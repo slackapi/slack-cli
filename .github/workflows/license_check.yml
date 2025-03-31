@@ -1,0 +1,25 @@
+name: Check License Headers
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # Since no branch is specified, this will run on all PRs
+
+jobs:
+  check-headers:
+    name: Check that license headers are in place
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Number of commits to fetch. 0 indicates all history for all branches and tags.
+          # Default: 1
+          # TODO - We should not fetch all history.
+          #        But we need to fetch the latest tag to run `make test` and `make build`.
+          #        This is a workaround until we fetch the latest tag using the Makefile.
+          fetch-depth: 0
+      - name: Check license headers
+        uses: apache/skywalking-eyes@v0.7.0
+        with:
+          config: .licenserc.yml

@@ -1,0 +1,56 @@
+# Copyright 2022-2025 Salesforce, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# https://golangci-lint.run/usage/configuration/
+
+version: "2"
+linters:
+  enable:
+    - misspell
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+  settings:
+    staticcheck:
+      checks:
+        - all
+        - '-ST1003' # disable rule 'Poorly chosen identifier'
+        - '-ST1005' # disable rule 'Incorrectly formatted error string'
+        - '-ST1006' # disable rule 'Poorly chosen receiver name'
+        - '-ST1008' # disable rule 'Function’s error value should be its last return value'
+        - '-ST1023' # disable rule 'Redundant type in variable declaration'
+        - '-QF1001' # disable rule 'Apply De Morgan’s law'
+        - '-QF1012' # disable rule 'Use fmt.Fprintf instead of x.Write(fmt.Sprintf(...))'
+        - '-QF1003' # disable rule 'Convert if/else-if chain to tagged switch'
+        - '-QF1004' # disable rule 'Use strings.ReplaceAll instead of strings.Replace'
+        - '-QF1008' # disable rule 'Omit embedded fields from selector'
+        - '-QF1011' # disable rule 'Omit redundant type from variable declaration'
+        - '-ST1016' # disable rule 'Use consistent method receiver names'
+formatters:
+  enable:
+    - gofmt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

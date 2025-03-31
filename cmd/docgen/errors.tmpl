@@ -1,0 +1,25 @@
+# Slack CLI errors reference
+
+Troubleshooting errors can be tricky between your development environment, the
+Slack CLI, and those encountered when running your code. Below are some common
+ones, as well as a list of the errors the Slack CLI may raise, what they mean,
+and some ways to remediate them.
+
+## Slack CLI errors list
+{{range $key, $err := . }}
+### {{ $err.Code }} {#{{ $err.Code }}}
+{{ if $err.Message }}
+**Message**: {{ $err.Message }}
+{{ end }}{{ if $err.Description }}
+**Description**: {{ $err.Description }}
+{{ end }}{{ if $err.Remediation }}
+**Remediation**: {{ $err.Remediation }}
+{{ end }}
+---
+{{ end }}
+## Additional help
+
+These error codes might reference an error you've encountered, but not provide
+enough details for a workaround.
+
+For more help, post to our issue tracker: https://github.com/slackapi/slack-cli/issues

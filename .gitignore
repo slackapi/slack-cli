@@ -1,0 +1,42 @@
+# Project build files
+bin/
+docs/
+slack
+slack-cli
+hermes
+hermes-project*
+my-slack-app*
+coverage.out
+
+# Release artifacts
+.gon.hcl
+
+# Slack app files
+.hermes
+.slack/
+environments.yaml
+
+# Exclude ignoring .slack/ included in (Deno) templates
+!assets/**/.slack/
+
+# macOS
+.DS_Store
+
+# For GoLand users
+.idea/
+
+# goreleaser
+dist/
+
+# json
+/package.json
+package-lock.json
+
+# VSCode extensions
+*.http
+
+# Temp log files
+*.log
+
+# End to End Test files
+test-e2e

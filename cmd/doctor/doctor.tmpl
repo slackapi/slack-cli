@@ -1,0 +1,45 @@
+
+{{- /* CATEGORIES */ -}}
+{{range .Sections}}
+{{Title .RenderLabel}}{{"\n"}}
+  {{- /* DEPENDENCIES */ -}}
+  {{range .Subsections}}
+    {{if .HasError}}{{Red "✘ "}}{{else}}{{Green "✔ "}}{{end}}
+    {{- .Label}} {{Context .Value}}
+
+    {{- /* DETAILS [Version, Last updated, etc.] */ -}}
+    {{range $i, $_ := .Subsections -}}
+      {{if .Label}}
+        {{.RenderLabel}} {{.Value}}
+        {{- range .Errors}}
+        {{Error .Message .Code}}
+        {{- if ne .Remediation ""}}
+        {{Suggestion .Remediation}}
+        {{- end}}
+        {{- end -}}
+      {{- end -}}
+
+      {{- /* GROUPS OF DETAILS [e.g., multiple workspace details] */ -}}
+      {{if .Subsections -}}
+      {{range .Subsections}}
+        {{.RenderLabel}} {{.Value}}
+        {{- range .Errors}}
+        {{Error .Message .Code}}
+        {{- if ne .Remediation ""}}
+        {{Suggestion .Remediation}}
+        {{- end}}
+        {{- end}}
+      {{- end -}}
+      {{"\n"}}
+      {{- end -}}
+    {{end}}
+    {{- range .Errors}}
+      {{Error .Message .Code}}
+      {{- if ne .Remediation ""}}
+      {{Suggestion .Remediation}}
+      {{- end}}
+    {{- end}}
+  {{- "\n" -}}
+{{- end -}}
+{{end}}
+Errors: {{.TotalErrors}}{{"\n"}}

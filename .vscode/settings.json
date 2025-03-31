@@ -1,0 +1,31 @@
+{
+  "go.lintFlags": ["--fast"],
+  "go.lintTool": "golangci-lint",
+
+  "[go]": {
+    "editor.defaultFormatter": "golang.go"
+  },
+  "files.associations": {
+    "*.bats": "shellscript"
+  },
+  "cSpell.words": [
+    "afero",
+    "auths",
+    "Autoupdate",
+    "deno",
+    "iostreams",
+    "opentracing",
+    "safeexec",
+    "slackdeps",
+    "slackerror",
+    "slackhq",
+    "slacktrace",
+    "tabletests",
+    "testutil"
+  ],
+  "go.coverOnSingleTest": true,
+  "go.coverOnSingleTestFile": true,
+  "go.coverageDecorator": {
+    "type": "gutter"
+  }
+}

@@ -1,0 +1,53 @@
+name: Update dependencies
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+jobs:
+  golang:
+    name: Bump the Golang version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gather credentials
+        id: credentials
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ steps.credentials.outputs.token }}
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - name: Get the latest version
+        id: version
+        run: |
+          LATEST=$(curl -s "https://go.dev/VERSION?m=text" | grep go)
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+      - name: Bump module versions
+        run: |
+          sed -i "s/^go .*/go ${VERSION#go}/" go.mod
+          go mod tidy
+          sed -i "s/cimg\/go:.*/cimg\/go:${VERSION#go}/" .circleci/config.yml
+          sed -i "s/go-version: .*/go-version: \"${VERSION#go}\"/" .github/workflows/tests.yml
+        env:
+          VERSION: ${{ steps.version.outputs.latest }}
+      - name: Open a change request
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b chore-bump-golang
+          if git diff --quiet; then
+            echo "No changes to commit, exiting."
+            exit 0
+          fi
+          git commit --all -m "build(deps): bump golang to ${VERSION#go}"
+          git push -u origin chore-bump-golang
+          gh pr create --title "build(deps): bump golang to ${VERSION#go}" --body "Automatic update to the latest release of Go" --milestone "Next Release" --label "code health"
+        env:
+          GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
+          VERSION: ${{ steps.version.outputs.latest }}

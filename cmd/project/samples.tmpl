@@ -1,0 +1,16 @@
+{{- define "option"}}
+{{- if eq .SelectedIndex .CurrentIndex }}{{color .Config.Icons.SelectFocus.Format }}{{ .Config.Icons.SelectFocus.Text }} {{else}}{{color "default+hb"}}  {{end}}
+{{- .CurrentOpt.Value}}{{color "reset"}}{{ if ne ($.GetDescription .CurrentOpt) "" }}{{"\n  "}}{{color "250"}}{{ $.GetDescription .CurrentOpt }}{{"\n"}}{{end}}
+{{- color "reset"}}
+{{end}}
+{{- if .ShowHelp }}{{- color .Config.Icons.Help.Format }}{{ .Config.Icons.Help.Text }} {{ .Help }}{{color "reset"}}{{"\n"}}{{end}}
+{{- color .Config.Icons.Question.Format }}{{ .Config.Icons.Question.Text }} {{color "reset"}}
+{{- color "default+hb"}}{{ .Message }}{{color "reset"}}
+{{- if .ShowAnswer}}{{color "39+b"}} {{.Answer}}{{color "reset"}}
+{{- else}}
+  {{- " "}}{{- color "39+b"}}[Use arrows to move]{{color "reset"}}{{"\n\n"}}
+  {{- range $ix, $option := .PageEntries}}
+  {{- template "option" $.IterateOption $ix $option}}
+  {{- end}}
+{{- "  Guided tutorials can be found at "}}{{color "32+u"}}{{"api.slack.com/automation/samples"}}{{color "reset"}}
+{{end}}

@@ -1,0 +1,688 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/configuration-reference/
+version: 2.1
+orbs:
+  slack: circleci/slack@4.13.2
+  jq: circleci/jq@2.2.0
+anchor:
+  # used in the workflows (bottom of this file) to filter running certain jobs only on git tag creation
+  filters-tag-triggered-workflow-job: &filters-tag-triggered-workflow-job
+    filters:
+      tags:
+        only: /^v[0-9]+(\.[0-9]+).*/
+parameters:
+  run_local_build_test_workflow:
+    type: boolean
+    default: false
+
+description: |
+  Build, test, code-sign & deploy Slack Platform CLI binaries
+
+commands:
+  export-build-version:
+    description: "Exports a BUILD_VERSION env var based on the most recent git tag. The format of the string will be 'vX.X.X[-branch-name[-feature]]', unless the `sanitized` parameter is set to `true` which drops the `v` prefix."
+    parameters:
+      sanitized:
+        type: boolean
+        default: false
+      release_ref:
+        type: string
+        description: "Provided as a parameter from the CirlceCI workflow, this determines the _kind_ of build: production, feature, or dev/branch build. It is a git ref (tag or branch) to base the exported build version off of."
+        default: "dev-build"
+    steps:
+      - run:
+          name: Output BUILD_VERSION env var based on recent git tag and type of build
+          command: |
+            BUILD_VERSION=$(git describe --tags --match 'v*.*.*' --exclude '*feature');
+            echo "git tag-based BUILD_VERSION: $BUILD_VERSION"
+            if [[ "<< parameters.release_ref >>" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+              # if release tag starts with semver, then this is either a prod or feature build. use the release tag, then, as build version too.
+              BUILD_VERSION="<< parameters.release_ref >>"
+              echo "BUILD_VERSION set to release_ref parameter."
+            fi
+            if [ "<< parameters.sanitized >>" != "false" ];
+            then
+              # drop leading 'v'
+              BUILD_VERSION=$(echo $BUILD_VERSION | sed 's/v//');
+            fi
+            export BUILD_VERSION="$BUILD_VERSION"
+            echo "export BUILD_VERSION=$BUILD_VERSION" >> $BASH_ENV
+  generate-archives:
+    description: "Assemble built binaries into tarball archives"
+    parameters:
+      artifact_dir:
+        type: string
+      release_ref:
+        type: string
+        description: "git ref (tag or branch). Provided as a parameter from the CirlceCI workflow, this determines the _kind_ of build: production, feature, or dev/branch build."
+        default: "dev-build"
+    steps:
+      - export-build-version:
+          release_ref: << parameters.release_ref >>
+          sanitized: true
+      - run:
+          name: Generate dev and prod archives
+          command: |
+            ./scripts/archive.sh << parameters.artifact_dir >> $BUILD_VERSION
+  retrieve-oidc-secrets:
+    description: "Retrieves secrets from Slack"
+    parameters:
+      endpoint:
+        type: env_var_name
+        default: SLACK_SECRETS_SERVICE_ENDPOINT
+      authz-token:
+        type: env_var_name
+        default: SLACK_SECRETS_SERVICE_AUTHZ_TOKEN
+      oidc-token:
+        type: env_var_name
+        default: CIRCLE_OIDC_TOKEN
+    steps:
+      - run:
+          name: Get OIDC env variables
+          command: |
+            curl -X POST "${<< parameters.endpoint >>}?format=shell" -H "TSAuth-Token: ${<< parameters.authz-token >>}" -H "Content-Type: application/json" -d '{"token":"'${<< parameters.oidc-token >>}'"}' -f --retry 3 --retry-delay 3 -o >(cat >> $BASH_ENV)
+  notify-slack-on-fail:
+    description: "Send a failure notification to a preconfigured Slack channel"
+    steps:
+      - retrieve-oidc-secrets
+      - slack/notify:
+          branch_pattern: main
+          event: fail
+          channel: $SLACK_ESCAL_CHANNEL, $SLACK_VERBOSE_NOTIFICATIONS_CHANNEL
+          template: basic_fail_1
+  notify-slack-on-pass:
+    description: "Send a success notification to a preconfigured Slack channel"
+    steps:
+      - retrieve-oidc-secrets
+      - slack/notify:
+          branch_pattern: main
+          event: pass
+          channel: $SLACK_VERBOSE_NOTIFICATIONS_CHANNEL
+          template: basic_success_1
+
+jobs:
+  build:
+    parameters:
+      release_ref:
+        type: string
+        description: "git ref (tag or branch) to base build version off of"
+        default: "dev-build"
+    docker: # run the steps with Docker
+      # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
+      - image: cimg/go:1.24.1
+    steps: # steps that comprise the `build` job
+      - checkout # check out source code to working directory
+      - restore_cache: # restores saved cache if no changes are detected since last run
+          keys:
+            - go-mod-v4-{{ checksum "go.sum" }}
+      - retrieve-oidc-secrets
+      - run:
+          name: Install Lint
+          command: |
+            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+      - run:
+          name: Run Unit Tests
+          command: |
+            make test
+      - run:
+          name: Sync Tests Results
+          command: |
+            cp ./coverage.out /tmp/test-results
+      - run:
+          name: Run Build
+          command: |
+            make build-ci
+      - run:
+          name: Install Goreleaser
+          command: |
+            # Ensures the directory we need exist.
+            mkdir -p ~/bin
+            installPath=~/bin
+
+            dlURL="https://github.com/goreleaser/goreleaser/releases/download/v2.5.1/goreleaser_Linux_x86_64.tar.gz"
+            curl -sSL $dlURL | tar -xz -C ${installPath} goreleaser
+      - run:
+          name: Check GoReleaser is install success
+          command: |
+            goreleaser --version
+      - export-build-version:
+          release_ref: << parameters.release_ref >>
+          sanitized: true
+      - run:
+          name: Run GoReleaser. Without actually publishing.
+          command: |
+            export LDFLAGS="-s -w -X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=$BUILD_VERSION'"
+            make build-snapshot
+      - run:
+          name: Show binaries are generated correctly
+          command: ls -R ./dist
+      # Move all binary archives into the folder which is the same path on EC2 instance
+      - run:
+          name: Copy binaries to CircleCI workspace
+          command: |
+            mkdir -p ./tmp/circleci-workspace/artifacts
+            cp -R ./dist/slack_cli_* ./tmp/circleci-workspace/artifacts
+      - persist_to_workspace:
+          root: ./tmp/circleci-workspace/artifacts
+          paths:
+            - "*.tar.gz"
+            - "*.zip"
+      - store_artifacts:
+          path: ./tmp/circleci-workspace/artifacts
+      - store_test_results:
+          path: /tmp/test-results
+      - notify-slack-on-fail
+      - notify-slack-on-pass
+
+  code-sign:
+    machine: true
+    resource_class: slackapi/slack-cli-code-sign-dev
+    working_directory: /tmp/circleci-workspace/mac-code-sign
+    parameters:
+      arch:
+        type: string
+        default: "x64"
+      prod_name:
+        type: string
+        default: "slack"
+      artifact_dir:
+        type: string
+        default: "/tmp/circleci-workspace/artifacts"
+    steps:
+      - retrieve-oidc-secrets
+      - run:
+          name: "Delete artifact directory"
+          command: |
+            echo << parameters.artifact_dir >>
+            rm -rf << parameters.artifact_dir >>
+      - attach_workspace:
+          at: << parameters.artifact_dir >>
+      - run:
+          name: "Code-sign and export to artifacts folder"
+          command: |
+            export JOB_PARAMS=$(
+                jq -n \
+                    --arg j MAC_CODE_SIGN \
+                    --arg ad << parameters.artifact_dir >> \
+                    --arg pn << parameters.prod_name >> \
+                    '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, PROD_NAME: $pn}'
+            )
+            if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=$CIRCLE_TAG; else export GIT_REF=$CIRCLE_BRANCH; fi
+            sudo bash /Library/circleci/runner-entrypoint.sh $GIT_REF "$JOB_PARAMS"
+          no_output_timeout: 45m
+      - store_artifacts:
+          path: << parameters.artifact_dir >>
+      - persist_to_workspace:
+          root: << parameters.artifact_dir >>
+          paths:
+            - "*"
+      - notify-slack-on-fail
+      - notify-slack-on-pass
+
+  create-github-release-and-artifacts:
+    docker:
+      - image: cimg/base:current
+    parameters:
+      artifact_dir:
+        type: string
+        description: "Output folder where release artifacts will be created in"
+        default: "/tmp/circleci-workspace/artifacts"
+      release_ref:
+        type: string
+        description: "git ref (tag or branch) to create a GitHub Release for"
+        default: "dev-build"
+      production:
+        type: boolean
+        description: "Whether to create a production, non-pre-release GitHub release"
+        default: false
+    steps:
+      - checkout # check out source code to working directory
+      - retrieve-oidc-secrets
+      - attach_workspace:
+          at: << parameters.artifact_dir >>
+      - run:
+          name: "Check file sync"
+          command: |
+            ls -R << parameters.artifact_dir >>
+      - persist_to_workspace:
+          root: << parameters.artifact_dir >>
+          paths:
+            - "*.tar.gz"
+            - "*.zip"
+      - store_artifacts:
+          path: << parameters.artifact_dir >>
+      - export-build-version:
+          release_ref: << parameters.release_ref >>
+      - run:
+          name: Massage RELEASE_REF
+          command: |
+            echo "release_ref parameter passed into job: << parameters.release_ref >>"
+            # The parameters.release_ref will be different based on build type:
+            # - Feature and production builds will be prefixed with a proper semver version (since they are based on git tags).
+            # - "dev" build (builds of `main` branch commits) will have the special tag "dev-build". This is a long-running tag that
+            #   continually has its GitHub pre-release updated w/ every new commit to `main`
+            if [[ "<< parameters.release_ref >>" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ || "<< parameters.release_ref >>" == "dev-build" ]]; then
+              RELEASE_REF="<< parameters.release_ref >>"
+            else
+            # - PR builds pass the branch name in as release_ref, so massage it if it is missing a semver prefix.
+              echo "Branch (PR) build detected, sanitizing release tag..."
+              LAST_SEMVER_TAG=$(git describe --tags --match 'v*.*.*' --abbrev=0 | cut -d"-" -f1)
+              RELEASE_REF="${LAST_SEMVER_TAG}-<< parameters.release_ref >>"
+            fi
+            echo "Will use RELEASE_REF=${RELEASE_REF}"
+            echo "export RELEASE_REF=${RELEASE_REF}" >> $BASH_ENV
+            echo "export RELEASE_REF=${RELEASE_REF}" >> << parameters.artifact_dir >>/release_ref
+      - run:
+          name: Delete non-signed archive
+          command: |
+            rm << parameters.artifact_dir >>/slack_*_macOS_64-bit.tar.gz
+      - generate-archives:
+          artifact_dir: << parameters.artifact_dir >>
+      - run:
+          name: "Delete old release assets"
+          command: |
+            ASSETS_IDS=($(curl -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" "https://api.github.com/repos/slackapi/slack-cli/releases/tags/$RELEASE_REF" | jq -r '.assets[]? | select(.name|test("slack")) | .id'))
+            echo "Identified the following asset IDs: ${ASSETS_IDS}"
+            if [ ! -z "$ASSETS_IDS" ]; then
+              for asset_id in "${ASSETS_IDS[@]}"; do
+                echo "DELETE ASSET_ID $asset_id"
+                curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases/assets/$asset_id
+                echo "FINISHED DELETING ASSET_ID $asset_id"
+              done
+            fi
+      - run:
+          name: "Update release description and upload assets to GitHub"
+          command: |
+            # Replace double quotes with single quotes
+            RELEASE_ID=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" "https://api.github.com/repos/slackapi/slack-cli/releases/tags/$RELEASE_REF" | jq -r .id);
+            PRERELEASE="true";
+            TARGET="${CIRCLE_SHA1}";
+            if [ "<< parameters.production >>" != "false" ];
+            then
+              PRERELEASE="false";
+              TARGET="main";
+            fi
+            BODY="{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},"
+
+            if [ "$RELEASE_ID" = "null" ]; then
+              BODY+="\"generate_release_notes\":true}"
+              echo "Creating a new GitHub release with: ${BODY}"
+              RELEASE_ID=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "${BODY}" | jq -r .id)
+              echo "... complete. RELEASE_ID=${RELEASE_ID}"
+            else
+              echo "Overwriting existing GitHub Release data; generating pre-release notes ..."
+              LAST_SEMVER_TAG=$(git describe --tags --match 'v*.*.*' --abbrev=0 | cut -d"-" -f1)
+              # When generating release notes, setting the target tag_name property to an existing tag has GitHub ignore the target_commitish property
+              # So, set it to some non-existent tag name for release-note-generating purposes.
+              # See https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#generate-release-notes-content-for-a-release--parameters
+              # Note the following _does not change releases or tags_ - it only creates release notes, just like clicking "Generate Release Notes" on the GitHub Releases page.
+              CHANGELOG=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/slackapi/slack-cli/releases/generate-notes -d "{\"tag_name\":\"does-not-exist\",\"target_commitish\":\"${TARGET}\",\"previous_tag_name\":\"${LAST_SEMVER_TAG}\"}" | jq .body)
+              echo "Will use release notes: ${CHANGELOG}"
+              BODY+="\"body\":$CHANGELOG}"
+              echo "Updating existing GitHub pre-release ${RELEASE_ID} with ${BODY}"
+              curl -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases/$RELEASE_ID -d "${BODY}"
+              echo "... complete."
+            fi
+
+            binaries=`find << parameters.artifact_dir >>/slack_* -maxdepth 1 -not -type d`
+            for binary in $binaries
+            do
+              curl -X POST \
+              -H "Authorization: token $GITHUB_RELEASE_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              -H "Content-Type: $(file -b --mime-type ${binary})" \
+              -H "Content-Length: $(wc -c <${binary} | xargs)" \
+              -T "${binary}" \
+              "https://uploads.github.com/repos/slackapi/slack-cli/releases/$RELEASE_ID/assets?name=$(basename ${binary})" | cat
+            done
+      - store_artifacts:
+          path: << parameters.artifact_dir >>
+      - persist_to_workspace:
+          root: << parameters.artifact_dir >>
+          paths:
+            - "*"
+      - notify-slack-on-fail
+      - notify-slack-on-pass
+
+  e2e-test:
+    docker:
+      - image: cimg/base:current
+    parameters:
+      artifact_dir:
+        type: string
+        default: "/tmp/circleci-workspace/artifacts"
+      e2e_target_branch:
+        type: string
+        description: "What branch of the integration test repo should be used to test the CLI?"
+        default: main
+      release_ref:
+        type: string
+        description: "What CLI release tag should be used during testing?"
+        default: dev-build
+    steps:
+      - checkout
+      - retrieve-oidc-secrets
+      - attach_workspace:
+          at: << parameters.artifact_dir >>
+      - run:
+          name: Check file sync
+          command: |
+            ls -R << parameters.artifact_dir >>
+      - run:
+          name: Source release_ref if present
+          command: |
+            # the create-github-release job, for branch builds, will create a release_ref file with the tag name in it
+            # branch builds have a special tag associated to them, so if this file exists, read the release tag from it
+            if [ -f << parameters.artifact_dir >>/release_ref ]; then
+              source << parameters.artifact_dir >>/release_ref
+              echo "Sourced release tag from create-github-release job: ${RELEASE_REF}"
+            else
+              RELEASE_REF="<< parameters.release_ref >>"
+              echo "Release tag provided as job parameter: ${RELEASE_REF}"
+            fi
+            echo "export RELEASE_REF=${RELEASE_REF}" >> $BASH_ENV
+      - run:
+          name: Kick off platform-devxp-test pipeline
+          command: |
+            # TODO: once CircleCI updates its pipeline-invocation API, move off of Cheng's personal CircleCI access token, which is saved to both of the slackapi CircleCI "contexts" as an env var:
+            # https://app.circleci.com/settings/organization/github/slackapi/contexts
+            TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
+              --header 'Content-Type: application/json' \
+              -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
+              --data "{\"branch\":\"${CIRCLE_BRANCH}\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
+            if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
+              echo "Performing the standard test suite found on the \"main\" branch of the end-to-end tests"
+              TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
+                --header 'Content-Type: application/json' \
+                -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
+                --data "{\"branch\":\"main\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
+            else
+              echo "Performing the changed tests on the \"$CIRCLE_BRANCH\" branch of the end-to-end tests"
+            fi
+            if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
+              echo "Failed to start the testing workflow"
+              exit 1
+            fi
+            echo "platform-devxp-test workflow started with id: $TEST_JOB_WORKFLOW_ID"
+            echo "export TEST_JOB_WORKFLOW_ID=${TEST_JOB_WORKFLOW_ID}" >> $BASH_ENV
+      - run:
+          name: Wait for platform-devxp-test E2E run to complete
+          command: |
+            E2E_RESULT="{}"
+            E2E_STATUS="running"
+            while [[ $E2E_STATUS != "failed" && $E2E_STATUS != "canceled" && $E2E_STATUS != "success" ]]
+            do
+              sleep 10
+              echo "Polling test job..."
+              E2E_RESULT=$(curl --location -sS --request GET "https://circleci.com/api/v2/pipeline/$TEST_JOB_WORKFLOW_ID/workflow" --header "Circle-Token: $CIRCLE_TOKEN")
+              E2E_STATUS=$(echo $E2E_RESULT | jq --raw-output '.items[0].status')
+              echo "Status is now: $E2E_STATUS"
+            done
+            if [ $E2E_STATUS = "failed" ]; then
+              E2E_PIPE_NUM=$(echo $E2E_RESULT | jq '.items[0].pipeline_number')
+              E2E_WORKFLOW_ID=$(echo $E2E_RESULT | jq -r '.items[0].id')
+              CIRCLE_FAIL_LINK="https://app.circleci.com/pipelines/github/slackapi/platform-devxp-test/${E2E_PIPE_NUM}/workflows/${E2E_WORKFLOW_ID}"
+              echo "Tests failed! Visit $CIRCLE_FAIL_LINK for more info."
+              exit 1
+            elif [ "$E2E_STATUS" = "canceled" ]; then
+              echo "Tests have been canceled and did not finish"
+              exit 1
+            else
+              echo "Tests passed woot 🎉"
+            fi
+      - notify-slack-on-fail
+      - notify-slack-on-pass
+
+  s3-upload:
+    machine: true
+    resource_class: slackapi/slack-cli-code-sign-dev
+    working_directory: /tmp/circleci-workspace/s3-upload
+    parameters:
+      s3-target-path:
+        type: string
+      file-name:
+        type: string
+      artifact_dir:
+        type: string
+        default: "/tmp/circleci-workspace/artifacts"
+    steps:
+      - retrieve-oidc-secrets
+      - run:
+          command: |
+            # clean up the workspace
+            rm -rf << parameters.artifact_dir >>
+      - attach_workspace:
+          at: << parameters.artifact_dir >>
+      - run:
+          name: "Upload binaries to S3 bucket"
+          command: |
+            export JOB_PARAMS=$(
+                jq -n \
+                    --arg j S3_UPLOAD \
+                    --arg ct "$CIRCLE_TAG" \
+                    --arg cs "$CIRCLE_SHA1" \
+                    --arg ad << parameters.artifact_dir >> \
+                    --arg p << parameters.s3-target-path >> \
+                    --arg fn << parameters.file-name >> \
+                    '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, CIRCLE_TAG: $ct, CIRCLE_SHA1: $cs, S3_TARGET_PATH: $p, FILE_NAME: $fn}'
+            )
+            if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=$CIRCLE_TAG; else export GIT_REF=$CIRCLE_BRANCH; fi
+            sudo /Library/circleci/runner-entrypoint.sh $GIT_REF "$JOB_PARAMS"
+          no_output_timeout: 45m
+      - store_artifacts:
+          path: << parameters.artifact_dir >>
+      - notify-slack-on-fail
+      - notify-slack-on-pass
+
+workflows:
+  local-build-test:
+    when:
+      and:
+        - not:
+            equal: [main, << pipeline.git.branch >>]
+        - not: << pipeline.git.tag >>
+        - equal: [<< pipeline.parameters.run_local_build_test_workflow >>, true]
+    jobs:
+      - build:
+          context: slack-cli-release
+      - e2e-test:
+          # Change `main` to your local e2e_test branch
+          e2e_target_branch: "main"
+          requires:
+            - build
+          context: slack-cli-e2e
+
+  build-lint-test-e2e-test:
+    when:
+      and:
+        - not:
+            equal: [main, << pipeline.git.branch >>]
+        - not: << pipeline.git.tag >>
+        - equal:
+            [<< pipeline.parameters.run_local_build_test_workflow >>, false]
+    jobs:
+      - build:
+          context: slack-cli-release
+          release_ref: << pipeline.git.branch >>
+      - create-github-release-and-artifacts:
+          requires:
+            - build
+          context: slack-cli-release
+          release_ref: << pipeline.git.branch >>
+      - e2e-test:
+          e2e_target_branch: "main"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
+
+  # nightly build will build from main branch nightly at 12:00 am UTC
+  nightly-build-test-code-sign-deploy:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only: main
+    jobs:
+      - build:
+          context: slack-cli-release
+          release_ref: dev-build
+      - code-sign:
+          requires:
+            - build
+          context: slack-cli-release
+      - create-github-release-and-artifacts:
+          requires:
+            - code-sign
+          context: slack-cli-release
+          release_ref: dev-build
+      - e2e-test:
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
+          release_ref: dev-build
+
+  dev-build-test-code-sign-deploy:
+    when:
+      and:
+        - equal: [<< pipeline.git.branch >>, main]
+        - not: << pipeline.git.tag >>
+        - equal:
+            [<< pipeline.parameters.run_local_build_test_workflow >>, false]
+    jobs:
+      - build:
+          context: slack-cli-release
+          release_ref: dev-build
+      - code-sign:
+          requires:
+            - build
+          context: slack-cli-release
+      - create-github-release-and-artifacts:
+          requires:
+            - code-sign
+          context: slack-cli-release
+          release_ref: dev-build
+      - e2e-test:
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
+          release_ref: dev-build
+
+  # feature build will be triggered when a Git tag matches the following pattern: 'v<major>.<minor>.<patch>-<describe the feature>-feature', eg. 'v1.0.0-branch-name-feature'
+  feature-build-code-sign-deploy:
+    when:
+      matches:
+        pattern: "^v(\\d+\\.)?(\\d+\\.)?(\\d+)?(([A-Za-z0-9\\-]+)-feature)$"
+        value: << pipeline.git.tag >>
+    jobs:
+      - build:
+          <<: *filters-tag-triggered-workflow-job
+          context: slack-cli-release
+          release_ref: << pipeline.git.tag >>
+      - code-sign:
+          <<: *filters-tag-triggered-workflow-job
+          requires:
+            - build
+          context: slack-cli-release
+      - create-github-release-and-artifacts:
+          <<: *filters-tag-triggered-workflow-job
+          requires:
+            - code-sign
+          context: slack-cli-release
+          release_ref: << pipeline.git.tag >>
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-install-linux-feature-build
+          s3-target-path: slack-cli
+          file-name: "slack_cli_*feature_linux_64-bit.tar.gz"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-install-macOS-feature-build
+          s3-target-path: slack-cli
+          file-name: "slack_cli_*feature_macOS_64-bit.tar.gz"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-install-windows-feature-build
+          s3-target-path: slack-cli
+          file-name: "slack_cli_*feature_windows_64-bit.zip"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+
+  # production build will be triggered when a Git tag matches the following pattern: 'v<major>.<minor>.<patch>', eg. 'v1.0.0'
+  prod-build-code-sign-deploy:
+    when:
+      matches:
+        pattern: "^v(\\d+\\.)?(\\d+\\.)?(\\d+)$"
+        value: << pipeline.git.tag >>
+    jobs:
+      - build:
+          <<: *filters-tag-triggered-workflow-job
+          context: slack-cli-release
+          release_ref: << pipeline.git.tag >>
+      - code-sign:
+          <<: *filters-tag-triggered-workflow-job
+          requires:
+            - build
+          context: slack-cli-release
+      - create-github-release-and-artifacts:
+          <<: *filters-tag-triggered-workflow-job
+          requires:
+            - code-sign
+          context: slack-cli-release
+          release_ref: << pipeline.git.tag >>
+          production: true
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-install-macos&linux
+          s3-target-path: slack-cli
+          file-name: "slack_cli_*.tar.gz"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-autoupdate-macos
+          s3-target-path: slack-cli
+          file-name: "slack_cli_*_macOS_64-bit.zip"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-install-windows
+          s3-target-path: slack-cli
+          file-name: "slack_cli_*_windows_64-bit.zip"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-autoupdate-zip
+          s3-target-path: cli
+          file-name: "slack_cli_*.zip"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-autoupdate-targz
+          s3-target-path: cli
+          file-name: "slack_cli_[0-9]*.tar.gz"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-for-hermes
+          s3-target-path: cli
+          file-name: "hermes_*"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release

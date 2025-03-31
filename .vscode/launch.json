@@ -1,0 +1,31 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Auto-Update",
+      "type": "go",
+      "request": "launch",
+      "console": "integratedTerminal",
+      // If mode is exec, the debugging process debugs the precompiled executable (specified in `program` below) 
+      // Make sure to use `make build-debug` to compile the debuggable binary before running this config
+      "mode": "exec",
+      "env": {
+        "SLACK_TEST_VERSION": "v1.0.0"
+      },
+      "args": ["update", "-v"],
+      "program": "bin/slack-cli-debug"
+    },
+    {
+      "name": "Debug auth list",
+      "type": "go",
+      "request": "launch",
+      "console": "integratedTerminal",
+      "mode": "debug",
+      "args": ["auth", "list", "-v"],
+      "program": "main.go"
+    }
+  ]
+}

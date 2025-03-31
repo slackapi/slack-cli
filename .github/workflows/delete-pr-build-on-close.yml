@@ -1,0 +1,25 @@
+name: Delete pre-release when a branch is deleted
+# Runs when PRs are merged or closed.
+# See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-pull_request-workflow-when-a-pull-request-merges
+# The circleci config builds CLI binaries when a PR is opened and hosts them under a GitHub (pre-)release named after the PR branch
+# This workflow action deletes that pre-release when a PR is merged or closed.
+on:
+  delete:
+    branches:
+
+jobs:
+  delete-pre-release:
+    name: Delete pre-release if exists
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete pre-release and tag named after branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          # Figure out tag name from branch name. This is coupled to the tag name generation that exists in .circleci/config.yml's `create-github-release` job.
+          LATEST_RELEASE_TAG=$(gh release list --repo slackapi/slack-cli --json tagName,isLatest --jq ".[] | select(.isLatest == true) | .tagName" )
+          TAG_NAME="$LATEST_RELEASE_TAG-${{ github.event.ref }}"
+          echo "Identified pre-release tagname to 🔪: $TAG_NAME"
+          # Delete the pre-release
+          GH_DEBUG=1 gh release --repo slackapi/slack-cli delete $TAG_NAME -y --cleanup-tag

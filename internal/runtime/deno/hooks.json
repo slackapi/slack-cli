@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "get-hooks": "deno run -q --allow-read --allow-net https://deno.land/x/deno_slack_hooks@1.3.1/mod.ts"
+  }
+}

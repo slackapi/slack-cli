@@ -1,0 +1,8 @@
+# * @slackapi/slack-cli-team will be added as code reviewers
+# to all files in this repo.
+* @slackapi/slack-cli-team
+
+# @slackapi/developer-education owns any file in the
+# `/docs` directory in the root of this repo and any
+# of its subdirectories.
+/docs/ @slackapi/developer-education

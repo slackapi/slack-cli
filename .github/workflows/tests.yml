@@ -1,0 +1,64 @@
+name: Lint -> Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # Since no branch is specified, this will run on all PRs
+  # Repository dispatches are triggered throughout the GitHub API. This is used to run the custom integration tests using a specified API host
+  # in the custom integration test job below
+  repository_dispatch:
+    types: [run_integration_tests]
+  workflow_dispatch:
+
+jobs:
+  lint-test:
+    name: Lints and Unit tests
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Number of commits to fetch. 0 indicates all history for all branches and tags.
+          # Default: 1
+          # TODO - We should not fetch all history.
+          #        But we need to fetch the latest tag to run `make test` and `make build`.
+          #        This is a workaround until we fetch the latest tag using the Makefile.
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.1"
+      - name: Lint
+        uses: golangci/golangci-lint-action@v7
+        with:
+          version: latest
+          args: --timeout=5m
+
+      - name: Unit Tests
+        run: make test
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.out
+          fail_ci_if_error: false
+
+  # Monitor code coverage and TODO/FIXME-type comments
+  health-score:
+    needs: lint-test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24.1"
+      - name: Report health score
+        uses: slackapi/slack-health-score@v0
+        with:
+          extension: "go"
+          codecov_token: ${{ secrets.ELAINES_CODECOV_API_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          include: "cmd internal"
