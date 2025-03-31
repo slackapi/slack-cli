@@ -53,10 +53,10 @@ submit an issue or pull request to start a discussion!
 
 Thanks for stopping by! You're awesome :sunglasses:
 
-[commands]: https://api.slack.com/automation/cli/commands
+[commands]: https://tools.slack.dev/slack-cli/reference/commands/slack
 [dev]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
 [enhancements]: https://github.com/slackapi/slack-cli/pulls
-[install]: https://api.slack.com/automation/cli/install
+[install]: https://tools.slack.dev/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
 [issues]: https://github.com/slackapi/slack-cli/issues/new?template=04_bug.md
 [maintainers]: .github/MAINTAINERS_GUIDE.md
 [releases]: https://github.com/slackapi/slack-cli/releases
