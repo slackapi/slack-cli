@@ -1,8 +1,8 @@
 # Slack CLI
 
-[![codecov](https://codecov.io/gh/slackapi/slack-cli/branch/main/graph/badge.svg?token=5QO6RECHOF)](https://codecov.io/gh/slackapi/slack-cli)
-[![CI](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml)
-[![CircleCI](https://circleci.com/gh/slackapi/slack-cli/tree/main.svg?style=svg&circle-token=4de07260bb3a2404b98698e7b01b5872defb11ed)](https://circleci.com/gh/slackapi/slack-cli)
+[![CodeCov](https://codecov.io/gh/slackapi/slack-cli/branch/main/graph/badge.svg?token=5QO6RECHOF)](https://codecov.io/gh/slackapi/slack-cli)
+[![Tests](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/slackapi/slack-cli/tree/main.svg?style=svg&circle-token=CCIPRJ_TfxL4UXvmnaoZ6np7aRRsT_df235908b5a56f4206787b59c6fbee59490ac35d)](https://dl.circleci.com/status-badge/redirect/gh/slackapi/slack-cli/tree/main)
 
 > Command-line interface for building apps on the Slack Platform.
 
@@ -53,10 +53,10 @@ submit an issue or pull request to start a discussion!
 
 Thanks for stopping by! You're awesome :sunglasses:
 
-[commands]: https://api.slack.com/automation/cli/commands
+[commands]: https://tools.slack.dev/slack-cli/reference/commands/slack
 [dev]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
 [enhancements]: https://github.com/slackapi/slack-cli/pulls
-[install]: https://api.slack.com/automation/cli/install
+[install]: https://tools.slack.dev/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
 [issues]: https://github.com/slackapi/slack-cli/issues/new?template=04_bug.md
 [maintainers]: .github/MAINTAINERS_GUIDE.md
 [releases]: https://github.com/slackapi/slack-cli/releases
