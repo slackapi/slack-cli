@@ -28,7 +28,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24.1"
+          go-version: "1.24.2"
       - name: Lint
         uses: golangci/golangci-lint-action@v7
         with:
@@ -54,7 +54,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24.1"
+          go-version: "1.24.2"
       - name: Report health score
         uses: slackapi/slack-health-score@v0
         with:
