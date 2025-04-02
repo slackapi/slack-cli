@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/mock"
@@ -33,13 +34,14 @@ import (
 )
 
 func TestClient_CreateApp_Ok(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:  appManifestCreateMethod,
 		ExpectedRequest: `{"manifest":{"display_information":{"name":"TestApp"}},"enable_distribution":true}`,
 		Response:        `{"ok":true,"app_id":"A123"}`,
 	})
 	defer teardown()
-	result, err := c.CreateApp(context.Background(), "token", types.AppManifest{
+	result, err := c.CreateApp(ctx, "token", types.AppManifest{
 		DisplayInformation: types.DisplayInformation{
 			Name: "TestApp",
 		},
@@ -49,39 +51,43 @@ func TestClient_CreateApp_Ok(t *testing.T) {
 }
 
 func TestClient_CreateApp_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, appManifestCreateMethod, func(c *Client) error {
-		_, err := c.CreateApp(context.Background(), "token", types.AppManifest{}, false)
+		_, err := c.CreateApp(ctx, "token", types.AppManifest{}, false)
 		return err
 	})
 }
 
 func TestClient_ExportAppManifest_Ok(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:  appManifestExportMethod,
 		ExpectedRequest: `{"app_id":"A0123456789"}`,
 		Response:        `{"ok":true,"manifest":{"display_information":{"name":"example"}}}`,
 	})
 	defer teardown()
-	result, err := c.ExportAppManifest(context.Background(), "token", "A0123456789")
+	result, err := c.ExportAppManifest(ctx, "token", "A0123456789")
 	require.NoError(t, err)
 	require.Equal(t, "example", result.Manifest.AppManifest.DisplayInformation.Name)
 }
 
 func TestClient_ExportAppManifest_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, appManifestExportMethod, func(c *Client) error {
-		_, err := c.ExportAppManifest(context.Background(), "token", "A0000000001")
+		_, err := c.ExportAppManifest(ctx, "token", "A0000000001")
 		return err
 	})
 }
 
 func TestClient_UpdateApp_OK(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:  appManifestUpdateMethod,
 		ExpectedRequest: `{"manifest":{"display_information":{"name":"TestApp"},"outgoing_domains":[]},"app_id":"A123","force_update":true,"consent_breaking_changes":true}`,
 		Response:        `{"ok":true,"app_id":"A123"}`,
 	})
 	defer teardown()
-	result, err := c.UpdateApp(context.Background(), "token", "A123", types.AppManifest{
+	result, err := c.UpdateApp(ctx, "token", "A123", types.AppManifest{
 		DisplayInformation: types.DisplayInformation{
 			Name: "TestApp",
 		},
@@ -94,8 +100,9 @@ func TestClient_UpdateApp_OK(t *testing.T) {
 }
 
 func TestClient_UpdateApp_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, appManifestUpdateMethod, func(c *Client) error {
-		_, err := c.UpdateApp(context.Background(), "token", "A123", types.AppManifest{},
+		_, err := c.UpdateApp(ctx, "token", "A123", types.AppManifest{},
 			/* forceUpdate= */ true,
 			/* continueWithBreakingChanges= */ true)
 		return err
@@ -103,12 +110,13 @@ func TestClient_UpdateApp_CommonErrors(t *testing.T) {
 }
 
 func TestClient_UpdateApp_SchemaCompatibilityError(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: appManifestUpdateMethod,
 		Response:       `{"ok": false, "error": "err", "errors": [{"message": "schema_compatibility_error: Following datatstore(s) will be deleted after the deploy: tasks"}]}`,
 	})
 	defer teardown()
-	_, err := c.UpdateApp(context.Background(), "token", "A123", types.AppManifest{},
+	_, err := c.UpdateApp(ctx, "token", "A123", types.AppManifest{},
 		/* forceUpdate= */ true,
 		/* continueWithBreakingChanges= */ true)
 	require.Error(t, err)
@@ -247,11 +255,13 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			var ts = httptest.NewServer(http.HandlerFunc(tt.handlerFunc))
 			defer ts.Close()
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
-			got, err := c.ValidateAppManifest(context.Background(), tt.args.token, tt.args.manifest, tt.args.appID)
+			got, err := c.ValidateAppManifest(ctx, tt.args.token, tt.args.manifest, tt.args.appID)
 			if tt.wantErr {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tt.wantErrVal.Error())
@@ -264,13 +274,14 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 }
 
 func TestClient_GetPresignedS3PostParams_Ok(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:  appGeneratePresignedPostMethod,
 		ExpectedRequest: `{"app_id":"A123"}`,
 		Response:        `{"ok":true,"url":"example.com/upload","file_name":"foo.tar.gz","fields":{"X-Amz-Credential":"cred"}}`,
 	})
 	defer teardown()
-	result, err := c.GetPresignedS3PostParams(context.Background(), "token", "A123")
+	result, err := c.GetPresignedS3PostParams(ctx, "token", "A123")
 	require.NoError(t, err)
 	require.Equal(t, "foo.tar.gz", result.FileName)
 	require.Equal(t, "example.com/upload", result.Url)
@@ -278,8 +289,9 @@ func TestClient_GetPresignedS3PostParams_Ok(t *testing.T) {
 }
 
 func TestClient_GetPresignedS3PostParams_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, appGeneratePresignedPostMethod, func(c *Client) error {
-		_, err := c.GetPresignedS3PostParams(context.Background(), "token", "A123")
+		_, err := c.GetPresignedS3PostParams(ctx, "token", "A123")
 		return err
 	})
 }
@@ -298,6 +310,7 @@ func TestClient_CertifiedAppInstall(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -316,7 +329,7 @@ func TestClient_CertifiedAppInstall(t *testing.T) {
 
 			mockAppId := "A123"
 			// execute
-			_, err := c.CertifiedAppInstall(context.Background(), "token", mockAppId)
+			_, err := c.CertifiedAppInstall(ctx, "token", mockAppId)
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -339,7 +352,7 @@ func TestClient_InstallApp(t *testing.T) {
 
 	var setup = func(t *testing.T) (context.Context, *iostreams.IOStreamsMock) {
 		// Mocks
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -368,7 +381,7 @@ func TestClient_InstallApp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			_, ioMock := setup(t)
+			ctx, ioMock := setup(t)
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -391,7 +404,7 @@ func TestClient_InstallApp(t *testing.T) {
 				TeamDomain: "mock",
 			}
 			// execute
-			_, _, err := c.DeveloperAppInstall(context.Background(), ioMock, "token", mockApp, []string{}, []string{}, "", false)
+			_, _, err := c.DeveloperAppInstall(ctx, ioMock, "token", mockApp, []string{}, []string{}, "", false)
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -430,6 +443,7 @@ func TestClient_UninstallApp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -447,7 +461,7 @@ func TestClient_UninstallApp(t *testing.T) {
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
 			// execute
-			err := c.UninstallApp(context.Background(), "token", "A123", "T123")
+			err := c.UninstallApp(ctx, "token", "A123", "T123")
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -486,6 +500,7 @@ func TestClient_DeleteApp(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -503,7 +518,7 @@ func TestClient_DeleteApp(t *testing.T) {
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
 			// execute
-			err := c.DeleteApp(context.Background(), "token", "A123")
+			err := c.DeleteApp(ctx, "token", "A123")
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -559,6 +574,7 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -590,7 +606,7 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 			iostreamMock.On("PrintTrace", mock.Anything, mock.Anything, mock.Anything).Return()
 
 			// execute
-			_, _, err := c.DeveloperAppInstall(context.Background(), iostreamMock, "token", tt.app, []string{}, []string{}, tt.orgGrantWorkspaceID, true)
+			_, _, err := c.DeveloperAppInstall(ctx, iostreamMock, "token", tt.app, []string{}, []string{}, tt.orgGrantWorkspaceID, true)
 			require.NoError(t, err)
 		})
 	}

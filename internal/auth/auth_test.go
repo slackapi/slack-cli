@@ -27,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
@@ -35,7 +36,6 @@ import (
 )
 
 func Test_AuthWithToken(t *testing.T) {
-	ctx := context.Background()
 	os := slackdeps.NewOsMock()
 	os.AddDefaultMocks()
 	fs := slackdeps.NewFsMock()
@@ -81,6 +81,7 @@ func Test_AuthWithToken(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			apic, teardown := api.NewFakeClient(t, api.FakeClientParams{
 				ExpectedMethod:  "auth.test",
 				ExpectedRequest: fmt.Sprintf("token=%s", tt.token),
@@ -131,7 +132,7 @@ func Test_AuthGettersAndSetters(t *testing.T) {
 
 	var setup = func(t *testing.T) (context.Context, *Client) {
 		// Mocks
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -226,7 +227,7 @@ func Test_AuthGettersAndSetters(t *testing.T) {
 func Test_AuthsRotation(t *testing.T) {
 	// Setup tests
 	var setup = func(t *testing.T) (context.Context, *Client) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -416,7 +417,7 @@ func Test_AuthsRotation(t *testing.T) {
 
 func Test_Auths(t *testing.T) {
 	var setup = func(t *testing.T) (context.Context, *Client) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -474,7 +475,7 @@ func Test_Auths(t *testing.T) {
 
 func Test_migrateToAuthByTeamID(t *testing.T) {
 	var setup = func(t *testing.T) (context.Context, *Client) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -528,7 +529,7 @@ func Test_migrateToAuthByTeamID(t *testing.T) {
 
 func Test_SetSelectedAuth(t *testing.T) {
 	var setup = func(t *testing.T) (context.Context, *Client, *slackdeps.OsMock) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -567,7 +568,7 @@ func Test_SetSelectedAuth(t *testing.T) {
 func Test_IsApiHostSlackDev(t *testing.T) {
 
 	var setup = func(t *testing.T) (context.Context, *Client) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
@@ -642,7 +643,7 @@ func Test_FilterKnownAuthErrors(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
 			fs := slackdeps.NewFsMock()

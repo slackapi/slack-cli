@@ -30,6 +30,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/ioutils"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
@@ -169,7 +170,11 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 	}
 	versionString, _ := strings.CutPrefix(cfg.Version, "v")
 	eventData := e.cleanSessionData(e.getSessionData())
-	sessionID := config.GetContextSessionID(ctx)
+	sessionID, err := slackcontext.SessionID(ctx)
+	if err != nil {
+		return err
+	}
+
 	var eventName EventType
 	switch exitCode {
 	case iostreams.ExitCancel:

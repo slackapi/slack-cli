@@ -15,13 +15,13 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/require"
 )
@@ -127,10 +127,11 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
 			defer ts.Close()
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastorePut(context.Background(), "shhh", tt.args.request)
+			got, err := apiClient.AppsDatastorePut(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastorePut() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -249,10 +250,11 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
 			defer ts.Close()
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreUpdate(context.Background(), "shhh", tt.args.request)
+			got, err := apiClient.AppsDatastoreUpdate(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -359,10 +361,11 @@ func TestClient_AppsDatastoreQuery(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
 			defer ts.Close()
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreQuery(context.Background(), "shhh", tt.args.query)
+			got, err := apiClient.AppsDatastoreQuery(ctx, "shhh", tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreQuery() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -470,10 +473,11 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
 			defer ts.Close()
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreDelete(context.Background(), "shhh", tt.args.request)
+			got, err := apiClient.AppsDatastoreDelete(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreDelete() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -583,10 +587,11 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
 			defer ts.Close()
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreGet(context.Background(), "shhh", tt.args.request)
+			got, err := apiClient.AppsDatastoreGet(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreGet() error = %v, wantErr %v", err, tt.wantErr)
 				return

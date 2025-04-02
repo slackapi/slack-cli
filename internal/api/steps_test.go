@@ -15,20 +15,21 @@
 package api
 
 import (
-	"context"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/require"
 )
 
 func TestClient_StepsList_Ok(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:  workflowsStepsListMethod,
 		ExpectedRequest: `{"workflow_app_id":"A123","workflow":"#/workflows/my-workflow","function_id":"Fn010N"}`,
 		Response:        `{"ok":true,"steps_versions":[{"title":"cool form","workflow_id":"Wf123","step_id":"0","is_deleted":false,"workflow_version_created":"1234"}]}`,
 	})
 	defer teardown()
-	versions, err := c.StepsList(context.Background(), "token", "#/workflows/my-workflow", "A123")
+	versions, err := c.StepsList(ctx, "token", "#/workflows/my-workflow", "A123")
 	require.NoError(t, err)
 	require.ElementsMatch(t, versions, []StepVersion{
 		{
@@ -42,25 +43,28 @@ func TestClient_StepsList_Ok(t *testing.T) {
 }
 
 func TestClient_StepsList_Errors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, workflowsStepsListMethod, func(c *Client) error {
-		_, err := c.StepsList(context.Background(), "token", "#/workflows/my-workflow", "A123")
+		_, err := c.StepsList(ctx, "token", "#/workflows/my-workflow", "A123")
 		return err
 	})
 }
 
 func TestClient_StepsResponsesExport_Ok(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:  workflowsStepsResponsesExportMethod,
 		ExpectedRequest: `{"workflow_app_id":"A123","workflow":"#/workflows/my-workflow","step_id":"0"}`,
 		Response:        `{"ok":true}`,
 	})
 	defer teardown()
-	err := c.StepsResponsesExport(context.Background(), "token", "#/workflows/my-workflow", "A123", "0")
+	err := c.StepsResponsesExport(ctx, "token", "#/workflows/my-workflow", "A123", "0")
 	require.NoError(t, err)
 }
 
 func TestClient_StepsResponsesExport_Errors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, workflowsStepsResponsesExportMethod, func(c *Client) error {
-		return c.StepsResponsesExport(context.Background(), "token", "#/workflows/my-workflow", "A123", "0")
+		return c.StepsResponsesExport(ctx, "token", "#/workflows/my-workflow", "A123", "0")
 	})
 }

@@ -16,6 +16,7 @@
     "iostreams",
     "opentracing",
     "safeexec",
+    "slackcontext",
     "slackdeps",
     "slackerror",
     "slackhq",

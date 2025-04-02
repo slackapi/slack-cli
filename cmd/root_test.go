@@ -21,12 +21,15 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRootCommand(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	tmp, _ := os.MkdirTemp("", "")
 	_ = os.Chdir(tmp)
 	defer os.RemoveAll(tmp)
@@ -38,7 +41,7 @@ func TestRootCommand(t *testing.T) {
 	clientsMock := shared.NewClientsMock()
 	testutil.MockCmdIO(clientsMock.IO, cmd)
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}
@@ -131,6 +134,7 @@ func Test_Aliases(t *testing.T) {
 	tmp, _ := os.MkdirTemp("", "")
 	_ = os.Chdir(tmp)
 	defer os.RemoveAll(tmp)
+
 	Init()
 
 	tests := map[string]struct {

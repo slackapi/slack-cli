@@ -22,7 +22,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -47,6 +46,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/internal/update"
@@ -222,6 +222,7 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 // TODO: consider using arguments for this function for certain dependencies, like working directory and other OS-specific strings, that OnInitialize above can provide during actual execution, but that we can override with test values for easier testing.
 func InitConfig(clients *shared.ClientFactory, rootCmd *cobra.Command) error {
 	ctx := rootCmd.Context()
+
 	// Get the current working directory (usually, but not always the project)
 	workingDirPath, err := clients.Os.Getwd()
 	if err != nil {
@@ -261,43 +262,35 @@ func InitConfig(clients *shared.ClientFactory, rootCmd *cobra.Command) error {
 	clients.Config.ApiHostResolved = clients.AuthInterface().ResolveApiHost(ctx, clients.Config.ApiHostFlag, nil)
 	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.ApiHostResolved, clients.CliVersion)
 
-	// TODO: should we store system ID in config or in context?
 	// Init System ID
 	if systemID, err := clients.Config.SystemConfig.InitSystemID(ctx); err != nil {
 		clients.IO.PrintDebug(ctx, "Error initializing user-level config system_id: %s", err.Error())
 	} else {
 		// Used by Logstash
+		// TODO(slackcontext) Consolidate storing SystemID to slackcontext
 		clients.Config.SystemID = systemID
-
 		// Used by OpenTracing
-		if span := opentracing.SpanFromContext(ctx); span != nil {
-			span.SetTag("system_id", clients.Config.SystemID)
-			ctx = opentracing.ContextWithSpan(ctx, span)
-		}
-
+		ctx = slackcontext.SetSystemID(ctx, systemID)
+		rootCmd.SetContext(ctx)
 		// Debug logging
 		clients.IO.PrintDebug(ctx, "system_id: %s", clients.Config.SystemID)
 	}
 
-	// TODO: should we store project ID in config or in context?
 	// Init Project ID, if current directory is a project
 	if projectID, _ := clients.Config.ProjectConfig.InitProjectID(ctx, false); projectID != "" {
 		// Used by Logstash
+		// TODO(slackcontext) Consolidate storing ProjectID to slackcontext
 		clients.Config.ProjectID = projectID
-
 		// Used by OpenTracing
-		if span := opentracing.SpanFromContext(ctx); span != nil {
-			span.SetTag("project_id", clients.Config.ProjectID)
-			ctx = opentracing.ContextWithSpan(ctx, span)
-		}
-
+		ctx = slackcontext.SetProjectID(ctx, projectID)
+		rootCmd.SetContext(ctx)
 		// Debug logging
 		clients.IO.PrintDebug(ctx, "project_id: %s", clients.Config.ProjectID)
 	}
 
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
-	// TODO: consolidate where we store CLI version; here are two locations, plus some code uses `contextutil.ContextFromVersion`, plus pkg/version/version
+	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
 	clients.Config.Version = clients.CliVersion
 
 	// The domain auths (token->domain) shouldn't change for the execution of the CLI so preload them into config!
@@ -334,10 +327,8 @@ func InitConfig(clients *shared.ClientFactory, rootCmd *cobra.Command) error {
 // listens for process interrupts and sends to IOStreams' GetInterruptChannel() for use in
 // in communicating process interrupts elsewhere in the code.
 func Execute(ctx context.Context, rootCmd *cobra.Command, clients *shared.ClientFactory) {
-	// TODO: ensure context is only used with setters and not with getters. After investigating, report:
-	// - internal/contextutil/contextutil.go has a `VersionFromContext` getter method which is used in various API methods when setting the user agent on HTTP requests, and when sending data up to logstash
-	// - internal/config/context.go has a variety of set and get methods related to app, token, team/enterprise/session/user/trace IDs, domains
 	ctx, cancel := context.WithCancel(ctx)
+
 	completedChan := make(chan bool, 1)      // completed is used for signalling an end to command
 	exitChan := make(chan bool, 1)           // exit blocks the command from exiting until completed
 	interruptChan := make(chan os.Signal, 1) // interrupt catches signals to avoid abrupt exits
@@ -366,6 +357,7 @@ func Execute(ctx context.Context, rootCmd *cobra.Command, clients *shared.Client
 			}()
 		case <-ctx.Done():
 			// No interrupt signal sent, command executed to completion
+			// FIXME - `.Done()` channel is triggered by `cancel()` and not a successfully completion
 		case <-completedChan:
 			// No canceled context, but command has completed execution
 			exitChan <- true

@@ -51,7 +51,7 @@ func NewEnvListCommand(clients *shared.ClientFactory) *cobra.Command {
 			return preRunEnvListCommandFunc(ctx, clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runEnvListCommandFunc(clients)
+			return runEnvListCommandFunc(clients, cmd)
 		},
 	}
 
@@ -74,8 +74,9 @@ func preRunEnvListCommandFunc(ctx context.Context, clients *shared.ClientFactory
 // runEnvListCommandFunc outputs environment variables for a selected app
 func runEnvListCommandFunc(
 	clients *shared.ClientFactory,
+	cmd *cobra.Command,
 ) error {
-	ctx := context.Background()
+	ctx := cmd.Context()
 
 	selection, err := teamAppSelectPromptFunc(
 		ctx,

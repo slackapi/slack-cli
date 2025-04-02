@@ -15,7 +15,6 @@
 package auth
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -23,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
@@ -68,7 +68,7 @@ func Test_AuthRevokeToken(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
 			fs := slackdeps.NewFsMock()

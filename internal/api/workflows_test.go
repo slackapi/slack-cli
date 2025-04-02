@@ -15,7 +15,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/require"
 )
 
@@ -114,6 +114,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +133,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
 			// execute
-			_, err := c.WorkflowsTriggersCreate(context.Background(), "token", tt.inputTrigger)
+			_, err := c.WorkflowsTriggersCreate(ctx, "token", tt.inputTrigger)
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -254,6 +255,7 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +274,7 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
 			// execute
-			_, err := c.WorkflowsTriggersUpdate(context.Background(), "token", tt.input)
+			_, err := c.WorkflowsTriggersUpdate(ctx, "token", tt.input)
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -311,6 +313,7 @@ func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
@@ -328,7 +331,7 @@ func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
 			// execute
-			err := c.WorkflowsTriggersDelete(context.Background(), "token", "FtABC")
+			err := c.WorkflowsTriggersDelete(ctx, "token", "FtABC")
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -425,6 +428,7 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: workflowsTriggersListMethod,
@@ -438,7 +442,7 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 				Limit:  tt.argsLimit,
 				Cursor: tt.argsCursor,
 			}
-			actual, _, err := c.WorkflowsTriggersList(context.Background(), tt.argsToken, args)
+			actual, _, err := c.WorkflowsTriggersList(ctx, tt.argsToken, args)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {

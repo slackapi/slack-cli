@@ -26,6 +26,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 )
@@ -62,12 +63,22 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 	// Added line break for each session
 	logger.Println("------------------------------------")
 
+	traceID, err := slackcontext.OpenTracingTraceID(ctx)
+	if err != nil {
+		return err
+	}
+
+	sessionID, err := slackcontext.SessionID(ctx)
+	if err != nil {
+		return err
+	}
+
 	// Log the Slack-CLI version, User's OS, SessionID, TraceID
 	// But format data before writing them to the log file
 	formatAndWriteDataToLogFile(logger, map[string]string{
 		"Command":               goutils.RedactPII(strings.Join(os.Args[0:], " ")),
-		"SessionID":             config.GetContextSessionID(ctx),
-		"Slack-CLI-TraceID":     config.GetContextTraceID(ctx),
+		"SessionID":             sessionID,
+		"Slack-CLI-TraceID":     traceID,
 		"Slack-CLI Version":     io.config.Version,
 		"Operating System (OS)": runtime.GOOS,
 		"System ID":             io.config.SystemID,

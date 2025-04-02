@@ -15,13 +15,13 @@
 package api
 
 import (
-	"context"
 	"image"
 	"image/color"
 	"image/png"
 	"math/rand"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -29,28 +29,31 @@ import (
 var imgFile = ".assets/icon.png"
 
 func TestClient_IconErrorIfMissingArgs(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: appIconMethod,
 	})
 	defer teardown()
-	_, err := c.Icon(context.Background(), fs, "token", "", "")
+	_, err := c.Icon(ctx, fs, "token", "", "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "missing required args")
 }
 
 func TestClient_IconErrorNoFile(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: appIconMethod,
 	})
 	defer teardown()
-	_, err := c.Icon(context.Background(), fs, "token", "12345", imgFile)
+	_, err := c.Icon(ctx, fs, "token", "12345", imgFile)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "file does not exist")
 }
 
 func TestClient_IconErrorWrongFile(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 	err := afero.WriteFile(fs, "test.txt", []byte("this is a text file"), 0666)
 	require.NoError(t, err)
@@ -58,12 +61,13 @@ func TestClient_IconErrorWrongFile(t *testing.T) {
 		ExpectedMethod: appIconMethod,
 	})
 	defer teardown()
-	_, err = c.Icon(context.Background(), fs, "token", "12345", "test.txt")
+	_, err = c.Icon(ctx, fs, "token", "12345", "test.txt")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "unknown format")
 }
 
 func TestClient_IconSuccess(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 
 	myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{100, 100}})
@@ -83,6 +87,6 @@ func TestClient_IconSuccess(t *testing.T) {
 		Response:       `{"ok":true}`,
 	})
 	defer teardown()
-	_, err = c.Icon(context.Background(), fs, "token", "12345", imgFile)
+	_, err = c.Icon(ctx, fs, "token", "12345", imgFile)
 	require.NoError(t, err)
 }
