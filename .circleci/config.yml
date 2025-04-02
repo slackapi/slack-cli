@@ -151,7 +151,7 @@ jobs:
       - run:
           name: Run GoReleaser. Without actually publishing.
           command: |
-            export LDFLAGS="-s -w -X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=$BUILD_VERSION'"
+            LDFLAGS="-s -w -X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=$BUILD_VERSION'"
             make LDFLAGS="$LDFLAGS" build-snapshot
       - run:
           name: Show binaries are generated correctly
