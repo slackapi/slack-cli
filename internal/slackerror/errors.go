@@ -812,13 +812,9 @@ Otherwise start your app for local development with: %s`,
 	},
 
 	ErrInvalidAppDirectory: {
-		Code:    ErrInvalidAppDirectory,
-		Message: "This is an invalid Slack app project directory",
-		Remediation: strings.Join([]string{
-			fmt.Sprintf("A valid Slack project includes the Slack hooks file: %s", filepath.Join(".slack", "hooks.json")),
-			"",
-			"If this is a Slack project, you can initialize it with " + style.Commandf("init", false),
-		}, "\n"),
+		Code:        ErrInvalidAppDirectory,
+		Message:     "This is an invalid Slack app project directory",
+		Remediation: fmt.Sprintf("A valid Slack project includes the Slack hooks file: %s", filepath.Join(".slack", "hooks.json")),
 	},
 
 	ErrInvalidAppFlag: {
@@ -1302,16 +1298,12 @@ Otherwise start your app for local development with: %s`,
 		Code:    ErrSDKHookNotFound,
 		Message: fmt.Sprintf("A script in %s was not found", style.Highlight(filepath.Join(".slack", "hooks.json"))),
 		Remediation: strings.Join([]string{
-			"Hook scripts are defined in one of these Slack hooks files:",
-			"- slack.json",
-			"- " + filepath.Join(".slack", "hooks.json"),
+			fmt.Sprintf("Hook scripts are defined in the Slack hooks file ('%s').", filepath.Join(".slack", "hooks.json")),
+			"Every app requires a Slack hooks file and you can find a working example at:",
 			"",
-			"Every app requires a Slack hooks file and you can find an example at:",
-			style.Highlight("https://github.com/slack-samples/deno-starter-template/blob/main/slack.json"),
+			style.Highlight("https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json"),
 			"",
-			"You can create a hooks file manually or with the " + style.Commandf("init", false) + " command.",
-			"",
-			"When manually creating the hooks file, you must install the hook dependencies.",
+			"After creating the hooks file, you must install related hook dependencies.",
 		}, "\n"),
 	},
 
