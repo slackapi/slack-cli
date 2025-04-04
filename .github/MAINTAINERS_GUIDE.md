@@ -688,7 +688,7 @@ definitions:
 - `semver:minor`: A change that requires a semver minor release.
 - `semver:patch`: A change that requires a semver patch release.
 - `server side issue`: An issue that exists on the Slack Platform, Slack API,
-  or other remote endpoint
+  or other remote endpoint.
 
 **Triage** is the process of taking new issues that aren't yet "seen" and
 marking them with a basic level of information with labels. An issue should have
