@@ -1,4 +1,4 @@
-# Slack CLI <img src="docs/assets/slack-cli-logo.svg" alt="Slack CLI logo" height="20px" />
+# Slack CLI <img src="docs/static/img/slack-cli-logo.svg" alt="Slack CLI logo" style="height: 1em; max-width: 100%" />
 
 [![tests](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/slackapi/slack-cli/branch/main/graph/badge.svg?token=G5TU59IV9I)](https://codecov.io/gh/slackapi/slack-cli)
