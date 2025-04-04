@@ -1,6 +1,5 @@
 # Project build files
 bin/
-docs/
 slack
 slack-cli
 hermes

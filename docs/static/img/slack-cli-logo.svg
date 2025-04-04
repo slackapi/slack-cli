@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg viewBox="0 0 99.62 99.62" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>.cls-1{fill:#f4b223;}.cls-2{fill:#fff;}</style>
+  </defs>
+  <g id="Layer_2" data-name="Layer 2">
+    <g id="Layer_1-2" data-name="Layer 1">
+      <rect class="cls-1" width="99.62" height="99.62" rx="14.69" style="fill: rgb(0, 0, 0);"/>
+      <polygon class="cls-2" points="33.09 37.3 13.96 37.3 33.09 9.75 33.09 37.3"/>
+      <polygon class="cls-2" points="33.09 37.3 33.09 64.84 52.21 37.3 33.09 37.3"/>
+      <text style="fill: rgb(255, 255, 255); font-family: &quot;Helvetica Neue&quot;; font-size: 20px; font-weight: 700; white-space: pre;" x="51.149" y="85.137">CLI</text>
+    </g>
+  </g>
+</svg>

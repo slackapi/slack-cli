@@ -26,6 +26,7 @@ header:
     - '**/*.json'
     - '**/*.md'
     - '**/*.tmpl'
+    - '**/*.svg'
     - 'dotgitignore'
     - 'go.sum'
     - 'go.mod'
