@@ -15,68 +15,91 @@
 package collaborators
 
 import (
-	"context"
+	"fmt"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/hooks"
+	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
-	"github.com/slackapi/slack-cli/test/testutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCollaboratorsCommand(t *testing.T) {
-	// Create mocks
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-
-	clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-
-	// Create clients that is mocked for testing
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	mockAuths := []types.SlackAuth{}
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return(mockAuths, nil)
-
-	// Create the command
-	cmd := NewCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	// Execute test
-	err := cmd.Execute()
-	if err != nil {
-		assert.Fail(t, "cmd.Execute had unexpected error")
+	tests := map[string]struct {
+		App           types.App
+		Collaborators []types.SlackUser
+	}{
+		"lists no collaborators if none exist": {
+			App: types.App{
+				AppID: "A001",
+			},
+			Collaborators: []types.SlackUser{},
+		},
+		"lists the collaborator if one exists": {
+			App: types.App{
+				AppID: "A002",
+			},
+			Collaborators: []types.SlackUser{
+				{
+					ID:             "USLACKBOT",
+					UserName:       "slackbot",
+					Email:          "bots@slack.com",
+					PermissionType: types.OWNER,
+				},
+			},
+		},
+		"lists all collaborators if many exist": {
+			App: types.App{
+				AppID: "A002",
+			},
+			Collaborators: []types.SlackUser{
+				{
+					ID:             "USLACKBOT",
+					UserName:       "slackbot",
+					Email:          "bots@slack.com",
+					PermissionType: types.OWNER,
+				},
+				{
+					ID:             "U00READER",
+					UserName:       "bookworm",
+					Email:          "reader@slack.com",
+					PermissionType: types.READER,
+				},
+			},
+		},
 	}
 
-	// Check result
-	clientsMock.ApiInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
-}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			appSelectMock := prompts.NewAppSelectMock()
+			teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
+			appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: tt.App, Auth: types.SlackAuth{}}, nil)
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
+				Return(tt.Collaborators, nil)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
+				clients.SDKConfig = hooks.NewSDKConfigMock()
+			})
 
-func TestCollaboratorsCommand_PrintSuccess(t *testing.T) {
-
-	// Setup
-
-	ctx := context.Background()
-	clientsMock := shared.NewClientsMock()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	// Execute tests
-
-	t.Run("Username will be used if present", func(t *testing.T) {
-		user := types.SlackUser{Email: "joe.smith@company.com", ID: "U1234", PermissionType: types.OWNER}
-		printSuccess(ctx, clients.IO, user, "added")
-		assert.Contains(t, clientsMock.GetStdoutOutput(), "joe.smith@company.com successfully added as an owner collaborator on this app")
-	})
-
-	t.Run("User has no email set; fall back on user ID", func(t *testing.T) {
-		user := types.SlackUser{ID: "U1234", PermissionType: types.OWNER}
-		printSuccess(ctx, clients.IO, user, "removed")
-		assert.Contains(t, clientsMock.GetStdoutOutput(), "\nU1234 successfully removed as an owner collaborator on this app\n\n")
-	})
-
-	t.Run("Reader-type collaborator", func(t *testing.T) {
-		user := types.SlackUser{Email: "joe.smith@company.com", ID: "U1234", PermissionType: types.READER}
-		printSuccess(ctx, clients.IO, user, "updated")
-		assert.Contains(t, clientsMock.GetStdoutOutput(), "\njoe.smith@company.com successfully updated as a reader collaborator on this app\n\n")
-	})
-
+			err := NewCommand(clients).Execute()
+			require.NoError(t, err)
+			clientsMock.ApiInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.App.AppID)
+			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListSuccess, mock.Anything)
+			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCount, []string{
+				fmt.Sprintf("%d", len(tt.Collaborators)),
+			})
+			for _, collaborator := range tt.Collaborators {
+				clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCollaborator, []string{
+					collaborator.ID,
+					collaborator.UserName,
+					collaborator.Email,
+					string(collaborator.PermissionType),
+				})
+			}
+		})
+	}
 }
