@@ -15,11 +15,13 @@
 package testutil
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -27,14 +29,14 @@ import (
 
 // CommandTests describes a single test case for a command.
 type CommandTests map[string]struct {
-	Setup                 func(*testing.T, *shared.ClientsMock, *shared.ClientFactory) // Optional
-	Teardown              func()                                                       // Optional
-	CmdArgs               []string                                                     // Required, Example: ["my-app", "--template", "slack-samples/deno-starter-template", "--verbose"]
-	ExpectedOutputs       []string                                                     // Optional
-	ExpectedStdoutOutputs []string                                                     // Optional
-	ExpectedAsserts       func(*testing.T, *shared.ClientsMock)                        // Optional
-	ExpectedError         error                                                        // Optional
-	ExpectedErrorStrings  []string                                                     // Optional
+	Setup                 func(*testing.T, context.Context, *shared.ClientsMock, *shared.ClientFactory) // Optional
+	Teardown              func()                                                                        // Optional
+	CmdArgs               []string                                                                      // Required, Example: ["my-app", "--template", "slack-samples/deno-starter-template", "--verbose"]
+	ExpectedOutputs       []string                                                                      // Optional
+	ExpectedStdoutOutputs []string                                                                      // Optional
+	ExpectedAsserts       func(*testing.T, *shared.ClientsMock)                                         // Optional
+	ExpectedError         error                                                                         // Optional
+	ExpectedErrorStrings  []string                                                                      // Optional
 }
 
 // TableTestCommand will run a table test collection defined by commandTests for a command created by newCommandFunc
@@ -42,6 +44,7 @@ func TableTestCommand(t *testing.T, commandTests CommandTests, newCommandFunc fu
 	for name, tt := range commandTests {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
+			ctxMock := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 
 			// Create clients that is mocked for testing
@@ -54,7 +57,7 @@ func TableTestCommand(t *testing.T, commandTests CommandTests, newCommandFunc fu
 
 			// Setup custom mocks (higher priority than default mocks)
 			if tt.Setup != nil {
-				tt.Setup(t, clientsMock, clients)
+				tt.Setup(t, ctxMock, clientsMock, clients)
 			}
 
 			// Setup default mock actions
@@ -62,7 +65,7 @@ func TableTestCommand(t *testing.T, commandTests CommandTests, newCommandFunc fu
 
 			// Execute the command
 			cmd.SetArgs(tt.CmdArgs)
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctxMock)
 
 			// Test failure mode
 			if tt.ExpectedError != nil || tt.ExpectedErrorStrings != nil {

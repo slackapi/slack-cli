@@ -39,7 +39,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to set access to app collaborators": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--app-collaborators"},
 			ExpectedOutputs: []string{fmt.Sprintf("Trigger '%s'", fakeTriggerID), "app collaborator"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -69,7 +69,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				"Trigger '%s'", fakeTriggerID),
 				"everyone in the workspace",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -99,7 +99,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				fmt.Sprintf("Trigger '%s'", fakeTriggerID),
 				"everyone in all workspaces in this org granted to this app",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdOrgApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -126,7 +126,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific users (previous access: app collaborators)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--users", "user1, user2", "--grant", "--include-app-collaborators=false"},
 			ExpectedOutputs: []string{"Users added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "these users", "USER1", "USER2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -158,7 +158,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific channels (previous access: app collaborators)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--channels", "channel1, channel2", "--grant", "--include-app-collaborators=false"},
 			ExpectedOutputs: []string{"Channels added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "all members of these channels", "CHANNEL1", "CHANNEL2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -189,7 +189,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific team (previous access: app collaborators)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workspaces", "team1", "--grant"},
 			ExpectedOutputs: []string{"Workspace added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "all members of this workspace", "TEAM1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -226,7 +226,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific teams with include-app-collaborators flag provided (previous access: app collaborators)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workspaces", "team1", "--grant", "--include-app-collaborators"},
 			ExpectedOutputs: []string{"Workspace added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "all members of this workspace", "TEAM1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -262,7 +262,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific users and channels (previous access: app collaborators)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--users", "user1, user2", "--channels", "channel1, channel2", "--grant"},
 			ExpectedOutputs: []string{"Users added", "Channels added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "these users", "all members of these channels", "USER1", "USER2", "CHANNEL1", "CHANNEL2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -312,7 +312,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific users (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--users", "USER2", "--grant"},
 			ExpectedOutputs: []string{"User added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "these users", "USER1", "USER2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -344,7 +344,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific channels (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--channels", "CHANNEL2", "--grant"},
 			ExpectedOutputs: []string{"Channel added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "all members of these channels", "CHANNEL1", "CHANNEL2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -376,7 +376,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to grant access to specific users, channels and workspaces (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--users", "user1, user2", "--channels", "channel2", "--workspaces", "team1", "--grant"},
 			ExpectedOutputs: []string{"Users added", "Channel added", fmt.Sprintf("Trigger '%s'", fakeTriggerID), "these users", "all members of these channels", "all members of this workspace", "USER1", "USER2", "CHANNEL1", "CHANNEL2", "TEAM1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -418,7 +418,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to revoke access from specific users (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--users", "USER2", "--revoke"},
 			ExpectedOutputs: []string{fmt.Sprintf("Trigger '%s'", fakeTriggerID), "this user", "USER1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -447,7 +447,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to revoke access from specific channels (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--channels", "CHANNEL2", "--revoke"},
 			ExpectedOutputs: []string{fmt.Sprintf("Trigger '%s'", fakeTriggerID), "all members of this channel", "CHANNEL1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -475,7 +475,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to revoke access from specific workspace (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workspaces", "TEAM2", "--revoke"},
 			ExpectedOutputs: []string{fmt.Sprintf("Trigger '%s'", fakeTriggerID), "all members of this workspace", "TEAM1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -503,7 +503,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"pass flags to revoke access from specific users and channels (previous access: named_entities)": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--users", "USER2", "--channels", "CHANNEL2", "--revoke"},
 			ExpectedOutputs: []string{fmt.Sprintf("Trigger '%s'", fakeTriggerID), "this user", "all members of this channel", "USER1", "CHANNEL1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
@@ -534,7 +534,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 		"set trigger ID through prompt": {
 			CmdArgs:         []string{"--everyone"},
 			ExpectedOutputs: []string{fmt.Sprintf("Trigger '%s'", fakeTriggerID), "everyone"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// trigger ID prompt lists available triggers, including current access
 				clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return(
@@ -578,7 +578,7 @@ func TestTriggersAccessCommand_AppSelection(t *testing.T) {
 		"select an non-installed app": {
 			CmdArgs:              []string{"--workflow", "#/workflows/my_workflow"},
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
 				require.NoError(t, err, "Cant write apps.json")

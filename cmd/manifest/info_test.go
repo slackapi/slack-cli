@@ -42,7 +42,7 @@ func TestInfoCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"errors when the source is project and app id is set": {
 			CmdArgs: []string{"--source", "local", "--app", "A0001"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			},
 			ExpectedError: slackerror.New(slackerror.ErrMismatchedFlags).
@@ -50,7 +50,7 @@ func TestInfoCommand(t *testing.T) {
 		},
 		"errors when the source is an unexpected value": {
 			CmdArgs: []string{"--source", "paper"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 				cm.HookExecutor.On("Execute", mock.Anything).Return("", nil)
 			},
@@ -59,7 +59,7 @@ func TestInfoCommand(t *testing.T) {
 		},
 		"gathers the --source local from the get-manifest hook": {
 			CmdArgs: []string{"--source", "local"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{
@@ -84,7 +84,7 @@ func TestInfoCommand(t *testing.T) {
 		},
 		"gathers the --source remote from the apps.manifest.export method": {
 			CmdArgs: []string{"--source", "remote"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt").Return(
@@ -114,8 +114,7 @@ func TestInfoCommand(t *testing.T) {
 			},
 		},
 		"gathers manifest.source from project configurations with the bolt experiment": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt").Return(
@@ -159,8 +158,7 @@ func TestInfoCommand(t *testing.T) {
 					fmt.Sprintf("Set \"manifest.source\" to \"%s\" in \"%s\" to continue", config.MANIFEST_SOURCE_LOCAL, filepath.Join(".slack", "config.json")),
 					fmt.Sprintf("Read about manifest sourcing with %s", style.Commandf("manifest info --help", false)),
 				}, "\n")),
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.IO.AddDefaultMocks()
 				cm.Os.AddDefaultMocks()

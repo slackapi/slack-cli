@@ -33,7 +33,7 @@ func TestSamplesCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"creates a template from a trusted sample": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				createPkg.GetSampleRepos = func(client createPkg.Sampler) ([]createPkg.GithubRepo, error) {
 					repos := []createPkg.GithubRepo{
 						{

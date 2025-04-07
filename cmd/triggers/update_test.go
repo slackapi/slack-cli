@@ -39,7 +39,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"with prompts": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"Trigger successfully updated!", fakeTriggerName, "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				clientsMock.AddDefaultMocks()
 				// Prompt for Trigger ID
@@ -75,7 +75,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"hosted app not installed": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
@@ -91,7 +91,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"local app not installed": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedErrorStrings: []string{cmdutil.LocalAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
@@ -107,7 +107,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"only pass --workflow and --trigger-id": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedOutputs: []string{"Trigger successfully updated!", fakeTriggerName, "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut")
@@ -143,7 +143,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"only pass --workflow and --trigger-id, with interactivity": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow", "--interactivity"},
 			ExpectedOutputs: []string{"Trigger successfully updated!", fakeTriggerName, "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut")
@@ -184,7 +184,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"only pass --workflow and --trigger-id, with interactivity and custom name": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow", "--interactivity", "--interactivity-name", "custom-interactivity"},
 			ExpectedOutputs: []string{"Trigger successfully updated!", fakeTriggerName, "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut")
@@ -225,7 +225,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"pass all shortcut parameters": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow", "--title", "unit tests", "--description", "are the best"},
 			ExpectedOutputs: []string{"Trigger successfully updated!", "unit tests", "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "unit tests", fakeAppID, "shortcut")
@@ -259,7 +259,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"api call fails": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedErrorStrings: []string{"invalid_auth"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				clientsMock.ApiInterface.On("WorkflowsTriggersUpdate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
@@ -274,7 +274,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"pass --trigger-def, scheduled trigger": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--trigger-def", "trigger_def.json"},
 			ExpectedOutputs: []string{"Trigger successfully updated!", "schedule"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "name", fakeAppID, "scheduled")
@@ -318,7 +318,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"--trigger-def, file missing": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--trigger-def", "foo.json"},
 			ExpectedErrorStrings: []string{"File not found"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -332,7 +332,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 		"--trigger-def, not json": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--trigger-def", "triggers/shortcut.ts"},
 			ExpectedErrorStrings: []string{"unexpected end of JSON"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				clientsMock.ApiInterface.On("WorkflowsTriggersUpdate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, nil)
 				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
@@ -404,7 +404,7 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 		"initial api call fails, missing interactivity, succeeds on retry": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedOutputs: []string{"Trigger successfully updated!"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				promptForInteractivityTeardown = setupMockUpdatePromptForInteractivity()
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
@@ -439,7 +439,7 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 		"initial api call fails, missing interactivity, fails on retry": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedErrorStrings: []string{"internal_error"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				promptForInteractivityTeardown = setupMockUpdatePromptForInteractivity()
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
@@ -470,7 +470,7 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 		"initial api call fails, missing a different type": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID, "--workflow", "#/workflows/my_workflow"},
 			ExpectedErrorStrings: []string{"invalid_trigger_inputs"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockUpdateAppSelection(installedProdApp)
 				promptForInteractivityTeardown = setupMockUpdatePromptForInteractivity()
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls

@@ -31,7 +31,7 @@ func TestUpdateCommand(t *testing.T) {
 		"given user ID, update a collaborator to be a reader": {
 			CmdArgs:         []string{"U123", "--permission-type", "reader"},
 			ExpectedOutputs: []string{"U123 successfully updated as a reader collaborator on this app"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -49,7 +49,7 @@ func TestUpdateCommand(t *testing.T) {
 		"given email, update a collaborator to be an owner": {
 			CmdArgs:         []string{"joe.smith@company.com", "--permission-type", "owner"},
 			ExpectedOutputs: []string{"joe.smith@company.com successfully updated as an owner collaborator on this app"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -67,7 +67,7 @@ func TestUpdateCommand(t *testing.T) {
 		"permission type must be specified": {
 			CmdArgs:         []string{"joe.smith@company.com"},
 			ExpectedOutputs: []string{"Specify a permission type for your collaborator"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
@@ -77,7 +77,7 @@ func TestUpdateCommand(t *testing.T) {
 		"user ID must be provided": {
 			CmdArgs:              []string{},
 			ExpectedErrorStrings: []string{"accepts 1 arg(s), received 0"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")

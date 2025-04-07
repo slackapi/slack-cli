@@ -47,7 +47,7 @@ func TestAppsUninstall(t *testing.T) {
 
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"Successfully uninstall": {
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				prepareCommonUninstallMocks(clients, clientsMock)
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
@@ -57,7 +57,7 @@ func TestAppsUninstall(t *testing.T) {
 			},
 		},
 		"Successfully uninstall with a get-manifest hook error": {
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				prepareCommonUninstallMocks(clients, clientsMock)
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
@@ -72,7 +72,7 @@ func TestAppsUninstall(t *testing.T) {
 		},
 		"Fail to uninstall due to API error": {
 			ExpectedError: slackerror.New("something went wrong"),
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				prepareCommonUninstallMocks(clients, clientsMock)
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(slackerror.New("something went wrong")).Once()
@@ -81,7 +81,7 @@ func TestAppsUninstall(t *testing.T) {
 		"errors if authentication for the team is missing": {
 			CmdArgs:       []string{},
 			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareCommonUninstallMocks(cf, cm)
 				appSelectMock := prompts.NewAppSelectMock()
 				uninstallAppSelectPromptFunc = appSelectMock.AppSelectPrompt

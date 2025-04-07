@@ -37,7 +37,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 		"no params; use prompts to successfully delete": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
 				clientsMock.AddDefaultMocks()
 				// promptForTriggerID lists available triggers
@@ -53,7 +53,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 		"app not installed": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID},
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockDeleteAppSelection(newProdApp)
 				clientsMock.AddDefaultMocks()
 			},
@@ -64,7 +64,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 		"pass --trigger-id, success": {
 			CmdArgs:         []string{"--trigger-id", fakeTriggerID},
 			ExpectedOutputs: []string{"Trigger '" + fakeTriggerID + "' deleted"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
 				clientsMock.ApiInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
@@ -84,7 +84,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 		"pass --trigger-id, failure": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID},
 			ExpectedErrorStrings: []string{"invalid_auth"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
 				clientsMock.ApiInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
@@ -112,7 +112,7 @@ func TestTriggersDeleteCommand_AppSelection(t *testing.T) {
 		"selection error": {
 			CmdArgs:              []string{"--trigger-id", "Ft01435GGLBD"},
 			ExpectedErrorStrings: []string{"selection error"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
 				appSelectMock := prompts.NewAppSelectMock()
@@ -126,7 +126,7 @@ func TestTriggersDeleteCommand_AppSelection(t *testing.T) {
 		"select a non-installed local app": {
 			CmdArgs:              []string{"--trigger-id", "Ft01435GGLBD"},
 			ExpectedErrorStrings: []string{cmdutil.LocalAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
@@ -142,7 +142,7 @@ func TestTriggersDeleteCommand_AppSelection(t *testing.T) {
 		"select a non-installed prod app": {
 			CmdArgs:              []string{"--trigger-id", "Ft01435GGLBD"},
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance

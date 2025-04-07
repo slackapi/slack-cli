@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -34,7 +35,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"logout of all teams": {
 			CmdArgs: []string{"--all"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
@@ -58,7 +59,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"logout of single team by named domain via flag": {
 			CmdArgs: []string{"--team", "team1"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
@@ -82,7 +83,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"logout of single team by id via flag": {
 			CmdArgs: []string{"--team", "T2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -114,7 +115,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"require a known team value is used in flag": {
 			CmdArgs: []string{"--team", "randomteamdomain"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clientsFactory *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("team"),
@@ -131,7 +132,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"logout of a workspace by prompt": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
@@ -159,7 +160,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"automatically logout of the only available workspace available": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
@@ -179,7 +180,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"verify the only available auth matches a team flag": {
 			CmdArgs: []string{"--team", "anotherteam"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					fakeAuthsByTeamSlice[0],
 				}, nil)
@@ -198,7 +199,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"confirm authorizations are revoked if none exist": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"All authorizations successfully revoked"},
@@ -209,7 +210,7 @@ func TestLogoutCommand(t *testing.T) {
 		},
 		"error if a team flag is provided without auths": {
 			CmdArgs: []string{"--team", "someteam"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{}, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("team"),

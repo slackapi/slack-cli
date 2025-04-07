@@ -15,6 +15,7 @@
 package openformresponse
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -35,7 +36,7 @@ func TestExportCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"missing --workflow": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 			},
 			Teardown: func() {
@@ -46,7 +47,7 @@ func TestExportCommand(t *testing.T) {
 		"with --step-id, API succeeds": {
 			CmdArgs:         []string{"--workflow", "#/workflows/my_workflow", "--step-id", "stepId"},
 			ExpectedOutputs: []string{"Slackbot will DM you with a CSV file once it's ready"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				cm.ApiInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
@@ -60,7 +61,7 @@ func TestExportCommand(t *testing.T) {
 		"with --step-id, API fails": {
 			CmdArgs:              []string{"--workflow", "#/workflows/my_workflow", "--step-id", "stepId"},
 			ExpectedErrorStrings: []string{"failed"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				cm.ApiInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("failed"))
 			},
