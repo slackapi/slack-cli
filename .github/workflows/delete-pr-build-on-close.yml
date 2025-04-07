@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           # Figure out tag name from branch name. This is coupled to the tag name generation that exists in .circleci/config.yml's `create-github-release` job.
-          RELEASES=$(gh release list --repo="slackapi/slack-cli" --order="desc" --json="tagName" --exclude-drafts --exclude-pre-releases --limit=6 --jq ".[] | .tagName")
+          RELEASES=$(gh release list --repo="slackapi/slack-cli" --order="desc" --json="tagName" --exclude-drafts --exclude-pre-releases --limit=24 --jq ".[] | .tagName")
           for TAGS in $RELEASES; do
             TAG_NAME="${TAGS}-${{ github.event.ref }}"
             echo "Identified pre-release tagname to 🔪: $TAG_NAME"
