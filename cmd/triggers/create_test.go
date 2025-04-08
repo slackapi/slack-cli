@@ -70,7 +70,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -101,7 +101,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -132,7 +132,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -168,7 +168,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -200,7 +200,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -221,7 +221,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				jsonPayload := `{
 								"type":"scheduled",
@@ -257,7 +257,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				clientsMock.HookExecutor.On("Execute", mock.Anything).Return("", nil)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -276,7 +276,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				clientsMock.HookExecutor.On("Execute", mock.Anything).Return(`{}`, nil)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				var content = `export default {}`
 				err = afero.WriteFile(clients.Fs, "triggers/shortcut.ts", []byte(content), 0600)
@@ -298,7 +298,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				var content = `export default {}`
 				err = afero.WriteFile(clients.Fs, "triggers/shortcut.ts", []byte(content), 0600)
@@ -373,7 +373,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
@@ -404,7 +404,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs).Return(types.DeployedTrigger{}, errors.New("internal_error")).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
@@ -433,7 +433,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, extendedErr)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
@@ -490,7 +490,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 					workspaceInstallAppFunc = originalWorkspaceInstallAppFunc
 				}
 				appCommandMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(context.Background(), types.SUCCESS, newDevApp.App, nil)
+					Return(ctx, types.SUCCESS, newDevApp.App, nil)
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, nil)
 				// Define default mocks
@@ -518,7 +518,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 					workspaceInstallAppFunc = originalWorkspaceInstallAppFunc
 				}
 				appCommandMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(context.Background(), types.SUCCESS, newDevApp.App, nil)
+					Return(ctx, types.SUCCESS, newDevApp.App, nil)
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, nil)
 				// Define default mocks

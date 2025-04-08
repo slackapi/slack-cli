@@ -71,7 +71,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -89,7 +89,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -130,7 +130,7 @@ func TestTriggersDeleteCommand_AppSelection(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 
 				appSelectTeardown = setupMockDeleteAppSelection(newDevApp)
@@ -146,7 +146,7 @@ func TestTriggersDeleteCommand_AppSelection(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 
 				appSelectTeardown = setupMockDeleteAppSelection(newProdApp)

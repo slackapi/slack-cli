@@ -163,7 +163,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedOutputs: []string{},
@@ -198,7 +198,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedOutputs: []string{},
@@ -231,7 +231,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedOutputs: []string{},
@@ -264,7 +264,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
@@ -289,7 +289,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedErrorStrings: []string{"test error"},

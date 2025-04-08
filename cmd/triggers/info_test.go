@@ -83,7 +83,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.EVERYONE, []string{}, nil).Once()
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -108,7 +108,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.EVERYONE, []string{}, nil).Once()
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -126,7 +126,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -146,7 +146,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.EVERYONE, []string{}, nil).Once()
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -197,7 +197,7 @@ func TestTriggersInfoCommand_AppSelection(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 
 				appSelectTeardown = setupMockInfoAppSelection(newDevApp)
@@ -213,7 +213,7 @@ func TestTriggersInfoCommand_AppSelection(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 
 				appSelectTeardown = setupMockInfoAppSelection(newProdApp)
