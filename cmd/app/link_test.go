@@ -303,7 +303,7 @@ func Test_Apps_Link(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, expectedApp, actualApp)
 				unsavedApp, err := cm.AppClient.GetLocal(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
 				require.NoError(t, err)
