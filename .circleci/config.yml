@@ -151,8 +151,8 @@ jobs:
       - run:
           name: Run GoReleaser. Without actually publishing.
           command: |
-            export LDFLAGS="-s -w -X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=$BUILD_VERSION'"
-            make build-snapshot
+            LDFLAGS="-s -w -X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=$BUILD_VERSION'"
+            make LDFLAGS="$LDFLAGS" build-snapshot
       - run:
           name: Show binaries are generated correctly
           command: ls -R ./dist
@@ -313,10 +313,10 @@ jobs:
               echo "Overwriting existing GitHub Release data; generating pre-release notes ..."
               LAST_SEMVER_TAG=$(git describe --tags --match 'v*.*.*' --abbrev=0 | cut -d"-" -f1)
               # When generating release notes, setting the target tag_name property to an existing tag has GitHub ignore the target_commitish property
-              # So, set it to some non-existent tag name for release-note-generating purposes.
+              # So, set the tag name to the target commit to generate release notes from the last semver tag to the target commit
               # See https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#generate-release-notes-content-for-a-release--parameters
               # Note the following _does not change releases or tags_ - it only creates release notes, just like clicking "Generate Release Notes" on the GitHub Releases page.
-              CHANGELOG=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/slackapi/slack-cli/releases/generate-notes -d "{\"tag_name\":\"does-not-exist\",\"target_commitish\":\"${TARGET}\",\"previous_tag_name\":\"${LAST_SEMVER_TAG}\"}" | jq .body)
+              CHANGELOG=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/slackapi/slack-cli/releases/generate-notes -d "{\"tag_name\":\"${TARGET}\",\"target_commitish\":\"${TARGET}\",\"previous_tag_name\":\"${LAST_SEMVER_TAG}\"}" | jq .body)
               echo "Will use release notes: ${CHANGELOG}"
               BODY+="\"body\":$CHANGELOG}"
               echo "Updating existing GitHub pre-release ${RELEASE_ID} with ${BODY}"

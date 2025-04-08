@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+set -eo
 
 # USAGE:
 #   ./scripts/archive.sh <artifact path> <release version>
@@ -30,7 +30,6 @@
 #   extracting it and looking for `bin/slack`
 #   Linux archive is generated directorily from original binary,
 #   the  script will check if `bin/slack` for Linux exits or not first
-
 
 DIST_DIR=${1}
 
@@ -82,10 +81,10 @@ main() {
     tar -zxvf "$macos_dev_targz_file_path" -C "$mac_targz_dir_path"
 
     if [ $(command -v "$mac_targz_dir_path/bin/slack") ]; then
-      echo "-> Found bin/slack"
-      rm -R "$mac_targz_dir_path"
+        echo "-> Found bin/slack"
+        rm -R "$mac_targz_dir_path"
     else
-      echo "-> Missing development bin/slack"
+        echo "-> Missing development bin/slack"
     fi
 
     echo "-> Testing macOs production tar.gz file..."
@@ -93,10 +92,10 @@ main() {
     tar -zxvf "$macos_prod_targz_file_path" -C "$mac_targz_dir_path"
 
     if [ $(command -v "$mac_targz_dir_path/bin/slack") ]; then
-      echo "-> Found bin/slack"
-      rm -R "$mac_targz_dir_path"
+        echo "-> Found bin/slack"
+        rm -R "$mac_targz_dir_path"
     else
-      echo "-> Missing production bin/slack"
+        echo "-> Missing production bin/slack"
     fi
 
     echo "-> Everything looks good!"
@@ -109,10 +108,10 @@ main() {
     linux_prod_targz_file_path="$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
 
     if [ -f "$linux_src_file_path" ]; then
-      echo "-> Found linux binary archive"
+        echo "-> Found linux binary archive"
     else
-      echo "-> Missing linux binary archive"
-      exit
+        echo "-> Missing linux binary archive"
+        exit
     fi
 
     echo "-> Creating development Linux tar.gz file: $linux_dev_targz_file_path"
