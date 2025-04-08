@@ -27,8 +27,8 @@ import (
 	"runtime"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/contextutil"
 	"github.com/slackapi/slack-cli/internal/image"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 )
@@ -115,7 +115,10 @@ func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePa
 	}
 	request.Header.Add("Content-Type", writer.FormDataContentType())
 	request.Header.Add("Authorization", "Bearer "+token)
-	cliVersion := contextutil.VersionFromContext(ctx)
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return IconResult{}, err
+	}
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	request.Header.Add("User-Agent", userAgent)
 

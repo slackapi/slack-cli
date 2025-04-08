@@ -30,9 +30,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/contextutil"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/uber/jaeger-client-go"
@@ -114,7 +114,11 @@ func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.V
 	if err != nil {
 		return nil, err
 	}
-	cliVersion := contextutil.VersionFromContext(ctx)
+
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 
 	request.Header.Add("content-type", "application/x-www-form-urlencoded")
@@ -162,9 +166,11 @@ func (c *Client) postJSON(ctx context.Context, endpoint, token string, cookie st
 		request.Header.Add("Authorization", "Bearer "+token)
 	}
 
-	cliVersion := contextutil.VersionFromContext(ctx)
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
-
 	request.Header.Add("User-Agent", userAgent)
 	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
 		request.Header.Add("x-b3-sampled", "0")
@@ -213,7 +219,10 @@ func (c *Client) get(ctx context.Context, endpoint, token string, cookie string)
 		request.Header.Add("Authorization", "Bearer "+token)
 	}
 
-	cliVersion := contextutil.VersionFromContext(ctx)
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 
 	request.Header.Add("User-Agent", userAgent)

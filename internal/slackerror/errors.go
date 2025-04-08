@@ -81,6 +81,7 @@ const (
 	ErrCommentRequired                               = "comment_required"
 	ErrConnectedOrgDenied                            = "connected_org_denied"
 	ErrConnectedTeamDenied                           = "connected_team_denied"
+	ErrContextValueNotFound                          = "context_value_not_found"
 	ErrCredentialsNotFound                           = "credentials_not_found"
 	ErrCustomizableInputMissingMatchingWorkflowInput = "customizable_input_missing_matching_workflow_input"
 	ErrCustomizableInputsNotAllowedOnOptionalInputs  = "customizable_inputs_not_allowed_on_optional_inputs"
@@ -593,6 +594,11 @@ Otherwise start your app for local development with: %s`,
 	ErrConnectedTeamDenied: {
 		Code:    ErrConnectedTeamDenied,
 		Message: "The admin does not allow connected teams to be named_entities",
+	},
+
+	ErrContextValueNotFound: {
+		Code:    ErrContextValueNotFound,
+		Message: "The context value could not be found",
 	},
 
 	ErrCredentialsNotFound: {

@@ -16,42 +16,15 @@ package config
 
 import (
 	"context"
-
-	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
 type contextKey string
 
-const CONTEXT_ENV contextKey = "env"
 const CONTEXT_TOKEN contextKey = "token"
 const CONTEXT_TEAM_ID contextKey = "team_id"
 const CONTEXT_TEAM_DOMAIN contextKey = "team_domain" // e.g. "subarachnoid"
 const CONTEXT_USER_ID contextKey = "user_id"
-const CONTEXT_SESSION_ID contextKey = "session_id"
 const CONTEXT_ENTERPRISE_ID contextKey = "enterprise_id"
-const CONTEXT_TRACE_ID contextKey = "trace_id"
-
-// SetContextApp sets the app on the context
-//
-// [LEGACY] Please do not use and prefer to
-// directly pass the app to methods which require
-// an app if possible.
-func SetContextApp(ctx context.Context, app types.App) context.Context {
-	return context.WithValue(ctx, CONTEXT_ENV, app)
-}
-
-// GetContextApp gets an app from the context
-//
-// [LEGACY] Please do not use and prefer to
-// directly pass the app to methods which require
-// an app if possible.
-func GetContextApp(ctx context.Context) types.App {
-	app, ok := ctx.Value(CONTEXT_ENV).(types.App)
-	if !ok {
-		return types.App{}
-	}
-	return app
-}
 
 func SetContextToken(ctx context.Context, token string) context.Context {
 	return context.WithValue(ctx, CONTEXT_TOKEN, token)
@@ -110,28 +83,4 @@ func GetContextUserID(ctx context.Context) string {
 		return ""
 	}
 	return userID
-}
-
-func GetContextSessionID(ctx context.Context) string {
-	sessionID, ok := ctx.Value(CONTEXT_SESSION_ID).(string)
-	if !ok {
-		return ""
-	}
-	return sessionID
-}
-
-func SetContextSessionID(ctx context.Context, sessionID string) context.Context {
-	return context.WithValue(ctx, CONTEXT_SESSION_ID, sessionID)
-}
-
-func SetContextTraceID(ctx context.Context, traceID string) context.Context {
-	return context.WithValue(ctx, CONTEXT_TRACE_ID, traceID)
-}
-
-func GetContextTraceID(ctx context.Context) string {
-	traceID, ok := ctx.Value(CONTEXT_TRACE_ID).(string)
-	if !ok {
-		return ""
-	}
-	return traceID
 }

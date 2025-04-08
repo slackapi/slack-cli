@@ -15,13 +15,13 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/require"
 )
 
@@ -63,6 +63,8 @@ func Test_API_TeamInfoResponse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup HTTP test server
 			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				json := tt.httpResponseJSON
@@ -74,7 +76,7 @@ func Test_API_TeamInfoResponse(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			actual, err := apiClient.TeamsInfo(context.Background(), tt.argsToken, tt.argsTeamID)
+			actual, err := apiClient.TeamsInfo(ctx, tt.argsToken, tt.argsTeamID)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {

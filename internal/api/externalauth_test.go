@@ -15,13 +15,13 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/require"
 )
 
@@ -66,6 +66,8 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup HTTP test server
 			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				json := tt.httpResponseJSON
@@ -77,7 +79,7 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			authorizationURL, err := apiClient.AppsAuthExternalStart(context.Background(), tt.argsToken, tt.argsAppID, tt.argsProviderKey)
+			authorizationURL, err := apiClient.AppsAuthExternalStart(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey)
 
 			// Assertions
 			require.Equal(t, tt.expectedAuthorizationURL, authorizationURL)
@@ -127,6 +129,8 @@ func Test_API_AppsAuthExternalRemove(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup HTTP test server
 			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				json := tt.httpResponseJSON
@@ -138,7 +142,7 @@ func Test_API_AppsAuthExternalRemove(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			err := apiClient.AppsAuthExternalDelete(context.Background(), tt.argsToken, tt.argsAppID, tt.argsProviderKey, "")
+			err := apiClient.AppsAuthExternalDelete(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, "")
 
 			// Assertions
 			if tt.expectedErrorContains == "" {
@@ -190,6 +194,8 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup HTTP test server
 			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				json := tt.httpResponseJSON
@@ -201,7 +207,7 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			err := apiClient.AppsAuthExternalClientSecretAdd(context.Background(), tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsClientSecret)
+			err := apiClient.AppsAuthExternalClientSecretAdd(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsClientSecret)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {
@@ -367,6 +373,8 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup HTTP test server
 			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				json := tt.httpResponseJSON
@@ -378,7 +386,7 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			actual, err := apiClient.AppsAuthExternalList(context.Background(), tt.argsToken, tt.argsAppID, false /*include_workflows flag to return workflow auth info*/)
+			actual, err := apiClient.AppsAuthExternalList(ctx, tt.argsToken, tt.argsAppID, false /*include_workflows flag to return workflow auth info*/)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {
@@ -438,6 +446,8 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup HTTP test server
 			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				json := tt.httpResponseJSON
@@ -449,7 +459,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			err := apiClient.AppsAuthExternalSelectAuth(context.Background(), tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowId, tt.argsExternalTokenId)
+			err := apiClient.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowId, tt.argsExternalTokenId)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {

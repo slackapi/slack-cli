@@ -15,7 +15,6 @@
 package api
 
 import (
-	"context"
 	"io"
 	"mime"
 	"mime/multipart"
@@ -23,11 +22,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
 
 func TestClient_UploadPackageToS3(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 	err := afero.WriteFile(fs, "foo.txt", []byte("this is the package"), 0666)
 	require.NoError(t, err)
@@ -87,7 +88,7 @@ func TestClient_UploadPackageToS3(t *testing.T) {
 			AmzToken:          token,
 		},
 	}
-	resp, err := client.UploadPackageToS3(context.Background(), fs, "appID", s3Params, "foo.txt")
+	resp, err := client.UploadPackageToS3(ctx, fs, "appID", s3Params, "foo.txt")
 	require.NoError(t, err)
 	require.Equal(t, "foo.txt", resp)
 }

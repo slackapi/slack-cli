@@ -27,7 +27,7 @@ import (
 	"runtime"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/contextutil"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 )
@@ -106,7 +106,10 @@ func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID strin
 	}
 	request.Header.Add("Content-Type", writer.FormDataContentType())
 	request.Header.Add("Content-MD5", md5s)
-	cliVersion := contextutil.VersionFromContext(ctx)
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return fileName, err
+	}
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	request.Header.Add("User-Agent", userAgent)
 

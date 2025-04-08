@@ -15,10 +15,10 @@
 package api
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,6 +90,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
@@ -101,7 +102,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 			// execute
 			if tt.users != "" {
-				_, err := c.TriggerPermissionsSet(context.Background(), fakeToken, fakeTriggerID, tt.users, tt.permissionType, "users")
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.users, tt.permissionType, "users")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -117,7 +118,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 					)
 				}
 			} else if tt.channels != "" {
-				_, err := c.TriggerPermissionsSet(context.Background(), fakeToken, fakeTriggerID, tt.channels, tt.permissionType, "channels")
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.channels, tt.permissionType, "channels")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -133,7 +134,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 					)
 				}
 			} else if tt.workspaces != "" {
-				_, err := c.TriggerPermissionsSet(context.Background(), fakeToken, fakeTriggerID, tt.workspaces, tt.permissionType, "workspaces")
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.workspaces, tt.permissionType, "workspaces")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -149,7 +150,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 					)
 				}
 			} else if tt.organizations != "" {
-				_, err := c.TriggerPermissionsSet(context.Background(), fakeToken, fakeTriggerID, tt.organizations, tt.permissionType, "organizations")
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.organizations, tt.permissionType, "organizations")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -169,7 +170,8 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 	}
 
 	verifyCommonErrorCases(t, workflowsTriggersPermissionsSetMethod, func(c *Client) error {
-		_, err := c.TriggerPermissionsSet(context.Background(), "xoxp-123", "Ft123", "user1", types.APP_COLLABORATORS, "users")
+		ctx := slackcontext.MockContext(t.Context())
+		_, err := c.TriggerPermissionsSet(ctx, "xoxp-123", "Ft123", "user1", types.APP_COLLABORATORS, "users")
 		return err
 	})
 }
@@ -223,6 +225,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
@@ -234,7 +237,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 
 			// execute
 			if tt.users != "" {
-				err := c.TriggerPermissionsAddEntities(context.Background(), fakeToken, fakeTriggerID, tt.users, "users")
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.users, "users")
 				// check
 				if (err != nil) != tt.wantErr {
 					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
@@ -249,7 +252,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 					)
 				}
 			} else if tt.channels != "" {
-				err := c.TriggerPermissionsAddEntities(context.Background(), fakeToken, fakeTriggerID, tt.channels, "channels")
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.channels, "channels")
 				// check
 				if (err != nil) != tt.wantErr {
 					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
@@ -264,7 +267,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 					)
 				}
 			} else if tt.workspaces != "" {
-				err := c.TriggerPermissionsAddEntities(context.Background(), fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
 				// check
 				if (err != nil) != tt.wantErr {
 					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
@@ -279,7 +282,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 					)
 				}
 			} else if tt.organizations != "" {
-				err := c.TriggerPermissionsAddEntities(context.Background(), fakeToken, fakeTriggerID, tt.organizations, "organizations")
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.organizations, "organizations")
 				// check
 				if (err != nil) != tt.wantErr {
 					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
@@ -299,7 +302,8 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 	}
 
 	verifyCommonErrorCases(t, workflowsTriggersPermissionsAddMethod, func(c *Client) error {
-		return c.TriggerPermissionsAddEntities(context.Background(), "xoxp-123", "Ft123", "user1", "users")
+		ctx := slackcontext.MockContext(t.Context())
+		return c.TriggerPermissionsAddEntities(ctx, "xoxp-123", "Ft123", "user1", "users")
 	})
 }
 
@@ -352,6 +356,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
@@ -363,7 +368,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 			// execute
 			if tt.users != "" {
-				err := c.TriggerPermissionsRemoveEntities(context.Background(), fakeToken, fakeTriggerID, tt.users, "users")
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.users, "users")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -379,7 +384,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 					)
 				}
 			} else if tt.channels != "" {
-				err := c.TriggerPermissionsRemoveEntities(context.Background(), fakeToken, fakeTriggerID, tt.channels, "channels")
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.channels, "channels")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -395,7 +400,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 					)
 				}
 			} else if tt.workspaces != "" {
-				err := c.TriggerPermissionsRemoveEntities(context.Background(), fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -411,7 +416,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 					)
 				}
 			} else if tt.organizations != "" {
-				err := c.TriggerPermissionsRemoveEntities(context.Background(), fakeToken, fakeTriggerID, tt.organizations, "organizations")
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.organizations, "organizations")
 
 				// check
 				if (err != nil) != tt.wantErr {
@@ -431,7 +436,8 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 	}
 
 	verifyCommonErrorCases(t, workflowsTriggersPermissionsRemoveMethod, func(c *Client) error {
-		return c.TriggerPermissionsRemoveEntities(context.Background(), "xoxp-123", "Ft123", "user1", "users")
+		ctx := slackcontext.MockContext(t.Context())
+		return c.TriggerPermissionsRemoveEntities(ctx, "xoxp-123", "Ft123", "user1", "users")
 	})
 }
 
@@ -504,6 +510,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
@@ -515,7 +522,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 			// execute
 			if len(tt.expectedUsers) != 0 {
-				actualType, actualUsers, err := c.TriggerPermissionsList(context.Background(), fakeToken, fakeTriggerID)
+				actualType, actualUsers, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
 				require.Equal(t, tt.expectedPermissionType, actualType)
 				require.Equal(t, tt.expectedUsers, actualUsers)
 
@@ -533,7 +540,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 					)
 				}
 			} else if len(tt.expectedChannels) != 0 {
-				actualType, actualChannels, err := c.TriggerPermissionsList(context.Background(), fakeToken, fakeTriggerID)
+				actualType, actualChannels, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
 				require.Equal(t, tt.expectedPermissionType, actualType)
 				require.Equal(t, tt.expectedChannels, actualChannels)
 
@@ -551,7 +558,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 					)
 				}
 			} else if len(tt.expectedWorkspaces) != 0 {
-				actualType, actualWorkspaces, err := c.TriggerPermissionsList(context.Background(), fakeToken, fakeTriggerID)
+				actualType, actualWorkspaces, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
 				require.Equal(t, tt.expectedPermissionType, actualType)
 				require.Equal(t, tt.expectedWorkspaces, actualWorkspaces)
 
@@ -569,7 +576,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 					)
 				}
 			} else if len(tt.expectedOrganizations) != 0 {
-				actualType, actualOrganizations, err := c.TriggerPermissionsList(context.Background(), fakeToken, fakeTriggerID)
+				actualType, actualOrganizations, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
 				require.Equal(t, tt.expectedPermissionType, actualType)
 				require.Equal(t, tt.expectedOrganizations, actualOrganizations)
 
@@ -591,7 +598,8 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 	}
 
 	verifyCommonErrorCases(t, workflowsTriggersPermissionsListMethod, func(c *Client) error {
-		_, _, err := c.TriggerPermissionsList(context.Background(), "xoxp-123", "Ft123")
+		ctx := slackcontext.MockContext(t.Context())
+		_, _, err := c.TriggerPermissionsList(ctx, "xoxp-123", "Ft123")
 		return err
 	})
 }

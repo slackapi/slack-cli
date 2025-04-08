@@ -15,10 +15,10 @@
 package api
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/require"
 )
@@ -28,11 +28,12 @@ var fakeResult = `{"ok":true,
 }`
 
 func Test_ApiClient_ActivityErrorsIfAppIdIsEmpty(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: appActivityMethod,
 	})
 	defer teardown()
-	_, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	_, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId: "",
 	})
 	require.Error(t, err)
@@ -40,13 +41,14 @@ func Test_ApiClient_ActivityErrorsIfAppIdIsEmpty(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityBasicSuccessfulGET(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId: "A123",
 	})
 	require.NoError(t, err)
@@ -54,13 +56,14 @@ func Test_ApiClient_ActivityBasicSuccessfulGET(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityEventType(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&log_event_type=silly",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:     "A123",
 		EventType: "silly",
 	})
@@ -69,13 +72,14 @@ func Test_ApiClient_ActivityEventType(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityLogLevel(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&min_log_level=silly",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:           "A123",
 		MinimumLogLevel: "silly",
 	})
@@ -84,13 +88,14 @@ func Test_ApiClient_ActivityLogLevel(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityMinDateCreated(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&min_date_created=1337",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:              "A123",
 		MinimumDateCreated: 1337,
 	})
@@ -99,13 +104,14 @@ func Test_ApiClient_ActivityMinDateCreated(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityComponentType(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&component_type=defirbulator",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:         "A123",
 		ComponentType: "defirbulator",
 	})
@@ -114,13 +120,14 @@ func Test_ApiClient_ActivityComponentType(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityComponentId(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&component_id=raspberry",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:       "A123",
 		ComponentId: "raspberry",
 	})
@@ -129,13 +136,14 @@ func Test_ApiClient_ActivityComponentId(t *testing.T) {
 }
 
 func Test_ApiClient_ActivitySource(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&source=beer",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:  "A123",
 		Source: "beer",
 	})
@@ -144,13 +152,14 @@ func Test_ApiClient_ActivitySource(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityTraceId(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123&limit=0&trace_id=stealth",
 		Response:            fakeResult,
 	})
 	defer teardown()
-	result, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	result, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId:   "A123",
 		TraceId: "stealth",
 	})
@@ -159,13 +168,14 @@ func Test_ApiClient_ActivityTraceId(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityResponseNotOK(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123",
 		Response:            `{"ok":false, "error": "internal_error"}`,
 	})
 	defer teardown()
-	_, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	_, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId: "A123",
 	})
 	require.Error(t, err)
@@ -173,13 +183,14 @@ func Test_ApiClient_ActivityResponseNotOK(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityInvalidResponse(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123",
 		Response:            `badjson`,
 	})
 	defer teardown()
-	_, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	_, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId: "A123",
 	})
 	require.Error(t, err)
@@ -187,13 +198,14 @@ func Test_ApiClient_ActivityInvalidResponse(t *testing.T) {
 }
 
 func Test_ApiClient_ActivityInvalidJSON(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
 		ExpectedQuerystring: "app_id=A123",
 		Response:            `badtime`,
 	})
 	defer teardown()
-	_, err := c.Activity(context.Background(), "token", types.ActivityRequest{
+	_, err := c.Activity(ctx, "token", types.ActivityRequest{
 		AppId: "A123",
 	})
 	require.Error(t, err)

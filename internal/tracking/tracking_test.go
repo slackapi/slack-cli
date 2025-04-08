@@ -15,7 +15,6 @@
 package tracking
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -140,6 +140,7 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			et := NewEventTracker()
 			var requestSent = false
 			testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
@@ -161,7 +162,7 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 			}
 			ioMock := iostreams.NewIOStreamsMock(cfg, fs, os)
 			ioMock.AddDefaultMocks()
-			err := et.FlushToLogstash(context.Background(), cfg, ioMock, tt.exitCode)
+			err := et.FlushToLogstash(ctx, cfg, ioMock, tt.exitCode)
 			require.NoError(t, err)
 			if tt.shouldNotSendRequest && requestSent {
 				require.Fail(t, "Expected no event tracking request to be sent, but request was sent")
