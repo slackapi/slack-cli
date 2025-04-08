@@ -39,7 +39,7 @@ func TestCollaboratorsCommand(t *testing.T) {
 			},
 			collaborators: []types.SlackUser{},
 			expectedOutputs: []string{
-				"0 collaborators",
+				" 0 collaborators", // Include space to not match "10 collaborators"
 			},
 		},
 		"lists the collaborator if one exists": {
