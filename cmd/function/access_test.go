@@ -49,7 +49,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockAppSelection(installedProdApp)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -81,7 +81,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockAppSelection(installedProdApp)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -109,7 +109,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockAppSelection(installedProdApp)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -129,7 +129,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 
 				appSelectTeardown = setupMockAppSelection(installedProdApp)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -146,7 +146,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockAppSelection(installedProdApp)
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedErrorStrings: []string{"file does not exist"},

@@ -55,7 +55,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.UserInfo{}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -85,7 +85,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -115,7 +115,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -147,7 +147,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.UserInfo{RealName: "User Two", Name: "USER2", Profile: user2Profile}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -179,7 +179,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.ChannelInfo{ID: "CHANNEL2", Name: "Channel Two"}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -216,7 +216,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -251,7 +251,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -302,7 +302,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -333,7 +333,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.UserInfo{RealName: "User Two", Name: "USER2", Profile: user2Profile}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -365,7 +365,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.ChannelInfo{ID: "CHANNEL2", Name: "Channel Two"}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -407,7 +407,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.TeamInfo{ID: "TEAM1", Name: "Team One"}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -437,7 +437,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -464,7 +464,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.ChannelInfo{ID: "CHANNEL1", Name: "Channel One"}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -492,7 +492,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(&types.TeamInfo{ID: "TEAM1", Name: "Team One"}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -523,7 +523,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				// display channel info for updated access
 				clientsMock.ApiInterface.On("ChannelsInfo", mock.Anything, mock.Anything, "CHANNEL1").
 					Return(&types.ChannelInfo{ID: "CHANNEL1", Name: "Channel One"}, nil).Once()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -558,7 +558,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				}, nil)
 
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			Teardown: func() {
@@ -580,7 +580,7 @@ func TestTriggersAccessCommand_AppSelection(t *testing.T) {
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
-				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				appSelectTeardown = setupMockAccessAppSelection(
 					prompts.SelectedApp{Auth: types.SlackAuth{}, App: types.App{}},

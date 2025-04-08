@@ -39,7 +39,7 @@ func TestAddCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
-				cm.Config.LoadExperiments(context.Background(), cm.IO.PrintDebug)
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				// Mock API call
 				cm.ApiInterface.On("AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
@@ -63,7 +63,7 @@ func TestAddCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
-				cm.Config.LoadExperiments(context.Background(), cm.IO.PrintDebug)
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				// Mock API call
 				cm.ApiInterface.On("AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
