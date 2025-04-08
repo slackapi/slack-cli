@@ -15,7 +15,6 @@
 package cmdutil
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
@@ -23,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -79,6 +79,7 @@ func TestIsSlackHostedProject(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			manifestMock := &app.ManifestMockObject{}
 			manifestMock.On(
@@ -93,7 +94,6 @@ func TestIsSlackHostedProject(t *testing.T) {
 			projectConfigMock := config.NewProjectConfigMock()
 			projectConfigMock.On("GetManifestSource", mock.Anything).Return(tt.mockManifestSource, nil)
 			clientsMock.Config.ProjectConfig = projectConfigMock
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			err := IsSlackHostedProject(ctx, clients)
 			assert.Equal(t, tt.expectedError, err)

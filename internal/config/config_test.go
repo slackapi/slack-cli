@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ import (
 
 // setup
 func setup(t *testing.T) (context.Context, *slackdeps.FsMock, *slackdeps.OsMock, *Config, string, func(*testing.T)) {
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	fs := slackdeps.NewFsMock()
 	os := slackdeps.NewOsMock()
 	os.AddDefaultMocks()

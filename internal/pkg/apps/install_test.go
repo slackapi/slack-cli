@@ -16,7 +16,6 @@ package apps
 
 import (
 	"bytes"
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -27,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -455,7 +455,7 @@ func TestInstall(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("IsTTY").Return(tt.mockIsTTY)
 			clientsMock.AddDefaultMocks()
@@ -898,7 +898,7 @@ func TestInstallLocalApp(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("IsTTY").Return(tt.mockIsTTY)
 			clientsMock.AddDefaultMocks()
@@ -1144,7 +1144,7 @@ func TestValidateManifestForInstall(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			tt.setup(clientsMock)
 			clientsMock.ApiInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, tt.app.AppID).
@@ -1217,6 +1217,7 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.AddDefaultMocks()
 			if tt.envAppToken != "" {
@@ -1236,7 +1237,6 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			clientsMock.IO.Stdout.SetOutput(output)
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 			err := setAppEnvironmentTokens(ctx, clients, tt.result)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedAppToken, clients.Os.Getenv("SLACK_APP_TOKEN"))

@@ -16,7 +16,6 @@ package iostreams
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -24,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -59,6 +59,7 @@ func Test_PrintDebug(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			osMock.AddDefaultMocks()
@@ -69,7 +70,6 @@ func Test_PrintDebug(t *testing.T) {
 			stdoutLogger := log.Logger{}
 			stdoutLogger.SetOutput(&stdoutBuffer)
 			io.Stdout = &stdoutLogger
-			ctx := context.Background()
 			io.PrintDebug(ctx, tt.format, tt.arguments...)
 
 			// Assert output lines match the pattern: [YYYY-MM-DD HH:MM:SS] line
@@ -127,6 +127,7 @@ func Test_PrintWarning(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			osMock.AddDefaultMocks()
@@ -136,7 +137,6 @@ func Test_PrintWarning(t *testing.T) {
 			stderrLogger := log.Logger{}
 			stderrLogger.SetOutput(&stderrBuffer)
 			io.Stderr = &stderrLogger
-			ctx := context.Background()
 			io.PrintWarning(ctx, tt.format, tt.arguments...)
 			assert.Equal(t, tt.expected, stderrBuffer.String())
 		})
@@ -185,13 +185,13 @@ func Test_IOStreams_PrintTrace(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
+			ctx := slackcontext.MockContext(t.Context())
 			var fsMock = slackdeps.NewFsMock()
 			var osMock = slackdeps.NewOsMock()
 
 			var config = config.NewConfig(fsMock, osMock)
 			config.SlackTestTraceFlag = tt.traceEnabled
 			var io = NewIOStreams(config, fsMock, osMock)
-			var ctx = context.Background()
 
 			var stdoutBuffer = bytes.Buffer{}
 			var stdoutLogger = log.Logger{}

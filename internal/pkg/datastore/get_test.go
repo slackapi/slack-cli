@@ -15,12 +15,12 @@
 package datastore
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -46,6 +46,7 @@ func TestDatastoreGetArguments(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			log := logger.Logger{
 				Data: map[string]interface{}{},
@@ -54,7 +55,7 @@ func TestDatastoreGetArguments(t *testing.T) {
 				Return(tt.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			event, err := Get(context.Background(), client, &log, tt.Query)
+			event, err := Get(ctx, client, &log, tt.Query)
 			if assert.NoError(t, err) {
 				assert.Equal(t, tt.Results, event.Data["getResult"])
 			}

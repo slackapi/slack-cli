@@ -15,13 +15,13 @@
 package function
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -61,6 +61,7 @@ func TestFunction_ChooseFunctionPrompt(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a function", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 				Flag: clientsMock.Config.Flags.Lookup("name"),
@@ -77,7 +78,6 @@ func TestFunction_ChooseFunctionPrompt(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = sdkConfigMock
 			})
-			ctx := context.Background()
 			functions := []types.Function{
 				{CallbackID: "alphabet_function"},
 				{CallbackID: "hello_function"},

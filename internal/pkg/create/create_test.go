@@ -15,7 +15,6 @@
 package create
 
 import (
-	"context"
 	"fmt"
 	"path/filepath"
 	"testing"
@@ -23,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -220,17 +220,17 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			}()
 
 			// Setup parameters for test
-			ctx := context.Background()
 			projectDirPath := "/path/to/project-name"
 
 			// Create mocks
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Os.On("Getwd").Return(projectDirPath, nil)
 			clientsMock.AddDefaultMocks()
 
 			// Set experiment flag
 			clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, tt.experiments...)
-			clientsMock.Config.LoadExperiments(context.Background(), clientsMock.IO.PrintDebug)
+			clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 
 			// Create clients that is mocked for testing
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())

@@ -24,13 +24,14 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func Test_ManifestValidate_GetManifestLocal_Error(t *testing.T) {
-	ctx, clients, _, log, appMock, authMock := setupCommonMocks()
+	ctx, clients, _, log, appMock, authMock := setupCommonMocks(t)
 
 	// Mock the manifest to return error on get
 	manifestMock := &app.ManifestMockObject{}
@@ -47,7 +48,7 @@ func Test_ManifestValidate_GetManifestLocal_Error(t *testing.T) {
 func Test_ManifestValidate_Success(t *testing.T) {
 	t.Run("should return success when no errors or warnings", func(t *testing.T) {
 
-		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with no error
 		clientsMock.ApiInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{}, nil)
@@ -63,7 +64,7 @@ func Test_ManifestValidate_Success(t *testing.T) {
 func Test_ManifestValidate_Warnings(t *testing.T) {
 	t.Run("should return warnings", func(t *testing.T) {
 
-		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with no error
 		clientsMock.ApiInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{
@@ -87,7 +88,7 @@ func Test_ManifestValidate_Warnings(t *testing.T) {
 func Test_ManifestValidate_Error(t *testing.T) {
 	t.Run("should return error when there are errors", func(t *testing.T) {
 
-		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with an error
 		clientsMock.ApiInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
@@ -108,7 +109,7 @@ func Test_ManifestValidate_Error(t *testing.T) {
 
 func Test_ManifestValidate_Error_ErrConnectorNotInstalled(t *testing.T) {
 	t.Run("should try to install connector apps when there are related errors", func(t *testing.T) {
-		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with an error and error details
 		clientsMock.ApiInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{
@@ -150,7 +151,7 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 
 	test_reason := "GIVE IT TO ME!"
 	t.Run("should send request to approve connector", func(t *testing.T) {
-		ctx, clients, clientsMock, _, _, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, _, _, authMock := setupCommonMocks(t)
 		testErr := slackerror.New("a dummy error").WithDetails(slackerror.ErrorDetails{
 			slackerror.ErrorDetail{
 				Code:             slackerror.ErrConnectorApprovalRequired,
@@ -187,7 +188,7 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 	})
 
 	t.Run("should not send request to approve connector if user refuses", func(t *testing.T) {
-		ctx, clients, clientsMock, _, _, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, _, _, authMock := setupCommonMocks(t)
 		testErr := slackerror.New("a dummy error").WithDetails(slackerror.ErrorDetails{
 			slackerror.ErrorDetail{
 				Code:             slackerror.ErrConnectorApprovalRequired,
@@ -208,7 +209,7 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 	})
 
 	t.Run("should return error if request RequestAppApproval fails", func(t *testing.T) {
-		ctx, clients, clientsMock, _, _, authMock := setupCommonMocks()
+		ctx, clients, clientsMock, _, _, authMock := setupCommonMocks(t)
 		testErr := slackerror.New("a dummy error").WithDetails(slackerror.ErrorDetails{
 			slackerror.ErrorDetail{
 				Code:             slackerror.ErrConnectorApprovalRequired,
@@ -231,8 +232,9 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 }
 
 // Setup
-func setupCommonMocks() (ctx context.Context, clients *shared.ClientFactory, clientsMock *shared.ClientsMock, log *logger.Logger, mockApp types.App, mockAuth types.SlackAuth) {
+func setupCommonMocks(t *testing.T) (ctx context.Context, clients *shared.ClientFactory, clientsMock *shared.ClientsMock, log *logger.Logger, mockApp types.App, mockAuth types.SlackAuth) {
 	// Create mocks
+	ctx = slackcontext.MockContext(t.Context())
 	clientsMock = shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 
@@ -240,8 +242,6 @@ func setupCommonMocks() (ctx context.Context, clients *shared.ClientFactory, cli
 	clients = shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 		clients.SDKConfig = hooks.NewSDKConfigMock()
 	})
-
-	ctx = context.Background()
 
 	// Mock valid auth session
 	clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)

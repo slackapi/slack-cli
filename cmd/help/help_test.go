@@ -15,11 +15,11 @@
 package help
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
@@ -75,6 +75,7 @@ func TestHelpFunc(t *testing.T) {
 				experiment.EnabledExperiments = _EnabledExperiments
 			}()
 
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clientsMock.Config.ExperimentsFlag = tt.experiments
@@ -90,7 +91,7 @@ func TestHelpFunc(t *testing.T) {
 				Run:   func(cmd *cobra.Command, args []string) {},
 			}
 			rootCmd.AddCommand(subCommand)
-			rootCmd.SetContext(context.Background())
+			rootCmd.SetContext(ctx)
 			rootCmd.Flags().Bool("help", true, "mock help flag")
 			clientsMock.Config.SetFlags(rootCmd)
 			testutil.MockCmdIO(clientsMock.IO, rootCmd)
