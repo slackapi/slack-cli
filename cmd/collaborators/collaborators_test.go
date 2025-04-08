@@ -29,20 +29,24 @@ import (
 
 func TestCollaboratorsCommand(t *testing.T) {
 	tests := map[string]struct {
-		App           types.App
-		Collaborators []types.SlackUser
+		app             types.App
+		collaborators   []types.SlackUser
+		expectedOutputs []string
 	}{
 		"lists no collaborators if none exist": {
-			App: types.App{
+			app: types.App{
 				AppID: "A001",
 			},
-			Collaborators: []types.SlackUser{},
+			collaborators: []types.SlackUser{},
+			expectedOutputs: []string{
+				" 0 collaborators", // Include space to not match "10 collaborators"
+			},
 		},
 		"lists the collaborator if one exists": {
-			App: types.App{
+			app: types.App{
 				AppID: "A002",
 			},
-			Collaborators: []types.SlackUser{
+			collaborators: []types.SlackUser{
 				{
 					ID:             "USLACKBOT",
 					UserName:       "slackbot",
@@ -50,12 +54,20 @@ func TestCollaboratorsCommand(t *testing.T) {
 					PermissionType: types.OWNER,
 				},
 			},
+			expectedOutputs: []string{
+				"1 collaborator",
+				// User info: slackbot
+				"USLACKBOT",
+				"slackbot",
+				"bots@slack.com",
+				string(types.OWNER),
+			},
 		},
 		"lists all collaborators if many exist": {
-			App: types.App{
+			app: types.App{
 				AppID: "A002",
 			},
-			Collaborators: []types.SlackUser{
+			collaborators: []types.SlackUser{
 				{
 					ID:             "USLACKBOT",
 					UserName:       "slackbot",
@@ -69,6 +81,19 @@ func TestCollaboratorsCommand(t *testing.T) {
 					PermissionType: types.READER,
 				},
 			},
+			expectedOutputs: []string{
+				"2 collaborators",
+				// User info: slackbot
+				"USLACKBOT",
+				"slackbot",
+				"bots@slack.com",
+				string(types.OWNER),
+				// User info: bookworm
+				"U00READER",
+				"bookworm",
+				"reader@slack.com",
+				string(types.READER),
+			},
 		},
 	}
 
@@ -76,29 +101,33 @@ func TestCollaboratorsCommand(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			appSelectMock := prompts.NewAppSelectMock()
 			teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-			appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: tt.App, Auth: types.SlackAuth{}}, nil)
+			appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: tt.app, Auth: types.SlackAuth{}}, nil)
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
-				Return(tt.Collaborators, nil)
+				Return(tt.collaborators, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 			})
 
 			err := NewCommand(clients).Execute()
 			require.NoError(t, err)
-			clientsMock.ApiInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.App.AppID)
+			clientsMock.ApiInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.app.AppID)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListSuccess, mock.Anything)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCount, []string{
-				fmt.Sprintf("%d", len(tt.Collaborators)),
+				fmt.Sprintf("%d", len(tt.collaborators)),
 			})
-			for _, collaborator := range tt.Collaborators {
+			for _, collaborator := range tt.collaborators {
 				clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCollaborator, []string{
 					collaborator.ID,
 					collaborator.UserName,
 					collaborator.Email,
 					string(collaborator.PermissionType),
 				})
+			}
+			output := clientsMock.GetCombinedOutput()
+			for _, expectedOutput := range tt.expectedOutputs {
+				require.Contains(t, output, expectedOutput)
 			}
 		})
 	}
