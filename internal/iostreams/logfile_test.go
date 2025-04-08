@@ -16,7 +16,6 @@ package iostreams
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -162,6 +162,7 @@ func Test_FlushToLogFile(t *testing.T) {
 			stderrBuff := bytes.Buffer{}
 			stderrLogger := log.Logger{}
 			stderrLogger.SetOutput(&stderrBuff)
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			osMock.AddDefaultMocks()
@@ -173,7 +174,6 @@ func Test_FlushToLogFile(t *testing.T) {
 			io = NewIOStreams(config, fsMock, osMock)
 			io.Stderr = &stderrLogger
 
-			ctx := context.Background()
 			err := io.FlushToLogFile(ctx, tt.prefix, tt.errStr)
 			require.NoError(t, err)
 

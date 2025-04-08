@@ -15,7 +15,6 @@
 package config
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -23,6 +22,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
@@ -56,7 +56,7 @@ func Test_ProjectConfig_NewProjectConfig(t *testing.T) {
 
 func Test_ProjectConfig_InitProjectID(t *testing.T) {
 	t.Run("When not a project directory, should return an error", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -72,7 +72,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 	})
 
 	t.Run("When project_id is empty, should init project_id", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -90,7 +90,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 	})
 
 	t.Run("When project_id exists, should not overwrite project_id (overwrite: false)", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -114,7 +114,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 	})
 
 	t.Run("When project_id exists, should overwrite project_id (overwrite: true)", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -141,7 +141,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 
 func Test_ProjectConfig_GetProjectID(t *testing.T) {
 	t.Run("When not a project directory, should return an error", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -157,7 +157,7 @@ func Test_ProjectConfig_GetProjectID(t *testing.T) {
 	})
 
 	t.Run("When a project directory, should return trimmed project_id", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -183,7 +183,7 @@ func Test_ProjectConfig_GetProjectID(t *testing.T) {
 
 func Test_ProjectConfig_SetProjectID(t *testing.T) {
 	t.Run("When not a project directory, should return an error", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -200,7 +200,7 @@ func Test_ProjectConfig_SetProjectID(t *testing.T) {
 	})
 
 	t.Run("When a project directory, should update the project_id", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -254,7 +254,7 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
@@ -274,7 +274,7 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 
 func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 	t.Run("When not a project directory, should return an error", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -289,7 +289,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 	})
 
 	t.Run("When project directory doesn't have a .slack/config.json, should return a default config.json", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -310,7 +310,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 	})
 
 	t.Run("When a project directory has a .slack/config.json, should return config.json", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -335,7 +335,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 	})
 
 	t.Run("errors on invalid formatting of project config file", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -360,7 +360,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 
 func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 	t.Run("When not a project directory, should return an error", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -379,7 +379,7 @@ func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 	})
 
 	t.Run("When a project directory, should write the .slack/config.json file", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -502,11 +502,11 @@ func Test_ProjectConfig_Cache(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
 			addProjectMocks(t, fs)
-			ctx := context.Background()
 			projectConfig := NewProjectConfig(fs, os)
 			cache := projectConfig.Cache()
 			if !tt.mockHash.Equals("") {
@@ -563,7 +563,7 @@ func Test_Config_CreateProjectConfigDir(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
 			if tt.existingDir {
 				err := fs.MkdirAll(tt.projectDirPath+"/.slack", 0755)

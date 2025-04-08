@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
@@ -235,6 +236,7 @@ func TestCreateCommand_confirmExternalTemplateSelection(t *testing.T) {
 
 func Test_CreateCommand_BoltExperiment(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 
@@ -243,7 +245,7 @@ func Test_CreateCommand_BoltExperiment(t *testing.T) {
 
 	// Set experiment flag
 	clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "bolt")
-	clientsMock.Config.LoadExperiments(context.Background(), clientsMock.IO.PrintDebug)
+	clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 
 	// Create the command
 	cmd := NewCreateCommand(clients)

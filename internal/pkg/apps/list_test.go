@@ -15,12 +15,12 @@
 package apps
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -91,11 +91,11 @@ var team2LocalApp = types.App{
 }
 
 func TestAppsList_FetchInstallStates_NoAuthsShouldReturnUnknownState(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	ctx := context.Background()
 	apps, err := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp, team2LocalApp})
 	require.NoError(t, err)
 	clientsMock.ApiInterface.AssertNotCalled(t, "GetAppStatus")
@@ -109,6 +109,7 @@ func TestAppsList_FetchInstallStates_NoAuthsShouldReturnUnknownState(t *testing.
 
 func TestAppsList_FetchInstallStates_HasEnterpriseApp_HasEnterpriseAuth(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
@@ -126,7 +127,6 @@ func TestAppsList_FetchInstallStates_HasEnterpriseApp_HasEnterpriseAuth(t *testi
 		}, nil)
 
 	require.True(t, team1DeployedApp.IsEnterpriseWorkspaceApp())
-	ctx := context.Background()
 
 	// Should successfully fetchAppInstallStates when the auth is enterprise and the app is enterprise workspace app
 	appsWithStatus, _ := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp})
@@ -135,6 +135,7 @@ func TestAppsList_FetchInstallStates_HasEnterpriseApp_HasEnterpriseAuth(t *testi
 }
 
 func TestAppsList_FetchInstallStates_TokenFlag(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	clientsMock.AuthInterface.On("Auths", mock.Anything).
@@ -156,7 +157,6 @@ func TestAppsList_FetchInstallStates_TokenFlag(t *testing.T) {
 
 	clients.Config.TokenFlag = team2Token
 
-	ctx := context.Background()
 	apps, err := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp, team2LocalApp})
 	require.NoError(t, err)
 	require.Len(t, apps, 2)
@@ -173,6 +173,7 @@ func TestAppsList_FetchInstallStates_TokenFlag(t *testing.T) {
 }
 
 func TestAppsList_FetchInstallStates_InvalidTokenFlag(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On("Auths", mock.Anything).
 		Return([]types.SlackAuth{}, nil)
@@ -183,7 +184,6 @@ func TestAppsList_FetchInstallStates_InvalidTokenFlag(t *testing.T) {
 
 	clients.Config.TokenFlag = "xoxp-invalid"
 
-	ctx := context.Background()
 	apps, err := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp, team2LocalApp})
 	if assert.Error(t, err) {
 		assert.Equal(t, slackerror.New(slackerror.ErrHttpRequestFailed), err)

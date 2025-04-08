@@ -15,23 +15,23 @@
 package externalauth
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPrompt_ProviderSelectPrompt_empty_list(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	authorizationInfoLists := types.ExternalAuthorizationInfoLists{}
 	clientsMock.AddDefaultMocks()
-	ctx := context.Background()
 	selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
 	require.Empty(t, selectedProvider)
 	require.Error(t, err, slackerror.New("No oauth2 providers found"))
@@ -74,6 +74,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 
 	for _, tt := range tests {
 		var mockProviderFlag string
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
@@ -81,7 +82,6 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 			Flag: clientsMock.Config.Flags.Lookup("provider"),
 		})).Return(tt.Selection, nil)
 		clientsMock.AddDefaultMocks()
-		ctx := context.Background()
 
 		selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
 		require.Equal(t, selectedProvider.ProviderKey, "provider_a")
@@ -136,6 +136,7 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 
 	for _, tt := range tests {
 		var mockProviderFlag string
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
@@ -146,7 +147,6 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 			Flag: clientsMock.Config.Flags.Lookup("provider"),
 		})).Return(tt.Selection, nil)
 		clientsMock.AddDefaultMocks()
-		ctx := context.Background()
 
 		selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
 		require.Equal(t, selectedProvider.ProviderKey, "provider_a")

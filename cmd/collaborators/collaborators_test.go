@@ -15,11 +15,11 @@
 package collaborators
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -52,15 +52,12 @@ func TestCollaboratorsCommand(t *testing.T) {
 }
 
 func TestCollaboratorsCommand_PrintSuccess(t *testing.T) {
-
 	// Setup
-
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 	// Execute tests
-
 	t.Run("Username will be used if present", func(t *testing.T) {
 		user := types.SlackUser{Email: "joe.smith@company.com", ID: "U1234", PermissionType: types.OWNER}
 		printSuccess(ctx, clients.IO, user, "added")

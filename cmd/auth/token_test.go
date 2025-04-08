@@ -15,18 +15,20 @@
 package auth
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestTokenCommand(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.AuthSession{UserID: &mockOrgAuth.UserID,
 		TeamID:   &mockOrgAuth.TeamID,
@@ -42,7 +44,7 @@ func TestTokenCommand(t *testing.T) {
 	tokenFlag = "xoxp-example-1234"
 
 	cmd := NewTokenCommand(clients)
-	cmd.SetContext(context.Background())
+	cmd.SetContext(ctx)
 	testutil.MockCmdIO(clients.IO, cmd)
 
 	serviceTokenFlag = true

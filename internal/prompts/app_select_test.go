@@ -27,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
@@ -220,6 +221,7 @@ func TestGetTeamApps(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(
 				AuthWithToken,
@@ -257,7 +259,6 @@ func TestGetTeamApps(t *testing.T) {
 			)
 			clientsMock.AddDefaultMocks()
 
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			for _, app := range tt.deployedApps {
 				err := clients.AppClient().SaveDeployed(ctx, app)
@@ -369,6 +370,7 @@ func TestGetTokenApp(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, test.tokenErr)
@@ -376,7 +378,6 @@ func TestGetTokenApp(t *testing.T) {
 				Return(test.appStatus, test.statusErr)
 			clientsMock.AddDefaultMocks()
 
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			for _, app := range test.saveLocal {
 				err := clients.AppClient().SaveLocal(ctx, app)
@@ -415,6 +416,7 @@ func TestFilterAuthsByToken_NoLogin(t *testing.T) {
 	}
 	test.expectedAuth.Token = test.TokenFlag // expect the same token
 
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.TokenFlag).
 		Return(test.expectedAuth, nil)
@@ -423,7 +425,6 @@ func TestFilterAuthsByToken_NoLogin(t *testing.T) {
 	clientsMock.AuthInterface.On(SetAuth, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AddDefaultMocks()
 
-	ctx := context.Background()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	clients.Config.TokenFlag = test.TokenFlag
 
@@ -438,6 +439,8 @@ func TestFilterAuthsByToken_NoLogin(t *testing.T) {
 }
 
 func Test_FilterAuthsByToken_Flags(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	mockAuthTeam1 := fakeAuthsByTeamDomain[team1TeamDomain]
 	mockAuthTeam1.Token = team1Token
 	mockAuthTeam2 := fakeAuthsByTeamDomain[team2TeamDomain]
@@ -457,7 +460,6 @@ func Test_FilterAuthsByToken_Flags(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
 		TeamID:     team2TeamID,
@@ -573,9 +575,8 @@ func Test_FilterAuthsByToken_Flags(t *testing.T) {
 //
 
 func TestPrompt_AppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *testing.T) {
-
 	// Setup
-
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	// Auth is present but invalid
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
@@ -601,7 +602,6 @@ func TestPrompt_AppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *testi
 	}, nil)
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	err := clients.AppClient().SaveDeployed(ctx, deployedTeam1InstalledApp)
 	require.NoError(t, err)
@@ -618,12 +618,12 @@ func TestPrompt_AppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *testi
 func TestPrompt_AppSelectPrompt_AuthsNoApps(t *testing.T) {
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 	clientsMock.AddDefaultMocks()
-	ctx := context.Background()
 
 	// Execute test
 	selectedApp, err := AppSelectPrompt(ctx, clients, AppInstallStatus(ShowInstalledAppsOnly))
@@ -691,6 +691,7 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, nil)
@@ -698,7 +699,6 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 				Return(test.appStatus, test.statusErr)
 			clientsMock.AddDefaultMocks()
 
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			clients.Config.TokenFlag = test.tokenFlag
 			clients.Config.AppFlag = test.appFlag
@@ -723,6 +723,7 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowAllApps(t *testing.T) {
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -734,7 +735,6 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowAllApps(t *tes
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
 		TeamDomain: team1TeamDomain,
 		TeamID:     team1TeamID,
@@ -770,6 +770,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowAllApps(t *tes
 func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowInstalledAppsOnly(t *testing.T) {
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -781,7 +782,6 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowInstalledAppsO
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 	// Installed app
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
 		TeamID:     team1TeamID,
@@ -818,6 +818,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowInstalledAppsO
 func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_InstalledAppOnly_Flags(t *testing.T) {
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -829,7 +830,6 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_InstalledAppOnly_F
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Installed app
 	deployedApp := types.App{
@@ -938,6 +938,8 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_InstalledAppOnly_F
 }
 
 func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_InstalledAppOnly_Flags(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	mockAuthTeam1 := fakeAuthsByTeamDomain[team1TeamDomain]
 	mockAuthTeam1.Token = team1Token
 	mockAuthTeam2 := fakeAuthsByTeamDomain[team2TeamDomain]
@@ -970,7 +972,6 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_InstalledAppOnly_Flag
 	}, nil)
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Installed app team 1 deployed
 	deployedApp := types.App{
@@ -1095,6 +1096,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_InstalledAppOnly_Flag
 func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_MultiWorkspaceAllApps_Flags(t *testing.T) {
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -1109,7 +1111,6 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_MultiWorkspaceAllApps
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Installed app
 
@@ -1221,6 +1222,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_MultiWorkspaceAllApps
 func TestPrompt_AppSelectPrompt_AuthsWithHostedInstalled_AllApps_CreateNew(t *testing.T) {
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -1234,7 +1236,6 @@ func TestPrompt_AppSelectPrompt_AuthsWithHostedInstalled_AllApps_CreateNew(t *te
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Installed apps
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
@@ -1477,7 +1478,7 @@ func TestPrompt_AppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := setupClientsMock()
 
 		// On select a team, choose
@@ -1499,7 +1500,6 @@ func TestPrompt_AppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 		}, nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		ctx := context.Background()
 		saveApps(ctx, clients)
 
 		selectedApp, err := AppSelectPrompt(ctx, clients, test.status)
@@ -1683,6 +1683,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.ApiInterface.On(
 				GetAppStatus,
@@ -1745,7 +1746,6 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 			)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 			for _, app := range tt.mockAppsSavedDeployed {
 				err := clients.AppClient().SaveDeployed(ctx, app)
 				require.NoError(t, err)
@@ -2277,6 +2277,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(
 				Auths,
@@ -2486,7 +2487,6 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 			clientsMock.Config.TeamFlag = tt.mockFlagTeam
 			clientsMock.Config.TokenFlag = tt.mockFlagToken
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 			for _, app := range tt.mockAppsDeployed {
 				err := clients.AppClient().SaveDeployed(ctx, app)
 				require.NoError(t, err)
@@ -2509,9 +2509,8 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 //
 
 func TestPrompt_TeamAppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *testing.T) {
-
 	// Setup
-
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	// Auth is present but invalid
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
@@ -2529,7 +2528,6 @@ func TestPrompt_TeamAppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *t
 	}, nil)
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	err := clients.AppClient().SaveDeployed(ctx, deployedTeam1InstalledApp)
 	require.NoError(t, err)
@@ -2544,9 +2542,8 @@ func TestPrompt_TeamAppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *t
 }
 
 func TestPrompt_TeamAppSelectPrompt_NoAuths_UserReAuthenticates(t *testing.T) {
-
 	// Setup
-
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	// No auths present
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return([]types.SlackAuth{}, nil)
@@ -2564,7 +2561,6 @@ func TestPrompt_TeamAppSelectPrompt_NoAuths_UserReAuthenticates(t *testing.T) {
 	}, nil)
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	err := clients.AppClient().SaveDeployed(ctx, deployedTeam1InstalledApp)
 	require.NoError(t, err)
@@ -2680,6 +2676,7 @@ func TestPrompt_TeamAppSelectPrompt_TokenAppFlag(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, nil)
@@ -2687,7 +2684,6 @@ func TestPrompt_TeamAppSelectPrompt_TokenAppFlag(t *testing.T) {
 				Return(test.appStatus, test.statusErr)
 			clientsMock.AddDefaultMocks()
 
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			for _, app := range test.saveLocal {
 				err := clients.AppClient().SaveLocal(ctx, app)
@@ -2715,12 +2711,12 @@ func TestPrompt_TeamAppSelectPrompt_TokenAppFlag(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_TeamNotFoundFor_TeamFlag(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Perform tests
 	var tests = []struct {
@@ -2745,6 +2741,7 @@ func TestPrompt_TeamAppSelectPrompt_TeamNotFoundFor_TeamFlag(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_NoApps(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team1TeamID).Return(fakeAuthsByTeamDomain[team1TeamDomain], nil)
@@ -2753,7 +2750,6 @@ func TestPrompt_TeamAppSelectPrompt_NoApps(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install the app to team1
 	clientsMock.IO.On(SelectPrompt, mock.Anything, "Choose a deployed environment", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -2804,12 +2800,12 @@ func TestPrompt_TeamAppSelectPrompt_NoApps(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_NoInstalls_TeamFlagDomain(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Perform tests
 	var tests = []struct {
@@ -2838,13 +2834,13 @@ func TestPrompt_TeamAppSelectPrompt_NoInstalls_TeamFlagDomain(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_NoInstalls_TeamFlagID(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Perform tests
 	var tests = []struct {
@@ -2872,14 +2868,13 @@ func TestPrompt_TeamAppSelectPrompt_NoInstalls_TeamFlagID(t *testing.T) {
 }
 
 func TestPrompt_TeamAppSelectPrompt_NoInstalls_Flags(t *testing.T) {
-
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Execute tests
 	tests := []struct {
@@ -3060,6 +3055,8 @@ func TestPrompt_TeamAppSelectPrompt_TokenFlag(t *testing.T) {
 	}
 
 	for name, test := range tests {
+		ctx := slackcontext.MockContext(t.Context())
+
 		mockAuth := fakeAuthsByTeamDomain[test.teamDomain]
 		mockAuth.Token = test.token
 
@@ -3075,7 +3072,6 @@ func TestPrompt_TeamAppSelectPrompt_TokenFlag(t *testing.T) {
 		clientsMock.AddDefaultMocks()
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		ctx := context.Background()
 
 		var err error
 		err = clients.AppClient().SaveDeployed(ctx, installedHostedApp)
@@ -3100,6 +3096,7 @@ func TestPrompt_TeamAppSelectPrompt_TokenFlag(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3111,7 +3108,6 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Select team2
 	clientsMock.IO.On(SelectPrompt, mock.Anything, "Choose a deployed environment", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -3181,6 +3177,7 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagDomain(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3191,7 +3188,6 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagDomain(t *testing.T) 
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install apps
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
@@ -3229,6 +3225,7 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagDomain(t *testing.T) 
 
 func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagID(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3239,7 +3236,6 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagID(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install apps
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
@@ -3277,6 +3273,7 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagID(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3289,7 +3286,6 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install the app to team1
 	clientsMock.IO.On(SelectPrompt, mock.Anything, appInstallPromptNew, mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -3361,6 +3357,7 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagDomain(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3372,7 +3369,6 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagDomain(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install apps
 	err := clients.AppClient().SaveLocal(ctx, types.App{
@@ -3412,6 +3408,7 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagDomain(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagID(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3423,7 +3420,6 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagID(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install apps
 	err := clients.AppClient().SaveLocal(ctx, types.App{
@@ -3463,6 +3459,7 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagID(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_AllApps(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3479,7 +3476,6 @@ func TestPrompt_TeamAppSelectPrompt_AllApps(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Select team2
 	clientsMock.IO.On(SelectPrompt, mock.Anything, "Choose a deployed environment", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -3555,6 +3551,7 @@ func TestPrompt_TeamAppSelectPrompt_LegacyDevApps(t *testing.T) {
 	// context is known
 
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
@@ -3569,7 +3566,6 @@ func TestPrompt_TeamAppSelectPrompt_LegacyDevApps(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Select team2
 	clientsMock.IO.On(SelectPrompt, mock.Anything, "Choose a deployed environment", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -3799,7 +3795,7 @@ func TestPrompt_TeamAppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 	}
 
 	for _, test := range tests {
-
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := setupClientsMock()
 		clientsMock.IO.On(SelectPrompt, mock.Anything, test.promptText, test.expectedTeamLabels, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("team"),
@@ -3809,7 +3805,6 @@ func TestPrompt_TeamAppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 			Index:  test.selectedTeamIndex,
 		}, nil)
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		ctx := context.Background()
 		saveApps(ctx, clients)
 
 		selection, err := TeamAppSelectPrompt(ctx, clients, test.env, test.status)
@@ -3821,6 +3816,7 @@ func TestPrompt_TeamAppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_AllApps_TeamFlagID(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
@@ -3828,7 +3824,6 @@ func TestPrompt_TeamAppSelectPrompt_AllApps_TeamFlagID(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install apps
 	err := clients.AppClient().SaveDeployed(ctx, types.App{
@@ -3868,8 +3863,8 @@ func TestPrompt_TeamAppSelectPrompt_AllApps_TeamFlagID(t *testing.T) {
 }
 
 func TestPrompt_TeamAppSelectPrompt_AllApps_Flags(t *testing.T) {
-
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
@@ -3877,7 +3872,6 @@ func TestPrompt_TeamAppSelectPrompt_AllApps_Flags(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Install apps
 	appTeam1Hosted := types.App{
@@ -4036,6 +4030,7 @@ func TestPrompt_TeamAppSelectPrompt_AllApps_Flags(t *testing.T) {
 
 func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_HasWorkspaceAuth(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
@@ -4075,7 +4070,6 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_HasW
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Save apps
 	// Save a hosted and local enterprise workspace-level app
@@ -4243,6 +4237,7 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_HasW
 
 func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth_MissingOrgAuth_UserReAuthenticates(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
@@ -4279,7 +4274,6 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_Miss
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Save apps
 	// Save a hosted and local enterprise workspace-level app
@@ -4432,6 +4426,7 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_Miss
 
 func TestPrompt_TeamAppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth_HasOrgAuth(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
@@ -4469,7 +4464,6 @@ func TestPrompt_TeamAppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Save apps
 	// Save a hosted and local enterprise workspace-level app
@@ -4610,6 +4604,7 @@ func TestPrompt_TeamAppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth
 
 func TestPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth_HasOrgAuth(t *testing.T) {
 	// Set up mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.ApiInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
@@ -4647,7 +4642,6 @@ func TestPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth_Has
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	ctx := context.Background()
 
 	// Save apps
 	// Save a hosted and local enterprise workspace-level app
@@ -4976,7 +4970,7 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
@@ -5089,7 +5083,7 @@ func Test_ValidateAuth(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.ApiInterface.On(
 				"ExchangeAuthTicket",

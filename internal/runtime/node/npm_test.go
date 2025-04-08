@@ -15,7 +15,6 @@
 package node
 
 import (
-	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -23,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -62,7 +62,7 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
 
 			fs := slackdeps.NewFsMock()
@@ -129,7 +129,7 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
 
 			fs := slackdeps.NewFsMock()
@@ -203,7 +203,7 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
 
 			fs := slackdeps.NewFsMock()

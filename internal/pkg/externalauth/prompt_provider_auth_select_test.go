@@ -15,23 +15,23 @@
 package externalauth
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPrompt_ProviderAuthSelectPrompt_empty_list(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	workflowsInfo := types.WorkflowsInfo{}
 	clientsMock.AddDefaultMocks()
-	ctx := context.Background()
 	selectedProvider, err := ProviderAuthSelectPrompt(ctx, clients, workflowsInfo)
 	require.Empty(t, selectedProvider)
 	require.Error(t, err, slackerror.New("No oauth2 providers found"))
@@ -84,6 +84,7 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 
 	for _, tt := range tests {
 		var mockProviderFlag string
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
@@ -95,7 +96,6 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 		})).Return(tt.Selection, nil)
 
 		clientsMock.AddDefaultMocks()
-		ctx := context.Background()
 
 		selectedProvider, err := ProviderAuthSelectPrompt(ctx, clients, workflowsInfo)
 		require.Equal(t, selectedProvider.ProviderKey, "provider_a")
@@ -151,6 +151,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 
 	for _, tt := range tests {
 		var mockProviderFlag string
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
@@ -158,7 +159,6 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 			Flag: clientsMock.Config.Flags.Lookup("provider"),
 		})).Return(tt.Selection, nil)
 		clientsMock.AddDefaultMocks()
-		ctx := context.Background()
 
 		selectedProvider, err := ProviderAuthSelectPrompt(ctx, clients, workflowsInfo)
 		require.Equal(t, selectedProvider.ProviderKey, "provider_b")
