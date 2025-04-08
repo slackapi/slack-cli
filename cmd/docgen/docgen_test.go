@@ -39,7 +39,7 @@ func TestNewDocsCommand(t *testing.T) {
 			ExpectedOutputs: []string{
 				filepath.Join(slackdeps.MockWorkingDirectory, "docs"),
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Cobra.AssertCalled(
 					t,
 					"GenMarkdownTree",
@@ -83,7 +83,7 @@ func TestNewDocsCommand(t *testing.T) {
 			ExpectedOutputs: []string{
 				filepath.Join(slackdeps.MockWorkingDirectory, "markdown-docs"),
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Cobra.AssertCalled(
 					t,
 					"GenMarkdownTree",
@@ -125,7 +125,7 @@ func TestNewDocsCommand(t *testing.T) {
 			},
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"References saved to: docs"},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Cobra.AssertCalled(
 					t,
 					"GenMarkdownTree",

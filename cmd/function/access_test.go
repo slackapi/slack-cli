@@ -132,7 +132,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertNotCalled(t, "FunctionDistributionAddUsers")
 				cm.ApiInterface.AssertNotCalled(t, "FunctionDistributionRemoveUsers")
 				cm.ApiInterface.AssertNotCalled(t, "FunctionDistributionSet")

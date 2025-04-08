@@ -56,7 +56,7 @@ func TestTriggersListCommand(t *testing.T) {
 				"Listing triggers installed to the app...",
 				"There are no triggers installed for the app",
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
@@ -93,7 +93,7 @@ func TestTriggersListCommand(t *testing.T) {
 				fmt.Sprintf("%s %s (%s)", fakeTriggerName, fakeTriggerID, "shortcut"),
 				"everyone in the workspace",
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
@@ -130,7 +130,7 @@ func TestTriggersListCommand(t *testing.T) {
 				fmt.Sprintf("%s %s (%s)", fakeTriggerName, fakeTriggerID, "shortcut"),
 				"everyone in all workspaces in this org granted to this app",
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
@@ -168,7 +168,7 @@ func TestTriggersListCommand(t *testing.T) {
 				fmt.Sprintf("%s %s (%s)", fakeTriggerName, fakeTriggerID, "shortcut"),
 				fmt.Sprintf("Trigger ID: %s (%s)", fakeTriggerID, "scheduled"),
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},

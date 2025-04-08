@@ -41,7 +41,7 @@ func TestRevokeCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
 			},
 		},
@@ -53,7 +53,7 @@ func TestRevokeCommand(t *testing.T) {
 				})).Return(iostreams.PasswordPromptResponse{}, slackerror.New(slackerror.ErrMissingFlag))
 			},
 			ExpectedErrorStrings: []string{"Failed to collect a token to revoke", "no_token_found", "missing_flag"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
 			},
 		},
@@ -69,7 +69,7 @@ func TestRevokeCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
 			},
 		},
@@ -85,7 +85,7 @@ func TestRevokeCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(slackerror.New(slackerror.ErrNotAuthed))
 			},
 			ExpectedError: slackerror.New(slackerror.ErrNotAuthed),
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
 				clients.IO.AssertNotCalled(t, "PrintTrace", mock.Anything, slacktrace.AuthRevokeSuccess)
 			},

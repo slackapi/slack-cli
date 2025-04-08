@@ -157,7 +157,7 @@ func TestLoginCommmand(t *testing.T) {
 					nil,
 				)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mockChallengeCode, mock.Anything)
 			},
 		},

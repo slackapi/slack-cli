@@ -59,7 +59,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
 					TriggerId: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
@@ -125,7 +125,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
 					TriggerId: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
@@ -161,7 +161,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
 					TriggerId: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
@@ -202,7 +202,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
 					TriggerId: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
@@ -241,7 +241,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
 					TriggerId: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
@@ -300,7 +300,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
 					TriggerId: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
@@ -353,7 +353,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 				appSelectTeardown()
 			},
 
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything)
 			},
 		},
@@ -431,7 +431,7 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 				appSelectTeardown()
 				promptForInteractivityTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
 			},
@@ -462,7 +462,7 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 				appSelectTeardown()
 				promptForInteractivityTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
 			},
@@ -491,7 +491,7 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 				appSelectTeardown()
 				promptForInteractivityTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},

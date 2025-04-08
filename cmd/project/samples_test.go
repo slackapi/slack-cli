@@ -67,7 +67,7 @@ func TestSamplesCommand(t *testing.T) {
 					return "", nil
 				}
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				for _, call := range cm.IO.Calls {
 					switch call.Method {
 					case "SelectPrompt":

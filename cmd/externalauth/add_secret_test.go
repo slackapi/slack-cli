@@ -167,7 +167,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedOutputs: []string{},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret_key_1234")
 			},
 		},
@@ -202,7 +202,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedOutputs: []string{},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret_key_1234")
 			},
 		},
@@ -235,7 +235,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedOutputs: []string{},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret")
 			},
 		},
@@ -267,7 +267,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret")
 			},
 		},
@@ -293,7 +293,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedErrorStrings: []string{"test error"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a")
 			},
 		},

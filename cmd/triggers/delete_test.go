@@ -77,7 +77,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersDelete", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
@@ -95,7 +95,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersDelete", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},

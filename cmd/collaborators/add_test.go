@@ -45,7 +45,7 @@ func TestAddCommand(t *testing.T) {
 					"A123",
 					types.SlackUser{ID: "U123", PermissionType: types.READER}).Return(nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{ID: "U123", PermissionType: types.READER})
@@ -70,7 +70,7 @@ func TestAddCommand(t *testing.T) {
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER}).Return(nil)
 				addFlags.permissionType = "owner"
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER})
@@ -90,7 +90,7 @@ func TestAddCommand(t *testing.T) {
 				cm.ApiInterface.On("AddCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER})

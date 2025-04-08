@@ -47,7 +47,7 @@ func TestLogoutCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[1]).Return(types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked for all teams"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].Token)
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].RefreshToken)
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[1].Token)
@@ -74,7 +74,7 @@ func TestLogoutCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[0]).Return(types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked for team1"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].Token)
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].RefreshToken)
 				clients.AuthInterface.AssertCalled(t, "DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[0])
@@ -98,7 +98,7 @@ func TestLogoutCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[1]).Return(types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked for team2"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[1].Token)
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[1].RefreshToken)
 				clients.AuthInterface.AssertCalled(t, "DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[1])
@@ -108,7 +108,7 @@ func TestLogoutCommand(t *testing.T) {
 		"require a team value with the flag": {
 			CmdArgs:              []string{"--team", ""},
 			ExpectedErrorStrings: []string{"The argument is missing from the --team flag (missing_flag)"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
 				clients.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an workspace authorization to revoke", mock.Anything, mock.Anything)
 			},
@@ -125,7 +125,7 @@ func TestLogoutCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"invalid_auth", "Cannot revoke authentication tokens for 'randomteamdomain'"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
 				clients.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, mock.Anything)
 			},
@@ -151,7 +151,7 @@ func TestLogoutCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[1]).Return(types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked for team2"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[1].Token)
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[1].RefreshToken)
 				clients.AuthInterface.AssertCalled(t, "DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[1])
@@ -171,7 +171,7 @@ func TestLogoutCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[0]).Return(types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked for team1"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].Token)
 				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].RefreshToken)
 				clients.AuthInterface.AssertCalled(t, "DeleteAuth", mock.Anything, fakeAuthsByTeamSlice[0])
@@ -192,7 +192,7 @@ func TestLogoutCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"invalid_auth", "Cannot revoke authentication tokens for 'anotherteam'"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
 				clients.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, mock.Anything)
 			},
@@ -203,7 +203,7 @@ func TestLogoutCommand(t *testing.T) {
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{}, nil)
 			},
 			ExpectedOutputs: []string{"All authorizations successfully revoked"},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
 				clients.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, mock.Anything)
 			},
@@ -219,7 +219,7 @@ func TestLogoutCommand(t *testing.T) {
 					Option: "someteam",
 				}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, clients *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
 				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
 				clients.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, mock.Anything)
 			},

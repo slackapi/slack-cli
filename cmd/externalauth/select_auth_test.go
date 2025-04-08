@@ -248,7 +248,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 					Return(types.ExternalAuthorizationInfoLists{}, errors.New("test error"))
 			},
 			ExpectedErrorStrings: []string{"test error"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -263,7 +263,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				})).Return(iostreams.SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingOptions))
 			},
 			ExpectedErrorStrings: []string{"No workflows found that require developer authorization"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything)
 			},
 		},
@@ -281,7 +281,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"Workflow not found"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -296,7 +296,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				})).Return(iostreams.SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingOptions))
 			},
 			ExpectedErrorStrings: []string{"No workflows found that require developer authorization"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -314,7 +314,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"Workflow not found"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -340,7 +340,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"No connected accounts found"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -372,7 +372,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"Workflow not found"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -397,7 +397,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"No connected accounts found"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -421,7 +421,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"Provider is not used in the selected workflow"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -447,7 +447,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"No connected accounts found"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -479,7 +479,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedOutputs: []string{"Workflow #/workflows/my_callback_id2 will use developer account xyz2@salesforce.com when making calls to provider_a APIs"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -510,7 +510,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedErrorStrings: []string{"Account is not used in the selected workflow"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -541,7 +541,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 				}, nil)
 			},
 			ExpectedOutputs: []string{"Workflow #/workflows/my_callback_id2 will use developer account xyz2@salesforce.com when making calls to provider_a APIs"},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		}}, func(clients *shared.ClientFactory) *cobra.Command {

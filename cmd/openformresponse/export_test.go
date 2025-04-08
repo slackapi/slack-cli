@@ -54,7 +54,7 @@ func TestExportCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appId, "stepId")
 			},
 		},
@@ -68,7 +68,7 @@ func TestExportCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appId, "stepId")
 			},
 		},

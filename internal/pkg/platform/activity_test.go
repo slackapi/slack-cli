@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -97,8 +98,8 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 	for name, tt := range map[string]struct {
 		Setup           func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context
 		Args            types.ActivityArgs
-		ExpectedAsserts func(*testing.T, *shared.ClientsMock) // Optional
-		ExpectedError   error                                 // Optional
+		ExpectedAsserts func(*testing.T, context.Context, *shared.ClientsMock) // Optional
+		ExpectedError   error                                                  // Optional
 	}{
 		"should return error if context contains no token": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
@@ -129,7 +130,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				cm.ApiInterface.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
 				return ctx
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertNumberOfCalls(t, "Activity", 1)
 			},
 		},
@@ -147,29 +148,29 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				}()
 				return ctx
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// with the above polling/canceling setup, expectation is activity called only once.
 				cm.ApiInterface.AssertNumberOfCalls(t, "Activity", 1)
 			},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
-			ctx = context.WithValue(ctx, config.CONTEXT_TOKEN, "sometoken")
 			// Create mocks
+			ctxMock := slackcontext.MockContext(context.Background())
+			ctxMock = context.WithValue(ctxMock, config.CONTEXT_TOKEN, "sometoken")
 			clientsMock := shared.NewClientsMock()
 			// Create clients that is mocked for testing
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			// Setup custom per-test mocks (higher priority than default mocks)
 			if tt.Setup != nil {
-				ctx = tt.Setup(t, ctx, clientsMock)
+				ctxMock = tt.Setup(t, ctxMock, clientsMock)
 			}
 			// Setup generic test suite mocks
 			clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 			// Setup default mock actions
 			clientsMock.AddDefaultMocks()
 
-			err := Activity(ctx, clients, &logger.Logger{}, tt.Args)
+			err := Activity(ctxMock, clients, &logger.Logger{}, tt.Args)
 			if tt.ExpectedError != nil {
 				assert.Contains(t, err.Error(), tt.ExpectedError.Error(), err)
 			} else {
@@ -177,7 +178,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 			}
 			// Assert mocks or other custom assertions
 			if tt.ExpectedAsserts != nil {
-				tt.ExpectedAsserts(t, clientsMock)
+				tt.ExpectedAsserts(t, ctxMock, clientsMock)
 			}
 		})
 	}

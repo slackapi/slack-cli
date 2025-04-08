@@ -148,7 +148,7 @@ func Test_Env_ListCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(
 					t,
 					"ListVariables",

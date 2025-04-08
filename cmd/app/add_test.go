@@ -352,7 +352,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, "T123", mock.Anything)
 			},
 		},

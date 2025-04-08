@@ -34,7 +34,7 @@ type CommandTests map[string]struct {
 	CmdArgs               []string                                                                      // Required, Example: ["my-app", "--template", "slack-samples/deno-starter-template", "--verbose"]
 	ExpectedOutputs       []string                                                                      // Optional
 	ExpectedStdoutOutputs []string                                                                      // Optional
-	ExpectedAsserts       func(*testing.T, *shared.ClientsMock)                                         // Optional
+	ExpectedAsserts       func(*testing.T, context.Context, *shared.ClientsMock)                        // Optional
 	ExpectedError         error                                                                         // Optional
 	ExpectedErrorStrings  []string                                                                      // Optional
 }
@@ -105,7 +105,7 @@ func TableTestCommand(t *testing.T, commandTests CommandTests, newCommandFunc fu
 
 			// Assert mocks or other custom assertions
 			if tt.ExpectedAsserts != nil {
-				tt.ExpectedAsserts(t, clientsMock)
+				tt.ExpectedAsserts(t, ctxMock, clientsMock)
 			}
 
 			if tt.Teardown != nil {

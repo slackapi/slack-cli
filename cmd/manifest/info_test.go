@@ -71,7 +71,7 @@ func TestInfoCommand(t *testing.T) {
 				cf.AppClient().Manifest = manifestMock
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				mockManifest := types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "app001",
@@ -102,7 +102,7 @@ func TestInfoCommand(t *testing.T) {
 				cf.AppClient().Manifest = manifestMock
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				mockManifest := types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "app002",
@@ -139,7 +139,7 @@ func TestInfoCommand(t *testing.T) {
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.MANIFEST_SOURCE_LOCAL, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				mockManifest := types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "app002",

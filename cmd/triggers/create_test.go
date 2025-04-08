@@ -75,7 +75,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Shortcut:      &api.Shortcut{},
@@ -106,7 +106,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Name:          "unit tests",
@@ -137,7 +137,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Name:          "unit tests",
@@ -173,7 +173,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Name:          "unit tests",
@@ -236,7 +236,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerRequest{
 					Type:          types.TriggerTypeScheduled,
 					Name:          "name",
@@ -285,7 +285,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
@@ -307,7 +307,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertNotCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -375,7 +375,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
 			},
@@ -406,7 +406,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
 			},
@@ -435,7 +435,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 			Teardown: func() {
@@ -499,7 +499,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 				appSelectTeardown()
 				workspaceInstallAppTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				appCommandMock.AssertCalled(t, "RunAddCommand", mock.Anything, mock.Anything, &newDevApp, mock.Anything)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
@@ -527,7 +527,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 				appSelectTeardown()
 				workspaceInstallAppTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				appCommandMock.AssertCalled(t, "RunAddCommand", mock.Anything, mock.Anything, &newProdApp, mock.Anything)
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},

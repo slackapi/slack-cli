@@ -74,7 +74,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				appClientMock.On("Remove", mock.Anything, mock.Anything).Return(fakeDeployedApp, nil)
 				cf.AppClient().AppClientInterface = appClientMock
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID)
 			},
 			ExpectedStdoutOutputs: []string{
@@ -107,7 +107,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				appClientMock.On("Remove", mock.Anything, mock.Anything).Return(fakeLocalApp, nil)
 				cf.AppClient().AppClientInterface = appClientMock
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "DeleteApp", mock.Anything, mock.Anything, fakeLocalApp.AppID)
 			},
 			ExpectedStdoutOutputs: []string{

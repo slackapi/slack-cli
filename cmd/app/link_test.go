@@ -95,7 +95,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedApp := types.App{
 					AppID:        mockLinkAppID1,
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
@@ -153,7 +153,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedApp := types.App{
 					AppID:      mockLinkAppID2,
 					TeamDomain: mockLinkSlackAuth2.TeamDomain,
@@ -220,7 +220,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedApp := types.App{
 					AppID:        mockLinkAppID1,
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
@@ -289,7 +289,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedApp := types.App{
 					AppID:        mockLinkAppID1,
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
@@ -365,7 +365,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			CmdArgs: []string{"--force"},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedApp := types.App{
 					AppID:      mockLinkAppID1,
 					TeamDomain: mockLinkSlackAuth2.TeamDomain,
@@ -481,7 +481,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedApp := types.App{
 					AppID:        mockLinkAppID1,
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
@@ -518,9 +518,7 @@ func Test_Apps_Link(t *testing.T) {
 				).Return(false, nil)
 			},
 			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
-				ctx := t.Context()
-
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert manifest confirmation prompt accepted
 				cm.IO.AssertCalled(t, "ConfirmPrompt",
 					mock.Anything,

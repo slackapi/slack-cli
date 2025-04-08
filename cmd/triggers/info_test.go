@@ -50,7 +50,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 			ExpectedOutputs: []string{
 				"Trigger Info",
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersInfo", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 			Teardown: func() {
@@ -89,7 +89,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersInfo", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
@@ -114,7 +114,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersInfo", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
@@ -132,7 +132,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 			Teardown: func() {
 				appSelectTeardown()
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersInfo", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
@@ -158,7 +158,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				"Hint:\n",
 				"Warning:\n",
 			},
-			ExpectedAsserts: func(t *testing.T, clientsMock *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersInfo", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
