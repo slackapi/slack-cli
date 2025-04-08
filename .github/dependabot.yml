@@ -6,9 +6,11 @@ updates:
       interval: "daily"
     labels:
       - "build"
+      - "semver:patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     labels:
       - "build"
+      - "semver:patch"
