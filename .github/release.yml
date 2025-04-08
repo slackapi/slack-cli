@@ -7,6 +7,9 @@ changelog:
     - title: 🐛 Bug Fixes
       labels:
         - bug
+    - title: 🤖 Build
+      labels:
+        - build
     - title: 🧪 Testing/Code Health
       labels:
         - code health
