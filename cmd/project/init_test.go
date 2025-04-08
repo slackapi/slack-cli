@@ -207,7 +207,7 @@ func Test_Project_InitCommand(t *testing.T) {
 					UserID:     mockLinkSlackAuth2.UserID,
 				}
 				actualApp, err := cm.AppClient.GetLocal(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth2.TeamID,
 				)
 				require.NoError(t, err)

@@ -103,7 +103,7 @@ func Test_Apps_Link(t *testing.T) {
 					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
 				}
 				actualApp, err := cm.AppClient.GetDeployed(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
 				require.NoError(t, err)
@@ -162,7 +162,7 @@ func Test_Apps_Link(t *testing.T) {
 					UserID:     mockLinkSlackAuth2.UserID,
 				}
 				actualApp, err := cm.AppClient.GetLocal(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth2.TeamID,
 				)
 				require.NoError(t, err)
@@ -228,7 +228,7 @@ func Test_Apps_Link(t *testing.T) {
 					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
 				}
 				actualApp, err := cm.AppClient.GetDeployed(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
 				require.NoError(t, err)
@@ -297,7 +297,7 @@ func Test_Apps_Link(t *testing.T) {
 					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
 				}
 				actualApp, err := cm.AppClient.GetDeployed(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
 				require.NoError(t, err)
@@ -374,7 +374,7 @@ func Test_Apps_Link(t *testing.T) {
 					UserID:     mockLinkSlackAuth2.UserID,
 				}
 				actualApp, err := cm.AppClient.GetLocal(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth2.TeamID,
 				)
 				require.NoError(t, err)
@@ -489,7 +489,7 @@ func Test_Apps_Link(t *testing.T) {
 					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
 				}
 				actualApp, err := cm.AppClient.GetDeployed(
-					context.Background(),
+					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
 				require.NoError(t, err)
