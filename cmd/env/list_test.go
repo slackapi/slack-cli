@@ -15,6 +15,7 @@
 package env
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
@@ -129,7 +130,7 @@ func Test_Env_ListCommandPreRun(t *testing.T) {
 func Test_Env_ListCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"list variables using arguments": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On(
 					"ListVariables",
 					mock.Anything,

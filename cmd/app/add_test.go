@@ -76,12 +76,12 @@ func TestAppAddCommandPreRun(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"errors if not run in a project directory": {
 			ExpectedError: slackerror.New(slackerror.ErrInvalidAppDirectory),
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 			},
 		},
 		"proceeds if run in a project directory": {
 			ExpectedError: nil,
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 			},
 		},
@@ -100,8 +100,7 @@ func TestAppAddCommandPreRun(t *testing.T) {
 						Message: "Cannot install apps with manifests sourced from app settings",
 					},
 				}),
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
@@ -113,8 +112,7 @@ func TestAppAddCommandPreRun(t *testing.T) {
 		},
 		"proceeds if manifest.source is local with the bolt experiment": {
 			ExpectedError: nil,
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
@@ -137,7 +135,7 @@ func TestAppAddCommand(t *testing.T) {
 		"adds a new deployed app": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm)
 
 				// Mock TeamSelector prompt to return "team1"
@@ -209,7 +207,7 @@ func TestAppAddCommand(t *testing.T) {
 		"updates an existing deployed app": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"Updated app manifest"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm)
 
 				// Mock TeamSelector prompt to return "team1"
@@ -291,7 +289,7 @@ func TestAppAddCommand(t *testing.T) {
 		"errors if authentication for the team is missing": {
 			CmdArgs:       []string{},
 			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm)
 				appSelectMock := prompts.NewAppSelectMock()
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
@@ -301,7 +299,7 @@ func TestAppAddCommand(t *testing.T) {
 		"adds a new deployed app to an org with a workspace grant": {
 			CmdArgs:         []string{"--" + cmdutil.OrgGrantWorkspaceFlag, "T123"},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm)
 				// Select workspace
 				appSelectMock := prompts.NewAppSelectMock()
@@ -361,7 +359,7 @@ func TestAppAddCommand(t *testing.T) {
 		"When admin approval request is pending, outputs instructions": {
 			CmdArgs:         []string{"--" + cmdutil.OrgGrantWorkspaceFlag, "T123"},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing", "Your request to install the app is pending", "complete installation by re-running"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm)
 				// Select workspace
 				appSelectMock := prompts.NewAppSelectMock()
@@ -417,7 +415,7 @@ func TestAppAddCommand(t *testing.T) {
 		"When admin approval request is cancelled, outputs instructions": {
 			CmdArgs:         []string{"--" + cmdutil.OrgGrantWorkspaceFlag, "T123"},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing", "Your request to install the app has been cancelled"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm)
 				// Select workspace
 				appSelectMock := prompts.NewAppSelectMock()

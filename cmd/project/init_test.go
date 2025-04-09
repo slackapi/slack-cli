@@ -54,7 +54,7 @@ func Test_Project_InitCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"requires bolt experiment": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Do not set experiment flag
 				setupProjectInitCommandMocks(t, cm, cf, false)
 			},
@@ -62,7 +62,7 @@ func Test_Project_InitCommand(t *testing.T) {
 		},
 		"init a project and do not link an existing app": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupProjectInitCommandMocks(t, cm, cf, true)
 				// Do not link an existing app
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(false, nil)
@@ -107,7 +107,7 @@ func Test_Project_InitCommand(t *testing.T) {
 		},
 		"init a project and link an existing app": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Mocks auths to match against team and app
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,

@@ -392,7 +392,7 @@ func TestQueryCommandExport(t *testing.T) {
 				`{"datastore":"Todos"}`,
 				`--to-file=my-file`,
 			},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
 				_, err := prepareExportMockData(cm, 10, 2)
 				assert.NoError(t, err)
@@ -421,7 +421,7 @@ func TestQueryCommandExport(t *testing.T) {
 				`--to-file=my-file`,
 			},
 			ExpectedOutputs: []string{"Export will be limited to the first 10000 items in the datastore"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
 				_, err := prepareExportMockData(cm, 10010, 100)
 				assert.NoError(t, err)

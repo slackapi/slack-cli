@@ -39,7 +39,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 			ExpectedOutputs: []string{
 				"Function 'F1234' can be added to workflows by app collaborators",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				// set distribution
 				clientsMock.ApiInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.APP_COLLABORATORS, mock.Anything).
 					Return([]types.FunctionDistributionUser{}, nil).Once()
@@ -65,7 +65,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				"U00",
 				"U01",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				// check if distribution type is named_entities
 				clientsMock.ApiInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.APP_COLLABORATORS, []types.FunctionDistributionUser{}, nil).Once()
@@ -96,7 +96,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				"Function 'F1234' can be added to workflows by the following users",
 				"U01",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				// check if distribution type is named_entities
 				clientsMock.ApiInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.NAMED_ENTITIES, []types.FunctionDistributionUser{{UserName: "user 0", ID: "U00"}, {UserName: "user 1", ID: "U01"}}, nil).Once()
@@ -123,7 +123,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				"Function 'F1234' can be added to workflows by the following users",
 				"everyone in the workspace",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("FunctionDistributionList", mock.Anything, "F1234", fakeApp.AppID).
 					Return(types.EVERYONE, []types.FunctionDistributionUser{}, nil).Once()
 				clientsMock.AddDefaultMocks()
@@ -143,7 +143,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 		},
 		"attempt to read permissions with the file flag": {
 			CmdArgs: []string{"--file", "permissions.json"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockAppSelection(installedProdApp)
 				err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)

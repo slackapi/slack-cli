@@ -15,6 +15,7 @@
 package env
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
@@ -131,7 +132,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"remove a variable using arguments": {
 			CmdArgs: []string{"ENV_NAME"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On(
 					"ListVariables",
 					mock.Anything,
@@ -174,7 +175,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		},
 		"remove a variable using prompt": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On(
 					"ListVariables",
 					mock.Anything,
@@ -233,7 +234,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		},
 		"exit without errors when prompting zero environment variables": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On(
 					"ListVariables",
 					mock.Anything,

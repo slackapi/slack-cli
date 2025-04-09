@@ -54,7 +54,7 @@ var mockLinkSlackAuth2 = types.SlackAuth{
 func Test_Apps_Link(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"saves information about the provided deployed app": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
@@ -111,7 +111,7 @@ func Test_Apps_Link(t *testing.T) {
 			},
 		},
 		"saves information about the provided local app": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
@@ -170,8 +170,7 @@ func Test_Apps_Link(t *testing.T) {
 			},
 		},
 		"avoids overwriting an app saved in json without confirmation": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
@@ -240,8 +239,7 @@ func Test_Apps_Link(t *testing.T) {
 				WithRemediation("Remove the app from this project or try again with --force"),
 		},
 		"avoids overwriting a matching app id for the team without confirmation": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
@@ -316,8 +314,7 @@ func Test_Apps_Link(t *testing.T) {
 				WithRemediation("Remove the app from this project or try again with --force"),
 		},
 		"completes overwriting an app saved in json with confirmation": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				ctx := context.Background()
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
@@ -385,7 +382,7 @@ func Test_Apps_Link(t *testing.T) {
 			},
 		},
 		"refuses to write an app with app id not existing upstream": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
@@ -433,7 +430,7 @@ func Test_Apps_Link(t *testing.T) {
 			ExpectedError: slackerror.New(slackerror.ErrAppNotFound),
 		},
 		"accept manifest source prompt and saves information about the provided deployed app": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
@@ -506,7 +503,7 @@ func Test_Apps_Link(t *testing.T) {
 			},
 		},
 		"decline manifest source prompt should not link app": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt

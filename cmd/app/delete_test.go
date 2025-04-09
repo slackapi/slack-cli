@@ -15,6 +15,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -49,7 +50,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"happy path; delete the deployed app": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareCommonDeleteMocks(t, cf, cm)
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -83,7 +84,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 		},
 		"happy path; delete the local app": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareCommonDeleteMocks(t, cf, cm)
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -116,7 +117,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 		},
 		"sad path; deleting the deployed app fails": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareCommonDeleteMocks(t, cf, cm)
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -143,7 +144,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 		"errors if authentication for the team is missing": {
 			CmdArgs:       []string{},
 			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareCommonDeleteMocks(t, cf, cm)
 				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 				appSelectMock := prompts.NewAppSelectMock()

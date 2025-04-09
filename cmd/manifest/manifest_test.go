@@ -15,6 +15,7 @@
 package manifest
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -34,7 +35,7 @@ func TestManifestCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"calls the manifest info command with a remote --app flag": {
 			CmdArgs: []string{"--app", "A0001"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt").Return(

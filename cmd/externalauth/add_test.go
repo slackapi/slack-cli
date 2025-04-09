@@ -139,7 +139,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 		"no params": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -167,7 +167,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 		"no params and no client secret set": {
 			CmdArgs:              []string{},
 			ExpectedErrorStrings: []string{"No client secret exists"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -195,7 +195,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 		"with provider_key": {
 			CmdArgs:         []string{"--provider", "provider_a"},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -223,7 +223,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 		"with no client secret set": {
 			CmdArgs:              []string{"--provider", "provider_a"},
 			ExpectedErrorStrings: []string{"No client secret exists"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -251,7 +251,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 		},
 		"when list api returns error": {
 			CmdArgs: []string{"--provider", "provider_a"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{

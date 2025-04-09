@@ -15,6 +15,7 @@
 package externalauth
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -241,7 +242,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"list api returns error": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{}, errors.New("test error"))
@@ -253,7 +254,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with no tokens and no params": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutTokens, nil)
@@ -268,7 +269,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with no tokens and workflow flag": {
 			CmdArgs: []string{"--workflow", "#/workflows/workflow_callback"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutTokens, nil)
@@ -286,7 +287,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with no workflows and no params": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutWorkflows, nil)
@@ -301,7 +302,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with no workflows and workflow flag": {
 			CmdArgs: []string{"--workflow", "#/workflows/workflow_callback"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutWorkflows, nil)
@@ -319,7 +320,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and no param": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -345,7 +346,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and invalid workflow param": {
 			CmdArgs: []string{"--workflow", "#/workflows/workflow_callback"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -377,7 +378,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and valid workflow param": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -402,7 +403,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and valid workflow invalid provider": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "test_provider"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -426,7 +427,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and valid workflow valid provider": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_b"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -452,7 +453,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and valid workflow valid provider with tokens": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_a"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -484,7 +485,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and valid workflow valid provider invalid account": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_a", "--external-account", "test_account"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
@@ -515,7 +516,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		},
 		"list with workflows and valid workflow valid provider valid account": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_a", "--external-account", "xyz2@salesforce.com"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)

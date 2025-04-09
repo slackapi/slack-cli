@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -52,7 +53,7 @@ func TestLoginCommmand(t *testing.T) {
 		"deprecated auth flag is noted in outputs": {
 			CmdArgs:         []string{"--auth", "xoxp-example"},
 			ExpectedOutputs: []string{deprecatedUserTokenMessage},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
 					TeamID:   &mockOrgAuth.TeamID,
@@ -79,7 +80,7 @@ func TestLoginCommmand(t *testing.T) {
 		"suggests creating a new app if not in a project": {
 			CmdArgs:               []string{"--ticket=example", "--challenge=tictactoe"},
 			ExpectedStdoutOutputs: []string{"Get started by creating a new app"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On(
 					"ExchangeAuthTicket",
 					mock.Anything,
@@ -109,7 +110,7 @@ func TestLoginCommmand(t *testing.T) {
 		"suggests listing existing apps from the project": {
 			CmdArgs:               []string{"--ticket", "example", "--challenge", "tictactoe"},
 			ExpectedStdoutOutputs: []string{"Review existing installations of the app"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On(
 					"ExchangeAuthTicket",
 					mock.Anything,
@@ -139,7 +140,7 @@ func TestLoginCommmand(t *testing.T) {
 		},
 		"happy path login with prompt flow should pass challenge code to ExchangeAuthTicket API": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter challenge code", iostreams.InputPromptConfig{
 					Required: true,
@@ -162,7 +163,7 @@ func TestLoginCommmand(t *testing.T) {
 		},
 		"should explode if ExchangeAuthTicket API fails": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter challenge code", iostreams.InputPromptConfig{
 					Required: true,

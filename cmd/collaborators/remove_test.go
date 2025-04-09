@@ -15,6 +15,7 @@
 package collaborators
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -50,7 +51,7 @@ func TestRemoveCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"always attempts to remove the collaborator provided via argument": {
 			CmdArgs: []string{"USLACKBOT"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").
@@ -69,7 +70,7 @@ func TestRemoveCommand(t *testing.T) {
 		},
 		"still attempts to remove the collaborator provided via prompt": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").
@@ -90,7 +91,7 @@ func TestRemoveCommand(t *testing.T) {
 		},
 		"avoids removing the user performing the command without confirmation": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").

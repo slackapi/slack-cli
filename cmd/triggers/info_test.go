@@ -36,7 +36,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"no params; use prompts to select a trigger": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockInfoAppSelection(installedProdApp)
 				mockRequestTrigger := createFakeTrigger(fakeTriggerID, "test trigger", "test app", "shortcut")
 				// promptForTriggerID lists available triggers
@@ -60,7 +60,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 		"app not installed": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID},
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockInfoAppSelection(newProdApp)
 				clientsMock.AddDefaultMocks()
 			},
@@ -75,7 +75,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				fakeTriggerID,
 				"everyone in the workspace",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockInfoAppSelection(installedProdApp)
 				mockRequestTrigger := createFakeTrigger(fakeTriggerID, "test trigger", "test app", "shortcut")
 				clientsMock.ApiInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
@@ -100,7 +100,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				fakeTriggerID,
 				"everyone in all workspaces in this org granted to this app",
 			},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockInfoAppSelection(installedProdOrgApp)
 				mockRequestTrigger := createFakeTrigger(fakeTriggerID, "test trigger", "test app", "shortcut")
 				clientsMock.ApiInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
@@ -121,7 +121,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 		"pass --trigger-id, failure": {
 			CmdArgs:              []string{"--trigger-id", fakeTriggerID},
 			ExpectedErrorStrings: []string{"invalid_auth"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockInfoAppSelection(installedProdApp)
 				clientsMock.ApiInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
@@ -138,7 +138,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 		},
 		"event trigger displays hints and warnings": {
 			CmdArgs: []string{"--trigger-id", fakeTriggerID},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockInfoAppSelection(installedProdApp)
 				mockRequestTrigger := createFakeTrigger(fakeTriggerID, "test trigger", "test app", "event")
 				clientsMock.ApiInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
@@ -175,7 +175,7 @@ func TestTriggersInfoCommand_AppSelection(t *testing.T) {
 		"selection error": {
 			CmdArgs:              []string{"--trigger-id", "Ft01435GGLBD"},
 			ExpectedErrorStrings: []string{"Error"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				appSelectTeardown = setupMockInfoAppSelection(newDevApp)
 				appSelectMock := prompts.NewAppSelectMock()
@@ -193,7 +193,7 @@ func TestTriggersInfoCommand_AppSelection(t *testing.T) {
 		"select an non-installed local app": {
 			CmdArgs:              []string{"--trigger-id", "Ft01435GGLBD"},
 			ExpectedErrorStrings: []string{cmdutil.LocalAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance
@@ -209,7 +209,7 @@ func TestTriggersInfoCommand_AppSelection(t *testing.T) {
 		"select an non-installed prod app": {
 			CmdArgs:              []string{"--trigger-id", "Ft01435GGLBD"},
 			ExpectedErrorStrings: []string{cmdutil.DeployedAppNotInstalledMsg},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
 				// the right place on the afero memfs instance

@@ -15,6 +15,7 @@
 package datastore
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
@@ -130,7 +131,7 @@ func TestCountCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"default to the empty expression when no expression is passed": {
 			CmdArgs: []string{"--datastore", "tasks"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
@@ -149,7 +150,7 @@ func TestCountCommand(t *testing.T) {
 		},
 		"pass an empty expression through arguments": {
 			CmdArgs: []string{`{"datastore":"tasks"}`},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
@@ -170,7 +171,7 @@ func TestCountCommand(t *testing.T) {
 			CmdArgs: []string{
 				`{"datastore":"tasks","expression":"#task_id < :num","expression_attributes":{"#task_id":"task_id"},"expression_values":{":num":"3"}}`,
 			},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
@@ -201,7 +202,7 @@ func TestCountCommand(t *testing.T) {
 			CmdArgs: []string{
 				`{"datastore":"Todos","app":"A001","expression":"#task_id < :num AND #status = :progress","expression_attributes":{"#task_id":"task_id","#status":"status"},"expression_values":{":num":"3",":progress":"wip"}}`,
 			},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
@@ -232,7 +233,7 @@ func TestCountCommand(t *testing.T) {
 		},
 		"pass an empty expression through prompts": {
 			CmdArgs: []string{"--unstable"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{
@@ -271,7 +272,7 @@ func TestCountCommand(t *testing.T) {
 		},
 		"pass an extended expression through prompts": {
 			CmdArgs: []string{"--unstable"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{

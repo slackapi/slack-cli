@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -30,7 +31,7 @@ func TestRevokeCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"revoke a token passed by flag": {
 			CmdArgs: []string{"--token", "xoxp-example-1234"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter a token to revoke", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("token"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -46,7 +47,7 @@ func TestRevokeCommand(t *testing.T) {
 		},
 		"require a set token value with the flag": {
 			CmdArgs: []string{"--token", ""},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter a token to revoke", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("token"),
 				})).Return(iostreams.PasswordPromptResponse{}, slackerror.New(slackerror.ErrMissingFlag))
@@ -58,7 +59,7 @@ func TestRevokeCommand(t *testing.T) {
 		},
 		"revoke a token input by prompt": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter a token to revoke", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("token"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -74,7 +75,7 @@ func TestRevokeCommand(t *testing.T) {
 		},
 		"verify errors are gracefully handled during the revoke": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter a token to revoke", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("token"),
 				})).Return(iostreams.PasswordPromptResponse{

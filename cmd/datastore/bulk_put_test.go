@@ -230,7 +230,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 				`{"datastore":"Todos"}`,
 				`--from-file=my-file`,
 			},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
 				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
@@ -260,7 +260,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 				`--from-file=my-file`,
 			},
 			ExpectedOutputs: []string{"Some items failed to be imported"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
 				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
@@ -303,7 +303,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 				`--from-file=my-file`,
 			},
 			ExpectedOutputs: []string{"Import will be limited to the first 5000 items in the file"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
 				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
@@ -326,7 +326,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 				`{"datastore":"Todos"}`,
 				`--from-file=my-file`,
 			},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
 
 				itemsFile, err := cm.Fs.Create("my-file")

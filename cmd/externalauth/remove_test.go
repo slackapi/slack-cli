@@ -140,7 +140,7 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 		"no params": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -167,7 +167,7 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 		"with --provider": {
 			CmdArgs:         []string{"--provider", "provider_a"},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -192,7 +192,7 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 		"with --all": {
 			CmdArgs:         []string{"--all"},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -217,7 +217,7 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 		"with --all and --provider": {
 			CmdArgs:         []string{"--all", "--provider", "provider_a"},
 			ExpectedOutputs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
@@ -242,7 +242,7 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 		},
 		"with --all but no auth present": {
 			CmdArgs: []string{"--all"},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.ApiInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{

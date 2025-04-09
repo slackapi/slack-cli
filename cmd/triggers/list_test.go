@@ -15,6 +15,7 @@
 package triggers
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -34,7 +35,7 @@ func TestTriggersListCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"list no triggers": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockListAppSelection(installedProdApp)
 
 				// Mock API responses
@@ -62,7 +63,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 		"list one trigger for a workspace app": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockListAppSelection(installedProdApp)
 
 				// Mock API responses
@@ -99,7 +100,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 		"list one trigger for an org app": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockListAppSelection(installedProdOrgApp)
 
 				// Mock API responses
@@ -136,7 +137,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 		"list multiple triggers": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockListAppSelection(installedProdApp)
 
 				// Mock API responses

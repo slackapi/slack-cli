@@ -15,6 +15,7 @@
 package docgen
 
 import (
+	"context"
 	"errors"
 	"path/filepath"
 	"testing"
@@ -32,7 +33,7 @@ func TestNewDocsCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"when no path argument": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Fs.On("MkdirAll", mock.Anything, mock.Anything).Return(nil)
 			},
 			ExpectedOutputs: []string{
@@ -76,7 +77,7 @@ func TestNewDocsCommand(t *testing.T) {
 		},
 		"when path argument exists": {
 			CmdArgs: []string{"markdown-docs"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Fs.On("MkdirAll", mock.Anything, mock.Anything).Return(nil)
 			},
 			ExpectedOutputs: []string{
@@ -118,7 +119,7 @@ func TestNewDocsCommand(t *testing.T) {
 			},
 		},
 		"when Getwd returns error": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Fs.On("MkdirAll", mock.Anything, mock.Anything).Return(nil)
 				cm.Os.On("Getwd").Return("", errors.New("somehow there is no cwd"))
 			},
@@ -152,7 +153,7 @@ func TestNewDocsCommand(t *testing.T) {
 			},
 		},
 		"when creating the default docs directory fails": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Fs.On(
 					"MkdirAll",
 					filepath.Join(slackdeps.MockWorkingDirectory, "docs"),
@@ -165,7 +166,7 @@ func TestNewDocsCommand(t *testing.T) {
 			ExpectedErrorStrings: []string{"no write permission"},
 		},
 		"when creating the default commands directory fails": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Fs.On(
 					"MkdirAll",
 					filepath.Join(slackdeps.MockWorkingDirectory, "docs"),
@@ -185,7 +186,7 @@ func TestNewDocsCommand(t *testing.T) {
 			ExpectedErrorStrings: []string{"no write permission"},
 		},
 		"when generating docs fails": {
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Cobra.On(
 					"GenMarkdownTree",
 					mock.Anything,

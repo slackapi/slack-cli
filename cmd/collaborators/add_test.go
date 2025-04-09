@@ -31,7 +31,7 @@ func TestAddCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"add an experimental reader collaborator from user id": {
 			CmdArgs: []string{"U123", "--permission-type", "reader"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -55,7 +55,7 @@ func TestAddCommand(t *testing.T) {
 		},
 		"add an owner collaborator from collaborator email": {
 			CmdArgs: []string{"joe.smith@company.com", "--permission-type", "owner"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
@@ -80,7 +80,7 @@ func TestAddCommand(t *testing.T) {
 		},
 		"default to owner if permission type is not specified": {
 			CmdArgs: []string{"joe.smith@company.com"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()

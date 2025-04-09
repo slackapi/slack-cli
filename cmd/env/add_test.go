@@ -144,7 +144,7 @@ func Test_Env_AddCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"add a variable using arguments": {
 			CmdArgs: []string{"ENV_NAME", "ENV_VALUE"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddCommandMocks(cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
@@ -168,7 +168,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		},
 		"provide a variable name by argument and value by prompt": {
 			CmdArgs: []string{"ENV_NAME"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddCommandMocks(cm, cf)
 				cm.IO.On(
 					"PasswordPrompt",
@@ -199,7 +199,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		},
 		"provide a variable name by argument and value by flag": {
 			CmdArgs: []string{"ENV_NAME", "--value", "example_value"},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddCommandMocks(cm, cf)
 				cm.IO.On(
 					"PasswordPrompt",
@@ -230,7 +230,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		},
 		"provide both variable name and value by prompt": {
 			CmdArgs: []string{},
-			Setup: func(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddCommandMocks(cm, cf)
 				cm.IO.On(
 					"InputPrompt",
