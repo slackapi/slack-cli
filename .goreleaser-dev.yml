@@ -53,7 +53,8 @@ archives:
       - slack-macos
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     name_template: >-
       {{- .ProjectName }}_
       {{- .Env.BUILD_VERSION }}_
@@ -64,7 +65,7 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
 
 snapshot:
-  version_template: "{{.Env.BUILD_VERSION}}"
+  version_template: "{{ .Env.BUILD_VERSION }}"
 
 release:
   disable: true
