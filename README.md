@@ -2,7 +2,7 @@
 
 [![tests](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/slackapi/slack-cli/branch/main/graph/badge.svg?token=G5TU59IV9I)](https://codecov.io/gh/slackapi/slack-cli)
-[![circleci](https://dl.circleci.com/status-badge/img/gh/slackapi/slack-cli/tree/main.svg?style=svg&circle-token=CCIPRJ_TfxL4UXvmnaoZ6np7aRRsT_df235908b5a56f4206787b59c6fbee59490ac35d)](https://dl.circleci.com/status-badge/redirect/gh/slackapi/slack-cli/tree/main)
+[![circleci](https://dl.circleci.com/status-badge/img/gh/slackapi/slack-cli/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/slackapi/slack-cli/tree/main)
 
 > Command-line interface for building apps on the Slack Platform.
 
