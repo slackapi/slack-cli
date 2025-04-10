@@ -26,10 +26,10 @@ jobs:
             # Delete the pre-release
             if GH_DEBUG=1 gh release --repo="slackapi/slack-cli" delete "$TAG_NAME" -y --cleanup-tag; then
               echo "Successfully deleted $TAG_NAME"
-              exit 0
             else
               echo "Failed to find $TAG_NAME, trying next..."
             fi
+            sleep 1
           done
           echo "No matching pre-releases tag was found for the branch $TAG_NAME in recent versions"
           exit 1
