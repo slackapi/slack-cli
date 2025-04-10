@@ -127,6 +127,8 @@ func RunLoginCommand(clients *shared.ClientFactory, cmd *cobra.Command) (types.S
 }
 
 func printAuthSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, credentialsPath string, token string) {
+	ctx := cmd.Context()
+
 	var secondaryLog string
 	if credentialsPath != "" {
 		secondaryLog = fmt.Sprintf("Authorization data was saved to %s", style.HomePath(credentialsPath))
@@ -134,7 +136,6 @@ func printAuthSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, credentialsPa
 		secondaryLog = fmt.Sprintf("Service token:\n\n  %s\n\nMake sure to copy the token now and save it safely.", token)
 	}
 
-	ctx := cmd.Context()
 	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "key",
 		Text:      "You've successfully authenticated!",

@@ -35,7 +35,7 @@ package slacktrace
 // To add trace output to a command:
 //
 // use,
-// clients.IO.PrintTrace(cmd.Context(), slacktrace.<NAMEDCONST>)
+// clients.IO.PrintTrace(ctx, slacktrace.<NAMEDCONST>)
 const (
 	AdminAppApprovalRequestPending         = "SLACK_TRACE_ADMIN_APPROVAL_REQUEST_PENDING"
 	AdminAppApprovalRequestReasonSubmitted = "SLACK_TRACE_ADMIN_APPROVAL_REQUEST_REASON_SUBMITTED"

@@ -118,6 +118,8 @@ func (u *UpdateNotification) Dependencies() []Dependency {
 // PrintUpdates displays an update message after the command runs and prompts the user if they want to update, if applicable
 // Invoked from root command's post-run method. If an error occurs, we return it so it is raised to the user.
 func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command, cliVersion string) error {
+	ctx := cmd.Context()
+
 	if updateNotification.WaitForCheckForUpdateInBackground() {
 		for _, dependency := range updateNotification.Dependencies() {
 			hasUpdate, err := dependency.HasUpdate()
@@ -131,7 +133,7 @@ func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command, cliVersio
 					return err
 				}
 				if shouldSelfUpdate {
-					if err := dependency.InstallUpdate(cmd.Context()); err != nil {
+					if err := dependency.InstallUpdate(ctx); err != nil {
 						return err
 					}
 				}

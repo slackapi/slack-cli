@@ -68,7 +68,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			},
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
-			var span, _ = opentracing.StartSpanFromContext(cmd.Context(), "cmd.version")
+			ctx := cmd.Context()
+			span, _ := opentracing.StartSpanFromContext(ctx, "cmd.version")
 			defer span.Finish()
 
 			cmd.Println(Template())

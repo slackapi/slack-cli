@@ -559,7 +559,7 @@ func printAccess(cmd *cobra.Command, clients *shared.ClientFactory, token string
 
 	accessType, userAccessList, err := clients.ApiInterface().TriggerPermissionsList(ctx, token, accessFlags.triggerId)
 	if err != nil {
-		clients.IO.PrintTrace(cmd.Context(), slacktrace.TriggersAccessError)
+		clients.IO.PrintTrace(ctx, slacktrace.TriggersAccessError)
 		return err
 	}
 
@@ -572,18 +572,20 @@ func printAccess(cmd *cobra.Command, clients *shared.ClientFactory, token string
 	} else if accessType == types.NAMED_ENTITIES {
 		err = printNamedEntitiesHelper(cmd, clients, token, userAccessList, "list")
 	}
-	clients.IO.PrintTrace(cmd.Context(), slacktrace.TriggersAccessSuccess)
+	clients.IO.PrintTrace(ctx, slacktrace.TriggersAccessSuccess)
 	return err
 }
 
 // printCurrentAuthorizedEntities formats and displays current access information
 func printCurrentAuthorizedEntities(cmd *cobra.Command, clients *shared.ClientFactory, token string, app types.App, currentAccessList []string, currentAccessType types.Permission) error {
+	ctx := cmd.Context()
+
 	cmd.Println()
 	if currentAccessType == types.EVERYONE {
 		var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
-		clients.IO.PrintInfo(cmd.Context(), false, "Trigger '%s' can be found and run by %s\n", accessFlags.triggerId, everyoneAccessTypeDescription)
+		clients.IO.PrintInfo(ctx, false, "Trigger '%s' can be found and run by %s\n", accessFlags.triggerId, everyoneAccessTypeDescription)
 	} else if currentAccessType == (types.APP_COLLABORATORS) {
-		clients.IO.PrintInfo(cmd.Context(), false, "Access is currently granted to %s:", style.Pluralize("app collaborator", "app collaborators", len(currentAccessList)))
+		clients.IO.PrintInfo(ctx, false, "Access is currently granted to %s:", style.Pluralize("app collaborator", "app collaborators", len(currentAccessList)))
 		err := printAppCollaboratorsHelper(cmd, clients, token, currentAccessList)
 		if err != nil {
 			return err

@@ -619,7 +619,7 @@ func Test_Config_CreateProjectConfigJSONFile(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
+			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
 
 			// Create the project directory and .slack directory

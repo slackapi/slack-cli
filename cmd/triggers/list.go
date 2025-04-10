@@ -72,7 +72,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 // runListCommand will execute the list command
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(cmd.Context(), "cmd.triggers.list")
+	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.list")
 	defer span.Finish()
 
 	// Get the app selection and accompanying auth from the flag or prompt

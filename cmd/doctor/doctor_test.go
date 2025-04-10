@@ -51,6 +51,7 @@ func TestDoctorCommand(t *testing.T) {
 	expectedUpdateTime := "0001-01-01 00:00:00 Z"
 
 	t.Run("creates a complete report", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{expectedCredentials}, nil)
 		clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
@@ -90,7 +91,7 @@ func TestDoctorCommand(t *testing.T) {
 		err := cmd.Execute()
 		require.NoError(t, err)
 
-		report, err := performChecks(cmd.Context(), clients)
+		report, err := performChecks(ctx, clients)
 		require.NoError(t, err)
 
 		expectedValues := DoctorReport{

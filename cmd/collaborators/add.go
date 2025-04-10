@@ -58,7 +58,8 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runAddCommandFunc(cmd.Context(), clients, cmd, args)
+			ctx := cmd.Context()
+			return runAddCommandFunc(ctx, clients, cmd, args)
 		},
 	}
 	cmd.Flags().StringVarP(&addFlags.permissionType, "permission-type", "P", "", "collaborator permission type: reader, owner")

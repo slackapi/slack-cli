@@ -102,7 +102,9 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			`{{Emoji "books"}}Get started by reading the docs: {{LinkText "https://api.slack.com/automation"}}`,
 		}, "\n"),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			clients.IO.SetCmdIO(cmd)
+
 			// Set user-invoked command (for metrics)
 			clients.Config.Command = strings.Join(strings.Split(cmd.CommandPath(), " ")[1:], " ")
 			clients.Config.CommandCanonical = clients.Config.Command
@@ -118,9 +120,9 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 					clients.Config.RawFlags = append(clients.Config.RawFlags, flag.Name)
 				}
 			})
+
 			// Check for an CLI update in the background while the command runs
 			updateNotification = update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
-			ctx := cmd.Context()
 			updateNotification.CheckForUpdateInBackground(ctx, false)
 			return nil
 		},
@@ -204,7 +206,7 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 	// OnInitialize will execute before any root or child commands' Pre* methods.
 	// This is a good place to house CLI bootup routines.
 	cobra.OnInitialize(func() {
-		err := InitConfig(clients, rootCmd)
+		err := InitConfig(rootCmd.Context(), clients, rootCmd)
 		if err != nil {
 			clients.IO.PrintError(rootCmd.Context(), err.Error())
 			clients.Os.Exit(int(iostreams.ExitError))
@@ -220,8 +222,7 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 // InitConfig reads in config files and ENV variables if set and sets up the CLI for functioning. Executes _before_ any Pre* methods from the root or child commands, but after Cobra parses flags and command arguments.
 // Put global CLI initialization routines that rely on flag and argument parsing in here please!
 // TODO: consider using arguments for this function for certain dependencies, like working directory and other OS-specific strings, that OnInitialize above can provide during actual execution, but that we can override with test values for easier testing.
-func InitConfig(clients *shared.ClientFactory, rootCmd *cobra.Command) error {
-	ctx := rootCmd.Context()
+func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cobra.Command) error {
 
 	// Get the current working directory (usually, but not always the project)
 	workingDirPath, err := clients.Os.Getwd()
