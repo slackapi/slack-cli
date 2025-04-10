@@ -399,7 +399,7 @@ func TestQueryCommandExport(t *testing.T) {
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				status, _ := exportProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully exported (10) items!")
 
@@ -428,7 +428,7 @@ func TestQueryCommandExport(t *testing.T) {
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				status, _ := exportProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully exported (10000) items!")
 			},

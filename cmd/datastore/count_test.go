@@ -135,7 +135,7 @@ func TestCountCommand(t *testing.T) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountTotal, []string{"12"})
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountDatastore, []string{"tasks"})
@@ -154,7 +154,7 @@ func TestCountCommand(t *testing.T) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountTotal, []string{"12"})
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountDatastore, []string{"tasks"})
@@ -175,7 +175,7 @@ func TestCountCommand(t *testing.T) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountTotal, []string{"12"})
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountDatastore, []string{"tasks"})
@@ -206,7 +206,7 @@ func TestCountCommand(t *testing.T) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "tasks", Count: 12}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountTotal, []string{"12"})
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountDatastore, []string{"tasks"})
@@ -254,7 +254,7 @@ func TestCountCommand(t *testing.T) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "numbers", Count: 12}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountTotal, []string{"12"})
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountDatastore, []string{"numbers"})
@@ -310,7 +310,7 @@ func TestCountCommand(t *testing.T) {
 				cm.ApiInterface.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "numbers", Count: 6}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountTotal, []string{"6"})
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DatastoreCountDatastore, []string{"numbers"})

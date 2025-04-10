@@ -39,7 +39,7 @@ func TestUpdateCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(context.Background(), clientsMock.IO.PrintDebug)
+				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				// Mock APi call
 				clientsMock.ApiInterface.On("UpdateCollaborator", mock.Anything, mock.Anything,
 					"A123",
@@ -57,7 +57,7 @@ func TestUpdateCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(context.Background(), clientsMock.IO.PrintDebug)
+				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				// Mock APi call
 				clientsMock.ApiInterface.On("UpdateCollaborator", mock.Anything, mock.Anything,
 					"A123",
@@ -71,7 +71,7 @@ func TestUpdateCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(context.Background(), clientsMock.IO.PrintDebug)
+				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 			},
 		},
 		"user ID must be provided": {
@@ -81,7 +81,7 @@ func TestUpdateCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(context.Background(), clientsMock.IO.PrintDebug)
+				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

@@ -39,13 +39,13 @@ func TestAddCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
-				cm.Config.LoadExperiments(context.Background(), cm.IO.PrintDebug)
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				// Mock API call
 				cm.ApiInterface.On("AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{ID: "U123", PermissionType: types.READER}).Return(nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{ID: "U123", PermissionType: types.READER})
@@ -63,14 +63,14 @@ func TestAddCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
-				cm.Config.LoadExperiments(context.Background(), cm.IO.PrintDebug)
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				// Mock API call
 				cm.ApiInterface.On("AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER}).Return(nil)
 				addFlags.permissionType = "owner"
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER})
@@ -90,7 +90,7 @@ func TestAddCommand(t *testing.T) {
 				cm.ApiInterface.On("AddCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER})

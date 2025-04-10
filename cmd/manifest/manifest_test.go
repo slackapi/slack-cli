@@ -54,7 +54,7 @@ func TestManifestCommand(t *testing.T) {
 				cf.AppClient().Manifest = manifestMock
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				mockManifest := types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "app001",

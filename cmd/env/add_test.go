@@ -147,7 +147,7 @@ func Test_Env_AddCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddCommandMocks(cm, cf)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(
 					t,
 					"AddVariable",
@@ -185,7 +185,7 @@ func Test_Env_AddCommand(t *testing.T) {
 					nil,
 				)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(
 					t,
 					"AddVariable",
@@ -216,7 +216,7 @@ func Test_Env_AddCommand(t *testing.T) {
 					nil,
 				)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(
 					t,
 					"AddVariable",
@@ -256,7 +256,7 @@ func Test_Env_AddCommand(t *testing.T) {
 					nil,
 				)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(
 					t,
 					"AddVariable",

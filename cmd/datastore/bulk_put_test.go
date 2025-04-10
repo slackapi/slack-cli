@@ -243,7 +243,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				status, _ := importProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully imported (30) items! (0) items failed to be imported. Total processed items is (30)")
 
@@ -273,7 +273,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				status, _ := importProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully imported (30) items! (5) items failed to be imported. Total processed items is (35)")
 
@@ -316,7 +316,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				status, _ := importProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully imported (5000) items! (0) items failed to be imported. Total processed items is (5000)")
 			},
@@ -343,7 +343,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				status, _ := importProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully imported (2) items! (0) items failed to be imported. Total processed items is (2)")
 

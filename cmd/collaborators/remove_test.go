@@ -59,7 +59,7 @@ func TestRemoveCommand(t *testing.T) {
 				cm.ApiInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				collaborator := types.SlackUser{
 					ID: "USLACKBOT",
 				}
@@ -83,7 +83,7 @@ func TestRemoveCommand(t *testing.T) {
 				cm.IO.On("SelectPrompt", mock.Anything, "Remove a collaborator", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, "A001", mockCollaborators[1])
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorRemoveSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorRemoveCollaborator, []string{"reader@slack.com"})
@@ -106,7 +106,7 @@ func TestRemoveCommand(t *testing.T) {
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to remove yourself?", mock.Anything, mock.Anything).
 					Return(false, nil)
 			},
-			ExpectedAsserts: func(t *testing.T, cm *shared.ClientsMock) {
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertNotCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
