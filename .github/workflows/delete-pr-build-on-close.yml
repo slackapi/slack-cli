@@ -19,6 +19,7 @@ jobs:
         run: |
           # Figure out tag name from branch name. This is coupled to the tag name generation that exists in .circleci/config.yml's `create-github-release` job.
           RELEASES=$(gh release list --repo="slackapi/slack-cli" --order="desc" --json="tagName" --exclude-drafts --exclude-pre-releases --limit=24 --jq ".[] | .tagName")
+          RELEASE_FOUND=1
           for TAGS in $RELEASES; do
             TAG_NAME="${TAGS}-${{ github.event.ref }}"
             echo "Identified pre-release tagname to 🔪: $TAG_NAME"
@@ -26,10 +27,13 @@ jobs:
             # Delete the pre-release
             if GH_DEBUG=1 gh release --repo="slackapi/slack-cli" delete "$TAG_NAME" -y --cleanup-tag; then
               echo "Successfully deleted $TAG_NAME"
+              RELEASE_FOUND=0
             else
               echo "Failed to find $TAG_NAME, trying next..."
             fi
             sleep 1
           done
-          echo "No matching pre-releases tag was found for the branch $TAG_NAME in recent versions"
-          exit 1
+          if [ "$RELEASE_FOUND" -ne 0 ]; then
+            echo "No matching pre-releases tag was found for the branch $TAG_NAME in recent versions"
+          fi
+          exit "$RELEASE_FOUND"
