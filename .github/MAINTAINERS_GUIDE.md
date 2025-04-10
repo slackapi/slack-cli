@@ -671,7 +671,7 @@ definitions:
   or tests.
 - `discussion`: An issue that is purely meant to hold a discussion. Typically
   the maintainers are looking for feedback in this issues.
-- `documentation`: An issue that is purely about documentation work.
+- `docs`: An issue that is purely about documentation work.
 - `duplicate`: An issue that is functionally the same as another issue. Apply
   this only if you've linked the other issue by number.
 - `enhancement`: A feature request for something this package might not already
@@ -698,7 +698,7 @@ marking them with a basic level of information with labels. An issue should have
 - `build`
 - `code health`
 - `discussion`
-- `documentation`
+- `docs`
 - `enhancement`
 - `needs info`
 - `question`
