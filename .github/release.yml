@@ -7,6 +7,9 @@ changelog:
     - title: 🐛 Bug Fixes
       labels:
         - bug
+    - title: 📚 Documentation
+      labels:
+        - docs
     - title: 🤖 Build
       labels:
         - build
@@ -16,9 +19,6 @@ changelog:
     - title: 🔒 Security
       labels:
         - security
-    - title: 🛠 Maintainers
-      labels:
-        - documentation
     - title: 📦 Other changes
       labels:
         - "*"
