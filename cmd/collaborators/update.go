@@ -75,7 +75,7 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 // runUpdateCommand will execute the update command
 func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []string) error {
 	ctx := cmd.Context()
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.Collaborators.Update")
+	span, _ := opentracing.StartSpanFromContext(ctx, "cmd.Collaborators.Update")
 	defer span.Finish()
 
 	var slackUser types.SlackUser
