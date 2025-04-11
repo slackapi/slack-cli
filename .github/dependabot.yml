@@ -5,10 +5,12 @@ updates:
     schedule:
       interval: "daily"
     labels:
-      - "code health"
+      - "build"
+      - "semver:patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
     labels:
-      - "code health"
+      - "build"
+      - "semver:patch"

@@ -223,7 +223,6 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 // Put global CLI initialization routines that rely on flag and argument parsing in here please!
 // TODO: consider using arguments for this function for certain dependencies, like working directory and other OS-specific strings, that OnInitialize above can provide during actual execution, but that we can override with test values for easier testing.
 func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cobra.Command) error {
-
 	// Get the current working directory (usually, but not always the project)
 	workingDirPath, err := clients.Os.Getwd()
 	if err != nil {

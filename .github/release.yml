@@ -7,15 +7,18 @@ changelog:
     - title: 🐛 Bug Fixes
       labels:
         - bug
+    - title: 📚 Documentation
+      labels:
+        - docs
+    - title: 🤖 Build
+      labels:
+        - build
     - title: 🧪 Testing/Code Health
       labels:
         - code health
     - title: 🔒 Security
       labels:
         - security
-    - title: 🛠 Maintainers
-      labels:
-        - documentation
     - title: 📦 Other changes
       labels:
         - "*"

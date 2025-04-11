@@ -664,33 +664,44 @@ definitions:
 
 - `bug`: A confirmed bug report. A bug is considered confirmed when reproduction
   steps have been documented and the issue has been reproduced.
-- `enhancement`: A feature request for something this package might not already
-  do.
-- `documentation`: An issue that is purely about documentation work.
-- `tests`: An issue that is purely about testing work.
-- `needs info`: An issue that may have claimed to be a bug but was not
-  reproducible, or was otherwise missing some information.
+- `build`: A change to the build, compile, or CI/CD pipeline.
+- `changelog`: An issue or pull request that should be mentioned in the public
+  release notes or CHANGELOG.
+- `code health`: An issue or pull request that is focused on internal refactors
+  or tests.
 - `discussion`: An issue that is purely meant to hold a discussion. Typically
   the maintainers are looking for feedback in this issues.
+- `docs`: An issue that is purely about documentation work.
+- `duplicate`: An issue that is functionally the same as another issue. Apply
+  this only if you've linked the other issue by number.
+- `enhancement`: A feature request for something this package might not already
+  do.
+- `experiment`: A change that is accessed behind the --experiment flag or toggle
+- `good first issue`: An issue that has a well-defined relatively-small scope,
+  with clear expectations. It helps when the testing approach is also known.
+- `needs info`: An issue that may have claimed to be a bug but was not
+  reproducible, or was otherwise missing some information.
 - `question`: An issue that is like a support request because the user's usage
   was not correct.
 - `security`: An issue that has special consideration for security reasons.
-- `good first issue`: An issue that has a well-defined relatively-small scope,
-  with clear expectations. It helps when the testing approach is also known.
-- `duplicate`: An issue that is functionally the same as another issue. Apply
-  this only if you've linked the other issue by number.
+- `semver:major`: A change that requires a semver major release.
+- `semver:minor`: A change that requires a semver minor release.
+- `semver:patch`: A change that requires a semver patch release.
+- `server side issue`: An issue that exists on the Slack Platform, Slack API,
+  or other remote endpoint.
 
 **Triage** is the process of taking new issues that aren't yet "seen" and
 marking them with a basic level of information with labels. An issue should have
 **one** of the following labels applied:
 
 - `bug`
-- `enhancement`
-- `question`
-- `needs info`
-- `docs`
-- `tests`
+- `build`
+- `code health`
 - `discussion`
+- `docs`
+- `enhancement`
+- `needs info`
+- `question`
 
 _Hint: The main triage issues always have a description that starts with `M-T:`_
 
@@ -718,7 +729,7 @@ Steps to triage a pull request:
 3. **Labels**:
    1. One of the following main labels to describe the type of pull request:
       - Main labels always have a description that starts with `M-T:`
-        - Example: `enhancement`, `bug`, `discussion`, `documentation`, `tests`
+        - Example: `enhancement`, `bug`, `discussion`, `documentation`, `code health`
         - Note: The main labels are used to organize the automated CHANGELOG
       - The `changelog` label denotes changes to document in the public Slack
         API Docs release notes
