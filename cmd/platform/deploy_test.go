@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -145,6 +146,7 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
@@ -157,7 +159,6 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 				clients.SDKConfig.Hooks.Deploy.Command = tt.deployScript
 			})
-			ctx := context.Background()
 			err := hasValidDeploymentMethod(ctx, clients, types.App{}, types.SlackAuth{})
 			if tt.expectedError != nil {
 				require.Error(t, err)

@@ -28,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -118,8 +119,8 @@ func Test_LocalServer_Start(t *testing.T) {
 				defer ts.Close()
 				wsFakeURL = "ws" + strings.TrimPrefix(ts.URL, "http")
 			}
-			ctx := context.Background()
 			// Create mocks
+			ctx := slackcontext.MockContext(t.Context())
 			conn := NewWebSocketConnMock()
 			clientsMock := shared.NewClientsMock()
 			// Create clients that is mocked for testing
@@ -330,8 +331,8 @@ func Test_LocalServer_Listen(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
 			// Create mocks
+			ctx := slackcontext.MockContext(t.Context())
 			conn := NewWebSocketConnMock()
 			clientsMock := shared.NewClientsMock()
 			// Create clients that is mocked for testing

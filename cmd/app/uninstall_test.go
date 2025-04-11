@@ -48,7 +48,7 @@ func TestAppsUninstall(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"Successfully uninstall": {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				prepareCommonUninstallMocks(clients, clientsMock)
+				prepareCommonUninstallMocks(ctx, clients, clientsMock)
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
 			},
@@ -58,7 +58,7 @@ func TestAppsUninstall(t *testing.T) {
 		},
 		"Successfully uninstall with a get-manifest hook error": {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				prepareCommonUninstallMocks(clients, clientsMock)
+				prepareCommonUninstallMocks(ctx, clients, clientsMock)
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
 				manifestMock := &app.ManifestMockObject{}
@@ -73,7 +73,7 @@ func TestAppsUninstall(t *testing.T) {
 		"Fail to uninstall due to API error": {
 			ExpectedError: slackerror.New("something went wrong"),
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				prepareCommonUninstallMocks(clients, clientsMock)
+				prepareCommonUninstallMocks(ctx, clients, clientsMock)
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(slackerror.New("something went wrong")).Once()
 			},
@@ -82,7 +82,7 @@ func TestAppsUninstall(t *testing.T) {
 			CmdArgs:       []string{},
 			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				prepareCommonUninstallMocks(cf, cm)
+				prepareCommonUninstallMocks(ctx, cf, cm)
 				appSelectMock := prompts.NewAppSelectMock()
 				uninstallAppSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{App: fakeApp}, nil)
@@ -95,7 +95,7 @@ func TestAppsUninstall(t *testing.T) {
 	})
 }
 
-func prepareCommonUninstallMocks(clients *shared.ClientFactory, clientsMock *shared.ClientsMock) *shared.ClientFactory {
+func prepareCommonUninstallMocks(ctx context.Context, clients *shared.ClientFactory, clientsMock *shared.ClientsMock) *shared.ClientFactory {
 
 	// Mock App Selection
 	appSelectMock := prompts.NewAppSelectMock()
@@ -124,7 +124,7 @@ func prepareCommonUninstallMocks(clients *shared.ClientFactory, clientsMock *sha
 
 	clients.AppClient().AppClientInterface = appClientMock
 
-	err := clients.AppClient().SaveDeployed(context.Background(), fakeApp)
+	err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 	if err != nil {
 		panic("error setting up test; cant write apps.json")
 	}
