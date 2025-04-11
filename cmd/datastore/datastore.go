@@ -53,7 +53,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"This command is supported for apps deployed to Slack managed infrastructure but",
 			"other apps can attempt to run the command with the --force flag.",
 			"",
-			`Discover the datastores: {{LinkText "https://api.slack.com/automation/datastores"}}`,
+			`Discover the datastores: {{LinkText "https://tools.slack.dev/deno-slack-sdk/guides/using-datastores"}}`,
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{

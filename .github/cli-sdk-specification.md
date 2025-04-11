@@ -50,7 +50,7 @@ Some hooks may return data as part of their functionality. The CLI will use the 
 
 ### ↪️ Discover hook scripts and default configuration with `get-hooks`
 
-In order for the CLI to reliably discover the hooks for the [Deno SDK](https://github.com/slackapi/deno-slack-sdk/), [Bolt Frameworks](https://api.slack.com/tools), and future community-driven SDKs, the CLI employs a service-discovery-like approach to querying the SDK for what functionality it supports.
+In order for the CLI to reliably discover the hooks for the [Deno SDK](https://github.com/slackapi/deno-slack-sdk), [Bolt Frameworks](https://tools.slack.dev), and future community-driven SDKs, the CLI employs a service-discovery-like approach to querying the SDK for what functionality it supports.
 
 A project includes a `hooks.json` file in its `.slack` directory which by default contains a single hook (`get-hooks`). The SDK is responsible for implementing this hook and returning to the CLI a JSON object with all hook definitions and their relevant default configuration (one hook to rule them all 💍).
 
@@ -95,7 +95,7 @@ For example, the hook name `run-v2` may be the successor to the hook named `run`
 
 ## 📄 Hook Specification
 
-Hooks are entry points for the CLI to initiate inter-process communication with the SDK. SDKs should implement one hook: `get-hooks`. It is the recommended approach for SDKs to enable communication with the CLI (for more details, see the [Hook Resolution](#hook-resolution) section). 
+Hooks are entry points for the CLI to initiate inter-process communication with the SDK. SDKs should implement one hook: `get-hooks`. It is the recommended approach for SDKs to enable communication with the CLI (for more details, see the [Hook Resolution](#hook-resolution) section).
 
 A hook encapsulates an isolated piece of functionality that the SDK provides to app developers; the CLI delegates execution of the functionality to the SDK via hook invocation in a separate process. SDKs are responsible for ensuring that hook processes exit with a status code of 0; otherwise the CLI will surface the `sdk_hook_invocation_failed` error to the end-user and report the hook process’ `STDOUT` and `STDERR` to the CLI process’ `STDOUT`.
 
@@ -150,7 +150,7 @@ The [application manifest](https://api.slack.com/concepts/manifests#fields) in J
 
 ### 🪝 `build` (optional)
 
-Implementing this hook allows for the CLI to [deploy function code to Slack's managed infrastructure](https://api.slack.com/automation/deploy). The work of assembling the application bundle according to Slack's application bundle format is delegated to the SDK via this hook.
+Implementing this hook allows for the CLI to [deploy function code to Slack's managed infrastructure](https://tools.slack.dev/deno-slack-sdk/guides/deploying-to-slack). The work of assembling the application bundle according to Slack's application bundle format is delegated to the SDK via this hook.
 
 The application bundle format has few restrictions, but the critical ones are:
 - It must have a `manifest.json` at the root of the package
@@ -159,9 +159,9 @@ The application bundle format has few restrictions, but the critical ones are:
 
 The above requirements come from the [deno-slack-runtime](https://github.com/slackapi/deno-slack-runtime) project, which implements the expected Slack deployment bundle format. It contains a hard-coded [reference](https://github.com/slackapi/deno-slack-runtime/blob/main/src/mod.ts#L73) to the above-mentioned `functions/` sub-directory, and combines it with the [specific custom function `callback_id`](https://github.com/slackapi/deno-slack-runtime/blob/main/src/mod.ts#L17-L19) to resolve an import path for userland function source code.
 
-*Note: This hook should only be implemented by official Slack SDKs and is only relevant to apps [deployed to Slack's managed infrastructure](https://api.slack.com/automation/deploy).*
+*Note: This hook should only be implemented by official Slack SDKs and is only relevant to apps [deployed to Slack's managed infrastructure](https://tools.slack.dev/deno-slack-sdk/guides/deploying-to-slack).*
 
-#### Input 
+#### Input
 
 Two command-line flags are provided as part of the hook invocation:
 - `--source`: the path to the root of the application project directory
@@ -178,13 +178,13 @@ No further output over STDOUT required from the SDK other than writing the appli
 
 ### 🪝 `start` (optional)
 
-The `slack run` CLI command will invoke the `start` hook to initiate a local-run development mode allowing for quick iteration during app development. This hook is responsible for actually running the app, but has two operating modes: one where the hook manages the connection to Slack via [Socket Mode](https://api.slack.com/apis/connections/socket), and one where it does not. Which mode should be employed by the CLI when invoking this hook is dictated by the `config.sdk-managed-connection-enabled` property in the response from [`get-hooks`](#get-hooks).
+The `slack run` CLI command will invoke the `start` hook to initiate a local-run development mode allowing for quick iteration during app development. This hook is responsible for actually running the app, but has two operating modes: one where the hook manages the connection to Slack via [Socket Mode](https://api.slack.com/apis/socket-mode), and one where it does not. Which mode should be employed by the CLI when invoking this hook is dictated by the `config.sdk-managed-connection-enabled` property in the response from [`get-hooks`](#get-hooks).
 
 #### Non-SDK-managed connection
 
 This section applies when `config.sdk-managed-connection-enabled` is undefined or set to `false` in `hooks.json` or in the [`get-hooks`](#get-hooks) hook response.
 
-When the app developer wants to initiate a development-mode local run of their application via the `slack run` CLI command, by default the CLI will create a [Socket Mode](https://api.slack.com/apis/connections/socket) connection to the Slack backend and start listening for events on behalf of the app.
+When the app developer wants to initiate a development-mode local run of their application via the `slack run` CLI command, by default the CLI will create a [Socket Mode](https://api.slack.com/apis/socket-mode) connection to the Slack backend and start listening for events on behalf of the app.
 
 Any events coming down the wire from Slack will be fed over `STDIN` to this hook for the SDK to process. *Each event incoming from Slack will invoke this hook independently*, meaning one `start` hook process will be spawned per incoming event. The SDK should process each incoming event and output a JSON object to `STDOUT` representing the response to send back to Slack over the socket connection managed by the CLI.
 
@@ -218,7 +218,7 @@ Note: The CLI always provides the `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN` enviro
 
 ##### Output
 
-Each incoming event from the socket connection will invoke this hook separately. As such, this hook's response to `STDOUT` should be the JSON response to the Slack event sent to the app. The CLI will handle [acknowledging events](https://api.slack.com/apis/connections/socket#acknowledge) by sending back the proper `envelope_id` attribute to the Slack backend. Therefore, the SDK’s `start` hook response `STDOUT` should be the `payload` of the response and nothing else. It is recommended to use the `v2` (`message-boundaries`) [protocol](#protocol) to more easily delineate logging/diagnostics from event responses to be sent to Slack.
+Each incoming event from the socket connection will invoke this hook separately. As such, this hook's response to `STDOUT` should be the JSON response to the Slack event sent to the app. The CLI will handle [acknowledging events](https://api.slack.com/apis/socket-mode#acknowledge) by sending back the proper `envelope_id` attribute to the Slack backend. Therefore, the SDK’s `start` hook response `STDOUT` should be the `payload` of the response and nothing else. It is recommended to use the `v2` (`message-boundaries`) [protocol](#protocol) to more easily delineate logging/diagnostics from event responses to be sent to Slack.
 
 ##### Support
 | Deno | Bolt JS | Bolt Python | Bolt Java |
@@ -229,11 +229,11 @@ Each incoming event from the socket connection will invoke this hook separately.
 
 This section applies when `config.sdk-managed-connection-enabled` is set to `true` in `hooks.json` or in the [`get-hooks`](#get-hooks) hook response.
 
-Implementing the `start` hook with `config.sdk-managed-connection-enabled` set to `true` will instruct the CLI to delegate connection management to the hook implementation as defined in our [Implementing Socket Mode documentation](https://api.slack.com/apis/connections/socket#implementing). Because establishing a network connection and handling incoming events is assumed to be a long-running process, invoking this hook will block the CLI process.
+Implementing the `start` hook with `config.sdk-managed-connection-enabled` set to `true` will instruct the CLI to delegate connection management to the hook implementation as defined in our [Implementing Socket Mode documentation](https://api.slack.com/apis/socket-mode#implementing). Because establishing a network connection and handling incoming events is assumed to be a long-running process, invoking this hook will block the CLI process.
 
 ##### Input
 
-The application's app-level token and bot access token will be provided as environment variables to the hook process (`SLACK_CLI_XAPP` and `SLACK_CLI_XOXB` respectively, as well as `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN`). The SDK should use the app token to [create a socket connection](https://api.slack.com/apis/connections/socket#call) with the Slack backend on behalf of the app. Additionally, the SDK may use the provided bot token to facilitate API calls to the Slack API.
+The application's app-level token and bot access token will be provided as environment variables to the hook process (`SLACK_CLI_XAPP` and `SLACK_CLI_XOXB` respectively, as well as `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN`). The SDK should use the app token to [create a socket connection](https://api.slack.com/apis/socket-mode#call) with the Slack backend on behalf of the app. Additionally, the SDK may use the provided bot token to facilitate API calls to the Slack API.
 
 All Bolt SDKs leverage this `start` hook operating mode.
 
@@ -428,7 +428,7 @@ This script is provided by the developer and is meant to simplify app management
 
 If this script isn't provided, an attempt is made to deploy the app to Slack's managed infrastructure. This is expected for Deno apps but will fail for Bolt apps.
 
-#### Input 
+#### Input
 
 Access to `STDIN` is necessary for certain scripts.
 
@@ -538,7 +538,7 @@ The CLI will employ the following algorithm in order to resolve the command to b
   }
 }
 ```
-#### Complete example returned by SDK from the get-hooks script implemented by Deno SDK (this is in-memory) 
+#### Complete example returned by SDK from the get-hooks script implemented by Deno SDK (this is in-memory)
 ```
 {
   "runtime": "deno",
@@ -565,17 +565,17 @@ The CLI will employ the following algorithm in order to resolve the command to b
 ### Types of developers
 
 1. App Developers are using the CLI and SDK to create and build a project
-2. SDK Developers are building and maintaining the CLI and/or SDKs (controlled by Slack or community-driven) 
+2. SDK Developers are building and maintaining the CLI and/or SDKs (controlled by Slack or community-driven)
 
 ### Types of SDKs
 
-1. Slack Deno SDK - Run on Slack 
+1. Slack Deno SDK - Run on Slack
 2. Bolt Frameworks (JavaScript, Python, and Java) - Remote using Slack's Bolt Framework
 3. No SDK at all - Run on Slack, Remote Self-Hosted
 4. Community SDKs, frameworks, and custom apps (e.g. Ruby, Golang, etc), if they exist
 
 ### Other definitions
 
-* hooks.json - The CLI-SDK Interface implemented as a JSON object ({...}) or JSON file (hooks.json). 
+* hooks.json - The CLI-SDK Interface implemented as a JSON object ({...}) or JSON file (hooks.json).
 * command - This refers to a CLI command, eg. `slack doctor`
 * hook - This refers to some CLI functionality delegated to the SDK and is defined at the level of the hooks.json file
