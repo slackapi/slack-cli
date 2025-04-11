@@ -206,15 +206,17 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 	// OnInitialize will execute before any root or child commands' Pre* methods.
 	// This is a good place to house CLI bootup routines.
 	cobra.OnInitialize(func() {
-		err := InitConfig(rootCmd.Context(), clients, rootCmd)
+		ctx := rootCmd.Context()
+		err := InitConfig(ctx, clients, rootCmd)
 		if err != nil {
-			clients.IO.PrintError(rootCmd.Context(), err.Error())
+			clients.IO.PrintError(ctx, err.Error())
 			clients.Os.Exit(int(iostreams.ExitError))
 		}
 	})
 	// Since we use the *E cobra lifecycle methods, OnFinalize is one of the few ways we can ensure something _always_ runs at the end of any command invocation, regardless if an error is raised or not during execution.
 	cobra.OnFinalize(func() {
-		cleanup(rootCmd.Context(), clients)
+		ctx := rootCmd.Context()
+		cleanup(ctx, clients)
 	})
 	return rootCmd, clients
 }
