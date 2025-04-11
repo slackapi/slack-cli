@@ -41,7 +41,7 @@ func Test_SlackContext_OpenTracingSpan(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = opentracing.ContextWithSpan(ctx, tt.expectedSpan)
 			actualSpan, actualError := OpenTracingSpan(ctx)
 			require.Equal(t, tt.expectedSpan, actualSpan)
@@ -60,7 +60,7 @@ func Test_SlackContext_SetOpenTracingSpan(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetOpenTracingSpan(ctx, tt.expectedSpan)
 			actualSpan := opentracing.SpanFromContext(ctx)
 			require.Equal(t, tt.expectedSpan, actualSpan)
@@ -84,7 +84,7 @@ func Test_SlackContext_OpenTracingTraceID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = context.WithValue(ctx, contextKeyOpenTracingTraceID, tt.expectedTraceID)
 			actualTraceID, actualError := OpenTracingTraceID(ctx)
 			require.Equal(t, tt.expectedTraceID, actualTraceID)
@@ -103,7 +103,7 @@ func Test_SlackContext_SetOpenTracingTraceID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetOpenTracingTraceID(ctx, tt.expectedTraceID)
 			actualTraceID := ctx.Value(contextKeyOpenTracingTraceID).(string)
 			require.Equal(t, tt.expectedTraceID, actualTraceID)
@@ -129,7 +129,7 @@ func Test_SlackContext_OpenTracingTracer(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tt.expectedTracer)
 			actualTracer, actualError := OpenTracingTracer(ctx)
 			require.Equal(t, tt.expectedTracer, actualTracer)
@@ -150,7 +150,7 @@ func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetOpenTracingTracer(ctx, tt.expectedTracer)
 			actualTracer := ctx.Value(contextKeyOpenTracingTracer).(opentracing.Tracer)
 			require.Equal(t, tt.expectedTracer, actualTracer)
@@ -174,7 +174,7 @@ func Test_SlackContext_ProjectID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = context.WithValue(ctx, contextKeyProjectID, tt.expectedProjectID)
 			actualProjectID, actualError := ProjectID(ctx)
 			require.Equal(t, tt.expectedProjectID, actualProjectID)
@@ -193,7 +193,7 @@ func Test_SlackContext_SetProjectID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetProjectID(ctx, tt.expectedProjectID)
 			actualProjectID := ctx.Value(contextKeyProjectID).(string)
 			require.Equal(t, tt.expectedProjectID, actualProjectID)
@@ -217,7 +217,7 @@ func Test_SlackContext_SessionID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = context.WithValue(ctx, contextKeySessionID, tt.expectedSessionID)
 			actualSessionID, actualError := SessionID(ctx)
 			require.Equal(t, tt.expectedSessionID, actualSessionID)
@@ -236,7 +236,7 @@ func Test_SlackContext_SetSessionID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetSessionID(ctx, tt.expectedSessionID)
 			actualSessionID := ctx.Value(contextKeySessionID).(string)
 			require.Equal(t, tt.expectedSessionID, actualSessionID)
@@ -260,7 +260,7 @@ func Test_SlackContext_SystemID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = context.WithValue(ctx, contextKeySystemID, tt.expectedSystemID)
 			actualSystemID, actualError := SystemID(ctx)
 			require.Equal(t, tt.expectedSystemID, actualSystemID)
@@ -279,7 +279,7 @@ func Test_SlackContext_SetSystemID(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetSystemID(ctx, tt.expectedSystemID)
 			actualSystemID := ctx.Value(contextKeySystemID).(string)
 			require.Equal(t, tt.expectedSystemID, actualSystemID)
@@ -303,7 +303,7 @@ func Test_SlackContext_Version(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = context.WithValue(ctx, contextKeyVersion, tt.expectedVersion)
 			actualVersion, actualError := Version(ctx)
 			require.Equal(t, tt.expectedVersion, actualVersion)
@@ -322,7 +322,7 @@ func Test_SlackContext_SetVersion(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			ctx = SetVersion(ctx, tt.expectedVersion)
 			actualVersion := ctx.Value(contextKeyVersion).(string)
 			require.Equal(t, tt.expectedVersion, actualVersion)

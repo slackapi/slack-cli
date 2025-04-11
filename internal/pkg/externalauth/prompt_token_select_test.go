@@ -15,23 +15,23 @@
 package externalauth
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestPrompt_TokenSelectPrompt_empty_list(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	authorizationInfo := types.ExternalAuthorizationInfo{}
 	clientsMock.AddDefaultMocks()
-	ctx := context.Background()
 
 	selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)
 	require.Empty(t, selectedToken)
@@ -83,6 +83,7 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 
 	var externalAccountFlag string
 	for _, tt := range tests {
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&externalAccountFlag, "external-account", "", "mock external-account flag")
@@ -93,7 +94,6 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 			Flag: clientsMock.Config.Flags.Lookup("external-account"),
 		})).Return(tt.Selection, nil)
 		clientsMock.AddDefaultMocks()
-		ctx := context.Background()
 
 		selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)
 		require.NoError(t, err)

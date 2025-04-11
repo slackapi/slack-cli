@@ -15,13 +15,13 @@
 package app
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
@@ -177,6 +177,7 @@ func Test_AppManifest_GetManifestRemote(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			osMock.AddDefaultMocks()
@@ -186,7 +187,6 @@ func Test_AppManifest_GetManifestRemote(t *testing.T) {
 				Return(api.ExportAppResult{Manifest: tt.mockManifestResponse}, tt.mockManifestError)
 			manifestClient := NewManifestClient(apic, configMock)
 
-			ctx := context.Background()
 			manifest, err := manifestClient.GetManifestRemote(ctx, tt.mockToken, tt.mockAppID)
 			if tt.expectedError != nil {
 				assert.Equal(t, tt.expectedError, err)

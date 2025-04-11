@@ -15,7 +15,6 @@
 package config
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	_os "os"
@@ -26,6 +25,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
@@ -54,7 +54,7 @@ func Test_SystemConfig_SetCustomConfigDirPath(t *testing.T) {
 
 func Test_SystemConfig_UserConfig(t *testing.T) {
 	t.Run("Error reading configuration directory", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -70,7 +70,7 @@ func Test_SystemConfig_UserConfig(t *testing.T) {
 	})
 
 	t.Run("Error when configuration file does not exist", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -86,7 +86,7 @@ func Test_SystemConfig_UserConfig(t *testing.T) {
 	})
 
 	t.Run("Error when configuration file has bad formatting", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -111,7 +111,7 @@ func Test_SystemConfig_UserConfig(t *testing.T) {
 
 func Test_Config_SlackConfigDir(t *testing.T) {
 	t.Run("Return home directory by default", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -126,7 +126,7 @@ func Test_Config_SlackConfigDir(t *testing.T) {
 	})
 
 	t.Run("Return custom directory when it exists", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -142,9 +142,8 @@ func Test_Config_SlackConfigDir(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	// TODO(@mbrooks) Uncomment
 	t.Run("Return error when custom directory is missing", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -161,7 +160,7 @@ func Test_Config_SlackConfigDir(t *testing.T) {
 	})
 
 	t.Run("Return error when home directory and working directory are unavailable", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -178,7 +177,7 @@ func Test_Config_SlackConfigDir(t *testing.T) {
 	})
 
 	t.Run("Return error when creating default config directory fails", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -195,7 +194,7 @@ func Test_Config_SlackConfigDir(t *testing.T) {
 	})
 
 	t.Run("Keep existing configuration files", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -215,7 +214,7 @@ func Test_Config_SlackConfigDir(t *testing.T) {
 
 func Test_SystemConfig_LogsDir(t *testing.T) {
 	t.Run("Create logs folder in .slack directory", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -233,7 +232,7 @@ func Test_SystemConfig_LogsDir(t *testing.T) {
 
 func Test_Config_GetLastUpdateCheckedAt(t *testing.T) {
 	t.Run("Error reading User Configuration file returns current time", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -252,7 +251,7 @@ func Test_Config_GetLastUpdateCheckedAt(t *testing.T) {
 	})
 
 	t.Run("Returns LastUpdateCheckedAt from User Configuration File", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -272,7 +271,7 @@ func Test_Config_GetLastUpdateCheckedAt(t *testing.T) {
 
 func Test_Config_SetLastUpdateCheckedAt(t *testing.T) {
 	t.Run("Error reading User Configuration file", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -290,7 +289,7 @@ func Test_Config_SetLastUpdateCheckedAt(t *testing.T) {
 	})
 
 	t.Run("Writes LastUpdateCheckedAt to User Configuration file", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -311,7 +310,7 @@ func Test_Config_SetLastUpdateCheckedAt(t *testing.T) {
 
 func Test_SystemConfig_GetSystemID(t *testing.T) {
 	t.Run("When no system_id is set, should return empty string", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -326,7 +325,7 @@ func Test_SystemConfig_GetSystemID(t *testing.T) {
 	})
 
 	t.Run("When system_id is set, should return system_id", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -351,7 +350,7 @@ func Test_SystemConfig_GetSystemID(t *testing.T) {
 
 func Test_SystemConfig_SetSystemID(t *testing.T) {
 	t.Run("Should update the system_id", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -385,7 +384,7 @@ func Test_SystemConfig_SetSystemID(t *testing.T) {
 
 func Test_SystemConfig_InitSystemID(t *testing.T) {
 	t.Run("When system_id is empty, should generate a new system_id", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -413,7 +412,7 @@ func Test_SystemConfig_InitSystemID(t *testing.T) {
 	})
 
 	t.Run("When system_id is not empty, should not overwrite it", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -596,7 +595,7 @@ func Test_SystemConfig_writeConfigFile(t *testing.T) {
 
 func Test_SystemConfig_GetTrustUnknownSources(t *testing.T) {
 	t.Run("When no trust_unknown_sources is set, should return false", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -611,7 +610,7 @@ func Test_SystemConfig_GetTrustUnknownSources(t *testing.T) {
 	})
 
 	t.Run("When trust_unknown_sources is set, should return true", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 
@@ -635,7 +634,7 @@ func Test_SystemConfig_GetTrustUnknownSources(t *testing.T) {
 
 func Test_SystemConfig_SetTrustUnknownSources(t *testing.T) {
 	t.Run("Should update the trust_unknown_sources", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		fs := slackdeps.NewFsMock()
 		os := slackdeps.NewOsMock()
 

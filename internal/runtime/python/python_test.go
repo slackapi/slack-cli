@@ -15,7 +15,6 @@
 package python
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -25,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/mock"
@@ -170,8 +170,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
-
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
@@ -350,7 +349,7 @@ func Test_Python_IsRuntimeForProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			projectDirPath := "/path/to/project-name"
 

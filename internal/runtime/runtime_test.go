@@ -15,13 +15,13 @@
 package runtime
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/runtime/deno"
 	"github.com/slackapi/slack-cli/internal/runtime/node"
 	"github.com/slackapi/slack-cli/internal/runtime/python"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -92,7 +92,7 @@ func Test_Runtime_NewDetectProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
 			projectDirPath := "/path/to/project-name"
 

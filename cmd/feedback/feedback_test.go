@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
@@ -46,6 +47,7 @@ func TestFeedbackCommand(t *testing.T) {
 		}
 
 		// Prepare mocks
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 
@@ -69,7 +71,7 @@ func TestFeedbackCommand(t *testing.T) {
 
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
-		err := runFeedbackCommand(context.Background(), clients, cmd)
+		err := runFeedbackCommand(ctx, clients, cmd)
 		assert.NoError(t, err)
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 	})
@@ -104,6 +106,7 @@ func TestFeedbackCommand(t *testing.T) {
 		}
 
 		// Prepare mocks
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 
@@ -134,7 +137,7 @@ func TestFeedbackCommand(t *testing.T) {
 
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
-		err := runFeedbackCommand(context.Background(), clients, cmd)
+		err := runFeedbackCommand(ctx, clients, cmd)
 		assert.NoError(t, err)
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 	})
@@ -196,6 +199,7 @@ func TestShowSurveyMessages(t *testing.T) {
 		}
 
 		// Prepare mocks
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 
@@ -239,7 +243,7 @@ func TestShowSurveyMessages(t *testing.T) {
 		SurveyStore = surveys
 
 		// Execute test
-		err := ShowSurveyMessages(context.Background(), clients)
+		err := ShowSurveyMessages(ctx, clients)
 		assert.NoError(t, err)
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://B.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://C.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")

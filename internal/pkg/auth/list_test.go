@@ -15,7 +15,6 @@
 package auth
 
 import (
-	"context"
 	"errors"
 	"testing"
 	"time"
@@ -24,16 +23,17 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAuthList(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 		clients.SDKConfig = hooks.NewSDKConfigMock()
 	})
-	ctx := context.Background()
 
 	authMockA := types.SlackAuth{
 		Token:               "xoxe.xoxp-",
@@ -58,11 +58,11 @@ func TestAuthList(t *testing.T) {
 }
 
 func TestAuthList_SortedAuths(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 		clients.SDKConfig = hooks.NewSDKConfigMock()
 	})
-	ctx := context.Background()
 
 	authZ := types.SlackAuth{
 		Token:       "xoxp-abc",

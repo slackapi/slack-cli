@@ -15,7 +15,6 @@
 package project
 
 import (
-	"context"
 	"io"
 	"net/http/httptest"
 	"testing"
@@ -23,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -102,6 +102,7 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			sampler := create.NewMockSampler()
 			w := httptest.NewRecorder()
 			_, _ = io.WriteString(w, tt.mockSlackHTTPResponse)
@@ -118,7 +119,6 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 				}),
 			).Return(tt.mockSelection, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 
 			// Execute test
 			repoName, err := PromptSampleSelection(ctx, clients, sampler)

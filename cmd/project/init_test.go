@@ -56,14 +56,14 @@ func Test_Project_InitCommand(t *testing.T) {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Do not set experiment flag
-				setupProjectInitCommandMocks(t, cm, cf, false)
+				setupProjectInitCommandMocks(t, ctx, cm, cf, false)
 			},
 			ExpectedErrorStrings: []string{"Command requires the Bolt Framework experiment"},
 		},
 		"init a project and do not link an existing app": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupProjectInitCommandMocks(t, cm, cf, true)
+				setupProjectInitCommandMocks(t, ctx, cm, cf, true)
 				// Do not link an existing app
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(false, nil)
 			},
@@ -114,7 +114,7 @@ func Test_Project_InitCommand(t *testing.T) {
 					mockLinkSlackAuth1,
 				}, nil)
 				// Default setup
-				setupProjectInitCommandMocks(t, cm, cf, true)
+				setupProjectInitCommandMocks(t, ctx, cm, cf, true)
 				// Do not link an existing app
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(true, nil)
 				// Mock prompt to link an existing app
@@ -221,7 +221,7 @@ func Test_Project_InitCommand(t *testing.T) {
 }
 
 // setupProjectInitCommandMocks prepares common mocks for these tests
-func setupProjectInitCommandMocks(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory, boltExperimentEnabled bool) {
+func setupProjectInitCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory, boltExperimentEnabled bool) {
 	// Mocks
 	projectDirPath := "/path/to/project-name"
 	cm.Os.On("Getwd").Return(projectDirPath, nil)
@@ -230,7 +230,7 @@ func setupProjectInitCommandMocks(t *testing.T, cm *shared.ClientsMock, cf *shar
 	// Set experiment flag
 	if boltExperimentEnabled {
 		cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "bolt")
-		cm.Config.LoadExperiments(context.Background(), cm.IO.PrintDebug)
+		cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 	}
 
 	// Create project directory

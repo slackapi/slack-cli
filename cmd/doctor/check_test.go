@@ -15,7 +15,6 @@
 package doctor
 
 import (
-	"context"
 	"fmt"
 	"runtime"
 	"testing"
@@ -26,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -34,10 +34,10 @@ import (
 
 func TestDoctorCheckOS(t *testing.T) {
 	t.Run("returns the operating system version", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		ctx := context.Background()
 		expected := Section{
 			Label: "Operating System",
 			Value: "the computer conductor",
@@ -56,10 +56,10 @@ func TestDoctorCheckOS(t *testing.T) {
 
 func TestDoctorCheckCLIVersion(t *testing.T) {
 	t.Run("returns the current version of this tool", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		ctx := context.Background()
 		expected := Section{
 			Label: "CLI",
 			Value: "this tool for building Slack apps",
@@ -141,13 +141,13 @@ func TestDoctorCheckProjectConfig(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			pcm := &config.ProjectConfigMock{}
 			pcm.On("ReadProjectConfigFile", mock.Anything).Return(tt.projectConfig, nil)
 			clientsMock.Config.ProjectConfig = pcm
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 			expected := Section{
 				Label:       "Configurations",
 				Value:       "your project's CLI settings",
@@ -218,10 +218,10 @@ func TestDoctorCheckProjectDeps(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := tt.mockHookSetup(clientsMock)
-			ctx := context.Background()
 			expected := Section{
 				Label:       "Dependencies",
 				Value:       "requisites for development",
@@ -246,6 +246,7 @@ func TestDoctorCheckCLIConfig(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			scm := &config.SystemConfigMock{}
@@ -254,7 +255,6 @@ func TestDoctorCheckCLIConfig(t *testing.T) {
 			}, nil)
 			clientsMock.Config.SystemConfig = scm
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 			expected := Section{
 				Label: "Configurations",
 				Value: "any adjustments to settings",
@@ -297,10 +297,10 @@ func TestDoctorCheckCLICreds(t *testing.T) {
 
 	for name := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			ctx := context.Background()
 			expected := Section{
 				Label:       "Credentials",
 				Value:       "your Slack authentication",
@@ -391,10 +391,10 @@ func TestDoctorCheckProjectTooling(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := tt.mockHookSetup(clientsMock)
-			ctx := context.Background()
 			expected := Section{
 				Label:       "Runtime",
 				Value:       "foundations for the application",
@@ -410,7 +410,7 @@ func TestDoctorCheckProjectTooling(t *testing.T) {
 
 func TestDoctorCheckGit(t *testing.T) {
 	t.Run("returns the version of git", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 		gitVersion, err := deputil.GetGitVersion()
 		require.NoError(t, err)
 		expected := Section{

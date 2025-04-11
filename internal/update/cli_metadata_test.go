@@ -15,13 +15,13 @@
 package update
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -70,6 +70,8 @@ func Test_CLI_Metadata_CheckForUpdate(t *testing.T) {
 
 	for name, s := range scenarios {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Mock an http.Response for the GitHub API
 			w := httptest.NewRecorder()
 			_, _ = io.WriteString(w, fmt.Sprintf(
@@ -84,7 +86,7 @@ func Test_CLI_Metadata_CheckForUpdate(t *testing.T) {
 
 			// Check for an update
 			md := Metadata{httpClient: httpClientMock}
-			releaseInfo, err := md.CheckForUpdate(context.Background(), metaDataUrl, s.CurrentVersion)
+			releaseInfo, err := md.CheckForUpdate(ctx, metaDataUrl, s.CurrentVersion)
 
 			// Assert expected results
 			if s.ExpectsResult {

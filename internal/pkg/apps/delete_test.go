@@ -15,13 +15,13 @@
 package apps
 
 import (
-	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -79,6 +79,7 @@ func TestAppsDelete(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api host")
 			clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash host")
@@ -89,7 +90,6 @@ func TestAppsDelete(t *testing.T) {
 			clientsMock.ApiInterface.On("DeleteApp", mock.Anything, mock.Anything, tt.app.AppID).Return(nil)
 			clientsMock.AddDefaultMocks()
 
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			if !tt.unsaved {
 				if !tt.app.IsDev {

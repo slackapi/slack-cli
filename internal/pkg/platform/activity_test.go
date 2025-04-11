@@ -156,7 +156,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
-			ctxMock := slackcontext.MockContext(context.Background())
+			ctxMock := slackcontext.MockContext(t.Context())
 			ctxMock = context.WithValue(ctxMock, config.CONTEXT_TOKEN, "sometoken")
 			clientsMock := shared.NewClientsMock()
 			// Create clients that is mocked for testing

@@ -15,7 +15,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -24,6 +23,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
@@ -211,8 +211,9 @@ func Test_AppClient_ReadDevApps_BrokenAppsJSON(t *testing.T) {
 func Test_AppClient_getDeployedAppTeamDomain_ViaCLIFlag(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
+	ctx := slackcontext.MockContext(t.Context())
 	ac.config.TeamFlag = "flagname"
-	name := ac.getDeployedAppTeamDomain(context.Background())
+	name := ac.getDeployedAppTeamDomain(ctx)
 	assert.Equal(t, "flagname", name)
 }
 
@@ -220,7 +221,7 @@ func Test_AppClient_getDeployedAppTeamDomain_ViaCLIFlag(t *testing.T) {
 func Test_AppClient_getDeployedAppTeamDomain_ViaDefaultDef(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	err := ac.apps.Set(types.App{
 		TeamID:     "T123",
 		TeamDomain: "shouty-rooster",
@@ -235,7 +236,7 @@ func Test_AppClient_getDeployedAppTeamDomain_ViaDefaultDef(t *testing.T) {
 func Test_AppClient_getDeployedAppTeamDomain_ViaDefaultAppName(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	name := ac.getDeployedAppTeamDomain(ctx)
 	assert.Equal(t, "prod", name)
 }
@@ -244,7 +245,7 @@ func Test_AppClient_getDeployedAppTeamDomain_ViaDefaultAppName(t *testing.T) {
 func Test_AppClient_GetDeployed_Empty(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 
 	// FIXME: This action is unsafely fetching an app. Please explicitly supply a TeamID
 	// This test case is specifically trying to test existing behavior when "" supplied
@@ -257,7 +258,7 @@ func Test_AppClient_GetDeployed_Empty(t *testing.T) {
 func Test_AppClient_GetDeployed_DefaultApp(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	jsonContents := []byte(`{
 		"apps":{
 			"twistandshout":{
@@ -281,7 +282,7 @@ func Test_AppClient_GetDeployed_DefaultApp(t *testing.T) {
 func Test_AppClient_GetDeployed_TeamID_NoDefault(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	jsonContents := []byte(`{
 		"apps":{
 			"T1":{
@@ -302,7 +303,7 @@ func Test_AppClient_GetDeployed_TeamID_NoDefault(t *testing.T) {
 func Test_AppClient_GetLocal_Empty(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	app, err := ac.GetLocal(ctx, "T123")
 	require.NoError(t, err)
 	assert.True(t, app.IsNew())
@@ -312,7 +313,7 @@ func Test_AppClient_GetLocal_Empty(t *testing.T) {
 func Test_AppClient_GetLocal_SingleApp(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	jsonContents := []byte(`{
 		"U123":{
 			"name":"dev",
@@ -332,7 +333,7 @@ func Test_AppClient_GetLocal_SingleApp(t *testing.T) {
 func Test_AppClient_GetDeployedAll_Empty(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	apps, defaultName, err := ac.GetDeployedAll(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, []types.App{}, apps)
@@ -343,7 +344,7 @@ func Test_AppClient_GetDeployedAll_Empty(t *testing.T) {
 func Test_AppClient_GetDeployedAll_SomeApps(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	jsonContents := []byte(`{
 		"apps":{
 			"twistandshout":{
@@ -372,7 +373,7 @@ func Test_AppClient_GetDeployedAll_SomeApps(t *testing.T) {
 func Test_AppClient_GetLocalAll_Empty(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	apps, err := ac.GetLocalAll(ctx)
 	require.NoError(t, err)
 	assert.Equal(t, []types.App{}, apps)
@@ -382,7 +383,7 @@ func Test_AppClient_GetLocalAll_Empty(t *testing.T) {
 func Test_AppClient_GetLocalAll_SomeApps(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	jsonContents := []byte(`{
 		"U123":{
 			"name":"dev",
@@ -401,7 +402,7 @@ func Test_AppClient_GetLocalAll_SomeApps(t *testing.T) {
 func Test_AppClient_Save_Empty(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	app := types.App{
 		TeamID:     "T123",
 		TeamDomain: "shouty-rooster",
@@ -430,7 +431,7 @@ func Test_AppClient_Save_Empty(t *testing.T) {
 func Test_AppClient_Save_NotEmpty(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	app := types.App{
 		TeamID:     "T123",
 		TeamDomain: "shouty-rooster",
@@ -467,7 +468,7 @@ func Test_AppClient_Save_NotEmpty(t *testing.T) {
 func Test_AppClient_SaveLocal_Empty(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	appTeamID := "T1"
 	app := types.App{
 		AppID:  "A123",
@@ -500,7 +501,7 @@ func Test_AppClient_SaveLocal_Empty(t *testing.T) {
 func Test_AppClient_SaveLocal_NotEmpty(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	appTeamID := "T1"
 	app := types.App{
 		AppID:  "A123",
@@ -533,7 +534,7 @@ func Test_AppClient_SaveLocal_NotEmpty(t *testing.T) {
 func Test_AppClient_RemoveDeployed(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	app := types.App{
 		TeamID:     "T123",
 		TeamDomain: "shouty-rooster",
@@ -557,7 +558,7 @@ func Test_AppClient_RemoveDeployed(t *testing.T) {
 func Test_AppClient_RemoveLocal(t *testing.T) {
 	ac, _, _, _, _, teardown := setup(t)
 	defer teardown(t)
-	ctx := context.Background()
+	ctx := slackcontext.MockContext(t.Context())
 	app := types.App{
 		AppID:  "A123",
 		UserID: "U123",
@@ -694,7 +695,7 @@ func TestAppClient_CleanupAppsJsonFiles(t *testing.T) {
 	for _, tt := range tests {
 		ac, _, _, pathToAppsJSON, pathToDevAppsJSON, teardown := setup(t)
 		defer teardown(t)
-		ctx := context.Background()
+		ctx := slackcontext.MockContext(t.Context())
 
 		err := afero.WriteFile(ac.fs, pathToAppsJSON, tt.appsJSON, 0600)
 		require.NoError(t, err)

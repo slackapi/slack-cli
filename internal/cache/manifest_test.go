@@ -15,11 +15,11 @@
 package cache
 
 import (
-	"context"
 	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -43,13 +43,13 @@ func TestCache_Manifest(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			projectDirPath := "/path/to/project-name"
 			err := fsMock.MkdirAll(filepath.Dir(projectDirPath), 0o755)
 			require.NoError(t, err)
 			cache := NewCache(fsMock, osMock, projectDirPath)
-			ctx := context.Background()
 			err = cache.SetManifestHash(ctx, tt.mockAppID, tt.mockCache.Hash)
 			require.NoError(t, err)
 			cache.ManifestCache.Apps = map[string]ManifestCacheApp{
@@ -104,12 +104,12 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			projectDirPath := "/path/to/project-name"
 			err := fsMock.MkdirAll(filepath.Dir(projectDirPath), 0o755)
 			require.NoError(t, err)
-			ctx := context.Background()
 			cache := NewCache(fsMock, osMock, projectDirPath)
 			hash, err := cache.NewManifestHash(ctx, tt.mockManifest)
 			assert.NoError(t, err)

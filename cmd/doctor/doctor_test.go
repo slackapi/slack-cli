@@ -16,7 +16,6 @@ package doctor
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"runtime"
 	"testing"
@@ -28,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
@@ -401,7 +401,7 @@ func TestDoctorHook(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := tt.mockHookSetup(clientsMock)

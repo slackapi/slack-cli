@@ -15,11 +15,11 @@
 package iostreams
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/pflag"
@@ -74,7 +74,7 @@ func TestPasswordPrompt(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			if tt.IsInteractive {

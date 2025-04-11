@@ -145,7 +145,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"add a variable using arguments": {
 			CmdArgs: []string{"ENV_NAME", "ENV_VALUE"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(cm, cf)
+				setupEnvAddCommandMocks(ctx, cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.ApiInterface.AssertCalled(
@@ -169,7 +169,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"provide a variable name by argument and value by prompt": {
 			CmdArgs: []string{"ENV_NAME"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(cm, cf)
+				setupEnvAddCommandMocks(ctx, cm, cf)
 				cm.IO.On(
 					"PasswordPrompt",
 					mock.Anything,
@@ -200,7 +200,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"provide a variable name by argument and value by flag": {
 			CmdArgs: []string{"ENV_NAME", "--value", "example_value"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(cm, cf)
+				setupEnvAddCommandMocks(ctx, cm, cf)
 				cm.IO.On(
 					"PasswordPrompt",
 					mock.Anything,
@@ -231,7 +231,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"provide both variable name and value by prompt": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(cm, cf)
+				setupEnvAddCommandMocks(ctx, cm, cf)
 				cm.IO.On(
 					"InputPrompt",
 					mock.Anything,
@@ -276,10 +276,10 @@ func Test_Env_AddCommand(t *testing.T) {
 }
 
 // setupEnvAddCommandMocks prepares common mocks for these tests
-func setupEnvAddCommandMocks(cm *shared.ClientsMock, cf *shared.ClientFactory) {
+func setupEnvAddCommandMocks(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	cf.SDKConfig = hooks.NewSDKConfigMock()
 	cm.AddDefaultMocks()
-	_ = cf.AppClient().SaveDeployed(context.Background(), mockApp)
+	_ = cf.AppClient().SaveDeployed(ctx, mockApp)
 
 	appSelectMock := prompts.NewAppSelectMock()
 	teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt

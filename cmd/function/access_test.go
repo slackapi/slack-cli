@@ -21,6 +21,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/afero"
@@ -326,6 +327,7 @@ func TestFunctionDistributionCommand_PermissionsFile(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.AddDefaultMocks()
 			err := afero.WriteFile(clientsMock.Fs, tt.filename, []byte(tt.data), 0644)
@@ -339,7 +341,6 @@ func TestFunctionDistributionCommand_PermissionsFile(t *testing.T) {
 			clientsMock.ApiInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return([]types.FunctionDistributionUser{}, nil)
 
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			app := types.App{AppID: "A123"}
 
@@ -400,6 +401,7 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.ApiInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.NAMED_ENTITIES, mock.Anything).
 				Return([]types.FunctionDistributionUser{}, nil).
@@ -414,7 +416,6 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 
 			app := types.App{AppID: "A123"}
 			function := "Ft123"
-			ctx := context.Background()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			err := updateNamedEntitiesDistribution(ctx, clients, app, function, tt.updatedEntities)

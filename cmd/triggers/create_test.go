@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -546,13 +547,13 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 
 	testcases := []struct {
 		name         string
-		prepareMocks func(*app.AppMock, *shared.ClientsMock)
+		prepareMocks func(*testing.T, context.Context, *shared.ClientsMock, *app.AppMock)
 		check        func(*testing.T, types.DeployedTrigger, bool, error)
 	}{
 		{
 			name: "Accept prompt to reinstall and create the trigger successfully",
-			prepareMocks: func(appCmdMock *app.AppMock, clientsMock *shared.ClientsMock) {
-				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(context.Background(), types.SUCCESS, types.App{}, nil)
+			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
+				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.SUCCESS, types.App{}, nil)
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{Name: "trigger name", ID: "Ft123", Type: "shortcut"}, nil)
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Re-install app to apply local file changes and try again?", mock.Anything).Return(true, nil)
@@ -565,7 +566,7 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 		},
 		{
 			name: "Decline prompt to reinstall and do nothing",
-			prepareMocks: func(appCmdMock *app.AppMock, clientsMock *shared.ClientsMock) {
+			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Re-install app to apply local file changes and try again?", mock.Anything).Return(false, nil)
 			},
 			check: func(t *testing.T, trigger types.DeployedTrigger, ok bool, err error) {
@@ -575,8 +576,8 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 		},
 		{
 			name: "Accept prompt to reinstall but fail to create the trigger",
-			prepareMocks: func(appCmdMock *app.AppMock, clientsMock *shared.ClientsMock) {
-				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(context.Background(), types.SUCCESS, types.App{}, nil)
+			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
+				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.SUCCESS, types.App{}, nil)
 				clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, errors.New("something_else_went_wrong"))
 				clientsMock.Os.On("UserHomeDir").Return("", nil) // Called by clients.IO.PrintError
@@ -594,17 +595,16 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 			fmt.Println("Running TriggersCreate test: ", testcase.name)
 
 			// Prepare mocks
-
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := NewCreateCommand(clients)
 			triggerRequest := api.TriggerRequest{}
-			ctx := context.Background()
 
 			appCmdMock := new(app.AppMock)
 			workspaceInstallAppFunc = appCmdMock.RunAddCommand
 
-			testcase.prepareMocks(appCmdMock, clientsMock)
+			testcase.prepareMocks(t, ctx, clientsMock, appCmdMock)
 
 			// Execute test
 

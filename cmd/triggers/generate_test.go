@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +55,7 @@ func Test_TriggerGenerate_accept_prompt(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
 
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
@@ -94,7 +95,7 @@ func Test_TriggerGenerate_decline_prompt(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -127,7 +128,7 @@ func Test_TriggerGenerate_skip_prompt(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 			Return(types.EVERYONE, []string{}, nil).Once()
@@ -158,7 +159,7 @@ func Test_TriggerGenerate_handle_error(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, fmt.Errorf("something went wrong") /*trigger create error*/)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, fmt.Errorf("something went wrong") /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -197,7 +198,7 @@ func Test_TriggerGenerate_handle_invalid_paths(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
@@ -226,7 +227,7 @@ func Test_TriggerGenerate_Config_TriggerPaths_Default(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -266,7 +267,7 @@ func Test_TriggerGenerate_Config_TriggerPaths_Custom(t *testing.T) {
 	}
 
 	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -451,8 +452,8 @@ func Test_ShowTriggers(t *testing.T) {
 	}
 }
 
-func prepareMocks(triggersListResponse []types.DeployedTrigger, globResponse []string, triggersCreateResponse types.DeployedTrigger, triggersCreateResponseError error) (context.Context, *shared.ClientsMock) {
-	ctx := context.Background()
+func prepareMocks(t *testing.T, triggersListResponse []types.DeployedTrigger, globResponse []string, triggersCreateResponse types.DeployedTrigger, triggersCreateResponseError error) (context.Context, *shared.ClientsMock) {
+	ctx := slackcontext.MockContext(t.Context())
 	ctx = config.SetContextToken(ctx, "token")
 
 	clientsMock := shared.NewClientsMock()
