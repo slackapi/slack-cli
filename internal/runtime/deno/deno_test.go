@@ -15,7 +15,6 @@
 package deno
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -26,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
@@ -134,7 +134,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
 
 			fs := slackdeps.NewFsMock()
@@ -347,7 +347,7 @@ func Test_Deno_IsRuntimeForProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Setup
-			ctx := context.Background()
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			projectDirPath := "/path/to/project-name"
 
