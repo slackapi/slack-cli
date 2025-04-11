@@ -137,7 +137,7 @@ This hook should return the CLI-SDK interface in [JSON](#interface-format) forma
 
 This hook allows for the application under development to be created on `api.slack.com/apps` as well as installed to workspaces that the CLI has been authorized to.
 
-Implementing this hook signals to the CLI that the SDK manages the [application manifest](https://api.slack.com/concepts/manifests#fields). Even if this hook is not present, the CLI should fall back to checking if a `manifest.json` or `manifest.yaml` exists in the project directory and read that file directly.
+Implementing this hook signals to the CLI that the SDK manages the [application manifest](https://docs.slack.dev/app-manifests/). Even if this hook is not present, the CLI should fall back to checking if a `manifest.json` or `manifest.yaml` exists in the project directory and read that file directly.
 
 #### Output
 
@@ -207,7 +207,7 @@ Several parameters are passed to the SDK over `STDIN` as JSON. The format of thi
 
 | Field       | Description | Required |
 | ------- | ----------- | -------- |
-| body | Object whose keys represent the incoming Slack event payload as described in [Events API Event Types](https://api.slack.com/events?filter=Events). The particular content of this key is dependent on the incoming event type. | Yes |
+| body | Object whose keys represent the incoming Slack event payload as described in [Events API Event Types](https://docs.slack.dev/reference/events?APIs=Events). The particular content of this key is dependent on the incoming event type. | Yes |
 | context | Object representing variables relevant for the locally-running application. | Yes |
 | context.bot_access_token | String; a bot access token that the SDK can provide to developer functions for issuing calls to the Slack API. | Yes |
 | context.app_id | String; the current application ID. | Yes |

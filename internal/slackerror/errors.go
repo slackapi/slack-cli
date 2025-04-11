@@ -430,7 +430,7 @@ Otherwise start your app for local development with: %s`,
 		Message: "App is not configured to be deployed to the Slack platform",
 		Remediation: strings.Join([]string{
 			"Deploy an app containing workflow automations to Slack managed infrastructure",
-			"Read about ROSI: https://api.slack.com/concepts/rosi",
+			"Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure",
 		}, "\n"),
 	},
 

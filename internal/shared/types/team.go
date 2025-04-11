@@ -34,7 +34,7 @@ func (c *SlackTeam) String() string {
 }
 
 // Team model with fields that match what is returned from the team.info method
-// Method documentation: https://api.slack.com/methods/team.info
+// Method documentation: https://docs.slack.dev/reference/methods/team.info
 type TeamInfo struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
