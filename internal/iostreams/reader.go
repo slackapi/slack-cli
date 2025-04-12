@@ -18,7 +18,7 @@ import (
 	"io"
 )
 
-// Reader contains implmentations of a Read methods for various inputs methods
+// Reader contains implementations of a Read methods for various inputs methods
 //
 // Only stdin is supported for now
 type Reader interface {

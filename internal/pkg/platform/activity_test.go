@@ -271,11 +271,11 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 
 func Test_datastoreRequestResultToString(t *testing.T) {
 	for name, tt := range map[string]struct {
-		activty         api.Activity
+		activity        api.Activity
 		expectedResults []string
 	}{
 		"successful datastore request event log": {
-			activty: api.Activity{
+			activity: api.Activity{
 				Payload: map[string]interface{}{
 					"datastore_name": "MyDatastore",
 					"request_type":   "get",
@@ -285,11 +285,11 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 			expectedResults: []string{"MyDatastore", "get", "succeeded", "f7d1253f-4066-4b83-8330-a483ff555c20"},
 		},
 		"successful datastore request event log with nil payload": {
-			activty:         api.Activity{},
+			activity:        api.Activity{},
 			expectedResults: []string{"succeeded"},
 		},
 		"failed datastore request error log": {
-			activty: api.Activity{
+			activity: api.Activity{
 				Level: "error",
 				Payload: map[string]interface{}{
 					"datastore_name": "MyDatastore",
@@ -301,7 +301,7 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 			expectedResults: []string{"MyDatastore", "query", "failed", "ValidationException", "f7d1253f-4066-4b83-8330-a483ff555c20"},
 		},
 		"failed datastore request without error field": {
-			activty: api.Activity{
+			activity: api.Activity{
 				Level: "error",
 				Payload: map[string]interface{}{
 					"datastore_name": "MyDatastore",
@@ -313,7 +313,7 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualResult := datastoreRequestResultToString(tt.activty)
+			actualResult := datastoreRequestResultToString(tt.activity)
 			for _, expectedResult := range tt.expectedResults {
 				require.Contains(t, actualResult, expectedResult)
 			}

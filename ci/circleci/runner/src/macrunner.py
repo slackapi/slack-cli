@@ -90,7 +90,7 @@ class MacCircleRunner(circlerunner.CircleRunner):
       for local_path in files:
         self.upload_file_to_s3(source_file_path=local_path, s3_path=s3_path)
     else:
-      raise Exception(f"unknow job to execute {job_name}")
+      raise Exception(f"unknown job to execute {job_name}")
 
 if __name__ == "__main__":
   parser = optparse.OptionParser()

@@ -74,7 +74,7 @@ func filterRepos(sampleRepos []create.GithubRepo, projectType string) []create.G
 	return filteredRepos
 }
 
-// sortRepos sorts the provided repostiories by the
+// sortRepos sorts the provided repositories by the
 // StargazersCount field in descending order
 func sortRepos(sampleRepos []create.GithubRepo) []create.GithubRepo {
 	sortedRepos := sampleRepos

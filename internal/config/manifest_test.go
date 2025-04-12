@@ -63,7 +63,7 @@ func Test_Config_ManifestSource_Exists(t *testing.T) {
 			expected: true,
 		},
 		"unknown source exists": {
-			a:        "unknonwn",
+			a:        "unknown",
 			expected: true,
 		},
 		"missing source does not exist": {
