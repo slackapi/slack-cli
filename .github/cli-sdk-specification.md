@@ -184,7 +184,7 @@ The `slack run` CLI command will invoke the `start` hook to initiate a local-run
 
 This section applies when `config.sdk-managed-connection-enabled` is undefined or set to `false` in `hooks.json` or in the [`get-hooks`](#get-hooks) hook response.
 
-When the app developer wants to initiate a development-mode local run of their application via the `slack run` CLI command, by default the CLI will create a [Socket Mode](https://api.slack.com/apis/socket-mode) connection to the Slack backend and start listening for events on behalf of the app.
+When the app developer wants to initiate a development-mode local run of their application via the `slack run` CLI command, by default the CLI will create a [Socket Mode](https://docs.slack.dev/apis/events-api/using-socket-mode/) connection to the Slack backend and start listening for events on behalf of the app.
 
 Any events coming down the wire from Slack will be fed over `STDIN` to this hook for the SDK to process. *Each event incoming from Slack will invoke this hook independently*, meaning one `start` hook process will be spawned per incoming event. The SDK should process each incoming event and output a JSON object to `STDOUT` representing the response to send back to Slack over the socket connection managed by the CLI.
 
