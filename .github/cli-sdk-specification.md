@@ -178,7 +178,7 @@ No further output over STDOUT required from the SDK other than writing the appli
 
 ### 🪝 `start` (optional)
 
-The `slack run` CLI command will invoke the `start` hook to initiate a local-run development mode allowing for quick iteration during app development. This hook is responsible for actually running the app, but has two operating modes: one where the hook manages the connection to Slack via [Socket Mode](https://api.slack.com/apis/socket-mode), and one where it does not. Which mode should be employed by the CLI when invoking this hook is dictated by the `config.sdk-managed-connection-enabled` property in the response from [`get-hooks`](#get-hooks).
+The `slack run` CLI command will invoke the `start` hook to initiate a local-run development mode allowing for quick iteration during app development. This hook is responsible for actually running the app, but has two operating modes: one where the hook manages the connection to Slack via [Socket Mode](https://docs.slack.dev/apis/events-api/using-socket-mode/), and one where it does not. Which mode should be employed by the CLI when invoking this hook is dictated by the `config.sdk-managed-connection-enabled` property in the response from [`get-hooks`](#get-hooks).
 
 #### Non-SDK-managed connection
 
