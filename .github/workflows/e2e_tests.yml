@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger CircleCI build-beta workflow.
-        uses: promiseofcake/circleci-trigger-action@v1
+        uses: promiseofcake/circleci-trigger-action@v1.7.8
         with:
           user-token: ${{ secrets.CIRCLECI_TOKEN }}
           project-slug: slackapi/slack-cli
