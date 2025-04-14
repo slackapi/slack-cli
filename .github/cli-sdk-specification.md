@@ -141,7 +141,7 @@ Implementing this hook signals to the CLI that the SDK manages the [application 
 
 #### Output
 
-The [application manifest](https://api.slack.com/concepts/manifests#fields) in JSON format to `STDOUT`.
+The [app manifest](https://docs.slack.dev/reference/app-manifest) in JSON format to `STDOUT`.
 
 #### Support
 | Deno | Bolt JS | Bolt Python | Bolt Java |
