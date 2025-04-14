@@ -218,7 +218,7 @@ Note: The CLI always provides the `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN` enviro
 
 ##### Output
 
-Each incoming event from the socket connection will invoke this hook separately. As such, this hook's response to `STDOUT` should be the JSON response to the Slack event sent to the app. The CLI will handle [acknowledging events](https://api.slack.com/apis/socket-mode#acknowledge) by sending back the proper `envelope_id` attribute to the Slack backend. Therefore, the SDK’s `start` hook response `STDOUT` should be the `payload` of the response and nothing else. It is recommended to use the `v2` (`message-boundaries`) [protocol](#protocol) to more easily delineate logging/diagnostics from event responses to be sent to Slack.
+Each incoming event from the socket connection will invoke this hook separately. As such, this hook's response to `STDOUT` should be the JSON response to the Slack event sent to the app. The CLI will handle [acknowledging events](https://docs.slack.dev/apis/events-api/using-socket-mode/#acknowledge) by sending back the proper `envelope_id` attribute to the Slack backend. Therefore, the SDK’s `start` hook response `STDOUT` should be the `payload` of the response and nothing else. It is recommended to use the `v2` (`message-boundaries`) [protocol](#protocol) to more easily delineate logging/diagnostics from event responses to be sent to Slack.
 
 ##### Support
 | Deno | Bolt JS | Bolt Python | Bolt Java |
