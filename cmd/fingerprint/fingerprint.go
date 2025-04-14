@@ -43,10 +43,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "_fingerprint", Meaning: "Print the unique value that identifies the Slack CLI binary"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var span, _ = opentracing.StartSpanFromContext(cmd.Context(), "cmd._fingerprint")
+			ctx := cmd.Context()
+			var span, _ = opentracing.StartSpanFromContext(ctx, "cmd._fingerprint")
 			defer span.Finish()
 
-			clients.IO.PrintInfo(cmd.Context(), false, fingerprintHash)
+			clients.IO.PrintInfo(ctx, false, fingerprintHash)
 			return nil
 		},
 	}

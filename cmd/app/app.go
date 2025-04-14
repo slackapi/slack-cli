@@ -46,8 +46,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			return runListCommand(cmd, clients)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
+			ctx := cmd.Context()
 			if cmd.CalledAs() == "workspace" {
-				clients.IO.PrintInfo(cmd.Context(), false, fmt.Sprintf(
+				clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
 					"\n%s It looks like you used %s. This command will be deprecated in an upcoming release.\n    You can now use %s instead of %s.\n ",
 					style.Emoji("bulb"),
 					style.Commandf("workspace", true),

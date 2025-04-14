@@ -21,6 +21,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -270,6 +271,7 @@ func Test_SDK_HasUpdate(t *testing.T) {
 func Test_SDK_InstallUpdate(t *testing.T) {
 	for _, s := range installScenarios {
 		// Create mocks
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 
 		// Create clients that is mocked for testing
@@ -290,7 +292,6 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 		// Create the command
 		cmd := &cobra.Command{}
 		testutil.MockCmdIO(clients.IO, cmd)
-		ctx := cmd.Context()
 
 		// output := clientsMock.GetCombinedOutput()
 

@@ -167,7 +167,7 @@ func newRunLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Log
 					event.DataToString("teamName"),
 				)))
 			case "on_cloud_run_connection_connected":
-				clients.IO.PrintTrace(cmd.Context(), slacktrace.PlatformRunReady)
+				clients.IO.PrintTrace(ctx, slacktrace.PlatformRunReady)
 				cmd.Println(style.Secondary("Connected, awaiting events"))
 			case "on_cloud_run_connection_message":
 				message := event.DataToString("cloud_run_connection_message")

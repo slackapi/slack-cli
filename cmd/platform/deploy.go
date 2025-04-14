@@ -244,6 +244,7 @@ func printDeployHosting(cmd *cobra.Command, event *logger.LogEvent) {
 }
 
 func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Command, event *logger.LogEvent) error {
+	var ctx = cmd.Context()
 	var authSession api.AuthSession
 
 	appName := event.DataToString("appName")
@@ -289,7 +290,7 @@ func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Comm
 
 	deploySpinner.Update(successfulDeployText, "").Stop()
 
-	clients.IO.PrintTrace(cmd.Context(), slacktrace.PlatformDeploySuccess)
+	clients.IO.PrintTrace(ctx, slacktrace.PlatformDeploySuccess)
 
 	navigateText := style.Sectionf(style.TextSection{
 		Emoji: "cloud_with_lightning",
@@ -300,7 +301,7 @@ func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Comm
 		},
 	})
 
-	clients.IO.PrintInfo(cmd.Context(), false, navigateText)
+	clients.IO.PrintInfo(ctx, false, navigateText)
 	return nil
 }
 

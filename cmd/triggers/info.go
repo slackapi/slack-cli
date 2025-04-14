@@ -61,7 +61,7 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 
 func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(cmd.Context(), "cmd.triggers.info")
+	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.info")
 	defer span.Finish()
 
 	// Get the app from the flag or prompt
