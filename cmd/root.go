@@ -99,7 +99,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 		Long: strings.Join([]string{
 			`{{Emoji "sparkles"}}CLI to create, run, and deploy Slack apps`,
 			"",
-			`{{Emoji "books"}}Get started by reading the docs: {{LinkText "https://api.slack.com/automation"}}`,
+			`{{Emoji "books"}}Get started by reading the docs: {{LinkText "https://tools.slack.dev/slack-cli"}}`,
 		}, "\n"),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()

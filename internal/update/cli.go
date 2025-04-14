@@ -79,7 +79,7 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 		style.Secondary(c.version),
 		style.CommandText(c.releaseInfo.Version),
 		"   You can read the release notes at:",
-		style.CommandText("https://api.slack.com/automation/changelog"),
+		style.CommandText("https://docs.slack.dev/changelog"),
 	)
 
 	if isHomebrew {
@@ -90,7 +90,7 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 	} else {
 		cmd.Printf(
 			"\n   To manually update, visit the download page:\n   %s\n\n",
-			style.CommandText("https://api.slack.com/automation/cli/install"),
+			style.CommandText("https://tools.slack.dev/slack-cli"),
 		)
 		selfUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest version now?", style.Emoji("rocket"))
 		return c.clients.IO.ConfirmPrompt(ctx, selfUpdatePrompt, false)

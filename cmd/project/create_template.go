@@ -276,7 +276,7 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 // getSelectionTemplate returns a custom formatted template used for selecting a
 // project template during creation
 func getSelectionTemplate(clients *shared.ClientFactory) string {
-	samplesURL := style.LinkText("api.slack.com/automation/samples")
+	samplesURL := style.LinkText("https://docs.slack.dev/samples")
 	switch clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 	case true:
 		return fmt.Sprintf(`
