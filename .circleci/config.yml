@@ -386,10 +386,15 @@ jobs:
           command: |
             # TODO: once CircleCI updates its pipeline-invocation API, move off of Cheng's personal CircleCI access token, which is saved to both of the slackapi CircleCI "contexts" as an env var:
             # https://app.circleci.com/settings/organization/github/slackapi/contexts
+            if [[ -z "$CIRCLE_BRANCH" || "$CIRCLE_BRANCH" == pull/* ]]; then
+              BRANCH_NAME="main"
+            else
+              BRANCH_NAME="$CIRCLE_BRANCH"
+            fi
             TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
               --header 'Content-Type: application/json' \
               -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
-              --data "{\"branch\":\"${CIRCLE_BRANCH}\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
+              --data "{\"branch\":\"${BRANCH_NAME}\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
             if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
               echo "Performing the standard test suite found on the \"main\" branch of the end-to-end tests"
               TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
@@ -397,7 +402,7 @@ jobs:
                 -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
                 --data "{\"branch\":\"main\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
             else
-              echo "Performing the changed tests on the \"$CIRCLE_BRANCH\" branch of the end-to-end tests"
+              echo "Performing the changed tests on the \"$BRANCH_NAME\" branch of the end-to-end tests"
             fi
             if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
               echo "Failed to start the testing workflow"
