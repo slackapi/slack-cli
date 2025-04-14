@@ -31,7 +31,7 @@ func (c *SlackChannel) String() string {
 }
 
 // Channel model with fields that match what is returned from the conversations.info method
-// Method documentation: https://api.slack.com/methods/conversations.info
+// Method documentation: https://docs.slack.dev/reference/methods/conversations.info
 type ChannelInfo struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
