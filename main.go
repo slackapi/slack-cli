@@ -72,7 +72,7 @@ func main() {
 	// add root span to context
 	ctx = slackcontext.SetOpenTracingSpan(ctx, span)
 
-	rootCmd, clients := cmd.Init()
+	rootCmd, clients := cmd.Init(ctx)
 	cmd.Execute(ctx, rootCmd, clients)
 }
 

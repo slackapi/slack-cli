@@ -153,10 +153,10 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 		templateForCategory := getSelectionTemplate(clients)
 
 		// Print a trace with info about the category title options provided by CLI
-		clients.IO.PrintTrace(cmd.Context(), slacktrace.CreateCategoryOptions, strings.Join(titlesForCategory, ", "))
+		clients.IO.PrintTrace(ctx, slacktrace.CreateCategoryOptions, strings.Join(titlesForCategory, ", "))
 
 		// Prompt to choose a category
-		selection, err := clients.IO.SelectPrompt(cmd.Context(), promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
+		selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
 			Description: func(value string, index int) string {
 				return optionsForCategory[index].Description
 			},
@@ -189,10 +189,10 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 		template := getSelectionTemplate(clients)
 
 		// Print a trace with info about the template title options provided by CLI
-		clients.IO.PrintTrace(cmd.Context(), slacktrace.CreateTemplateOptions, strings.Join(titles, ", "))
+		clients.IO.PrintTrace(ctx, slacktrace.CreateTemplateOptions, strings.Join(titles, ", "))
 
 		// Prompt to choose a template
-		selection, err := clients.IO.SelectPrompt(cmd.Context(), prompt, titles, iostreams.SelectPromptConfig{
+		selection, err := clients.IO.SelectPrompt(ctx, prompt, titles, iostreams.SelectPromptConfig{
 			Description: func(value string, index int) string {
 				return options[index].Description
 			},
@@ -238,7 +238,9 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 // confirmExternalTemplateSelection prompts the user to confirm that they want to create an app from
 // an external template and saves their preference if they choose to ignore future warnings
 func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, template create.Template) (bool, error) {
-	trustSources, err := clients.Config.SystemConfig.GetTrustUnknownSources(cmd.Context())
+	ctx := cmd.Context()
+
+	trustSources, err := clients.Config.SystemConfig.GetTrustUnknownSources(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -254,7 +256,7 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 		},
 	}))
 
-	selection, err := clients.IO.SelectPrompt(cmd.Context(), "Proceed?", []string{"Yes", "Yes, don't ask again", "No"}, iostreams.SelectPromptConfig{
+	selection, err := clients.IO.SelectPrompt(ctx, "Proceed?", []string{"Yes", "Yes, don't ask again", "No"}, iostreams.SelectPromptConfig{
 		Required: true,
 		Flag:     clients.Config.Flags.Lookup("force"),
 	})
@@ -263,7 +265,7 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 	} else if selection.Option == "No" {
 		return false, nil
 	} else if selection.Option == "Yes, don't ask again" {
-		err = clients.Config.SystemConfig.SetTrustUnknownSources(cmd.Context(), true)
+		err = clients.Config.SystemConfig.SetTrustUnknownSources(ctx, true)
 		if err != nil {
 			return true, slackerror.Wrap(err, "failed to set trust_unknown_sources property to config")
 		}

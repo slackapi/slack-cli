@@ -30,9 +30,10 @@ func HelpFunc(
 	aliases map[string]string,
 ) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
+		ctx := cmd.Context()
 		style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
 		if help, _ := clients.Config.Flags.GetBool("help"); help {
-			clients.Config.LoadExperiments(cmd.Context(), clients.IO.PrintDebug)
+			clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 		}
 		experiments := []string{}
 		for _, exp := range clients.Config.GetExperiments() {

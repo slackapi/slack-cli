@@ -189,6 +189,8 @@ func (c *SDKDependency) InstallUpdate(ctx context.Context) error {
 // SDK, including formatting and language that indicates if a breaking change
 // is included or an error has occurred
 func (c *SDKDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error) {
+	ctx := cmd.Context()
+
 	if c.releaseInfo.Update {
 		// Standard "update is available" message
 		cmd.Printf(
@@ -308,7 +310,7 @@ func (c *SDKDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 
 	// The update(s) includes an error
 	if c.releaseInfo.Error.Message != "" {
-		c.clients.IO.PrintError(cmd.Context(),
+		c.clients.IO.PrintError(ctx,
 			style.Indent("%s\n%s\n"),
 			style.Error("Error:"),
 			style.Indent(c.releaseInfo.Error.Message),
@@ -318,7 +320,7 @@ func (c *SDKDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 	// If `install-update` hook available, prompt to auto-update
 	if c.clients.SDKConfig.Hooks.InstallUpdate.IsAvailable() {
 		autoUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest versions now?", style.Emoji("rocket"))
-		return c.clients.IO.ConfirmPrompt(cmd.Context(), autoUpdatePrompt, false)
+		return c.clients.IO.ConfirmPrompt(ctx, autoUpdatePrompt, false)
 	}
 
 	return false, nil
