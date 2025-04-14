@@ -28,7 +28,7 @@ import (
 // checkForUpdatesFunc is a function pointer for tests to mock the checkForUpdates function
 var checkForUpdatesFunc = checkForUpdates
 
-const changelogURL = "https://api.slack.com/automation/changelog"
+const changelogURL = "https://docs.slack.dev/changelog"
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	return &cobra.Command{

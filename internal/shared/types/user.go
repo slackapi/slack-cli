@@ -62,7 +62,7 @@ type FunctionDistributionUser struct {
 }
 
 // User model with fields that match what is returned from the users.info method
-// Method documentation: https://api.slack.com/methods/users.info
+// Method documentation: https://docs.slack.dev/reference/methods/users.info
 type UserInfo struct {
 	ID       string      `json:"id"`
 	Name     string      `json:"name"`

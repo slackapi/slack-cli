@@ -341,12 +341,14 @@ var ErrorCodeMap = map[string]Error{
 		Details: ErrorDetails{
 			ErrorDetail{Message: "Deployment to Slack is currently supported for apps written with the Deno Slack SDK."},
 		},
-		Remediation: fmt.Sprintf(`Learn about building apps with the Deno Slack SDK: api.slack.com/automation
-If you are using a Bolt framework, deployment is supported under an experiment.
-Add a deploy hook then run: %s
+		Remediation: fmt.Sprintf(`Learn about building apps with the Deno Slack SDK:
+
+https://tools.slack.dev/deno-slack-sdk
+
+If you are using a Bolt framework, add a deploy hook then run: %s
 
 Otherwise start your app for local development with: %s`,
-			style.Commandf("deploy --experiment=bolt", true),
+			style.Commandf("deploy", true),
 			style.Commandf("run", true),
 		),
 	},
@@ -428,7 +430,7 @@ Otherwise start your app for local development with: %s`,
 		Message: "App is not configured to be deployed to the Slack platform",
 		Remediation: strings.Join([]string{
 			"Deploy an app containing workflow automations to Slack managed infrastructure",
-			"Read about ROSI: https://api.slack.com/concepts/rosi",
+			"Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure",
 		}, "\n"),
 	},
 
@@ -551,7 +553,7 @@ Otherwise start your app for local development with: %s`,
 	ErrCliAutoupdate: {
 		Code:        ErrCliAutoupdate,
 		Message:     "Couldn't auto-update this command-line tool",
-		Remediation: "You can manually install the latest version from https://api.slack.com/automation/cli/install.",
+		Remediation: "You can manually install the latest version from:\nhttps://tools.slack.dev/slack-cli",
 	},
 
 	ErrCliConfigLocationError: {

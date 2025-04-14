@@ -770,7 +770,7 @@ Steps to merge a pull request:
 When in doubt, find the other maintainers and ask.
 
 [circleci]: ../.circleci/config.yml
-[commands]: https://api.slack.com/automation/cli/commands
+[commands]: https://tools.slack.dev/slack-cli/reference/commands/slack
 [commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
