@@ -389,7 +389,7 @@ jobs:
             # https://app.circleci.com/settings/organization/github/slackapi/contexts
             if [[ -z "$CIRCLE_BRANCH" || "$CIRCLE_BRANCH" == pull/* ]]; then
               BRANCH_NAME="main"
-              echo "Performing the standard test suite found on the \"main\" branch of the end-to-end tests"
+              echo "Performing the standard end-to-end test suite for changes from a pull request"
             else
               BRANCH_NAME="$CIRCLE_BRANCH"
             fi
