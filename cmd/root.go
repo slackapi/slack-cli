@@ -139,7 +139,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 }
 
 // Init bootstraps the CLI process. Put things that do not rely on specific arguments or flags passed to the CLI in here. If you need flag/argument values, InitConfig below.
-func Init() (*cobra.Command, *shared.ClientFactory) {
+func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// clients stores shared clients and configurations used across the commands and handlers
 	var clients *shared.ClientFactory
 	// updateNotification will check for an update in the background and print a message after the command runs
@@ -206,7 +206,6 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 	// OnInitialize will execute before any root or child commands' Pre* methods.
 	// This is a good place to house CLI bootup routines.
 	cobra.OnInitialize(func() {
-		ctx := rootCmd.Context()
 		err := InitConfig(ctx, clients, rootCmd)
 		if err != nil {
 			clients.IO.PrintError(ctx, err.Error())
@@ -215,7 +214,6 @@ func Init() (*cobra.Command, *shared.ClientFactory) {
 	})
 	// Since we use the *E cobra lifecycle methods, OnFinalize is one of the few ways we can ensure something _always_ runs at the end of any command invocation, regardless if an error is raised or not during execution.
 	cobra.OnFinalize(func() {
-		ctx := rootCmd.Context()
 		cleanup(ctx, clients)
 	})
 	return rootCmd, clients
