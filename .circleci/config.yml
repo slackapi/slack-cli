@@ -267,7 +267,8 @@ jobs:
             # - PR builds pass the branch name in as release_ref, so massage it if it is missing a semver prefix.
               echo "Branch (PR) build detected, sanitizing release tag..."
               LAST_SEMVER_TAG=$(git describe --tags --match 'v*.*.*' --abbrev=0 | cut -d"-" -f1)
-              RELEASE_REF="${LAST_SEMVER_TAG}-<< parameters.release_ref >>"
+              BRANCH_NAME=$(echo "<< parameters.release_ref >>" | sed 's/\//-/g')
+              RELEASE_REF="${LAST_SEMVER_TAG}-${BRANCH_NAME}"
             fi
             echo "Will use RELEASE_REF=${RELEASE_REF}"
             echo "export RELEASE_REF=${RELEASE_REF}" >> $BASH_ENV
