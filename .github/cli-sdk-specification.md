@@ -229,7 +229,7 @@ Each incoming event from the socket connection will invoke this hook separately.
 
 This section applies when `config.sdk-managed-connection-enabled` is set to `true` in `hooks.json` or in the [`get-hooks`](#get-hooks) hook response.
 
-Implementing the `start` hook with `config.sdk-managed-connection-enabled` set to `true` will instruct the CLI to delegate connection management to the hook implementation as defined in our [Implementing Socket Mode documentation](https://api.slack.com/apis/socket-mode#implementing). Because establishing a network connection and handling incoming events is assumed to be a long-running process, invoking this hook will block the CLI process.
+Implementing the `start` hook with `config.sdk-managed-connection-enabled` set to `true` will instruct the CLI to delegate connection management to the hook implementation as defined in our [Implementing Socket Mode documentation](https://docs.slack.dev/apis/events-api/using-socket-mode/#implementing). Because establishing a network connection and handling incoming events is assumed to be a long-running process, invoking this hook will block the CLI process.
 
 ##### Input
 
