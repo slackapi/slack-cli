@@ -750,6 +750,10 @@ Steps to merge a pull request:
 1. Tests must pass on the pull request using the continuous integration suite
    - Tests for development APIs are optional, but we recommend investigating why
      it's failing before merging
+   - End-to-end tests for pull requests from forks can be [started][e2e] if:
+     - The `workflow` from the **main** branch is used
+     - The `branch` contains the pull request number as: `pull/123/head`
+     - The `status` is reported with the commit checks
 2. Code is reviewed and approved by another maintainer
 3. Title is descriptive
    - This becomes part of the CHANGELOG, so please make sure it's meaningful to
@@ -770,6 +774,7 @@ When in doubt, find the other maintainers and ask.
 [commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
+[e2e]: https://github.com/slackapi/slack-cli/actions/workflows/e2e_tests.yml
 [effective-go]: https://golang.org/doc/effective_go
 [github-app]: https://github.com/apps/slack-cli-releaser
 [goinstaller]: https://go.dev/doc/install
