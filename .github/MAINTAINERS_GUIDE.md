@@ -750,7 +750,7 @@ Steps to merge a pull request:
 1. Tests must pass on the pull request using the continuous integration suite
    - Tests for development APIs are optional, but we recommend investigating why
      it's failing before merging
-   - End-to-end tests for pull requests from forks can be [started][e2e] with:
+   - End-to-end tests for pull requests from forks can be [started][e2e] if:
      - The `workflow` from the **main** branch is used
      - The `branch` contains the pull request number as: `pull/123/head`
      - The `status` is reported with the commit checks
