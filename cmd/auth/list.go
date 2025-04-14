@@ -51,8 +51,9 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // runListCommand will execute the list command
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
+	ctx := cmd.Context()
 	log := newListLogger(cmd, clients.IO)
-	userAuthList, err := listFunc(cmd.Context(), clients, log)
+	userAuthList, err := listFunc(ctx, clients, log)
 	if err != nil {
 		return err
 	}
@@ -87,6 +88,8 @@ func newListLogger(cmd *cobra.Command, IO iostreams.IOStreamer) *logger.Logger {
 // API Host: https://dev.slack.com (optional, only shown for custom API Hosts)
 // Last Updated: 2021-03-12 11:18:00 -0700
 func printAuthList(cmd *cobra.Command, IO iostreams.IOStreamer, userAuthList []types.SlackAuth) {
+	ctx := cmd.Context()
+
 	// Based on loosely on time.RFC3339
 	timeFormat := "2006-01-02 15:04:05 Z07:00"
 
@@ -121,7 +124,7 @@ func printAuthList(cmd *cobra.Command, IO iostreams.IOStreamer, userAuthList []t
 		cmd.Println()
 
 		// Print a trace with info about the authorization
-		IO.PrintTrace(cmd.Context(), slacktrace.AuthListInfo, authInfo.UserID, authInfo.TeamID)
+		IO.PrintTrace(ctx, slacktrace.AuthListInfo, authInfo.UserID, authInfo.TeamID)
 	}
 
 	// When there are no authorizations
@@ -130,11 +133,12 @@ func printAuthList(cmd *cobra.Command, IO iostreams.IOStreamer, userAuthList []t
 	}
 
 	// Print a trace with the total number of authorized workspaces
-	IO.PrintTrace(cmd.Context(), slacktrace.AuthListCount, fmt.Sprint(len(userAuthList)))
+	IO.PrintTrace(ctx, slacktrace.AuthListCount, fmt.Sprint(len(userAuthList)))
 }
 
 // printAuthListSuccess is displayed at the very end and helps guide the developer toward next steps.
 func printAuthListSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, userAuthList []types.SlackAuth) {
+	ctx := cmd.Context()
 	commandText := style.Commandf("login", true)
 
 	// When there are no authorizations, guide the user to creating an authorization.
@@ -145,5 +149,5 @@ func printAuthListSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, userAuthL
 		)
 	}
 
-	IO.PrintTrace(cmd.Context(), slacktrace.AuthListSuccess)
+	IO.PrintTrace(ctx, slacktrace.AuthListSuccess)
 }

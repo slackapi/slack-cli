@@ -61,7 +61,7 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth1,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
@@ -118,7 +118,7 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth1,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
@@ -177,7 +177,7 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth2,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				existingApp := types.App{
 					AppID:        mockLinkAppID1,
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
@@ -246,7 +246,7 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth2,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				existingApp := types.App{
 					AppID:        mockLinkAppID1,
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
@@ -321,7 +321,7 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth2,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				existingApp := types.App{
 					AppID:      mockLinkAppID2,
 					TeamDomain: mockLinkSlackAuth2.TeamDomain,
@@ -389,7 +389,7 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth2,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
@@ -437,9 +437,9 @@ func Test_Apps_Link(t *testing.T) {
 					mockLinkSlackAuth1,
 				}, nil)
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt
-				if err := cm.Config.ProjectConfig.SetManifestSource(t.Context(), config.MANIFEST_SOURCE_LOCAL); err != nil {
+				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_LOCAL); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Accept manifest source confirmation prompt
@@ -506,9 +506,9 @@ func Test_Apps_Link(t *testing.T) {
 		"decline manifest source prompt should not link app": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, cm, cf)
+				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt
-				if err := cm.Config.ProjectConfig.SetManifestSource(t.Context(), config.MANIFEST_SOURCE_LOCAL); err != nil {
+				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_LOCAL); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Decline manifest source confirmation prompt
@@ -593,8 +593,7 @@ func Test_Apps_LinkAppHeaderSection(t *testing.T) {
 	}
 }
 
-func setupAppLinkCommandMocks(t *testing.T, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-	ctx := t.Context()
+func setupAppLinkCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	projectDirPath := slackdeps.MockWorkingDirectory
 	cm.Os.On("Getwd").Return(projectDirPath, nil)
 

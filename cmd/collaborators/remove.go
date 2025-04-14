@@ -48,7 +48,8 @@ func NewRemoveCommand(clients *shared.ClientFactory) *cobra.Command {
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRemoveCommandFunc(cmd.Context(), clients, cmd, args)
+			ctx := cmd.Context()
+			return runRemoveCommandFunc(ctx, clients, cmd, args)
 		},
 	}
 }

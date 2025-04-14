@@ -69,6 +69,7 @@ func (c *CLIDependency) HasUpdate() (bool, error) {
 
 // PrintUpdateNotification notifies the user that a new version is available and provides upgrade instructions for Homebrew. Returns a bool representing whether the user wants the self-update to run
 func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error) {
+	ctx := cmd.Context()
 	processName := cmdutil.GetProcessName()
 	isHomebrew := IsHomebrew(processName)
 
@@ -92,7 +93,7 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 			style.CommandText("https://api.slack.com/automation/cli/install"),
 		)
 		selfUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest version now?", style.Emoji("rocket"))
-		return c.clients.IO.ConfirmPrompt(cmd.Context(), selfUpdatePrompt, false)
+		return c.clients.IO.ConfirmPrompt(ctx, selfUpdatePrompt, false)
 	}
 
 	return false, nil
