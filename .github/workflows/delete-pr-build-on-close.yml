@@ -25,7 +25,7 @@ jobs:
             echo "Successfully deleted ${REF}"
             RELEASE_FOUND=0
           else
-            echo "Did to find ${REF} tag, trying next..."
+            echo "Did not find ${REF} tag, trying version prefixes..."
           fi
 
           # Figure out tag name from branch name. This is coupled to the tag name generation that exists in .circleci/config.yml's `create-github-release` job.
