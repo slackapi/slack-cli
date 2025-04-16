@@ -294,14 +294,18 @@ jobs:
       - run:
           name: "Update release description and upload assets to GitHub"
           command: |
-            # Replace double quotes with single quotes
             RELEASE_ID=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" "https://api.github.com/repos/slackapi/slack-cli/releases/tags/$RELEASE_REF" | jq -r .id);
-            PRERELEASE="true";
+
             TARGET="${CIRCLE_SHA1}";
-            if [ "<< parameters.production >>" != "false" ];
-            then
+            PRERELEASE="true";
+            PR_NUMBER=$(echo "$RELEASE_REF" | sed -n 's/.*-pull-\([0-9]\+\)-head/\1/p');
+
+            if [ "<< parameters.production >>" != "false" ]; then
               PRERELEASE="false";
               TARGET="main";
+            elif [ -n "$PR_NUMBER" ]; then
+              git fetch origin "pull/${PR_NUMBER}/head:pr-${PR_NUMBER}"
+              TARGET=$(git rev-parse "pr-${PR_NUMBER}")
             fi
             BODY="{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},"
 
