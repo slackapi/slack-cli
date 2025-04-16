@@ -304,8 +304,10 @@ jobs:
               PRERELEASE="false";
               TARGET="main";
             elif [ -n "$PR_NUMBER" ]; then
-              git fetch origin "refs/pull/${PR_NUMBER}/merge:pr-${PR_NUMBER}"
-              TARGET=$(git rev-parse "pr-${PR_NUMBER}")
+              BRANCH="${RELEASE_REF}-branch"
+              git fetch origin "pull/${PR_NUMBER}/head:${BRANCH}"
+              git push origin "${BRANCH}"
+              TARGET=$(git rev-parse "${BRANCH}")
             fi
             BODY="{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},"
 
