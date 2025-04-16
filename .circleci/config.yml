@@ -306,6 +306,7 @@ jobs:
             elif [ -n "$PR_NUMBER" ]; then
               BRANCH="${RELEASE_REF}-branch"
               git fetch origin "pull/${PR_NUMBER}/head:${BRANCH}"
+              git remote -v
               git push origin "${BRANCH}"
               TARGET=$(git rev-parse "${BRANCH}")
             fi
