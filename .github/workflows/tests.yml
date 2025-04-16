@@ -2,6 +2,9 @@ name: Lint -> Test
 
 on:
   push:
+    branches: [main]
+  pull_request:
+    # Since no branch is specified, this will run on all PRs
   # Repository dispatches are triggered throughout the GitHub API. This is used to run the custom integration tests using a specified API host
   # in the custom integration test job below
   repository_dispatch:
