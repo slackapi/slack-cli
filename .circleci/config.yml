@@ -308,8 +308,7 @@ jobs:
               git fetch origin "pull/${PR_NUMBER}/head:${BRANCH}"
               git remote -v
               git remote set-url origin https://$GITHUB_RELEASE_TOKEN@github.com/slackapi/slack-cli.git
-              git remote -v
-              git push origin "${BRANCH}"
+              GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push origin "${BRANCH}"
               TARGET=$(git rev-parse "${BRANCH}")
             fi
             BODY="{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},"
