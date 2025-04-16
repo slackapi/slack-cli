@@ -308,6 +308,10 @@ jobs:
             if [ "$RELEASE_ID" = "null" ]; then
               BODY+="\"generate_release_notes\":true}"
               echo "Creating a new GitHub release with: ${BODY}"
+
+              # TODO: once logs in ci are found for err this can (should or perhaps must) be deleted
+              curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "${BODY}"
+
               RELEASE_ID=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "${BODY}" | jq -r .id)
               echo "... complete. RELEASE_ID=${RELEASE_ID}"
             else
