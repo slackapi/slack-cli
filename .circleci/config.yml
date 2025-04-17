@@ -294,32 +294,20 @@ jobs:
       - run:
           name: "Update release description and upload assets to GitHub"
           command: |
+            # Replace double quotes with single quotes
             RELEASE_ID=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" "https://api.github.com/repos/slackapi/slack-cli/releases/tags/$RELEASE_REF" | jq -r .id);
-
-            TARGET="${CIRCLE_SHA1}";
             PRERELEASE="true";
-            PR_NUMBER=$(echo "$RELEASE_REF" | sed -n 's/.*-pull-\([0-9]\+\)-head/\1/p');
-
-            if [ "<< parameters.production >>" != "false" ]; then
+            TARGET="${CIRCLE_SHA1}";
+            if [ "<< parameters.production >>" != "false" ];
+            then
               PRERELEASE="false";
               TARGET="main";
-            elif [ -n "$PR_NUMBER" ]; then
-              BRANCH="${RELEASE_REF}-branch"
-              git fetch origin "pull/${PR_NUMBER}/head:${BRANCH}"
-              git remote -v
-              git remote set-url origin https://x-access-token:$GITHUB_RELEASE_TOKEN@github.com/slackapi/slack-cli.git
-              GIT_CURL_VERBOSE=1 GIT_TRACE=1 git push origin "${BRANCH}"
-              TARGET=$(git rev-parse "${BRANCH}")
             fi
             BODY="{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},"
 
             if [ "$RELEASE_ID" = "null" ]; then
               BODY+="\"generate_release_notes\":true}"
               echo "Creating a new GitHub release with: ${BODY}"
-
-              # TODO: once logs in ci are found for err this can (should or perhaps must) be deleted
-              curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "${BODY}"
-
               RELEASE_ID=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "${BODY}" | jq -r .id)
               echo "... complete. RELEASE_ID=${RELEASE_ID}"
             else
