@@ -116,7 +116,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		app = _app
 	}
 
-	err = validateCreateCmdFlags(clients, &createFlags)
+	err = validateCreateCmdFlags(ctx, clients, &createFlags)
 	if err != nil {
 		return err
 	}

@@ -372,6 +372,7 @@ func Test_TriggerGenerate_MismatchedFlags(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Os.On("Glob", mock.Anything).Return([]string{definitionFile}, nil)
 			clientsMock.AddDefaultMocks()
@@ -383,7 +384,7 @@ func Test_TriggerGenerate_MismatchedFlags(t *testing.T) {
 			err = afero.WriteFile(clients.Fs, definitionFile, []byte(""), 0600)
 			require.NoError(t, err, "Cant write apps.json")
 
-			err = validateCreateCmdFlags(clients, &tt.flags)
+			err = validateCreateCmdFlags(ctx, clients, &tt.flags)
 			if tt.err != nil {
 				assert.NotNil(t, err)
 				assert.Equal(t, slackerror.ToSlackError(tt.err).Code, slackerror.ToSlackError(err).Code)
