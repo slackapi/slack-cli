@@ -17,11 +17,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          # Escape tags to create a semantic version
+          REF=$(echo "${{ github.event.ref }}" | sed 's/\//-/g')
+          RELEASE_FOUND=1
+
+          # Delete tags matching the pull request branch from forks
+          if GH_DEBUG=1 gh release --repo="slackapi/slack-cli" delete "${REF}" -y --cleanup-tag; then
+            echo "Successfully deleted ${REF}"
+            RELEASE_FOUND=0
+          else
+            echo "Did not find ${REF} tag, trying version prefixes..."
+          fi
+
           # Figure out tag name from branch name. This is coupled to the tag name generation that exists in .circleci/config.yml's `create-github-release` job.
           RELEASES=$(gh release list --repo="slackapi/slack-cli" --order="desc" --json="tagName" --exclude-drafts --exclude-pre-releases --limit=24 --jq ".[] | .tagName")
-          RELEASE_FOUND=1
           for TAGS in $RELEASES; do
-            TAG_NAME="${TAGS}-${{ github.event.ref }}"
+            TAG_NAME="${TAGS}-${REF}"
             echo "Identified pre-release tagname to 🔪: $TAG_NAME"
 
             # Delete the pre-release
