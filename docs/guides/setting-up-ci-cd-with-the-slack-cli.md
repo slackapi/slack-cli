@@ -6,7 +6,7 @@ slug: /slack-cli/guides/setting-up-ci-cd-with-the-slack-cli
 
 # Setting up CI/CD with the Slack CLI
 
-CI/CD is an acronym for Continuous Integration and Continuous Delivery. Also referred to as _CI/CD pipeline_, it is a common term in the world of DevOps. 
+CI/CD is an acronym for Continuous Integration and Continuous Delivery. Also referred to as _CI/CD pipeline_, it is a common term in the world of DevOps.
 
 DevOps is another acronym of sorts that stands for Development and Operations, a combination of software development (typically encompassing planning, building, coding, and testing) and operations (including software releases, deployment, and status monitoring).
 
@@ -32,7 +32,7 @@ CI providers are tools for automating the code changes that are part of your pip
 
 Some popular providers include:
 
-* [Github Actions](https://github.com/features/actions)
+* [GitHub Actions](https://github.com/features/actions)
 * [CircleCI](https://circleci.com/)
 * [GitLab](https://about.gitlab.com/)
 * [Jenkins](https://www.jenkins.io/)
@@ -60,7 +60,7 @@ In addition, you'll need to obtain a service token to authorize your CI/CD setup
 
 Once you've done those things, you're ready to get started! Let's walk through an example.
 
-Let's take a look at the [Virtual Running Buddies sample app](https://github.com/slack-samples/deno-virtual-running-buddies). 
+Let's take a look at the [Virtual Running Buddies sample app](https://github.com/slack-samples/deno-virtual-running-buddies).
 
 First, we'll open the `deno.jsonc` file located at the root of the project:
 
@@ -72,14 +72,14 @@ First, we'll open the `deno.jsonc` file located at the root of the project:
   "fmt": {
     "files": {
       "include": [
-        "README.md", 
-        "datastores", 
-        "external_auth", 
-        "functions", 
-        "manifest.ts", 
-        "triggers", 
-        "types", 
-        "views", 
+        "README.md",
+        "datastores",
+        "external_auth",
+        "functions",
+        "manifest.ts",
+        "triggers",
+        "types",
+        "views",
         "workflows"
         ]
     }
@@ -88,13 +88,13 @@ First, we'll open the `deno.jsonc` file located at the root of the project:
   "lint": {
     "files": {
       "include": [
-        "datastores", 
-        "external_auth", 
-        "functions", 
-        "manifest.ts", 
-        "triggers", 
-        "types", 
-        "views", 
+        "datastores",
+        "external_auth",
+        "functions",
+        "manifest.ts",
+        "triggers",
+        "types",
+        "views",
         "workflows"
         ]
     }
@@ -106,7 +106,7 @@ First, we'll open the `deno.jsonc` file located at the root of the project:
 }
 ```
 
-This file is your [configuration file](https://deno.land/manual/getting_started/configuration_file). It allows you to customize Deno's built-in TypeScript compiler, formatter, and linter. 
+This file is your [configuration file](https://deno.land/manual/getting_started/configuration_file). It allows you to customize Deno's built-in TypeScript compiler, formatter, and linter.
 
 We'll also point to our import map here (`import_map.json`), which allows you to manage what versions of modules or the standard library are included with your project:
 
@@ -178,7 +178,7 @@ While not part of this sample app, you can also generate test coverage reports f
 
 ## Continuous Delivery setup {#cd-pipeline}
 
-On the CD side of things, there are various ways you can deploy Deno projects to the cloud. Your setup will differ based on which platform you choose. 
+On the CD side of things, there are various ways you can deploy Deno projects to the cloud. Your setup will differ based on which platform you choose.
 
 Let's look at an example `deploy.yml` file, which you would also place in the `.github/workflows` folder along with your `deno.yml` file. The steps below need to run within the app folder and are for already-deployed apps only. Its contents are as follows:
 
