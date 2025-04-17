@@ -653,8 +653,8 @@ func TestTriggersCreateCommand_promptShouldDisplayTriggerDefinitionFiles(t *test
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-
 			// Prepare mocks
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			testcase.prepareMocks(clientsMock)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -663,7 +663,7 @@ func TestTriggersCreateCommand_promptShouldDisplayTriggerDefinitionFiles(t *test
 
 			var err error
 			createFlags := createCmdFlags{}
-			err = maybeSetTriggerDefFlag(clients, &createFlags)
+			err = maybeSetTriggerDefFlag(ctx, clients, &createFlags)
 			testcase.check(t, createFlags, err)
 		})
 	}
