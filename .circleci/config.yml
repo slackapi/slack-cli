@@ -518,7 +518,7 @@ workflows:
           release_ref: << pipeline.git.branch >>
           filters:
             branches:
-              ignore: "^pull/[0-9]+/head$"
+              ignore: "^pull/[0-9]+/head$" # Skip fork branches
       - e2e-test:
           e2e_target_branch: "main"
           requires:
@@ -526,7 +526,7 @@ workflows:
           context: slack-cli-e2e
           filters:
             branches:
-              ignore: "^pull/[0-9]+/head$"
+              ignore: "^pull/[0-9]+/head$" # Skip fork branches
 
   # nightly build will build from main branch nightly at 12:00 am UTC
   nightly-build-test-code-sign-deploy:
