@@ -228,7 +228,7 @@ func packageArchive(ctx context.Context, clients *shared.ClientFactory, projectR
 	}
 
 	// Install the project's production dependencies with a timeout in case there are issues
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	if _, err := clients.Runtime.InstallProjectDependencies(ctx, tmpDir, clients.HookExecutor, clients.IO, clients.Fs, clients.Os); err != nil {

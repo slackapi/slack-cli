@@ -15,7 +15,6 @@
 package project
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -248,7 +247,7 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 		return true, nil
 	}
 
-	clients.IO.PrintWarning(context.Background(), style.Sectionf(style.TextSection{
+	clients.IO.PrintWarning(ctx, style.Sectionf(style.TextSection{
 		Text: style.Bold("You are trying to use code published by an unknown author"),
 		Secondary: []string{
 			"We strongly advise reviewing the source code and dependencies of external",
