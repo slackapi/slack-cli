@@ -4,7 +4,7 @@ name: Delete pre-release when a branch is deleted
 # The circleci config builds CLI binaries when a PR is opened and hosts them under a GitHub (pre-)release named after the PR branch
 # This workflow action deletes that pre-release when a PR is merged or closed.
 on:
-  pull_request:
+  pull_request_target:
     types:
       - closed
 
