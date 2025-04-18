@@ -285,7 +285,7 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 		clientsMock.HookExecutor.On("Execute", mock.Anything).Return(string(mockInstallUpdateJSON), nil)
 
 		// Execute `install-update` hook
-		_, err := clients.HookExecutor.Execute(hooks.HookExecOpts{Hook: clients.SDKConfig.Hooks.InstallUpdate})
+		_, err := clients.HookExecutor.Execute(ctx, hooks.HookExecOpts{Hook: clients.SDKConfig.Hooks.InstallUpdate})
 		if err != nil {
 			assert.Fail(t, "Running the `install-update` encountered an unexpected error")
 		}

@@ -215,7 +215,7 @@ func (r *LocalServer) Listen(ctx context.Context, errChan chan<- error, done cha
 					Stderr: r.clients.IO.WriteSecondary(r.clients.IO.WriteErr()),
 				}
 
-				out, err := r.clients.HookExecutor.Execute(startHookOpts)
+				out, err := r.clients.HookExecutor.Execute(ctx, startHookOpts)
 
 				if err != nil {
 					// Log the error but do not return because the user may be able to recover inside their app code

@@ -103,7 +103,7 @@ func (d *Deno) HooksJSONTemplate() []byte {
 }
 
 // PreparePackage will prepare and copy the app in srcDirPath to dstDirPath as a release-ready bundle.
-func (d *Deno) PreparePackage(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor, opts types.PreparePackageOpts) error {
+func (d *Deno) PreparePackage(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor, opts types.PreparePackageOpts) error {
 	// Generate the bundle.js in the dstDirPath
 	var packageHookOpts = hooks.HookExecOpts{
 		Directory: opts.SrcDirPath,
@@ -118,7 +118,7 @@ func (d *Deno) PreparePackage(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.H
 	}
 
 	// Execute the package hook and ignore the output because it's always 0 length
-	_, err := hookExecutor.Execute(packageHookOpts)
+	_, err := hookExecutor.Execute(ctx, packageHookOpts)
 	if err != nil {
 		return err
 	}
@@ -195,7 +195,7 @@ func cacheDenoDependencies(
 			Stdout: &stdout,
 		}
 
-		if _, err := hookExecutor.Execute(hookExecOpts); err != nil {
+		if _, err := hookExecutor.Execute(ctx, hookExecOpts); err != nil {
 			ios.PrintDebug(ctx, "failed to cache project dependencies")
 			return "", err
 		}
