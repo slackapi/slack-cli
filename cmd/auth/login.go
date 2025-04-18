@@ -47,7 +47,7 @@ func NewLoginCommand(clients *shared.ClientFactory) *cobra.Command {
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "auth login", Meaning: "Login to a Slack account with prompts"},
 			{Command: "auth login --no-prompt", Meaning: "Login to a Slack account without prompts, this returns a ticket"},
-			{Command: "auth login --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...", Meaning: "Complete login using ticket and challenge code"},
+			{Command: "auth login --challenge 6d0a31c9 --ticket ISQWLiZT0tOMLO3YWNTJO0...", Meaning: "Complete login using ticket and challenge code"},
 			{Command: "auth login --token xoxp-...", Meaning: "Login with a user token"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
