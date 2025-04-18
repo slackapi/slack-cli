@@ -41,7 +41,7 @@ type Runtime interface {
 	Version() string
 	SetVersion(string)
 	HooksJSONTemplate() []byte
-	PreparePackage(hooks.SDKCLIConfig, hooks.HookExecutor, types.PreparePackageOpts) error
+	PreparePackage(context.Context, hooks.SDKCLIConfig, hooks.HookExecutor, types.PreparePackageOpts) error
 }
 
 // New creates a new runtime using runtimeName to choose the runtime

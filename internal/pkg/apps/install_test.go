@@ -535,7 +535,7 @@ func TestInstall(t *testing.T) {
 				)
 			}
 			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			if tt.mockBoltExperiment {
@@ -978,7 +978,7 @@ func TestInstallLocalApp(t *testing.T) {
 				)
 			}
 			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			if tt.mockBoltExperiment {

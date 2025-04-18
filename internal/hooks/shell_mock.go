@@ -15,6 +15,7 @@
 package hooks
 
 import (
+	"context"
 	"io"
 
 	"github.com/stretchr/testify/mock"
@@ -83,7 +84,7 @@ type MockHookExecutor struct {
 	mock.Mock
 }
 
-func (m *MockHookExecutor) Execute(opts HookExecOpts) (string, error) {
-	args := m.Called(opts)
+func (m *MockHookExecutor) Execute(ctx context.Context, opts HookExecOpts) (string, error) {
+	args := m.Called(ctx, opts)
 	return args.String(0), args.Error(1)
 }

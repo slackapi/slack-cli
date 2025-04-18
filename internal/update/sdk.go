@@ -131,7 +131,7 @@ func CheckUpdateHook(ctx context.Context, clients *shared.ClientFactory) (SDKRel
 	var hookExecOpts = hooks.HookExecOpts{
 		Hook: clients.SDKConfig.Hooks.CheckUpdate,
 	}
-	checkUpdateResponse, err := clients.HookExecutor.Execute(hookExecOpts)
+	checkUpdateResponse, err := clients.HookExecutor.Execute(ctx, hookExecOpts)
 	if err != nil {
 		return SDKReleaseInfo{}, err
 	}
@@ -164,7 +164,7 @@ func (c *SDKDependency) InstallUpdate(ctx context.Context) error {
 
 		fmt.Print(style.SectionSecondaryf("Starting the auto-update..."))
 
-		installUpdateJSON, err := c.clients.HookExecutor.Execute(hookExecOpts)
+		installUpdateJSON, err := c.clients.HookExecutor.Execute(ctx, hookExecOpts)
 		if err != nil {
 			return err
 		}

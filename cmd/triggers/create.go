@@ -123,7 +123,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	var triggerArg api.TriggerRequest
 	if createFlags.triggerDef != "" {
-		triggerArg, err = triggerRequestFromDef(clients, createFlags, app.IsDev)
+		triggerArg, err = triggerRequestFromDef(ctx, clients, createFlags, app.IsDev)
 		if err != nil {
 			return err
 		}
@@ -305,7 +305,7 @@ func triggerRequestFromFlags(flags createCmdFlags, isDev bool) api.TriggerReques
 	return req
 }
 
-func triggerRequestViaHook(clients *shared.ClientFactory, path string, isDev bool) (api.TriggerRequest, error) {
+func triggerRequestViaHook(ctx context.Context, clients *shared.ClientFactory, path string, isDev bool) (api.TriggerRequest, error) {
 	if !clients.SDKConfig.Hooks.GetTrigger.IsAvailable() {
 		return api.TriggerRequest{}, slackerror.New(slackerror.ErrSDKHookGetTriggerNotFound)
 	}
@@ -319,6 +319,7 @@ func triggerRequestViaHook(clients *shared.ClientFactory, path string, isDev boo
 		hookExecOpts.Env[name] = val
 	}
 	triggerDefAsStr, err := clients.HookExecutor.Execute(
+		ctx,
 		hookExecOpts,
 	)
 	if err != nil {
@@ -350,10 +351,10 @@ func triggerRequestFromJSONFile(clients *shared.ClientFactory, path string, isDe
 	return req, nil
 }
 
-func triggerRequestFromDef(clients *shared.ClientFactory, flags createCmdFlags, isDev bool) (api.TriggerRequest, error) {
+func triggerRequestFromDef(ctx context.Context, clients *shared.ClientFactory, flags createCmdFlags, isDev bool) (api.TriggerRequest, error) {
 	if strings.HasSuffix(flags.triggerDef, ".json") {
 		return triggerRequestFromJSONFile(clients, flags.triggerDef, isDev)
 	}
 
-	return triggerRequestViaHook(clients, flags.triggerDef, isDev)
+	return triggerRequestViaHook(ctx, clients, flags.triggerDef, isDev)
 }

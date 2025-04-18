@@ -81,7 +81,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return app, "", err
 	}
@@ -365,7 +365,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		clients.EventTracker.SetAuthEnterpriseID(*authSession.EnterpriseID)
 	}
 
-	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
@@ -663,7 +663,7 @@ func shouldCacheManifest(ctx context.Context, clients *shared.ClientFactory, app
 	if manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE) {
 		return false, nil
 	}
-	manifest, err := clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+	manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return false, err
 	}
@@ -701,7 +701,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if clients.Config.ForceFlag {
 		return true, nil
 	}
-	manifest, err := clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+	manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return false, err
 	}

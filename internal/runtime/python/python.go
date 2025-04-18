@@ -163,7 +163,7 @@ func (p *Python) HooksJSONTemplate() []byte {
 }
 
 // PreparePackage will prepare and copy the app in projectDirPath to tmpDirPath as a release-ready bundle.
-func (p *Python) PreparePackage(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor, opts types.PreparePackageOpts) error {
+func (p *Python) PreparePackage(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor, opts types.PreparePackageOpts) error {
 	return nil // Unsupported
 }
 

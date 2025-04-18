@@ -106,7 +106,7 @@ func getManifestInfo(ctx context.Context, clients *shared.ClientFactory, cmd *co
 	}
 	switch {
 	case source.Equals(config.MANIFEST_SOURCE_LOCAL):
-		return getManifestInfoProject(clients)
+		return getManifestInfoProject(ctx, clients)
 	case source.Equals(config.MANIFEST_SOURCE_REMOTE):
 		return getManifestInfoRemote(ctx, clients)
 	default:
@@ -115,8 +115,9 @@ func getManifestInfo(ctx context.Context, clients *shared.ClientFactory, cmd *co
 }
 
 // getManifestInfoProject gathers app manifest information from "get-manifest"
-func getManifestInfoProject(clients *shared.ClientFactory) (types.AppManifest, error) {
+func getManifestInfoProject(ctx context.Context, clients *shared.ClientFactory) (types.AppManifest, error) {
 	slackManifest, err := clients.AppClient().Manifest.GetManifestLocal(
+		ctx,
 		clients.SDKConfig,
 		clients.HookExecutor,
 	)

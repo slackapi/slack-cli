@@ -26,8 +26,8 @@ type ManifestMockObject struct {
 	mock.Mock
 }
 
-func (m *ManifestMockObject) GetManifestLocal(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
-	args := m.Called(sdkConfig, hookExecutor)
+func (m *ManifestMockObject) GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
+	args := m.Called(ctx, sdkConfig, hookExecutor)
 	return args.Get(0).(types.SlackYaml), args.Error(1)
 }
 

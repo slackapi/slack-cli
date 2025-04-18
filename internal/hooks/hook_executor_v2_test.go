@@ -22,6 +22,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
@@ -158,6 +159,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			generateBoundary = mockBoundaryStringGenerator
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
@@ -167,7 +169,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			hookExecutor := &HookExecutorMessageBoundaryProtocol{
 				IO: ios,
 			}
-			response, err := hookExecutor.Execute(tt.opts)
+			response, err := hookExecutor.Execute(ctx, tt.opts)
 			tt.check(t, response, err, tt.opts.Exec)
 		})
 	}

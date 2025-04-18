@@ -111,6 +111,7 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 				"GetManifestLocal",
 				mock.Anything,
 				mock.Anything,
+				mock.Anything,
 			).Return(
 				tt.mockManifestResponse,
 				tt.mockManifestError,

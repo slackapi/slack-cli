@@ -148,7 +148,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			ios.AddDefaultMocks()
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
 
 			// Create files
 			for _, filePath := range tt.existingFilePaths {
@@ -285,6 +285,8 @@ func Test_Deno_PreparePackage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup SDKConfig
 			mockSDKConfig := hooks.NewSDKConfigMock()
 			mockSDKConfig.Hooks.BuildProject = hooks.HookScript{
@@ -294,7 +296,7 @@ func Test_Deno_PreparePackage(t *testing.T) {
 
 			// Setup HookExecutor
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
 
 			// Setup
 			mockOpts := types.PreparePackageOpts{}
@@ -304,7 +306,7 @@ func Test_Deno_PreparePackage(t *testing.T) {
 
 			// Run tests
 			d := New()
-			err := d.PreparePackage(mockSDKConfig, mockHookExecutor, mockOpts)
+			err := d.PreparePackage(ctx, mockSDKConfig, mockHookExecutor, mockOpts)
 
 			// Assertions
 			require.Equal(t, tt.expectedPreparePackageError, err)

@@ -340,7 +340,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 					Return(types.EVERYONE, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
-				clientsMock.HookExecutor.On("Execute", mock.Anything).Return(`{`, nil)
+				clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(`{`, nil)
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				var content = `export default {}`
@@ -354,7 +354,7 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything)
+				clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

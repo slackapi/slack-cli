@@ -15,6 +15,7 @@
 package hooks
 
 import (
+	"context"
 	"os"
 	"strings"
 
@@ -23,7 +24,7 @@ import (
 )
 
 type HookExecutor interface {
-	Execute(opts HookExecOpts) (response string, err error)
+	Execute(ctx context.Context, opts HookExecOpts) (response string, err error)
 }
 
 func GetHookExecutor(ios iostreams.IOStreamer, cfg SDKCLIConfig) HookExecutor {

@@ -167,7 +167,7 @@ func doctorHook(ctx context.Context, clients *shared.ClientFactory) (DoctorHookJ
 	var hookExecOpts = hooks.HookExecOpts{
 		Hook: clients.SDKConfig.Hooks.Doctor,
 	}
-	getDoctorHookJSON, err := clients.HookExecutor.Execute(hookExecOpts)
+	getDoctorHookJSON, err := clients.HookExecutor.Execute(ctx, hookExecOpts)
 	if err != nil {
 		return DoctorHookJSON{}, err
 	}

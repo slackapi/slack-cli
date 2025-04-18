@@ -461,7 +461,7 @@ func prepareMocks(t *testing.T, triggersListResponse []types.DeployedTrigger, gl
 	clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return(triggersListResponse, "", nil)
 	clientsMock.Os.On("Glob", mock.Anything).Return(globResponse, nil)
 	clientsMock.ApiInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(triggersCreateResponse, triggersCreateResponseError)
-	clientsMock.HookExecutor.On("Execute", mock.Anything).Return(`{}`, nil)
+	clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(`{}`, nil)
 
 	clientsMock.AddDefaultMocks()
 

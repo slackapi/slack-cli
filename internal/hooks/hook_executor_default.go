@@ -31,7 +31,7 @@ type HookExecutorDefaultProtocol struct {
 }
 
 // Execute processes the data received by the SDK.
-func (e *HookExecutorDefaultProtocol) Execute(opts HookExecOpts) (string, error) {
+func (e *HookExecutorDefaultProtocol) Execute(ctx context.Context, opts HookExecOpts) (string, error) {
 	cmdArgs, cmdArgVars, cmdEnvVars, err := processExecOpts(opts)
 	if err != nil {
 		return "", err
@@ -41,11 +41,11 @@ func (e *HookExecutorDefaultProtocol) Execute(opts HookExecOpts) (string, error)
 		opts.Exec = ShellExec{}
 	}
 
-	e.IO.PrintDebug(context.Background(),
+	e.IO.PrintDebug(ctx,
 		"starting hook command: %s %s\n", cmdArgs[0], strings.Join(cmdArgVars, " "),
 	)
 	defer func() {
-		e.IO.PrintDebug(context.Background(),
+		e.IO.PrintDebug(ctx,
 			"finished hook command: %s %s\n", cmdArgs[0], strings.Join(cmdArgVars, " "),
 		)
 	}()
@@ -56,14 +56,14 @@ func (e *HookExecutorDefaultProtocol) Execute(opts HookExecOpts) (string, error)
 		Buff: &buffout,
 		Stream: iostreams.BufferedWriter{
 			Buff:   opts.Stdout,
-			Stream: e.IO.WriteDebug(context.Background()),
+			Stream: e.IO.WriteDebug(ctx),
 		},
 	}
 	stderr := iostreams.BufferedWriter{
 		Buff: &bufferr,
 		Stream: iostreams.BufferedWriter{
 			Buff:   opts.Stderr,
-			Stream: e.IO.WriteDebug(context.Background()),
+			Stream: e.IO.WriteDebug(ctx),
 		},
 	}
 

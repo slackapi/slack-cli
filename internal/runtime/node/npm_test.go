@@ -73,9 +73,9 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 
 			// Mock hook
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 				Run(func(args mock.Arguments) {
-					opts := args.Get(0).(hooks.HookExecOpts)
+					opts := args.Get(1).(hooks.HookExecOpts)
 					_, err := opts.Stdout.Write([]byte(tt.hookExecuteStdout))
 					require.NoError(t, err)
 				}).
@@ -140,9 +140,9 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 
 			// Mock hook
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 				Run(func(args mock.Arguments) {
-					opts := args.Get(0).(hooks.HookExecOpts)
+					opts := args.Get(1).(hooks.HookExecOpts)
 					_, err := opts.Stdout.Write([]byte(tt.hookExecuteStdout))
 					require.NoError(t, err)
 				}).
@@ -214,9 +214,9 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 
 			// Mock hook
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 				Run(func(args mock.Arguments) {
-					opts := args.Get(0).(hooks.HookExecOpts)
+					opts := args.Get(1).(hooks.HookExecOpts)
 					_, err := opts.Stdout.Write([]byte(tt.hookExecuteStdout))
 					require.NoError(t, err)
 				}).

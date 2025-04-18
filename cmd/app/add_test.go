@@ -484,7 +484,7 @@ func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *s
 		Return("logstash host")
 
 	manifestMock := &app.ManifestMockObject{}
-	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 		AppManifest: types.AppManifest{
 			DisplayInformation: types.DisplayInformation{
 				Name: team1TeamDomain,

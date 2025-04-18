@@ -31,7 +31,7 @@ func IsSlackHostedProject(ctx context.Context, clients *shared.ClientFactory) er
 	}
 	switch {
 	case manifestSource.Equals(config.MANIFEST_SOURCE_LOCAL):
-		manifest, err := clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+		manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}

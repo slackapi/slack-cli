@@ -44,7 +44,6 @@ var fakeApp = types.App{
 var selectedProdApp = prompts.SelectedApp{Auth: types.SlackAuth{TeamDomain: "team1234"}, App: types.App{AppID: fakeAppID, TeamID: fakeAppTeamID}}
 
 func TestAppsUninstall(t *testing.T) {
-
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"Successfully uninstall": {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
@@ -62,7 +61,7 @@ func TestAppsUninstall(t *testing.T) {
 				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.SlackYaml{}, slackerror.New(slackerror.ErrSDKHookNotFound))
 				clients.AppClient().Manifest = manifestMock
 			},
