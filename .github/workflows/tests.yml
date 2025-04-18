@@ -55,6 +55,10 @@ jobs:
         uses: actions/setup-go@v5.4.0
         with:
           go-version: "1.24.2"
+      - name: Check spelling
+        uses: crate-ci/typos@v1.31.1
+        with:
+          extend_identifiers: alle,groupe,UE
       - name: Report health score
         uses: slackapi/slack-health-score@v0.1.1
         with:
