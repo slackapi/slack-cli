@@ -22,7 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
-// Writer contains implementions of io.Writer that log and output provided input
+// Writer contains implementations of io.Writer to log and output provided input
 //
 // Used over Printer when the Write method is needed while still wanting to have
 // outputs formatted and directed to the matching stream

@@ -30,7 +30,7 @@ func NewTokenCommand(clients *shared.ClientFactory) *cobra.Command {
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "auth token", Meaning: "Create a service token with prompts"},
 			{Command: "auth token --no-prompt", Meaning: "Gather a service token without prompts, this returns a ticket"},
-			{Command: "auth token --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...", Meaning: "Complete authentication using a ticket and challenge code"},
+			{Command: "auth token --challenge 6d0a31c9 --ticket ISQWLiZT0tOMLO3YWNTJO0...", Meaning: "Complete authentication using a ticket and challenge code"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serviceTokenFlag = true
