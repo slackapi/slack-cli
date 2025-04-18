@@ -1,8 +1,17 @@
 name: Delete pre-release when a branch is deleted
-# Runs when PRs are merged or closed.
+# This workflow action deletes pre-releases when a PR is merged or closed.
+#
+# The CircleCI configuration builds CLI binaries when a PR is opened.
+# These are uploaded to the upstream project as GitHub (pre-)releases.
+#
+# The release tag matches one of the following patterns:
+#  - v1.2.3-example-branch-placeholder  # Branches on upstream
+#  - v1.2.3-pull-12-head                # Branches from forks
+#
+# A "pull_request_target" event is used to delete pre-releases upstream.
+#
 # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-pull_request-workflow-when-a-pull-request-merges
-# The circleci config builds CLI binaries when a PR is opened and hosts them under a GitHub (pre-)release named after the PR branch
-# This workflow action deletes that pre-release when a PR is merged or closed.
+# See https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request_target
 on:
   pull_request_target:
     types:
