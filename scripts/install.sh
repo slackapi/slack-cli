@@ -109,7 +109,7 @@ install_slack_cli() {
                 LATEST_SLACK_CLI_VERSION=$(curl --silent "https://api.slack.com/slackcli/metadata.json" | grep -o '"version": "[^"]*' | grep -o '[^"]*$' | head -1)
                 if [ -z "$LATEST_SLACK_CLI_VERSION" ]; then
                     echo "🛑 Error: Installer cannot find the latest Slack CLI version!"
-                    echo "🔖 Check the status of https://api.slack.com and try again"
+                    echo "🔖 Check the status of https://slack-status.com/ and try again"
                     exit 1
                 fi
                 echo -e "💾 Release v$LATEST_SLACK_CLI_VERSION was found! Downloading now..."
@@ -127,7 +127,7 @@ install_slack_cli() {
         else
                 echo "🛑 Error: This installer is only supported on Linux and macOS"
                 echo "🔖 Try using a different installation method:"
-                echo "🔗 https://api.slack.com/automation/cli/install"
+                echo "🔗 https://tools.slack.dev/slack-cli"
                 exit 1
         fi
 

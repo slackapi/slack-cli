@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -35,7 +36,7 @@ func TestRootCommand(t *testing.T) {
 	defer os.RemoveAll(tmp)
 
 	// Get command
-	cmd, _ := Init()
+	cmd, _ := Init(ctx)
 
 	// Create mocks
 	clientsMock := shared.NewClientsMock()
@@ -77,6 +78,8 @@ func TestRootCommand(t *testing.T) {
 
 // FYI: do not try to run this test in vscode using the run/debug test inline test helper; as the assertions in this test will fail in that context
 func TestVersionFlags(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	tmp, _ := os.MkdirTemp("", "")
 	_ = os.Chdir(tmp)
 	defer os.RemoveAll(tmp)
@@ -84,7 +87,7 @@ func TestVersionFlags(t *testing.T) {
 	var output string
 
 	// Get command
-	cmd, _ := Init()
+	cmd, _ := Init(ctx)
 
 	// Create mocks
 	clientsMock := shared.NewClientsMock()
@@ -110,12 +113,14 @@ func TestVersionFlags(t *testing.T) {
 }
 
 func Test_NewSuggestion(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	tmp, _ := os.MkdirTemp("", "")
 	_ = os.Chdir(tmp)
 	defer os.RemoveAll(tmp)
 
 	// Get command
-	cmd, clients := Init()
+	cmd, clients := Init(ctx)
 
 	// Create mocks
 	clientsMock := shared.NewClientsMock()
@@ -131,11 +136,13 @@ func Test_NewSuggestion(t *testing.T) {
 }
 
 func Test_Aliases(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+
 	tmp, _ := os.MkdirTemp("", "")
 	_ = os.Chdir(tmp)
 	defer os.RemoveAll(tmp)
 
-	Init()
+	Init(ctx)
 
 	tests := map[string]struct {
 		args     string
@@ -176,7 +183,7 @@ func Test_Aliases(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			err, output := testExecCmd(strings.Fields(tt.args))
+			err, output := testExecCmd(ctx, strings.Fields(tt.args))
 			require.NoError(t, err)
 			require.Contains(t, output, tt.expected)
 		})
@@ -184,9 +191,9 @@ func Test_Aliases(t *testing.T) {
 }
 
 // testExecCmd will execute the root cobra command with args and return the output
-func testExecCmd(args []string) (error, string) {
+func testExecCmd(ctx context.Context, args []string) (error, string) {
 	// Get command
-	cmd, clients := Init()
+	cmd, clients := Init(ctx)
 
 	// Create mocks
 	clientsMock := shared.NewClientsMock()

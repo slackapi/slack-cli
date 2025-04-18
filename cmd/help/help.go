@@ -30,9 +30,10 @@ func HelpFunc(
 	aliases map[string]string,
 ) func(*cobra.Command, []string) {
 	return func(cmd *cobra.Command, args []string) {
+		ctx := cmd.Context()
 		style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
 		if help, _ := clients.Config.Flags.GetBool("help"); help {
-			clients.Config.LoadExperiments(cmd.Context(), clients.IO.PrintDebug)
+			clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 		}
 		experiments := []string{}
 		for _, exp := range clients.Config.GetExperiments() {
@@ -106,6 +107,6 @@ const helpTemplate string = `{{.Long}}
   For more information about a specific command, run:
   $ {{.CommandPath}}{{if eq .Name (GetProcessName)}} <command>{{end}} <subcommand> --help
 
-  For guides and documentation, head over to {{LinkText "https://api.slack.com/automation"}}{{end}}
+  For guides and documentation, head over to {{LinkText "https://tools.slack.dev/slack-cli"}}{{end}}
 
 `

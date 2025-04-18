@@ -10,17 +10,17 @@ jobs:
     steps:
       - name: Gather credentials
         id: credentials
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v2.0.2
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
       - name: Checkout the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
         with:
           ref: main
           token: ${{ steps.credentials.outputs.token }}
       - name: Install Golang
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.4.0
         with:
           go-version: "stable"
       - name: Get the latest version

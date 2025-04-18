@@ -116,7 +116,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		app = _app
 	}
 
-	err = validateCreateCmdFlags(clients, &createFlags)
+	err = validateCreateCmdFlags(ctx, clients, &createFlags)
 	if err != nil {
 		return err
 	}
@@ -268,12 +268,14 @@ func promptShouldRetryCreateWithInteractivity(cmd *cobra.Command, IO iostreams.I
 }
 
 func promptShouldRetryWithInteractivity(promptMsg string, cmd *cobra.Command, IO iostreams.IOStreamer, triggerArg api.TriggerRequest) (bool, error) {
+	ctx := cmd.Context()
+
 	pretty, err := json.MarshalIndent(triggerArg, "", "    ")
 	if err != nil {
 		return false, err
 	}
 
-	IO.PrintInfo(cmd.Context(), false, "\n%s", style.Sectionf(style.TextSection{
+	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "memo",
 		Text:  "Workflow requires interactivity",
 		Secondary: []string{
@@ -282,7 +284,7 @@ func promptShouldRetryWithInteractivity(promptMsg string, cmd *cobra.Command, IO
 		},
 	}))
 
-	return IO.ConfirmPrompt(cmd.Context(), promptMsg, true)
+	return IO.ConfirmPrompt(ctx, promptMsg, true)
 }
 
 func triggerRequestFromFlags(flags createCmdFlags, isDev bool) api.TriggerRequest {

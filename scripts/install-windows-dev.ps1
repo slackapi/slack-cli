@@ -339,7 +339,7 @@ function next_step_message {
       Write-Host "   Then, authorize your CLI in your workspace with ``$confirmed_alias login``.`n"
     }
     catch {
-      throw "`nSlack CLI is not installed.`nPlease reach out to feedback@slack.com to share the issues you are facing.`nMeanwhile you can try the manual installation: https://api.slack.com/automation/quickstart.`n"
+      throw "`nSlack CLI is not installed.`nPlease reach out to feedback@slack.com to share the issues you are facing.`nMeanwhile you can try the manual installation: https://tools.slack.dev/slack-cli.`n"
     }
   }
 }

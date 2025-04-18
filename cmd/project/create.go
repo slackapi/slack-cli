@@ -76,6 +76,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 }
 
 func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
 
 	// Set up event logger
 	log := newCreateLogger(clients, cmd)
@@ -102,7 +103,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
-	ctx := cmd.Context()
 	appDirPath, err := CreateFunc(ctx, clients, log, createArgs)
 	if err != nil {
 		printAppCreateError(clients, cmd, err)
@@ -200,7 +200,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 			Emoji: "compass",
 			Text:  "Explore the documentation to learn more",
 			Secondary: []string{
-				"Read the README.md or peruse the docs over at " + style.Highlight("api.slack.com/automation"),
+				"Read the README.md or peruse the docs over at " + style.Highlight("https://tools.slack.dev/deno-slack-sdk"),
 				"Find available commands and usage info with " + style.Commandf("help", false),
 			},
 		}))
@@ -239,11 +239,12 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 
 // printAppCreateError stops the creation spinners and displays the returned error message
 func printAppCreateError(clients *shared.ClientFactory, cmd *cobra.Command, err error) {
+	ctx := cmd.Context()
 	switch {
 	case appCreateSpinner.Active():
 		errorText := fmt.Sprintf("Error creating project directory: %s", err)
 		appCreateSpinner.Update(errorText, "warning").Stop()
 	default:
 	}
-	clients.IO.PrintTrace(cmd.Context(), slacktrace.CreateError)
+	clients.IO.PrintTrace(ctx, slacktrace.CreateError)
 }

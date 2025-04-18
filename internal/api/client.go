@@ -324,7 +324,7 @@ func (c *Client) DoWithRetry(ctx context.Context, request *http.Request, span op
 }
 
 // getRetryAfter returns the value of the Retry-After header for applicable requests.
-// More information can be found here: https://api.slack.com/docs/rate-limits
+// More information can be found here: https://docs.slack.dev/apis/web-api/rate-limits/
 func getRetryAfter(r *http.Response) (time.Duration, bool) {
 	if !(r.StatusCode == http.StatusTooManyRequests || r.StatusCode == http.StatusServiceUnavailable) {
 		return 0, false

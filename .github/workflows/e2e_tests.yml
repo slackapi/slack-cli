@@ -5,17 +5,32 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'The branch to build'
+        description: "The branch to build"
+        required: true
+      status:
+        description: "Report test status"
+        default: false
+        type: boolean
         required: true
 
 jobs:
   execute:
+    name: Start tests
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger CircleCI build-beta workflow.
-        uses: promiseofcake/circleci-trigger-action@v1
+      - name: Trigger CircleCI 'local' workflow
+        if: ${{ github.event.inputs.status == 'false' }}
+        uses: promiseofcake/circleci-trigger-action@v1.7.8
         with:
           user-token: ${{ secrets.CIRCLECI_TOKEN }}
           project-slug: slackapi/slack-cli
           branch: ${{ github.event.inputs.branch }}
           payload: '{"run_local_build_test_workflow": true}'
+      - name: Trigger CircleCI 'e2e' workflow
+        if: ${{ github.event.inputs.status == 'true' }}
+        uses: promiseofcake/circleci-trigger-action@v1.7.8
+        with:
+          user-token: ${{ secrets.CIRCLECI_TOKEN }}
+          project-slug: slackapi/slack-cli
+          branch: ${{ github.event.inputs.branch }}
+          payload: '{"run_local_build_test_workflow": false}'

@@ -78,7 +78,7 @@ func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app typ
 		},
 	})))
 
-	triggerFilePaths, err := getFullyQualifiedTriggerFilePaths(clients, triggerPaths)
+	triggerFilePaths, err := getFullyQualifiedTriggerFilePaths(ctx, clients, triggerPaths)
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +171,7 @@ func getTriggerPaths(sdkCLIConfig *hooks.SDKCLIConfig) []string {
 
 // getFullyQualifiedTriggerFilePaths returns an array of file paths that
 // are validated
-func getFullyQualifiedTriggerFilePaths(clients *shared.ClientFactory, triggerPaths []string) ([]string, error) {
-	ctx := context.Background()
+func getFullyQualifiedTriggerFilePaths(ctx context.Context, clients *shared.ClientFactory, triggerPaths []string) ([]string, error) {
 	projectDir, err := clients.Os.Getwd()
 	if err != nil {
 		return nil, err
@@ -196,7 +195,7 @@ func getFullyQualifiedTriggerFilePaths(clients *shared.ClientFactory, triggerPat
 
 	if len(triggerFilePaths) <= 0 {
 		clients.IO.PrintInfo(ctx, false, style.SectionSecondaryf(
-			"No trigger definition files found\nLearn more about triggers: https://api.slack.com/automation/triggers/link",
+			"No trigger definition files found\nLearn more about triggers:\nhttps://tools.slack.dev/deno-slack-sdk/guides/creating-link-triggers",
 		))
 		return nil, nil
 	} else {
@@ -239,7 +238,7 @@ func isValidTriggerFilePath(triggerPath string) bool {
 	return true
 }
 
-func validateCreateCmdFlags(clients *shared.ClientFactory, createFlags *createCmdFlags) error {
+func validateCreateCmdFlags(ctx context.Context, clients *shared.ClientFactory, createFlags *createCmdFlags) error {
 	if createFlags.triggerDef != "" {
 		exists, err := afero.Exists(clients.Fs, createFlags.triggerDef)
 		if err != nil {
@@ -280,7 +279,7 @@ func validateCreateCmdFlags(clients *shared.ClientFactory, createFlags *createCm
 	}
 
 	if createFlags.triggerDef == "" && createFlags.workflow == "" {
-		return maybeSetTriggerDefFlag(clients, createFlags)
+		return maybeSetTriggerDefFlag(ctx, clients, createFlags)
 	}
 
 	if createFlags.description == "" {
@@ -290,8 +289,7 @@ func validateCreateCmdFlags(clients *shared.ClientFactory, createFlags *createCm
 	return nil
 }
 
-func maybeSetTriggerDefFlag(clients *shared.ClientFactory, createFlags *createCmdFlags) error {
-	ctx := context.Background()
+func maybeSetTriggerDefFlag(ctx context.Context, clients *shared.ClientFactory, createFlags *createCmdFlags) error {
 	triggerPaths := getTriggerPaths(&clients.SDKConfig)
 
 	fmt.Printf("%s", style.Sectionf(style.TextSection{
@@ -299,7 +297,7 @@ func maybeSetTriggerDefFlag(clients *shared.ClientFactory, createFlags *createCm
 		Text:  fmt.Sprintf("Searching for trigger definition files under '%s'...", strings.Join(triggerPaths, ", ")),
 	}))
 
-	triggerFilePaths, err := getFullyQualifiedTriggerFilePaths(clients, triggerPaths)
+	triggerFilePaths, err := getFullyQualifiedTriggerFilePaths(ctx, clients, triggerPaths)
 	if err != nil {
 		return err
 	}

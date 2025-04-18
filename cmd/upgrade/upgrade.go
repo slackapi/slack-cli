@@ -28,7 +28,7 @@ import (
 // checkForUpdatesFunc is a function pointer for tests to mock the checkForUpdates function
 var checkForUpdatesFunc = checkForUpdates
 
-const changelogURL = "https://api.slack.com/automation/changelog"
+const changelogURL = "https://docs.slack.dev/changelog"
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	return &cobra.Command{
@@ -54,6 +54,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 // checkForUpdates will check for CLI/SDK updates and print a message when no updates are available.
 // When there are updates, the function will *not* print a message because the root command handles printing update notifications.
 func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
+	ctx := cmd.Context()
 	updateNotification := update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
 
 	// TODO(@mbrooks) This update check is happening at the same time as the root command's `CheckForUpdateInBackground`.
@@ -62,7 +63,7 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	//                How can we improve this to avoid doing 2 update network requests/checks?
 	//
 	// Force an update check that is blocking and synchronous
-	if err := updateNotification.CheckForUpdate(cmd.Context(), true); err != nil {
+	if err := updateNotification.CheckForUpdate(ctx, true); err != nil {
 		return err
 	}
 

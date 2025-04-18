@@ -16,7 +16,7 @@ jobs:
     name: Lints and Unit tests
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
         with:
           # Number of commits to fetch. 0 indicates all history for all branches and tags.
           # Default: 1
@@ -26,11 +26,11 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.4.0
         with:
           go-version: "1.24.2"
       - name: Lint
-        uses: golangci/golangci-lint-action@v7
+        uses: golangci/golangci-lint-action@v7.0.0
         with:
           version: latest
           args: --timeout=5m
@@ -39,7 +39,7 @@ jobs:
         run: make test
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.out
@@ -50,13 +50,13 @@ jobs:
     needs: lint-test
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v5.4.0
         with:
           go-version: "1.24.2"
       - name: Report health score
-        uses: slackapi/slack-health-score@v0
+        uses: slackapi/slack-health-score@v0.1.1
         with:
           extension: "go"
           codecov_token: ${{ secrets.ELAINES_CODECOV_API_TOKEN }}
