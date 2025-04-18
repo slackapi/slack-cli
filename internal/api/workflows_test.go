@@ -421,8 +421,8 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 			argsLimit:             4,
 			argsCursor:            "",
 			argsType:              "fake_type",
-			httpResponseJSON:      `{"ok":false,"error":"invaild_arguments"}`,
-			expectedErrorContains: "invaild_arguments",
+			httpResponseJSON:      `{"ok":false,"error":"invalid_arguments"}`,
+			expectedErrorContains: "invalid_arguments",
 		},
 	}
 

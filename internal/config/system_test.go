@@ -575,7 +575,7 @@ func Test_SystemConfig_writeConfigFile(t *testing.T) {
 			wg.Done()
 		}()
 
-		// Step 3) Wait a few seconds to guarantee Step 2) go rountine executes first
+		// Step 3) Wait a few seconds to guarantee Step 2) go routine executes first
 		time.Sleep(50 * time.Millisecond)
 
 		// Step 4) Unlock the file so that Step 2) can stop waiting and write the config file

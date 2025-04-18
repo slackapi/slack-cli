@@ -29,7 +29,7 @@ const (
 )
 
 // OrgGrantWorkspaceDescription is the description for for --org-workspace-grant flag in the run, deploy and install commands
-// This vaue is a function so that formatting is applied for the help page (when style is enabled).
+// This value is a function so that formatting is applied for the help page (when style is enabled).
 var OrgGrantWorkspaceDescription = func() string {
 	return fmt.Sprintf("grant access to a specific org workspace ID\n  %s",
 		style.Secondary("(or 'all' for all workspaces in the org)"))

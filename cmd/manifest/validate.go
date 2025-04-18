@@ -124,7 +124,7 @@ func newValidateLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logge
 	)
 }
 
-// gatherAuthenticationToken returns some user token and configures authenication
+// gatherAuthenticationToken returns some user token and configures authentication
 // internals for API use
 func gatherAuthenticationToken(ctx context.Context, clients *shared.ClientFactory) (auth types.SlackAuth, err error) {
 	defer func() {

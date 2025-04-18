@@ -248,7 +248,7 @@ func restoreBinary(updatedBinaryFolderPath string, newPathToOldBinary string, or
 // getUpdateFilename returns name of the archive that contains the upgrade for the given version and OS
 func getUpdateFileName(version, operatingSys string) (filename string, err error) {
 	// You can get a list of all possible OS/architecture combinations with `go tool dist list | column -c 75 | column -t`
-	// TODO: account for architecture as well. M1 macs would have an arch of arm64 instead of the ususal amd64
+	// TODO: account for architecture as well. M1 macs would have an arch of arm64 instead of the usual amd64
 	const binaryName = "slack_cli"
 	const architecture = "64-bit"
 	switch operatingSys {

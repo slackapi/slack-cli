@@ -89,7 +89,7 @@ func Test_HookScript_Get(t *testing.T) {
 			expectedError:   nil,
 			expectedCommand: "npm start",
 		},
-		"Cmmand does not exist": {
+		"Command does not exist": {
 			hookScript:      &HookScript{Name: "start", Command: ""},
 			expectedError:   slackerror.New(slackerror.ErrSDKHookNotFound).WithMessage("The command for 'start' was not found"),
 			expectedCommand: "",

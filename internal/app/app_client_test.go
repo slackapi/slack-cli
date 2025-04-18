@@ -638,7 +638,7 @@ func TestAppClient_CleanupSlackFolder(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.False(t, ac.config.ProjectConfig.ProjectConfigJSONFileExists(wd),
-		"an unexepcted config was found")
+		"an unexpected config was found")
 
 	dotSlackFolder := filepath.Dir(pathToAppsJSON)
 	_, err = ac.fs.Stat(dotSlackFolder)
