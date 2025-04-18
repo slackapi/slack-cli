@@ -178,7 +178,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", nil)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", nil)
 
 			projectDirPath := "/path/to/project-name"
 
@@ -304,7 +304,7 @@ func Test_Python_PreparePackage(t *testing.T) {
 
 			// Setup HookExecutor
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
 
 			// Setup
 			mockOpts := types.PreparePackageOpts{}

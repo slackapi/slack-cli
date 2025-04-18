@@ -282,7 +282,7 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 		// Mock the returned value from executing the `install-update` hook
 		mockInstallUpdateHook := hooks.HookScript{Command: fmt.Sprintf(`echo %s`, string(mockInstallUpdateJSON))}
 		clients.SDKConfig.Hooks.InstallUpdate = mockInstallUpdateHook
-		clientsMock.HookExecutor.On("Execute", mock.Anything).Return(string(mockInstallUpdateJSON), nil)
+		clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(string(mockInstallUpdateJSON), nil)
 
 		// Execute `install-update` hook
 		_, err := clients.HookExecutor.Execute(ctx, hooks.HookExecOpts{Hook: clients.SDKConfig.Hooks.InstallUpdate})
@@ -307,7 +307,7 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 				assert.Fail(t, "InstallUpdate had unexpected error")
 			}
 
-			clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything)
+			clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
 
 			// TODO :: Test Case: `install-update` hook is available
 			// == TODO :: Assert:  Updates are present; printed output contains updates

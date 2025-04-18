@@ -118,7 +118,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 					Name:    "GetManifest",
 					Command: "cat manifest.json",
 				}
-				mockHookExecutor.On("Execute", mock.Anything).
+				mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 					Return(tt.mockManifestInfo, tt.mockManifestErr)
 			} else {
 				mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}

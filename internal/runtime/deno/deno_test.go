@@ -148,7 +148,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			ios.AddDefaultMocks()
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
 
 			// Create files
 			for _, filePath := range tt.existingFilePaths {
@@ -296,7 +296,7 @@ func Test_Deno_PreparePackage(t *testing.T) {
 
 			// Setup HookExecutor
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
 
 			// Setup
 			mockOpts := types.PreparePackageOpts{}

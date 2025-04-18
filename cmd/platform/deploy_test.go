@@ -87,7 +87,7 @@ func TestDeployCommand(t *testing.T) {
 	teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 
 	manifestMock := &app.ManifestMockObject{}
-	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 		AppManifest: types.AppManifest{
 			Settings: &types.AppSettings{
 				FunctionRuntime: types.SLACK_HOSTED,
@@ -150,7 +150,7 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(tt.manifest, tt.manifestError)
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.manifest, tt.manifestError)
 				clients.AppClient().Manifest = manifestMock
 				projectConfigMock := config.NewProjectConfigMock()
 				projectConfigMock.On("GetManifestSource", mock.Anything).
