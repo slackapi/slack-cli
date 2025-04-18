@@ -23,9 +23,9 @@ jobs:
         id: ghtoken
         uses: actions/create-github-app-token@v2.0.2
         with:
-          app-id: ${{ secrets.GH_APP_ID }}
+          app-id: ${{ secrets.GH_APP_ID_DOCS }}
           owner: slackapi
-          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_DOCS }}
 
       - name: Checkout the tool repo (source)
         uses: actions/checkout@v4.2.2
