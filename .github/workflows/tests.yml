@@ -47,6 +47,7 @@ jobs:
 
   # Monitor code coverage and TODO/FIXME-type comments
   health-score:
+    name: Health score
     needs: lint-test
     runs-on: macos-latest
     steps:
