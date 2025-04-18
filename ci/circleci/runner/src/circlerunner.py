@@ -116,7 +116,7 @@ class CircleRunner(abc.ABC):
     """validate file security for runner execution, besides file existence,
     the file needs to pass the following validation:
     1. it needs to be owned by root
-    2. it needs to be only readable (and optionaly executable)
+    2. it needs to be only readable (and optionally executable)
       by owner(root) (mode 500 or 400)
     """
     self.logger.debug(f"validating script file {file_path}")

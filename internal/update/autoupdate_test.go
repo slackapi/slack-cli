@@ -217,7 +217,7 @@ func verifyFileContainsVersion(file, version string, t *testing.T) {
 		"expected file %s to contain %s, but instead was '%s'", file, version, strContents)
 }
 
-// zip creates a new zip archive at destination containing a singl
+// zip creates a new zip archive at destination containing a single
 // file at path with the given contents
 func zipArchive(files []testFile, destination string, t *testing.T) {
 	destFile, err := os.OpenFile(destination, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0600)

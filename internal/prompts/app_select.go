@@ -1685,7 +1685,7 @@ func TeamAppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env
 		WithMessage("No credentials found for team \"%s\"", selectedDomain)
 }
 
-// OrgSelectWorkspacePrompt prompts the user to select a single workspace to grant app access to, or grant all workspaces wihtin the org.
+// OrgSelectWorkspacePrompt prompts the user to select a single workspace to grant app access to, or grant all workspaces within the org.
 func OrgSelectWorkspacePrompt(ctx context.Context, clients *shared.ClientFactory, orgDomain, token string, topOptionAllWorkspaces bool) (string, error) {
 	teams, paginationCursor, err := clients.ApiInterface().AuthTeamsList(ctx, token, api.DefaultAuthTeamsListPageSize)
 	if err != nil {

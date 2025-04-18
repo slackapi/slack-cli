@@ -40,7 +40,7 @@ var mockOrgAuth = types.SlackAuth{
 }
 var mockOrgAuthURL = "https://url.com"
 
-func TestLoginCommmand(t *testing.T) {
+func TestLoginCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"errors when the challenge flag is provided without the ticket flag": {
 			CmdArgs:              []string{"--challenge=achallengestring"},

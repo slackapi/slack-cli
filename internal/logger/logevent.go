@@ -30,7 +30,7 @@ type LogEvent struct {
 	Data LogData
 }
 
-// DataToString safetly returns the Data[key] value as a string
+// DataToString safely returns the Data[key] value as a string
 func (l *LogEvent) DataToString(key string) string {
 	var defaultValue string
 
@@ -48,7 +48,7 @@ func (l *LogEvent) DataToString(key string) string {
 	}
 }
 
-// DataToString safetly returns the Data[key] value as a string
+// DataToString safely returns the Data[key] value as a string
 func (l *LogEvent) DataToStringSlice(key string) []string {
 	defaultValue := make([]string, 0)
 
@@ -66,7 +66,7 @@ func (l *LogEvent) DataToStringSlice(key string) []string {
 	}
 }
 
-// DataToBool safetly returns the Data[key] value as a bool
+// DataToBool safely returns the Data[key] value as a bool
 func (l *LogEvent) DataToBool(key string) bool {
 	var defaultValue bool
 
@@ -84,7 +84,7 @@ func (l *LogEvent) DataToBool(key string) bool {
 	}
 }
 
-// DataToBool safetly returns the Data[key] value as a bool
+// DataToBool safely returns the Data[key] value as a bool
 func (l *LogEvent) DataToInt(key string) int {
 	var defaultValue int
 

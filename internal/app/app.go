@@ -137,7 +137,7 @@ func regexReplaceAppNameInManifest(src []byte, appName string) []byte {
 	//
 	// Expression explained:
 	// (?m) - Multi-line match that enables the use of ^ and $
-	// #1   - Match $1 captures start of content to the `Manifest({` function with optional whitepsace between the name, bracket `(```, and brace `{`
+	// #1   - Match $1 captures start of content to the `Manifest({` function with optional whitespace between the name, bracket `(```, and brace `{`
 	// #2   - Continue match $1 unless a closing brace `}` is encountered
 	// #3   - Continue match $1 to the `name` key surrounded by optional single or double quotes
 	// #4   - Continue match $1 ignoring whitespace followed by a colon `:` and the opening single or double quotes of the string's value

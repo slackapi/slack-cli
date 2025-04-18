@@ -543,7 +543,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 // here before installing the application. This includes interactivity and event
 // subscriptions as specified through Run On Slack hosting requirements.
 //
-// The CLI determines the API host from selected credentials during installaion.
+// The CLI determines the API host from selected credentials during installation.
 //
 // Apps without a specified or a "remote" function runtime should ignore this.
 func configureHostedManifest(
