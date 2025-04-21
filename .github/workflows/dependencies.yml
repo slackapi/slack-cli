@@ -7,6 +7,8 @@ jobs:
   golang:
     name: Bump the Golang version
     runs-on: ubuntu-latest
+    permissions:
+      contents: none # Permissions are set with an application token
     steps:
       - name: Gather credentials
         id: credentials

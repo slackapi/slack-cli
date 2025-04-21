@@ -17,6 +17,8 @@ jobs:
   execute:
     name: Start tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: none
     steps:
       - name: Trigger CircleCI 'local' workflow
         if: ${{ github.event.inputs.status == 'false' }}
