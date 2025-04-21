@@ -124,7 +124,7 @@ func (n *Node) HooksJSONTemplate() []byte {
 }
 
 // PreparePackage will prepare and copy the app in projectDirPath to tmpDirPath as a release-ready bundle.
-func (n *Node) PreparePackage(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor, opts types.PreparePackageOpts) error {
+func (n *Node) PreparePackage(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor, opts types.PreparePackageOpts) error {
 	return nil // Unsupported
 }
 

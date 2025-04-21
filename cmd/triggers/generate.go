@@ -106,7 +106,7 @@ func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app typ
 		selectedTriggerDef = selection.Option
 	}
 
-	triggerArg, err := triggerRequestFromDef(clients, createCmdFlags{triggerDef: selectedTriggerDef}, app.IsDev)
+	triggerArg, err := triggerRequestFromDef(ctx, clients, createCmdFlags{triggerDef: selectedTriggerDef}, app.IsDev)
 	if err != nil {
 		return nil, err
 	}

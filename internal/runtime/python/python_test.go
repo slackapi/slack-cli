@@ -178,7 +178,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", nil)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", nil)
 
 			projectDirPath := "/path/to/project-name"
 
@@ -293,6 +293,8 @@ func Test_Python_PreparePackage(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
 			// Setup SDKConfig
 			mockSDKConfig := hooks.NewSDKConfigMock()
 			mockSDKConfig.Hooks.BuildProject = hooks.HookScript{
@@ -302,7 +304,7 @@ func Test_Python_PreparePackage(t *testing.T) {
 
 			// Setup HookExecutor
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
 
 			// Setup
 			mockOpts := types.PreparePackageOpts{}
@@ -312,7 +314,7 @@ func Test_Python_PreparePackage(t *testing.T) {
 
 			// Run tests
 			p := New()
-			err := p.PreparePackage(mockSDKConfig, mockHookExecutor, mockOpts)
+			err := p.PreparePackage(ctx, mockSDKConfig, mockHookExecutor, mockOpts)
 
 			// Assertions
 			require.Equal(t, tt.expectedPreparePackageError, err)
