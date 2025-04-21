@@ -224,7 +224,7 @@ func (e *Error) recursiveUnwrapWithLimit(maxDepth int) *Error {
 	// base case
 	if e.Cause == nil || maxDepth == 0 {
 		// if we get to an error with no cause then we have the innermost error so we should stop here.
-		// OR if we have exausted the depth allowed then we should also stop here and return this error
+		// OR if we have exhausted the depth allowed then we should also stop here and return this error
 		return e
 	}
 

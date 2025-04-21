@@ -69,8 +69,14 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	// Update notification messages are printed by the root command's persistent post-run (cmd/root.go).
 	// So this command only needs to print a message when everything is up-to-date.
-	if !updateNotification.HasUpdate() {
-		cmd.Printf("%s You are using the latest Slack CLI and SDK\n", style.Styler().Green("✔").String())
+	if updateNotification.HasUpdate() {
+		return nil
+	}
+
+	if clients.SDKConfig.Hooks.CheckUpdate.IsAvailable() {
+		cmd.Printf("%s You are using the latest Slack CLI and SDK versions\n", style.Styler().Green("✔").String())
+	} else {
+		cmd.Printf("%s You are using the latest Slack CLI version\n", style.Styler().Green("✔").String())
 	}
 
 	return nil

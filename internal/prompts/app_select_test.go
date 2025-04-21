@@ -147,7 +147,7 @@ var (
 		Installed: true,
 		Hosted:    true,
 	}
-	deployedTeam2UnistalledAppStatus = api.AppStatusResultAppInfo{
+	deployedTeam2UninstalledAppStatus = api.AppStatusResultAppInfo{
 		AppID:     deployedTeam2UninstalledAppID,
 		Installed: false,
 		Hosted:    true,
@@ -1490,7 +1490,7 @@ func TestPrompt_AppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 			Index:  test.selectedTeamIndex,
 		}, nil)
 
-		// On choosed deployed or local
+		// On chosen deployed or local
 		clientsMock.IO.On(SelectPrompt, mock.Anything, "Choose an app environment", test.expectedAppLabels, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("app"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -1568,7 +1568,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 			},
 			mockTeam2Status: api.GetAppStatusResult{
 				Apps: []api.AppStatusResultAppInfo{
-					deployedTeam2UnistalledAppStatus,
+					deployedTeam2UninstalledAppStatus,
 					localTeam2InstalledAppStatus,
 				},
 			},

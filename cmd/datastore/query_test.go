@@ -279,7 +279,7 @@ func TestQueryCommand(t *testing.T) {
 					Option: "status",
 					Index:  0,
 				}, nil)
-				clientsMock.IO.On("SelectPrompt", mock.Anything, "Slect an attribute for '#task_id'", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an attribute for '#task_id'", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("attributes"),
 				})).Return(iostreams.SelectPromptResponse{
 					Prompt: true,
