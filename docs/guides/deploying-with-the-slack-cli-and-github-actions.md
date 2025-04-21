@@ -29,7 +29,7 @@ Once created, copy the link and share it in a Slack channel. You'll see a button
 
 ## Obtain a service token {#obtain-service-token}
 
-To automate subsequent deployments, we'll need to obtain a [service token](/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for the app. 
+To automate subsequent deployments, we'll need to obtain a [service token](/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for the app.
 
 Navigate to the root directory of your project and run the `slack auth token` command. You'll be prompted to run a slash command called `slackauthticket`, similar to the way you authorized your app earlier. Copy that command and run it in Slack, then copy the challenge code you receive and enter it into your terminal. You'll see a service token that starts with `xoxp-` &mdash; make sure you save this token. Note that this token is connected to a specific workspace and organization.
 
@@ -78,7 +78,7 @@ jobs:
         slack deploy -s --token $SLACK_SERVICE_TOKEN
 ```
 
-This file instructs the Slack CLI to deploy the latest revision of your repository to the Slack platform when any changes are pushed to the main branch. 
+This file instructs the Slack CLI to deploy the latest revision of your repository to the Slack platform when any changes are pushed to the main branch.
 
 You can go with any other Linux option you prefer for the GitHub-hosted runner; refer to [About GitHub-hosted runners](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#viewing-available-runners-for-a-repository) for more details.
 
@@ -90,7 +90,7 @@ Your GitHub repository is now set up for team collaboration! Your team members c
 
 ## Further reading {#read}
 
-Check out these articles to expand your knowledge and skills of automated deployments and the Slack CLI: 
+Check out these articles to expand your knowledge and skills of automated deployments and the Slack CLI:
 
 ➡️ [CI/CD overview and setup](https://tools.slack.dev/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli)
 
