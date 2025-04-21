@@ -25,13 +25,16 @@ jobs:
       - name: Delete pre-release and tag named after branch
         env:
           GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         shell: bash
         run: |
           # Use either an upstream or fork PR branch
-          if [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
-            BRANCH="pull/${{ github.event.pull_request.number }}/head"
+          if [[ "$PR_REPO" != "slackapi/slack-cli" ]]; then
+            BRANCH="pull/$PR_NUMBER/head"
           else
-            BRANCH="${{ github.event.pull_request.head.ref }}"
+            BRANCH="$PR_BRANCH"
           fi
 
           # Escape tags to create a semantic version
