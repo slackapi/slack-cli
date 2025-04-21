@@ -34,7 +34,7 @@ type ManifestClient struct {
 }
 
 type ManifestClientInterface interface {
-	GetManifestLocal(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error)
+	GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error)
 	GetManifestRemote(ctx context.Context, token string, appID string) (types.SlackYaml, error)
 }
 
@@ -69,7 +69,7 @@ func NewManifestClient(
 }
 
 // GetManifestLocal gathers manifest content from the "get-manifest" hook
-func (c *ManifestClient) GetManifestLocal(sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
+func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
 	var sl types.SlackYaml
 
 	if !sdkConfig.Hooks.GetManifest.IsAvailable() {
@@ -91,7 +91,7 @@ func (c *ManifestClient) GetManifestLocal(sdkConfig hooks.SDKCLIConfig, hookExec
 		manifestHookOpts.Env[name] = val
 	}
 
-	slackManifestInfo, err := hookExecutor.Execute(manifestHookOpts)
+	slackManifestInfo, err := hookExecutor.Execute(ctx, manifestHookOpts)
 	if err != nil {
 		return sl, slackerror.New("Failed to get app manifest details. Please check your manifest file.").
 			WithRootCause(err).

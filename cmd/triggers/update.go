@@ -117,7 +117,7 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	var triggerArg api.TriggerRequest
 	if updateFlags.triggerDef != "" {
-		triggerArg, err = triggerRequestFromDef(clients, updateFlags.createCmdFlags, app.IsDev)
+		triggerArg, err = triggerRequestFromDef(ctx, clients, updateFlags.createCmdFlags, app.IsDev)
 		if err != nil {
 			return err
 		}

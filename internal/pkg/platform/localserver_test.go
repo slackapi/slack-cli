@@ -273,7 +273,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				// Simulate receiving an event, then a disconnect message
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"event\",\"payload\":{}}"), nil).Once()
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"disconnect\"}"), nil).Once()
-				cm.HookExecutor.On("Execute", mock.Anything).Return("{}", nil)
+				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("{}", nil)
 			},
 			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
@@ -294,7 +294,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				// Simulate receiving an event, then a disconnect message
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"event\",\"payload\":{}}"), nil).Once()
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"disconnect\"}"), nil).Once()
-				cm.HookExecutor.On("Execute", mock.Anything).Return("{}", slackerror.New("typescript error, probably"))
+				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("{}", slackerror.New("typescript error, probably"))
 			},
 			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
@@ -314,7 +314,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				clients.SDKConfig.Hooks.Start = hooks.HookScript{Command: "echo '{}'", Name: "start"}
 				// Simulate receiving an event, then a disconnect message
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"event\",\"payload\":{}}"), nil).Once()
-				cm.HookExecutor.On("Execute", mock.Anything).Return("{}", nil)
+				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("{}", nil)
 				conn.On("WriteMessage", mock.Anything, mock.Anything).Return(slackerror.New("socket pipe severed"))
 			},
 			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {

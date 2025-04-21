@@ -38,7 +38,7 @@ type HookExecutorMessageBoundaryProtocol struct {
 var generateBoundary = generateMD5FromRandomString
 
 // Execute processes the data received by the SDK.
-func (e *HookExecutorMessageBoundaryProtocol) Execute(opts HookExecOpts) (string, error) {
+func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts HookExecOpts) (string, error) {
 	cmdArgs, cmdArgVars, cmdEnvVars, err := processExecOpts(opts)
 	if err != nil {
 		return "", err
@@ -51,11 +51,11 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(opts HookExecOpts) (string
 	boundary := generateBoundary()
 	cmdArgVars = append(cmdArgVars, "--protocol="+HOOK_PROTOCOL_V2.String(), "--boundary="+boundary)
 
-	e.IO.PrintDebug(context.Background(),
+	e.IO.PrintDebug(ctx,
 		"starting hook command: %s %s\n", cmdArgs[0], strings.Join(cmdArgVars, " "),
 	)
 	defer func() {
-		e.IO.PrintDebug(context.Background(),
+		e.IO.PrintDebug(ctx,
 			"finished hook command: %s %s\n", cmdArgs[0], strings.Join(cmdArgVars, " "),
 		)
 	}()
@@ -70,7 +70,7 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(opts HookExecOpts) (string
 				Bounds: boundary,
 				Stream: opts.Stdout,
 			},
-			Stream: e.IO.WriteDebug(context.Background()),
+			Stream: e.IO.WriteDebug(ctx),
 		},
 	}
 	stderr := iostreams.BufferedWriter{
@@ -80,7 +80,7 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(opts HookExecOpts) (string
 				Bounds: boundary,
 				Stream: opts.Stderr,
 			},
-			Stream: e.IO.WriteDebug(context.Background()),
+			Stream: e.IO.WriteDebug(ctx),
 		},
 	}
 
