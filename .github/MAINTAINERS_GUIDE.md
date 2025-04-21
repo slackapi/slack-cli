@@ -467,8 +467,8 @@ slack docgen
 Automated workflows run on documentation changes to [sync][sync] files between
 this project and the documentation build.
 
-A GitHub application called [`@slackapi[bot]`][github-docs] mirrors changes to
-these files and requires certain permissions:
+A GitHub application called [`@slackapi[bot]`][github-app-docs] mirrors changes
+to these files and requires certain permissions:
 
 - **Actions**: Read and write
 - **Contents**: Read and write
@@ -530,7 +530,7 @@ to ensure all references were updated properly:
 - GitHub Actions in: `.github/workflows/tests.yml` - e.g. `actions/setup-go`
 
 Automation that powers can be found in [this workflow][wf-dependencies] and
-[this app][github-releaser]. Secrets are found elsewhere.
+[this app][github-app-releaser]. Secrets are found elsewhere.
 
 For these changes to complete, certain application permissions are needed:
 
@@ -812,8 +812,8 @@ When in doubt, find the other maintainers and ask.
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
 [e2e]: https://github.com/slackapi/slack-cli/actions/workflows/e2e_tests.yml
 [effective-go]: https://golang.org/doc/effective_go
-[github-docs]: https://github.com/apps/slackapi
-[github-releaser]: https://github.com/apps/slack-cli-releaser
+[github-app-docs]: https://github.com/apps/slackapi
+[github-app-releaser]: https://github.com/apps/slack-cli-releaser
 [goinstaller]: https://go.dev/doc/install
 [golang]: https://golang.org/
 [golang-standards]: https://github.com/golang-standards/project-layout
