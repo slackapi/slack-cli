@@ -477,6 +477,11 @@ these files and requires certain permissions:
 
 Access to both this project repo and documentation repo must also be granted.
 
+Credentials and secrets for the app can be stored as the following variables:
+
+- `GH_APP_ID_DOCS`
+- `GH_APP_PRIVATE_KEY_DOCS`
+
 ### Versioning
 
 We use git tags and [semantic versioning][semver] to version this program. The
@@ -536,6 +541,11 @@ For these changes to complete, certain application permissions are needed:
 - **Workflows**: Read and write
 
 Access to this project is also required with the selected application scopes.
+
+Credentials and secrets for the app can be stored as the following variables:
+
+- `GH_APP_ID_RELEASER`
+- `GH_APP_PRIVATE_KEY_RELEASER`
 
 #### Bumping Go package versions
 
