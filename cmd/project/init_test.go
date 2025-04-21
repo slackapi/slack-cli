@@ -22,6 +22,7 @@ import (
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/api"
+	internalApp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -237,4 +238,9 @@ func setupProjectInitCommandMocks(t *testing.T, ctx context.Context, cm *shared.
 	if err := cm.Fs.MkdirAll(filepath.Dir(projectDirPath), 0755); err != nil {
 		require.FailNow(t, fmt.Sprintf("Failed to create the directory %s in the memory-based file system", projectDirPath))
 	}
+
+	// Mock manifest
+	manifestMock := &internalApp.ManifestMockObject{}
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+	cf.AppClient().Manifest = manifestMock
 }
