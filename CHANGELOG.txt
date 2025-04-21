@@ -1,0 +1,3 @@
+changelog - a log of changes
+
+1. commit this file for testing a license workflow
