@@ -59,7 +59,7 @@ func (n *NPMClient) InstallAllPackages(ctx context.Context, dirPath string, hook
 		Directory: dirPath,
 	}
 
-	_, err := hookExecutor.Execute(hookExecOpts)
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
 	output := strings.TrimSpace(stdout.String())
 
 	if err != nil {
@@ -90,7 +90,7 @@ func (n *NPMClient) InstallDevPackage(ctx context.Context, pkgName string, dirPa
 		Directory: dirPath,
 	}
 
-	_, err := hookExecutor.Execute(hookExecOpts)
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
 	output := strings.TrimSpace(stdout.String())
 
 	if err != nil {
@@ -121,7 +121,7 @@ func (n *NPMClient) ListPackage(ctx context.Context, pkgName string, dirPath str
 		Directory: dirPath,
 	}
 
-	_, err := hookExecutor.Execute(hookExecOpts)
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
 	output := strings.TrimSpace(stdout.String())
 
 	if err != nil {

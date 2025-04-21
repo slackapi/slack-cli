@@ -292,7 +292,7 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 		defaultExecutor := hooks.HookExecutorDefaultProtocol{
 			IO: c.IO,
 		}
-		if SDKHooksResponse, err = defaultExecutor.Execute(hookExecOpts); err != nil {
+		if SDKHooksResponse, err = defaultExecutor.Execute(ctx, hookExecOpts); err != nil {
 			return err
 		}
 	}

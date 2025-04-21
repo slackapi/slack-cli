@@ -223,7 +223,7 @@ func packageArchive(ctx context.Context, clients *shared.ClientFactory, projectR
 		DstDirPath: tmpDir,
 		AuthTokens: authTokens,
 	}
-	if err := clients.Runtime.PreparePackage(clients.SDKConfig, clients.HookExecutor, preparePackageOpts); err != nil {
+	if err := clients.Runtime.PreparePackage(ctx, clients.SDKConfig, clients.HookExecutor, preparePackageOpts); err != nil {
 		return packageResult{}, slackerror.Wrap(err, "preparing the app package for deployment")
 	}
 

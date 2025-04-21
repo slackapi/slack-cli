@@ -109,6 +109,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			mockManifestEnv := map[string]string{"EXAMPLE": "12"}
 			mockSDKConfig := hooks.NewSDKConfigMock()
 			mockHookExecutor := &hooks.MockHookExecutor{}
@@ -117,7 +118,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 					Name:    "GetManifest",
 					Command: "cat manifest.json",
 				}
-				mockHookExecutor.On("Execute", mock.Anything).
+				mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 					Return(tt.mockManifestInfo, tt.mockManifestErr)
 			} else {
 				mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}
@@ -130,7 +131,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			configMock.ManifestEnv = mockManifestEnv
 			manifestClient := NewManifestClient(&api.ApiMock{}, configMock)
 
-			actualManifest, err := manifestClient.GetManifestLocal(mockSDKConfig, mockHookExecutor)
+			actualManifest, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
 			if tt.expectedErr != nil {
 				require.Error(t, err)
 				assert.Equal(t,
