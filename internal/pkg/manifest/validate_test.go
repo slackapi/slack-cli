@@ -35,7 +35,7 @@ func Test_ManifestValidate_GetManifestLocal_Error(t *testing.T) {
 
 	// Mock the manifest to return error on get
 	manifestMock := &app.ManifestMockObject{}
-	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{}, slackerror.New("An error"))
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, slackerror.New("An error"))
 	clients.AppClient().Manifest = manifestMock
 
 	// Test
@@ -248,7 +248,7 @@ func setupCommonMocks(t *testing.T) (ctx context.Context, clients *shared.Client
 
 	// Mock the manifest
 	manifestMock := &app.ManifestMockObject{}
-	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
 	clients.AppClient().Manifest = manifestMock
 
 	// Setup logger

@@ -164,7 +164,7 @@ func hasValidDeploymentMethod(
 	}
 	switch {
 	case manifestSource.Equals(config.MANIFEST_SOURCE_LOCAL):
-		manifest, err = clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+		manifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func deployHook(ctx context.Context, clients *shared.ClientFactory) (*logger.Log
 	shell := hooks.HookExecutorDefaultProtocol{
 		IO: clients.IO,
 	}
-	if _, err := shell.Execute(hookExecOpts); err != nil {
+	if _, err := shell.Execute(ctx, hookExecOpts); err != nil {
 		return &log, err
 	}
 	// Follow successful hook executions with a newline to match section formatting
