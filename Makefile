@@ -22,16 +22,12 @@ testname ?= ./...
 # Remove files
 .PHONY: clean
 clean:
-	rm -f ./slack
-	rm -f ./slack-cli
-	rm -f ./hermes
 	rm -rf ./bin/
 	rm -rf ./dist/
 
 # Initialize project
 .PHONY: init
 init:
-	# Get the latest tags to build correctly
 	git fetch origin --tags
 
 # Run all unit tests
@@ -53,7 +49,6 @@ lint:
 .PHONY: build
 build: lint clean
 	mkdir bin/
-	# set version using the latest tag plus short revision
 	go build -ldflags="$(LDFLAGS)" -o bin/slack
 	SLACK_DISABLE_TELEMETRY="true" ./bin/slack version --skip-update
 
@@ -61,7 +56,6 @@ build: lint clean
 .PHONY: build-ci
 build-ci: clean
 	mkdir bin/
-	# set version using the latest tag plus short revision
 	go build -ldflags="-s -w $(LDFLAGS)" -o bin/slack
 	SLACK_DISABLE_TELEMETRY="true" ./bin/slack version --skip-update
 
