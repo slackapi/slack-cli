@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -35,6 +36,7 @@ func (m *UpdatePkgMock) CheckForUpdates(clients *shared.ClientFactory, cmd *cobr
 
 func TestUpgradeCommand(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Create clients that is mocked for testing
@@ -48,7 +50,7 @@ func TestUpgradeCommand(t *testing.T) {
 	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
 
 	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything).Return(nil)
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Upgrade had unexpected error")
 	}
