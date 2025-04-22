@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -205,6 +206,7 @@ func TestRunCommand_Flags(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("IsTTY").Return(true)
 			clientsMock.IO.AddDefaultMocks()
@@ -227,7 +229,7 @@ func TestRunCommand_Flags(t *testing.T) {
 			cmd.SetArgs(tt.cmdArgs)
 
 			// Execute
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 
 			// Check args passed into the run function
 			if tt.expectedErr == nil {
@@ -243,6 +245,7 @@ func TestRunCommand_Flags(t *testing.T) {
 }
 
 func TestRunCommand_Help(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -255,7 +258,7 @@ func TestRunCommand_Help(t *testing.T) {
 	runFunc = runPkgMock.Run
 	runPkgMock.On("Run", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	assert.NoError(t, err)
 	runPkgMock.AssertNotCalled(t, "Run")
 

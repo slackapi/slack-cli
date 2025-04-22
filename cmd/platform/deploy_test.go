@@ -62,6 +62,7 @@ func (m *AppCmdMock) RunAddCommand(ctx context.Context, clients *shared.ClientFa
 // TODO: improve this test, it only tests the mock that we install ourselves on the function doing all the deploy work is called. Add actual tests here.
 func TestDeployCommand(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
@@ -100,7 +101,7 @@ func TestDeployCommand(t *testing.T) {
 	runAddCommandFunc = appCmdMock.RunAddCommand
 	appCmdMock.On("RunAddCommand").Return()
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error", err.Error())
 	}
@@ -231,6 +232,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			sdkConfigMock := hooks.NewSDKConfigMock()
@@ -259,7 +261,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
 			testutil.MockCmdIO(clients.IO, cmd)
 
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			assert.Contains(t, stdoutBuffer.String(), tt.command)
 			if tt.expectedError != nil {
 				require.Error(t, err)

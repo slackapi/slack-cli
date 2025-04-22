@@ -88,7 +88,7 @@ func TestDoctorCommand(t *testing.T) {
 
 		cmd := NewDoctorCommand(clients)
 		testutil.MockCmdIO(clients.IO, cmd)
-		err := cmd.Execute()
+		err := cmd.ExecuteContext(ctx)
 		require.NoError(t, err)
 
 		report, err := performChecks(ctx, clients)
@@ -300,6 +300,7 @@ func TestDoctorCommand(t *testing.T) {
 	})
 
 	t.Run("errors on broken template", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -313,7 +314,7 @@ func TestDoctorCommand(t *testing.T) {
 			embedDocTmpl = embedDocTmplHolder
 		}()
 
-		err := cmd.Execute()
+		err := cmd.ExecuteContext(ctx)
 		if assert.Error(t, err) {
 			assert.Contains(t, err.Error(), "function \"BrokenTemplate\" not defined")
 		}

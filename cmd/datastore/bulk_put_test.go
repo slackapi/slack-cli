@@ -28,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/afero"
@@ -191,6 +192,7 @@ func TestBulkPutCommand(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := setupDatastoreMocks()
 			if tt.Setup != nil {
 				tt.Setup(clientsMock)
@@ -211,7 +213,7 @@ func TestBulkPutCommand(t *testing.T) {
 			clients.IO.SetCmdIO(cmd)
 
 			// Perform test
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
 				bulkPutMock.AssertCalled(t, "BulkPut", mock.Anything, mock.Anything, mock.Anything, tt.Query)
 			}
