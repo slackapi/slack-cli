@@ -115,7 +115,7 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 // explaining how to link apps, in case the user declines.
 func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, shouldConfirm bool) {
 	var secondaryText = []string{
-		"Add an existing app created on app settings",
+		"Add an existing app from app settings",
 		"Find your existing apps at: " + style.Underline("https://api.slack.com/apps"),
 	}
 
@@ -156,10 +156,14 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 		}
 	}
 
-	// Confirm to update manifest source to remote
+	// Confirm to update manifest source to remote.
+	// - Update the manifest source to remote when its a GBP project with a local manifest.
+	// - Do not update manifest source for ROSI projects, because they can only be local manifests.
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	isManifestSourceRemote := manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE)
+	isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
 
-	if !manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE) || err != nil {
+	if err != nil || (!isManifestSourceRemote && !isSlackHostedProject) {
 		// When undefined, the default is config.MANIFEST_SOURCE_LOCAL
 		if !manifestSource.Exists() {
 			manifestSource = config.MANIFEST_SOURCE_LOCAL

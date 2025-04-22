@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -46,6 +47,7 @@ func (m *ActivityPkgMock) Activity(
 
 func TestActivity_Command(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Create clients that is mocked for testing
@@ -65,7 +67,7 @@ func TestActivity_Command(t *testing.T) {
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
 	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}

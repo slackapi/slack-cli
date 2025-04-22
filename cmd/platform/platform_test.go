@@ -18,12 +18,14 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPlatformCommand(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Create clients that is mocked for testing
@@ -33,7 +35,7 @@ func TestPlatformCommand(t *testing.T) {
 	cmd := NewCommand(clients)
 	testutil.MockCmdIO(clients.IO, cmd)
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}

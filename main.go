@@ -73,7 +73,7 @@ func main() {
 	ctx = slackcontext.SetOpenTracingSpan(ctx, span)
 
 	rootCmd, clients := cmd.Init(ctx)
-	cmd.Execute(ctx, rootCmd, clients)
+	cmd.ExecuteContext(ctx, rootCmd, clients)
 }
 
 // TODO(slackcontext) Use closure to pass in the ctx, which includes the sessionID

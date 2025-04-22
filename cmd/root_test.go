@@ -95,7 +95,7 @@ func TestVersionFlags(t *testing.T) {
 
 	// Test --version
 	cmd.SetArgs([]string{"--version"})
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error", err.Error())
 	}
@@ -104,7 +104,7 @@ func TestVersionFlags(t *testing.T) {
 
 	// Test -v
 	cmd.SetArgs([]string{"-v"})
-	err2 := cmd.Execute()
+	err2 := cmd.ExecuteContext(ctx)
 	if err2 != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error", err.Error())
 	}
@@ -129,7 +129,7 @@ func Test_NewSuggestion(t *testing.T) {
 
 	// Execute new command
 	cmd.SetArgs([]string{"new"})
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 
 	require.Error(t, err, "should have error because command not found")
 	require.Regexp(t, `Did you mean this\?\s+create`, err.Error(), "should suggest the create command")
@@ -202,7 +202,7 @@ func testExecCmd(ctx context.Context, args []string) (error, string) {
 	testutil.MockCmdIO(clientsMock.IO, cmd)
 
 	cmd.SetArgs(args)
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		return err, ""
 	}
