@@ -552,7 +552,7 @@ func Test_Apps_Link(t *testing.T) {
 				}
 				// Mock manifest for Run-on-Slack app
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{
 						Settings: &types.AppSettings{
 							FunctionRuntime: types.SLACK_HOSTED,
@@ -629,7 +629,7 @@ func Test_Apps_Link(t *testing.T) {
 				}
 				// Mock manifest for Run-on-Slack app
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
 				cf.AppClient().Manifest = manifestMock
 				cm.IO.On("ConfirmPrompt",
 					mock.Anything,
@@ -766,6 +766,6 @@ func setupAppLinkCommandMocks(t *testing.T, ctx context.Context, cm *shared.Clie
 
 	// Mock manifest
 	manifestMock := &app.ManifestMockObject{}
-	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
 	cf.AppClient().Manifest = manifestMock
 }

@@ -241,6 +241,6 @@ func setupProjectInitCommandMocks(t *testing.T, ctx context.Context, cm *shared.
 
 	// Mock manifest
 	manifestMock := &internalApp.ManifestMockObject{}
-	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
 	cf.AppClient().Manifest = manifestMock
 }
