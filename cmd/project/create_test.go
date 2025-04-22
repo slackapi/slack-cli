@@ -42,6 +42,7 @@ func (m *CreateClientMock) Create(ctx context.Context, clients *shared.ClientFac
 
 func TestCreateCommand(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 
@@ -66,7 +67,7 @@ func TestCreateCommand(t *testing.T) {
 
 	CreateFunc = createClientMock.Create
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}
@@ -273,7 +274,7 @@ func Test_CreateCommand_BoltExperiment(t *testing.T) {
 
 	CreateFunc = createClientMock.Create
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}

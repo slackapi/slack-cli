@@ -22,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -38,6 +39,7 @@ func (m *listMockObject) MockListFunction(ctx context.Context, clients *shared.C
 
 func TestAuthCommand(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 
@@ -53,7 +55,7 @@ func TestAuthCommand(t *testing.T) {
 	mock.On("MockListFunction").Return([]types.SlackAuth{}, nil)
 
 	// Execute test
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}

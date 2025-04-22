@@ -322,6 +322,7 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 func Test_SDK_PrintUpdateNotification(t *testing.T) {
 	for i, s := range updateScenarios {
 		// Create mocks
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 
 		// Create clients that is mocked for testing
@@ -346,7 +347,7 @@ func Test_SDK_PrintUpdateNotification(t *testing.T) {
 				assert.Fail(t, "PrintUpdateNotification had unexpected error")
 			}
 
-			err = cmd.Execute()
+			err = cmd.ExecuteContext(ctx)
 			if err != nil {
 				assert.Fail(t, "cmd.Execute had unexpected error")
 			}
