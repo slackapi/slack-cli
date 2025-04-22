@@ -160,8 +160,10 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	// - Update the manifest source to remote when its a GBP project with a local manifest.
 	// - Do not update manifest source for ROSI projects, because they can only be local manifests.
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	isManifestSourceRemote := manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE)
+	isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
 
-	if err != nil || (!manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE) && cmdutil.IsSlackHostedProject(ctx, clients) != nil) {
+	if err != nil || (!isManifestSourceRemote && !isSlackHostedProject) {
 		// When undefined, the default is config.MANIFEST_SOURCE_LOCAL
 		if !manifestSource.Exists() {
 			manifestSource = config.MANIFEST_SOURCE_LOCAL
