@@ -21,6 +21,8 @@ jobs:
   delete-pre-release:
     name: Delete pre-release if exists
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Delete pre-release and tag named after branch
         env:
