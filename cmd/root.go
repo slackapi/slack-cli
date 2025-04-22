@@ -323,10 +323,10 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	return clients.IO.InitLogFile(ctx)
 }
 
-// Execute sets up a cancellable context for use with IOStreams' interrupt channel. It also
-// listens for process interrupts and sends to IOStreams' GetInterruptChannel() for use in
+// ExecuteContext sets up a cancellable context for use with IOStreams' interrupt channel.
+// It listens for process interrupts and sends to IOStreams' GetInterruptChannel() for use in
 // in communicating process interrupts elsewhere in the code.
-func Execute(ctx context.Context, rootCmd *cobra.Command, clients *shared.ClientFactory) {
+func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared.ClientFactory) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	completedChan := make(chan bool, 1)      // completed is used for signalling an end to command
