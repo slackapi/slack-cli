@@ -282,10 +282,10 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 		// Mock the returned value from executing the `install-update` hook
 		mockInstallUpdateHook := hooks.HookScript{Command: fmt.Sprintf(`echo %s`, string(mockInstallUpdateJSON))}
 		clients.SDKConfig.Hooks.InstallUpdate = mockInstallUpdateHook
-		clientsMock.HookExecutor.On("Execute", mock.Anything).Return(string(mockInstallUpdateJSON), nil)
+		clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(string(mockInstallUpdateJSON), nil)
 
 		// Execute `install-update` hook
-		_, err := clients.HookExecutor.Execute(hooks.HookExecOpts{Hook: clients.SDKConfig.Hooks.InstallUpdate})
+		_, err := clients.HookExecutor.Execute(ctx, hooks.HookExecOpts{Hook: clients.SDKConfig.Hooks.InstallUpdate})
 		if err != nil {
 			assert.Fail(t, "Running the `install-update` encountered an unexpected error")
 		}
@@ -307,7 +307,7 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 				assert.Fail(t, "InstallUpdate had unexpected error")
 			}
 
-			clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything)
+			clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
 
 			// TODO :: Test Case: `install-update` hook is available
 			// == TODO :: Assert:  Updates are present; printed output contains updates
@@ -322,6 +322,7 @@ func Test_SDK_InstallUpdate(t *testing.T) {
 func Test_SDK_PrintUpdateNotification(t *testing.T) {
 	for i, s := range updateScenarios {
 		// Create mocks
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 
 		// Create clients that is mocked for testing
@@ -346,7 +347,7 @@ func Test_SDK_PrintUpdateNotification(t *testing.T) {
 				assert.Fail(t, "PrintUpdateNotification had unexpected error")
 			}
 
-			err = cmd.Execute()
+			err = cmd.ExecuteContext(ctx)
 			if err != nil {
 				assert.Fail(t, "cmd.Execute had unexpected error")
 			}

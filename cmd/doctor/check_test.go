@@ -206,7 +206,7 @@ func TestDoctorCheckProjectDeps(t *testing.T) {
 				mockHookUpdate := `{"name": "deno_slack_hooks", "current": "2.6.0", "latest": "2.7.0", "breaking": false, "update": true}`
 				mockUpdate := fmt.Sprintf(`{"name": "the Slack SDK", "releases": [%s, %s, %s]}`, mockSDKUpdate, mockAPIUpdate, mockHookUpdate)
 				mockUpdateScript := hooks.HookScript{Command: "echo updates"}
-				cm.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockUpdateScript}).
+				cm.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockUpdateScript}).
 					Return(mockUpdate, nil)
 				return shared.NewClientFactory(cm.MockClientFactory(), func(clients *shared.ClientFactory) {
 					clients.SDKConfig.WorkingDirectory = "."
@@ -351,7 +351,7 @@ func TestDoctorCheckProjectTooling(t *testing.T) {
 			mockHookSetup: func(cm *shared.ClientsMock) *shared.ClientFactory {
 				mockDoctorHook := `{"versions": [{"name": "deno", "current": "1.0.0"}, {"name": "typescript", "current": "5.4.3"}]}`
 				mockDoctorScript := hooks.HookScript{Command: "echo checkup"}
-				cm.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockDoctorScript}).
+				cm.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockDoctorScript}).
 					Return(mockDoctorHook, nil)
 				return shared.NewClientFactory(cm.MockClientFactory(), func(clients *shared.ClientFactory) {
 					clients.SDKConfig.WorkingDirectory = "."
@@ -379,7 +379,7 @@ func TestDoctorCheckProjectTooling(t *testing.T) {
 			mockHookSetup: func(cm *shared.ClientsMock) *shared.ClientFactory {
 				mockDoctorHook := `{"versions": [{"name": "deno", "current": "1.0.0", "message": "Secure runtimes make safer code", "error": {"message": "Something isn't right with this installation"}}]}`
 				mockDoctorScript := hooks.HookScript{Command: "echo checkup"}
-				cm.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockDoctorScript}).
+				cm.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockDoctorScript}).
 					Return(mockDoctorHook, nil)
 				return shared.NewClientFactory(cm.MockClientFactory(), func(clients *shared.ClientFactory) {
 					clients.SDKConfig.WorkingDirectory = "."

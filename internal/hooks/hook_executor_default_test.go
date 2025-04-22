@@ -16,11 +16,13 @@ package hooks
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
@@ -30,7 +32,7 @@ import (
 func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 	tests := map[string]struct {
 		opts             HookExecOpts
-		handler          func(t *testing.T, executor HookExecutor, opts HookExecOpts)
+		handler          func(t *testing.T, ctx context.Context, executor HookExecutor, opts HookExecOpts)
 		expectedError    error
 		expectedResponse string
 	}{
@@ -68,8 +70,8 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 					},
 				},
 			},
-			handler: func(t *testing.T, executor HookExecutor, opts HookExecOpts) {
-				response, err := executor.Execute(opts)
+			handler: func(t *testing.T, ctx context.Context, executor HookExecutor, opts HookExecOpts) {
+				response, err := executor.Execute(ctx, opts)
 				require.Equal(t, "test output", response)
 				require.Equal(t, nil, err)
 				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `batman="robin"`)
@@ -105,8 +107,8 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 			},
 			expectedError: slackerror.New(slackerror.ErrSDKHookInvocationFailed).
 				WithMessage("Failed to successfully complete the 'Deploy' hook"),
-			handler: func(t *testing.T, executor HookExecutor, opts HookExecOpts) {
-				_, err := executor.Execute(opts)
+			handler: func(t *testing.T, ctx context.Context, executor HookExecutor, opts HookExecOpts) {
+				_, err := executor.Execute(ctx, opts)
 				require.Error(t, err)
 			},
 		},
@@ -139,6 +141,7 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 			config := config.NewConfig(fs, os)
@@ -148,9 +151,9 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 				IO: ios,
 			}
 			if tt.handler != nil {
-				tt.handler(t, hookExecutor, tt.opts)
+				tt.handler(t, ctx, hookExecutor, tt.opts)
 			} else {
-				str, err := hookExecutor.Execute(tt.opts)
+				str, err := hookExecutor.Execute(ctx, tt.opts)
 				assert.Contains(t, str, tt.expectedResponse)
 				assert.Equal(t, tt.expectedError, err)
 			}

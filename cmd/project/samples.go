@@ -80,5 +80,5 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 	}
 
 	// Execute the `create` command with the set flag
-	return createCmd.Execute()
+	return createCmd.ExecuteContext(ctx)
 }

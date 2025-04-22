@@ -52,7 +52,7 @@ func TestInfoCommand(t *testing.T) {
 			CmdArgs: []string{"--source", "paper"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig = hooks.NewSDKConfigMock()
-				cm.HookExecutor.On("Execute", mock.Anything).Return("", nil)
+				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("", nil)
 			},
 			ExpectedError: slackerror.New(slackerror.ErrInvalidFlag).
 				WithMessage("The \"--source\" flag must be \"local\" or \"remote\""),
@@ -61,7 +61,7 @@ func TestInfoCommand(t *testing.T) {
 			CmdArgs: []string{"--source", "local"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{
 						DisplayInformation: types.DisplayInformation{
 							Name: "app001",
@@ -125,7 +125,7 @@ func TestInfoCommand(t *testing.T) {
 				cm.Os.AddDefaultMocks()
 				cf.SDKConfig.WorkingDirectory = "."
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything).Return(types.SlackYaml{
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{
 						DisplayInformation: types.DisplayInformation{
 							Name: "app002",

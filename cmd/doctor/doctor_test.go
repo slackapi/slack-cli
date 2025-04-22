@@ -74,11 +74,11 @@ func TestDoctorCommand(t *testing.T) {
 		clientsMock.Config.SystemConfig = scm
 		mockDoctorScript := hooks.HookScript{Command: "echo checkup"}
 		mockDoctorHook := `{"versions": [{"name": "node", "current": "20.11.1"}]}`
-		clientsMock.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockDoctorScript}).
+		clientsMock.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockDoctorScript}).
 			Return(mockDoctorHook, nil)
 		mockUpdateScript := hooks.HookScript{Command: "echo update"}
 		mockUpdateHook := `{"name": "the Slack SDK", "releases": [{"name": "@slack/bolt", "current": "1.0.0", "latest": "2.2.2", "breaking": true, "update": true}]}`
-		clientsMock.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockUpdateScript}).
+		clientsMock.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockUpdateScript}).
 			Return(mockUpdateHook, nil)
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig.WorkingDirectory = "."
@@ -88,7 +88,7 @@ func TestDoctorCommand(t *testing.T) {
 
 		cmd := NewDoctorCommand(clients)
 		testutil.MockCmdIO(clients.IO, cmd)
-		err := cmd.Execute()
+		err := cmd.ExecuteContext(ctx)
 		require.NoError(t, err)
 
 		report, err := performChecks(ctx, clients)
@@ -300,6 +300,7 @@ func TestDoctorCommand(t *testing.T) {
 	})
 
 	t.Run("errors on broken template", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AddDefaultMocks()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -313,7 +314,7 @@ func TestDoctorCommand(t *testing.T) {
 			embedDocTmpl = embedDocTmplHolder
 		}()
 
-		err := cmd.Execute()
+		err := cmd.ExecuteContext(ctx)
 		if assert.Error(t, err) {
 			assert.Contains(t, err.Error(), "function \"BrokenTemplate\" not defined")
 		}
@@ -357,7 +358,7 @@ func TestDoctorHook(t *testing.T) {
 			mockHookSetup: func(cm *shared.ClientsMock) *shared.ClientFactory {
 				mockDoctorHook := `{"versions": [{"name": "deno", "current": "1.0.0"}, {"name": "typescript", "current": "5.4.3"}]}`
 				mockDoctorScript := hooks.HookScript{Command: "echo checkup"}
-				cm.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockDoctorScript}).
+				cm.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockDoctorScript}).
 					Return(mockDoctorHook, nil)
 				return shared.NewClientFactory(cm.MockClientFactory(), func(clients *shared.ClientFactory) {
 					clients.SDKConfig.WorkingDirectory = "."
@@ -390,7 +391,7 @@ func TestDoctorHook(t *testing.T) {
 			mockHookSetup: func(cm *shared.ClientsMock) *shared.ClientFactory {
 				mockDoctorHook := `{"versions": [{"name": "deno", "current": "1.0.0", "message": "Secure runtimes make safer code", "error": {"message": "Something isn't right with this installation"}}]}`
 				mockDoctorScript := hooks.HookScript{Command: "echo checkup"}
-				cm.HookExecutor.On("Execute", hooks.HookExecOpts{Hook: mockDoctorScript}).
+				cm.HookExecutor.On("Execute", mock.Anything, hooks.HookExecOpts{Hook: mockDoctorScript}).
 					Return(mockDoctorHook, nil)
 				return shared.NewClientFactory(cm.MockClientFactory(), func(clients *shared.ClientFactory) {
 					clients.SDKConfig.WorkingDirectory = "."

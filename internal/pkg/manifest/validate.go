@@ -45,7 +45,7 @@ func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, log *l
 		return nil, nil, slackerror.New(slackerror.ErrAuthToken).WithRootCause(err)
 	}
 
-	slackManifest, err := clients.AppClient().Manifest.GetManifestLocal(clients.SDKConfig, clients.HookExecutor)
+	slackManifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return nil, nil, slackerror.Wrap(err, slackerror.ErrAppManifestGenerate)
 	}

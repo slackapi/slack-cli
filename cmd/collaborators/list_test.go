@@ -22,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -99,6 +100,7 @@ func TestListCommand(t *testing.T) {
 
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			appSelectMock := prompts.NewAppSelectMock()
 			teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 			appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: tt.app, Auth: types.SlackAuth{}}, nil)
@@ -110,7 +112,7 @@ func TestListCommand(t *testing.T) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 			})
 
-			err := NewListCommand(clients).Execute()
+			err := NewListCommand(clients).ExecuteContext(ctx)
 			require.NoError(t, err)
 			clientsMock.ApiInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.app.AppID)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListSuccess, mock.Anything)

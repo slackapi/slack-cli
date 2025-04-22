@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -108,6 +109,7 @@ func TestGetCommandPreRun(t *testing.T) {
 			manifestMock := &app.ManifestMockObject{}
 			manifestMock.On(
 				"GetManifestLocal",
+				mock.Anything,
 				mock.Anything,
 				mock.Anything,
 			).Return(
@@ -200,6 +202,7 @@ func TestGetCommand(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := setupDatastoreMocks()
 			if tt.Setup != nil {
 				tt.Setup(clientsMock)
@@ -223,7 +226,7 @@ func TestGetCommand(t *testing.T) {
 			clients.IO.SetCmdIO(cmd)
 
 			// Perform test
-			err := cmd.Execute()
+			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
 				getMock.AssertCalled(t, "Get", mock.Anything, mock.Anything, mock.Anything, tt.Query)
 			}

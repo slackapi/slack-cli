@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
@@ -43,6 +44,7 @@ func (m *ManifestValidatePkgMock) ManifestValidate(ctx context.Context, clients 
 
 func TestManifestValidateCommand(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Create clients that is mocked for testing
@@ -62,7 +64,7 @@ func TestManifestValidateCommand(t *testing.T) {
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
 
 	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}
@@ -72,6 +74,7 @@ func TestManifestValidateCommand(t *testing.T) {
 
 func TestManifestValidateCommand_HandleMissingAppInstallError_ZeroUserAuth(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Create clients that is mocked for testing
@@ -94,12 +97,13 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_ZeroUserAuth(t *te
 	clientsMock.AddDefaultMocks()
 
 	// A failed selection/prompt should raise an error
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	require.ErrorContains(t, err, slackerror.ErrNotAuthed)
 }
 
 func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Mock one user auths
@@ -137,13 +141,14 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	// Should execute without error
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 	clientsMock.AuthInterface.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAuth(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
 	// Create clients that is mocked for testing
@@ -198,13 +203,14 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	// Should execute without error
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 	clientsMock.AuthInterface.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestManifestValidateCommand_HandleOtherErrors(t *testing.T) {
 	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 
@@ -223,6 +229,6 @@ func TestManifestValidateCommand_HandleOtherErrors(t *testing.T) {
 	errMsg := "Unrelated error"
 	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, slackerror.New(errMsg))
 
-	err := cmd.Execute()
+	err := cmd.ExecuteContext(ctx)
 	require.ErrorContains(t, err, errMsg)
 }
