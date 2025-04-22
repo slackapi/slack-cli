@@ -22,9 +22,6 @@ testname ?= ./...
 # Remove files
 .PHONY: clean
 clean:
-	rm -f ./slack
-	rm -f ./slack-cli
-	rm -f ./hermes
 	rm -rf ./bin/
 	rm -rf ./dist/
 
