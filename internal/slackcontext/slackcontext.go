@@ -12,6 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package slackcontext defines getters and setters for request-scoped values
+// that are propagated through context.Context during the execution of a Slack
+// command. These values may include identifiers, metadata, host information,
+// and other execution data.
+//
+// All values should be set in the context before a Slack command begins execution.
+// The values can then be accessed throughout the command's execution lifecycle
+// using the provided getter methods.
+//
+// Each value is stored with an unexported key type to prevent collisions with
+// other packages using context values. The package provides type-safe accessors
+// for retrieving these values.
 package slackcontext
 
 import (
