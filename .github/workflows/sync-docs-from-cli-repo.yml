@@ -17,7 +17,8 @@ jobs:
   config-sync:
     name: Sync docs to docs site repo
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
       - name: Generate a GitHub token
         id: ghtoken
