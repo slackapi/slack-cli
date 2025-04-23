@@ -21,9 +21,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -74,6 +76,65 @@ func TestRootCommand(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestExecuteContext(t *testing.T) {
+	t.Run("successful execution", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+
+		// Mock clients
+		clientsMock := shared.NewClientsMock()
+		clientsMock.AddDefaultMocks()
+		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+		// Mock command
+		cmd := &cobra.Command{
+			Use: "mock [flags]",
+			RunE: func(cmd *cobra.Command, args []string) error {
+				return nil
+			},
+		}
+
+		// Execute the command
+		ExecuteContext(ctx, cmd, clients)
+
+		// Assert exit code is success
+		require.Equal(t, iostreams.ExitOK, clients.IO.GetExitCode())
+	})
+
+	t.Run("handles command error", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+
+		// Mock clients
+		clientsMock := shared.NewClientsMock()
+		clientsMock.AddDefaultMocks()
+		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+		// Mock command
+		cmd := &cobra.Command{
+			Use: "mock [flags]",
+			RunE: func(cmd *cobra.Command, args []string) error {
+				return nil
+			},
+		}
+
+		// Mock command IO
+		testutil.MockCmdIO(clients.IO, cmd)
+
+		// Create a test command that returns an error
+		expectedErr := fmt.Errorf("command failed")
+		cmd.RunE = func(cmd *cobra.Command, args []string) error {
+			return expectedErr
+		}
+
+		// Execute the command
+		ExecuteContext(ctx, cmd, clients)
+
+		// Assert exit code is error
+		require.Equal(t, iostreams.ExitError, clients.IO.GetExitCode())
+		output := clientsMock.GetCombinedOutput()
+		require.Contains(t, output, expectedErr.Error())
+	})
 }
 
 // FYI: do not try to run this test in vscode using the run/debug test inline test helper; as the assertions in this test will fail in that context

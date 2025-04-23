@@ -356,7 +356,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 				clients.IO.PrintDebug(ctx, "... root cleanup waitgroup done.")
 				cleanup(ctx, clients)
 				clients.IO.PrintDebug(ctx, "Exiting with cancel exit code.")
-				os.Exit(int(iostreams.ExitCancel))
+				clients.Os.Exit(int(iostreams.ExitCancel))
 			}()
 		// Received cancelled context, so send an interrupt signal
 		case <-ctx.Done():
@@ -369,7 +369,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 		// If we get a second interrupt, no matter what exit the process
 		<-interruptChan
 		clients.IO.PrintDebug(ctx, "Got second process interrupt signal, exiting the process")
-		os.Exit(int(iostreams.ExitCancel))
+		clients.Os.Exit(int(iostreams.ExitCancel))
 	}()
 	// The cleanup() method in the root command will invoke via `defer` from within Execute.
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
@@ -388,7 +388,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 			}
 			clients.IO.PrintError(ctx, errMsg)
 		}
-		defer os.Exit(int(clients.IO.GetExitCode()))
+		defer clients.Os.Exit(int(clients.IO.GetExitCode()))
 		completedChan <- true
 	} else {
 		completedChan <- true
