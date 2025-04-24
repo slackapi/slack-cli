@@ -40,6 +40,8 @@ type SlackSurvey struct {
 	PromptDisplayText string
 	// PromptDescription is displayed beneath the `feedback` command prompt option
 	PromptDescription string
+	// SkipQueryParams is a flag to skip adding query params to the survey URL
+	SkipQueryParams bool
 	// URL is the survey URL
 	URL url.URL
 	// Config returns either the project-level or system-level survey config
@@ -85,6 +87,7 @@ var SurveyStore = map[string]SlackSurvey{
 		Name:              SlackCLIFeedback,
 		PromptDisplayText: "Slack CLI",
 		PromptDescription: "Questions, issues, and feature requests about the Slack CLI",
+		SkipQueryParams:   true,
 		URL: url.URL{
 			RawPath: "https://github.com/slackapi/slack-cli/issues",
 		},
@@ -346,15 +349,19 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 		}
 	}
 
-	u, err := addQueryParams(ctx, clients, s.URL.RawPath)
-	if err != nil {
-		return err
+	url := s.URL.RawPath
+
+	if !s.SkipQueryParams {
+		url, err = addQueryParams(ctx, clients, s.URL.RawPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	if ok { // Open survey in browser
-		clients.Browser().OpenURL(u)
+		clients.Browser().OpenURL(url)
 	} else { // Print survey URL
-		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Feedback URL: \n", style.Secondary(u)))
+		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Feedback URL: \n", style.Secondary(url)))
 	}
 
 	// Record completion
