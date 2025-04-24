@@ -90,7 +90,7 @@ var SurveyStore = map[string]SlackSurvey{
 			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
 				"%s\n%s\n",
 				style.Secondary("You can send us a message at "+style.Highlight(email)),
-				style.Secondary("Or, survey your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
+				style.Secondary("Or, share your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
 			))
 		},
 		Trace: slacktrace.FeedbackMessage,
@@ -206,7 +206,8 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short:   "Share feedback about your experience or project",
 		Long:    "Help us make the Slack Platform better with your feedback",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "feedback", Meaning: "Open a feedback survey in your browser"},
+			{Command: "feedback", Meaning: "Choose to give feedback on part of the Slack Platform"},
+			{Command: "feedback --name slack-cli-feedback", Meaning: "Give feedback on the Slack CLI"},
 		}),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			clients.Config.SetFlags(cmd)
@@ -225,7 +226,7 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 	sort.Strings(surveyNames)
 	nameFlagDescription := style.Sectionf(style.TextSection{
-		Text:      "name of the survey:",
+		Text:      "name of the feedback:",
 		Secondary: surveyNames,
 	})
 	cmd.Flags().StringVar(&surveyNameFlag, "name", "", nameFlagDescription)
@@ -238,7 +239,7 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 // runFeedbackCommand will open the user's browser to the feedback survey webpage.
 func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	if len(SurveyStore) == 0 {
-		clients.IO.PrintInfo(ctx, false, "No surveys currently available; please try again later")
+		clients.IO.PrintInfo(ctx, false, "No feedback options currently available; please try again later")
 		return nil
 	}
 
@@ -246,14 +247,14 @@ func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd 
 
 	if _, ok := SurveyStore[surveyNameFlag]; !ok && surveyNameFlag != "" {
 		return slackerror.New("invalid_survey_name").
-			WithMessage("Invalid survey name provided: %s", surveyNameFlag).
-			WithRemediation("View survey options with %s", style.Commandf("feedback --help", false))
+			WithMessage("Invalid feedback name provided: %s", surveyNameFlag).
+			WithRemediation("View the feedback options with %s", style.Commandf("feedback --help", false))
 	}
 
 	if surveyNameFlag == "" && noPromptFlag {
 		return slackerror.New("survey_name_required").
-			WithMessage("Please provide a survey name or remove the --no-prompt flag").
-			WithRemediation("View survey options with %s", style.Commandf("feedback --help", false))
+			WithMessage("Please provide a feedback name or remove the --no-prompt flag").
+			WithRemediation("View feedback options with %s", style.Commandf("feedback --help", false))
 	}
 
 	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
@@ -339,7 +340,7 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	var err error
 	var ok bool
 	if !noPromptFlag {
-		ok, err = clients.IO.ConfirmPrompt(ctx, "Open survey in browser?", true)
+		ok, err = clients.IO.ConfirmPrompt(ctx, "Open in browser?", true)
 		if err != nil {
 			return err
 		}
@@ -353,7 +354,7 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	if ok { // Open survey in browser
 		clients.Browser().OpenURL(u)
 	} else { // Print survey URL
-		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Survey URL: \n", style.Secondary(u)))
+		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Feedback URL: \n", style.Secondary(u)))
 	}
 
 	// Record completion
