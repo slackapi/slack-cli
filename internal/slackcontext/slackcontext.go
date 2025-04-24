@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package slackcontext defines getters and setters for request-scoped values
+// Package slackcontext defines getters and setters for execution-scoped values
 // that are propagated through context.Context during the execution of a Slack
 // command. These values may include unique identifiers, session metadata, host
 // information, version details, and other execution data.
