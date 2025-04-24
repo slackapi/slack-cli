@@ -127,7 +127,7 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.0.4_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
+<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_5_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
 
 **5\. Add the** `slack` **CLI to your path.**
 
@@ -140,7 +140,7 @@ typescript 4.*
 **6\. Verify that** `slack` **is installed and in your path:**
 ```
 $ slack version
-Using slack v3.0.4
+Using slack v3.0.5
 ```
 
 **7\. Verify that all dependencies have been installed.**
