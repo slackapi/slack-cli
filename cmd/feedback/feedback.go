@@ -63,13 +63,13 @@ const (
 	Always  Frequency = iota // We always want to ask
 	Once                     // Ask user to complete the survey only once
 	Monthly                  // Ask user to complete the survey once a month
+	Never                    // Do not ask the user to complete the survey
 )
 
 // Supported survey names
 const (
-	PlatformSurvey = "platform-improvements"
-	// TODO: uncomment when the survey is ready for release
-	//ProjectInfoSurvey = "project-info"
+	PlatformSurvey   = "platform-improvements"
+	SlackCLIFeedback = "slack-cli-feedback"
 )
 
 type SurveyConfigInterface interface {
@@ -109,6 +109,37 @@ var SurveyStore = map[string]SlackSurvey{
 			return clients.Config.SystemConfig
 		},
 	},
+	// SlackCLIFeedback asks for Slack CLI feedback using GitHub Issues
+	SlackCLIFeedback: {
+		Name:              SlackCLIFeedback,
+		PromptDisplayText: "Slack CLI",
+		PromptDescription: "Questions, issues, and feature requests about the Slack CLI",
+		URL: url.URL{
+			RawPath: "https://github.com/slackapi/slack-cli/issues",
+		},
+		Info: func(ctx context.Context, clients *shared.ClientFactory) {
+			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
+				"%s\n%s\n",
+				style.Secondary("Ask questions, submit issues, or suggest features for the SLack CLI:"),
+				style.Secondary(style.Highlight("https://github.com/slackapi/slack-cli/issues")),
+			))
+		},
+		Trace: slacktrace.FeedbackMessage,
+		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
+			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+				Emoji: "love_letter",
+				Text:  "We would love to know how things are going",
+				Secondary: []string{
+					"Share your experience with " + style.Commandf("feedback --name slack-cli-feedback", false),
+				},
+			}))
+			return false, nil
+		},
+		Frequency: Never,
+		Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
+			return clients.Config.SystemConfig
+		},
+	},
 }
 
 // SetAskedAtTimestamp writes a timestamp for when the survey was last asked to the project or system level config
@@ -134,6 +165,10 @@ func (s SlackSurvey) SetCompletedAtTimestamp(ctx context.Context, clients *share
 
 // ShouldAsk returns true if we should ask the user the complete the survey
 func (s SlackSurvey) ShouldAsk(cfg config.SurveyConfig) (bool, error) {
+	if s.Frequency == Never {
+		return false, nil
+	}
+
 	if cfg.AskedAt == "" { // survey has never been asked before
 		return true, nil
 	}
