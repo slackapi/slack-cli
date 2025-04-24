@@ -338,7 +338,7 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	if s.Info != nil {
 		s.Info(ctx, clients)
 	}
-	clients.IO.PrintTrace(ctx, s.Trace)
+	clients.IO.PrintTrace(ctx, s.Trace, s.Name)
 
 	var err error
 	var ok bool
