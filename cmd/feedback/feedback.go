@@ -68,8 +68,8 @@ const (
 
 // Supported survey names
 const (
-	PlatformSurvey   = "platform-improvements"
-	SlackCLIFeedback = "slack-cli-feedback"
+	SlackCLIFeedback      = "slack-cli-feedback"
+	SlackPlatformFeedback = "platform-improvements"
 )
 
 type SurveyConfigInterface interface {
@@ -80,35 +80,6 @@ type SurveyConfigInterface interface {
 // SurveyStore stores all available surveys.
 // New surveys should be added here.
 var SurveyStore = map[string]SlackSurvey{
-	// PlatformSurvey asks for general developer experience feedback
-	PlatformSurvey: {
-		Name:              PlatformSurvey,
-		PromptDisplayText: "Help make the Slack platform better",
-		PromptDescription: "Tell us about your experience as a Slack developer",
-		URL:               url.URL{RawPath: "https://docs.slack.dev/developer-support"},
-		Info: func(ctx context.Context, clients *shared.ClientFactory) {
-			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
-				"%s\n%s\n",
-				style.Secondary("You can send us a message at "+style.Highlight(email)),
-				style.Secondary("Or, share your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
-			))
-		},
-		Trace: slacktrace.FeedbackMessage,
-		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
-				Emoji: "love_letter",
-				Text:  "We would love to know how things are going",
-				Secondary: []string{
-					"Share your development experience with " + style.Commandf("feedback", false),
-				},
-			}))
-			return false, nil
-		},
-		Frequency: Always,
-		Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
-			return clients.Config.SystemConfig
-		},
-	},
 	// SlackCLIFeedback asks for Slack CLI feedback using GitHub Issues
 	SlackCLIFeedback: {
 		Name:              SlackCLIFeedback,
@@ -136,6 +107,35 @@ var SurveyStore = map[string]SlackSurvey{
 			return false, nil
 		},
 		Frequency: Never,
+		Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
+			return clients.Config.SystemConfig
+		},
+	},
+	// SlackPlatformFeedback asks for general developer experience feedback
+	SlackPlatformFeedback: {
+		Name:              SlackPlatformFeedback,
+		PromptDisplayText: "Slack Platform",
+		PromptDescription: "Developer support for the Slack Platform, Slack API, Block Kit, and more",
+		URL:               url.URL{RawPath: "https://docs.slack.dev/developer-support"},
+		Info: func(ctx context.Context, clients *shared.ClientFactory) {
+			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
+				"%s\n%s\n",
+				style.Secondary("You can send us a message at "+style.Highlight(email)),
+				style.Secondary("Or, share your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
+			))
+		},
+		Trace: slacktrace.FeedbackMessage,
+		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
+			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+				Emoji: "love_letter",
+				Text:  "We would love to know how things are going",
+				Secondary: []string{
+					"Share your development experience with " + style.Commandf("feedback", false),
+				},
+			}))
+			return false, nil
+		},
+		Frequency: Always,
 		Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
 			return clients.Config.SystemConfig
 		},

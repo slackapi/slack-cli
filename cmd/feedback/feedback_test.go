@@ -36,8 +36,8 @@ func TestFeedbackCommand(t *testing.T) {
 	t.Run("when there is only one survey option", func(t *testing.T) {
 
 		surveys := map[string]SlackSurvey{
-			PlatformSurvey: {
-				Name:              PlatformSurvey,
+			SlackPlatformFeedback: {
+				Name:              SlackPlatformFeedback,
 				PromptDisplayText: "Please complete this survey",
 				URL:               url.URL{RawPath: "https://survey.com"},
 				Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
@@ -53,11 +53,11 @@ func TestFeedbackCommand(t *testing.T) {
 
 		pcm := &config.ProjectConfigMock{}
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil)
-		pcm.On("GetSurveyConfig", mock.Anything, PlatformSurvey).Return(config.SurveyConfig{}, nil)
+		pcm.On("GetSurveyConfig", mock.Anything, SlackPlatformFeedback).Return(config.SurveyConfig{}, nil)
 		clientsMock.Config.ProjectConfig = pcm
 
 		scm := &config.SystemConfigMock{}
-		scm.On("GetSurveyConfig", mock.Anything, PlatformSurvey).Return(config.SurveyConfig{}, nil)
+		scm.On("GetSurveyConfig", mock.Anything, SlackPlatformFeedback).Return(config.SurveyConfig{}, nil)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil)
 		scm.On("SetSurveyConfig", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		clientsMock.Config.SystemConfig = scm
@@ -87,8 +87,8 @@ func TestFeedbackCommand(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 			},
-			PlatformSurvey: {
-				Name:              PlatformSurvey,
+			SlackPlatformFeedback: {
+				Name:              SlackPlatformFeedback,
 				PromptDisplayText: "PlatformSurvey survey",
 				URL:               url.URL{RawPath: "https://survey.com"},
 				Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
