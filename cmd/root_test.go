@@ -118,6 +118,7 @@ func TestExecuteContext(t *testing.T) {
 			output := clientsMock.GetCombinedOutput()
 
 			// Assertions
+			// TODO: Assert that the event tracker was called with the correct exit code
 			require.Equal(t, tt.expectedExitCode, clients.IO.GetExitCode())
 
 			for _, expectedOutput := range tt.expectedOutputs {
