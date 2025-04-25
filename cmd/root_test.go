@@ -104,6 +104,7 @@ func TestExecuteContext(t *testing.T) {
 			// Mock clients
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
+			clientsMock.EventTracker.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Mock command

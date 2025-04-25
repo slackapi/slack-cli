@@ -27,7 +27,6 @@ type EventTrackerMock struct {
 }
 
 func (m *EventTrackerMock) AddDefaultMocks() {
-	m.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	m.On("SetAppEnterpriseID", mock.Anything)
 	m.On("SetAppTeamID", mock.Anything)
 	m.On("SetAppTemplate", mock.Anything)
