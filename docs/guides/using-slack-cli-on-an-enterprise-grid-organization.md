@@ -93,13 +93,13 @@ You can also skip the prompt and proactively grant the desired access by appendi
 For running on a local development server:
 
 ```
-slack run -org-workspace-grant <team_id>
+slack run --org-workspace-grant <team_id>
 ```
 
 For deploying to production:
 
 ```
-slack deploy -org-workspace-grant <team_id>
+slack deploy --org-workspace-grant <team_id>
 ```
 
 ## Adjusting access to specific workspaces {#adjusting-access}
