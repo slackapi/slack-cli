@@ -75,6 +75,7 @@ func (m *ClientsMock) AddDefaultMocks() {
 	m.AuthInterface.AddDefaultMocks()
 	m.Browser.AddDefaultMocks()
 	m.Cobra.AddDefaultMocks()
+	m.EventTracker.AddDefaultMocks()
 	m.IO.AddDefaultMocks()
 	m.Os.AddDefaultMocks()
 }
@@ -86,6 +87,7 @@ func (m *ClientsMock) MockClientFactory() func(c *ClientFactory) {
 		clients.Browser = func() slackdeps.Browser { return m.Browser }
 		clients.Cobra.GenMarkdownTree = m.Cobra.GenMarkdownTree
 		clients.Config = m.Config
+		clients.EventTracker = m.EventTracker
 		clients.Os = m.Os
 		clients.IO = m.IO
 		clients.Fs = m.Fs
