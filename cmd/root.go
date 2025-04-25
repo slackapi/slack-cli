@@ -327,6 +327,11 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 // It listens for process interrupts and sends to IOStreams' GetInterruptChannel() for use in
 // in communicating process interrupts elsewhere in the code.
 func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared.ClientFactory) {
+	// Derive a cancel context that is cancelled when the main execution is interrupted or cleaned up.
+	// Sub-commands can register for the cleanup wait group with clients.CleanupWaitGroup.Add(1)
+	// and listen for <-ctx.Done() to be notified when the main execution is interrupted, in order
+	// to have a chance to cleanup. This is useful for long running processes and background goroutines,
+	// such as the activity and upgrade commands.
 	ctx, cancel := context.WithCancel(ctx)
 
 	completedChan := make(chan bool, 1)      // completed is used for signalling an end to command
@@ -358,19 +363,17 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 				clients.IO.PrintDebug(ctx, "Exiting with cancel exit code.")
 				clients.Os.Exit(int(iostreams.ExitCancel))
 			}()
-		// Received cancelled context, so send an interrupt signal
-		case <-ctx.Done():
-			clients.IO.PrintDebug(ctx, "Got a cancelled context, sending interrupt signal")
-			interruptChan <- os.Interrupt
 		// Received completed execution, so exit the process successfully
 		case <-completedChan:
 			exitChan <- true
 		}
+
 		// If we get a second interrupt, no matter what exit the process
 		<-interruptChan
 		clients.IO.PrintDebug(ctx, "Got second process interrupt signal, exiting the process")
 		clients.Os.Exit(int(iostreams.ExitCancel))
 	}()
+
 	// The cleanup() method in the root command will invoke via `defer` from within Execute.
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		errMsg := err.Error()
@@ -393,6 +396,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 	} else {
 		completedChan <- true
 	}
+
 	<-exitChan
 	_ = clients.EventTracker.FlushToLogstash(ctx, clients.Config, clients.IO, clients.IO.GetExitCode())
 }
