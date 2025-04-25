@@ -27,12 +27,30 @@ type EventTrackerMock struct {
 }
 
 func (m *EventTrackerMock) AddDefaultMocks() {
-	m.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	m.On("SetAppEnterpriseID", mock.Anything)
+	m.On("SetAppTeamID", mock.Anything)
+	m.On("SetAppTemplate", mock.Anything)
+	m.On("SetAppUserID", mock.Anything)
+	m.On("SetAuthEnterpriseID", mock.Anything)
+	m.On("SetAuthTeamID", mock.Anything)
+	m.On("SetAuthUserID", mock.Anything)
+	m.On("SetErrorCode", mock.Anything)
+	m.On("SetErrorMessage", mock.Anything)
 }
 
-func (m *EventTrackerMock) FlushToLogstash(ctx context.Context, cfg config.Config, io iostreams.IOStreamer, exitCode iostreams.ExitCode) error {
-	args := m.Called(ctx)
+func (m *EventTrackerMock) FlushToLogstash(ctx context.Context, cfg *config.Config, io iostreams.IOStreamer, exitCode iostreams.ExitCode) error {
+	args := m.Called(ctx, cfg, io, exitCode)
 	return args.Error(0)
+}
+
+func (m *EventTrackerMock) getSessionData() EventData {
+	args := m.Called()
+	return args.Get(0).(EventData)
+}
+
+func (m *EventTrackerMock) cleanSessionData(data EventData) EventData {
+	args := m.Called(data)
+	return args.Get(0).(EventData)
 }
 
 func (m *EventTrackerMock) SetErrorCode(code string) {

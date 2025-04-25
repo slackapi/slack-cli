@@ -27,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -103,6 +104,7 @@ func TestExecuteContext(t *testing.T) {
 			// Mock clients
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
+			clientsMock.EventTracker.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Mock command
@@ -118,8 +120,8 @@ func TestExecuteContext(t *testing.T) {
 			output := clientsMock.GetCombinedOutput()
 
 			// Assertions
-			// TODO: Assert that the event tracker was called with the correct exit code
 			require.Equal(t, tt.expectedExitCode, clients.IO.GetExitCode())
+			clientsMock.EventTracker.AssertCalled(t, "FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, tt.expectedExitCode)
 
 			for _, expectedOutput := range tt.expectedOutputs {
 				require.Contains(t, output, expectedOutput)
