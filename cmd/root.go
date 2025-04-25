@@ -329,9 +329,9 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared.ClientFactory) {
 	// Derive a cancel context that is cancelled when the main execution is interrupted or cleaned up.
 	// Sub-commands can register for the cleanup wait group with clients.CleanupWaitGroup.Add(1)
-	// and listen for <-ctx.Done() to be notified when the main execution is terminated and have
-	// a chance to cleanup. This is useful for long running processes and background goroutines,
-	// the activity and upgrade commands.
+	// and listen for <-ctx.Done() to be notified when the main execution is interrupted, in order
+	// to have a chance to cleanup. This is useful for long running processes and background goroutines,
+	// such as the activity and upgrade commands.
 	ctx, cancel := context.WithCancel(ctx)
 
 	completedChan := make(chan bool, 1)      // completed is used for signalling an end to command
