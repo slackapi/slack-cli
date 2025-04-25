@@ -40,7 +40,7 @@ type SlackSurvey struct {
 	PromptDisplayText string
 	// PromptDescription is displayed beneath the `feedback` command prompt option
 	PromptDescription string
-	// SkipQueryParams is a flag to skip adding query params to the survey URL
+	// SkipQueryParams is a flag to skip adding query params to the survey URL (optional, default false)
 	SkipQueryParams bool
 	// URL is the survey URL
 	URL url.URL
