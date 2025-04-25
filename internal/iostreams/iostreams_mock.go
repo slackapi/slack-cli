@@ -118,5 +118,3 @@ func (m *IOStreamsMock) InitLogFile(ctx context.Context) error {
 func (m *IOStreamsMock) FinishLogFile(ctx context.Context) {}
 
 func (m *IOStreamsMock) FlushToLogFile(ctx context.Context, prefix, errStr string) error { return nil }
-
-func (m *IOStreamsMock) FlushToLogstash(ctx context.Context) error { return nil }

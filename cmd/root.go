@@ -327,20 +327,28 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 // It listens for process interrupts and sends to IOStreams' GetInterruptChannel() for use in
 // in communicating process interrupts elsewhere in the code.
 func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared.ClientFactory) {
+	// Derive a cancel context that is cancelled when the main execution is interrupted or cleaned up.
+	// Sub-commands can register for the cleanup wait group with clients.CleanupWaitGroup.Add(1)
+	// and listen for <-ctx.Done() to be notified when the main execution is interrupted, in order
+	// to have a chance to cleanup. This is useful for long running processes and background goroutines,
+	// such as the activity and upgrade commands.
 	ctx, cancel := context.WithCancel(ctx)
 
 	completedChan := make(chan bool, 1)      // completed is used for signalling an end to command
 	exitChan := make(chan bool, 1)           // exit blocks the command from exiting until completed
 	interruptChan := make(chan os.Signal, 1) // interrupt catches signals to avoid abrupt exits
+
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
 	defer func() {
 		signal.Stop(interruptChan)
 		cancel()
 	}()
+
+	// Wait for either an interrupt signal (ctrl+c) or an explicit call to ctx.cancel()
 	go func() {
-		// Wait for either an interrupt signal (ctrl+c), or an explicit call to ctx.cancel()
 		select {
-		case <-interruptChan: // first interrupt signal, cancel context
+		// Received interrupt signal, so cancel the context and cleanup
+		case <-interruptChan:
 			clients.IO.PrintInfo(ctx, false, "\n") // flush the CTRL + C character
 			clients.IO.PrintDebug(ctx, "Got process interrupt signal, cancelling context")
 			cancel()
@@ -353,20 +361,19 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 				clients.IO.PrintDebug(ctx, "... root cleanup waitgroup done.")
 				cleanup(ctx, clients)
 				clients.IO.PrintDebug(ctx, "Exiting with cancel exit code.")
-				os.Exit(int(iostreams.ExitCancel))
+				clients.Os.Exit(int(iostreams.ExitCancel))
 			}()
-		case <-ctx.Done():
-			// No interrupt signal sent, command executed to completion
-			// FIXME - `.Done()` channel is triggered by `cancel()` and not a successfully completion
+		// Received completed execution, so exit the process successfully
 		case <-completedChan:
-			// No canceled context, but command has completed execution
 			exitChan <- true
 		}
+
 		// If we get a second interrupt, no matter what exit the process
 		<-interruptChan
 		clients.IO.PrintDebug(ctx, "Got second process interrupt signal, exiting the process")
-		os.Exit(int(iostreams.ExitCancel))
+		clients.Os.Exit(int(iostreams.ExitCancel))
 	}()
+
 	// The cleanup() method in the root command will invoke via `defer` from within Execute.
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		errMsg := err.Error()
@@ -384,11 +391,12 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 			}
 			clients.IO.PrintError(ctx, errMsg)
 		}
-		defer os.Exit(int(clients.IO.GetExitCode()))
+		defer clients.Os.Exit(int(clients.IO.GetExitCode()))
 		completedChan <- true
 	} else {
 		completedChan <- true
 	}
+
 	<-exitChan
 	_ = clients.EventTracker.FlushToLogstash(ctx, clients.Config, clients.IO, clients.IO.GetExitCode())
 }

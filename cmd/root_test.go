@@ -21,10 +21,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -73,6 +76,57 @@ func TestRootCommand(t *testing.T) {
 				assert.Contains(t, output, topLevelCommand.Short, fmt.Sprintf("should contain %s in help output", topLevelCommand.Short))
 			}
 		}
+	}
+}
+
+func TestExecuteContext(t *testing.T) {
+	tests := map[string]struct {
+		expectedErr      error
+		expectedExitCode iostreams.ExitCode
+		expectedOutputs  []string
+	}{
+		"Command successfully executes": {
+			expectedErr:      nil,
+			expectedExitCode: iostreams.ExitOK,
+		},
+		"Command fails execution and returns an error": {
+			expectedErr:      fmt.Errorf("command failed"),
+			expectedExitCode: iostreams.ExitError,
+			expectedOutputs: []string{
+				"command failed",
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
+			// Mock clients
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.EventTracker.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			// Mock command
+			cmd := &cobra.Command{
+				Use: "mock [flags]",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					return tt.expectedErr
+				},
+			}
+
+			// Execute the command
+			ExecuteContext(ctx, cmd, clients)
+			output := clientsMock.GetCombinedOutput()
+
+			// Assertions
+			require.Equal(t, tt.expectedExitCode, clients.IO.GetExitCode())
+			clientsMock.EventTracker.AssertCalled(t, "FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, tt.expectedExitCode)
+
+			for _, expectedOutput := range tt.expectedOutputs {
+				require.Contains(t, output, expectedOutput)
+			}
+		})
 	}
 }
 
