@@ -79,62 +79,52 @@ func TestRootCommand(t *testing.T) {
 }
 
 func TestExecuteContext(t *testing.T) {
-	t.Run("successful execution", func(t *testing.T) {
-		ctx := slackcontext.MockContext(t.Context())
-
-		// Mock clients
-		clientsMock := shared.NewClientsMock()
-		clientsMock.AddDefaultMocks()
-		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-		// Mock command
-		cmd := &cobra.Command{
-			Use: "mock [flags]",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return nil
+	tests := map[string]struct {
+		expectedErr      error
+		expectedExitCode iostreams.ExitCode
+		expectedOutputs  []string
+	}{
+		"Command successfully executes": {
+			expectedErr:      nil,
+			expectedExitCode: iostreams.ExitOK,
+		},
+		"Command fails execution and returns an error": {
+			expectedErr:      fmt.Errorf("command failed"),
+			expectedExitCode: iostreams.ExitError,
+			expectedOutputs: []string{
+				"command failed",
 			},
-		}
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 
-		// Execute the command
-		ExecuteContext(ctx, cmd, clients)
+			// Mock clients
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-		// Assert exit code is success
-		require.Equal(t, iostreams.ExitOK, clients.IO.GetExitCode())
-	})
+			// Mock command
+			cmd := &cobra.Command{
+				Use: "mock [flags]",
+				RunE: func(cmd *cobra.Command, args []string) error {
+					return tt.expectedErr
+				},
+			}
 
-	t.Run("handles command error", func(t *testing.T) {
-		ctx := slackcontext.MockContext(t.Context())
+			// Execute the command
+			ExecuteContext(ctx, cmd, clients)
+			output := clientsMock.GetCombinedOutput()
 
-		// Mock clients
-		clientsMock := shared.NewClientsMock()
-		clientsMock.AddDefaultMocks()
-		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			// Assertions
+			require.Equal(t, tt.expectedExitCode, clients.IO.GetExitCode())
 
-		// Mock command
-		cmd := &cobra.Command{
-			Use: "mock [flags]",
-			RunE: func(cmd *cobra.Command, args []string) error {
-				return nil
-			},
-		}
-
-		// Mock command IO
-		testutil.MockCmdIO(clients.IO, cmd)
-
-		// Create a test command that returns an error
-		expectedErr := fmt.Errorf("command failed")
-		cmd.RunE = func(cmd *cobra.Command, args []string) error {
-			return expectedErr
-		}
-
-		// Execute the command
-		ExecuteContext(ctx, cmd, clients)
-
-		// Assert exit code is error
-		require.Equal(t, iostreams.ExitError, clients.IO.GetExitCode())
-		output := clientsMock.GetCombinedOutput()
-		require.Contains(t, output, expectedErr.Error())
-	})
+			for _, expectedOutput := range tt.expectedOutputs {
+				require.Contains(t, output, expectedOutput)
+			}
+		})
+	}
 }
 
 // FYI: do not try to run this test in vscode using the run/debug test inline test helper; as the assertions in this test will fail in that context
