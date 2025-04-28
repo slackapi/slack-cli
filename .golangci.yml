@@ -42,7 +42,6 @@ linters:
         - '-QF1012' # disable rule 'Use fmt.Fprintf instead of x.Write(fmt.Sprintf(...))'
         - '-QF1003' # disable rule 'Convert if/else-if chain to tagged switch'
         - '-QF1004' # disable rule 'Use strings.ReplaceAll instead of strings.Replace'
-        - '-QF1008' # disable rule 'Omit embedded fields from selector'
         - '-QF1011' # disable rule 'Omit redundant type from variable declaration'
         - '-ST1016' # disable rule 'Use consistent method receiver names'
 formatters:

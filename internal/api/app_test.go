@@ -68,7 +68,7 @@ func TestClient_ExportAppManifest_Ok(t *testing.T) {
 	defer teardown()
 	result, err := c.ExportAppManifest(ctx, "token", "A0123456789")
 	require.NoError(t, err)
-	require.Equal(t, "example", result.Manifest.AppManifest.DisplayInformation.Name)
+	require.Equal(t, "example", result.Manifest.DisplayInformation.Name)
 }
 
 func TestClient_ExportAppManifest_CommonErrors(t *testing.T) {

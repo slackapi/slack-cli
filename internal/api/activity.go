@@ -124,7 +124,7 @@ func (c *Client) Activity(ctx context.Context, token string, activityRequest typ
 	if !resp.Ok {
 		return ActivityResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appActivityMethod)
 	}
-	resp.ActivityResult.NextCursor = resp.ResponseMetadata.NextCursor
+	resp.NextCursor = resp.ResponseMetadata.NextCursor
 
 	return resp.ActivityResult, nil
 }

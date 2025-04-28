@@ -80,7 +80,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	if err != nil {
 		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestAccess)
 	}
-	log.Data["appName"] = manifest.AppManifest.DisplayInformation.Name
+	log.Data["appName"] = manifest.DisplayInformation.Name
 
 	if showTriggers {
 		// Generate an optional trigger when none exist

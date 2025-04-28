@@ -52,7 +52,7 @@ func TestCache_Manifest(t *testing.T) {
 			cache := NewCache(fsMock, osMock, projectDirPath)
 			err = cache.SetManifestHash(ctx, tt.mockAppID, tt.mockCache.Hash)
 			require.NoError(t, err)
-			cache.ManifestCache.Apps = map[string]ManifestCacheApp{
+			cache.Apps = map[string]ManifestCacheApp{
 				tt.mockAppID: tt.mockCache,
 			}
 			hash, err := cache.GetManifestHash(ctx, tt.mockAppID)
