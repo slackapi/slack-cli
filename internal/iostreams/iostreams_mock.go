@@ -98,13 +98,13 @@ func (m *IOStreamsMock) IsTTY() bool {
 }
 
 // SetExitCode sets the desired exit code in a thread-safe way
-func (io *IOStreamsMock) SetExitCode(code ExitCode) {
-	atomic.StoreInt32((*int32)(&io.exitCode), int32(code))
+func (m *IOStreamsMock) SetExitCode(code ExitCode) {
+	atomic.StoreInt32((*int32)(&m.exitCode), int32(code))
 }
 
 // GetExitCode returns the most-recently set desired exit code in a thread safe way
-func (io *IOStreamsMock) GetExitCode() ExitCode {
-	return ExitCode(atomic.LoadInt32((*int32)(&io.exitCode)))
+func (m *IOStreamsMock) GetExitCode() ExitCode {
+	return ExitCode(atomic.LoadInt32((*int32)(&m.exitCode)))
 }
 
 // InitLogFile mocks starting the debug info to
