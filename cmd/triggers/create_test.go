@@ -65,7 +65,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -98,7 +98,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -129,7 +129,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -165,7 +165,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -218,7 +218,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				// no collaborators on app
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -272,7 +272,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{{}}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(`{}`, nil)
@@ -370,7 +370,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs).Return(fakeTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -490,7 +490,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 					workspaceInstallAppFunc = originalWorkspaceInstallAppFunc
 				}
 				appCommandMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(ctx, types.SUCCESS, newDevApp.App, nil)
+					Return(ctx, types.InstallSuccess, newDevApp.App, nil)
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, nil)
 				// Define default mocks
@@ -518,7 +518,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 					workspaceInstallAppFunc = originalWorkspaceInstallAppFunc
 				}
 				appCommandMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(ctx, types.SUCCESS, newDevApp.App, nil)
+					Return(ctx, types.InstallSuccess, newDevApp.App, nil)
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, nil)
 				// Define default mocks
@@ -553,7 +553,7 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 		{
 			name: "Accept prompt to reinstall and create the trigger successfully",
 			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
-				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.SUCCESS, types.App{}, nil)
+				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.InstallSuccess, types.App{}, nil)
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{Name: "trigger name", ID: "Ft123", Type: "shortcut"}, nil)
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Re-install app to apply local file changes and try again?", mock.Anything).Return(true, nil)
@@ -577,7 +577,7 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 		{
 			name: "Accept prompt to reinstall but fail to create the trigger",
 			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
-				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.SUCCESS, types.App{}, nil)
+				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.InstallSuccess, types.App{}, nil)
 				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, errors.New("something_else_went_wrong"))
 				clientsMock.Os.On("UserHomeDir").Return("", nil) // Called by clients.IO.PrintError

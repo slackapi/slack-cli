@@ -45,7 +45,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				cm.IO.On("SelectPrompt", mock.Anything, "Choose a trigger:", mock.Anything, mock.Anything).Return(iostreams.SelectPromptResponse{Index: 0, Prompt: true}, nil)
 				cm.APIInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
 				cm.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				cm.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil).Once()
+				cm.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil).Once()
 			},
 			ExpectedOutputs: []string{
 				"Trigger Info",
@@ -81,7 +81,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
@@ -106,7 +106,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
@@ -144,7 +144,7 @@ func TestTriggersInfoCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersInfo", mock.Anything, mock.Anything, mock.Anything).Return(mockRequestTrigger, nil)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")

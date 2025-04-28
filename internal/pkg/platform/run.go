@@ -82,8 +82,8 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
 
-	if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
-		return log.SuccessEvent(), types.SUCCESS, nil
+	if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
+		return log.SuccessEvent(), types.InstallSuccess, nil
 	}
 
 	if runArgs.ShowTriggers {
@@ -194,13 +194,13 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	if err := <-errChan; err != nil {
 		switch slackerror.ToSlackError(err).Code {
 		case slackerror.ErrLocalAppRunCleanExit:
-			return log.SuccessEvent(), types.SUCCESS, nil
+			return log.SuccessEvent(), types.InstallSuccess, nil
 		case slackerror.ErrSDKHookInvocationFailed:
 			return nil, "", err
 		}
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
-	return log.SuccessEvent(), types.SUCCESS, nil
+	return log.SuccessEvent(), types.InstallSuccess, nil
 }
 
 func deleteAppOnTerminate(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, log *logger.Logger) {

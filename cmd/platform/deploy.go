@@ -92,7 +92,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
+			if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 				return nil
 			}
 			switch {

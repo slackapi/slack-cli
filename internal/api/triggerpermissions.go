@@ -118,7 +118,7 @@ func (c *Client) TriggerPermissionsSet(ctx context.Context, token, triggerID, en
 	values.Add("token", token)
 	values.Add("trigger_id", triggerID)
 	values.Add("permission_type", string(permissionType))
-	if permissionType == types.NAMED_ENTITIES && len(entities) > 0 {
+	if permissionType == types.PermissionNamedEntities && len(entities) > 0 {
 		if entityType == "users" {
 			values.Add("user_ids", entities)
 		} else if entityType == "channels" {

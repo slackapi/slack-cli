@@ -190,7 +190,7 @@ func TestInstall(t *testing.T) {
 			mockAPIInstall: api.DeveloperAppInstallResult{
 				AppID: "A002",
 			},
-			mockAPIInstallState: types.SUCCESS,
+			mockAPIInstallState: types.InstallSuccess,
 			mockAPIUpdate: api.UpdateAppResult{
 				AppID: "A002",
 			},
@@ -230,7 +230,7 @@ func TestInstall(t *testing.T) {
 				AppID:  "A002",
 				TeamID: mockTeamID,
 			},
-			expectedInstallState: types.SUCCESS,
+			expectedInstallState: types.InstallSuccess,
 			expectedManifest: types.AppManifest{
 				MetaData: &types.ManifestMetaData{
 					MajorVersion: 1,
@@ -255,7 +255,7 @@ func TestInstall(t *testing.T) {
 			mockAPIInstall: api.DeveloperAppInstallResult{
 				AppID: "A003",
 			},
-			mockAPIInstallState: types.SUCCESS,
+			mockAPIInstallState: types.InstallSuccess,
 			mockAPIUpdate: api.UpdateAppResult{
 				AppID: "A003",
 			},
@@ -286,7 +286,7 @@ func TestInstall(t *testing.T) {
 				AppID:  "A003",
 				TeamID: mockTeamID,
 			},
-			expectedInstallState: types.SUCCESS,
+			expectedInstallState: types.InstallSuccess,
 			expectedManifest: types.AppManifest{
 				DisplayInformation: types.DisplayInformation{
 					Name: "example-3",
@@ -364,7 +364,7 @@ func TestInstall(t *testing.T) {
 			mockAPIInstall: api.DeveloperAppInstallResult{
 				AppID: "A005",
 			},
-			mockAPIInstallState: types.SUCCESS,
+			mockAPIInstallState: types.InstallSuccess,
 			mockAPIUpdate: api.UpdateAppResult{
 				AppID: "A005",
 			},
@@ -408,7 +408,7 @@ func TestInstall(t *testing.T) {
 			mockAPIInstall: api.DeveloperAppInstallResult{
 				AppID: "A006",
 			},
-			mockAPIInstallState: types.SUCCESS,
+			mockAPIInstallState: types.InstallSuccess,
 			mockAPIUpdate: api.UpdateAppResult{
 				AppID: "A006",
 			},
@@ -440,7 +440,7 @@ func TestInstall(t *testing.T) {
 				AppID:  "A006",
 				TeamID: mockTeamID,
 			},
-			expectedInstallState: types.SUCCESS,
+			expectedInstallState: types.InstallSuccess,
 			expectedManifest: types.AppManifest{
 				MetaData: &types.ManifestMetaData{
 					MajorVersion: 1,

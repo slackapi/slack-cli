@@ -110,7 +110,7 @@ func (c *Client) FunctionDistributionSet(ctx context.Context, callbackID, appID 
 	values.Add("function_callback_id", callbackID)
 	values.Add("function_app_id", appID)
 	values.Add("distribution_type", string(distributionType))
-	if distributionType == types.NAMED_ENTITIES && len(users) > 0 {
+	if distributionType == types.PermissionNamedEntities && len(users) > 0 {
 		values.Add("user_ids", users)
 	}
 

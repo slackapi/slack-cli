@@ -185,7 +185,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		return app, "", err
 	}
 
-	if installState != types.SUCCESS {
+	if installState != types.InstallSuccess {
 		printNonSuccessInstallState(ctx, clients, installState)
 		return app, installState, nil
 	}
@@ -228,7 +228,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	log.Data["installTime"] = fmt.Sprintf("%.1fs", time.Since(start).Seconds())
 	log.Info("app_install_complete")
 
-	return app, types.SUCCESS, nil
+	return app, types.InstallSuccess, nil
 }
 
 func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFactory, installState types.InstallState) {
@@ -236,13 +236,13 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 		primary   string
 		secondary string
 	)
-	if installState == types.REQUEST_PENDING {
+	if installState == types.InstallRequestPending {
 		primary = "Your request to install the app is pending"
 		secondary = fmt.Sprintf("You will receive a Slackbot message after an admin has reviewed your request\nOnce your request is approved, complete installation by re-running %s", style.Commandf(clients.Config.Command, true))
-	} else if installState == types.REQUEST_CANCELLED {
+	} else if installState == types.InstallRequestCancelled {
 		primary = "Your request to install the app has been cancelled"
 		secondary = ""
-	} else if installState == types.REQUEST_NOT_SENT {
+	} else if installState == types.InstallRequestNotSent {
 		primary = "You've declined to send a request to an admin"
 		secondary = "Please submit a request to install or update your app"
 	}
@@ -473,7 +473,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
 
-	if installState != types.SUCCESS {
+	if installState != types.InstallSuccess {
 		printNonSuccessInstallState(ctx, clients, installState)
 		return app, api.DeveloperAppInstallResult{}, installState, nil
 	}
@@ -513,7 +513,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	log.Data["installTime"] = fmt.Sprintf("%.1fs", time.Since(start).Seconds())
 	log.Info("app_install_complete")
 
-	return app, result, types.SUCCESS, nil
+	return app, result, types.InstallSuccess, nil
 }
 
 // getIconHash returns the MD5 hash of the icon file

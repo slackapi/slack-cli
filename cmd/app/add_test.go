@@ -178,7 +178,7 @@ func TestAppAddCommand(t *testing.T) {
 							User     string "json:\"user,omitempty\""
 						}{},
 					},
-					types.SUCCESS,
+					types.InstallSuccess,
 					nil,
 				)
 
@@ -260,7 +260,7 @@ func TestAppAddCommand(t *testing.T) {
 							User     string "json:\"user,omitempty\""
 						}{},
 					},
-					types.SUCCESS,
+					types.InstallSuccess,
 					nil,
 				)
 
@@ -327,7 +327,7 @@ func TestAppAddCommand(t *testing.T) {
 					api.DeveloperAppInstallResult{
 						AppID: mockOrgApp.AppID,
 					},
-					types.SUCCESS,
+					types.InstallSuccess,
 					nil,
 				)
 
@@ -387,7 +387,7 @@ func TestAppAddCommand(t *testing.T) {
 					api.DeveloperAppInstallResult{
 						AppID: mockOrgApp.AppID,
 					},
-					types.REQUEST_PENDING,
+					types.InstallRequestPending,
 					nil,
 				)
 				// Mock existing and updated cache
@@ -443,7 +443,7 @@ func TestAppAddCommand(t *testing.T) {
 					api.DeveloperAppInstallResult{
 						AppID: mockOrgApp.AppID,
 					},
-					types.REQUEST_CANCELLED,
+					types.InstallRequestCancelled,
 					nil,
 				)
 				// Mock existing and updated cache

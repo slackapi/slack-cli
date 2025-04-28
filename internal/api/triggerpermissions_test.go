@@ -40,42 +40,42 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 	}{
 		{
 			name:            "Set to everyone",
-			permissionType:  types.EVERYONE,
+			permissionType:  types.PermissionEveryone,
 			users:           "",
 			expectedRequest: `permission_type=everyone&token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:      `{"ok": true, "permission_type": "everyone"}`,
 		},
 		{
 			name:            "Set to collaborators",
-			permissionType:  types.APP_COLLABORATORS,
+			permissionType:  types.PermissionAppCollaborators,
 			users:           "U0001",
 			expectedRequest: `permission_type=app_collaborators&token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:      `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
 		},
 		{
 			name:            "Set to named_entities (users)",
-			permissionType:  types.NAMED_ENTITIES,
+			permissionType:  types.PermissionNamedEntities,
 			users:           "U0001,U0002",
 			expectedRequest: `permission_type=named_entities&token=xoxp-123&trigger_id=Ft123&user_ids=U0001%2CU0002`,
 			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
 		{
 			name:            "Set to named_entities (channels)",
-			permissionType:  types.NAMED_ENTITIES,
+			permissionType:  types.PermissionNamedEntities,
 			channels:        "C0001,C0002",
 			expectedRequest: `channel_ids=C0001%2CC0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
 		{
 			name:            "Set to named_entities (workspaces)",
-			permissionType:  types.NAMED_ENTITIES,
+			permissionType:  types.PermissionNamedEntities,
 			workspaces:      "T0001,T0002",
 			expectedRequest: `permission_type=named_entities&team_ids=T0001%2CT0002&token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:      `{"ok": true,"permission_type": "named_entities", "teams_ids": [ "T0001", "T0002" ]}`,
 		},
 		{
 			name:            "Set to named_entities (organizations)",
-			permissionType:  types.NAMED_ENTITIES,
+			permissionType:  types.PermissionNamedEntities,
 			organizations:   "E0001,E0002",
 			expectedRequest: `org_ids=E0001%2CE0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
@@ -171,7 +171,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 	verifyCommonErrorCases(t, workflowsTriggersPermissionsSetMethod, func(c *Client) error {
 		ctx := slackcontext.MockContext(t.Context())
-		_, err := c.TriggerPermissionsSet(ctx, "xoxp-123", "Ft123", "user1", types.APP_COLLABORATORS, "users")
+		_, err := c.TriggerPermissionsSet(ctx, "xoxp-123", "Ft123", "user1", types.PermissionAppCollaborators, "users")
 		return err
 	})
 }
@@ -459,42 +459,42 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 	}{
 		{
 			name:                   "Access is everyone",
-			expectedPermissionType: types.EVERYONE,
+			expectedPermissionType: types.PermissionEveryone,
 			expectedUsers:          []string(nil),
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:             `{"ok": true, "permission_type": "everyone"}`,
 		},
 		{
 			name:                   "Access is collaborators",
-			expectedPermissionType: types.APP_COLLABORATORS,
+			expectedPermissionType: types.PermissionAppCollaborators,
 			expectedUsers:          []string{"U0001"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:             `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (users)",
-			expectedPermissionType: types.NAMED_ENTITIES,
+			expectedPermissionType: types.PermissionNamedEntities,
 			expectedUsers:          []string{"U0001", "U0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:             `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (channels)",
-			expectedPermissionType: types.NAMED_ENTITIES,
+			expectedPermissionType: types.PermissionNamedEntities,
 			expectedChannels:       []string{"C0001", "C0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:             `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (workspaces)",
-			expectedPermissionType: types.NAMED_ENTITIES,
+			expectedPermissionType: types.PermissionNamedEntities,
 			expectedWorkspaces:     []string{"T0001", "T0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:             `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (organizations)",
-			expectedPermissionType: types.NAMED_ENTITIES,
+			expectedPermissionType: types.PermissionNamedEntities,
 			expectedOrganizations:  []string{"E0001", "E0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
 			resultJSON:             `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,

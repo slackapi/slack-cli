@@ -136,19 +136,19 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 	}
 	// Get trigger's ACL entities details
 	if singleTriggerInfo {
-		if accessType != types.EVERYONE && len(entitiesAccessList) <= 0 {
+		if accessType != types.PermissionEveryone && len(entitiesAccessList) <= 0 {
 			triggerText = append(triggerText, fmt.Sprintf(
 				style.Indent(style.Secondary("  %s")),
 				"nobody",
 			))
 		} else {
-			if accessType == types.EVERYONE {
+			if accessType == types.PermissionEveryone {
 				var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 				triggerText = append(triggerText, fmt.Sprintf(
 					style.Indent(style.Secondary("Can be found and used by:\n  %s")),
 					style.Indent(style.Secondary(everyoneAccessTypeDescription)),
 				))
-			} else if accessType == types.APP_COLLABORATORS {
+			} else if accessType == types.PermissionAppCollaborators {
 				triggerText = append(triggerText, fmt.Sprint(
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))
@@ -162,7 +162,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 						userInfo.RealName, style.Secondary("@"+userInfo.Profile.DisplayName), style.Secondary(userInfo.ID),
 					))
 				}
-			} else if accessType == types.NAMED_ENTITIES {
+			} else if accessType == types.PermissionNamedEntities {
 				triggerText = append(triggerText, fmt.Sprint(
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))
@@ -220,7 +220,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 		}
 	} else {
 		accessTypeDescription := accessType.ToString()
-		if accessType == types.EVERYONE {
+		if accessType == types.PermissionEveryone {
 			accessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 		}
 

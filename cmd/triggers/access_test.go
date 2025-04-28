@@ -43,13 +43,13 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// set access type to collaborators
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, types.APP_COLLABORATORS, "").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, types.PermissionAppCollaborators, "").
 					Return([]string{"collaborator_ID"}, nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for updated access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
@@ -73,16 +73,16 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// set access type to everyone
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, mock.Anything, types.EVERYONE, "").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, mock.Anything, types.PermissionEveryone, "").
 					Return([]string{}, nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -103,16 +103,16 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdOrgApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// set access type to everyone
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, mock.Anything, types.EVERYONE, "").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, mock.Anything, types.PermissionEveryone, "").
 					Return([]string{}, nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -130,16 +130,16 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// set access type to named_entities
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "USER1,USER2", types.NAMED_ENTITIES, "users").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "USER1,USER2", types.PermissionNamedEntities, "users").
 					Return([]string{}, nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "USER2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "USER2"}, nil).Once()
 				// display user info for updated access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
@@ -162,16 +162,16 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// set access type to named_entities
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL1,CHANNEL2", types.NAMED_ENTITIES, "channels").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL1,CHANNEL2", types.PermissionNamedEntities, "channels").
 					Return([]string{}, nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"CHANNEL1", "CHANNEL2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"CHANNEL1", "CHANNEL2"}, nil).Once()
 				// display channel info for updated access
 				clientsMock.APIInterface.On("ChannelsInfo", mock.Anything, mock.Anything, "CHANNEL1").
 					Return(&types.ChannelInfo{ID: "CHANNEL1", Name: "Channel One"}, nil).Once()
@@ -193,20 +193,20 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// confirm to add app collaborators
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Include app collaborators?", mock.Anything).Return(true, nil)
 				// set access type to named_entities
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.NAMED_ENTITIES, "users").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.PermissionNamedEntities, "users").
 					Return([]string{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "TEAM1", "workspaces").
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"collaborator_ID", "TEAM1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"collaborator_ID", "TEAM1"}, nil).Once()
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// display workspace info for updated access
@@ -230,18 +230,18 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// set access type to named_entities
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.NAMED_ENTITIES, "users").
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.PermissionNamedEntities, "users").
 					Return([]string{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "TEAM1", "workspaces").
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"collaborator_ID", "TEAM1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"collaborator_ID", "TEAM1"}, nil).Once()
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// display workspace info for updated access
@@ -266,18 +266,18 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.APP_COLLABORATORS, []string{"collaborator_ID"}, nil).Once()
+					Return(types.PermissionAppCollaborators, []string{"collaborator_ID"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// confirm to add app collaborators
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Include app collaborators?", mock.Anything).Return(true)
 				// set access type to named_entities
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.NAMED_ENTITIES, "users").Maybe().
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.PermissionNamedEntities, "users").Maybe().
 					Return([]string{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "USER1,USER2", types.NAMED_ENTITIES, "users").Maybe().
+				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "USER1,USER2", types.PermissionNamedEntities, "users").Maybe().
 					Return([]string{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL1,CHANNEL2", types.NAMED_ENTITIES, "channels").Maybe().
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL1,CHANNEL2", types.PermissionNamedEntities, "channels").Maybe().
 					Return([]string{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL1,CHANNEL2", "channels").Maybe().
 					Return(nil)
@@ -285,7 +285,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "USER2", "CHANNEL1", "CHANNEL2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "USER2", "CHANNEL1", "CHANNEL2"}, nil).Once()
 				// display user info for updated access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
@@ -316,7 +316,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{}, nil).Once()
@@ -325,7 +325,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "USER2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "USER2"}, nil).Once()
 				// display user info for updated access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
@@ -348,7 +348,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"CHANNEL1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"CHANNEL1"}, nil).Once()
 				// display user info for current access
 				// clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "USER1").
 				// 	Return(&types.UserInfo{}, nil).Once()
@@ -357,7 +357,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"CHANNEL1", "CHANNEL2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"CHANNEL1", "CHANNEL2"}, nil).Once()
 				// display channel info for updated access
 				clientsMock.APIInterface.On("ChannelsInfo", mock.Anything, mock.Anything, "CHANNEL1").
 					Return(&types.ChannelInfo{ID: "CHANNEL1", Name: "Channel One"}, nil).Once()
@@ -380,7 +380,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"CHANNEL1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"CHANNEL1"}, nil).Once()
 				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL2", "channels").
 					Return(nil)
 				clientsMock.APIInterface.On("TriggerPermissionsAddEntities", mock.Anything, mock.Anything, fakeTriggerID, "USER1,USER2", "users").
@@ -389,7 +389,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "USER2", "CHANNEL1", "CHANNEL2", "TEAM1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "USER2", "CHANNEL1", "CHANNEL2", "TEAM1"}, nil).Once()
 				// display user info for updated access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
@@ -422,7 +422,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "USER2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "USER2"}, nil).Once()
 				// display user info for current access
 				clientsMock.APIInterface.On("UserInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{}, nil).Once()
@@ -431,7 +431,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1"}, nil).Once()
 				// display user info for updated access
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
@@ -451,13 +451,13 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"CHANNEL1", "CHANNEL2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"CHANNEL1", "CHANNEL2"}, nil).Once()
 				// remove channel from named_entities ACL
 				clientsMock.APIInterface.On("TriggerPermissionsRemoveEntities", mock.Anything, mock.Anything, fakeTriggerID, "CHANNEL2", "channels").
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"CHANNEL1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"CHANNEL1"}, nil).Once()
 
 				// display channel info for updated access
 				clientsMock.APIInterface.On("ChannelsInfo", mock.Anything, mock.Anything, "CHANNEL1").
@@ -479,13 +479,13 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"TEAM1", "TEAM2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"TEAM1", "TEAM2"}, nil).Once()
 				// remove workspace from named_entities ACL
 				clientsMock.APIInterface.On("TriggerPermissionsRemoveEntities", mock.Anything, mock.Anything, fakeTriggerID, "TEAM2", "workspaces").
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"TEAM1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"TEAM1"}, nil).Once()
 
 				// display team info for updated access
 				clientsMock.APIInterface.On("TeamsInfo", mock.Anything, mock.Anything, "TEAM1").
@@ -507,7 +507,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				appSelectTeardown = setupMockAccessAppSelection(installedProdApp)
 				// get current access type
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "USER2", "CHANNEL1", "CHANNEL2"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "USER2", "CHANNEL1", "CHANNEL2"}, nil).Once()
 				// remove user from named_entities ACL
 				clientsMock.APIInterface.On("TriggerPermissionsRemoveEntities", mock.Anything, mock.Anything, fakeTriggerID, "USER2", "users").
 					Return(nil)
@@ -516,7 +516,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 					Return(nil)
 				// get access type from backend to display
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.NAMED_ENTITIES, []string{"USER1", "CHANNEL1"}, nil).Once()
+					Return(types.PermissionNamedEntities, []string{"USER1", "CHANNEL1"}, nil).Once()
 				clientsMock.APIInterface.On("UsersInfo", mock.Anything, mock.Anything, "USER1").
 					Return(&types.UserInfo{RealName: "User One", Name: "USER1", Profile: user1Profile}, nil).Once()
 				clientsMock.AddDefaultMocks()
@@ -540,14 +540,14 @@ func TestTriggersAccessCommand(t *testing.T) {
 				clientsMock.APIInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return(
 					[]types.DeployedTrigger{{Name: "Trigger 1", ID: fakeTriggerID, Type: "Shortcut", Workflow: types.TriggerWorkflow{AppID: fakeAppID}}}, "", nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// set and display access
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
-				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, types.EVERYONE, "").
+					Return(types.PermissionEveryone, []string{}, nil).Once()
+				clientsMock.APIInterface.On("TriggerPermissionsSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, types.PermissionEveryone, "").
 					Return([]string{}, nil)
 				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-					Return(types.EVERYONE, []string{}, nil).Once()
+					Return(types.PermissionEveryone, []string{}, nil).Once()
 
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("trigger-id"),

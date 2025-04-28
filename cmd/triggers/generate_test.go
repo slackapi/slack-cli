@@ -66,7 +66,7 @@ func Test_TriggerGenerate_accept_prompt(t *testing.T) {
 		}, nil)
 		clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-			Return(types.EVERYONE, []string{}, nil).Once()
+			Return(types.PermissionEveryone, []string{}, nil).Once()
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
@@ -131,7 +131,7 @@ func Test_TriggerGenerate_skip_prompt(t *testing.T) {
 		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-			Return(types.EVERYONE, []string{}, nil).Once()
+			Return(types.PermissionEveryone, []string{}, nil).Once()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
 			clients.SDKConfig.Hooks.GetTrigger = hooks.HookScript{
@@ -169,7 +169,7 @@ func Test_TriggerGenerate_handle_error(t *testing.T) {
 		}, nil)
 		clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-			Return(types.EVERYONE, []string{}, nil).Once()
+			Return(types.PermissionEveryone, []string{}, nil).Once()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
 			clients.SDKConfig.Hooks.GetTrigger = hooks.HookScript{
@@ -237,7 +237,7 @@ func Test_TriggerGenerate_Config_TriggerPaths_Default(t *testing.T) {
 		}, nil)
 		clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-			Return(types.EVERYONE, []string{}, nil).Once()
+			Return(types.PermissionEveryone, []string{}, nil).Once()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
 			clients.SDKConfig.Hooks.GetTrigger = hooks.HookScript{
@@ -277,7 +277,7 @@ func Test_TriggerGenerate_Config_TriggerPaths_Custom(t *testing.T) {
 		}, nil)
 		clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
-			Return(types.EVERYONE, []string{}, nil).Once()
+			Return(types.PermissionEveryone, []string{}, nil).Once()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
 			clients.SDKConfig.Hooks.GetTrigger = hooks.HookScript{

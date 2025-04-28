@@ -109,7 +109,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		if err != nil {
 			return err
 		}
-		if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
+		if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 			return nil
 		}
 		ctx = _ctx
@@ -211,7 +211,7 @@ func promptShouldInstallAndRetry(ctx context.Context, clients *shared.ClientFact
 		if err != nil {
 			return types.DeployedTrigger{}, false, slackerror.Wrap(err, slackerror.ErrInstallationFailed)
 		}
-		if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
+		if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 			return types.DeployedTrigger{}, false, nil
 		}
 

@@ -81,7 +81,7 @@ func TestTriggersListCommand(t *testing.T) {
 					nil,
 				)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil)
+				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil)
 
 				clientsMock.AddDefaultMocks()
 			},
@@ -118,7 +118,7 @@ func TestTriggersListCommand(t *testing.T) {
 					nil,
 				)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil)
+				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil)
 
 				clientsMock.AddDefaultMocks()
 			},
@@ -156,7 +156,7 @@ func TestTriggersListCommand(t *testing.T) {
 					nil,
 				)
 				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil)
+				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil)
 
 				clientsMock.AddDefaultMocks()
 			},

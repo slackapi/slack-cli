@@ -76,7 +76,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 			resultJSON: `{"ok": true, "distribution_type": "everyone", "user_ids": []}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
-				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.EVERYONE, "")
+				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.PermissionEveryone, "")
 				return err
 			},
 		},
@@ -85,7 +85,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 			resultJSON: `{"ok":false,"error":"invalid_arguments"}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
-				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.EVERYONE, "")
+				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.PermissionEveryone, "")
 				return err
 			},
 			wantErr:    true,

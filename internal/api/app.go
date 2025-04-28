@@ -697,7 +697,7 @@ func (c *Client) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreame
 		return DeveloperAppInstallResult{}, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDeveloperInstallMethod)
 	}
 
-	return resp.DeveloperAppInstallResult, types.SUCCESS, nil
+	return resp.DeveloperAppInstallResult, types.InstallSuccess, nil
 }
 
 // handleAppApprovalStates handles responses from the developerInstall API when admin apps approval (AAA) is on
@@ -773,9 +773,9 @@ func (c *Client) handleAppRequestEligibleState(ctx context.Context, IO iostreams
 		}
 
 		IO.PrintTrace(ctx, slacktrace.AdminAppApprovalRequestPending)
-		return types.REQUEST_PENDING, nil
+		return types.InstallRequestPending, nil
 	} else {
-		return types.REQUEST_NOT_SENT, nil
+		return types.InstallRequestNotSent, nil
 	}
 }
 
@@ -842,13 +842,13 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 			return "", err
 		}
 
-		if installState != types.REQUEST_PENDING {
-			return types.REQUEST_CANCELLED, nil
+		if installState != types.InstallRequestPending {
+			return types.InstallRequestCancelled, nil
 		} else {
 			return installState, nil
 		}
 	} else {
-		return types.REQUEST_PENDING, nil
+		return types.InstallRequestPending, nil
 	}
 }
 

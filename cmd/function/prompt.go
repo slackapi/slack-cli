@@ -85,18 +85,18 @@ func chooseDistributionPrompt(
 		// Prefer named entities on mismatch then prompt for collaborators later
 		if slackerror.ToSlackError(err).Code == slackerror.ErrMismatchedFlags &&
 			!clients.Config.Flags.Lookup("everyone").Changed {
-			selectedDistribution = types.NAMED_ENTITIES
+			selectedDistribution = types.PermissionNamedEntities
 		} else {
 			return "", err
 		}
 	} else if selection.Flag {
 		switch {
 		case clients.Config.Flags.Lookup("app-collaborators").Changed:
-			selectedDistribution = types.APP_COLLABORATORS
+			selectedDistribution = types.PermissionAppCollaborators
 		case clients.Config.Flags.Lookup("everyone").Changed:
-			selectedDistribution = types.EVERYONE
+			selectedDistribution = types.PermissionEveryone
 		case clients.Config.Flags.Lookup("users").Changed:
-			selectedDistribution = types.NAMED_ENTITIES
+			selectedDistribution = types.PermissionNamedEntities
 		}
 	} else if selection.Prompt {
 		selectedDistribution = distributions[selection.Index]
@@ -104,8 +104,8 @@ func chooseDistributionPrompt(
 
 	// Optional follow-up: if the function is moving from an access type where collaborators have access,
 	// to named_entities where they do not unless explicitly added, offer to add them automatically
-	if (currentDist == types.APP_COLLABORATORS || currentDist == types.EVERYONE) &&
-		selectedDistribution == types.NAMED_ENTITIES {
+	if (currentDist == types.PermissionAppCollaborators || currentDist == types.PermissionEveryone) &&
+		selectedDistribution == types.PermissionNamedEntities {
 		err := addCollaboratorsToNamedEntitiesPrompt(ctx, clients, app, token)
 		if err != nil {
 			return "", err
