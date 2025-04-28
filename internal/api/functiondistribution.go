@@ -62,18 +62,18 @@ func (c *Client) FunctionDistributionList(ctx context.Context, callbackID, appID
 
 	b, err := c.postForm(ctx, functionDistributionsPermissionsListMethod, values)
 	if err != nil {
-		return "", []types.FunctionDistributionUser{}, errHttpRequestFailed.WithRootCause(err)
+		return "", []types.FunctionDistributionUser{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return "", []types.FunctionDistributionUser{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return "", []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := FunctionDistributionListResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return "", []types.FunctionDistributionUser{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsListMethod)
+		return "", []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsListMethod)
 	}
 
 	if !resp.Ok {
@@ -116,18 +116,18 @@ func (c *Client) FunctionDistributionSet(ctx context.Context, callbackID, appID 
 
 	b, err := c.postForm(ctx, functionDistributionsPermissionsSetMethod, values)
 	if err != nil {
-		return []types.FunctionDistributionUser{}, errHttpRequestFailed.WithRootCause(err)
+		return []types.FunctionDistributionUser{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return []types.FunctionDistributionUser{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := FunctionDistributionSetResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return []types.FunctionDistributionUser{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsSetMethod)
+		return []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsSetMethod)
 	}
 
 	if !resp.Ok {
@@ -158,18 +158,18 @@ func (c *Client) FunctionDistributionAddUsers(ctx context.Context, callbackID, a
 
 	b, err := c.postForm(ctx, functionDistributionsPermissionsAddMethod, values)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := FunctionDistributionAddUsersResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsAddMethod)
 	}
 
 	if !resp.Ok {
@@ -200,18 +200,18 @@ func (c *Client) FunctionDistributionRemoveUsers(ctx context.Context, callbackID
 
 	b, err := c.postForm(ctx, functionDistributionsPermissionsRemoveMethod, values)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := FunctionDistributionRemoveUsersResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsRemoveMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsRemoveMethod)
 	}
 
 	if !resp.Ok {

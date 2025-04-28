@@ -60,7 +60,7 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 			argsProviderKey:          "provider-key",
 			httpResponseJSON:         `this is not valid json {"ok": true, "authorization_url": "http://slack.com/authorization/url"}`,
 			expectedAuthorizationURL: "",
-			expectedErrorContains:    errHttpResponseInvalid.Code,
+			expectedErrorContains:    errHTTPResponseInvalid.Code,
 		},
 	}
 
@@ -123,7 +123,7 @@ func Test_API_AppsAuthExternalRemove(t *testing.T) {
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
-			expectedErrorContains: errHttpResponseInvalid.Code,
+			expectedErrorContains: errHTTPResponseInvalid.Code,
 		},
 	}
 
@@ -188,7 +188,7 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
-			expectedErrorContains: errHttpResponseInvalid.Code,
+			expectedErrorContains: errHTTPResponseInvalid.Code,
 		},
 	}
 
@@ -367,7 +367,7 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
-			expectedErrorContains: errHttpResponseInvalid.Code,
+			expectedErrorContains: errHTTPResponseInvalid.Code,
 		},
 	}
 

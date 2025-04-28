@@ -69,13 +69,13 @@ func (c *Client) StepsList(ctx context.Context, token string, workflow string, a
 
 	b, err := c.postJSON(ctx, workflowsStepsListMethod, token, "", body)
 	if err != nil {
-		return []StepVersion{}, errHttpRequestFailed.WithRootCause(err)
+		return []StepVersion{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := stepsListResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return []StepVersion{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsStepsListMethod)
+		return []StepVersion{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsStepsListMethod)
 	}
 
 	if !resp.Ok {
@@ -103,13 +103,13 @@ func (c *Client) StepsResponsesExport(ctx context.Context, token string, workflo
 
 	b, err := c.postJSON(ctx, workflowsStepsResponsesExportMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := exportResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsStepsResponsesExportMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsStepsResponsesExportMethod)
 	}
 
 	if !resp.Ok {

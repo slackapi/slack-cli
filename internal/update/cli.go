@@ -49,7 +49,7 @@ func NewCLIDependency(clients *shared.ClientFactory, version string) *CLIDepende
 // the latest update available directly to the CLIDependency instance
 // Synchronous version of CheckForUpdateInBackground
 func (c *CLIDependency) CheckForUpdate(ctx context.Context) error {
-	httpClient, err := newHttpClient()
+	httpClient, err := newHTTPClient()
 	if err != nil {
 		return err
 	}

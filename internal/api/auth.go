@@ -91,18 +91,18 @@ func (c *Client) ExchangeAuthTicket(ctx context.Context, ticket string, challeng
 
 	b, err := c.postForm(ctx, exchangeAuthTicketMethod, values)
 	if err != nil {
-		return ExchangeAuthTicketResult{}, errHttpRequestFailed.WithRootCause(err)
+		return ExchangeAuthTicketResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return ExchangeAuthTicketResult{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return ExchangeAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := exchangeAuthTicketMethodResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return ExchangeAuthTicketResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(exchangeAuthTicketMethod)
+		return ExchangeAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(exchangeAuthTicketMethod)
 	}
 
 	if !resp.Ok {
@@ -127,17 +127,17 @@ func (c *Client) GenerateAuthTicket(ctx context.Context, cliVersion string, serv
 
 	b, err := c.postForm(ctx, generateAuthTicketMethod, values)
 	if err != nil {
-		return GenerateAuthTicketResult{}, errHttpRequestFailed.WithRootCause(err)
+		return GenerateAuthTicketResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return GenerateAuthTicketResult{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return GenerateAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := generateAuthTicketResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return GenerateAuthTicketResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(generateAuthTicketMethod)
+		return GenerateAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(generateAuthTicketMethod)
 	}
 
 	if !resp.Ok {
@@ -171,17 +171,17 @@ func (c *Client) RotateToken(ctx context.Context, auth types.SlackAuth) (RotateT
 
 	b, err := c.postForm(ctx, rotateTokenMethod, values)
 	if err != nil {
-		return RotateTokenResult{}, errHttpRequestFailed.WithRootCause(err)
+		return RotateTokenResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return RotateTokenResult{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return RotateTokenResult{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := rotateTokenMethodResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return RotateTokenResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(rotateTokenMethod)
+		return RotateTokenResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(rotateTokenMethod)
 	}
 
 	if !resp.Ok {

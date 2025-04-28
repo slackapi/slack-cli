@@ -382,7 +382,7 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
-			expectedErrorContains: errHttpResponseInvalid.Code,
+			expectedErrorContains: errHTTPResponseInvalid.Code,
 		},
 		{
 			name:                  "Successful request",

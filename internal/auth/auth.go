@@ -469,7 +469,7 @@ func (c *Client) ResolveApiHost(ctx context.Context, apiHostFlag string, customA
 	var isLoginCommand = goutils.Contains(os.Args, "login", true)
 	var apiHost string
 	if apiHostFlag != "" {
-		apiHost = goutils.ToHttps(apiHostFlag)
+		apiHost = goutils.ToHTTPS(apiHostFlag)
 		c.config.SlackDevFlag = c.IsApiHostSlackDev(apiHostFlag)
 	} else if c.config.SlackDevFlag {
 		apiHost = defaultDevApiClientHost
@@ -477,7 +477,7 @@ func (c *Client) ResolveApiHost(ctx context.Context, apiHostFlag string, customA
 		// When a custom auth, we want to respect the APIHost
 		// When not set, we default to prod
 		if customAuth.ApiHost != nil {
-			apiHost = goutils.ToHttps(*customAuth.ApiHost)
+			apiHost = goutils.ToHTTPS(*customAuth.ApiHost)
 		} else {
 			apiHost = defaultProdApiClientHost
 		}

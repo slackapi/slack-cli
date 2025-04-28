@@ -76,7 +76,7 @@ func (c *Client) AppsDatastorePut(ctx context.Context, token string, request typ
 
 	b, err := c.postJSON(ctx, appDatastorePutMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastorePutResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastorePutResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -86,7 +86,7 @@ func (c *Client) AppsDatastorePut(ctx context.Context, token string, request typ
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastorePutResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastorePutMethod)
+		return types.AppDatastorePutResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastorePutMethod)
 	}
 
 	if !resp.Ok {
@@ -119,7 +119,7 @@ func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request
 
 	b, err := c.postJSON(ctx, appDatastoreBulkPutMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreBulkPutResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreBulkPutResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -129,7 +129,7 @@ func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreBulkPutResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkPutMethod)
+		return types.AppDatastoreBulkPutResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkPutMethod)
 	}
 
 	if !resp.Ok && len(resp.FailedItems) == 0 {
@@ -166,7 +166,7 @@ func (c *Client) AppsDatastoreUpdate(ctx context.Context, token string, request 
 
 	b, err := c.postJSON(ctx, appDatastoreUpdateMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreUpdateResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreUpdateResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -176,7 +176,7 @@ func (c *Client) AppsDatastoreUpdate(ctx context.Context, token string, request 
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreUpdateResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreUpdateMethod)
+		return types.AppDatastoreUpdateResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreUpdateMethod)
 	}
 
 	if !resp.Ok {
@@ -217,7 +217,7 @@ func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query typ
 
 	b, err := c.postJSON(ctx, appDatastoreQueryMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreQueryResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreQueryResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -227,7 +227,7 @@ func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query typ
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreQueryResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreQueryMethod)
+		return types.AppDatastoreQueryResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreQueryMethod)
 	}
 
 	if !resp.Ok {
@@ -266,7 +266,7 @@ func (c *Client) AppsDatastoreCount(ctx context.Context, token string, count typ
 
 	b, err := c.postJSON(ctx, appDatastoreCountMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreCountResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreCountResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -276,7 +276,7 @@ func (c *Client) AppsDatastoreCount(ctx context.Context, token string, count typ
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreCountResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreCountMethod)
+		return types.AppDatastoreCountResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreCountMethod)
 	}
 
 	if !resp.Ok {
@@ -309,7 +309,7 @@ func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request 
 
 	b, err := c.postJSON(ctx, appDatastoreDeleteMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreDeleteResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreDeleteResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -319,7 +319,7 @@ func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request 
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreDeleteResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreDeleteMethod)
+		return types.AppDatastoreDeleteResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreDeleteMethod)
 	}
 
 	if !resp.Ok {
@@ -360,7 +360,7 @@ func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, requ
 
 	b, err := c.postJSON(ctx, appDatastoreBulkDeleteMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreBulkDeleteResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreBulkDeleteResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -370,7 +370,7 @@ func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, requ
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreBulkDeleteResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkDeleteMethod)
+		return types.AppDatastoreBulkDeleteResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkDeleteMethod)
 	}
 
 	if !resp.Ok && len(resp.FailedItems) == 0 {
@@ -407,7 +407,7 @@ func (c *Client) AppsDatastoreGet(ctx context.Context, token string, request typ
 
 	b, err := c.postJSON(ctx, appDatastoreGetMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreGetResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreGetResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -417,7 +417,7 @@ func (c *Client) AppsDatastoreGet(ctx context.Context, token string, request typ
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreGetResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreGetMethod)
+		return types.AppDatastoreGetResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreGetMethod)
 	}
 
 	if !resp.Ok {
@@ -450,7 +450,7 @@ func (c *Client) AppsDatastoreBulkGet(ctx context.Context, token string, request
 
 	b, err := c.postJSON(ctx, appDatastoreBulkGetMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreBulkGetResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreBulkGetResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -460,7 +460,7 @@ func (c *Client) AppsDatastoreBulkGet(ctx context.Context, token string, request
 	resp := responseWrapper{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreBulkGetResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkGetMethod)
+		return types.AppDatastoreBulkGetResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkGetMethod)
 	}
 
 	if !resp.Ok && len(resp.FailedItems) == 0 {

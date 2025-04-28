@@ -61,18 +61,18 @@ func (c *Client) TriggerPermissionsList(ctx context.Context, token, triggerID st
 
 	b, err := c.postForm(ctx, workflowsTriggersPermissionsListMethod, values)
 	if err != nil {
-		return "", []string{}, errHttpRequestFailed.WithRootCause(err)
+		return "", []string{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return "", []string{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return "", []string{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := TriggerPermissionsListResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return "", []string{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return "", []string{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {
@@ -131,18 +131,18 @@ func (c *Client) TriggerPermissionsSet(ctx context.Context, token, triggerID, en
 	}
 	b, err := c.postForm(ctx, workflowsTriggersPermissionsSetMethod, values)
 	if err != nil {
-		return []string{}, errHttpRequestFailed.WithRootCause(err)
+		return []string{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return []string{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return []string{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := TriggerPermissionsSetResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return []string{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsSetMethod)
+		return []string{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsSetMethod)
 	}
 
 	if !resp.Ok {
@@ -179,18 +179,18 @@ func (c *Client) TriggerPermissionsAddEntities(ctx context.Context, token, trigg
 
 	b, err := c.postForm(ctx, workflowsTriggersPermissionsAddMethod, values)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := TriggerPermissionsAddEntitiesResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsAddMethod)
 	}
 
 	if !resp.Ok {
@@ -226,18 +226,18 @@ func (c *Client) TriggerPermissionsRemoveEntities(ctx context.Context, token, tr
 
 	b, err := c.postForm(ctx, workflowsTriggersPermissionsRemoveMethod, values)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := TriggerPermissionsRemoveEntitiesResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsRemoveMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsRemoveMethod)
 	}
 
 	if !resp.Ok {

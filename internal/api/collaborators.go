@@ -56,18 +56,18 @@ func (c *Client) AddCollaborator(ctx context.Context, token, appID string, slack
 
 	b, err := c.postForm(ctx, collaboratorsAddMethod, values)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := extendedBaseResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsAddMethod)
 	}
 
 	if !resp.Ok {
@@ -94,18 +94,18 @@ func (c *Client) ListCollaborators(ctx context.Context, token, appID string) ([]
 
 	b, err := c.postForm(ctx, collaboratorsListMethod, values)
 	if err != nil {
-		return []types.SlackUser{}, errHttpRequestFailed.WithRootCause(err)
+		return []types.SlackUser{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return []types.SlackUser{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return []types.SlackUser{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := listCollaboratorsResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return []types.SlackUser{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsListMethod)
+		return []types.SlackUser{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsListMethod)
 	}
 
 	if !resp.Ok {
@@ -132,18 +132,18 @@ func (c *Client) RemoveCollaborator(ctx context.Context, token, appID string, sl
 
 	b, err := c.postForm(ctx, collaboratorsRemoveMethod, values)
 	if err != nil {
-		return nil, errHttpRequestFailed.WithRootCause(err)
+		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := extendedBaseResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return resp.Warnings, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsRemoveMethod)
+		return resp.Warnings, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsRemoveMethod)
 	}
 
 	if !resp.Ok {
@@ -171,18 +171,18 @@ func (c *Client) UpdateCollaborator(ctx context.Context, token, appID string, sl
 
 	b, err := c.postForm(ctx, collaboratorsUpdateMethod, values)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := extendedBaseResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsUpdateMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsUpdateMethod)
 	}
 
 	if !resp.Ok {

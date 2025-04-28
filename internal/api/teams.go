@@ -53,18 +53,18 @@ func (c *Client) TeamsInfo(ctx context.Context, token, teamID string) (*types.Te
 
 	b, err := c.postForm(ctx, teamsInfoMethod, values)
 	if err != nil {
-		return nil, errHttpRequestFailed.WithRootCause(err)
+		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := TeamInfoResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {
@@ -100,18 +100,18 @@ func (c *Client) AuthTeamsList(ctx context.Context, token string, limit int) ([]
 
 	b, err := c.postForm(ctx, authTeamsListMethod, values)
 	if err != nil {
-		return nil, "", errHttpRequestFailed.WithRootCause(err)
+		return nil, "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, "", errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, "", errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := AuthTeamsListResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(authTeamsListMethod)
+		return nil, "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(authTeamsListMethod)
 	}
 
 	if !resp.Ok {

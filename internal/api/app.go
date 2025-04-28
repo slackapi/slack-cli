@@ -94,14 +94,14 @@ func (c *Client) CertifiedAppInstall(ctx context.Context, token string, certifie
 	}
 	b, err := c.postJSON(ctx, appCertifiedInstallMethod, token, "", body)
 	if err != nil {
-		return CertifiedInstallResult{}, errHttpRequestFailed.WithRootCause(err)
+		return CertifiedInstallResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := certifiedInstallResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return CertifiedInstallResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appCertifiedInstallMethod)
+		return CertifiedInstallResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appCertifiedInstallMethod)
 	}
 
 	if !resp.Ok {
@@ -170,14 +170,14 @@ func (c *Client) CreateApp(ctx context.Context, token string, manifest types.App
 
 	b, err := c.postJSON(ctx, appManifestCreateMethod, token, "", body)
 	if err != nil {
-		return CreateAppResult{}, errHttpRequestFailed.WithRootCause(err)
+		return CreateAppResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := createAppResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return CreateAppResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestCreateMethod)
+		return CreateAppResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appManifestCreateMethod)
 	}
 
 	if !resp.Ok {
@@ -215,14 +215,14 @@ func (c *Client) ExportAppManifest(ctx context.Context, token, appID string) (Ex
 	}
 	b, err := c.postJSON(ctx, appManifestExportMethod, token, "", body)
 	if err != nil {
-		return ExportAppResult{}, errHttpRequestFailed.WithRootCause(err)
+		return ExportAppResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := ExportAppResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return ExportAppResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestExportMethod)
+		return ExportAppResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appManifestExportMethod)
 	}
 	if !resp.Ok {
 		return ExportAppResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appManifestExportMethod)
@@ -263,7 +263,7 @@ func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest
 
 	if err != nil {
 		return ValidateAppManifestResult{slackerror.Warnings{}},
-			errHttpRequestFailed.WithRootCause(err)
+			errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := extendedBaseResponse{}
@@ -271,7 +271,7 @@ func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest
 
 	if err != nil {
 		return ValidateAppManifestResult{slackerror.Warnings{}},
-			errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestValidateMethod)
+			errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appManifestValidateMethod)
 	}
 
 	if resp.Ok && len(resp.Errors) == 0 {
@@ -320,14 +320,14 @@ func (c *Client) UpdateApp(ctx context.Context, token string, appID string, mani
 
 	b, err := c.postJSON(ctx, appManifestUpdateMethod, token, "", body)
 	if err != nil {
-		return UpdateAppResult{}, errHttpRequestFailed.WithRootCause(err)
+		return UpdateAppResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := updateAppResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return UpdateAppResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestUpdateMethod)
+		return UpdateAppResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appManifestUpdateMethod)
 	}
 
 	if !resp.Ok {
@@ -367,14 +367,14 @@ func (c *Client) GetPresignedS3PostParams(ctx context.Context, token string, app
 
 	b, err := c.postJSON(ctx, appGeneratePresignedPostMethod, token, "", body)
 	if err != nil {
-		return GenerateS3PresignedPostResult{}, errHttpRequestFailed.WithRootCause(err)
+		return GenerateS3PresignedPostResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := generateS3PresignedPostResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return GenerateS3PresignedPostResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appGeneratePresignedPostMethod)
+		return GenerateS3PresignedPostResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appGeneratePresignedPostMethod)
 	}
 
 	if !resp.Ok {
@@ -417,14 +417,14 @@ func (c *Client) UploadApp(ctx context.Context, token, runtime, appID string, fi
 
 	b, err := c.postJSON(ctx, appUploadMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := uploadAppResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appUploadMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appUploadMethod)
 	}
 
 	if !resp.Ok {
@@ -457,14 +457,14 @@ func (c *Client) DeleteApp(ctx context.Context, token string, appID string) erro
 
 	b, err := c.postJSON(ctx, appDeleteMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := deleteAppResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDeleteMethod)
 	}
 
 	if !resp.Ok {
@@ -495,7 +495,7 @@ func (c *Client) UninstallApp(ctx context.Context, token string, appID, teamID s
 
 	b, err := c.postJSON(ctx, appDeveloperUninstallMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := struct {
@@ -504,7 +504,7 @@ func (c *Client) UninstallApp(ctx context.Context, token string, appID, teamID s
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDeveloperUninstallMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDeveloperUninstallMethod)
 	}
 
 	if !resp.Ok {
@@ -556,14 +556,14 @@ func (c *Client) GetAppStatus(ctx context.Context, token string, appIDs []string
 
 	b, err := c.postJSON(ctx, appStatusMethod, token, "", body)
 	if err != nil {
-		return GetAppStatusResult{}, errHttpRequestFailed.WithRootCause(err)
+		return GetAppStatusResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp GetAppStatusResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return GetAppStatusResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appStatusMethod)
+		return GetAppStatusResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appStatusMethod)
 	}
 
 	if !resp.Ok {
@@ -605,14 +605,14 @@ func (c *Client) ConnectionsOpen(ctx context.Context, token string) (AppsConnect
 
 	b, err := c.postJSON(ctx, appConnectionsOpenMethod, token, "", body)
 	if err != nil {
-		return AppsConnectionsOpenResult{}, errHttpRequestFailed.WithRootCause(err)
+		return AppsConnectionsOpenResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := appsConnectionsOpenResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return AppsConnectionsOpenResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appConnectionsOpenMethod)
+		return AppsConnectionsOpenResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appConnectionsOpenMethod)
 	}
 
 	if !resp.Ok {
@@ -672,14 +672,14 @@ func (c *Client) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreame
 
 	b, err := c.postJSON(ctx, appDeveloperInstallMethod, token, "", body)
 	if err != nil {
-		return DeveloperAppInstallResult{}, "", errHttpRequestFailed.WithRootCause(err)
+		return DeveloperAppInstallResult{}, "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp developerAppInstallResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return DeveloperAppInstallResult{}, "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDeveloperInstallMethod)
+		return DeveloperAppInstallResult{}, "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appDeveloperInstallMethod)
 	}
 
 	if !resp.Ok {
@@ -818,13 +818,13 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 
 		b, err := c.postJSON(ctx, appApprovalRequestCancelMethod, token, "", body)
 		if err != nil {
-			return "", errHttpRequestFailed.WithRootCause(err)
+			return "", errHTTPRequestFailed.WithRootCause(err)
 		}
 
 		appsApprovalsRequestsCancelResp := appsApprovalsRequestsCancelResponse{}
 		err = goutils.JsonUnmarshal(b, &appsApprovalsRequestsCancelResp)
 		if err != nil {
-			return "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appApprovalRequestCancelMethod)
+			return "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appApprovalRequestCancelMethod)
 		}
 
 		if !appsApprovalsRequestsCancelResp.Ok {
@@ -879,13 +879,13 @@ func (c *Client) RequestAppApproval(ctx context.Context, token string, appID str
 
 	b, err := c.postJSON(ctx, appApprovalRequestCreateMethod, token, "", body)
 	if err != nil {
-		return AppsApprovalsRequestsCreateResult{}, errHttpRequestFailed.WithRootCause(err)
+		return AppsApprovalsRequestsCreateResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := appsApprovalsRequestsCreateResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return AppsApprovalsRequestsCreateResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appApprovalRequestCreateMethod)
+		return AppsApprovalsRequestsCreateResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appApprovalRequestCreateMethod)
 	}
 
 	if !resp.Ok {

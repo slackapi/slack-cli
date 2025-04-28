@@ -49,18 +49,18 @@ func (c *Client) ChannelsInfo(ctx context.Context, token, channelID string) (*ty
 
 	b, err := c.postForm(ctx, channelsInfoMethod, values)
 	if err != nil {
-		return nil, errHttpRequestFailed.WithRootCause(err)
+		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := ChannelInfoResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {

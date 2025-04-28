@@ -112,13 +112,13 @@ func (c *Client) Activity(ctx context.Context, token string, activityRequest typ
 
 	b, err := c.get(ctx, url, token, "")
 	if err != nil {
-		return ActivityResult{}, errHttpRequestFailed.WithRootCause(err)
+		return ActivityResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := activityResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return ActivityResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appActivityMethod)
+		return ActivityResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appActivityMethod)
 	}
 
 	if !resp.Ok {

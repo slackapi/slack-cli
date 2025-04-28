@@ -114,7 +114,7 @@ const (
 	ErrHomeDirectoryAccessFailed                     = "home_directory_access_failed"
 	ErrHooksJsonLocation                             = "hooks_json_location_error"
 	ErrHostAppsDisallowUserScopes                    = "hosted_apps_disallow_user_scopes"
-	ErrHttpRequestFailed                             = "http_request_failed"
+	ErrHTTPRequestFailed                             = "http_request_failed"
 	ErrHTTPResponseInvalid                           = "http_response_invalid"
 	ErrInsecureRequest                               = "insecure_request"
 	ErrInstallationDenied                            = "installation_denied"
@@ -770,8 +770,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "Hosted apps do not support user scopes",
 	},
 
-	ErrHttpRequestFailed: {
-		Code:    ErrHttpRequestFailed,
+	ErrHTTPRequestFailed: {
+		Code:    ErrHTTPRequestFailed,
 		Message: "HTTP request failed",
 	},
 

@@ -178,7 +178,7 @@ func TestAppsList_FetchInstallStates_InvalidTokenFlag(t *testing.T) {
 	clientsMock.AuthInterface.On("Auths", mock.Anything).
 		Return([]types.SlackAuth{}, nil)
 	clientsMock.AuthInterface.On("AuthWithToken", mock.Anything, mock.Anything).
-		Return(types.SlackAuth{}, slackerror.New(slackerror.ErrHttpRequestFailed))
+		Return(types.SlackAuth{}, slackerror.New(slackerror.ErrHTTPRequestFailed))
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
@@ -186,7 +186,7 @@ func TestAppsList_FetchInstallStates_InvalidTokenFlag(t *testing.T) {
 
 	apps, err := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp, team2LocalApp})
 	if assert.Error(t, err) {
-		assert.Equal(t, slackerror.New(slackerror.ErrHttpRequestFailed), err)
+		assert.Equal(t, slackerror.New(slackerror.ErrHTTPRequestFailed), err)
 	}
 	assert.Equal(t, []types.App{}, apps)
 }

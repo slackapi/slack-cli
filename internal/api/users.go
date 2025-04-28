@@ -49,18 +49,18 @@ func (c *Client) UsersInfo(ctx context.Context, token, userID string) (*types.Us
 
 	b, err := c.postForm(ctx, usersInfoMethod, values)
 	if err != nil {
-		return nil, errHttpRequestFailed.WithRootCause(err)
+		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := UserInfoResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {

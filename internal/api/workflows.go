@@ -168,13 +168,13 @@ func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, trig
 
 	b, err := c.postJSON(ctx, workflowsTriggersDeleteMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := triggerDeleteResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersDeleteMethod)
 	}
 
 	if !resp.Ok {
@@ -187,13 +187,13 @@ func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, trig
 func (c *Client) workflowsTriggerSave(ctx context.Context, token string, method string, body []byte) (types.DeployedTrigger, error) {
 	b, err := c.postJSON(ctx, method, token, "", body)
 	if err != nil {
-		return types.DeployedTrigger{}, errHttpRequestFailed.WithRootCause(err)
+		return types.DeployedTrigger{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := triggerCreateOrUpdateResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.DeployedTrigger{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(method)
+		return types.DeployedTrigger{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(method)
 	}
 
 	if !resp.Ok {
@@ -239,7 +239,7 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 
 	b, err := c.postJSON(ctx, workflowsTriggersListMethod, token, "", body)
 	if err != nil {
-		return []types.DeployedTrigger{}, "", errHttpRequestFailed.WithRootCause(err)
+		return []types.DeployedTrigger{}, "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	// workflowTriggersListResponse details to be saved
@@ -251,7 +251,7 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 	resp := workflowTriggersListResponse{}
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return []types.DeployedTrigger{}, "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersListMethod)
+		return []types.DeployedTrigger{}, "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersListMethod)
 	}
 
 	if !resp.Ok {
@@ -274,13 +274,13 @@ func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerId str
 
 	b, err := c.postJSON(ctx, workflowsTriggersInfoMethod, token, "", body)
 	if err != nil {
-		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHttpRequestFailed, err))
+		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHTTPRequestFailed, err))
 	}
 
 	resp := triggerInfoResponse{}
 	err = json.Unmarshal(b, &resp)
 	if err != nil {
-		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHttpResponseInvalid, err))
+		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHTTPResponseInvalid, err))
 	}
 
 	if !resp.Ok {

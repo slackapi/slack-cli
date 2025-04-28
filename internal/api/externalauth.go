@@ -88,13 +88,13 @@ func (c *Client) AppsAuthExternalStart(ctx context.Context, token, appID, provid
 
 	b, err := c.postJSON(ctx, appsAuthExternalStartMethod, token, "", body)
 	if err != nil {
-		return "", errHttpRequestFailed.WithRootCause(err)
+		return "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp appsAuthExternalStartResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalStartMethod)
+		return "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalStartMethod)
 	}
 
 	if !resp.Ok {
@@ -142,13 +142,13 @@ func (c *Client) AppsAuthExternalDelete(ctx context.Context, token, appID, provi
 
 	b, err := c.postJSON(ctx, appsAuthExternalDeleteMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp appsAuthExternalDeleteResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalDeleteMethod)
 	}
 
 	if !resp.Ok {
@@ -182,13 +182,13 @@ func (c *Client) AppsAuthExternalClientSecretAdd(ctx context.Context, token, app
 
 	b, err := c.postJSON(ctx, appsAuthExternalClientSecretAddMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp appsAuthExternalClientSecretAddResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalClientSecretAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalClientSecretAddMethod)
 	}
 
 	if !resp.Ok {
@@ -223,13 +223,13 @@ func (c *Client) AppsAuthExternalList(ctx context.Context, token, appID string, 
 
 	b, err := c.postJSON(ctx, appsAuthExternalListMethod, token, "", body)
 	if err != nil {
-		return types.ExternalAuthorizationInfoLists{}, errHttpRequestFailed.WithRootCause(err)
+		return types.ExternalAuthorizationInfoLists{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp appsAuthExternalListResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return types.ExternalAuthorizationInfoLists{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalListMethod)
+		return types.ExternalAuthorizationInfoLists{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalListMethod)
 	}
 
 	if !resp.Ok {
@@ -267,13 +267,13 @@ func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, p
 
 	b, err := c.postJSON(ctx, appsAuthExternalSelectAuthMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp appsAuthExternalSelectAuthResponse
 	err = goutils.JsonUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalSelectAuthMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalSelectAuthMethod)
 	}
 
 	if !resp.Ok {

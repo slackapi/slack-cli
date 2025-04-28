@@ -57,7 +57,7 @@ func Test_API_TeamInfoResponse(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsTeamID:            "T0123",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
-			expectedErrorContains: errHttpResponseInvalid.Code,
+			expectedErrorContains: errHTTPResponseInvalid.Code,
 		},
 	}
 

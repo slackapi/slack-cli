@@ -87,6 +87,6 @@ func verifyCommonErrorCases(t *testing.T, method string, callApi func(c *Client)
 		defer teardown()
 		err := callApi(c)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), slackerror.ErrHttpRequestFailed)
+		require.Contains(t, err.Error(), slackerror.ErrHTTPRequestFailed)
 	})
 }

@@ -324,7 +324,7 @@ func TestGetTokenApp(t *testing.T) {
 			appFlag:   "A01001101",
 			appStatus: api.GetAppStatusResult{},
 			appInfo:   types.App{},
-			statusErr: slackerror.New(slackerror.ErrHttpRequestFailed),
+			statusErr: slackerror.New(slackerror.ErrHTTPRequestFailed),
 		},
 		"error if no app status is returned": {
 			tokenFlag: team1Token,
@@ -5048,10 +5048,10 @@ func Test_ValidateAuth(t *testing.T) {
 			authExpected: types.SlackAuth{
 				Token: "xoxb-testing",
 			},
-			expectedErr:                         slackerror.New(slackerror.ErrHttpRequestFailed),
-			apiValidateSessionError:             slackerror.New(slackerror.ErrHttpRequestFailed),
+			expectedErr:                         slackerror.New(slackerror.ErrHTTPRequestFailed),
+			apiValidateSessionError:             slackerror.New(slackerror.ErrHTTPRequestFailed),
 			authFilteredKnownAuthErrorsResponse: false,
-			authFilteredKnownAuthErrorsError:    slackerror.New(slackerror.ErrHttpRequestFailed),
+			authFilteredKnownAuthErrorsError:    slackerror.New(slackerror.ErrHTTPRequestFailed),
 		},
 		"errors without revalidation if the terminal is not interactive": {
 			authProvided: types.SlackAuth{
