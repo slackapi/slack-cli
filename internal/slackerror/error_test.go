@@ -124,7 +124,7 @@ func Test_JsonUnmarshalErrorTest(t *testing.T) {
 			if tt.err == nil {
 				require.Nil(t, err)
 			} else {
-				require.Equal(t, ErrUnableToParseJson, err.Code)
+				require.Equal(t, ErrUnableToParseJSON, err.Code)
 				require.Contains(t, err.Error(), string(tt.data[:]))
 
 				transformedErr := ToSlackError(tt.err)

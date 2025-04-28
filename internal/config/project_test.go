@@ -353,7 +353,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 
 		_, err = projectConfig.ReadProjectConfigFile(ctx)
 		require.Error(t, err)
-		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJson)
+		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of project-level config file")
 	})
 }

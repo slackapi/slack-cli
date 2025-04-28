@@ -61,12 +61,12 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
-					TriggerId: fakeTriggerID,
+					TriggerID: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
 						Type:          types.TriggerTypeShortcut,
 						Shortcut:      &api.Shortcut{},
 						Name:          fakeTriggerName,
-						WorkflowAppId: fakeAppID,
+						WorkflowAppID: fakeAppID,
 					},
 				}
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, expectedTriggerRequest)
@@ -127,14 +127,14 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
-					TriggerId: fakeTriggerID,
+					TriggerID: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
 						Type:          types.TriggerTypeShortcut,
 						Shortcut:      &api.Shortcut{},
 						Name:          fakeTriggerName,
 						Description:   "Runs the '#/workflows/my_workflow' workflow",
 						Workflow:      "#/workflows/my_workflow",
-						WorkflowAppId: fakeAppID,
+						WorkflowAppID: fakeAppID,
 					},
 				}
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, expectedTriggerRequest)
@@ -163,14 +163,14 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
-					TriggerId: fakeTriggerID,
+					TriggerID: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
 						Type:          types.TriggerTypeShortcut,
 						Shortcut:      &api.Shortcut{},
 						Name:          fakeTriggerName,
 						Description:   "Runs the '#/workflows/my_workflow' workflow",
 						Workflow:      "#/workflows/my_workflow",
-						WorkflowAppId: fakeAppID,
+						WorkflowAppID: fakeAppID,
 						Inputs: api.Inputs{
 							"interactivity": &api.Input{
 								Value: "{{data.interactivity}}",
@@ -204,14 +204,14 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
-					TriggerId: fakeTriggerID,
+					TriggerID: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
 						Type:          types.TriggerTypeShortcut,
 						Shortcut:      &api.Shortcut{},
 						Name:          fakeTriggerName,
 						Description:   "Runs the '#/workflows/my_workflow' workflow",
 						Workflow:      "#/workflows/my_workflow",
-						WorkflowAppId: fakeAppID,
+						WorkflowAppID: fakeAppID,
 						Inputs: api.Inputs{
 							"custom-interactivity": &api.Input{
 								Value: "{{data.interactivity}}",
@@ -243,14 +243,14 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
-					TriggerId: fakeTriggerID,
+					TriggerID: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
 						Type:          types.TriggerTypeShortcut,
 						Name:          "unit tests",
 						Description:   "are the best",
 						Shortcut:      &api.Shortcut{},
 						Workflow:      "#/workflows/my_workflow",
-						WorkflowAppId: fakeAppID,
+						WorkflowAppID: fakeAppID,
 					},
 				}
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersUpdate", mock.Anything, mock.Anything, expectedTriggerRequest)
@@ -302,13 +302,13 @@ func TestTriggersUpdateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				expectedTriggerRequest := api.TriggerUpdateRequest{
-					TriggerId: fakeTriggerID,
+					TriggerID: fakeTriggerID,
 					TriggerRequest: api.TriggerRequest{
 						Type:          types.TriggerTypeScheduled,
 						Name:          "name",
 						Description:   "desc",
 						Workflow:      "#/workflows/my_workflow",
-						WorkflowAppId: fakeAppID,
+						WorkflowAppID: fakeAppID,
 						Schedule:      types.ToRawJson(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
 					},
 				}
@@ -372,26 +372,26 @@ func TestTriggersUpdateCommand_MissingParameters(t *testing.T) {
 	var promptForInteractivityTeardown func()
 
 	triggerRequestMissingInputs := api.TriggerUpdateRequest{
-		TriggerId: fakeTriggerID,
+		TriggerID: fakeTriggerID,
 		TriggerRequest: api.TriggerRequest{
 			Type:          types.TriggerTypeShortcut,
 			Shortcut:      &api.Shortcut{},
 			Name:          fakeTriggerName,
 			Description:   "Runs the '#/workflows/my_workflow' workflow",
 			Workflow:      "#/workflows/my_workflow",
-			WorkflowAppId: fakeAppID,
+			WorkflowAppID: fakeAppID,
 		},
 	}
 
 	triggerRequestWithInteractivityInputs := api.TriggerUpdateRequest{
-		TriggerId: fakeTriggerID,
+		TriggerID: fakeTriggerID,
 		TriggerRequest: api.TriggerRequest{
 			Type:          types.TriggerTypeShortcut,
 			Shortcut:      &api.Shortcut{},
 			Name:          fakeTriggerName,
 			Description:   "Runs the '#/workflows/my_workflow' workflow",
 			Workflow:      "#/workflows/my_workflow",
-			WorkflowAppId: fakeAppID,
+			WorkflowAppID: fakeAppID,
 			Inputs: api.Inputs{
 				"my-interactivity": &api.Input{
 					Value: "{{data.interactivity}}",

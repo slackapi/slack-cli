@@ -298,7 +298,7 @@ func (ac *AppClient) readDeployedApps() error {
 	}
 
 	if err = json.Unmarshal(f, &ac.apps); err != nil {
-		return slackerror.New(slackerror.ErrUnableToParseJson).
+		return slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of deployed apps file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(deployedAppsPath))
@@ -373,7 +373,7 @@ func (ac *AppClient) readLocalApps() error {
 
 	err = json.Unmarshal(f, &ac.apps.LocalApps)
 	if err != nil {
-		return slackerror.New(slackerror.ErrUnableToParseJson).
+		return slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of local apps file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(devAppsPath))

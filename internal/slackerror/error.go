@@ -422,7 +422,7 @@ func JsonUnmarshalError(err error, data []byte) *Error {
 	}
 
 	contentToParse := style.Secondary(string(data[:]))
-	jsonErr := New(ErrUnableToParseJson)
+	jsonErr := New(ErrUnableToParseJSON)
 	jsonErr.Message = strings.Replace(jsonErr.Message, "<json>", contentToParse, 1)
 
 	transformedErr := ToSlackError(err)

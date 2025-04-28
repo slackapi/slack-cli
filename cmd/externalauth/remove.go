@@ -187,7 +187,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 			if err != nil {
 				return err
 			}
-			externalTokenArg := externalTokenInfo.ExternalTokenId
+			externalTokenArg := externalTokenInfo.ExternalTokenID
 			if externalTokenArg == "" {
 				return slackerror.New("Unable to get a provider selection")
 			}

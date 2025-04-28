@@ -415,7 +415,7 @@ func startQueryExport(ctx context.Context, clients *shared.ClientFactory, cmd *c
 		}
 
 		for _, element := range queryResult.Items {
-			stringItem, err := goutils.JsonMarshalUnescaped(element)
+			stringItem, err := goutils.JSONMarshalUnescaped(element)
 			if err != nil {
 				return err
 			}

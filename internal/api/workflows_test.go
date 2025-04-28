@@ -43,7 +43,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeShortcut,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				Shortcut:      &Shortcut{},
@@ -56,7 +56,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeShortcut,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				Shortcut:      &Shortcut{},
@@ -70,7 +70,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeEvent,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				Event:         types.ToRawJson(`{"event_type":"reaction_added","channel_ids":["C1234"]}`),
@@ -83,7 +83,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeScheduled,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				Schedule:      types.ToRawJson(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
@@ -96,7 +96,7 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeWebhook,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				WebHook:       types.ToRawJson(`{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}`),
@@ -167,11 +167,11 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		{
 			name: "Valid shortcut",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					Shortcut:      &Shortcut{},
@@ -183,11 +183,11 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		{
 			name: "Valid shortcut, with inputs",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					Shortcut:      &Shortcut{},
@@ -200,11 +200,11 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		{
 			name: "Valid event",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeEvent,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					Event:         types.ToRawJson(`{"event_type":"reaction_added","channel_ids":["C1234"]}`),
@@ -216,11 +216,11 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		{
 			name: "Valid schedule",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeScheduled,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					Schedule:      types.ToRawJson(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
@@ -232,11 +232,11 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		{
 			name: "Valid webhook",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeWebhook,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					WebHook:       types.ToRawJson(`{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}`),
@@ -438,7 +438,7 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 
 			// Execute test
 			args := TriggerListRequest{
-				AppId:  tt.argsAppID,
+				AppID:  tt.argsAppID,
 				Limit:  tt.argsLimit,
 				Cursor: tt.argsCursor,
 			}

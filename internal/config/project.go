@@ -262,7 +262,7 @@ func (c *ProjectConfig) ReadProjectConfigFile(ctx context.Context) (ProjectConfi
 
 	err = json.Unmarshal(projectConfigFileBytes, &projectConfig)
 	if err != nil {
-		return projectConfig, slackerror.New(slackerror.ErrUnableToParseJson).
+		return projectConfig, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of project-level config file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(projectConfigFilePath))

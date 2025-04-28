@@ -54,7 +54,7 @@ type TriggerRequest struct {
 	Description   string         `json:"description"`
 	Shortcut      *Shortcut      `json:"shortcut,omitempty"`
 	Workflow      string         `json:"workflow"`
-	WorkflowAppId string         `json:"workflow_app_id"`
+	WorkflowAppID string         `json:"workflow_app_id"`
 	Inputs        Inputs         `json:"inputs,omitempty"`
 	Event         *types.RawJSON `json:"event,omitempty"`
 	Schedule      *types.RawJSON `json:"schedule,omitempty"`
@@ -63,7 +63,7 @@ type TriggerRequest struct {
 }
 
 type triggerInfoRequest struct {
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 type triggerInfoResponse struct {
@@ -72,7 +72,7 @@ type triggerInfoResponse struct {
 }
 
 type triggerDeleteRequest struct {
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 type triggerDeleteResponse struct {
@@ -81,7 +81,7 @@ type triggerDeleteResponse struct {
 
 type TriggerUpdateRequest struct {
 	TriggerRequest
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 type triggerCreateOrUpdateErrorDetails []triggerCreateOrUpdateErrorDetail
@@ -117,7 +117,7 @@ func (e *TriggerCreateOrUpdateError) Error() string {
 }
 
 type TriggerListRequest struct {
-	AppId  string `json:"app_id,omitempty"`
+	AppID  string `json:"app_id,omitempty"`
 	Limit  int    `json:"limit,omitempty"`
 	Cursor string `json:"cursor,omitempty"`
 	Type   string `json:"type,omitempty"`
@@ -156,9 +156,9 @@ func (c *Client) WorkflowsTriggersUpdate(ctx context.Context, token string, trig
 }
 
 // WorkflowsTriggersDelete will delete an existing trigger using the method workflows.trigger.delete
-func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, triggerId string) error {
+func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, triggerID string) error {
 	deleteRequest := triggerDeleteRequest{
-		TriggerId: triggerId,
+		TriggerID: triggerID,
 	}
 
 	body, err := json.Marshal(deleteRequest)
@@ -264,7 +264,7 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 // WorkflowsTriggersInfo will retrieve information on an existing trigger
 func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerId string) (types.DeployedTrigger, error) {
 	infoRequest := triggerInfoRequest{
-		TriggerId: triggerId,
+		TriggerID: triggerId,
 	}
 
 	body, err := json.Marshal(infoRequest)

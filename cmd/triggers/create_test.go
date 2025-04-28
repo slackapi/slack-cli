@@ -83,7 +83,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Name:          fakeTriggerName,
 					Description:   "Runs the '#/workflows/my_workflow' workflow",
 					Workflow:      "#/workflows/my_workflow",
-					WorkflowAppId: fakeAppID,
+					WorkflowAppID: fakeAppID,
 				}
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
@@ -114,7 +114,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Description:   "are the best",
 					Shortcut:      &api.Shortcut{},
 					Workflow:      "#/workflows/my_workflow",
-					WorkflowAppId: fakeAppID,
+					WorkflowAppID: fakeAppID,
 				}
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
@@ -145,7 +145,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Description:   "are the best",
 					Shortcut:      &api.Shortcut{},
 					Workflow:      "#/workflows/my_workflow",
-					WorkflowAppId: fakeAppID,
+					WorkflowAppID: fakeAppID,
 					Inputs: api.Inputs{
 						"interactivity": &api.Input{
 							Value: "{{data.interactivity}}",
@@ -181,7 +181,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Description:   "are the best",
 					Shortcut:      &api.Shortcut{},
 					Workflow:      "#/workflows/my_workflow",
-					WorkflowAppId: fakeAppID,
+					WorkflowAppID: fakeAppID,
 					Inputs: api.Inputs{
 						"custom-interactivity": &api.Input{
 							Value: "{{data.interactivity}}",
@@ -243,7 +243,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Name:          "name",
 					Description:   "desc",
 					Workflow:      "#/workflows/my_workflow",
-					WorkflowAppId: fakeAppID,
+					WorkflowAppID: fakeAppID,
 					Schedule:      types.ToRawJson(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
 				}
 				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
@@ -332,7 +332,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 		Name:          fakeTriggerName,
 		Description:   "Runs the '#/workflows/my_workflow' workflow",
 		Workflow:      "#/workflows/my_workflow",
-		WorkflowAppId: fakeAppID,
+		WorkflowAppID: fakeAppID,
 	}
 
 	triggerRequestWithInteractivityInputs := api.TriggerRequest{
@@ -341,7 +341,7 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 		Name:          fakeTriggerName,
 		Description:   "Runs the '#/workflows/my_workflow' workflow",
 		Workflow:      "#/workflows/my_workflow",
-		WorkflowAppId: fakeAppID,
+		WorkflowAppID: fakeAppID,
 		Inputs: api.Inputs{
 			"my-interactivity": &api.Input{
 				Value: "{{data.interactivity}}",

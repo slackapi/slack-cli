@@ -349,7 +349,7 @@ const (
 
 func promptForTriggerID(ctx context.Context, cmd *cobra.Command, clients *shared.ClientFactory, app types.App, token string, labelOption promptForTriggerIDLabelOption) (string, error) {
 	args := api.TriggerListRequest{
-		AppId: app.AppID,
+		AppID: app.AppID,
 		Limit: 0,     // 0 means no pagation
 		Type:  "all", // all means showing all types of triggers
 	}

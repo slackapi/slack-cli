@@ -94,7 +94,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	}
 
 	args := api.TriggerListRequest{
-		AppId: app.AppID,
+		AppID: app.AppID,
 		Limit: listFlags.triggerLimit,
 		Type:  listFlags.triggerType,
 	}
@@ -159,7 +159,7 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 
 	token := config.GetContextToken(ctx)
 	args := api.TriggerListRequest{
-		AppId:  app.AppID,
+		AppID:  app.AppID,
 		Limit:  listFlags.triggerLimit,
 		Cursor: cursor,
 		Type:   listFlags.triggerType,

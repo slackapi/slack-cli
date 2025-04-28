@@ -100,10 +100,10 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 				ClientId:           "xxxxx",
 				ClientSecretExists: true,
 				ValidTokenExists:   true,
-				ExternalTokenIds:   []string{"Et0548LYDWCT"},
+				ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 				ExternalTokens: []types.ExternalTokenInfo{
 					{
-						ExternalTokenId: "Et0548LABCDE",
+						ExternalTokenID: "Et0548LABCDE",
 						ExternalUserId:  "xyz@salesforce.com",
 						DateUpdated:     1682021142,
 					},

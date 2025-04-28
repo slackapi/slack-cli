@@ -204,7 +204,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		hooksJSONFilePath = filepath.Join(dirPath, "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
-			c.IO.PrintDebug(ctx, "%s", slackerror.New(slackerror.ErrSlackJsonLocation))
+			c.IO.PrintDebug(ctx, "%s", slackerror.New(slackerror.ErrSlackJSONLocation))
 			break
 		}
 		// Next, search for the hooks files in the outdated path
@@ -214,7 +214,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
-			c.IO.PrintWarning(ctx, "%s", slackerror.New(slackerror.ErrSlackSlackJsonLocation))
+			c.IO.PrintWarning(ctx, "%s", slackerror.New(slackerror.ErrSlackSlackJSONLocation))
 			break
 		}
 		// Next, search for the hooks files in the outdated path

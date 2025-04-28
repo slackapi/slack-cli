@@ -194,7 +194,7 @@ func Test_ApiClient_ActivityInvalidResponse(t *testing.T) {
 		AppId: "A123",
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), slackerror.ErrHttpResponseInvalid)
+	require.Contains(t, err.Error(), slackerror.ErrHTTPResponseInvalid)
 }
 
 func Test_ApiClient_ActivityInvalidJSON(t *testing.T) {
@@ -209,5 +209,5 @@ func Test_ApiClient_ActivityInvalidJSON(t *testing.T) {
 		AppId: "A123",
 	})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), slackerror.ErrUnableToParseJson)
+	require.Contains(t, err.Error(), slackerror.ErrUnableToParseJSON)
 }

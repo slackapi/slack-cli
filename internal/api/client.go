@@ -70,7 +70,7 @@ type responseMetadata struct {
 
 var (
 	errInvalidArguments    = slackerror.New(slackerror.ErrInvalidArguments)
-	errHttpResponseInvalid = slackerror.New(slackerror.ErrHttpResponseInvalid)
+	errHttpResponseInvalid = slackerror.New(slackerror.ErrHTTPResponseInvalid)
 	errHttpRequestFailed   = slackerror.New(slackerror.ErrHttpRequestFailed)
 )
 

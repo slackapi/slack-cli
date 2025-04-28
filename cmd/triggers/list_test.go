@@ -40,7 +40,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
@@ -68,7 +68,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
@@ -105,7 +105,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
@@ -142,7 +142,7 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,

@@ -46,15 +46,15 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 		ClientId:           "xxxxx",
 		ClientSecretExists: true,
 		ValidTokenExists:   true,
-		ExternalTokenIds:   []string{"Et0548LYDWCT"},
+		ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 		ExternalTokens: []types.ExternalTokenInfo{
 			{
-				ExternalTokenId: "Et0548LABCD1",
+				ExternalTokenID: "Et0548LABCD1",
 				ExternalUserId:  "xyz@salesforce.com",
 				DateUpdated:     1682021142,
 			},
 			{
-				ExternalTokenId: "Et0548LABCDE2",
+				ExternalTokenID: "Et0548LABCDE2",
 				ExternalUserId:  "xyz2@salesforce.com",
 				DateUpdated:     1682021192,
 			},
@@ -98,7 +98,7 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 		selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)
 		require.NoError(t, err)
 		require.Equal(t, selectedToken, types.ExternalTokenInfo{
-			ExternalTokenId: "Et0548LABCDE2",
+			ExternalTokenID: "Et0548LABCDE2",
 			ExternalUserId:  "xyz2@salesforce.com",
 			DateUpdated:     1682021192,
 		})

@@ -51,7 +51,7 @@ func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app typ
 	// FIXME: Stop relying on context getters and setters
 	token := config.GetContextToken(ctx)
 	args := api.TriggerListRequest{
-		AppId: app.AppID,
+		AppID: app.AppID,
 		Limit: 4, // Limit to improve performance for apps with many triggers
 	}
 	existingTriggers, _, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
@@ -113,7 +113,7 @@ func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app typ
 
 	// Fix the app ID selected from the menu. In the --trigger-def case, this lets you use the same
 	// def file for dev and prod.
-	triggerArg.WorkflowAppId = app.AppID
+	triggerArg.WorkflowAppID = app.AppID
 
 	createdTrigger, err := clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 	if err != nil {

@@ -93,7 +93,7 @@ func Test_mergeJSON(t *testing.T) {
 	}
 }
 
-func Test_JsonMarshalUnescaped(t *testing.T) {
+func Test_JSONMarshalUnescaped(t *testing.T) {
 	type TestInput struct {
 		Data    string
 		Numbers []int
@@ -113,7 +113,7 @@ func Test_JsonMarshalUnescaped(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			buff, err := JsonMarshalUnescaped(tt.Input)
+			buff, err := JSONMarshalUnescaped(tt.Input)
 			if assert.NoError(t, err) {
 				assert.Equal(t, tt.Expected, buff)
 			}
@@ -175,7 +175,7 @@ func Test_UnmarshalJson(t *testing.T) {
 		},
 		"invalid json": {
 			data:      `}{`,
-			expectAll: []string{slackerror.ErrUnableToParseJson},
+			expectAll: []string{slackerror.ErrUnableToParseJSON},
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -184,7 +184,7 @@ func Test_UnmarshalJson(t *testing.T) {
 			if tt.expectedError == nil && len(tt.expectAll) == 0 {
 				require.Nil(t, err)
 			} else {
-				require.Contains(t, err.Error(), slackerror.ErrUnableToParseJson)
+				require.Contains(t, err.Error(), slackerror.ErrUnableToParseJSON)
 				for _, s := range tt.expectAll {
 					require.Contains(t, err.Error(), s)
 				}

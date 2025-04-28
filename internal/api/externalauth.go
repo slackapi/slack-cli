@@ -250,7 +250,7 @@ func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, p
 		AppID            string `json:"app_id,omitempty"`
 		ProviderKey      string `json:"provider_key,omitempty"`
 		WorkflowId       string `json:"workflow_id,omitempty"`
-		ExternalTokenId  string `json:"external_token_id,omitempty"`
+		ExternalTokenID  string `json:"external_token_id,omitempty"`
 		MappingOwnerType string `json:"mapping_owner_type,omitempty"`
 	}{
 		appID,

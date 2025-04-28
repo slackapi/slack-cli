@@ -93,7 +93,7 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 						ProviderKey:  "provider_b",
 						ProviderName: "Provider_B",
 						SelectedAuth: types.ExternalTokenInfo{
-							ExternalTokenId: "Et0548LABCDE",
+							ExternalTokenID: "Et0548LABCDE",
 							ExternalUserId:  "user_a@gmail.com",
 							DateUpdated:     1682021142,
 						},
@@ -112,7 +112,7 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 						ProviderKey:  "provider_b",
 						ProviderName: "Provider_B",
 						SelectedAuth: types.ExternalTokenInfo{
-							ExternalTokenId: "Et0548LABCDE",
+							ExternalTokenID: "Et0548LABCDE",
 							ExternalUserId:  "user_a@gmail.com",
 							DateUpdated:     1682021142,
 						},
@@ -170,7 +170,7 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 					ProviderKey:  "provider_b",
 					ProviderName: "Provider_B",
 					SelectedAuth: types.ExternalTokenInfo{
-						ExternalTokenId: "Et0548LABCDE",
+						ExternalTokenID: "Et0548LABCDE",
 						ExternalUserId:  "user_a@gmail.com",
 						DateUpdated:     1682021142,
 					},

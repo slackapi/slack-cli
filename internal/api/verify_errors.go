@@ -41,7 +41,7 @@ func verifyCommonErrorCases(t *testing.T, method string, callApi func(c *Client)
 		{
 			Name:          "invalid json response error",
 			Response:      `{`,
-			ExpectedError: slackerror.ErrHttpResponseInvalid,
+			ExpectedError: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			Name:          "response not ok with error and errors",

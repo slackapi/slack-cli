@@ -388,7 +388,7 @@ func prepareImportMockData(file afero.File, numberOfValidRows int, numberOfInval
 		} else {
 			data = append(data, item)
 		}
-		stringItem, err := goutils.JsonMarshalUnescaped(item)
+		stringItem, err := goutils.JSONMarshalUnescaped(item)
 		if err != nil {
 			return []map[string]interface{}{}, err
 		}

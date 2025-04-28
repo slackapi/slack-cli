@@ -162,7 +162,7 @@ func Test_AppClient_ReadDeployedApps_BrokenAppsJSON(t *testing.T) {
 	require.NoError(t, err)
 	err = ac.readDeployedApps()
 	require.Error(t, err)
-	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJson)
+	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 }
 
 // Test that pre-existing dev app details get read from apps.dev.json
@@ -204,7 +204,7 @@ func Test_AppClient_ReadDevApps_BrokenAppsJSON(t *testing.T) {
 	require.NoError(t, err)
 	err = ac.readLocalApps()
 	require.Error(t, err)
-	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJson)
+	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 }
 
 // Test that a team flag config defines the default app name in an empty AppClient

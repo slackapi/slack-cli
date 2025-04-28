@@ -220,7 +220,7 @@ func Test_AuthGettersAndSetters(t *testing.T) {
 		require.NoError(t, err)
 		_, err = authClient.auths(ctx)
 		require.Error(t, err)
-		assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJson)
+		assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 	})
 }
 

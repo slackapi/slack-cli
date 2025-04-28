@@ -38,7 +38,7 @@ func WorkflowSelectPrompt(ctx context.Context, clients *shared.ClientFactory, pr
 		for _, provider := range providers {
 			var selectedExternalAccountId = "None"
 			selectedAuth := provider.SelectedAuth
-			if selectedAuth.ExternalTokenId != "" {
+			if selectedAuth.ExternalTokenID != "" {
 				selectedExternalAccountId = selectedAuth.ExternalUserId
 			}
 			fmt.Fprintf(&providerList, "\tKey: %s, Name: %s, Selected Account: %s\n", provider.ProviderKey, provider.ProviderName, selectedExternalAccountId)

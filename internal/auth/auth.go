@@ -217,7 +217,7 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 
 	err = json.Unmarshal(raw, &auths)
 	if err != nil {
-		return auths, slackerror.New(slackerror.ErrUnableToParseJson).
+		return auths, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of credentials file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(path))

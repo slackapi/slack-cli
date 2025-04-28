@@ -48,7 +48,7 @@ func MergeJSON(defaultJSON string, customJSON string, config interface{}) error 
 
 // JsonMarshalUnescaped converts a struct into a JSON encoding without escaping
 // characters
-func JsonMarshalUnescaped(v interface{}) (string, error) {
+func JSONMarshalUnescaped(v interface{}) (string, error) {
 	var buff bytes.Buffer
 	encoder := json.NewEncoder(&buff)
 	encoder.SetEscapeHTML(false)

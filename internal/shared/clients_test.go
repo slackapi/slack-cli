@@ -243,7 +243,7 @@ func Test_ClientFactory_InitSDKConfigFromJSON_brokenJSONFile(t *testing.T) {
 	getHooksJson := `{"hooks":{"get-hooks":`
 	err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson))
 	require.Error(t, err)
-	assert.Equal(t, slackerror.New(slackerror.ErrUnableToParseJson).Code, slackerror.ToSlackError(err).Code)
+	assert.Equal(t, slackerror.New(slackerror.ErrUnableToParseJSON).Code, slackerror.ToSlackError(err).Code)
 }
 
 func setupGetHooksScript(t *testing.T) string {

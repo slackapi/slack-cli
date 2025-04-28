@@ -168,9 +168,9 @@ func TestLoginCommand(t *testing.T) {
 				cm.IO.On("InputPrompt", mock.Anything, "Enter challenge code", iostreams.InputPromptConfig{
 					Required: true,
 				}).Return(mockChallengeCode, nil)
-				cm.ApiInterface.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, slackerror.New(slackerror.ErrHttpResponseInvalid))
+				cm.ApiInterface.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, slackerror.New(slackerror.ErrHTTPResponseInvalid))
 			},
-			ExpectedError: slackerror.New(slackerror.ErrHttpResponseInvalid),
+			ExpectedError: slackerror.New(slackerror.ErrHTTPResponseInvalid),
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewLoginCommand(cf)

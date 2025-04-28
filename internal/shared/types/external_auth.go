@@ -35,7 +35,7 @@ type ExternalAuthorizationInfo struct {
 	ClientId           string              `json:"client_id" yaml:"client_id,flow"`
 	ClientSecretExists bool                `json:"client_secret_exists" yaml:"client_secret_exists,flow"`
 	ValidTokenExists   bool                `json:"valid_token_exists" yaml:"valid_token_exists,flow"`
-	ExternalTokenIds   []string            `json:"external_token_ids,omitempty" yaml:"external_token_ids,omitempty,flow"`
+	ExternalTokenIDs   []string            `json:"external_token_ids,omitempty" yaml:"external_token_ids,omitempty,flow"`
 	ExternalTokens     []ExternalTokenInfo `json:"external_tokens,omitempty" yaml:"external_tokens,omitempty,flow"`
 }
 
@@ -52,7 +52,7 @@ type ProvidersInfo struct {
 }
 
 type ExternalTokenInfo struct {
-	ExternalTokenId string `json:"external_token_id" yaml:"external_token_id,flow"`
+	ExternalTokenID string `json:"external_token_id" yaml:"external_token_id,flow"`
 	ExternalUserId  string `json:"external_user_id" yaml:"external_user_id,flow"`
 	DateUpdated     int    `json:"date_updated" yaml:"date_updated,flow"`
 }
@@ -75,7 +75,7 @@ type ProviderExternalAuthorizationInfo struct {
 }
 
 type SelectedAuthInfo struct {
-	ExternalTokenId string `json:"external_token_id" yaml:"external_token_id,flow"`
+	ExternalTokenID string `json:"external_token_id" yaml:"external_token_id,flow"`
 	ExternalUserId  string `json:"external_user_id" yaml:"external_user_id,flow"`
 	DateUpdated     string `json:"date_updated" yaml:"date_updated,flow"`
 }

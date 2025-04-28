@@ -127,10 +127,10 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	// Fix the app ID selected from the menu. In the --trigger-def case, this lets you use the same
 	// def file for dev and prod.
-	triggerArg.WorkflowAppId = app.AppID
+	triggerArg.WorkflowAppID = app.AppID
 
 	updateRequest := api.TriggerUpdateRequest{
-		TriggerId:      updateFlags.triggerId,
+		TriggerID:      updateFlags.triggerId,
 		TriggerRequest: triggerArg,
 	}
 

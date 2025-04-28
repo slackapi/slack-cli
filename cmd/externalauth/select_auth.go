@@ -138,7 +138,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 	if err != nil {
 		return err
 	}
-	if selectedAuth.ExternalTokenId == "" {
+	if selectedAuth.ExternalTokenID == "" {
 		return slackerror.New("Account is not used in the selected workflow")
 	}
 
@@ -148,7 +148,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		selection.App.AppID,
 		selectedProviderAuth.ProviderKey,
 		selectedWorkflowAuth.WorkflowId,
-		selectedAuth.ExternalTokenId,
+		selectedAuth.ExternalTokenID,
 	)
 	if err != nil {
 		return slackerror.New(err.Error())

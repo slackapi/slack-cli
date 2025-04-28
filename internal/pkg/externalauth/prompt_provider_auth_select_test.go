@@ -51,7 +51,7 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 				ProviderKey:  "provider_b",
 				ProviderName: "Provider_B",
 				SelectedAuth: types.ExternalTokenInfo{
-					ExternalTokenId: "Et0548LABCDE",
+					ExternalTokenID: "Et0548LABCDE",
 					ExternalUserId:  "user_a@example.com",
 					DateUpdated:     1682021142,
 				},
@@ -118,7 +118,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 				ProviderKey:  "provider_b",
 				ProviderName: "Provider_B",
 				SelectedAuth: types.ExternalTokenInfo{
-					ExternalTokenId: "Et0548LABCDE",
+					ExternalTokenID: "Et0548LABCDE",
 					ExternalUserId:  "user_a@example.com",
 					DateUpdated:     1682021142,
 				},

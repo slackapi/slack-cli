@@ -274,10 +274,10 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 						ClientId:           "xxxxx",
 						ClientSecretExists: true,
 						ValidTokenExists:   true,
-						ExternalTokenIds:   []string{"Et0548LYDWCT"},
+						ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 						ExternalTokens: []types.ExternalTokenInfo{
 							{
-								ExternalTokenId: "Et0548LABCDE",
+								ExternalTokenID: "Et0548LABCDE",
 								ExternalUserId:  "xyz@salesforce.com",
 								DateUpdated:     1682021142,
 							},
@@ -330,10 +330,10 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 						ClientId:           "xxxxx",
 						ClientSecretExists: true,
 						ValidTokenExists:   true,
-						ExternalTokenIds:   []string{"Et0548LYDWCT"},
+						ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 						ExternalTokens: []types.ExternalTokenInfo{
 							{
-								ExternalTokenId: "Et0548LABCDE",
+								ExternalTokenID: "Et0548LABCDE",
 								ExternalUserId:  "xyz@salesforce.com",
 								DateUpdated:     1682021142,
 							},
@@ -405,7 +405,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 		argsAppID             string
 		argsProviderKey       string
 		argsWorkflowId        string
-		argsExternalTokenId   string
+		argsExternalTokenID   string
 		argsMappingOwnerType  string
 		httpResponseJSON      string
 		expectedErrorContains string
@@ -416,7 +416,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			argsWorkflowId:        "WABCD12",
-			argsExternalTokenId:   "ET1234AB",
+			argsExternalTokenID:   "ET1234AB",
 			argsMappingOwnerType:  "DEVELOPER",
 			httpResponseJSON:      `{"ok": true}`,
 			expectedErrorContains: "",
@@ -427,7 +427,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			argsWorkflowId:        "WABCD12",
-			argsExternalTokenId:   "",
+			argsExternalTokenID:   "",
 			argsMappingOwnerType:  "DEVELOPER",
 			httpResponseJSON:      `{"ok":false,"error":"token id cannot be empty"}`,
 			expectedErrorContains: "token id cannot be empty",
@@ -438,7 +438,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			argsWorkflowId:        "WABCD12",
-			argsExternalTokenId:   "",
+			argsExternalTokenID:   "",
 			httpResponseJSON:      `{"ok":false,"error":"this is not valid json"}`,
 			expectedErrorContains: "this is not valid json",
 		},
@@ -459,7 +459,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			err := apiClient.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowId, tt.argsExternalTokenId)
+			err := apiClient.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowId, tt.argsExternalTokenID)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {

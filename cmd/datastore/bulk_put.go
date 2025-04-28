@@ -314,7 +314,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 				}
 				currentBatch = slices.Delete(currentBatch, idx, idx+1)
 
-				stringItem, err := goutils.JsonMarshalUnescaped(errorDetail.Item)
+				stringItem, err := goutils.JSONMarshalUnescaped(errorDetail.Item)
 				if err != nil {
 					return err
 				}
@@ -359,7 +359,7 @@ func logBulkPutImportError(file afero.File, item string, reason string) error {
 		Item:   item,
 		Reason: reason,
 	}
-	stringFailedItem, err := goutils.JsonMarshalUnescaped(failedItem)
+	stringFailedItem, err := goutils.JSONMarshalUnescaped(failedItem)
 	if err != nil {
 		return err
 	}
