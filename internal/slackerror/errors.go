@@ -721,7 +721,7 @@ Otherwise start your app for local development with: %s`,
 
 	ErrFeedbackNameRequired: {
 		Code:        ErrFeedbackNameRequired,
-		Message:     "Please provide a feedback name or remove the --no-prompt flag",
+		Message:     "Please provide a feedback --name flag or remove the --no-prompt flag",
 		Remediation: fmt.Sprintf("View feedback options with %s", style.Commandf("feedback --help", false)),
 	},
 
