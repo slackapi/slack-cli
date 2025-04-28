@@ -51,8 +51,6 @@ type SlackSurvey struct {
 	// Info prints additional information about the survey; displayed when the option is selected in `feedback`
 	// Info is optional
 	Info func(ctx context.Context, clients *shared.ClientFactory)
-	// Trace is a string consumed by tests to confirm that the Info text was displayed
-	Trace string
 	// Ask either prints text or prompts the user to complete the survey
 	// Potentially displayed after `run`/`deploy`/`doctor` (or other places where ShowSurveyMessages is called)
 	Ask func(ctx context.Context, clients *shared.ClientFactory) (bool, error)
@@ -98,7 +96,6 @@ var SurveyStore = map[string]SlackSurvey{
 				style.Secondary(style.Highlight("https://github.com/slackapi/slack-cli/issues")),
 			))
 		},
-		Trace: slacktrace.FeedbackMessage,
 		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
 			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 				Emoji: "love_letter",
@@ -127,7 +124,6 @@ var SurveyStore = map[string]SlackSurvey{
 				style.Secondary("Or, share your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
 			))
 		},
-		Trace: slacktrace.FeedbackMessage,
 		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
 			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 				Emoji: "love_letter",
@@ -338,7 +334,8 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	if s.Info != nil {
 		s.Info(ctx, clients)
 	}
-	clients.IO.PrintTrace(ctx, s.Trace, s.Name)
+
+	clients.IO.PrintTrace(ctx, slacktrace.FeedbackMessage, s.Name)
 
 	var err error
 	var ok bool
