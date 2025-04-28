@@ -294,7 +294,7 @@ func (c *Client) DoWithRetry(ctx context.Context, request *http.Request, span op
 	span.SetTag("status_code", r.StatusCode)
 
 	if r.StatusCode != http.StatusOK {
-		return nil, errors.WithStack(fmt.Errorf("Slack API unexpected status code %d returned from url %s", r.StatusCode, sURL))
+		return nil, errors.WithStack(fmt.Errorf("unexpected status code %d returned from url %s", r.StatusCode, sURL))
 	}
 
 	var bytes []byte
