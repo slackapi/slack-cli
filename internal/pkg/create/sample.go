@@ -93,7 +93,7 @@ func getSampleReposFromGitHub(client Sampler) ([]GithubRepo, error) {
 		return []GithubRepo{}, err
 	}
 	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+	req.Header.Set("X-GitHub-API-Version", "2022-11-28")
 	res, err := client.Do(req)
 	if err != nil {
 		return []GithubRepo{}, err

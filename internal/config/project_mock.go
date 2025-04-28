@@ -30,7 +30,7 @@ func NewProjectConfigMock() *ProjectConfigMock {
 }
 
 func (m *ProjectConfigMock) AddDefaultMocks() {
-	m.On("GetManifestSource", mock.Anything).Return(MANIFEST_SOURCE_LOCAL, nil)
+	m.On("GetManifestSource", mock.Anything).Return(ManifestSourceLocal, nil)
 }
 
 func (m *ProjectConfigMock) InitProjectID(ctx context.Context, overwriteExistingProjectID bool) (string, error) {

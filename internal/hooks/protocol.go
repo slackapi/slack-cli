@@ -18,8 +18,8 @@ package hooks
 type Protocol string
 
 const (
-	HOOK_PROTOCOL_DEFAULT Protocol = "default"
-	HOOK_PROTOCOL_V2      Protocol = "message-boundaries"
+	HookProtocolDefault Protocol = "default"
+	HookProtocolV2      Protocol = "message-boundaries"
 )
 
 func (p Protocol) String() string {
@@ -28,5 +28,5 @@ func (p Protocol) String() string {
 
 // Valid returns true if this protocol is understood by the CLI.
 func (p Protocol) Valid() bool {
-	return p == HOOK_PROTOCOL_DEFAULT || p == HOOK_PROTOCOL_V2
+	return p == HookProtocolDefault || p == HookProtocolV2
 }

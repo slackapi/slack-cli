@@ -35,7 +35,7 @@ type SlackAuth struct {
 	EnterpriseID        string    `json:"enterprise_id,omitempty"`
 	UserID              string    `json:"user_id"`
 	LastUpdated         time.Time `json:"last_updated,omitempty"`
-	ApiHost             *string   `json:"api_host,omitempty"`
+	APIHost             *string   `json:"api_host,omitempty"`
 	RefreshToken        string    `json:"refresh_token,omitempty"`
 	ExpiresAt           int       `json:"exp,omitempty"`
 	IsEnterpriseInstall bool      `json:"is_enterprise_install,omitempty"`

@@ -64,14 +64,14 @@ func (c *Client) AddCollaborator(ctx context.Context, token, appID string, slack
 	}
 
 	resp := extendedBaseResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(collaboratorsAddMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, collaboratorsAddMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, collaboratorsAddMethod)
 	}
 
 	return nil
@@ -102,14 +102,14 @@ func (c *Client) ListCollaborators(ctx context.Context, token, appID string) ([]
 	}
 
 	resp := listCollaboratorsResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return []types.SlackUser{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsListMethod)
+		return []types.SlackUser{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(collaboratorsListMethod)
 	}
 
 	if !resp.Ok {
-		return []types.SlackUser{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, collaboratorsListMethod)
+		return []types.SlackUser{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, collaboratorsListMethod)
 	}
 
 	return resp.Owners, nil
@@ -140,14 +140,14 @@ func (c *Client) RemoveCollaborator(ctx context.Context, token, appID string, sl
 	}
 
 	resp := extendedBaseResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return resp.Warnings, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsRemoveMethod)
+		return resp.Warnings, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(collaboratorsRemoveMethod)
 	}
 
 	if !resp.Ok {
-		return resp.Warnings, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, collaboratorsRemoveMethod)
+		return resp.Warnings, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, collaboratorsRemoveMethod)
 	}
 
 	return resp.Warnings, nil
@@ -179,14 +179,14 @@ func (c *Client) UpdateCollaborator(ctx context.Context, token, appID string, sl
 	}
 
 	resp := extendedBaseResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(collaboratorsUpdateMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(collaboratorsUpdateMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, collaboratorsUpdateMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, collaboratorsUpdateMethod)
 	}
 
 	return nil

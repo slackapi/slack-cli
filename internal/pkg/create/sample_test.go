@@ -98,7 +98,7 @@ func TestSamples_GetSampleRepos(t *testing.T) {
 			req, err = http.NewRequest("GET", "https://api.github.com/orgs/slack-samples/repos?type=public", nil)
 			require.NoError(t, err)
 			req.Header.Set("Accept", "application/vnd.github+json")
-			req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
+			req.Header.Set("X-GitHub-API-Version", "2022-11-28")
 			clientMock.On("Do", req).Return(res, nil)
 
 			result, err := GetSampleRepos(clientMock)

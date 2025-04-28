@@ -70,20 +70,20 @@ func (c *Client) FunctionDistributionList(ctx context.Context, callbackID, appID
 	}
 
 	resp := FunctionDistributionListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return "", []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsListMethod)
+		return "", []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(functionDistributionsPermissionsListMethod)
 	}
 
 	if !resp.Ok {
-		return "", []types.FunctionDistributionUser{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsListMethod)
+		return "", []types.FunctionDistributionUser{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsListMethod)
 	}
 
 	dist := types.Permission(strings.ToLower(resp.DistributionType))
 	if !dist.IsValid() {
 		errStr := fmt.Sprintf("unrecognized access type %s", dist)
-		return "", []types.FunctionDistributionUser{}, slackerror.New(errStr).AddApiMethod(functionDistributionsPermissionsListMethod)
+		return "", []types.FunctionDistributionUser{}, slackerror.New(errStr).AddAPIMethod(functionDistributionsPermissionsListMethod)
 
 	}
 
@@ -124,14 +124,14 @@ func (c *Client) FunctionDistributionSet(ctx context.Context, callbackID, appID 
 	}
 
 	resp := FunctionDistributionSetResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsSetMethod)
+		return []types.FunctionDistributionUser{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(functionDistributionsPermissionsSetMethod)
 	}
 
 	if !resp.Ok {
-		return []types.FunctionDistributionUser{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsSetMethod)
+		return []types.FunctionDistributionUser{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsSetMethod)
 	}
 
 	return resp.Users, nil
@@ -166,14 +166,14 @@ func (c *Client) FunctionDistributionAddUsers(ctx context.Context, callbackID, a
 	}
 
 	resp := FunctionDistributionAddUsersResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(functionDistributionsPermissionsAddMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsAddMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsAddMethod)
 	}
 
 	return nil
@@ -208,14 +208,14 @@ func (c *Client) FunctionDistributionRemoveUsers(ctx context.Context, callbackID
 	}
 
 	resp := FunctionDistributionRemoveUsersResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(functionDistributionsPermissionsRemoveMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(functionDistributionsPermissionsRemoveMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsRemoveMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, functionDistributionsPermissionsRemoveMethod)
 	}
 
 	return nil

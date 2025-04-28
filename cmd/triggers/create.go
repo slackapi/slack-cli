@@ -135,7 +135,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	// def file for dev and prod.
 	triggerArg.WorkflowAppID = app.AppID
 
-	createdTrigger, err := clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+	createdTrigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 	if extendedErr, ok := err.(*api.TriggerCreateOrUpdateError); ok {
 		// If the user used --workflow and the creation failed because we were missing the interactivity
 		// context, lets prompt and optionally add it
@@ -149,7 +149,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 				return err
 			}
 			if retryTriggerCreate {
-				createdTrigger, err = clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+				createdTrigger, err = clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 			}
 		}
 	}
@@ -191,7 +191,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateSuccess)
 	if createdTrigger.Type == "shortcut" {
-		clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateURL, createdTrigger.ShortcutUrl)
+		clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateURL, createdTrigger.ShortcutURL)
 	}
 	if createdTrigger.Type == "webhook" {
 		clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateURL, createdTrigger.Webhook)
@@ -215,7 +215,7 @@ func promptShouldInstallAndRetry(ctx context.Context, clients *shared.ClientFact
 			return types.DeployedTrigger{}, false, nil
 		}
 
-		trigger, err := clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+		trigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 		if err != nil {
 			return types.DeployedTrigger{}, false, err
 		}
@@ -240,8 +240,8 @@ func ListWorkflows(
 
 	if len(slackYaml.Workflows) > 0 {
 		workflows := ""
-		for cb_id := range slackYaml.Workflows {
-			workflows = workflows + fmt.Sprintf("- #/workflows/%s\n", cb_id)
+		for callbackID := range slackYaml.Workflows {
+			workflows = workflows + fmt.Sprintf("- #/workflows/%s\n", callbackID)
 		}
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 			Emoji: "bulb",

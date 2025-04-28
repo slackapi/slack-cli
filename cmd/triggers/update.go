@@ -33,7 +33,7 @@ import (
 
 type updateCmdFlags struct {
 	createCmdFlags
-	triggerId string
+	triggerID string
 }
 
 var updateFlags updateCmdFlags
@@ -61,7 +61,7 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&updateFlags.triggerId, "trigger-id", "", "the ID of the trigger to update")
+	cmd.Flags().StringVar(&updateFlags.triggerID, "trigger-id", "", "the ID of the trigger to update")
 	cmd.Flags().StringVar(&updateFlags.workflow, "workflow", "", "a reference to the workflow to execute\n  formatted as:\n  \"#/workflows/<workflow_callback_id>\"")
 	cmd.Flags().StringVar(&updateFlags.title, "title", "My Trigger", "the title of this trigger\n  ")
 	cmd.Flags().StringVar(&updateFlags.description, "description", "", "the description of this trigger")
@@ -94,8 +94,8 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	}
 
 	// Get trigger ID from flag or prompt
-	if updateFlags.triggerId == "" {
-		updateFlags.triggerId, err = promptForTriggerID(ctx, cmd, clients, app, token, defaultLabels)
+	if updateFlags.triggerID == "" {
+		updateFlags.triggerID, err = promptForTriggerID(ctx, cmd, clients, app, token, defaultLabels)
 		if err != nil {
 			if slackerror.ToSlackError(err).Code == slackerror.ErrNoTriggers {
 				printNoTriggersMessage(ctx, clients.IO)
@@ -130,11 +130,11 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	triggerArg.WorkflowAppID = app.AppID
 
 	updateRequest := api.TriggerUpdateRequest{
-		TriggerID:      updateFlags.triggerId,
+		TriggerID:      updateFlags.triggerID,
 		TriggerRequest: triggerArg,
 	}
 
-	updatedTrigger, err := clients.ApiInterface().WorkflowsTriggersUpdate(ctx, token, updateRequest)
+	updatedTrigger, err := clients.APIInterface().WorkflowsTriggersUpdate(ctx, token, updateRequest)
 	if extendedErr, ok := err.(*api.TriggerCreateOrUpdateError); ok {
 		// If the user used --workflow and the creation failed because we were missing the interactivity
 		// context, lets prompt and optionally add it
@@ -149,7 +149,7 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 			if shouldUpdate {
 				// TODO: based on the unit tests, I _think_ this should be the behaviour.. but needs a review.
 				// Assumption is: if trigger update fails due to missing interactivity, we prompt user to tweak their definition to include interactivity, recreate, and if successful, proceed.
-				updatedTrigger, innerErr = clients.ApiInterface().WorkflowsTriggersUpdate(ctx, token, updateRequest)
+				updatedTrigger, innerErr = clients.APIInterface().WorkflowsTriggersUpdate(ctx, token, updateRequest)
 				if innerErr != nil {
 					return innerErr
 				} else {

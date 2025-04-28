@@ -238,7 +238,7 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 					{
 						ProviderName:       "Google",
 						ProviderKey:        "google",
-						ClientId:           "xxxxx",
+						ClientID:           "xxxxx",
 						ClientSecretExists: true,
 						ValidTokenExists:   true,
 					},
@@ -271,14 +271,14 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 					{
 						ProviderName:       "Google",
 						ProviderKey:        "google",
-						ClientId:           "xxxxx",
+						ClientID:           "xxxxx",
 						ClientSecretExists: true,
 						ValidTokenExists:   true,
 						ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 						ExternalTokens: []types.ExternalTokenInfo{
 							{
 								ExternalTokenID: "Et0548LABCDE",
-								ExternalUserId:  "xyz@salesforce.com",
+								ExternalUserID:  "xyz@salesforce.com",
 								DateUpdated:     1682021142,
 							},
 						},
@@ -327,14 +327,14 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 					{
 						ProviderName:       "Google",
 						ProviderKey:        "google",
-						ClientId:           "xxxxx",
+						ClientID:           "xxxxx",
 						ClientSecretExists: true,
 						ValidTokenExists:   true,
 						ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 						ExternalTokens: []types.ExternalTokenInfo{
 							{
 								ExternalTokenID: "Et0548LABCDE",
-								ExternalUserId:  "xyz@salesforce.com",
+								ExternalUserID:  "xyz@salesforce.com",
 								DateUpdated:     1682021142,
 							},
 						},
@@ -342,8 +342,8 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 				},
 				Workflows: []types.WorkflowsInfo{
 					{
-						WorkflowId: "Wf04QXGCK3FF",
-						CallBackId: "external_auth_demo_workflow",
+						WorkflowID: "Wf04QXGCK3FF",
+						CallBackID: "external_auth_demo_workflow",
 						Providers: []types.ProvidersInfo{
 							{
 								ProviderName: "Google",
@@ -404,7 +404,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 		argsToken             string
 		argsAppID             string
 		argsProviderKey       string
-		argsWorkflowId        string
+		argsWorkflowID        string
 		argsExternalTokenID   string
 		argsMappingOwnerType  string
 		httpResponseJSON      string
@@ -415,7 +415,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
-			argsWorkflowId:        "WABCD12",
+			argsWorkflowID:        "WABCD12",
 			argsExternalTokenID:   "ET1234AB",
 			argsMappingOwnerType:  "DEVELOPER",
 			httpResponseJSON:      `{"ok": true}`,
@@ -426,7 +426,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
-			argsWorkflowId:        "WABCD12",
+			argsWorkflowID:        "WABCD12",
 			argsExternalTokenID:   "",
 			argsMappingOwnerType:  "DEVELOPER",
 			httpResponseJSON:      `{"ok":false,"error":"token id cannot be empty"}`,
@@ -437,7 +437,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
-			argsWorkflowId:        "WABCD12",
+			argsWorkflowID:        "WABCD12",
 			argsExternalTokenID:   "",
 			httpResponseJSON:      `{"ok":false,"error":"this is not valid json"}`,
 			expectedErrorContains: "this is not valid json",
@@ -459,7 +459,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			apiClient := NewClient(&http.Client{}, ts.URL, nil)
 
 			// Execute test
-			err := apiClient.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowId, tt.argsExternalTokenID)
+			err := apiClient.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowID, tt.argsExternalTokenID)
 
 			// Assertions
 			if tt.expectedErrorContains == "" {

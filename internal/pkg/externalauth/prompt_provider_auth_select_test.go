@@ -40,8 +40,8 @@ func TestPrompt_ProviderAuthSelectPrompt_empty_list(t *testing.T) {
 
 func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 	workflowsInfo := types.WorkflowsInfo{
-		WorkflowId: "Wf0548LABCD1",
-		CallBackId: "my_callback_id1",
+		WorkflowID: "Wf0548LABCD1",
+		CallBackID: "my_callback_id1",
 		Providers: []types.ProvidersInfo{
 			{
 				ProviderKey:  "provider_a",
@@ -52,7 +52,7 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 				ProviderName: "Provider_B",
 				SelectedAuth: types.ExternalTokenInfo{
 					ExternalTokenID: "Et0548LABCDE",
-					ExternalUserId:  "user_a@example.com",
+					ExternalUserID:  "user_a@example.com",
 					DateUpdated:     1682021142,
 				},
 			},
@@ -107,8 +107,8 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 
 func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 	workflowsInfo := types.WorkflowsInfo{
-		WorkflowId: "Wf0548LABCD1",
-		CallBackId: "my_callback_id1",
+		WorkflowID: "Wf0548LABCD1",
+		CallBackID: "my_callback_id1",
 		Providers: []types.ProvidersInfo{
 			{
 				ProviderKey:  "provider_a",
@@ -119,7 +119,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 				ProviderName: "Provider_B",
 				SelectedAuth: types.ExternalTokenInfo{
 					ExternalTokenID: "Et0548LABCDE",
-					ExternalUserId:  "user_a@example.com",
+					ExternalUserID:  "user_a@example.com",
 					DateUpdated:     1682021142,
 				},
 			},

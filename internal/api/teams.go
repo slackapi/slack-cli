@@ -61,14 +61,14 @@ func (c *Client) TeamsInfo(ctx context.Context, token, teamID string) (*types.Te
 	}
 
 	resp := TeamInfoResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {
-		return nil, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
 	}
 
 	return &resp.Team, nil
@@ -108,14 +108,14 @@ func (c *Client) AuthTeamsList(ctx context.Context, token string, limit int) ([]
 	}
 
 	resp := AuthTeamsListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(authTeamsListMethod)
+		return nil, "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(authTeamsListMethod)
 	}
 
 	if !resp.Ok {
-		return nil, "", slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, authTeamsListMethod)
+		return nil, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, authTeamsListMethod)
 	}
 
 	sort.Slice(resp.Teams, func(i, j int) bool {

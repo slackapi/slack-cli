@@ -27,20 +27,20 @@ var fakeResult = `{"ok":true,
 "activities": [{"trace_id":"12345"}]
 }`
 
-func Test_ApiClient_ActivityErrorsIfAppIdIsEmpty(t *testing.T) {
+func Test_APIClient_ActivityErrorsIfAppIDIsEmpty(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: appActivityMethod,
 	})
 	defer teardown()
 	_, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId: "",
+		AppID: "",
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "app is not deployed")
 }
 
-func Test_ApiClient_ActivityBasicSuccessfulGET(t *testing.T) {
+func Test_APIClient_ActivityBasicSuccessfulGET(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -49,13 +49,13 @@ func Test_ApiClient_ActivityBasicSuccessfulGET(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId: "A123",
+		AppID: "A123",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityEventType(t *testing.T) {
+func Test_APIClient_ActivityEventType(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -64,14 +64,14 @@ func Test_ApiClient_ActivityEventType(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:     "A123",
+		AppID:     "A123",
 		EventType: "silly",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityLogLevel(t *testing.T) {
+func Test_APIClient_ActivityLogLevel(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -80,14 +80,14 @@ func Test_ApiClient_ActivityLogLevel(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:           "A123",
+		AppID:           "A123",
 		MinimumLogLevel: "silly",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityMinDateCreated(t *testing.T) {
+func Test_APIClient_ActivityMinDateCreated(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -96,14 +96,14 @@ func Test_ApiClient_ActivityMinDateCreated(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:              "A123",
+		AppID:              "A123",
 		MinimumDateCreated: 1337,
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityComponentType(t *testing.T) {
+func Test_APIClient_ActivityComponentType(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -112,14 +112,14 @@ func Test_ApiClient_ActivityComponentType(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:         "A123",
+		AppID:         "A123",
 		ComponentType: "defirbulator",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityComponentId(t *testing.T) {
+func Test_APIClient_ActivityComponentID(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -128,14 +128,14 @@ func Test_ApiClient_ActivityComponentId(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:       "A123",
-		ComponentId: "raspberry",
+		AppID:       "A123",
+		ComponentID: "raspberry",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivitySource(t *testing.T) {
+func Test_APIClient_ActivitySource(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -144,14 +144,14 @@ func Test_ApiClient_ActivitySource(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:  "A123",
+		AppID:  "A123",
 		Source: "beer",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityTraceId(t *testing.T) {
+func Test_APIClient_ActivityTraceID(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -160,14 +160,14 @@ func Test_ApiClient_ActivityTraceId(t *testing.T) {
 	})
 	defer teardown()
 	result, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId:   "A123",
-		TraceId: "stealth",
+		AppID:   "A123",
+		TraceID: "stealth",
 	})
 	require.NoError(t, err)
-	require.Equal(t, result.Activities[0].TraceId, "12345")
+	require.Equal(t, result.Activities[0].TraceID, "12345")
 }
 
-func Test_ApiClient_ActivityResponseNotOK(t *testing.T) {
+func Test_APIClient_ActivityResponseNotOK(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -176,13 +176,13 @@ func Test_ApiClient_ActivityResponseNotOK(t *testing.T) {
 	})
 	defer teardown()
 	_, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId: "A123",
+		AppID: "A123",
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "internal_error")
 }
 
-func Test_ApiClient_ActivityInvalidResponse(t *testing.T) {
+func Test_APIClient_ActivityInvalidResponse(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -191,13 +191,13 @@ func Test_ApiClient_ActivityInvalidResponse(t *testing.T) {
 	})
 	defer teardown()
 	_, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId: "A123",
+		AppID: "A123",
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), slackerror.ErrHTTPResponseInvalid)
 }
 
-func Test_ApiClient_ActivityInvalidJSON(t *testing.T) {
+func Test_APIClient_ActivityInvalidJSON(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod:      appActivityMethod,
@@ -206,7 +206,7 @@ func Test_ApiClient_ActivityInvalidJSON(t *testing.T) {
 	})
 	defer teardown()
 	_, err := c.Activity(ctx, "token", types.ActivityRequest{
-		AppId: "A123",
+		AppID: "A123",
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), slackerror.ErrUnableToParseJSON)

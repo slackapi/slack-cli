@@ -172,13 +172,13 @@ func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, trig
 	}
 
 	resp := triggerDeleteResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersDeleteMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersDeleteMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersDeleteMethod)
 	}
 
 	return nil
@@ -191,14 +191,14 @@ func (c *Client) workflowsTriggerSave(ctx context.Context, token string, method 
 	}
 
 	resp := triggerCreateOrUpdateResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.DeployedTrigger{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(method)
+		return types.DeployedTrigger{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(method)
 	}
 
 	if !resp.Ok {
 		errorDetails, missingParamError := parseMissingParameterErrors(resp.Errors)
-		err = slackerror.NewApiError(resp.Error, resp.Description, errorDetails, method)
+		err = slackerror.NewAPIError(resp.Error, resp.Description, errorDetails, method)
 		if missingParamError != nil {
 			return types.DeployedTrigger{}, &TriggerCreateOrUpdateError{
 				Err: err, MissingParameterDetail: *missingParamError}
@@ -249,22 +249,22 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 	}
 
 	resp := workflowTriggersListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return []types.DeployedTrigger{}, "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersListMethod)
+		return []types.DeployedTrigger{}, "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersListMethod)
 	}
 
 	if !resp.Ok {
-		return []types.DeployedTrigger{}, "", slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersListMethod)
+		return []types.DeployedTrigger{}, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersListMethod)
 	}
 
 	return resp.Triggers, resp.extendedBaseResponse.ResponseMetadata.NextCursor, nil
 }
 
 // WorkflowsTriggersInfo will retrieve information on an existing trigger
-func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerId string) (types.DeployedTrigger, error) {
+func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerID string) (types.DeployedTrigger, error) {
 	infoRequest := triggerInfoRequest{
-		TriggerID: triggerId,
+		TriggerID: triggerID,
 	}
 
 	body, err := json.Marshal(infoRequest)
@@ -284,7 +284,7 @@ func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerId str
 	}
 
 	if !resp.Ok {
-		return types.DeployedTrigger{}, errors.WithStack(slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersInfoMethod))
+		return types.DeployedTrigger{}, errors.WithStack(slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersInfoMethod))
 	}
 
 	return resp.Trigger, nil

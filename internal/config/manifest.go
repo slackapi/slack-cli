@@ -16,8 +16,8 @@ package config
 type ManifestSource string
 
 const (
-	MANIFEST_SOURCE_LOCAL  ManifestSource = "local"
-	MANIFEST_SOURCE_REMOTE ManifestSource = "remote"
+	ManifestSourceLocal  ManifestSource = "local"
+	ManifestSourceRemote ManifestSource = "remote"
 )
 
 // Equals returns true if the manifest source is the same

@@ -201,7 +201,7 @@ func printQueryResult(clients *shared.ClientFactory, cmd *cobra.Command, queryRe
 			datastore,
 		)
 		for _, item := range items {
-			b, err := goutils.JsonMarshalUnescapedIndent(item)
+			b, err := goutils.JSONMarshalUnescapedIndent(item)
 			if err != nil {
 				return slackerror.New("Error during output indentation").WithRootCause(err)
 			}
@@ -211,7 +211,7 @@ func printQueryResult(clients *shared.ClientFactory, cmd *cobra.Command, queryRe
 			)
 		}
 	case "json":
-		b, err := goutils.JsonMarshalUnescapedIndent(queryResult)
+		b, err := goutils.JSONMarshalUnescapedIndent(queryResult)
 		if err != nil {
 			return slackerror.New("Error during output indentation").WithRootCause(err)
 		}
@@ -409,7 +409,7 @@ func startQueryExport(ctx context.Context, clients *shared.ClientFactory, cmd *c
 		}
 
 		query.Limit = maxItemsToRead
-		queryResult, err := clients.ApiInterface().AppsDatastoreQuery(ctx, token, query)
+		queryResult, err := clients.APIInterface().AppsDatastoreQuery(ctx, token, query)
 		if err != nil {
 			return err
 		}

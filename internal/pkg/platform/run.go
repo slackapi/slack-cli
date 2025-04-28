@@ -51,7 +51,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	ctx = config.SetContextToken(ctx, runArgs.Auth.Token)
 
 	// Validate auth session
-	authSession, err := clients.ApiInterface().ValidateSession(ctx, runArgs.Auth.Token)
+	authSession, err := clients.APIInterface().ValidateSession(ctx, runArgs.Auth.Token)
 	if err != nil {
 		err = slackerror.Wrap(err, "No auth session found")
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
@@ -111,7 +111,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	if value, ok := variables["SLACK_API_URL"]; ok {
 		_ = clients.Os.Setenv("SLACK_API_URL", value)
 	} else {
-		variables["SLACK_API_URL"] = fmt.Sprintf("%s/api/", clients.Config.ApiHostResolved)
+		variables["SLACK_API_URL"] = fmt.Sprintf("%s/api/", clients.Config.APIHostResolved)
 	}
 
 	var localHostedContext = LocalHostedContext{

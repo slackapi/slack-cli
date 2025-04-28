@@ -69,20 +69,20 @@ func (c *Client) TriggerPermissionsList(ctx context.Context, token, triggerID st
 	}
 
 	resp := TriggerPermissionsListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return "", []string{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return "", []string{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {
-		return "", []string{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
+		return "", []string{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
 	}
 
 	dist := types.Permission(strings.ToLower(resp.PermissionType))
 	if !dist.IsValid() {
 		errStr := fmt.Sprintf("unrecognized access type %s", dist)
-		return "", []string{}, slackerror.New(errStr).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return "", []string{}, slackerror.New(errStr).AddAPIMethod(workflowsTriggersPermissionsListMethod)
 	}
 	entitiesList := []string{}
 	namedEntitiesRespList := [][]string{
@@ -139,14 +139,14 @@ func (c *Client) TriggerPermissionsSet(ctx context.Context, token, triggerID, en
 	}
 
 	resp := TriggerPermissionsSetResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return []string{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsSetMethod)
+		return []string{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsSetMethod)
 	}
 
 	if !resp.Ok {
-		return []string{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsSetMethod)
+		return []string{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsSetMethod)
 	}
 
 	entitiesList := append(resp.Users, resp.Channels...)
@@ -187,14 +187,14 @@ func (c *Client) TriggerPermissionsAddEntities(ctx context.Context, token, trigg
 	}
 
 	resp := TriggerPermissionsAddEntitiesResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsAddMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsAddMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsAddMethod)
 	}
 
 	return nil
@@ -234,14 +234,14 @@ func (c *Client) TriggerPermissionsRemoveEntities(ctx context.Context, token, tr
 	}
 
 	resp := TriggerPermissionsRemoveEntitiesResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsRemoveMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsRemoveMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsRemoveMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsRemoveMethod)
 	}
 
 	return nil

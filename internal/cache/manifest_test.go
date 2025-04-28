@@ -77,7 +77,7 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 					Name: "slackbot[bot]",
 				},
 				Settings: &types.AppSettings{
-					FunctionRuntime: types.SLACK_HOSTED,
+					FunctionRuntime: types.SlackHosted,
 					EventSubscriptions: &types.ManifestEventSubscriptions{
 						BotEvents:  []string{"chat:write"},
 						UserEvents: []string{"channels:read"},
@@ -96,7 +96,7 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 						UserEvents: []string{"channels:read"},
 						BotEvents:  []string{"chat:write"},
 					},
-					FunctionRuntime: types.SLACK_HOSTED,
+					FunctionRuntime: types.SlackHosted,
 				},
 			},
 			expectedHash: "49691953b3bb36cad1333949846ad9f9c1fde9f12a395674dd2bbdafabccdd0c",

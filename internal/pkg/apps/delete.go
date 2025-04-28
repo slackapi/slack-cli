@@ -56,7 +56,7 @@ func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	log.Info("on_apps_delete_app_init")
 
 	// Delete app remotely via Slack API
-	err = clients.ApiInterface().DeleteApp(ctx, config.GetContextToken(ctx), app.AppID)
+	err = clients.APIInterface().DeleteApp(ctx, config.GetContextToken(ctx), app.AppID)
 	if err != nil {
 		return app, err
 	}
@@ -88,10 +88,10 @@ func getAuthSession(ctx context.Context, clients *shared.ClientFactory, auth typ
 	// Update the APIHost with the selected login, this is important for commands that use the Login to temporarily
 	// get an auth without updating the default auth. It's less important for the Login command that terminals afterward,
 	// because on start up, the root command resolves the auth's current APIHost.
-	clients.Config.ApiHostResolved = clients.AuthInterface().ResolveApiHost(ctx, clients.Config.ApiHostFlag, &auth)
-	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.ApiHostResolved, clients.Config.Version)
+	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
+	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
 
-	authSession, err := clients.ApiInterface().ValidateSession(ctx, token)
+	authSession, err := clients.APIInterface().ValidateSession(ctx, token)
 	if err != nil {
 		return ctx, api.AuthSession{}, slackerror.Wrap(err, slackerror.ErrInvalidAuth)
 	}

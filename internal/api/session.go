@@ -55,13 +55,13 @@ func (c *Client) ValidateSession(ctx context.Context, token string) (AuthSession
 	}
 
 	var authResp authCheckResponse
-	err = goutils.JsonUnmarshal(b, &authResp)
+	err = goutils.JSONUnmarshal(b, &authResp)
 	if err != nil {
-		return AuthSession{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(sessionValidateMethod)
+		return AuthSession{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sessionValidateMethod)
 	}
 
 	if !authResp.Ok {
-		return AuthSession{}, slackerror.NewApiError(authResp.Error, authResp.Description, authResp.Errors, sessionValidateMethod)
+		return AuthSession{}, slackerror.NewAPIError(authResp.Error, authResp.Description, authResp.Errors, sessionValidateMethod)
 	}
 
 	if authResp.UserID == nil {
@@ -103,13 +103,13 @@ func (c *Client) RevokeToken(ctx context.Context, token string) error {
 	}
 
 	var revokeResp authRevokeResponse
-	err = goutils.JsonUnmarshal(b, &revokeResp)
+	err = goutils.JSONUnmarshal(b, &revokeResp)
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(revokeTokenMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(revokeTokenMethod)
 	}
 
 	if !revokeResp.Ok {
-		return slackerror.NewApiError(revokeResp.Error, revokeResp.Description, revokeResp.Errors, revokeTokenMethod)
+		return slackerror.NewAPIError(revokeResp.Error, revokeResp.Description, revokeResp.Errors, revokeTokenMethod)
 	}
 
 	return nil

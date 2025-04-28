@@ -153,7 +153,7 @@ func printBulkDeleteResult(clients *shared.ClientFactory, cmd *cobra.Command, de
 			style.Emoji("warning"),
 		)
 
-		b, err := goutils.JsonMarshalUnescapedIndent(failedItems)
+		b, err := goutils.JSONMarshalUnescapedIndent(failedItems)
 		if err != nil {
 			return slackerror.New("Error during output indentation").WithRootCause(err)
 		}

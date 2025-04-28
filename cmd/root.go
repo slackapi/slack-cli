@@ -259,8 +259,8 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	clients.Config.TrustUnknownSources = trustSources
 
 	// Init clients that use flags
-	clients.Config.ApiHostResolved = clients.AuthInterface().ResolveApiHost(ctx, clients.Config.ApiHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.ApiHostResolved, clients.CliVersion)
+	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
+	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.CliVersion)
 
 	// Init System ID
 	if systemID, err := clients.Config.SystemConfig.InitSystemID(ctx); err != nil {

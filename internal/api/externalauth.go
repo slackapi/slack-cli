@@ -43,7 +43,7 @@ const (
 
 type appsAuthExternalStartResponse struct {
 	extendedBaseResponse
-	AuthorizationUrl string `json:"authorization_url"`
+	AuthorizationURL string `json:"authorization_url"`
 }
 
 type appsAuthExternalDeleteResponse struct {
@@ -92,30 +92,30 @@ func (c *Client) AppsAuthExternalStart(ctx context.Context, token, appID, provid
 	}
 
 	var resp appsAuthExternalStartResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return "", errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalStartMethod)
+		return "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appsAuthExternalStartMethod)
 	}
 
 	if !resp.Ok {
-		return "", slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appsAuthExternalStartMethod)
+		return "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appsAuthExternalStartMethod)
 	}
 
-	return resp.AuthorizationUrl, nil
+	return resp.AuthorizationURL, nil
 }
 
-func (c *Client) AppsAuthExternalDelete(ctx context.Context, token, appID, providerKey string, externalTokenId string) error {
+func (c *Client) AppsAuthExternalDelete(ctx context.Context, token, appID, providerKey string, externalTokenID string) error {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalDelete")
 	defer span.Finish()
 
 	var body []byte
 	var err error
-	if externalTokenId != "" {
+	if externalTokenID != "" {
 		args := struct {
 			ExternalTokenID string `json:"external_token_id,omitempty"`
 		}{
-			externalTokenId,
+			externalTokenID,
 		}
 		body, err = json.Marshal(args)
 	} else if providerKey == "" {
@@ -146,13 +146,13 @@ func (c *Client) AppsAuthExternalDelete(ctx context.Context, token, appID, provi
 	}
 
 	var resp appsAuthExternalDeleteResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appsAuthExternalDeleteMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appsAuthExternalDeleteMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appsAuthExternalDeleteMethod)
 	}
 
 	return nil
@@ -186,13 +186,13 @@ func (c *Client) AppsAuthExternalClientSecretAdd(ctx context.Context, token, app
 	}
 
 	var resp appsAuthExternalClientSecretAddResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalClientSecretAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appsAuthExternalClientSecretAddMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appsAuthExternalClientSecretAddMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appsAuthExternalClientSecretAddMethod)
 	}
 
 	return nil
@@ -227,19 +227,19 @@ func (c *Client) AppsAuthExternalList(ctx context.Context, token, appID string, 
 	}
 
 	var resp appsAuthExternalListResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.ExternalAuthorizationInfoLists{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalListMethod)
+		return types.ExternalAuthorizationInfoLists{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appsAuthExternalListMethod)
 	}
 
 	if !resp.Ok {
-		return types.ExternalAuthorizationInfoLists{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appsAuthExternalListMethod)
+		return types.ExternalAuthorizationInfoLists{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appsAuthExternalListMethod)
 	}
 
 	return types.ExternalAuthorizationInfoLists(resp.appsAuthExternalListResult), nil
 }
 
-func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, providerKey, workflowId, externalTokenId string) error {
+func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, providerKey, workflowID, externalTokenID string) error {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalSelectAuth")
 	defer span.Finish()
@@ -249,14 +249,14 @@ func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, p
 	args := struct {
 		AppID            string `json:"app_id,omitempty"`
 		ProviderKey      string `json:"provider_key,omitempty"`
-		WorkflowId       string `json:"workflow_id,omitempty"`
+		WorkflowID       string `json:"workflow_id,omitempty"`
 		ExternalTokenID  string `json:"external_token_id,omitempty"`
 		MappingOwnerType string `json:"mapping_owner_type,omitempty"`
 	}{
 		appID,
 		providerKey,
-		workflowId,
-		externalTokenId,
+		workflowID,
+		externalTokenID,
 		"DEVELOPER",
 	}
 	body, err = json.Marshal(args)
@@ -271,13 +271,13 @@ func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, p
 	}
 
 	var resp appsAuthExternalSelectAuthResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(appsAuthExternalSelectAuthMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appsAuthExternalSelectAuthMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appsAuthExternalSelectAuthMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appsAuthExternalSelectAuthMethod)
 	}
 
 	return nil

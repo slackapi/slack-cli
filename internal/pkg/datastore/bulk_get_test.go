@@ -63,7 +63,7 @@ func TestDatastoreBulkGetArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.ApiInterface.On("AppsDatastoreBulkGet", mock.Anything, mock.Anything, tt.Query).
+			clientsMock.APIInterface.On("AppsDatastoreBulkGet", mock.Anything, mock.Anything, tt.Query).
 				Return(tt.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 

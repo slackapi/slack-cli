@@ -99,14 +99,14 @@ func (c *Client) ExchangeAuthTicket(ctx context.Context, ticket string, challeng
 	}
 
 	resp := exchangeAuthTicketMethodResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return ExchangeAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(exchangeAuthTicketMethod)
+		return ExchangeAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(exchangeAuthTicketMethod)
 	}
 
 	if !resp.Ok {
-		return ExchangeAuthTicketResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, exchangeAuthTicketMethod)
+		return ExchangeAuthTicketResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, exchangeAuthTicketMethod)
 	}
 
 	// ExchangeAuthTicketResult must have a token to be valid
@@ -135,13 +135,13 @@ func (c *Client) GenerateAuthTicket(ctx context.Context, cliVersion string, serv
 	}
 
 	resp := generateAuthTicketResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return GenerateAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(generateAuthTicketMethod)
+		return GenerateAuthTicketResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(generateAuthTicketMethod)
 	}
 
 	if !resp.Ok {
-		return GenerateAuthTicketResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, generateAuthTicketMethod)
+		return GenerateAuthTicketResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, generateAuthTicketMethod)
 	}
 
 	return resp.GenerateAuthTicketResult, nil
@@ -179,13 +179,13 @@ func (c *Client) RotateToken(ctx context.Context, auth types.SlackAuth) (RotateT
 	}
 
 	resp := rotateTokenMethodResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return RotateTokenResult{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(rotateTokenMethod)
+		return RotateTokenResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(rotateTokenMethod)
 	}
 
 	if !resp.Ok {
-		return RotateTokenResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, rotateTokenMethod)
+		return RotateTokenResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, rotateTokenMethod)
 	}
 
 	return resp.RotateTokenResult, nil

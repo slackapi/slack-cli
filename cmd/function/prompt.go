@@ -64,7 +64,7 @@ func chooseDistributionPrompt(
 ) (types.Permission, error) {
 
 	// Get the function's active distribution type
-	currentDist, _, err := clients.ApiInterface().FunctionDistributionList(ctx, functionFlag, app.AppID)
+	currentDist, _, err := clients.APIInterface().FunctionDistributionList(ctx, functionFlag, app.AppID)
 	if err != nil {
 		return "", err
 	}

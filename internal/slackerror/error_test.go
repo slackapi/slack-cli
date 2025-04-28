@@ -21,28 +21,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_AddApiMethod(t *testing.T) {
+func Test_AddAPIMethod(t *testing.T) {
 	tests := map[string]struct {
 		err         Error
 		newEndpoint string
 	}{
 		"previously empty endpoint": {
-			err:         Error{ApiEndpoint: ""},
+			err:         Error{APIEndpoint: ""},
 			newEndpoint: "http://example2.com",
 		},
 		"previously non-empty endpoint": {
-			err:         Error{ApiEndpoint: "http://example1.com"},
+			err:         Error{APIEndpoint: "http://example1.com"},
 			newEndpoint: "http://example2.com",
 		},
 		"empty endpoint being set": {
-			err:         Error{ApiEndpoint: "http://example1.com"},
+			err:         Error{APIEndpoint: "http://example1.com"},
 			newEndpoint: "",
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			_ = tt.err.AddApiMethod(tt.newEndpoint)
-			require.Equal(t, tt.newEndpoint, tt.err.ApiEndpoint)
+			_ = tt.err.AddAPIMethod(tt.newEndpoint)
+			require.Equal(t, tt.newEndpoint, tt.err.APIEndpoint)
 		})
 	}
 }
@@ -99,7 +99,7 @@ func Test_AppendRemediation(t *testing.T) {
 	}
 }
 
-func Test_JsonUnmarshalErrorTest(t *testing.T) {
+func Test_JSONUnmarshalErrorTest(t *testing.T) {
 	tests := map[string]struct {
 		data     []byte
 		err      error
@@ -120,7 +120,7 @@ func Test_JsonUnmarshalErrorTest(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := JsonUnmarshalError(tt.err, tt.data)
+			err := JSONUnmarshalError(tt.err, tt.data)
 			if tt.err == nil {
 				require.Nil(t, err)
 			} else {
@@ -162,7 +162,7 @@ func Test_New(t *testing.T) {
 	}
 }
 
-func Test_NewApiError(t *testing.T) {
+func Test_NewAPIError(t *testing.T) {
 	testErr := ErrorCodeMap[ErrInternal]
 
 	tests := map[string]struct {
@@ -187,30 +187,30 @@ func Test_NewApiError(t *testing.T) {
 			code:        "fake",
 			description: "fake",
 			apiMethod:   "fakeMethod",
-			expected:    Error{Code: "fake", Description: "fake", ApiEndpoint: "fakeMethod"},
+			expected:    Error{Code: "fake", Description: "fake", APIEndpoint: "fakeMethod"},
 		},
 		"error code  + description + details + api endpoint": {
 			code:        "fake",
 			description: "fake",
 			details:     ErrorDetails{{Code: "c1", Message: "m1"}},
 			apiMethod:   "fakeMethod",
-			expected:    Error{Code: "fake", Description: "fake", ApiEndpoint: "fakeMethod", Details: ErrorDetails{{Code: "c1", Message: "m1"}}},
+			expected:    Error{Code: "fake", Description: "fake", APIEndpoint: "fakeMethod", Details: ErrorDetails{{Code: "c1", Message: "m1"}}},
 		},
 		"known error + add details": {
 			code:      ErrInternal,
 			details:   ErrorDetails{{Code: "c1", Message: "m1"}},
 			apiMethod: "fakeMethod",
-			expected:  *testErr.AddApiMethod("fakeMethod").WithDetails(ErrorDetails{{Code: "c1", Message: "m1"}}),
+			expected:  *testErr.AddAPIMethod("fakeMethod").WithDetails(ErrorDetails{{Code: "c1", Message: "m1"}}),
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := NewApiError(tt.code, tt.description, tt.details, tt.apiMethod)
+			err := NewAPIError(tt.code, tt.description, tt.details, tt.apiMethod)
 			require.Equal(t, tt.expected.Code, err.Code)
 			require.Equal(t, tt.expected.Description, err.Description)
 			require.Equal(t, tt.expected.Message, err.Message)
 			require.Equal(t, tt.expected.Details, err.Details)
-			require.Equal(t, tt.expected.ApiEndpoint, err.ApiEndpoint)
+			require.Equal(t, tt.expected.APIEndpoint, err.APIEndpoint)
 			require.Equal(t, tt.expected.Error(), err.Error())
 		})
 	}
@@ -236,10 +236,10 @@ func Test_Error(t *testing.T) {
 			err: &Error{Code: "code", Message: "msg", Remediation: "remediation"},
 		},
 		"code + message + remediation + api endpoint only": {
-			err: &Error{Code: "code", Message: "msg", Remediation: "remediation", ApiEndpoint: "host"},
+			err: &Error{Code: "code", Message: "msg", Remediation: "remediation", APIEndpoint: "host"},
 		},
 		"code + message + remediation + api endpoint + details": {
-			err: &Error{Code: "code", Message: "msg", Remediation: "remediation", ApiEndpoint: "host", Details: ErrorDetails{{Message: "m1", Code: "c1", Remediation: "r1", Pointer: "p1"}}},
+			err: &Error{Code: "code", Message: "msg", Remediation: "remediation", APIEndpoint: "host", Details: ErrorDetails{{Message: "m1", Code: "c1", Remediation: "r1", Pointer: "p1"}}},
 		},
 	}
 
@@ -252,7 +252,7 @@ func Test_Error(t *testing.T) {
 			} else {
 				require.Contains(t, res, tt.err.Code)
 				require.Contains(t, res, tt.err.Message)
-				require.Contains(t, res, tt.err.ApiEndpoint)
+				require.Contains(t, res, tt.err.APIEndpoint)
 				require.Contains(t, res, tt.err.Remediation)
 				for _, d := range tt.err.Details {
 					require.Contains(t, res, d.Message)

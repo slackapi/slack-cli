@@ -61,14 +61,14 @@ func (c *Client) AddVariable(ctx context.Context, token, appID, name, value stri
 	}
 
 	resp := extendedBaseResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(varAddMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(varAddMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, varAddMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, varAddMethod)
 	}
 
 	return nil
@@ -102,14 +102,14 @@ func (c *Client) ListVariables(ctx context.Context, token, appID string) ([]stri
 	}
 
 	resp := listVariablesResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return []string{}, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(varListMethod)
+		return []string{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(varListMethod)
 	}
 
 	if !resp.Ok {
-		return []string{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, varListMethod)
+		return []string{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, varListMethod)
 	}
 
 	return resp.VariableNames, nil
@@ -140,14 +140,14 @@ func (c *Client) RemoveVariable(ctx context.Context, token string, appID string,
 	}
 
 	resp := extendedBaseResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(varRemoveMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(varRemoveMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, varRemoveMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, varRemoveMethod)
 	}
 
 	return nil

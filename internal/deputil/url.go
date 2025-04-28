@@ -16,8 +16,8 @@ package deputil
 
 import "net/http"
 
-// urlChecker returns url if it's status code is 200, otherwise returns empty string
-func UrlChecker(url string) string {
+// URLChecker returns url if it's status code is 200, otherwise returns empty string
+func URLChecker(url string) string {
 	resp, err := http.Get(url)
 	if err != nil {
 		return ""

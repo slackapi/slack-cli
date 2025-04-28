@@ -28,7 +28,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		resultJson      string
+		resultJSON      string
 		expectedRequest string
 		permissionType  types.Permission
 		users           string
@@ -43,46 +43,46 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 			permissionType:  types.EVERYONE,
 			users:           "",
 			expectedRequest: `permission_type=everyone&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true, "permission_type": "everyone"}`,
+			resultJSON:      `{"ok": true, "permission_type": "everyone"}`,
 		},
 		{
 			name:            "Set to collaborators",
 			permissionType:  types.APP_COLLABORATORS,
 			users:           "U0001",
 			expectedRequest: `permission_type=app_collaborators&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
+			resultJSON:      `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
 		},
 		{
 			name:            "Set to named_entities (users)",
 			permissionType:  types.NAMED_ENTITIES,
 			users:           "U0001,U0002",
 			expectedRequest: `permission_type=named_entities&token=xoxp-123&trigger_id=Ft123&user_ids=U0001%2CU0002`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
 		{
 			name:            "Set to named_entities (channels)",
 			permissionType:  types.NAMED_ENTITIES,
 			channels:        "C0001,C0002",
 			expectedRequest: `channel_ids=C0001%2CC0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
 		{
 			name:            "Set to named_entities (workspaces)",
 			permissionType:  types.NAMED_ENTITIES,
 			workspaces:      "T0001,T0002",
 			expectedRequest: `permission_type=named_entities&team_ids=T0001%2CT0002&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "teams_ids": [ "T0001", "T0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "teams_ids": [ "T0001", "T0002" ]}`,
 		},
 		{
 			name:            "Set to named_entities (organizations)",
 			permissionType:  types.NAMED_ENTITIES,
 			organizations:   "E0001,E0002",
 			expectedRequest: `org_ids=E0001%2CE0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
 		},
 		{
 			name:       "Propagates errors",
-			resultJson: `{"ok": false, "error":"invalid_scopes"}`,
+			resultJSON: `{"ok": false, "error":"invalid_scopes"}`,
 			wantErr:    true,
 			errMessage: "invalid_scopes",
 		},
@@ -96,7 +96,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsSetMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJson,
+				Response:        tt.resultJSON,
 			})
 			defer teardown()
 
@@ -182,7 +182,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		resultJson      string
+		resultJSON      string
 		expectedRequest string
 		users           string
 		channels        string
@@ -195,29 +195,29 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 			name:            "Add user successfully",
 			users:           "U0001",
 			expectedRequest: `token=xoxp-123&trigger_id=Ft123&user_ids=U0001`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
 		{
 			name:            "Add channel successfully",
 			channels:        "C0001",
 			expectedRequest: `channel_ids=C0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
 		{
 			name:            "Add workspace successfully",
 			workspaces:      "T0001",
 			expectedRequest: `team_ids=T0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
 		},
 		{
 			name:            "Add organization successfully",
 			organizations:   "E0001",
 			expectedRequest: `org_ids=E0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
 		},
 		{
 			name:       "Propagates errors",
-			resultJson: `{"ok": false, "error":"user_not_found"}`,
+			resultJSON: `{"ok": false, "error":"user_not_found"}`,
 			wantErr:    true,
 			errMessage: "user_not_found",
 		},
@@ -231,7 +231,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsAddMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJson,
+				Response:        tt.resultJSON,
 			})
 			defer teardown()
 
@@ -313,7 +313,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		resultJson      string
+		resultJSON      string
 		expectedRequest string
 		users           string
 		channels        string
@@ -326,29 +326,29 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 			name:            "Remove user successfully",
 			users:           "U0001",
 			expectedRequest: `token=xoxp-123&trigger_id=Ft123&user_ids=U0001`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0002" ]}`,
 		},
 		{
 			name:            "Remove channel successfully",
 			channels:        "C0001",
 			expectedRequest: `channel_ids=C0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0002" ]}`,
 		},
 		{
 			name:            "Remove workspace successfully",
 			workspaces:      "T0001",
 			expectedRequest: `team_ids=T0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0002" ]}`,
 		},
 		{
 			name:            "Remove organization successfully",
 			organizations:   "E0001",
 			expectedRequest: `org_ids=E0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJson:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0002" ]}`,
+			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0002" ]}`,
 		},
 		{
 			name:       "Propagates errors",
-			resultJson: `{"ok": false, "error":"user_not_found"}`,
+			resultJSON: `{"ok": false, "error":"user_not_found"}`,
 			wantErr:    true,
 			errMessage: "user_not_found",
 		},
@@ -362,7 +362,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsRemoveMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJson,
+				Response:        tt.resultJSON,
 			})
 			defer teardown()
 
@@ -447,7 +447,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 	tests := []struct {
 		name                   string
-		resultJson             string
+		resultJSON             string
 		expectedRequest        string
 		expectedPermissionType types.Permission
 		expectedUsers          []string
@@ -462,46 +462,46 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 			expectedPermissionType: types.EVERYONE,
 			expectedUsers:          []string(nil),
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJson:             `{"ok": true, "permission_type": "everyone"}`,
+			resultJSON:             `{"ok": true, "permission_type": "everyone"}`,
 		},
 		{
 			name:                   "Access is collaborators",
 			expectedPermissionType: types.APP_COLLABORATORS,
 			expectedUsers:          []string{"U0001"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJson:             `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
+			resultJSON:             `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (users)",
 			expectedPermissionType: types.NAMED_ENTITIES,
 			expectedUsers:          []string{"U0001", "U0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJson:             `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
+			resultJSON:             `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (channels)",
 			expectedPermissionType: types.NAMED_ENTITIES,
 			expectedChannels:       []string{"C0001", "C0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJson:             `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
+			resultJSON:             `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (workspaces)",
 			expectedPermissionType: types.NAMED_ENTITIES,
 			expectedWorkspaces:     []string{"T0001", "T0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJson:             `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
+			resultJSON:             `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
 		},
 		{
 			name:                   "Set to named_entities (organizations)",
 			expectedPermissionType: types.NAMED_ENTITIES,
 			expectedOrganizations:  []string{"E0001", "E0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJson:             `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
+			resultJSON:             `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
 		},
 		{
 			name:          "Propagates errors",
-			resultJson:    `{"ok": false, "error":"invalid_scopes"}`,
+			resultJSON:    `{"ok": false, "error":"invalid_scopes"}`,
 			wantErr:       true,
 			errMessage:    "invalid_scopes",
 			expectedUsers: []string{},
@@ -516,7 +516,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsListMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJson,
+				Response:        tt.resultJSON,
 			})
 			defer teardown()
 

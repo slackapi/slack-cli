@@ -106,7 +106,7 @@ func TestAppAddCommandPreRun(t *testing.T) {
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
-				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.MANIFEST_SOURCE_REMOTE, nil)
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceRemote, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
 		},
@@ -118,7 +118,7 @@ func TestAppAddCommandPreRun(t *testing.T) {
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
-				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.MANIFEST_SOURCE_LOCAL, nil)
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
 		},
@@ -144,24 +144,24 @@ func TestAppAddCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockAuthTeam1.UserID,
 					TeamID:   &mockAuthTeam1.TeamID,
 					TeamName: &mockAuthTeam1.TeamDomain,
 				}, nil)
 
 				// Mock a clean ValidateAppManifest result
-				cm.ApiInterface.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
 					api.ValidateAppManifestResult{
 						Warnings: slackerror.Warnings{},
 					}, nil,
 				)
 
 				// Mock Host
-				cm.ApiInterface.On("Host").Return("")
+				cm.APIInterface.On("Host").Return("")
 
 				// Mock a successful CreateApp call and return our mocked AppID
-				cm.ApiInterface.On("CreateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("CreateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
 					api.CreateAppResult{
 						AppID: mockAppTeam1.AppID,
 					},
@@ -169,7 +169,7 @@ func TestAppAddCommand(t *testing.T) {
 				)
 
 				// Mock a successful DeveloperAppInstall
-				cm.ApiInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					api.DeveloperAppInstallResult{
 						AppID: mockAppTeam1.AppID,
 						APIAccessTokens: struct {
@@ -183,7 +183,7 @@ func TestAppAddCommand(t *testing.T) {
 				)
 
 				// Mock existing and updated cache
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ExportAppManifest",
 					mock.Anything,
 					mock.Anything,
@@ -216,21 +216,21 @@ func TestAppAddCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: mockAppTeam1, Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockAuthTeam1.UserID,
 					TeamID:   &mockAuthTeam1.TeamID,
 					TeamName: &mockAuthTeam1.TeamDomain,
 				}, nil)
 
 				// Mock a clean ValidateAppManifest result
-				cm.ApiInterface.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
 					api.ValidateAppManifestResult{
 						Warnings: slackerror.Warnings{},
 					}, nil,
 				)
 
 				// Mock Host
-				cm.ApiInterface.On("Host").Return("")
+				cm.APIInterface.On("Host").Return("")
 
 				// Mock to ensure that an existing deployed app is found
 				appClientMock := &app.AppClientMock{}
@@ -241,7 +241,7 @@ func TestAppAddCommand(t *testing.T) {
 				cf.AppClient().AppClientInterface = appClientMock
 
 				// Mock to ensure that the existing deployed app is updated successfully
-				cm.ApiInterface.On("UpdateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("UpdateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					api.UpdateAppResult{
 						AppID:             mockAppTeam1.AppID,
 						Credentials:       api.Credentials{},
@@ -251,7 +251,7 @@ func TestAppAddCommand(t *testing.T) {
 				)
 
 				// Mock a successful DeveloperAppInstall
-				cm.ApiInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					api.DeveloperAppInstallResult{
 						AppID: mockAppTeam1.AppID,
 						APIAccessTokens: struct {
@@ -265,7 +265,7 @@ func TestAppAddCommand(t *testing.T) {
 				)
 
 				// Mock existing and updated cache
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ExportAppManifest",
 					mock.Anything,
 					mock.Anything,
@@ -306,24 +306,24 @@ func TestAppAddCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
 				// Mock calls
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
 					TeamID:   &mockOrgAuth.TeamID,
 					TeamName: &mockOrgAuth.TeamDomain,
 				}, nil)
-				cm.ApiInterface.On("ValidateAppManifest", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("ValidateAppManifest", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
 					api.ValidateAppManifestResult{}, nil,
 				)
-				cm.ApiInterface.On("Host").Return("")
+				cm.APIInterface.On("Host").Return("")
 				// Return mocked AppID
-				cm.ApiInterface.On("CreateApp", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("CreateApp", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
 					api.CreateAppResult{
 						AppID: mockOrgApp.AppID,
 					},
 					nil,
 				)
 				// Mock call to apps.developerInstall
-				cm.ApiInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					api.DeveloperAppInstallResult{
 						AppID: mockOrgApp.AppID,
 					},
@@ -332,7 +332,7 @@ func TestAppAddCommand(t *testing.T) {
 				)
 
 				// Mock existing and updated cache
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ExportAppManifest",
 					mock.Anything,
 					mock.Anything,
@@ -353,7 +353,7 @@ func TestAppAddCommand(t *testing.T) {
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, "T123", mock.Anything)
+				cm.APIInterface.AssertCalled(t, "DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, "T123", mock.Anything)
 			},
 		},
 		"When admin approval request is pending, outputs instructions": {
@@ -366,24 +366,24 @@ func TestAppAddCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
 				// Mock calls
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
 					TeamID:   &mockOrgAuth.TeamID,
 					TeamName: &mockOrgAuth.TeamDomain,
 				}, nil)
-				cm.ApiInterface.On("ValidateAppManifest", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("ValidateAppManifest", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
 					api.ValidateAppManifestResult{}, nil,
 				)
-				cm.ApiInterface.On("Host").Return("")
+				cm.APIInterface.On("Host").Return("")
 				// Return mocked AppID
-				cm.ApiInterface.On("CreateApp", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("CreateApp", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
 					api.CreateAppResult{
 						AppID: mockOrgApp.AppID,
 					},
 					nil,
 				)
 				// Mock call to apps.developerInstall
-				cm.ApiInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					api.DeveloperAppInstallResult{
 						AppID: mockOrgApp.AppID,
 					},
@@ -391,7 +391,7 @@ func TestAppAddCommand(t *testing.T) {
 					nil,
 				)
 				// Mock existing and updated cache
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ExportAppManifest",
 					mock.Anything,
 					mock.Anything,
@@ -422,24 +422,24 @@ func TestAppAddCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
 				// Mock calls
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
 					TeamID:   &mockOrgAuth.TeamID,
 					TeamName: &mockOrgAuth.TeamDomain,
 				}, nil)
-				cm.ApiInterface.On("ValidateAppManifest", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("ValidateAppManifest", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
 					api.ValidateAppManifestResult{}, nil,
 				)
-				cm.ApiInterface.On("Host").Return("")
+				cm.APIInterface.On("Host").Return("")
 				// Return mocked AppID
-				cm.ApiInterface.On("CreateApp", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("CreateApp", mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything).Return(
 					api.CreateAppResult{
 						AppID: mockOrgApp.AppID,
 					},
 					nil,
 				)
 				// Mock call to apps.developerInstall
-				cm.ApiInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+				cm.APIInterface.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 					api.DeveloperAppInstallResult{
 						AppID: mockOrgApp.AppID,
 					},
@@ -447,7 +447,7 @@ func TestAppAddCommand(t *testing.T) {
 					nil,
 				)
 				// Mock existing and updated cache
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ExportAppManifest",
 					mock.Anything,
 					mock.Anything,
@@ -478,7 +478,7 @@ func TestAppAddCommand(t *testing.T) {
 func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *shared.ClientsMock) {
 	clientsMock.AddDefaultMocks()
 
-	clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
 	clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("logstash host")
@@ -489,7 +489,7 @@ func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *s
 			DisplayInformation: types.DisplayInformation{
 				Name: team1TeamDomain,
 			},
-			Workflows: map[string]types.Workflow{"test_workflow": {Title: "test workflow", InputParameters: types.ToRawJson(`{}`)}},
+			Workflows: map[string]types.Workflow{"test_workflow": {Title: "test workflow", InputParameters: types.ToRawJSON(`{}`)}},
 		},
 	}, nil)
 	clients.AppClient().Manifest = manifestMock

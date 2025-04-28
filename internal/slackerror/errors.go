@@ -112,7 +112,7 @@ const (
 	ErrGitClone                                      = "git_clone_error"
 	ErrGitZipDownload                                = "git_zip_download_error"
 	ErrHomeDirectoryAccessFailed                     = "home_directory_access_failed"
-	ErrHooksJsonLocation                             = "hooks_json_location_error"
+	ErrHooksJSONLocation                             = "hooks_json_location_error"
 	ErrHostAppsDisallowUserScopes                    = "hosted_apps_disallow_user_scopes"
 	ErrHTTPRequestFailed                             = "http_request_failed"
 	ErrHTTPResponseInvalid                           = "http_response_invalid"
@@ -140,7 +140,7 @@ const (
 	ErrInvalidParameters                             = "invalid_parameters"
 	ErrInvalidPermissionType                         = "invalid_permission_type"
 	ErrInvalidRefreshToken                           = "invalid_refresh_token"
-	ErrInvalidRequestId                              = "invalid_request_id"
+	ErrInvalidRequestID                              = "invalid_request_id"
 	ErrInvalidResourceID                             = "invalid_resource_id"
 	ErrInvalidResourceType                           = "invalid_resource_type"
 	ErrInvalidS3Key                                  = "invalid_s3_key"
@@ -759,8 +759,8 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "A Slack directory is required for retrieving/storing auth credentials and config data. Check permissions on your system.",
 	},
 
-	ErrHooksJsonLocation: {
-		Code:        ErrHooksJsonLocation,
+	ErrHooksJSONLocation: {
+		Code:        ErrHooksJSONLocation,
 		Message:     "Missing the Slack hooks file from project configurations",
 		Remediation: fmt.Sprintf("A `%s` file must be present in the project's `.slack` directory.", filepath.Join(".slack", "hooks.json")),
 	},
@@ -920,8 +920,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "The given refresh token is invalid",
 	},
 
-	ErrInvalidRequestId: {
-		Code:    ErrInvalidRequestId,
+	ErrInvalidRequestID: {
+		Code:    ErrInvalidRequestID,
 		Message: "The request_id passed is invalid",
 	},
 

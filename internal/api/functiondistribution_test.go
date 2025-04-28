@@ -29,7 +29,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 	tests := []struct {
 		name         string
 		expectedPath string
-		resultJson   string
+		resultJSON   string
 		testFunc     func(t *testing.T, c *Client) error
 		want         string
 		wantErr      bool
@@ -37,7 +37,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 	}{
 		{
 			name:       "Add user success",
-			resultJson: `{"ok": true, "distribution_type": "named_entities", "user_ids": ["user1", "user2"]}`,
+			resultJSON: `{"ok": true, "distribution_type": "named_entities", "user_ids": ["user1", "user2"]}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
 				return c.FunctionDistributionAddUsers(ctx, "valid_function", "app", "user1,user2")
@@ -45,7 +45,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 		},
 		{
 			name:       "Add user: validation error",
-			resultJson: `{"ok": false, "error":"user_not_found"}`,
+			resultJSON: `{"ok": false, "error":"user_not_found"}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
 				return c.FunctionDistributionAddUsers(ctx, "valid_function", "app", "user1,user2")
@@ -55,7 +55,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 		},
 		{
 			name:       "Remove user success",
-			resultJson: `{"ok": true, "distribution_type": "named_entities", "user_ids": []}`,
+			resultJSON: `{"ok": true, "distribution_type": "named_entities", "user_ids": []}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
 				return c.FunctionDistributionRemoveUsers(ctx, "valid_function", "app", "user1,user2")
@@ -63,7 +63,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 		},
 		{
 			name:       "Remove user: distribution type not named_entitied",
-			resultJson: `{"ok":false,"error":"invalid_distribution_type"}`,
+			resultJSON: `{"ok":false,"error":"invalid_distribution_type"}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
 				return c.FunctionDistributionRemoveUsers(ctx, "valid_function", "app", "user1,user2")
@@ -73,7 +73,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 		},
 		{
 			name:       "Set access type success",
-			resultJson: `{"ok": true, "distribution_type": "everyone", "user_ids": []}`,
+			resultJSON: `{"ok": true, "distribution_type": "everyone", "user_ids": []}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
 				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.EVERYONE, "")
@@ -82,7 +82,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 		},
 		{
 			name:       "Set access type: access type not recognized by backend",
-			resultJson: `{"ok":false,"error":"invalid_arguments"}`,
+			resultJSON: `{"ok":false,"error":"invalid_arguments"}`,
 			testFunc: func(t *testing.T, c *Client) error {
 				ctx := slackcontext.MockContext(t.Context())
 				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.EVERYONE, "")
@@ -97,7 +97,7 @@ func TestClient_AddRemoveSetAccess(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				result := tt.resultJson
+				result := tt.resultJSON
 				_, err := fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}

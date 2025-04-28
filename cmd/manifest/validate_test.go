@@ -111,7 +111,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 		{
 			Token:        "mocktokenval",
 			TeamDomain:   "mock",
-			TeamID:       "mockteamId",
+			TeamID:       "mockteamID",
 			UserID:       "mockuser",
 			LastUpdated:  time.Time{},
 			RefreshToken: "refresh",
@@ -177,7 +177,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 		{
 			Token:        "mocktokenval",
 			TeamDomain:   "mock",
-			TeamID:       "mockteamId",
+			TeamID:       "mockteamID",
 			UserID:       "mockuser",
 			LastUpdated:  time.Time{},
 			RefreshToken: "refresh",
@@ -186,7 +186,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 		{
 			Token:        "mocktokenval",
 			TeamDomain:   "mock2",
-			TeamID:       "mockteamId",
+			TeamID:       "mockteamID",
 			UserID:       "mockuser",
 			LastUpdated:  time.Time{},
 			RefreshToken: "refresh",

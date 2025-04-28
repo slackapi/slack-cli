@@ -74,18 +74,18 @@ func TestGetAvailableDirectory(t *testing.T) {
 	assert.Nil(t, err, "should not return an error")
 }
 
-func Test_generateGitZipFileUrl(t *testing.T) {
-	url := generateGitZipFileUrl("https://github.com/slack-samples/deno-starter-template", "pre-release-0316")
+func Test_generateGitZipFileURL(t *testing.T) {
+	url := generateGitZipFileURL("https://github.com/slack-samples/deno-starter-template", "pre-release-0316")
 	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/pre-release-0316.zip", url, "should return zip download link with branch")
 
-	url = generateGitZipFileUrl("https://github.com/slack-samples/deno-starter-template", "")
+	url = generateGitZipFileURL("https://github.com/slack-samples/deno-starter-template", "")
 	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip", url, "should return zip download link with main")
 
-	// TODO - We should mock the `deputil.UrlChecker` HTTP request so that the unit test is not dependent on the network activity and repo configuration
-	url = generateGitZipFileUrl("https://github.com/google/uuid", "")
+	// TODO - We should mock the `deputil.URLChecker` HTTP request so that the unit test is not dependent on the network activity and repo configuration
+	url = generateGitZipFileURL("https://github.com/google/uuid", "")
 	assert.Equal(t, "https://github.com/google/uuid/archive/refs/heads/master.zip", url, "should return zip download link with 'master' when 'main' branch doesn't exist")
 
-	url = generateGitZipFileUrl("fake_url", "")
+	url = generateGitZipFileURL("fake_url", "")
 	assert.Equal(t, "", url, "should return empty string when url is invalid")
 }
 
@@ -203,7 +203,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		},
 		"When manifest source is provided, should set it": {
 			experiments:    []string{"bolt"},
-			manifestSource: config.MANIFEST_SOURCE_REMOTE,
+			manifestSource: config.ManifestSourceRemote,
 			expectedOutputs: []string{
 				"Updated config.json manifest source to remote",
 			},

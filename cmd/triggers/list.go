@@ -98,7 +98,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		Limit: listFlags.triggerLimit,
 		Type:  listFlags.triggerType,
 	}
-	deployedTriggers, cursor, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
+	deployedTriggers, cursor, err := clients.APIInterface().WorkflowsTriggersList(ctx, token, args)
 	if err != nil {
 		return err
 	}
@@ -172,7 +172,7 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 
 	for proceed && args.Cursor != "" {
 		proceed = false
-		deployedTriggers, nextCursor, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
+		deployedTriggers, nextCursor, err := clients.APIInterface().WorkflowsTriggersList(ctx, token, args)
 		if err != nil {
 			return err
 		}

@@ -146,9 +146,9 @@ func printBulkGetResult(clients *shared.ClientFactory, cmd *cobra.Command, reque
 	var datastore = getResult.Datastore
 	var items = getResult.Items
 
-	missing_ids_msg := ""
+	missingIDsMessage := ""
 	if len(request.IDs) != len(items)+len(getResult.FailedItems) {
-		missing_ids_msg = " Not all IDs were found"
+		missingIDsMessage = " Not all IDs were found"
 	}
 
 	if outputFlag == "text" {
@@ -156,7 +156,7 @@ func printBulkGetResult(clients *shared.ClientFactory, cmd *cobra.Command, reque
 			style.Bold("%s Get from Datastore: %s.%s\n\n"),
 			style.Emoji("tada"),
 			datastore,
-			missing_ids_msg,
+			missingIDsMessage,
 		)
 	}
 
@@ -170,14 +170,14 @@ func printBulkGetResult(clients *shared.ClientFactory, cmd *cobra.Command, reque
 		string(b),
 	)
 
-	var failed_items = getResult.FailedItems
-	if len(failed_items) > 0 {
+	var failedItems = getResult.FailedItems
+	if len(failedItems) > 0 {
 		cmd.Printf(
 			style.Bold("%s Some items failed to be retrieved and should be retried: \n\n"),
 			style.Emoji("warning"),
 		)
 
-		b, err := goutils.JsonMarshalUnescapedIndent(failed_items)
+		b, err := goutils.JSONMarshalUnescapedIndent(failedItems)
 		if err != nil {
 			return slackerror.New("Error during output indentation").WithRootCause(err)
 		}

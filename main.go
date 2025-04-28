@@ -41,7 +41,7 @@ func main() {
 
 	// TODO - Could we refactor this to cmd/root.go to initialize open tracing after the CLI flags are parsed?
 	//      - This would allow us to choose the correct API host based on flags
-	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveApiHost`
+	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveAPIHost`
 	// var isDevTarget = shared.NewClientFactory().AuthClient().UserDefaultAuthIsProd(ctx) // TODO - hack, remove shared.clients
 	var jaegerCloser, tracer = tracer.SetupTracer(false) // Always setup open tracing on prod
 	defer jaegerCloser.Close()
@@ -86,7 +86,7 @@ func recoveryFunc() {
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())
 
 		// set host for logging
-		clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.ApiHostResolved, clients.Config.Version)
+		clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
 		clients.IO.PrintError(ctx, "Recovered from panic: %s\n%s", r, string(debug.Stack()))
 		os.Exit(int(iostreams.ExitError))
 	}

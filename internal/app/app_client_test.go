@@ -122,7 +122,7 @@ func Test_AppClient_SaveLocalApps(t *testing.T) {
 }
 
 // Test that pre-existing deployed app details get read from apps.json
-func Test_AppClient_ReadDeployedApps_ExistingAppsJson(t *testing.T) {
+func Test_AppClient_ReadDeployedApps_ExistingAppsJSON(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
 	jsonContents := []byte(`{
@@ -145,7 +145,7 @@ func Test_AppClient_ReadDeployedApps_ExistingAppsJson(t *testing.T) {
 }
 
 // Test that a missing apps.json writes an empty apps.json
-func Test_AppClient_ReadDeployedApps_NoAppsJson(t *testing.T) {
+func Test_AppClient_ReadDeployedApps_NoAppsJSON(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
 	err := ac.readDeployedApps()
@@ -166,7 +166,7 @@ func Test_AppClient_ReadDeployedApps_BrokenAppsJSON(t *testing.T) {
 }
 
 // Test that pre-existing dev app details get read from apps.dev.json
-func Test_AppClient_ReadDevApps_ExistingAppsJson(t *testing.T) {
+func Test_AppClient_ReadDevApps_ExistingAppsJSON(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
 	jsonContents := []byte(`{
@@ -187,7 +187,7 @@ func Test_AppClient_ReadDevApps_ExistingAppsJson(t *testing.T) {
 }
 
 // Test that a missing apps.dev.json writes an empty apps.dev.json
-func Test_AppClient_ReadDevApps_NoAppsJson(t *testing.T) {
+func Test_AppClient_ReadDevApps_NoAppsJSON(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
 	err := ac.readLocalApps()
@@ -652,7 +652,7 @@ func TestAppClient_CleanupSlackFolder(t *testing.T) {
 		"an unexpected error occurred while stating the .slack directory")
 }
 
-func TestAppClient_CleanupAppsJsonFiles(t *testing.T) {
+func TestAppClient_CleanupAppsJSONFiles(t *testing.T) {
 	blankAppsJSONExample := []byte(`{}`)
 	appsJSONExample := []byte(`{
   "apps": {

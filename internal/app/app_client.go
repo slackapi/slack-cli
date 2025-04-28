@@ -442,11 +442,11 @@ func (ac *AppClient) migrateToAppByTeamID() error {
 // See also: migrateToAuthByTeamID
 func (ac *AppClient) migrateToAppByTeamIDLocal() error {
 	// Ensure apps.dev.json is written by team_id
-	localAppsByTeamId, err := ac.apps.MapByTeamID(ac.apps.LocalApps)
+	localAppsByTeamID, err := ac.apps.MapByTeamID(ac.apps.LocalApps)
 	if err != nil {
 		return err
 	}
-	ac.apps.LocalApps = localAppsByTeamId
+	ac.apps.LocalApps = localAppsByTeamID
 	if err = ac.saveLocalApps(); err != nil {
 		return err
 	}

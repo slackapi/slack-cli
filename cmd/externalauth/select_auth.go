@@ -92,7 +92,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 	}
 
 	// Get the oauth2 details for the app
-	externalAuths, err := clients.ApiInterface().AppsAuthExternalList(
+	externalAuths, err := clients.APIInterface().AppsAuthExternalList(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
@@ -110,10 +110,10 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		}
 		return err
 	}
-	if selectedWorkflowAuth.CallBackId == "" {
+	if selectedWorkflowAuth.CallBackID == "" {
 		return slackerror.New(slackerror.ErrWorkflowNotFound)
 	}
-	if selectedWorkflowAuth.WorkflowId == "" {
+	if selectedWorkflowAuth.WorkflowID == "" {
 		return slackerror.New("Unable to get a workflow selection")
 	}
 
@@ -142,12 +142,12 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		return slackerror.New("Account is not used in the selected workflow")
 	}
 
-	err = clients.ApiInterface().AppsAuthExternalSelectAuth(
+	err = clients.APIInterface().AppsAuthExternalSelectAuth(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
 		selectedProviderAuth.ProviderKey,
-		selectedWorkflowAuth.WorkflowId,
+		selectedWorkflowAuth.WorkflowID,
 		selectedAuth.ExternalTokenID,
 	)
 	if err != nil {
@@ -158,8 +158,8 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		Emoji: "sparkles",
 		Text: fmt.Sprintf(
 			"Workflow #/workflows/%s will use developer account %s when making calls to %s APIs",
-			selectedWorkflowAuth.CallBackId,
-			selectedAuth.ExternalUserId,
+			selectedWorkflowAuth.CallBackID,
+			selectedAuth.ExternalUserID,
 			selectedProviderAuth.ProviderKey,
 		),
 	}))

@@ -95,7 +95,7 @@ func runEnvRemoveCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, 
 	if len(args) > 0 {
 		variableName = args[0]
 	} else {
-		variables, err := clients.ApiInterface().ListVariables(
+		variables, err := clients.APIInterface().ListVariables(
 			ctx,
 			selection.Auth.Token,
 			selection.App.AppID,
@@ -130,7 +130,7 @@ func runEnvRemoveCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, 
 		}
 	}
 
-	err = clients.ApiInterface().RemoveVariable(
+	err = clients.APIInterface().RemoveVariable(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,

@@ -106,7 +106,7 @@ func TestListCommand(t *testing.T) {
 			appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: tt.app, Auth: types.SlackAuth{}}, nil)
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
+			clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
 				Return(tt.collaborators, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
@@ -114,7 +114,7 @@ func TestListCommand(t *testing.T) {
 
 			err := NewListCommand(clients).ExecuteContext(ctx)
 			require.NoError(t, err)
-			clientsMock.ApiInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.app.AppID)
+			clientsMock.APIInterface.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.app.AppID)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListSuccess, mock.Anything)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCount, []string{
 				fmt.Sprintf("%d", len(tt.collaborators)),

@@ -57,14 +57,14 @@ func (c *Client) UsersInfo(ctx context.Context, token, userID string) (*types.Us
 	}
 
 	resp := UserInfoResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, errHTTPResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {
-		return nil, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
 	}
 
 	return &resp.User, nil

@@ -54,7 +54,7 @@ func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app typ
 		AppID: app.AppID,
 		Limit: 4, // Limit to improve performance for apps with many triggers
 	}
-	existingTriggers, _, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
+	existingTriggers, _, err := clients.APIInterface().WorkflowsTriggersList(ctx, token, args)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app typ
 	// def file for dev and prod.
 	triggerArg.WorkflowAppID = app.AppID
 
-	createdTrigger, err := clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+	createdTrigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 	if err != nil {
 		return nil, err
 	}
