@@ -203,7 +203,7 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 	if err != nil {
 		return auths, err
 	}
-	var path string = filepath.Join(dir, credentialsFileName)
+	var path = filepath.Join(dir, credentialsFileName)
 
 	if _, err := c.fs.Stat(path); os.IsNotExist(err) {
 		return auths, err
