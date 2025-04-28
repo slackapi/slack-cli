@@ -245,15 +245,12 @@ func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd 
 	surveyNames, surveyPromptOptions := initSurveyOpts(ctx, clients, SurveyStore)
 
 	if _, ok := SurveyStore[surveyNameFlag]; !ok && surveyNameFlag != "" {
-		return slackerror.New("invalid_survey_name").
-			WithMessage("Invalid feedback name provided: %s", surveyNameFlag).
-			WithRemediation("View the feedback options with %s", style.Commandf("feedback --help", false))
+		return slackerror.New(slackerror.ErrFeedbackNameInvalid).
+			WithMessage("Invalid feedback name provided: %s", surveyNameFlag)
 	}
 
 	if surveyNameFlag == "" && noPromptFlag {
-		return slackerror.New("survey_name_required").
-			WithMessage("Please provide a feedback name or remove the --no-prompt flag").
-			WithRemediation("View feedback options with %s", style.Commandf("feedback --help", false))
+		return slackerror.New(slackerror.ErrFeedbackNameRequired)
 	}
 
 	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
