@@ -117,7 +117,7 @@ func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
 	if err != nil {
 		return &SystemConfig{}, err
 	}
-	var path string = filepath.Join(dir, configFileName)
+	var path = filepath.Join(dir, configFileName)
 
 	if _, err := c.fs.Stat(path); os.IsNotExist(err) {
 		return &config, err
@@ -424,7 +424,7 @@ func (c *SystemConfig) initializeConfigFiles(ctx context.Context, dir string) er
 	defer span.Finish()
 
 	// ensure the credentials.json file exists
-	var credentialsPath string = filepath.Join(dir, credentialsFileName)
+	var credentialsPath = filepath.Join(dir, credentialsFileName)
 	_, err := c.fs.Stat(credentialsPath)
 	if os.IsNotExist(err) {
 		// create the credentials file because it does not exist
@@ -435,7 +435,7 @@ func (c *SystemConfig) initializeConfigFiles(ctx context.Context, dir string) er
 	}
 
 	// ensure the config.json file exists
-	var configPath string = filepath.Join(dir, configFileName)
+	var configPath = filepath.Join(dir, configFileName)
 	_, err = c.fs.Stat(configPath)
 	if os.IsNotExist(err) {
 		err = c.writeConfigFile(configPath, []byte("{}\n"))
@@ -445,7 +445,7 @@ func (c *SystemConfig) initializeConfigFiles(ctx context.Context, dir string) er
 	}
 
 	// ensure the logs folder exists
-	var logsPath string = filepath.Join(dir, logsFolderName)
+	var logsPath = filepath.Join(dir, logsFolderName)
 	_, err = c.fs.Stat(logsPath)
 	if os.IsNotExist(err) {
 		// create the logs folder because it does not exist
