@@ -36,8 +36,8 @@ func TestFeedbackCommand(t *testing.T) {
 	t.Run("when there is only one survey option", func(t *testing.T) {
 
 		surveys := map[string]SlackSurvey{
-			PlatformSurvey: {
-				Name:              PlatformSurvey,
+			SlackPlatformFeedback: {
+				Name:              SlackPlatformFeedback,
 				PromptDisplayText: "Please complete this survey",
 				URL:               url.URL{RawPath: "https://survey.com"},
 				Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
@@ -53,16 +53,16 @@ func TestFeedbackCommand(t *testing.T) {
 
 		pcm := &config.ProjectConfigMock{}
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil)
-		pcm.On("GetSurveyConfig", mock.Anything, PlatformSurvey).Return(config.SurveyConfig{}, nil)
+		pcm.On("GetSurveyConfig", mock.Anything, SlackPlatformFeedback).Return(config.SurveyConfig{}, nil)
 		clientsMock.Config.ProjectConfig = pcm
 
 		scm := &config.SystemConfigMock{}
-		scm.On("GetSurveyConfig", mock.Anything, PlatformSurvey).Return(config.SurveyConfig{}, nil)
+		scm.On("GetSurveyConfig", mock.Anything, SlackPlatformFeedback).Return(config.SurveyConfig{}, nil)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil)
 		scm.On("SetSurveyConfig", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		clientsMock.Config.SystemConfig = scm
 
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true)
 		clientsMock.Browser.On("OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -87,8 +87,8 @@ func TestFeedbackCommand(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 			},
-			PlatformSurvey: {
-				Name:              PlatformSurvey,
+			SlackPlatformFeedback: {
+				Name:              SlackPlatformFeedback,
 				PromptDisplayText: "PlatformSurvey survey",
 				URL:               url.URL{RawPath: "https://survey.com"},
 				Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
@@ -128,7 +128,7 @@ func TestFeedbackCommand(t *testing.T) {
 			Index:  2,
 		}, nil)
 
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true)
 		clientsMock.Browser.On("OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -217,7 +217,7 @@ func TestShowSurveyMessages(t *testing.T) {
 		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about B?", mock.Anything).Return(true)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil).Once()
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true).Once()
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true).Once()
 		clientsMock.Browser.On("OpenURL", "https://B.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil).Once()
 		pcm.On("SetSurveyConfig", mock.Anything, "B", mock.Anything).Return(nil).Once()
 
@@ -226,7 +226,7 @@ func TestShowSurveyMessages(t *testing.T) {
 		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about C?", mock.Anything).Return(true)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil).Once()
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true).Once()
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true).Once()
 		clientsMock.Browser.On("OpenURL", "https://C.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil).Once()
 		scm.On("SetSurveyConfig", mock.Anything, "C", mock.Anything).Return(nil).Once()
 
