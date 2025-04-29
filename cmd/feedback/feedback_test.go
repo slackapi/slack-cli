@@ -68,7 +68,9 @@ func TestFeedbackCommand(t *testing.T) {
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+		_surveys := SurveyStore
 		SurveyStore = surveys
+		defer func() { SurveyStore = _surveys }()
 
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
@@ -136,7 +138,9 @@ func TestFeedbackCommand(t *testing.T) {
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+		_surveys := SurveyStore
 		SurveyStore = surveys
+		defer func() { SurveyStore = _surveys }()
 
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
@@ -245,7 +249,9 @@ func TestShowSurveyMessages(t *testing.T) {
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+		_surveys := SurveyStore
 		SurveyStore = surveys
+		defer func() { SurveyStore = _surveys }()
 
 		// Execute test
 		err := ShowSurveyMessages(ctx, clients)
