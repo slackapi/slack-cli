@@ -70,7 +70,7 @@ const (
 
 // Supported survey names
 const (
-	SlackCLIFeedback      = "slack-cli-feedback"
+	SlackCLIFeedback      = "slack-cli"
 	SlackPlatformFeedback = "platform-improvements"
 )
 
