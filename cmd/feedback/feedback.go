@@ -68,8 +68,9 @@ const (
 
 // Supported survey names
 const (
-	SlackCLIFeedback      = "slack-cli"
-	SlackPlatformFeedback = "platform-improvements"
+	SlackCLIFeedback                = "slack-cli"
+	SlackPlatformFeedback           = "slack-platform"
+	SlackPlatformFeedbackDeprecated = "platform-improvements" // DEPRECATED(semver:major)
 )
 
 type SurveyConfigInterface interface {
@@ -92,7 +93,7 @@ var SurveyStore = map[string]SlackSurvey{
 		Info: func(ctx context.Context, clients *shared.ClientFactory) {
 			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
 				"%s\n%s\n",
-				style.Secondary("Ask questions, submit issues, or suggest features for the SLack CLI:"),
+				style.Secondary("Ask questions, submit issues, or suggest features for the Slack CLI:"),
 				style.Secondary(style.Highlight("https://github.com/slackapi/slack-cli/issues")),
 			))
 		},
@@ -240,6 +241,11 @@ func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd 
 	if len(SurveyStore) == 0 {
 		clients.IO.PrintInfo(ctx, false, "No feedback options currently available; please try again later")
 		return nil
+	}
+
+	// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
+	if surveyNameFlag == SlackPlatformFeedbackDeprecated {
+		surveyNameFlag = SlackPlatformFeedback
 	}
 
 	surveyNames, surveyPromptOptions := initSurveyOpts(ctx, clients, SurveyStore)
