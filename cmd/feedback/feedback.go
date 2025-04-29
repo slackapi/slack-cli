@@ -246,6 +246,7 @@ func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd 
 	// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
 	if surveyNameFlag == SlackPlatformFeedbackDeprecated {
 		surveyNameFlag = SlackPlatformFeedback
+		clients.IO.PrintDebug(ctx, "DEPRECATED: The '--name %s' flag is deprecated; use '--name %s' instead", SlackPlatformFeedbackDeprecated, SlackPlatformFeedback)
 	}
 
 	surveyNames, surveyPromptOptions := initSurveyOpts(ctx, clients, SurveyStore)
