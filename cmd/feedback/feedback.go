@@ -104,7 +104,7 @@ var SurveyStore = map[string]SlackSurvey{
 				Emoji: "love_letter",
 				Text:  "We would love to know how things are going",
 				Secondary: []string{
-					"Share your experience with " + style.Commandf("feedback --name slack-cli-feedback", false),
+					"Share your experience with " + style.Commandf(fmt.Sprintf("feedback --name %s", SlackCLIFeedback), false),
 				},
 			}))
 			return false, nil
@@ -210,7 +210,7 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:    "Help us make the Slack Platform better with your feedback",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "feedback", Meaning: "Choose to give feedback on part of the Slack Platform"},
-			{Command: "feedback --name slack-cli-feedback", Meaning: "Give feedback on the Slack CLI"},
+			{Command: fmt.Sprintf("feedback --name %s", SlackCLIFeedback), Meaning: "Give feedback on the Slack CLI"},
 		}),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			clients.Config.SetFlags(cmd)
