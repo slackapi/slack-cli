@@ -26,18 +26,18 @@ func Test_Config_ManifestSource_Equals(t *testing.T) {
 		expected bool
 	}{
 		"matching project sources are equal": {
-			a:        MANIFEST_SOURCE_LOCAL,
-			b:        MANIFEST_SOURCE_LOCAL,
+			a:        ManifestSourceLocal,
+			b:        ManifestSourceLocal,
 			expected: true,
 		},
 		"matching remote sources are equal": {
-			a:        MANIFEST_SOURCE_REMOTE,
-			b:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceRemote,
+			b:        ManifestSourceRemote,
 			expected: true,
 		},
 		"different manifest sources are not equal": {
-			a:        MANIFEST_SOURCE_LOCAL,
-			b:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceLocal,
+			b:        ManifestSourceRemote,
 			expected: false,
 		},
 	}
@@ -55,11 +55,11 @@ func Test_Config_ManifestSource_Exists(t *testing.T) {
 		expected bool
 	}{
 		"project source exists": {
-			a:        MANIFEST_SOURCE_LOCAL,
+			a:        ManifestSourceLocal,
 			expected: true,
 		},
 		"remote source exists": {
-			a:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceRemote,
 			expected: true,
 		},
 		"unknown source exists": {
@@ -85,11 +85,11 @@ func Test_Config_ManifestSource_String(t *testing.T) {
 		expected string
 	}{
 		"project manifest source is local": {
-			a:        MANIFEST_SOURCE_LOCAL,
+			a:        ManifestSourceLocal,
 			expected: "local",
 		},
 		"remote manifest source is remote": {
-			a:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceRemote,
 			expected: "remote",
 		},
 	}

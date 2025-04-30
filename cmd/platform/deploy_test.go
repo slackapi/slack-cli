@@ -91,7 +91,7 @@ func TestDeployCommand(t *testing.T) {
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 		AppManifest: types.AppManifest{
 			Settings: &types.AppSettings{
-				FunctionRuntime: types.SLACK_HOSTED,
+				FunctionRuntime: types.SlackHosted,
 			},
 		},
 	}, nil)
@@ -119,29 +119,29 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	}{
 		"fails when no manifest exists": {
 			manifestError:  slackerror.New(slackerror.ErrInvalidManifest),
-			manifestSource: config.MANIFEST_SOURCE_LOCAL,
+			manifestSource: config.ManifestSourceLocal,
 			expectedError:  slackerror.New(slackerror.ErrInvalidManifest),
 		},
 		"succeeds with a slack hosted function runtime": {
 			manifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
-			manifestSource: config.MANIFEST_SOURCE_LOCAL,
+			manifestSource: config.ManifestSourceLocal,
 		},
 		"succeeds if a deploy hook script is available to project manifest sources": {
-			manifestSource: config.MANIFEST_SOURCE_LOCAL,
+			manifestSource: config.ManifestSourceLocal,
 			deployScript:   "echo go!",
 		},
 		"continues if a deploy hook script is available to remote manifest sources": {
-			manifestSource: config.MANIFEST_SOURCE_REMOTE,
+			manifestSource: config.ManifestSourceRemote,
 			deployScript:   "sleep 4",
 		},
 		"fails if no deploy hook is provided": {
-			manifestSource: config.MANIFEST_SOURCE_LOCAL,
+			manifestSource: config.ManifestSourceLocal,
 			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
 		},
 	}
@@ -236,7 +236,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			sdkConfigMock := hooks.NewSDKConfigMock()
-			sdkConfigMock.Config.SupportedProtocols = []hooks.Protocol{hooks.HOOK_PROTOCOL_DEFAULT}
+			sdkConfigMock.Config.SupportedProtocols = []hooks.Protocol{hooks.HookProtocolDefault}
 			sdkConfigMock.Hooks.Deploy = hooks.HookScript{Name: "Deploy", Command: tt.command}
 
 			stdoutLogger := log.Logger{}
@@ -285,7 +285,7 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 		"information from a workspace deploy is printed": {
 			event: logger.LogData{
 				"appName":     "DeployerApp",
-				"appId":       "A123",
+				"appID":       "A123",
 				"deployTime":  "12.34",
 				"authSession": `{"user": "slackbot", "user_id": "USLACKBOT", "team": "speck", "team_id": "T001"}`,
 			},
@@ -299,7 +299,7 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 		"information from an enterprise deploy is printed": {
 			event: logger.LogData{
 				"appName":     "Spackulen",
-				"appId":       "A999",
+				"appID":       "A999",
 				"deployTime":  "8.05",
 				"authSession": `{"user": "stub", "user_id": "U111", "team": "spack", "team_id": "E002", "is_enterprise_install": true, "enterprise_id": "E002"}`,
 			},
@@ -322,7 +322,7 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
-			clientsMock.ApiInterface.On("Host").Return("https://slacker.com")
+			clientsMock.APIInterface.On("Host").Return("https://slacker.com")
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := NewDeployCommand(clients)

@@ -31,7 +31,7 @@ func Put(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	putResult, err := clients.ApiInterface().AppsDatastorePut(ctx, token, request)
+	putResult, err := clients.APIInterface().AppsDatastorePut(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}

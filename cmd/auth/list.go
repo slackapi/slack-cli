@@ -105,10 +105,10 @@ func printAuthList(cmd *cobra.Command, IO iostreams.IOStreamer, userAuthList []t
 			style.Secondary("User ID: %s\n"),
 			authInfo.UserID,
 		)
-		if authInfo.ApiHost != nil {
+		if authInfo.APIHost != nil {
 			cmd.Printf(
 				style.Secondary("API Host: %s\n"),
-				*authInfo.ApiHost,
+				*authInfo.APIHost,
 			)
 		}
 		cmd.Printf(

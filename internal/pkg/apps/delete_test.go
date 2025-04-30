@@ -81,13 +81,13 @@ func TestAppsDelete(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api host")
+			clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api host")
 			clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash host")
-			clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+			clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 				TeamName: &tt.auth.TeamDomain,
 				TeamID:   &tt.auth.TeamID,
 			}, nil)
-			clientsMock.ApiInterface.On("DeleteApp", mock.Anything, mock.Anything, tt.app.AppID).Return(nil)
+			clientsMock.APIInterface.On("DeleteApp", mock.Anything, mock.Anything, tt.app.AppID).Return(nil)
 			clientsMock.AddDefaultMocks()
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -110,7 +110,7 @@ func TestAppsDelete(t *testing.T) {
 			app, err := Delete(ctx, clients, logger.New(nil), tt.app.TeamDomain, tt.app, tt.auth)
 			require.NoError(t, err)
 			assert.Equal(t, tt.app, app)
-			clientsMock.ApiInterface.AssertCalled(
+			clientsMock.APIInterface.AssertCalled(
 				t,
 				"DeleteApp",
 				mock.Anything,

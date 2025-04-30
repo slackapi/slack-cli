@@ -158,7 +158,7 @@ func printPutResult(clients *shared.ClientFactory, cmd *cobra.Command, putResult
 		style.Emoji("tada"),
 		datastore,
 	)
-	b, err := goutils.JsonMarshalUnescapedIndent(item)
+	b, err := goutils.JSONMarshalUnescapedIndent(item)
 	if err != nil {
 		return slackerror.New("Error during output indentation").WithRootCause(err)
 	}
@@ -228,13 +228,13 @@ func promptDatastorePutRequest(
 	// Prompt for the primary key first
 	primaryKey := yaml.Datastores[query.Datastore].PrimaryKey
 	primaryKeyPrompt := fmt.Sprintf("Enter a value for '%s':", primaryKey)
-	recordId, err := clients.IO.InputPrompt(ctx, primaryKeyPrompt, iostreams.InputPromptConfig{
+	recordID, err := clients.IO.InputPrompt(ctx, primaryKeyPrompt, iostreams.InputPromptConfig{
 		Required: true,
 	})
 	if err != nil {
 		return types.AppDatastorePut{}, err
 	}
-	query.Item[primaryKey] = recordId
+	query.Item[primaryKey] = recordID
 	delete(fields, primaryKey)
 
 	for field := range fields {

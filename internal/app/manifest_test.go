@@ -129,7 +129,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			configMock := config.NewConfig(fsMock, osMock)
 			configMock.DomainAuthTokens = "api.slack.com"
 			configMock.ManifestEnv = mockManifestEnv
-			manifestClient := NewManifestClient(&api.ApiMock{}, configMock)
+			manifestClient := NewManifestClient(&api.APIMock{}, configMock)
 
 			actualManifest, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
 			if tt.expectedErr != nil {
@@ -183,7 +183,7 @@ func Test_AppManifest_GetManifestRemote(t *testing.T) {
 			osMock := slackdeps.NewOsMock()
 			osMock.AddDefaultMocks()
 			configMock := config.NewConfig(fsMock, osMock)
-			apic := &api.ApiMock{}
+			apic := &api.APIMock{}
 			apic.On("ExportAppManifest", mock.Anything, mock.Anything, mock.Anything).
 				Return(api.ExportAppResult{Manifest: tt.mockManifestResponse}, tt.mockManifestError)
 			manifestClient := NewManifestClient(apic, configMock)

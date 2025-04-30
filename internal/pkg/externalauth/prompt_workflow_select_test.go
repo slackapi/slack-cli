@@ -49,7 +49,7 @@ func TestPrompt_WorkflowSelectPrompt_with_no_workflows(t *testing.T) {
 			{
 				ProviderName:       "Google",
 				ProviderKey:        "provider_a",
-				ClientId:           "xxxxx",
+				ClientID:           "xxxxx",
 				ClientSecretExists: true,
 				ValidTokenExists:   false,
 			},
@@ -75,15 +75,15 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 			{
 				ProviderName:       "Google",
 				ProviderKey:        "provider_a",
-				ClientId:           "xxxxx",
+				ClientID:           "xxxxx",
 				ClientSecretExists: true,
 				ValidTokenExists:   false,
 			},
 		},
 		Workflows: []types.WorkflowsInfo{
 			{
-				WorkflowId: "Wf0548LABCD1",
-				CallBackId: "my_callback_id1",
+				WorkflowID: "Wf0548LABCD1",
+				CallBackID: "my_callback_id1",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_a",
@@ -93,16 +93,16 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 						ProviderKey:  "provider_b",
 						ProviderName: "Provider_B",
 						SelectedAuth: types.ExternalTokenInfo{
-							ExternalTokenId: "Et0548LABCDE",
-							ExternalUserId:  "user_a@gmail.com",
+							ExternalTokenID: "Et0548LABCDE",
+							ExternalUserID:  "user_a@gmail.com",
 							DateUpdated:     1682021142,
 						},
 					},
 				},
 			},
 			{
-				WorkflowId: "Wf0548LABCD2",
-				CallBackId: "my_callback_id2",
+				WorkflowID: "Wf0548LABCD2",
+				CallBackID: "my_callback_id2",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_a",
@@ -112,8 +112,8 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 						ProviderKey:  "provider_b",
 						ProviderName: "Provider_B",
 						SelectedAuth: types.ExternalTokenInfo{
-							ExternalTokenId: "Et0548LABCDE",
-							ExternalUserId:  "user_a@gmail.com",
+							ExternalTokenID: "Et0548LABCDE",
+							ExternalUserID:  "user_a@gmail.com",
 							DateUpdated:     1682021142,
 						},
 					},
@@ -159,8 +159,8 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		selectedWorkflow, err := WorkflowSelectPrompt(ctx, clients, authorizationInfoLists)
 		require.NoError(t, err)
 		require.Equal(t, selectedWorkflow, types.WorkflowsInfo{
-			WorkflowId: "Wf0548LABCD2",
-			CallBackId: "my_callback_id2",
+			WorkflowID: "Wf0548LABCD2",
+			CallBackID: "my_callback_id2",
 			Providers: []types.ProvidersInfo{
 				{
 					ProviderKey:  "provider_a",
@@ -170,8 +170,8 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 					ProviderKey:  "provider_b",
 					ProviderName: "Provider_B",
 					SelectedAuth: types.ExternalTokenInfo{
-						ExternalTokenId: "Et0548LABCDE",
-						ExternalUserId:  "user_a@gmail.com",
+						ExternalTokenID: "Et0548LABCDE",
+						ExternalUserID:  "user_a@gmail.com",
 						DateUpdated:     1682021142,
 					},
 				},

@@ -33,7 +33,6 @@ linters:
     staticcheck:
       checks:
         - all
-        - '-ST1003' # disable rule 'Poorly chosen identifier'
         - '-ST1005' # disable rule 'Incorrectly formatted error string'
         - '-ST1006' # disable rule 'Poorly chosen receiver name'
         - '-ST1008' # disable rule 'Function’s error value should be its last return value'

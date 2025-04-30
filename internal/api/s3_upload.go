@@ -100,7 +100,7 @@ func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID strin
 	writer.Close()
 
 	var request *http.Request
-	request, err = http.NewRequestWithContext(ctx, "POST", uploadParams.Url, uploadbody)
+	request, err = http.NewRequestWithContext(ctx, "POST", uploadParams.URL, uploadbody)
 	if err != nil {
 		return fileName, err
 	}
