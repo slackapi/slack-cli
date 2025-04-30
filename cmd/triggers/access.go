@@ -256,7 +256,8 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		if accessNamedEntities > 0 {
-			if accessAction == "grant" {
+			switch accessAction {
+			case "grant":
 				accessFlags.grant = true
 				if !cmdutil.IsFlagChanged(cmd, "include-app-collaborators") && currentAccessType != types.PermissionNamedEntities {
 					includeAppCollaborators, err = prompts.AddAppCollaboratorsToNamedEntitiesPrompt(ctx, clients.IO)
@@ -264,9 +265,9 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 						return err
 					}
 				}
-			} else if accessAction == "revoke" {
+			case "revoke":
 				accessFlags.revoke = true
-			} else {
+			default:
 				return nil
 			}
 		} else {
@@ -563,13 +564,14 @@ func printAccess(cmd *cobra.Command, clients *shared.ClientFactory, token string
 		return err
 	}
 
-	if accessType == types.PermissionEveryone {
+	switch accessType {
+	case types.PermissionEveryone:
 		var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 		clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s", accessFlags.triggerID, everyoneAccessTypeDescription)
-	} else if accessType == types.PermissionAppCollaborators {
+	case types.PermissionAppCollaborators:
 		clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s:", accessFlags.triggerID, style.Pluralize("app collaborator", "app collaborators", len(userAccessList)))
 		err = printAppCollaboratorsHelper(cmd, clients, token, userAccessList)
-	} else if accessType == types.PermissionNamedEntities {
+	case types.PermissionNamedEntities:
 		err = printNamedEntitiesHelper(cmd, clients, token, userAccessList, "list")
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.TriggersAccessSuccess)
@@ -581,16 +583,17 @@ func printCurrentAuthorizedEntities(cmd *cobra.Command, clients *shared.ClientFa
 	ctx := cmd.Context()
 
 	cmd.Println()
-	if currentAccessType == types.PermissionEveryone {
+	switch currentAccessType {
+	case types.PermissionEveryone:
 		var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 		clients.IO.PrintInfo(ctx, false, "Trigger '%s' can be found and run by %s\n", accessFlags.triggerID, everyoneAccessTypeDescription)
-	} else if currentAccessType == (types.PermissionAppCollaborators) {
+	case types.PermissionAppCollaborators:
 		clients.IO.PrintInfo(ctx, false, "Access is currently granted to %s:", style.Pluralize("app collaborator", "app collaborators", len(currentAccessList)))
 		err := printAppCollaboratorsHelper(cmd, clients, token, currentAccessList)
 		if err != nil {
 			return err
 		}
-	} else {
+	case types.PermissionNamedEntities:
 		err := printNamedEntitiesHelper(cmd, clients, token, currentAccessList, "manage")
 		if err != nil {
 			return err
@@ -622,9 +625,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 	ctx := cmd.Context()
 
 	if len(entitiesAccessList) <= 0 {
-		if action == "manage" {
+		switch action {
+		case "manage":
 			clients.IO.PrintInfo(ctx, false, "Access is currently granted:")
-		} else if action == "list" {
+		case "list":
 			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by:", accessFlags.triggerID)
 		}
 		clients.IO.PrintInfo(ctx, false, "nobody")
@@ -635,9 +639,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 
 	if len(namedEntitiesAccessMap["users"]) > 0 {
 		var userLabel = style.Pluralize("this user", "these users", len(namedEntitiesAccessMap["users"]))
-		if action == "manage" {
+		switch action {
+		case "manage":
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to %s:", userLabel)
-		} else if action == "list" {
+		case "list":
 			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s:", accessFlags.triggerID, userLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["users"] {
@@ -650,9 +655,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 	}
 	if len(namedEntitiesAccessMap["channels"]) > 0 {
 		var channelLabel = style.Pluralize("this channel", "these channels", len(namedEntitiesAccessMap["channels"]))
-		if action == "manage" {
+		switch action {
+		case "manage":
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to all members of %s:", channelLabel)
-		} else if action == "list" {
+		case "list":
 			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerID, channelLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["channels"] {
@@ -665,9 +671,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 	}
 	if len(namedEntitiesAccessMap["teams"]) > 0 {
 		var teamLabel = style.Pluralize("this workspace", "these workspaces", len(namedEntitiesAccessMap["teams"]))
-		if action == "manage" {
+		switch action {
+		case "manage":
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to all members of %s:", teamLabel)
-		} else if action == "list" {
+		case "list":
 			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerID, teamLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["teams"] {
@@ -680,9 +687,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 	}
 	if len(namedEntitiesAccessMap["organizations"]) > 0 {
 		var orgLabel = style.Pluralize("this organization", "these organizations", len(namedEntitiesAccessMap["organizations"]))
-		if action == "manage" {
+		switch action {
+		case "manage":
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to all members of %s:", orgLabel)
-		} else if action == "list" {
+		case "list":
 			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerID, orgLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["organizations"] {

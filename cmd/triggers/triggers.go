@@ -142,13 +142,14 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				"nobody",
 			))
 		} else {
-			if accessType == types.PermissionEveryone {
+			switch accessType {
+			case types.PermissionEveryone:
 				var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 				triggerText = append(triggerText, fmt.Sprintf(
 					style.Indent(style.Secondary("Can be found and used by:\n  %s")),
 					style.Indent(style.Secondary(everyoneAccessTypeDescription)),
 				))
-			} else if accessType == types.PermissionAppCollaborators {
+			case types.PermissionAppCollaborators:
 				triggerText = append(triggerText, fmt.Sprint(
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))
@@ -162,7 +163,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 						userInfo.RealName, style.Secondary("@"+userInfo.Profile.DisplayName), style.Secondary(userInfo.ID),
 					))
 				}
-			} else if accessType == types.PermissionNamedEntities {
+			case types.PermissionNamedEntities:
 				triggerText = append(triggerText, fmt.Sprint(
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))

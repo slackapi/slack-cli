@@ -236,13 +236,14 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 		primary   string
 		secondary string
 	)
-	if installState == types.InstallRequestPending {
+	switch installState {
+	case types.InstallRequestPending:
 		primary = "Your request to install the app is pending"
 		secondary = fmt.Sprintf("You will receive a Slackbot message after an admin has reviewed your request\nOnce your request is approved, complete installation by re-running %s", style.Commandf(clients.Config.Command, true))
-	} else if installState == types.InstallRequestCancelled {
+	case types.InstallRequestCancelled:
 		primary = "Your request to install the app has been cancelled"
 		secondary = ""
-	} else if installState == types.InstallRequestNotSent {
+	case types.InstallRequestNotSent:
 		primary = "You've declined to send a request to an admin"
 		secondary = "Please submit a request to install or update your app"
 	}
