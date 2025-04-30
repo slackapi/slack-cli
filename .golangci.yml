@@ -44,6 +44,10 @@ linters:
         - '-QF1008' # disable rule 'Omit embedded fields from selector'
         - '-QF1011' # disable rule 'Omit redundant type from variable declaration'
         - '-ST1016' # disable rule 'Use consistent method receiver names'
+      # https://golangci-lint.run/usage/linters/#staticcheck
+      # https://staticcheck.dev/docs/configuration/options/#initialisms
+      initialisms: ["ACL", "API", "ASCII", "CLI", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS", "SDK", "SIP", "RTP", "AMQP", "DB", "TS"]
+
 formatters:
   enable:
     - gofmt
