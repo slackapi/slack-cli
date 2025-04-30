@@ -26,7 +26,7 @@ const SchemaVersion = 1
 // for yaml, are we always using flow style? most properties have it, but when
 
 type AppManifest struct {
-	MetaData           *ManifestMetaData  `json:"_metadata,omitempty" yaml:"_metadata,flow,omitempty"`
+	Metadata           *ManifestMetadata  `json:"_metadata,omitempty" yaml:"_metadata,flow,omitempty"`
 	DisplayInformation DisplayInformation `json:"display_information" yaml:"display_information,flow"`
 	Directory          *AppDirectory      `json:"app_directory,omitempty" yaml:"app_directory,omitempty"`
 	Features           *AppFeatures       `json:"features,omitempty" yaml:"features,omitempty"`
@@ -43,7 +43,7 @@ type AppManifest struct {
 	ExternalAuthProviders *ManifestAuthProviders       `json:"external_auth_providers,omitempty" yaml:"external_auth_providers,flow,omitempty"`
 }
 
-type ManifestMetaData struct {
+type ManifestMetadata struct {
 	MajorVersion uint64 `json:"major_version,omitempty" yaml:"major_version,omitempty"`
 	MinorVersion uint64 `json:"minor_version,omitempty" yaml:"minor_version,omitempty"`
 }
