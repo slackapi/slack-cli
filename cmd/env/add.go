@@ -127,7 +127,7 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		variableValue = args[1]
 	}
 
-	err = clients.ApiInterface().AddVariable(
+	err = clients.APIInterface().AddVariable(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,

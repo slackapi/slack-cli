@@ -59,7 +59,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	}
 
 	// Get the token for the authenticated workspace
-	apiInterface := clients.ApiInterface()
+	apiInterface := clients.APIInterface()
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
 	if err != nil {
@@ -144,7 +144,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		if err != nil {
 			return types.App{}, "", err
 		}
-		upstream, err := clients.ApiInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
+		upstream, err := clients.APIInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return types.App{}, "", err
 		}
@@ -185,12 +185,12 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		return app, "", err
 	}
 
-	if installState != types.SUCCESS {
+	if installState != types.InstallSuccess {
 		printNonSuccessInstallState(ctx, clients, installState)
 		return app, installState, nil
 	}
 
-	if manifest.FunctionRuntime() != types.SLACK_HOSTED {
+	if manifest.FunctionRuntime() != types.SlackHosted {
 		if err := setAppEnvironmentTokens(ctx, clients, result); err != nil {
 			return app, installState, err
 		}
@@ -228,7 +228,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	log.Data["installTime"] = fmt.Sprintf("%.1fs", time.Since(start).Seconds())
 	log.Info("app_install_complete")
 
-	return app, types.SUCCESS, nil
+	return app, types.InstallSuccess, nil
 }
 
 func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFactory, installState types.InstallState) {
@@ -236,13 +236,13 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 		primary   string
 		secondary string
 	)
-	if installState == types.REQUEST_PENDING {
+	if installState == types.InstallRequestPending {
 		primary = "Your request to install the app is pending"
 		secondary = fmt.Sprintf("You will receive a Slackbot message after an admin has reviewed your request\nOnce your request is approved, complete installation by re-running %s", style.Commandf(clients.Config.Command, true))
-	} else if installState == types.REQUEST_CANCELLED {
+	} else if installState == types.InstallRequestCancelled {
 		primary = "Your request to install the app has been cancelled"
 		secondary = ""
-	} else if installState == types.REQUEST_NOT_SENT {
+	} else if installState == types.InstallRequestNotSent {
 		primary = "You've declined to send a request to an admin"
 		secondary = "Please submit a request to install or update your app"
 	}
@@ -259,10 +259,10 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, app types.App, appManifest types.AppManifest) error {
 	var token = config.GetContextToken(ctx)
 
-	validationResult, err := clients.ApiInterface().ValidateAppManifest(ctx, token, appManifest, app.AppID)
+	validationResult, err := clients.APIInterface().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 
 	if retryValidate := manifest.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
-		validationResult, err = clients.ApiInterface().ValidateAppManifest(ctx, token, appManifest, app.AppID)
+		validationResult, err = clients.APIInterface().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 	}
 
 	if err := manifest.HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
@@ -344,7 +344,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, api.DeveloperAppInstallResult{}, "", nil
 	}
 
-	apiInterface := clients.ApiInterface()
+	apiInterface := clients.APIInterface()
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
 	if err != nil {
@@ -438,7 +438,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		if err != nil {
 			return types.App{}, api.DeveloperAppInstallResult{}, "", err
 		}
-		upstream, err := clients.ApiInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
+		upstream, err := clients.APIInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return types.App{}, api.DeveloperAppInstallResult{}, "", err
 		}
@@ -473,7 +473,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
 
-	if installState != types.SUCCESS {
+	if installState != types.InstallSuccess {
 		printNonSuccessInstallState(ctx, clients, installState)
 		return app, api.DeveloperAppInstallResult{}, installState, nil
 	}
@@ -513,7 +513,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	log.Data["installTime"] = fmt.Sprintf("%.1fs", time.Since(start).Seconds())
 	log.Info("app_install_complete")
 
-	return app, result, types.SUCCESS, nil
+	return app, result, types.InstallSuccess, nil
 }
 
 // getIconHash returns the MD5 hash of the icon file
@@ -558,11 +558,11 @@ func configureHostedManifest(
 	if manifest.Settings == nil {
 		manifest.Settings = &types.AppSettings{}
 	}
-	manifest.Settings.FunctionRuntime = types.SLACK_HOSTED
+	manifest.Settings.FunctionRuntime = types.SlackHosted
 	if manifest.Settings.Interactivity == nil {
 		manifest.Settings.Interactivity = &types.ManifestInteractivity{}
 	}
-	host := clients.ApiInterface().Host()
+	host := clients.APIInterface().Host()
 	manifest.Settings.Interactivity.IsEnabled = true
 	manifest.Settings.Interactivity.MessageMenuOptionsURL = host
 	manifest.Settings.Interactivity.RequestURL = host
@@ -593,7 +593,7 @@ func configureLocalManifest(
 		manifest.Settings = &types.AppSettings{}
 	}
 	clients.IO.PrintDebug(ctx, "updating app manifest with default properties for a run-on-slack function runtime")
-	manifest.Settings.FunctionRuntime = types.LOCALLY_RUN
+	manifest.Settings.FunctionRuntime = types.LocallyRun
 	t := true
 	manifest.Settings.SocketModeEnabled = &t
 	if manifest.Settings.Interactivity == nil {
@@ -626,7 +626,7 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 
 	// var iconResp apiclient.IconResult
 	var err error
-	_, err = clients.ApiInterface().Icon(ctx, clients.Fs, token, appID, iconPath)
+	_, err = clients.APIInterface().Icon(ctx, clients.Fs, token, appID, iconPath)
 	if err != nil {
 		// TODO: separate the icon upload into a different function because if an error is returned
 		// the new app_id might be ignored and next time we'll create another app.
@@ -648,7 +648,7 @@ func shouldCreateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	return app.AppID == "" && manifestSource == config.MANIFEST_SOURCE_LOCAL, nil
+	return app.AppID == "" && manifestSource == config.ManifestSourceLocal, nil
 }
 
 // shouldCacheManifest decides if an app manifest hash should be saved to cache
@@ -660,7 +660,7 @@ func shouldCacheManifest(ctx context.Context, clients *shared.ClientFactory, app
 	if err != nil {
 		return false, err
 	}
-	if manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE) {
+	if manifestSource.Equals(config.ManifestSourceRemote) {
 		return false, nil
 	}
 	manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
@@ -695,7 +695,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	if manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE) {
+	if manifestSource.Equals(config.ManifestSourceRemote) {
 		return false, nil
 	}
 	if clients.Config.ForceFlag {
@@ -712,7 +712,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	upstream, err := clients.ApiInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
+	upstream, err := clients.APIInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
 	if err != nil {
 		return false, err
 	}
@@ -741,7 +741,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 		ctx,
 		fmt.Sprintf(
 			"Update app settings with changes to the %s manifest?",
-			config.MANIFEST_SOURCE_LOCAL.String(),
+			config.ManifestSourceLocal.String(),
 		),
 		false,
 	)
@@ -765,14 +765,14 @@ func errorAppManifestUpdate(app types.App, forceOption bool) *slackerror.Error {
 	case app.AppID != "":
 		url = fmt.Sprintf("https://api.slack.com/apps/%s", app.AppID)
 	}
-	command := style.Commandf(fmt.Sprintf("manifest --source %s", config.MANIFEST_SOURCE_LOCAL.String()), false)
+	command := style.Commandf(fmt.Sprintf("manifest --source %s", config.ManifestSourceLocal.String()), false)
 	remediation := []string{
-		fmt.Sprintf("Check %s values with %s", config.MANIFEST_SOURCE_LOCAL.String(), command),
+		fmt.Sprintf("Check %s values with %s", config.ManifestSourceLocal.String(), command),
 		fmt.Sprintf("Compare app settings: %s", style.LinkText(url)),
 	}
 	if forceOption {
 		option := fmt.Sprintf("Write %s manifest values to app settings using `%s`",
-			config.MANIFEST_SOURCE_LOCAL.String(),
+			config.ManifestSourceLocal.String(),
 			style.CommandText("--force"),
 		)
 		remediation = append(remediation, option)

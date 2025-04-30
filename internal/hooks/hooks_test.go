@@ -28,20 +28,20 @@ func Test_Hooks_GetHookExecutor(t *testing.T) {
 		protocolVersions ProtocolVersions
 		expectedType     interface{}
 	}{
-		"Type HOOK_PROTOCOL_V2": {
-			protocolVersions: ProtocolVersions{HOOK_PROTOCOL_V2},
+		"Type HookProtocolV2": {
+			protocolVersions: ProtocolVersions{HookProtocolV2},
 			expectedType:     &HookExecutorMessageBoundaryProtocol{},
 		},
-		"Type HOOK_PROTOCOL_DEFAULT": {
-			protocolVersions: ProtocolVersions{HOOK_PROTOCOL_DEFAULT},
+		"Type HookProtocolDefault": {
+			protocolVersions: ProtocolVersions{HookProtocolDefault},
 			expectedType:     &HookExecutorDefaultProtocol{},
 		},
-		"Both HOOK_PROTOCOL_V2 and HOOK_PROTOCOL_DEFAULT": {
-			protocolVersions: ProtocolVersions{HOOK_PROTOCOL_V2, HOOK_PROTOCOL_DEFAULT},
+		"Both HookProtocolV2 and HookProtocolDefault": {
+			protocolVersions: ProtocolVersions{HookProtocolV2, HookProtocolDefault},
 			expectedType:     &HookExecutorMessageBoundaryProtocol{},
 		},
-		"Both HOOK_PROTOCOL_DEFAULT and HOOK_PROTOCOL_V2": {
-			protocolVersions: ProtocolVersions{HOOK_PROTOCOL_DEFAULT, HOOK_PROTOCOL_V2},
+		"Both HookProtocolDefault and HookProtocolV2": {
+			protocolVersions: ProtocolVersions{HookProtocolDefault, HookProtocolV2},
 			expectedType:     &HookExecutorDefaultProtocol{},
 		},
 	}

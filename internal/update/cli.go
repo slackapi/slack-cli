@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const metaDataUrl = "https://api.slack.com/slackcli/metadata.json"
+const metaDataURL = "https://api.slack.com/slackcli/metadata.json"
 
 // CLIDependency contains information about the
 // current version and the latest CLI release version
@@ -49,13 +49,13 @@ func NewCLIDependency(clients *shared.ClientFactory, version string) *CLIDepende
 // the latest update available directly to the CLIDependency instance
 // Synchronous version of CheckForUpdateInBackground
 func (c *CLIDependency) CheckForUpdate(ctx context.Context) error {
-	httpClient, err := newHttpClient()
+	httpClient, err := newHTTPClient()
 	if err != nil {
 		return err
 	}
 
 	metadata := Metadata{httpClient: httpClient}
-	c.releaseInfo, err = metadata.CheckForUpdate(ctx, metaDataUrl, c.version)
+	c.releaseInfo, err = metadata.CheckForUpdate(ctx, metaDataURL, c.version)
 	if err != nil {
 		return err
 	}

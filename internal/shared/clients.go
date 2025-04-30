@@ -46,7 +46,7 @@ import (
 type ClientFactory struct {
 	// Internal dependencies
 
-	ApiInterface func() api.ApiInterface
+	APIInterface func() api.APIInterface
 
 	AppClient    func() *app.Client
 	Config       *config.Config
@@ -100,7 +100,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 		IO: clients.IO,
 	}
 	clients.EventTracker = tracking.NewEventTracker()
-	clients.ApiInterface = clients.defaultApiInterfaceFunc
+	clients.APIInterface = clients.defaultAPIInterfaceFunc
 	clients.AppClient = clients.defaultAppClientFunc
 	clients.AuthInterface = clients.defaultAuthInterfaceFunc
 	clients.Browser = clients.defaultBrowserFunc
@@ -112,7 +112,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 
 	// TODO: Temporary hack to get around circular dependency in internal/api/client.go since that imports version
 	// Follows pattern demonstrated by the GitHub CLI here https://github.com/cli/cli/blob/5a46c1cab601a3394caa8de85adb14f909b811e9/pkg/cmd/factory/default.go#L29
-	// Used by the ApiClient for its userAgent
+	// Used by the APIClient for its userAgent
 	// Currently needed because trying to get the version of the CLI from pkg/version/version.go would cause a circular dependency
 	// We can get rid of this once we refactor the code relationship between pkg/ and internal/
 	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CliVersion is retained for future code refactor purpose and serve SetVersion function
@@ -127,24 +127,24 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	return clients
 }
 
-// defaultApiClientFunc return a new API Client using the ConfigApiHost
-func (c *ClientFactory) defaultApiClientFunc() *api.Client {
-	return api.NewClient(nil, c.Config.ApiHostResolved, c.IO)
+// defaultAPIClientFunc return a new API Client using the ConfigAPIHost
+func (c *ClientFactory) defaultAPIClientFunc() *api.Client {
+	return api.NewClient(nil, c.Config.APIHostResolved, c.IO)
 }
 
-// defaultApiInterfaceFunc return a new API Client using the ConfigApiHost
-func (c *ClientFactory) defaultApiInterfaceFunc() api.ApiInterface {
-	return c.defaultApiClientFunc()
+// defaultAPIInterfaceFunc return a new API Client using the ConfigAPIHost
+func (c *ClientFactory) defaultAPIInterfaceFunc() api.APIInterface {
+	return c.defaultAPIClientFunc()
 }
 
 // defaultAppClientFunc return a new App Client
 func (c *ClientFactory) defaultAppClientFunc() *app.Client {
-	return app.NewClient(c.ApiInterface(), c.Config, c.Fs, c.Os)
+	return app.NewClient(c.APIInterface(), c.Config, c.Fs, c.Os)
 }
 
 // defaultAuthClientFunc return a new Auth Client
 func (c *ClientFactory) defaultAuthClientFunc() *auth.Client {
-	return auth.NewClient(c.ApiInterface(), c.AppClient(), c.Config, c.IO, c.Fs)
+	return auth.NewClient(c.APIInterface(), c.AppClient(), c.Config, c.IO, c.Fs)
 }
 
 // defaultAuthInterfaceFunc return a new Auth Interface
@@ -204,7 +204,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		hooksJSONFilePath = filepath.Join(dirPath, "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
-			c.IO.PrintDebug(ctx, "%s", slackerror.New(slackerror.ErrSlackJsonLocation))
+			c.IO.PrintDebug(ctx, "%s", slackerror.New(slackerror.ErrSlackJSONLocation))
 			break
 		}
 		// Next, search for the hooks files in the outdated path
@@ -214,7 +214,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
-			c.IO.PrintWarning(ctx, "%s", slackerror.New(slackerror.ErrSlackSlackJsonLocation))
+			c.IO.PrintWarning(ctx, "%s", slackerror.New(slackerror.ErrSlackSlackJSONLocation))
 			break
 		}
 		// Next, search for the hooks files in the outdated path
@@ -231,13 +231,13 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		slackConfigDirPath := filepath.Join(dirPath, ".slack")
 		info, err = c.Fs.Stat(slackConfigDirPath)
 		if err == nil && info.IsDir() {
-			return slackerror.New(slackerror.ErrHooksJsonLocation)
+			return slackerror.New(slackerror.ErrHooksJSONLocation)
 		}
 		// Return an error if we have reached the user home directory, root directory,
 		// system root volume, or "." (returned by Dir when all path elements are removed)
 		switch dirPath {
 		case homeDir, "/", filepath.VolumeName(os.Getenv("SYSTEMROOT")) + "\\", ".":
-			return slackerror.New(slackerror.ErrHooksJsonLocation)
+			return slackerror.New(slackerror.ErrHooksJSONLocation)
 		}
 		// Move upward one directory level
 		dirPath = filepath.Dir(dirPath)
@@ -272,7 +272,7 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 	getHooksConfig := GetHooksConfig{}
 	err := json.Unmarshal(configFileBytes, &getHooksConfig)
 	if err != nil {
-		return slackerror.JsonUnmarshalError(err, configFileBytes)
+		return slackerror.JSONUnmarshalError(err, configFileBytes)
 	}
 
 	// When GetHooks is available, load the scripts as the default values
@@ -281,7 +281,7 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 	if getHooksConfig.Hooks.GetHooks.IsAvailable() {
 		getHooksConfig.Hooks.GetHooks.Name = "GetHooks"
 		getHooksArgs := map[string]string{}
-		if devInstanceHostname := getDevHostname(c.Config.ApiHostResolved); devInstanceHostname != "" {
+		if devInstanceHostname := getDevHostname(c.Config.APIHostResolved); devInstanceHostname != "" {
 			getHooksArgs[sdkSlackDevDomainFlag] = devInstanceHostname
 			getHooksArgs[sdkUnsafelyIgnoreCertErrorsFlag] = devInstanceHostname
 		}

@@ -30,7 +30,7 @@ type HookExecutor interface {
 func GetHookExecutor(ios iostreams.IOStreamer, cfg SDKCLIConfig) HookExecutor {
 	protocol := cfg.Config.SupportedProtocols.Preferred()
 	switch protocol {
-	case HOOK_PROTOCOL_V2:
+	case HookProtocolV2:
 		return &HookExecutorMessageBoundaryProtocol{
 			IO: ios,
 		}

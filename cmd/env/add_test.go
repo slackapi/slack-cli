@@ -57,12 +57,12 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
 		},
@@ -70,12 +70,12 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.REMOTE,
+						FunctionRuntime: types.Remote,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -87,7 +87,7 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 		"errors if the project manifest cannot be retrieved": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
@@ -98,7 +98,7 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
 		},
 		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.MANIFEST_SOURCE_REMOTE,
+			mockManifestSource:   config.ManifestSourceRemote,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -149,7 +149,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				setupEnvAddCommandMocks(ctx, cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -187,7 +187,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -218,7 +218,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -258,7 +258,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -288,5 +288,5 @@ func setupEnvAddCommandMocks(ctx context.Context, cm *shared.ClientsMock, cf *sh
 
 	cm.Config.Flags.String("value", "", "mock value flag")
 
-	cm.ApiInterface.On("AddVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	cm.APIInterface.On("AddVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 }

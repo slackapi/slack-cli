@@ -20,28 +20,28 @@ type ProviderData struct {
 }
 
 type ManifestOAuth2ProviderOptions struct {
-	AuthorizationUrl       string            `json:"authorization_url" yaml:"authorization_url,flow"`
-	ClientId               string            `json:"client_id" yaml:"client_id,flow"`
-	TokenUrl               string            `json:"token_url" yaml:"token_url,flow"`
+	AuthorizationURL       string            `json:"authorization_url" yaml:"authorization_url,flow"`
+	ClientID               string            `json:"client_id" yaml:"client_id,flow"`
+	TokenURL               string            `json:"token_url" yaml:"token_url,flow"`
 	Scope                  []string          `json:"scope" yaml:"scope,flow"`
 	ProviderName           string            `json:"provider_name" yaml:"provider_name,flow"`
 	IdentityConfig         *RawJSON          `json:"identity_config" yaml:"identity_config,flow"`
-	AuthorizationUrlExtras map[string]string `json:"authorization_url_extras,omitempty" yaml:"authorization_url_extras,omitempty,flow"`
+	AuthorizationURLExtras map[string]string `json:"authorization_url_extras,omitempty" yaml:"authorization_url_extras,omitempty,flow"`
 }
 
 type ExternalAuthorizationInfo struct {
 	ProviderName       string              `json:"provider_name" yaml:"provider_name,flow"`
 	ProviderKey        string              `json:"provider_key" yaml:"provider_key,flow"`
-	ClientId           string              `json:"client_id" yaml:"client_id,flow"`
+	ClientID           string              `json:"client_id" yaml:"client_id,flow"`
 	ClientSecretExists bool                `json:"client_secret_exists" yaml:"client_secret_exists,flow"`
 	ValidTokenExists   bool                `json:"valid_token_exists" yaml:"valid_token_exists,flow"`
-	ExternalTokenIds   []string            `json:"external_token_ids,omitempty" yaml:"external_token_ids,omitempty,flow"`
+	ExternalTokenIDs   []string            `json:"external_token_ids,omitempty" yaml:"external_token_ids,omitempty,flow"`
 	ExternalTokens     []ExternalTokenInfo `json:"external_tokens,omitempty" yaml:"external_tokens,omitempty,flow"`
 }
 
 type WorkflowsInfo struct {
-	WorkflowId string          `json:"workflow_id" yaml:"workflow_id,flow"`
-	CallBackId string          `json:"callback_id" yaml:"callback_id,flow"`
+	WorkflowID string          `json:"workflow_id" yaml:"workflow_id,flow"`
+	CallBackID string          `json:"callback_id" yaml:"callback_id,flow"`
 	Providers  []ProvidersInfo `json:"providers" yaml:"providers,flow"`
 }
 
@@ -52,8 +52,8 @@ type ProvidersInfo struct {
 }
 
 type ExternalTokenInfo struct {
-	ExternalTokenId string `json:"external_token_id" yaml:"external_token_id,flow"`
-	ExternalUserId  string `json:"external_user_id" yaml:"external_user_id,flow"`
+	ExternalTokenID string `json:"external_token_id" yaml:"external_token_id,flow"`
+	ExternalUserID  string `json:"external_user_id" yaml:"external_user_id,flow"`
 	DateUpdated     int    `json:"date_updated" yaml:"date_updated,flow"`
 }
 
@@ -63,8 +63,8 @@ type ExternalAuthorizationInfoLists struct {
 }
 
 type WorkflowExternalAuthorizationInfo struct {
-	WorkflowId string                              `json:"workflow_id" yaml:"workflow_id,flow"`
-	CallbackId string                              `json:"callback_id" yaml:"callback_id,flow"`
+	WorkflowID string                              `json:"workflow_id" yaml:"workflow_id,flow"`
+	CallbackID string                              `json:"callback_id" yaml:"callback_id,flow"`
 	Providers  []ProviderExternalAuthorizationInfo `json:"providers" yaml:"providers,flow"`
 }
 
@@ -75,7 +75,7 @@ type ProviderExternalAuthorizationInfo struct {
 }
 
 type SelectedAuthInfo struct {
-	ExternalTokenId string `json:"external_token_id" yaml:"external_token_id,flow"`
-	ExternalUserId  string `json:"external_user_id" yaml:"external_user_id,flow"`
+	ExternalTokenID string `json:"external_token_id" yaml:"external_token_id,flow"`
+	ExternalUserID  string `json:"external_user_id" yaml:"external_user_id,flow"`
 	DateUpdated     string `json:"date_updated" yaml:"date_updated,flow"`
 }

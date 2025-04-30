@@ -25,7 +25,7 @@ const (
 )
 
 // Options allows a user of this lib to customize their http Client.
-type HttpClientOptions struct {
+type HTTPClientOptions struct {
 	TotalTimeOut     time.Duration // total time for the life of the request.
 	SkipTLSVerify    bool
 	Retries          int            // how many times we should retry, if 0 no retry logic is added.
@@ -36,7 +36,7 @@ type HttpClientOptions struct {
 }
 
 // New returns an http.Client based on a given Options input.
-func NewHttpClient(opts HttpClientOptions) *http.Client {
+func NewHTTPClient(opts HTTPClientOptions) *http.Client {
 	var client http.Client
 
 	if opts.TotalTimeOut == 0 {

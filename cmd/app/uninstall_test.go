@@ -48,7 +48,7 @@ func TestAppsUninstall(t *testing.T) {
 		"Successfully uninstall": {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				prepareCommonUninstallMocks(ctx, clients, clientsMock)
-				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
+				clientsMock.APIInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
 			},
 			ExpectedStdoutOutputs: []string{
@@ -58,7 +58,7 @@ func TestAppsUninstall(t *testing.T) {
 		"Successfully uninstall with a get-manifest hook error": {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				prepareCommonUninstallMocks(ctx, clients, clientsMock)
-				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
+				clientsMock.APIInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(nil).Once()
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
@@ -73,7 +73,7 @@ func TestAppsUninstall(t *testing.T) {
 			ExpectedError: slackerror.New("something went wrong"),
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				prepareCommonUninstallMocks(ctx, clients, clientsMock)
-				clientsMock.ApiInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
+				clientsMock.APIInterface.On("UninstallApp", mock.Anything, mock.Anything, fakeAppID, fakeAppTeamID).
 					Return(slackerror.New("something went wrong")).Once()
 			},
 		},
@@ -102,12 +102,12 @@ func prepareCommonUninstallMocks(ctx context.Context, clients *shared.ClientFact
 	appSelectMock.On("AppSelectPrompt").Return(selectedProdApp, nil)
 
 	// Mock API calls
-	clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
 	clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("logstash host")
 
-	clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 		TeamName: &fakeApp.TeamDomain,
 		TeamID:   &fakeApp.TeamID,
 	}, nil)

@@ -70,7 +70,7 @@ func runRemoveCommandFunc(ctx context.Context, clients *shared.ClientFactory, cm
 	if err = cmdutil.AppExists(selection.App, selection.Auth); err != nil {
 		return err
 	}
-	warnings, err := clients.ApiInterface().RemoveCollaborator(ctx, selection.Auth.Token, selection.App.AppID, slackUser)
+	warnings, err := clients.APIInterface().RemoveCollaborator(ctx, selection.Auth.Token, selection.App.AppID, slackUser)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func promptCollaboratorsRemoveSlackUserPrompts(
 	slackUser types.SlackUser,
 	err error,
 ) {
-	collaborators, err := clients.ApiInterface().ListCollaborators(ctx, selection.Auth.Token, selection.App.AppID)
+	collaborators, err := clients.APIInterface().ListCollaborators(ctx, selection.Auth.Token, selection.App.AppID)
 	if err != nil {
 		return types.SlackUser{}, err
 	}

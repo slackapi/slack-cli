@@ -61,12 +61,12 @@ func TestBulkPutCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
 		},
@@ -74,12 +74,12 @@ func TestBulkPutCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.REMOTE,
+						FunctionRuntime: types.Remote,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -91,7 +91,7 @@ func TestBulkPutCommandPreRun(t *testing.T) {
 		"errors if the project manifest cannot be retrieved": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
@@ -102,7 +102,7 @@ func TestBulkPutCommandPreRun(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
 		},
 		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.MANIFEST_SOURCE_REMOTE,
+			mockManifestSource:   config.ManifestSourceRemote,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -235,7 +235,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
-				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
 
 				itemsFile, err := cm.Fs.Create("my-file")
@@ -265,7 +265,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 			ExpectedOutputs: []string{"Some items failed to be imported"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
-				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
 
 				itemsFile, err := cm.Fs.Create("my-file")
@@ -308,7 +308,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 			ExpectedOutputs: []string{"Import will be limited to the first 5000 items in the file"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
-				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
 
 				itemsFile, err := cm.Fs.Create("my-file")
@@ -338,10 +338,10 @@ func TestBulkPutCommandImport(t *testing.T) {
 				items, err := prepareImportMockData(itemsFile, 2, 0)
 				assert.NoError(t, err)
 
-				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{FailedItems: items[:1]}, nil).Once()
 
-				cm.ApiInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil).Once()
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
@@ -350,8 +350,8 @@ func TestBulkPutCommandImport(t *testing.T) {
 				status, _ := importProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully imported (2) items! (0) items failed to be imported. Total processed items is (2)")
 
-				cm.ApiInterface.AssertNumberOfCalls(t, "AppsDatastoreBulkPut", 2)
-				cm.ApiInterface.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
+				cm.APIInterface.AssertNumberOfCalls(t, "AppsDatastoreBulkPut", 2)
+				cm.APIInterface.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
 					Datastore: "Todos",
 					App:       "A0123456",
 					Items: []map[string]interface{}{
@@ -359,7 +359,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 						{"task_id": "0002", "task": "counting", "status": "ongoing"},
 					},
 				})
-				cm.ApiInterface.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
+				cm.APIInterface.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
 					Datastore: "Todos",
 					App:       "A0123456",
 					Items: []map[string]interface{}{
@@ -388,7 +388,7 @@ func prepareImportMockData(file afero.File, numberOfValidRows int, numberOfInval
 		} else {
 			data = append(data, item)
 		}
-		stringItem, err := goutils.JsonMarshalUnescaped(item)
+		stringItem, err := goutils.JSONMarshalUnescaped(item)
 		if err != nil {
 			return []map[string]interface{}{}, err
 		}

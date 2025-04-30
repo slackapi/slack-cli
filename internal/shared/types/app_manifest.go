@@ -20,7 +20,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const SCHEMA_VERSION = 1
+const SchemaVersion = 1
 
 // omitempty should be consistent across yaml and json marshalling
 // for yaml, are we always using flow style? most properties have it, but when
@@ -99,7 +99,7 @@ type AppSettings struct {
 	Interactivity          *ManifestInteractivity      `json:"interactivity,omitempty" yaml:"interactivity,omitempty"`
 	IncomingWebhooks       *IncomingWebhooks           `json:"incoming_webhooks,omitempty" yaml:"incoming_webhooks,flow,omitempty"`
 	EventSubscriptions     *ManifestEventSubscriptions `json:"event_subscriptions,omitempty" yaml:"event_subscriptions,flow,omitempty"`
-	AllowedIpAddressRanges []string                    `json:"allowed_ip_address_ranges,omitempty" yaml:"allowed_ip_address_ranges,flow,omitempty"`
+	AllowedIPAddressRanges []string                    `json:"allowed_ip_address_ranges,omitempty" yaml:"allowed_ip_address_ranges,flow,omitempty"`
 	FunctionRuntime        FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
 	TokenRotationEnabled   *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
 	SiwsLinks              *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
@@ -219,7 +219,7 @@ type ManifestEventSubscriptions struct {
 }
 
 type MetadataSubscription struct {
-	AppId     string `json:"app_id" yaml:"app_id"`
+	AppID     string `json:"app_id" yaml:"app_id"`
 	EventType string `json:"event_type" yaml:"event_type"`
 }
 
@@ -284,23 +284,18 @@ type Constraint struct {
 }
 
 type SiwsLinks struct {
-	InitiateUri string `json:"initiate_uri,omitempty" yaml:"initiate_uri,omitempty"`
+	InitiateURI string `json:"initiate_uri,omitempty" yaml:"initiate_uri,omitempty"`
 }
 
 type FunctionRuntime string
 
 const (
-	SLACK_HOSTED FunctionRuntime = "slack"
-	LOCALLY_RUN  FunctionRuntime = "local"
-	REMOTE       FunctionRuntime = "remote"
+	LocallyRun  FunctionRuntime = "local"
+	Remote      FunctionRuntime = "remote"
+	SlackHosted FunctionRuntime = "slack"
 )
 
 type ShortcutScopeType string
-
-const (
-	MESSAGE string = "message"
-	GLOBAL  string = "global"
-)
 
 // Methods
 
@@ -315,11 +310,11 @@ func (manifest *AppManifest) FunctionRuntime() FunctionRuntime {
 // IsFunctionRuntimeSlackHosted returns true when the function runtime setting
 // is slack hosted
 func (manifest *AppManifest) IsFunctionRuntimeSlackHosted() bool {
-	return manifest.Settings != nil && manifest.Settings.FunctionRuntime == SLACK_HOSTED
+	return manifest.Settings != nil && manifest.Settings.FunctionRuntime == SlackHosted
 }
 
-// ToRawJson converts a string to types.RawJSON
-func ToRawJson(obj string) *RawJSON {
+// ToRawJSON converts a string to types.RawJSON
+func ToRawJSON(obj string) *RawJSON {
 	b := []byte(obj)
 	return &RawJSON{JSONData: (*json.RawMessage)(&b)}
 }

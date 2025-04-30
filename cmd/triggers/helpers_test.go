@@ -45,7 +45,7 @@ func createFakeTrigger(fakeTriggerID string, fakeTriggerName string, fakeAppID s
 			ID:          fakeTriggerID,
 			Type:        "shortcut",
 			Name:        fakeTriggerName,
-			ShortcutUrl: "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID,
+			ShortcutURL: "https://app.slack.com/app/" + fakeAppID + "/shortcut/" + fakeTriggerID,
 		}
 	case "scheduled":
 		fakeTrigger = types.DeployedTrigger{

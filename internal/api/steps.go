@@ -27,7 +27,7 @@ const (
 	workflowsStepsResponsesExportMethod = "functions.workflows.steps.responses.export"
 )
 
-const openFormFunctionId = "Fn010N"
+const openFormFunctionID = "Fn010N"
 
 type StepVersion struct {
 	Title                  string `json:"title"`
@@ -47,19 +47,19 @@ type exportResponse struct {
 }
 
 type StepsClient interface {
-	StepsList(ctx context.Context, token string, workflow string, appId string) ([]StepVersion, error)
-	StepsResponsesExport(ctx context.Context, token string, workflow string, appId string, stepId string) error
+	StepsList(ctx context.Context, token string, workflow string, appID string) ([]StepVersion, error)
+	StepsResponsesExport(ctx context.Context, token string, workflow string, appID string, stepID string) error
 }
 
-func (c *Client) StepsList(ctx context.Context, token string, workflow string, appId string) ([]StepVersion, error) {
+func (c *Client) StepsList(ctx context.Context, token string, workflow string, appID string) ([]StepVersion, error) {
 	args := struct {
-		WorkflowAppId string `json:"workflow_app_id"`
+		WorkflowAppID string `json:"workflow_app_id"`
 		Workflow      string `json:"workflow"`
-		FunctionId    string `json:"function_id"`
+		FunctionID    string `json:"function_id"`
 	}{
-		appId,
+		appID,
 		workflow,
-		openFormFunctionId,
+		openFormFunctionID,
 	}
 
 	body, err := json.Marshal(args)
@@ -69,31 +69,31 @@ func (c *Client) StepsList(ctx context.Context, token string, workflow string, a
 
 	b, err := c.postJSON(ctx, workflowsStepsListMethod, token, "", body)
 	if err != nil {
-		return []StepVersion{}, errHttpRequestFailed.WithRootCause(err)
+		return []StepVersion{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := stepsListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return []StepVersion{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsStepsListMethod)
+		return []StepVersion{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsStepsListMethod)
 	}
 
 	if !resp.Ok {
-		return []StepVersion{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsStepsListMethod)
+		return []StepVersion{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsStepsListMethod)
 	}
 
 	return resp.StepVersions, nil
 }
 
-func (c *Client) StepsResponsesExport(ctx context.Context, token string, workflow string, appId string, stepId string) error {
+func (c *Client) StepsResponsesExport(ctx context.Context, token string, workflow string, appID string, stepID string) error {
 	args := struct {
-		WorkflowAppId string `json:"workflow_app_id"`
+		WorkflowAppID string `json:"workflow_app_id"`
 		Workflow      string `json:"workflow"`
-		StepId        string `json:"step_id"`
+		StepID        string `json:"step_id"`
 	}{
-		appId,
+		appID,
 		workflow,
-		stepId,
+		stepID,
 	}
 
 	body, err := json.Marshal(args)
@@ -103,17 +103,17 @@ func (c *Client) StepsResponsesExport(ctx context.Context, token string, workflo
 
 	b, err := c.postJSON(ctx, workflowsStepsResponsesExportMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := exportResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsStepsResponsesExportMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsStepsResponsesExportMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsStepsResponsesExportMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsStepsResponsesExportMethod)
 	}
 
 	return nil

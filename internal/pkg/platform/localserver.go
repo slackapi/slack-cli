@@ -91,13 +91,13 @@ func (r *LocalServer) Start(ctx context.Context) error {
 		err := func() error {
 			// Get a socket connection address
 			r.clients.IO.PrintDebug(ctx, "Retrieving and establishing connection to WebSocket URL...")
-			result, err := r.clients.ApiInterface().ConnectionsOpen(ctx, r.token)
+			result, err := r.clients.APIInterface().ConnectionsOpen(ctx, r.token)
 			if err != nil {
 				return slackerror.Wrap(err, slackerror.ErrSocketConnection).WithMessage("Error fetching socket connection URL")
 			}
 
 			// Open the websocket connection
-			c, _, err := websocketDialerDial(websocket.DefaultDialer, result.Url, nil)
+			c, _, err := websocketDialerDial(websocket.DefaultDialer, result.URL, nil)
 			if err != nil {
 				return slackerror.Wrap(err, slackerror.ErrSocketConnection).WithMessage("Error establishing socket connection")
 			}
@@ -363,17 +363,17 @@ func (r *LocalServer) Watch(ctx context.Context, auth types.SlackAuth, app types
 func (r *LocalServer) WatchActivityLogs(ctx context.Context, minLevel string) error {
 	// Default minimum log level
 	if strings.TrimSpace(minLevel) == "" {
-		minLevel = ACTIVITY_MIN_LEVEL
+		minLevel = ActivityMinLevelDefault
 	}
 
 	var activityArgs = types.ActivityArgs{
-		TeamId:            r.localHostedContext.TeamID,
-		AppId:             r.localHostedContext.AppID,
+		TeamID:            r.localHostedContext.TeamID,
+		AppID:             r.localHostedContext.AppID,
 		TailArg:           true,
-		PollingIntervalMS: ACTIVITY_POLLING_INTERVAL_SECONDS * 1000,
+		PollingIntervalMS: ActivityPollingIntervalDefault * 1000,
 		MinDateCreated:    time.Now().UnixMicro(),
 		MinLevel:          minLevel,
-		Limit:             ACTIVITY_LIMIT,
+		Limit:             ActivityLimitDefault,
 
 		// Timeout after 24 hours - TODO(@mbrooks) can we remove the timeout entirely?
 		IdleTimeoutM: 60 * 24,
