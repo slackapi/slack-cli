@@ -56,7 +56,7 @@ type ClientFactory struct {
 	EventTracker tracking.TrackingManager
 
 	Runtime       runtime.Runtime
-	CliVersion    string
+	CLIVersion    string
 	AuthInterface func() auth.AuthInterface
 
 	// Browser can display or open URLs as webpages on the internet
@@ -115,8 +115,8 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	// Used by the APIClient for its userAgent
 	// Currently needed because trying to get the version of the CLI from pkg/version/version.go would cause a circular dependency
 	// We can get rid of this once we refactor the code relationship between pkg/ and internal/
-	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CliVersion is retained for future code refactor purpose and serve SetVersion function
-	clients.CliVersion = ""
+	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CLIVersion is retained for future code refactor purpose and serve SetVersion function
+	clients.CLIVersion = ""
 
 	// Custom values set by functional options
 	// Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
@@ -224,7 +224,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "cli.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
-			return slackerror.New(slackerror.ErrCliConfigLocationError)
+			return slackerror.New(slackerror.ErrCLIConfigLocationError)
 		}
 		// Return an error if the current path is the project root, identified by the
 		// .slack directory, because no hooks file was found
@@ -331,7 +331,7 @@ func DebugMode(c *ClientFactory) {
 // SetVersion is a functional option that sets the Cli version that the API Client references
 // Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
 func SetVersion(version string) func(c *ClientFactory) {
-	return func(c *ClientFactory) { c.CliVersion = version }
+	return func(c *ClientFactory) { c.CLIVersion = version }
 }
 
 // getDevHostname returns the hostname of the given URL if it is dev or a numbered dev instance
