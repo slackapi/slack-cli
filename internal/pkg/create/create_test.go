@@ -129,7 +129,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			},
 			unexpectedOutputs: []string{
 				"Found project-name/.slack/hooks.json", // Behind bolt experiment
-				"project-name/slack.json",              // TODO(semver:major) Deprecated
+				"project-name/slack.json",              // DEPRECATED(semver:major): Now use hooks.json
 			},
 			expectedVerboseOutputs: []string{
 				"Detected a project using Deno",
@@ -137,7 +137,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		},
 		"When no bolt experiment and slack.json exists, should output adding .slack and caching steps": {
 			existingFiles: map[string]string{
-				"slack.json": "{}", // TODO(semver:major) Included with the template (deprecated path)
+				"slack.json": "{}", // DEPRECATED(semver:major): Included with the template (deprecated path)
 			},
 			expectedOutputs: []string{
 				"Added project-name/.slack",
@@ -188,7 +188,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			},
 			expectedOutputs: []string{
 				"Added project-name/.slack",
-				"Found project-name/slack.json", // TODO(semver:major) Deprecated
+				"Found project-name/slack.json", // DEPRECATED(semver:major): Now use hooks.json
 				"Cached dependencies with deno cache import_map.json",
 			},
 			expectedVerboseOutputs: []string{

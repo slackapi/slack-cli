@@ -316,7 +316,7 @@ func (c *ProjectConfig) GetProjectDirPath() (string, error) {
 	if _, err := c.fs.Stat(projectHooksJSONPath); os.IsNotExist(err) {
 
 		// Fallback check for slack.json and .slack/slack.json file
-		// TODO(semver:major): remove both fallbacks next major release
+		// DEPRECATED(semver:major): remove both fallbacks next major release
 		projectSlackJSONPath := filepath.Join(currentDir, "slack.json")
 		if _, err := c.fs.Stat(projectSlackJSONPath); err == nil {
 			return currentDir, nil
