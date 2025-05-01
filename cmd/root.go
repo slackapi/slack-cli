@@ -259,8 +259,8 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	clients.Config.TrustUnknownSources = trustSources
 
 	// Init clients that use flags
-	clients.Config.ApiHostResolved = clients.AuthInterface().ResolveApiHost(ctx, clients.Config.ApiHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.ApiHostResolved, clients.CliVersion)
+	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
+	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.CLIVersion)
 
 	// Init System ID
 	if systemID, err := clients.Config.SystemConfig.InitSystemID(ctx); err != nil {
@@ -291,7 +291,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
-	clients.Config.Version = clients.CliVersion
+	clients.Config.Version = clients.CLIVersion
 
 	// The domain auths (token->domain) shouldn't change for the execution of the CLI so preload them into config!
 	clients.Config.DomainAuthTokens = clients.AuthInterface().MapAuthTokensToDomains(ctx)

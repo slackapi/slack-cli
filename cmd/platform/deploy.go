@@ -92,7 +92,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
+			if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 				return nil
 			}
 			switch {
@@ -163,18 +163,18 @@ func hasValidDeploymentMethod(
 		return err
 	}
 	switch {
-	case manifestSource.Equals(config.MANIFEST_SOURCE_LOCAL):
+	case manifestSource.Equals(config.ManifestSourceLocal):
 		manifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}
-	case manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE):
+	case manifestSource.Equals(config.ManifestSourceRemote):
 		manifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return err
 		}
 	}
-	if manifest.FunctionRuntime() == types.SLACK_HOSTED {
+	if manifest.FunctionRuntime() == types.SlackHosted {
 		return nil
 	}
 	return errorMissingDeployHook(clients)
@@ -256,9 +256,9 @@ func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Comm
 
 	parsedAppInfo := map[string]string{}
 
-	host := clients.ApiInterface().Host()
-	if appId := event.DataToString("appId"); appId != "" && host != "" {
-		parsedAppInfo["Dashboard"] = fmt.Sprintf("%s/apps/%s", host, appId)
+	host := clients.APIInterface().Host()
+	if appID := event.DataToString("appID"); appID != "" && host != "" {
+		parsedAppInfo["Dashboard"] = fmt.Sprintf("%s/apps/%s", host, appID)
 	}
 
 	if authSession.UserName != nil && authSession.UserID != nil {

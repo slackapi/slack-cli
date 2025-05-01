@@ -109,7 +109,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		if err != nil {
 			return err
 		}
-		if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
+		if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 			return nil
 		}
 		ctx = _ctx
@@ -133,9 +133,9 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	// Fix the app ID selected from the menu. In the --trigger-def case, this lets you use the same
 	// def file for dev and prod.
-	triggerArg.WorkflowAppId = app.AppID
+	triggerArg.WorkflowAppID = app.AppID
 
-	createdTrigger, err := clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+	createdTrigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 	if extendedErr, ok := err.(*api.TriggerCreateOrUpdateError); ok {
 		// If the user used --workflow and the creation failed because we were missing the interactivity
 		// context, lets prompt and optionally add it
@@ -149,7 +149,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 				return err
 			}
 			if retryTriggerCreate {
-				createdTrigger, err = clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+				createdTrigger, err = clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 			}
 		}
 	}
@@ -191,7 +191,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateSuccess)
 	if createdTrigger.Type == "shortcut" {
-		clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateURL, createdTrigger.ShortcutUrl)
+		clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateURL, createdTrigger.ShortcutURL)
 	}
 	if createdTrigger.Type == "webhook" {
 		clients.IO.PrintTrace(ctx, slacktrace.TriggersCreateURL, createdTrigger.Webhook)
@@ -211,11 +211,11 @@ func promptShouldInstallAndRetry(ctx context.Context, clients *shared.ClientFact
 		if err != nil {
 			return types.DeployedTrigger{}, false, slackerror.Wrap(err, slackerror.ErrInstallationFailed)
 		}
-		if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
+		if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 			return types.DeployedTrigger{}, false, nil
 		}
 
-		trigger, err := clients.ApiInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+		trigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
 		if err != nil {
 			return types.DeployedTrigger{}, false, err
 		}
@@ -240,8 +240,8 @@ func ListWorkflows(
 
 	if len(slackYaml.Workflows) > 0 {
 		workflows := ""
-		for cb_id := range slackYaml.Workflows {
-			workflows = workflows + fmt.Sprintf("- #/workflows/%s\n", cb_id)
+		for callbackID := range slackYaml.Workflows {
+			workflows = workflows + fmt.Sprintf("- #/workflows/%s\n", callbackID)
 		}
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 			Emoji: "bulb",

@@ -135,7 +135,7 @@ func runCountCommandFunc(
 	}
 
 	// Perform the count
-	countResult, err := clients.ApiInterface().AppsDatastoreCount(ctx, selection.Auth.Token, count)
+	countResult, err := clients.APIInterface().AppsDatastoreCount(ctx, selection.Auth.Token, count)
 	if err != nil {
 		return err
 	}

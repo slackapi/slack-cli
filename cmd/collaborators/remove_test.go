@@ -56,14 +56,14 @@ func TestRemoveCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").
 					Return(mockSelection, nil)
-				cm.ApiInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				collaborator := types.SlackUser{
 					ID: "USLACKBOT",
 				}
-				cm.ApiInterface.AssertCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, "A001", collaborator)
+				cm.APIInterface.AssertCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, "A001", collaborator)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorRemoveSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorRemoveCollaborator, []string{"USLACKBOT"})
 			},
@@ -75,16 +75,16 @@ func TestRemoveCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").
 					Return(mockSelection, nil)
-				cm.ApiInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				cm.IO.On("IsTTY").Return(true)
-				cm.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
 					Return(mockCollaborators, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Remove a collaborator", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, "A001", mockCollaborators[1])
+				cm.APIInterface.AssertCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, "A001", mockCollaborators[1])
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorRemoveSuccess, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorRemoveCollaborator, []string{"reader@slack.com"})
 			},
@@ -96,10 +96,10 @@ func TestRemoveCommand(t *testing.T) {
 				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
 				appSelectMock.On("TeamAppSelectPrompt").
 					Return(mockSelection, nil)
-				cm.ApiInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				cm.IO.On("IsTTY").Return(true)
-				cm.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
+				cm.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
 					Return(mockCollaborators, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Remove a collaborator", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0}, nil)
@@ -107,7 +107,7 @@ func TestRemoveCommand(t *testing.T) {
 					Return(false, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertNotCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				cm.APIInterface.AssertNotCalled(t, "RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
 		},

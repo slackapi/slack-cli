@@ -31,7 +31,7 @@ import (
 
 type exportCmdFlags struct {
 	workflow string
-	stepId   string
+	stepID   string
 }
 
 var exportFlags exportCmdFlags
@@ -58,7 +58,7 @@ func NewExportCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.PersistentFlags().StringVar(&exportFlags.workflow, "workflow", "", "a reference to the workflow containing the form\n  formatted as \"#/workflows/<workflow_callback_id>\"")
-	cmd.PersistentFlags().StringVar(&exportFlags.stepId, "step-id", "", "the ID of an OpenForm step in this workflow")
+	cmd.PersistentFlags().StringVar(&exportFlags.stepID, "step-id", "", "the ID of an OpenForm step in this workflow")
 
 	return &cmd
 }
@@ -74,22 +74,22 @@ func runExportCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	}
 
 	token := selection.Auth.Token
-	appId := selection.App.AppID
+	appID := selection.App.AppID
 	ctx = config.SetContextToken(ctx, token)
 
 	if exportFlags.workflow == "" {
 		return slackerror.New(slackerror.ErrMissingFlag).WithMessage("--workflow flag required")
 	}
 
-	var stepId = exportFlags.stepId
-	if stepId == "" {
-		stepId, err = pickStepFromPrompt(ctx, clients, token, exportFlags.workflow, appId)
+	var stepID = exportFlags.stepID
+	if stepID == "" {
+		stepID, err = pickStepFromPrompt(ctx, clients, token, exportFlags.workflow, appID)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = clients.ApiInterface().StepsResponsesExport(ctx, token, exportFlags.workflow, appId, stepId)
+	err = clients.APIInterface().StepsResponsesExport(ctx, token, exportFlags.workflow, appID, stepID)
 	if err != nil {
 		return err
 	}
@@ -104,8 +104,8 @@ func runExportCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	return nil
 }
 
-func pickStepFromPrompt(ctx context.Context, clients *shared.ClientFactory, token string, workflow string, appId string) (string, error) {
-	stepVersions, err := clients.ApiInterface().StepsList(ctx, token, workflow, appId)
+func pickStepFromPrompt(ctx context.Context, clients *shared.ClientFactory, token string, workflow string, appID string) (string, error) {
+	stepVersions, err := clients.APIInterface().StepsList(ctx, token, workflow, appID)
 	if err != nil {
 		return "", err
 	}

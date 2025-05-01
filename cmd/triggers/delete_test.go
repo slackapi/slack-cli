@@ -41,10 +41,10 @@ func TestTriggersDeleteCommand(t *testing.T) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
 				clientsMock.AddDefaultMocks()
 				// promptForTriggerID lists available triggers
-				clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return(
+				clientsMock.APIInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return(
 					[]types.DeployedTrigger{{Name: "Trigger 1", ID: fakeTriggerID, Type: "Shortcut", Workflow: types.TriggerWorkflow{AppID: fakeAppID}}}, "", nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger:", mock.Anything, mock.Anything).Return(iostreams.SelectPromptResponse{}, nil)
-				clientsMock.ApiInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.APIInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			Teardown: func() {
 				appSelectTeardown()
@@ -66,7 +66,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 			ExpectedOutputs: []string{"Trigger '" + fakeTriggerID + "' deleted"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
-				clientsMock.ApiInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.APIInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -78,7 +78,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersDelete", mock.Anything, mock.Anything, fakeTriggerID)
+				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersDelete", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
 		"pass --trigger-id, failure": {
@@ -86,7 +86,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 			ExpectedErrorStrings: []string{"invalid_auth"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
-				clientsMock.ApiInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("invalid_auth"))
+				clientsMock.APIInterface.On("WorkflowsTriggersDelete", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -96,7 +96,7 @@ func TestTriggersDeleteCommand(t *testing.T) {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersDelete", mock.Anything, mock.Anything, fakeTriggerID)
+				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersDelete", mock.Anything, mock.Anything, fakeTriggerID)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

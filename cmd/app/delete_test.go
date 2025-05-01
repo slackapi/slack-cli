@@ -61,12 +61,12 @@ func TestAppsDeleteCommand(t *testing.T) {
 				}, nil)
 				// Mock delete confirmation prompt
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the app?", mock.Anything).Return(true, nil)
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					TeamName: &fakeDeployedApp.TeamDomain,
 					TeamID:   &fakeDeployedApp.TeamID,
 				}, nil)
 				// Mock delete API call
-				cm.ApiInterface.On("DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID).Return(nil)
+				cm.APIInterface.On("DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID).Return(nil)
 				// Mock AppClient calls
 				appClientMock := &app.AppClientMock{}
 				appClientMock.On("GetDeployed", mock.Anything, mock.Anything).Return(fakeDeployedApp, nil)
@@ -75,7 +75,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				cf.AppClient().AppClientInterface = appClientMock
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID)
+				cm.APIInterface.AssertCalled(t, "DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID)
 			},
 			ExpectedStdoutOutputs: []string{
 				fmt.Sprintf(`Uninstalled the app "%s" from "%s"`, fakeDeployedApp.AppID, fakeDeployedApp.TeamDomain),
@@ -95,12 +95,12 @@ func TestAppsDeleteCommand(t *testing.T) {
 				}, nil)
 				// Mock delete confirmation prompt
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the app?", mock.Anything).Return(true, nil)
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					TeamName: &fakeLocalApp.TeamDomain,
 					TeamID:   &fakeLocalApp.TeamID,
 				}, nil)
 				// Mock delete API call
-				cm.ApiInterface.On("DeleteApp", mock.Anything, mock.Anything, fakeLocalApp.AppID).Return(nil)
+				cm.APIInterface.On("DeleteApp", mock.Anything, mock.Anything, fakeLocalApp.AppID).Return(nil)
 				// Mock AppClient calls
 				appClientMock := &app.AppClientMock{}
 				appClientMock.On("GetLocal", mock.Anything, mock.Anything).Return(fakeLocalApp, nil)
@@ -108,7 +108,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				cf.AppClient().AppClientInterface = appClientMock
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "DeleteApp", mock.Anything, mock.Anything, fakeLocalApp.AppID)
+				cm.APIInterface.AssertCalled(t, "DeleteApp", mock.Anything, mock.Anything, fakeLocalApp.AppID)
 			},
 			ExpectedStdoutOutputs: []string{
 				fmt.Sprintf(`Uninstalled the app "%s" from "%s"`, fakeLocalApp.AppID, fakeLocalApp.TeamDomain),
@@ -128,12 +128,12 @@ func TestAppsDeleteCommand(t *testing.T) {
 				}, nil)
 				// Mock delete confirmation prompt
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the app?", mock.Anything).Return(true, nil)
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					TeamName: &fakeDeployedApp.TeamDomain,
 					TeamID:   &fakeDeployedApp.TeamID,
 				}, nil)
 				// Mock delete API call
-				cm.ApiInterface.On("DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID).Return(fmt.Errorf("something went terribly wrong"))
+				cm.APIInterface.On("DeleteApp", mock.Anything, mock.Anything, fakeDeployedApp.AppID).Return(fmt.Errorf("something went terribly wrong"))
 				// Mock AppClient calls
 				appClientMock := &app.AppClientMock{}
 				appClientMock.On("GetDeployed", mock.Anything, mock.Anything).Return(fakeDeployedApp, nil)
@@ -146,7 +146,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareCommonDeleteMocks(t, cf, cm)
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 				appSelectMock := prompts.NewAppSelectMock()
 				deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{App: fakeDeployedApp}, nil)
@@ -162,7 +162,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 func prepareCommonDeleteMocks(t *testing.T, cf *shared.ClientFactory, cm *shared.ClientsMock) {
 	cm.AddDefaultMocks()
 
-	cm.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).
+	cm.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
 	cm.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("logstash host")

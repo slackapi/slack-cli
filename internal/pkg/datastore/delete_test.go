@@ -51,7 +51,7 @@ func TestDatastoreDeleteArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.ApiInterface.On("AppsDatastoreDelete", mock.Anything, mock.Anything, tt.Query).
+			clientsMock.APIInterface.On("AppsDatastoreDelete", mock.Anything, mock.Anything, tt.Query).
 				Return(tt.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 

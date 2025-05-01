@@ -19,7 +19,7 @@ package api
 // TODO: consider renaming interfaces from '*Client' to an -er verb such as '*Manager'
 //
 //	Ref: https://go.dev/doc/effective_go#interface-names
-type ApiInterface interface {
+type APIInterface interface {
 	ActivityClient
 	AppsClient
 	AuthClient

@@ -34,11 +34,11 @@ import (
 )
 
 const (
-	ACTIVITY_IDLE_TIMEOUT             = 5
-	ACTIVITY_LIMIT                    = 100
-	ACTIVITY_MIN_LEVEL                = "info"
-	ACTIVITY_POLLING_INTERVAL_SECONDS = 3
-	LOG_TEMPLATE                      = "%s [%s] [%s] (Trace=%s) %s"
+	ActivityIdleTimeoutDefault     = 5 // Minutes
+	ActivityLimitDefault           = 100
+	ActivityMinLevelDefault        = "info"
+	ActivityPollingIntervalDefault = 3 // Seconds
+	logTemplate                    = "%s [%s] [%s] (Trace=%s) %s"
 )
 
 // actor verb object
@@ -60,11 +60,11 @@ func Activity(
 	}
 
 	if args.Browser {
-		clients.Browser().OpenURL(fmt.Sprintf("https://app.%s/app-settings/%s/%s/app-logs", strings.Split(clients.Config.ApiHostResolved, "//")[1], args.TeamId, args.AppId))
+		clients.Browser().OpenURL(fmt.Sprintf("https://app.%s/app-settings/%s/%s/app-logs", strings.Split(clients.Config.APIHostResolved, "//")[1], args.TeamID, args.AppID))
 		return nil
 	}
 
-	authSession, err := clients.ApiInterface().ValidateSession(ctx, token)
+	authSession, err := clients.APIInterface().ValidateSession(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -75,16 +75,16 @@ func Activity(
 	ctx = config.SetContextToken(ctx, token)
 
 	activityRequest := types.ActivityRequest{
-		AppId:              args.AppId,
+		AppID:              args.AppID,
 		Limit:              args.Limit,
 		MinimumDateCreated: args.MinDateCreated,
 		MaximumDateCreated: args.MaxDateCreated,
 		MinimumLogLevel:    args.MinLevel,
 		EventType:          args.EventType,
 		ComponentType:      args.ComponentType,
-		ComponentId:        args.ComponentId,
+		ComponentID:        args.ComponentID,
 		Source:             args.Source,
-		TraceId:            args.TraceId,
+		TraceID:            args.TraceID,
 	}
 
 	latestCreatedTimestamp, _, err := printLatestActivity(ctx, clients, token, activityRequest, token)
@@ -136,7 +136,7 @@ func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, tok
 	span, ctx = opentracing.StartSpanFromContext(ctx, "getLatestActivity")
 	defer span.Finish()
 
-	var result, err = clients.ApiInterface().Activity(ctx, xoxpToken, args)
+	var result, err = clients.APIInterface().Activity(ctx, xoxpToken, args)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -162,47 +162,47 @@ func prettifyActivity(activity api.Activity) (log string) {
 	msg := ""
 
 	switch activity.EventType {
-	case types.DATASTORE_REQUEST_RESULT:
+	case types.DatastoreRequestResult:
 		msg = datastoreRequestResultToString(activity)
-	case types.EXTERNAL_AUTH_MISSING_FUNCTION:
+	case types.ExternalAuthMissingFunction:
 		msg = externalAuthMissingFunctionToString(activity)
-	case types.EXTERNAL_AUTH_MISSING_SELECTED_AUTH:
+	case types.ExternalAuthMissingSelectedAuth:
 		msg = externalAuthMissingSelectedAuthToString(activity)
-	case types.EXTERNAL_AUTH_RESULT:
+	case types.ExternalAuthResult:
 		msg = externalAuthResultToString(activity)
-	case types.EXTERNAL_AUTH_STARTED:
+	case types.ExternalAuthStarted:
 		msg = externalAuthStartedToString(activity)
-	case types.EXTERNAL_AUTH_TOKEN_FETCH_RESULT:
+	case types.ExternalAuthTokenFetchResult:
 		msg = externalAuthTokenFetchResult(activity)
-	case types.FUNCTION_DEPLOYMENT:
+	case types.FunctionDeployment:
 		msg = functionDeploymentToString(activity)
-	case types.FUNCTION_EXECUTION_OUTPUT:
+	case types.FunctionExecutionOutput:
 		msg = functionExecutionOutputToString(activity)
-	case types.TRIGGER_PAYLOAD_RECEIVED:
+	case types.TriggerPayloadReceived:
 		msg = triggerPayloadReceivedOutputToString(activity)
-	case types.FUNCTION_EXECUTION_RESULT:
+	case types.FunctionExecutionResult:
 		msg = functionExecutionResultToString(activity)
-	case types.FUNCTION_EXECUTION_STARTED:
+	case types.FunctionExecutionStarted:
 		msg = functionExecutionStartedToString(activity)
-	case types.TRIGGER_EXECUTED:
+	case types.TriggerExecuted:
 		msg = triggerExecutedToString(activity)
-	case types.WORKFLOW_BILLING_RESULT:
+	case types.WorkflowBillingResult:
 		msg = workflowBillingResultToString(activity)
-	case types.WORKFLOW_BOT_INVITED:
+	case types.WorkflowBotInvited:
 		msg = workflowBotInvitedToString(activity)
-	case types.WORKFLOW_CREATED_FROM_TEMPLATE:
+	case types.WorkflowCreatedFromTemplate:
 		msg = workflowCreatedFromTemplateToString(activity)
-	case types.WORKFLOW_EXECUTION_RESULT:
+	case types.WorkflowExecutionResult:
 		msg = workflowExecutionResultToString(activity)
-	case types.WORKFLOW_EXECUTION_STARTED:
+	case types.WorkflowExecutionStarted:
 		msg = workflowExecutionStartedToString(activity)
-	case types.WORKFLOW_PUBLISHED:
+	case types.WorkflowPublished:
 		msg = workflowPublishedToString(activity)
-	case types.WORKFLOW_STEP_EXECUTION_RESULT:
+	case types.WorkflowStepExecutionResult:
 		msg = workflowStepExecutionResultToString(activity)
-	case types.WORKFLOW_STEP_STARTED:
+	case types.WorkflowStepStarted:
 		msg = workflowStepStartedToString(activity)
-	case types.WORKFLOW_UNPUBLISHED:
+	case types.WorkflowUnpublished:
 		msg = workflowUnpublishedToString(activity)
 	default:
 		payload := []byte("")
@@ -212,7 +212,7 @@ func prettifyActivity(activity api.Activity) (log string) {
 				payload = []byte("")
 			}
 		}
-		msg = fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, payload)
+		msg = fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, payload)
 	}
 
 	switch activity.Level {
@@ -251,17 +251,17 @@ func datastoreRequestResultToString(activity api.Activity) (result string) {
 		msg = fmt.Sprintf("Datastore %s succeeded with '%s'", reqType, details)
 	}
 
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, datastoreName, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, datastoreName, activity.TraceID, msg)
 }
 
 func externalAuthMissingFunctionToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Step function '%s' is missing", activity.Payload["function_id"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func externalAuthMissingSelectedAuthToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Missing mapped token for workflow '%s'", activity.Payload["code"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func externalAuthResultToString(activity api.Activity) (result string) {
@@ -329,7 +329,7 @@ func functionExecutionOutputToString(activity api.Activity) (result string) {
 	//strings.ReplaceAll needs string input only, it doesn't accept json encoded interfaces.
 	//While Sprintf can take the interfaces like json encoded data and outputs as string.
 	msg := strings.ReplaceAll(fmt.Sprintf("Function output:\n%s", log), "\n", "\n\t")
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func triggerPayloadReceivedOutputToString(activity api.Activity) (result string) {
@@ -337,7 +337,7 @@ func triggerPayloadReceivedOutputToString(activity api.Activity) (result string)
 	//strings.ReplaceAll needs string input only, it doesn't accept json encoded interfaces.
 	//While Sprintf can take the interfaces like json encoded data and outputs as string.
 	msg := strings.ReplaceAll(fmt.Sprintf("Trigger payload:\n%s", log), "\n", "\n\t")
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func functionExecutionResultToString(activity api.Activity) (result string) {
@@ -354,12 +354,12 @@ func functionExecutionResultToString(activity api.Activity) (result string) {
 		msg = msg + "\n\t" + strings.ReplaceAll(err.(string), "\n", "\n\t")
 	}
 
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func functionExecutionStartedToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Function '%s' (%s function) started", activity.Payload["function_name"], activity.Payload["function_type"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func triggerExecutedToString(activity api.Activity) (result string) {
@@ -392,7 +392,7 @@ func triggerExecutedToString(activity api.Activity) (result string) {
 
 	// Format the messages in the log template
 	for i, msg := range msgs {
-		msgs[i] = fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+		msgs[i] = fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 	}
 
 	return strings.Join(msgs, "\n")
@@ -400,8 +400,8 @@ func triggerExecutedToString(activity api.Activity) (result string) {
 
 func workflowBillingResultToString(activity api.Activity) (result string) {
 	msg := ""
-	if workflow_name, ok := activity.Payload["workflow_name"]; ok {
-		msg = fmt.Sprintf("Workflow '%s'", workflow_name)
+	if workflowName, ok := activity.Payload["workflow_name"]; ok {
+		msg = fmt.Sprintf("Workflow '%s'", workflowName)
 	} else {
 		msg = "Workflow"
 	}
@@ -411,17 +411,17 @@ func workflowBillingResultToString(activity api.Activity) (result string) {
 	} else {
 		msg = fmt.Sprintf("%s is excluded from billing", msg)
 	}
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowBotInvitedToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Channel %s detected in workflow configuration. Bot user %s automatically invited.", activity.Payload["channel_id"], activity.Payload["bot_user_id"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowCreatedFromTemplateToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Workflow '%s' created from template '%s'", activity.Payload["workflow_name"], activity.Payload["template_id"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowExecutionResultToString(activity api.Activity) (result string) {
@@ -437,17 +437,17 @@ func workflowExecutionResultToString(activity api.Activity) (result string) {
 	if err, ok := activity.Payload["error"]; ok {
 		msg = msg + "\n\t" + strings.ReplaceAll(err.(string), "\n", "\n\t")
 	}
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowExecutionStartedToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Workflow '%s' started", activity.Payload["workflow_name"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowPublishedToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Workflow '%s' published", activity.Payload["workflow_name"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowStepExecutionResultToString(activity api.Activity) (result string) {
@@ -458,15 +458,15 @@ func workflowStepExecutionResultToString(activity api.Activity) (result string) 
 	}
 
 	msg := fmt.Sprintf("Workflow step '%s' %s", activity.Payload["function_name"], s)
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowStepStartedToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Workflow step %.0f of %.0f started", activity.Payload["current_step"], activity.Payload["total_steps"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }
 
 func workflowUnpublishedToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Workflow '%s' unpublished", activity.Payload["workflow_name"])
-	return fmt.Sprintf(LOG_TEMPLATE, activity.CreatedPretty(), activity.Level, activity.ComponentId, activity.TraceId, msg)
+	return fmt.Sprintf(logTemplate, activity.CreatedPretty(), activity.Level, activity.ComponentID, activity.TraceID, msg)
 }

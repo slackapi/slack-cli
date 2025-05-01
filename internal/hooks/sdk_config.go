@@ -64,7 +64,7 @@ func (pv ProtocolVersions) Preferred() Protocol {
 			return p
 		}
 	}
-	return HOOK_PROTOCOL_DEFAULT
+	return HookProtocolDefault
 }
 
 type WatchOpts struct {
