@@ -715,15 +715,15 @@ Otherwise start your app for local development with: %s`,
 
 	ErrFeedbackNameInvalid: {
 		Code:        ErrFeedbackNameInvalid,
-		Message:     "Invalid feedback name provided",
+		Message:     "The name of the feedback is invalid",
 		Remediation: fmt.Sprintf("View the feedback options with %s", style.Commandf("feedback --help", false)),
 	},
 
 	ErrFeedbackNameRequired: {
 		Code:    ErrFeedbackNameRequired,
-		Message: "The name of feedback to provide is required",
+		Message: "The name of the feedback is required",
 		Remediation: strings.Join([]string{
-			"Please provide a feedback --name flag or remove the --no-prompt flag",
+			"Please provide a --name <string> flag or remove the --no-prompt flag",
 			fmt.Sprintf("View feedback options with %s", style.Commandf("feedback --help", false)),
 		}, "\n"),
 	},
