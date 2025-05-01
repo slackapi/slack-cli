@@ -31,7 +31,7 @@ func BulkDelete(ctx context.Context, clients *shared.ClientFactory, log *logger.
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	deleteResult, err := clients.ApiInterface().AppsDatastoreBulkDelete(ctx, token, request)
+	deleteResult, err := clients.APIInterface().AppsDatastoreBulkDelete(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}

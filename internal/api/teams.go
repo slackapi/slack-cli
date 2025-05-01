@@ -53,22 +53,22 @@ func (c *Client) TeamsInfo(ctx context.Context, token, teamID string) (*types.Te
 
 	b, err := c.postForm(ctx, teamsInfoMethod, values)
 	if err != nil {
-		return nil, errHttpRequestFailed.WithRootCause(err)
+		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := TeamInfoResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersPermissionsListMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersPermissionsListMethod)
 	}
 
 	if !resp.Ok {
-		return nil, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersPermissionsListMethod)
 	}
 
 	return &resp.Team, nil
@@ -100,22 +100,22 @@ func (c *Client) AuthTeamsList(ctx context.Context, token string, limit int) ([]
 
 	b, err := c.postForm(ctx, authTeamsListMethod, values)
 	if err != nil {
-		return nil, "", errHttpRequestFailed.WithRootCause(err)
+		return nil, "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return nil, "", errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return nil, "", errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	resp := AuthTeamsListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return nil, "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(authTeamsListMethod)
+		return nil, "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(authTeamsListMethod)
 	}
 
 	if !resp.Ok {
-		return nil, "", slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, authTeamsListMethod)
+		return nil, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, authTeamsListMethod)
 	}
 
 	sort.Slice(resp.Teams, func(i, j int) bool {

@@ -63,7 +63,7 @@ func Test_AuthRevokeToken(t *testing.T) {
 		"errors if the revoke error is an unexpected error": {
 			token:    "xoxb-example-0001",
 			response: `{"ok":false,"error":"not_found"}`,
-			expected: slackerror.New(slackerror.ErrNotFound).AddApiMethod("auth.revoke"),
+			expected: slackerror.New(slackerror.ErrNotFound).AddAPIMethod("auth.revoke"),
 		},
 	}
 	for name, tt := range tests {

@@ -28,7 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const SCRIPT_TEMPLATE = "#!/bin/bash\necho %s\n"
+const scriptTemplate = "#!/bin/bash\necho %s\n"
 
 type testFile struct {
 	path    string
@@ -42,10 +42,10 @@ type testData struct {
 }
 
 func TestDownload(t *testing.T) {
-	badCLIDownloadUrl := "https://downloads.slack-edge.com/slack-cli/fake.zip"
+	badCLIDownloadURL := "https://downloads.slack-edge.com/slack-cli/fake.zip"
 	dir := t.TempDir()
 	dstFilePath := filepath.Join(dir, "slack")
-	err := download(badCLIDownloadUrl, dstFilePath)
+	err := download(badCLIDownloadURL, dstFilePath)
 	require.Error(t, err, "Should return an error")
 }
 
@@ -56,7 +56,7 @@ func TestUpgradeFromLocalFile_multiFile(t *testing.T) {
 	filesToArchive := []testFile{
 		{
 			path:    "bin/slack",
-			content: fmt.Sprintf(SCRIPT_TEMPLATE, newVersion),
+			content: fmt.Sprintf(scriptTemplate, newVersion),
 		},
 		{
 			path:    "README.md",
@@ -123,7 +123,7 @@ func TestUpgradeFromLocalFile_singleFile(t *testing.T) {
 	filesToArchive := []testFile{
 		{
 			path:    "slack",
-			content: fmt.Sprintf(SCRIPT_TEMPLATE, newVersion),
+			content: fmt.Sprintf(scriptTemplate, newVersion),
 		},
 	}
 
@@ -178,7 +178,7 @@ func TestUpgradeFromLocalFile_restoresAfterBadUpgrade(t *testing.T) {
 	filesToArchive := []testFile{
 		{
 			path:    "slack",
-			content: fmt.Sprintf(SCRIPT_TEMPLATE, "vBadVersion"),
+			content: fmt.Sprintf(scriptTemplate, "vBadVersion"),
 		},
 	}
 	dir := t.TempDir()

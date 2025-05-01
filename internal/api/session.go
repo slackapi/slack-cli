@@ -47,25 +47,25 @@ func (c *Client) ValidateSession(ctx context.Context, token string) (AuthSession
 
 	b, err := c.postForm(ctx, sessionValidateMethod, url.Values{"token": []string{token}})
 	if err != nil {
-		return AuthSession{}, errHttpRequestFailed.WithRootCause(err)
+		return AuthSession{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return AuthSession{}, errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return AuthSession{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	var authResp authCheckResponse
-	err = goutils.JsonUnmarshal(b, &authResp)
+	err = goutils.JSONUnmarshal(b, &authResp)
 	if err != nil {
-		return AuthSession{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(sessionValidateMethod)
+		return AuthSession{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sessionValidateMethod)
 	}
 
 	if !authResp.Ok {
-		return AuthSession{}, slackerror.NewApiError(authResp.Error, authResp.Description, authResp.Errors, sessionValidateMethod)
+		return AuthSession{}, slackerror.NewAPIError(authResp.Error, authResp.Description, authResp.Errors, sessionValidateMethod)
 	}
 
 	if authResp.UserID == nil {
-		return AuthSession{}, errHttpResponseInvalid.WithRootCause(slackerror.New("invalid user_id"))
+		return AuthSession{}, errHTTPResponseInvalid.WithRootCause(slackerror.New("invalid user_id"))
 	}
 
 	return authResp.AuthSession, nil
@@ -95,21 +95,21 @@ func (c *Client) RevokeToken(ctx context.Context, token string) error {
 
 	b, err := c.postForm(ctx, revokeTokenMethod, url.Values{"token": []string{token}})
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	if b == nil {
-		return errHttpResponseInvalid.WithRootCause(slackerror.New("empty body"))
+		return errHTTPResponseInvalid.WithRootCause(slackerror.New("empty body"))
 	}
 
 	var revokeResp authRevokeResponse
-	err = goutils.JsonUnmarshal(b, &revokeResp)
+	err = goutils.JSONUnmarshal(b, &revokeResp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(revokeTokenMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(revokeTokenMethod)
 	}
 
 	if !revokeResp.Ok {
-		return slackerror.NewApiError(revokeResp.Error, revokeResp.Description, revokeResp.Errors, revokeTokenMethod)
+		return slackerror.NewAPIError(revokeResp.Error, revokeResp.Description, revokeResp.Errors, revokeTokenMethod)
 	}
 
 	return nil

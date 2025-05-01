@@ -30,9 +30,9 @@ func AccessLabels(current types.Permission) ([]string, []types.Permission) {
 	distributions := []types.Permission{}
 	distributionLabels := []string{}
 	optionLabels := map[types.Permission]string{
-		types.APP_COLLABORATORS: "app collaborators only",
-		types.EVERYONE:          "everyone",
-		types.NAMED_ENTITIES:    "specific users",
+		types.PermissionAppCollaborators: "app collaborators only",
+		types.PermissionEveryone:         "everyone",
+		types.PermissionNamedEntities:    "specific users",
 	}
 
 	distributionLabels = append(distributionLabels, fmt.Sprintf("%s (current)", optionLabels[current]))

@@ -112,7 +112,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // setQueryExpression validates the provided expression and sets query values
 func setQueryExpression(clients *shared.ClientFactory, query types.Datastorer, expression string, method string) error {
-	err := goutils.JsonUnmarshal([]byte(expression), query)
+	err := goutils.JSONUnmarshal([]byte(expression), query)
 	if err != nil {
 		return slackerror.New(slackerror.ErrInvalidDatastoreExpression).
 			WithRootCause(err).
@@ -157,7 +157,7 @@ func datastoreExpressionRemediation(command string, isEmpty bool) string {
 
 // printDatastoreExpressionMarshal displays a message with the query encoded as JSON
 func printDatastoreExpressionMarshal(ctx context.Context, clients *shared.ClientFactory, query interface{}) error {
-	expression, err := goutils.JsonMarshalUnescaped(query)
+	expression, err := goutils.JSONMarshalUnescaped(query)
 	if err != nil {
 		return err
 	}
