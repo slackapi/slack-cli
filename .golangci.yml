@@ -46,7 +46,27 @@ linters:
         - '-ST1016' # disable rule 'Use consistent method receiver names'
       # https://golangci-lint.run/usage/linters/#staticcheck
       # https://staticcheck.dev/docs/configuration/options/#initialisms
-      initialisms: ["ACL", "API", "ASCII", "CLI", "CPU", "CSS", "DNS", "EOF", "GUID", "HTML", "HTTP", "HTTPS", "ID", "IP", "JSON", "QPS", "RAM", "RPC", "SLA", "SMTP", "SQL", "SSH", "TCP", "TLS", "TTL", "UDP", "UI", "GID", "UID", "UUID", "URI", "URL", "UTF8", "VM", "XML", "XMPP", "XSRF", "XSS", "SDK", "SIP", "RTP", "AMQP", "DB", "TS"]
+      initialisms:
+        - "ACL"
+        - "API"
+        - "CLI"
+        - "EOF"
+        - "HTML"
+        - "HTTP"
+        - "HTTPS"
+        - "ID"
+        - "IP"
+        - "JSON"
+        - "TCP"
+        - "TLS"
+        - "TTL"
+        - "UI"
+        - "UUID"
+        - "URI"
+        - "URL"
+        - "UTF"
+        - "SDK"
+        - "TS"
 
 formatters:
   enable:
