@@ -26,15 +26,14 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestFeedbackCommand(t *testing.T) {
-
 	t.Run("when there is only one survey option", func(t *testing.T) {
-
 		surveys := map[string]SlackSurvey{
 			SlackPlatformFeedback: {
 				Name:              SlackPlatformFeedback,
@@ -72,12 +71,14 @@ func TestFeedbackCommand(t *testing.T) {
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
 		err := runFeedbackCommand(ctx, clients, cmd)
+
+		// Assertions
 		assert.NoError(t, err)
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
+		clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.FeedbackMessage, []string{SlackPlatformFeedback})
 	})
 
 	t.Run("when there are multiple survey options", func(t *testing.T) {
-
 		surveys := map[string]SlackSurvey{
 			"A_test": {
 				Name:              "A_test",
@@ -139,12 +140,14 @@ func TestFeedbackCommand(t *testing.T) {
 		cmd := NewFeedbackCommand(clients)
 		err := runFeedbackCommand(ctx, clients, cmd)
 		assert.NoError(t, err)
+
+		// Assertions
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
+		clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.FeedbackMessage, []string{SlackPlatformFeedback})
 	})
 }
 
 func TestShowSurveyMessages(t *testing.T) {
-
 	t.Run("surveys asked or not asked based on the stored config", func(t *testing.T) {
 		surveys := map[string]SlackSurvey{
 			// Should be asked once; already asked
@@ -248,5 +251,4 @@ func TestShowSurveyMessages(t *testing.T) {
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://B.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://C.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 	})
-
 }

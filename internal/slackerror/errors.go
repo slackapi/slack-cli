@@ -103,6 +103,8 @@ const (
 	ErrFailedToGetUser                               = "failed_to_get_user"
 	ErrFailedToSaveExtensionLogs                     = "failed_to_save_extension_logs"
 	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
+	ErrFeedbackNameInvalid                           = "feedback_name_invalid"
+	ErrFeedbackNameRequired                          = "feedback_name_required"
 	ErrFileRejected                                  = "file_rejected"
 	ErrForbiddenTeam                                 = "forbidden_team"
 	ErrFreeTeamNotAllowed                            = "free_team_not_allowed"
@@ -709,6 +711,21 @@ Otherwise start your app for local development with: %s`,
 	ErrFailToGetTeamsForRestrictedUser: {
 		Code:    ErrFailToGetTeamsForRestrictedUser,
 		Message: "Failed to get teams for restricted user",
+	},
+
+	ErrFeedbackNameInvalid: {
+		Code:        ErrFeedbackNameInvalid,
+		Message:     "The name of the feedback is invalid",
+		Remediation: fmt.Sprintf("View the feedback options with %s", style.Commandf("feedback --help", false)),
+	},
+
+	ErrFeedbackNameRequired: {
+		Code:    ErrFeedbackNameRequired,
+		Message: "The name of the feedback is required",
+		Remediation: strings.Join([]string{
+			"Please provide a --name <string> flag or remove the --no-prompt flag",
+			fmt.Sprintf("View feedback options with %s", style.Commandf("feedback --help", false)),
+		}, "\n"),
 	},
 
 	ErrFileRejected: {
