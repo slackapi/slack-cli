@@ -110,7 +110,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		}
 		return err
 	}
-	if selectedWorkflowAuth.CallBackID == "" {
+	if selectedWorkflowAuth.CallbackID == "" {
 		return slackerror.New(slackerror.ErrWorkflowNotFound)
 	}
 	if selectedWorkflowAuth.WorkflowID == "" {
@@ -158,7 +158,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		Emoji: "sparkles",
 		Text: fmt.Sprintf(
 			"Workflow #/workflows/%s will use developer account %s when making calls to %s APIs",
-			selectedWorkflowAuth.CallBackID,
+			selectedWorkflowAuth.CallbackID,
 			selectedAuth.ExternalUserID,
 			selectedProviderAuth.ProviderKey,
 		),

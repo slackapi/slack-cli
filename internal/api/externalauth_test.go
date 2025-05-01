@@ -343,7 +343,7 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 				Workflows: []types.WorkflowsInfo{
 					{
 						WorkflowID: "Wf04QXGCK3FF",
-						CallBackID: "external_auth_demo_workflow",
+						CallbackID: "external_auth_demo_workflow",
 						Providers: []types.ProvidersInfo{
 							{
 								ProviderName: "Google",

@@ -41,7 +41,7 @@ type ExternalAuthorizationInfo struct {
 
 type WorkflowsInfo struct {
 	WorkflowID string          `json:"workflow_id" yaml:"workflow_id,flow"`
-	CallBackID string          `json:"callback_id" yaml:"callback_id,flow"`
+	CallbackID string          `json:"callback_id" yaml:"callback_id,flow"`
 	Providers  []ProvidersInfo `json:"providers" yaml:"providers,flow"`
 }
 
