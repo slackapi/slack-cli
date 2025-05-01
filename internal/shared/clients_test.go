@@ -90,7 +90,7 @@ func Test_ClientFactory_InitSDKConfig(t *testing.T) {
 			mockHooksJSONContent:  "{}",
 			mockHooksJSONFilePath: filepath.Join(slackdeps.MockHomeDirectory, "project", ".slack", "cli.json"),
 			mockWorkingDirectory:  filepath.Join(slackdeps.MockHomeDirectory, "project"),
-			expectedError:         slackerror.New(slackerror.ErrCliConfigLocationError),
+			expectedError:         slackerror.New(slackerror.ErrCLIConfigLocationError),
 		},
 		"errors if no project configuration file can be found": {
 			mockHooksJSONContent:  "{}",

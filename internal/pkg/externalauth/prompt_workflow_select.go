@@ -32,7 +32,7 @@ func WorkflowSelectPrompt(ctx context.Context, clients *shared.ClientFactory, pr
 	var workflowOptions = []string{}
 	var selectedWorkflow types.WorkflowsInfo
 	for _, workflow := range workflows {
-		workflowMap[workflow.CallBackID] = workflow
+		workflowMap[workflow.CallbackID] = workflow
 		providers := workflow.Providers
 		var providerList strings.Builder
 		for _, provider := range providers {
@@ -43,7 +43,7 @@ func WorkflowSelectPrompt(ctx context.Context, clients *shared.ClientFactory, pr
 			}
 			fmt.Fprintf(&providerList, "\tKey: %s, Name: %s, Selected Account: %s\n", provider.ProviderKey, provider.ProviderName, selectedExternalAccountID)
 		}
-		optionText := fmt.Sprintf("Workflow: %s\n  Providers:\n %s", workflowCallbackPrefix+workflow.CallBackID, providerList.String())
+		optionText := fmt.Sprintf("Workflow: %s\n  Providers:\n %s", workflowCallbackPrefix+workflow.CallbackID, providerList.String())
 		workflowOptions = append(workflowOptions, optionText)
 	}
 	selection, err := clients.IO.SelectPrompt(ctx, "Select a workflow", workflowOptions, iostreams.SelectPromptConfig{

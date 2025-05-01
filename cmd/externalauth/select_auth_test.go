@@ -202,7 +202,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		Workflows: []types.WorkflowsInfo{
 			{
 				WorkflowID: "Wf0548LABCD1",
-				CallBackID: "my_callback_id1",
+				CallbackID: "my_callback_id1",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_c",
@@ -225,7 +225,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			{
 				WorkflowID: "Wf0548LABCD2",
-				CallBackID: "my_callback_id2",
+				CallbackID: "my_callback_id2",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_a",

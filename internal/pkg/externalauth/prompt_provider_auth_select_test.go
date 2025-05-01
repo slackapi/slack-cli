@@ -41,7 +41,7 @@ func TestPrompt_ProviderAuthSelectPrompt_empty_list(t *testing.T) {
 func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 	workflowsInfo := types.WorkflowsInfo{
 		WorkflowID: "Wf0548LABCD1",
-		CallBackID: "my_callback_id1",
+		CallbackID: "my_callback_id1",
 		Providers: []types.ProvidersInfo{
 			{
 				ProviderKey:  "provider_a",
@@ -108,7 +108,7 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 	workflowsInfo := types.WorkflowsInfo{
 		WorkflowID: "Wf0548LABCD1",
-		CallBackID: "my_callback_id1",
+		CallbackID: "my_callback_id1",
 		Providers: []types.ProvidersInfo{
 			{
 				ProviderKey:  "provider_a",

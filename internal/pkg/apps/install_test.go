@@ -90,7 +90,7 @@ func TestInstall(t *testing.T) {
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
 					},
 					Settings: &types.AppSettings{
@@ -105,7 +105,7 @@ func TestInstall(t *testing.T) {
 				TeamDomain:   mockTeamDomain,
 			},
 			expectedManifest: types.AppManifest{
-				MetaData: &types.ManifestMetaData{
+				Metadata: &types.ManifestMetadata{
 					MajorVersion: 2,
 				},
 				Settings: &types.AppSettings{
@@ -149,7 +149,7 @@ func TestInstall(t *testing.T) {
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
 					},
 					Settings: &types.AppSettings{
@@ -164,7 +164,7 @@ func TestInstall(t *testing.T) {
 				TeamDomain:   mockTeamDomain,
 			},
 			expectedManifest: types.AppManifest{
-				MetaData: &types.ManifestMetaData{
+				Metadata: &types.ManifestMetadata{
 					MajorVersion: 2,
 				},
 				Settings: &types.AppSettings{
@@ -210,7 +210,7 @@ func TestInstall(t *testing.T) {
 			mockIsTTY:          true,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
 					},
 					DisplayInformation: types.DisplayInformation{
@@ -232,7 +232,7 @@ func TestInstall(t *testing.T) {
 			},
 			expectedInstallState: types.InstallSuccess,
 			expectedManifest: types.AppManifest{
-				MetaData: &types.ManifestMetaData{
+				Metadata: &types.ManifestMetadata{
 					MajorVersion: 1,
 				},
 				DisplayInformation: types.DisplayInformation{
@@ -386,7 +386,7 @@ func TestInstall(t *testing.T) {
 			mockIsTTY:          true,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
 					},
 					DisplayInformation: types.DisplayInformation{
@@ -426,7 +426,7 @@ func TestInstall(t *testing.T) {
 			mockBoltExperiment: true,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
 					},
 					DisplayInformation: types.DisplayInformation{
@@ -442,7 +442,7 @@ func TestInstall(t *testing.T) {
 			},
 			expectedInstallState: types.InstallSuccess,
 			expectedManifest: types.AppManifest{
-				MetaData: &types.ManifestMetaData{
+				Metadata: &types.ManifestMetadata{
 					MajorVersion: 1,
 				},
 				DisplayInformation: types.DisplayInformation{
@@ -687,7 +687,7 @@ func TestInstallLocalApp(t *testing.T) {
 			},
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
 					},
 					DisplayInformation: types.DisplayInformation{
@@ -707,7 +707,7 @@ func TestInstallLocalApp(t *testing.T) {
 				UserID:       mockUserID,
 			},
 			expectedManifest: types.AppManifest{
-				MetaData: &types.ManifestMetaData{
+				Metadata: &types.ManifestMetadata{
 					MajorVersion: 2,
 				},
 				DisplayInformation: types.DisplayInformation{
@@ -749,7 +749,7 @@ func TestInstallLocalApp(t *testing.T) {
 			},
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
-					MetaData: &types.ManifestMetaData{
+					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
 					},
 					DisplayInformation: types.DisplayInformation{
@@ -777,7 +777,7 @@ func TestInstallLocalApp(t *testing.T) {
 				UserID: mockUserID,
 			},
 			expectedManifest: types.AppManifest{
-				MetaData: &types.ManifestMetaData{
+				Metadata: &types.ManifestMetadata{
 					MajorVersion: 1,
 				},
 				DisplayInformation: types.DisplayInformation{
