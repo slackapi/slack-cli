@@ -71,7 +71,7 @@ func (m *AuthMock) RevokeToken(ctx context.Context, token string) error {
 	return args.Error(0)
 }
 
-func (m *AuthMock) ResolveApiHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string {
+func (m *AuthMock) ResolveAPIHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string {
 	args := m.Called(ctx, apiHostFlag, customAuth)
 	return args.String(0)
 }
@@ -86,12 +86,12 @@ func (m *AuthMock) MapAuthTokensToDomains(ctx context.Context) string {
 	return args.String(0)
 }
 
-func (m *AuthMock) IsApiHostSlackDev(host string) bool {
+func (m *AuthMock) IsAPIHostSlackDev(host string) bool {
 	args := m.Called(host)
 	return args.Bool(0)
 }
 
-func (m *AuthMock) IsApiHostSlackProd(host string) bool {
+func (m *AuthMock) IsAPIHostSlackProd(host string) bool {
 	args := m.Called(host)
 	return args.Bool(0)
 }

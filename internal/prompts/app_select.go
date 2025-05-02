@@ -284,8 +284,8 @@ func getApps(ctx context.Context, clients *shared.ClientFactory) (map[string]Sel
 		}
 		auth := apps[0].Auth
 		apiHost := ""
-		if auth.ApiHost != nil {
-			apiHost = *auth.ApiHost
+		if auth.APIHost != nil {
+			apiHost = *auth.APIHost
 		}
 		ids := []string{}
 		for _, app := range apps {
@@ -545,7 +545,7 @@ func getTokenApp(ctx context.Context, clients *shared.ClientFactory, token strin
 		return SelectedApp{}, err
 	}
 	var appStatus api.AppStatusResultAppInfo
-	if appStatusResult, err := clients.ApiInterface().GetAppStatus(ctx, token, []string{appID}, auth.TeamID); err != nil {
+	if appStatusResult, err := clients.APIInterface().GetAppStatus(ctx, token, []string{appID}, auth.TeamID); err != nil {
 		return SelectedApp{}, err
 	} else if len(appStatusResult.Apps) != 1 || appStatusResult.Apps[0].AppID != appID {
 		return SelectedApp{}, slackerror.New(slackerror.ErrAppNotFound)
@@ -588,8 +588,8 @@ func appendAppInstallStatus(ctx context.Context, clients *shared.ClientFactory, 
 	}
 	if len(appIDs) > 0 {
 		var apiHost = ""
-		if auth.ApiHost != nil {
-			apiHost = *auth.ApiHost
+		if auth.APIHost != nil {
+			apiHost = *auth.APIHost
 		}
 		appInfo, err := getInstallationStatuses(ctx, clients, auth.Token, appIDs, auth.TeamID, apiHost)
 		if err != nil {
@@ -627,7 +627,7 @@ func getInstallationStatuses(ctx context.Context, clients *shared.ClientFactory,
 	startTimer := time.Now()
 
 	// Ensure that the client's host in this case is set to any apiHost provided
-	apiClient := clients.ApiInterface()
+	apiClient := clients.APIInterface()
 	if apiHost != "" {
 		apiClient.SetHost(apiHost)
 	}
@@ -910,7 +910,7 @@ func selectTeamApp(ctx context.Context, clients *shared.ClientFactory, workspace
 	}
 
 	teamIDsWithApps, domainsWithApps, domainsWithAppsLabels := []string{}, []string{}, []string{}
-	unusedTeamIds, unusedDomains, unusedDomainsLabels := []string{}, []string{}, []string{}
+	unusedTeamIDs, unusedDomains, unusedDomainsLabels := []string{}, []string{}, []string{}
 	for _, workspace := range workspaceApps {
 		if includeApp(workspace.Hosted.App) {
 
@@ -928,7 +928,7 @@ func selectTeamApp(ctx context.Context, clients *shared.ClientFactory, workspace
 		} else {
 			// Neither hosted nor local app can be included, so this teamApp's remaining auth domain is unused
 			if workspace.Auth.TeamID != "" {
-				unusedTeamIds = append(unusedTeamIds, workspace.Auth.TeamID)
+				unusedTeamIDs = append(unusedTeamIDs, workspace.Auth.TeamID)
 				unusedDomains = append(unusedDomains, workspace.Auth.TeamDomain)
 				unusedDomainsLabels = append(unusedDomainsLabels, style.TeamSelectLabel(workspace.Auth.TeamDomain, workspace.Auth.TeamID))
 			}
@@ -942,7 +942,7 @@ func selectTeamApp(ctx context.Context, clients *shared.ClientFactory, workspace
 	if err := SortAlphaNumeric(domainsWithApps, domainsWithAppsLabels, teamIDsWithApps); err != nil {
 		return "", SelectedApp{}, err
 	}
-	if err := SortAlphaNumeric(unusedDomains, unusedDomainsLabels, unusedTeamIds); err != nil {
+	if err := SortAlphaNumeric(unusedDomains, unusedDomainsLabels, unusedTeamIDs); err != nil {
 		return "", SelectedApp{}, err
 	}
 
@@ -995,7 +995,7 @@ func selectTeamApp(ctx context.Context, clients *shared.ClientFactory, workspace
 			}
 		} else if selection.Prompt {
 			selectedDomain = unusedDomains[selection.Index]
-			selectedTeamID = unusedTeamIds[selection.Index]
+			selectedTeamID = unusedTeamIDs[selection.Index]
 		}
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(appTransferDisclaimer))
 	}
@@ -1162,7 +1162,7 @@ func flatAppSelectPrompt(
 			return SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired)
 		}
 	case ShowAllApps, ShowInstalledAndNewApps:
-		if manifestSource.Equals(config.MANIFEST_SOURCE_LOCAL) {
+		if manifestSource.Equals(config.ManifestSourceLocal) {
 			option := Selection{
 				label: style.Secondary("Create a new app"),
 			}
@@ -1687,7 +1687,7 @@ func TeamAppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env
 
 // OrgSelectWorkspacePrompt prompts the user to select a single workspace to grant app access to, or grant all workspaces within the org.
 func OrgSelectWorkspacePrompt(ctx context.Context, clients *shared.ClientFactory, orgDomain, token string, topOptionAllWorkspaces bool) (string, error) {
-	teams, paginationCursor, err := clients.ApiInterface().AuthTeamsList(ctx, token, api.DefaultAuthTeamsListPageSize)
+	teams, paginationCursor, err := clients.APIInterface().AuthTeamsList(ctx, token, api.DefaultAuthTeamsListPageSize)
 	if err != nil {
 		return "", err
 	}
@@ -1824,12 +1824,12 @@ func appExists(app types.App) bool {
 // validateAuth checks if the auth for the selected app is valid and if not,
 // prompts the user to re-authenticate
 func validateAuth(ctx context.Context, clients *shared.ClientFactory, auth *types.SlackAuth) error {
-	apiClient := clients.ApiInterface()
+	apiClient := clients.APIInterface()
 	if auth == nil {
 		auth = &types.SlackAuth{}
 	}
-	if auth.ApiHost != nil {
-		apiClient.SetHost(*auth.ApiHost)
+	if auth.APIHost != nil {
+		apiClient.SetHost(*auth.APIHost)
 	}
 	_, err := apiClient.ValidateSession(ctx, auth.Token)
 	if err == nil {

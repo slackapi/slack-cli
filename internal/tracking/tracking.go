@@ -162,8 +162,8 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 	if cfg.DisableTelemetryFlag {
 		return nil
 	}
-	postUrl := cfg.LogstashHostResolved
-	if postUrl == "" {
+	postURL := cfg.LogstashHostResolved
+	if postURL == "" {
 		// Root command initialization was not run; we might get here if user ran `slack --version`.
 		// In this case, the root command was not initialized, so none of the bootup routine executed (flags weren't parsed, config not initialized, etc.).
 		return nil
@@ -210,10 +210,10 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		return err
 	}
 
-	ioStream.PrintDebug(ctx, "FlushToLogstash will POST %s payload: %s", postUrl, string(postBody))
+	ioStream.PrintDebug(ctx, "FlushToLogstash will POST %s payload: %s", postURL, string(postBody))
 	responseBody := bytes.NewBuffer(postBody)
 
-	request, err := http.NewRequest("POST", postUrl, responseBody)
+	request, err := http.NewRequest("POST", postURL, responseBody)
 	if err != nil {
 		return err
 	}

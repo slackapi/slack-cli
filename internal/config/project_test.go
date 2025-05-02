@@ -232,24 +232,24 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 		expectedError                 error
 	}{
 		"saves manifest.source remote to project configs": {
-			mockManifestSource:            MANIFEST_SOURCE_REMOTE,
-			expectedManifestSourceDefault: MANIFEST_SOURCE_LOCAL,
-			expectedManifestSource:        MANIFEST_SOURCE_REMOTE,
+			mockManifestSource:            ManifestSourceRemote,
+			expectedManifestSourceDefault: ManifestSourceLocal,
+			expectedManifestSource:        ManifestSourceRemote,
 		},
 		"saves manifest.source local to project configs": {
-			mockManifestSource:            MANIFEST_SOURCE_LOCAL,
-			expectedManifestSourceDefault: MANIFEST_SOURCE_LOCAL,
-			expectedManifestSource:        MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:            ManifestSourceLocal,
+			expectedManifestSourceDefault: ManifestSourceLocal,
+			expectedManifestSource:        ManifestSourceLocal,
 		},
 		"errors if an unknown manifest.source is provided": {
 			mockManifestSource:            ManifestSource("upstream"),
-			expectedManifestSourceDefault: MANIFEST_SOURCE_LOCAL,
+			expectedManifestSourceDefault: ManifestSourceLocal,
 			expectedError:                 slackerror.New(slackerror.ErrProjectConfigManifestSource),
 		},
 		"defaults to local manifest without manifest.source": {
 			mockManifestSource:            ManifestSource(""),
-			expectedManifestSourceDefault: MANIFEST_SOURCE_LOCAL,
-			expectedManifestSource:        MANIFEST_SOURCE_LOCAL,
+			expectedManifestSourceDefault: ManifestSourceLocal,
+			expectedManifestSource:        ManifestSourceLocal,
 		},
 	}
 	for name, tt := range tests {
@@ -353,7 +353,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 
 		_, err = projectConfig.ReadProjectConfigFile(ctx)
 		require.Error(t, err)
-		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJson)
+		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of project-level config file")
 	})
 }

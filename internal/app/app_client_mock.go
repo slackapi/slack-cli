@@ -25,8 +25,8 @@ type AppClientMock struct {
 	mock.Mock
 }
 
-func (m *AppClientMock) NewDeployed(ctx context.Context, teamId string) (types.App, error) {
-	args := m.Called(ctx, teamId)
+func (m *AppClientMock) NewDeployed(ctx context.Context, teamID string) (types.App, error) {
+	args := m.Called(ctx, teamID)
 	return args.Get(0).(types.App), args.Error(1)
 }
 

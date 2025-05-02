@@ -224,13 +224,13 @@ func promptDatastoreUpdateRequest(
 	// Prompt for the primary key first
 	primaryKey := yaml.Datastores[query.Datastore].PrimaryKey
 	primaryKeyPrompt := fmt.Sprintf("Enter a value for '%s':", yaml.Datastores[query.Datastore].PrimaryKey)
-	recordId, err := clients.IO.InputPrompt(ctx, primaryKeyPrompt, iostreams.InputPromptConfig{
+	recordID, err := clients.IO.InputPrompt(ctx, primaryKeyPrompt, iostreams.InputPromptConfig{
 		Required: true,
 	})
 	if err != nil {
 		return types.AppDatastoreUpdate{}, err
 	}
-	query.Item[primaryKey] = recordId
+	query.Item[primaryKey] = recordID
 	delete(fields, primaryKey)
 
 	// Choose fields to update, then update

@@ -28,7 +28,7 @@ type FingerprintPkgMock struct {
 	mock.Mock
 }
 
-const fingerprintHash_test = "d41d8cd98f00b204e9800998ecf8427e"
+const fingerprintHashTest = "d41d8cd98f00b204e9800998ecf8427e"
 
 func TestFingerprintCommand(t *testing.T) {
 	// Create mocks
@@ -49,5 +49,5 @@ func TestFingerprintCommand(t *testing.T) {
 	}
 
 	output := clientsMock.GetCombinedOutput()
-	assert.Contains(t, output, fingerprintHash_test)
+	assert.Contains(t, output, fingerprintHashTest)
 }

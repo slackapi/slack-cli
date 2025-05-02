@@ -298,7 +298,7 @@ func (ac *AppClient) readDeployedApps() error {
 	}
 
 	if err = json.Unmarshal(f, &ac.apps); err != nil {
-		return slackerror.New(slackerror.ErrUnableToParseJson).
+		return slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of deployed apps file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(deployedAppsPath))
@@ -373,7 +373,7 @@ func (ac *AppClient) readLocalApps() error {
 
 	err = json.Unmarshal(f, &ac.apps.LocalApps)
 	if err != nil {
-		return slackerror.New(slackerror.ErrUnableToParseJson).
+		return slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of local apps file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(devAppsPath))
@@ -442,11 +442,11 @@ func (ac *AppClient) migrateToAppByTeamID() error {
 // See also: migrateToAuthByTeamID
 func (ac *AppClient) migrateToAppByTeamIDLocal() error {
 	// Ensure apps.dev.json is written by team_id
-	localAppsByTeamId, err := ac.apps.MapByTeamID(ac.apps.LocalApps)
+	localAppsByTeamID, err := ac.apps.MapByTeamID(ac.apps.LocalApps)
 	if err != nil {
 		return err
 	}
-	ac.apps.LocalApps = localAppsByTeamId
+	ac.apps.LocalApps = localAppsByTeamID
 	if err = ac.saveLocalApps(); err != nil {
 		return err
 	}

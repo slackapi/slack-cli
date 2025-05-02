@@ -45,12 +45,12 @@ func Test_Env_RemoveCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
 		},
@@ -58,12 +58,12 @@ func Test_Env_RemoveCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.REMOTE,
+						FunctionRuntime: types.Remote,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -75,7 +75,7 @@ func Test_Env_RemoveCommandPreRun(t *testing.T) {
 		"errors if the project manifest cannot be retrieved": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
@@ -86,7 +86,7 @@ func Test_Env_RemoveCommandPreRun(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
 		},
 		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.MANIFEST_SOURCE_REMOTE,
+			mockManifestSource:   config.ManifestSourceRemote,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -134,7 +134,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		"remove a variable using arguments": {
 			CmdArgs: []string{"ENV_NAME"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -143,7 +143,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					[]string{"example"},
 					nil,
 				)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"RemoveVariable",
 					mock.Anything,
 					mock.Anything,
@@ -157,7 +157,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"RemoveVariable",
 					mock.Anything,
@@ -177,7 +177,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		"remove a variable using prompt": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -186,7 +186,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					[]string{"example"},
 					nil,
 				)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"RemoveVariable",
 					mock.Anything,
 					mock.Anything,
@@ -216,14 +216,14 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				)
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"RemoveVariable",
 					mock.Anything,
@@ -236,7 +236,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		"exit without errors when prompting zero environment variables": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -250,7 +250,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(
+				cm.APIInterface.AssertCalled(
 					t,
 					"ListVariables",
 					mock.Anything,

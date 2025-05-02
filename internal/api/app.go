@@ -49,12 +49,12 @@ const (
 
 // AppsClient is the interface for app-related API calls
 type AppsClient interface {
-	CertifiedAppInstall(ctx context.Context, token string, certifiedAppId string) (CertifiedInstallResult, error)
+	CertifiedAppInstall(ctx context.Context, token string, certifiedAppID string) (CertifiedInstallResult, error)
 	ConnectionsOpen(ctx context.Context, token string) (AppsConnectionsOpenResult, error)
 	CreateApp(ctx context.Context, token string, manifest types.AppManifest, enableDistribution bool) (CreateAppResult, error)
 	DeleteApp(ctx context.Context, token string, appID string) error
 	DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreamer, token string, app types.App, botScopes []string, outgoingDomains []string, orgGrantWorkspaceID string, autoRequestAAA bool) (DeveloperAppInstallResult, types.InstallState, error)
-	ExportAppManifest(ctx context.Context, token string, appId string) (ExportAppResult, error)
+	ExportAppManifest(ctx context.Context, token string, appID string) (ExportAppResult, error)
 	GetAppStatus(ctx context.Context, token string, appIDs []string, teamID string) (GetAppStatusResult, error)
 	GetPresignedS3PostParams(ctx context.Context, token string, appID string) (GenerateS3PresignedPostResult, error)
 	Host() string
@@ -65,7 +65,7 @@ type AppsClient interface {
 	UpdateApp(ctx context.Context, token string, appID string, manifest types.AppManifest, forceUpdate bool, continueWithBreakingChanges bool) (UpdateAppResult, error)
 	UploadApp(ctx context.Context, token, runtime, appID string, fileName string) error
 	UploadPackageToS3(ctx context.Context, fs afero.Fs, appID string, uploadParams GenerateS3PresignedPostResult, archiveFilePath string) (string, error)
-	ValidateAppManifest(ctx context.Context, token string, manifest types.AppManifest, appId string) (ValidateAppManifestResult, error)
+	ValidateAppManifest(ctx context.Context, token string, manifest types.AppManifest, appID string) (ValidateAppManifestResult, error)
 }
 
 // This API returns null
@@ -77,15 +77,15 @@ type certifiedInstallResponse struct {
 }
 
 // CertifiedAppInstall requests the installation of a certified app in order for its connectors to be usable
-func (c *Client) CertifiedAppInstall(ctx context.Context, token string, certifiedAppId string) (CertifiedInstallResult, error) {
+func (c *Client) CertifiedAppInstall(ctx context.Context, token string, certifiedAppID string) (CertifiedInstallResult, error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CertifiedAppInstall")
 	defer span.Finish()
 
 	args := struct {
-		AppId string `json:"app_id,omitempty"` // the app id of the certified app
+		AppID string `json:"app_id,omitempty"` // the app id of the certified app
 	}{
-		certifiedAppId,
+		certifiedAppID,
 	}
 
 	body, err := json.Marshal(args)
@@ -94,18 +94,18 @@ func (c *Client) CertifiedAppInstall(ctx context.Context, token string, certifie
 	}
 	b, err := c.postJSON(ctx, appCertifiedInstallMethod, token, "", body)
 	if err != nil {
-		return CertifiedInstallResult{}, errHttpRequestFailed.WithRootCause(err)
+		return CertifiedInstallResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := certifiedInstallResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return CertifiedInstallResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appCertifiedInstallMethod)
+		return CertifiedInstallResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appCertifiedInstallMethod)
 	}
 
 	if !resp.Ok {
-		return CertifiedInstallResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appCertifiedInstallMethod)
+		return CertifiedInstallResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appCertifiedInstallMethod)
 	}
 
 	return resp.CertifiedInstallResult, nil
@@ -135,7 +135,7 @@ type PresignedPostFields struct {
 type CreateAppResult struct {
 	AppID             string      `json:"app_id,omitempty"`
 	Credentials       Credentials `json:"credentials,omitempty"`
-	OAuthAuthorizeUrl string      `json:"oauth_authorize_url,omitempty"`
+	OAuthAuthorizeURL string      `json:"oauth_authorize_url,omitempty"`
 }
 
 type createAppResponse struct {
@@ -170,18 +170,18 @@ func (c *Client) CreateApp(ctx context.Context, token string, manifest types.App
 
 	b, err := c.postJSON(ctx, appManifestCreateMethod, token, "", body)
 	if err != nil {
-		return CreateAppResult{}, errHttpRequestFailed.WithRootCause(err)
+		return CreateAppResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := createAppResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return CreateAppResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestCreateMethod)
+		return CreateAppResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appManifestCreateMethod)
 	}
 
 	if !resp.Ok {
-		return CreateAppResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appManifestCreateMethod)
+		return CreateAppResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appManifestCreateMethod)
 	}
 
 	return resp.CreateAppResult, nil
@@ -215,17 +215,17 @@ func (c *Client) ExportAppManifest(ctx context.Context, token, appID string) (Ex
 	}
 	b, err := c.postJSON(ctx, appManifestExportMethod, token, "", body)
 	if err != nil {
-		return ExportAppResult{}, errHttpRequestFailed.WithRootCause(err)
+		return ExportAppResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := ExportAppResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return ExportAppResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestExportMethod)
+		return ExportAppResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appManifestExportMethod)
 	}
 	if !resp.Ok {
-		return ExportAppResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appManifestExportMethod)
+		return ExportAppResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appManifestExportMethod)
 	}
 	return resp.ExportAppResult, nil
 }
@@ -235,7 +235,7 @@ type ValidateAppManifestResult struct {
 }
 
 // ValidateAppManifest validates a new Slack app
-func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest types.AppManifest, appId string) (ValidateAppManifestResult, error) {
+func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest types.AppManifest, appID string) (ValidateAppManifestResult, error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ValidateAppManifest")
 	defer span.Finish()
@@ -246,10 +246,10 @@ func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest
 	// deployed (slack deploy), but cannot check against apps installed only locally (slack run)
 	args := struct {
 		Manifest types.AppManifest `json:"manifest,omitempty"`
-		AppId    string            `json:"app_id,omitempty"`
+		AppID    string            `json:"app_id,omitempty"`
 	}{
 		manifest,
-		appId,
+		appID,
 	}
 
 	body, err := json.Marshal(args)
@@ -263,15 +263,15 @@ func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest
 
 	if err != nil {
 		return ValidateAppManifestResult{slackerror.Warnings{}},
-			errHttpRequestFailed.WithRootCause(err)
+			errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := extendedBaseResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
 		return ValidateAppManifestResult{slackerror.Warnings{}},
-			errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestValidateMethod)
+			errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appManifestValidateMethod)
 	}
 
 	if resp.Ok && len(resp.Errors) == 0 {
@@ -279,7 +279,7 @@ func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest
 	}
 
 	return ValidateAppManifestResult{resp.Warnings},
-		slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appManifestValidateMethod)
+		slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appManifestValidateMethod)
 }
 
 // UpdateAppResult details returned
@@ -320,18 +320,18 @@ func (c *Client) UpdateApp(ctx context.Context, token string, appID string, mani
 
 	b, err := c.postJSON(ctx, appManifestUpdateMethod, token, "", body)
 	if err != nil {
-		return UpdateAppResult{}, errHttpRequestFailed.WithRootCause(err)
+		return UpdateAppResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := updateAppResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return UpdateAppResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appManifestUpdateMethod)
+		return UpdateAppResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appManifestUpdateMethod)
 	}
 
 	if !resp.Ok {
-		return UpdateAppResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appManifestUpdateMethod)
+		return UpdateAppResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appManifestUpdateMethod)
 	}
 
 	return resp.UpdateAppResult, nil
@@ -339,7 +339,7 @@ func (c *Client) UpdateApp(ctx context.Context, token string, appID string, mani
 
 // GenerateS3PresignedPost details to be saved
 type GenerateS3PresignedPostResult struct {
-	Url      string              `json:"url"`
+	URL      string              `json:"url"`
 	FileName string              `json:"file_name"`
 	Fields   PresignedPostFields `json:"fields"`
 }
@@ -367,18 +367,18 @@ func (c *Client) GetPresignedS3PostParams(ctx context.Context, token string, app
 
 	b, err := c.postJSON(ctx, appGeneratePresignedPostMethod, token, "", body)
 	if err != nil {
-		return GenerateS3PresignedPostResult{}, errHttpRequestFailed.WithRootCause(err)
+		return GenerateS3PresignedPostResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := generateS3PresignedPostResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return GenerateS3PresignedPostResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appGeneratePresignedPostMethod)
+		return GenerateS3PresignedPostResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appGeneratePresignedPostMethod)
 	}
 
 	if !resp.Ok {
-		return GenerateS3PresignedPostResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appGeneratePresignedPostMethod)
+		return GenerateS3PresignedPostResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appGeneratePresignedPostMethod)
 	}
 
 	return resp.GenerateS3PresignedPostResult, nil
@@ -417,18 +417,18 @@ func (c *Client) UploadApp(ctx context.Context, token, runtime, appID string, fi
 
 	b, err := c.postJSON(ctx, appUploadMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := uploadAppResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appUploadMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appUploadMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appUploadMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appUploadMethod)
 	}
 
 	return nil
@@ -457,18 +457,18 @@ func (c *Client) DeleteApp(ctx context.Context, token string, appID string) erro
 
 	b, err := c.postJSON(ctx, appDeleteMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := deleteAppResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDeleteMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDeleteMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDeleteMethod)
 	}
 
 	return nil
@@ -495,20 +495,20 @@ func (c *Client) UninstallApp(ctx context.Context, token string, appID, teamID s
 
 	b, err := c.postJSON(ctx, appDeveloperUninstallMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := struct {
 		baseResponse
 	}{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDeveloperUninstallMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDeveloperUninstallMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, nil, appDeveloperUninstallMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, nil, appDeveloperUninstallMethod)
 	}
 
 	return nil
@@ -556,18 +556,18 @@ func (c *Client) GetAppStatus(ctx context.Context, token string, appIDs []string
 
 	b, err := c.postJSON(ctx, appStatusMethod, token, "", body)
 	if err != nil {
-		return GetAppStatusResult{}, errHttpRequestFailed.WithRootCause(err)
+		return GetAppStatusResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp GetAppStatusResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return GetAppStatusResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appStatusMethod)
+		return GetAppStatusResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appStatusMethod)
 	}
 
 	if !resp.Ok {
-		return GetAppStatusResult{}, slackerror.NewApiError(resp.Error, resp.Description, nil, appStatusMethod)
+		return GetAppStatusResult{}, slackerror.NewAPIError(resp.Error, resp.Description, nil, appStatusMethod)
 	}
 
 	return resp.GetAppStatusResult, nil
@@ -588,7 +588,7 @@ type appsApprovalsRequestsCancelResponse struct {
 
 // GenerateS3PresignedPost details to be saved
 type AppsConnectionsOpenResult struct {
-	Url string `json:"url"`
+	URL string `json:"url"`
 }
 type appsConnectionsOpenResponse struct {
 	extendedBaseResponse
@@ -605,18 +605,18 @@ func (c *Client) ConnectionsOpen(ctx context.Context, token string) (AppsConnect
 
 	b, err := c.postJSON(ctx, appConnectionsOpenMethod, token, "", body)
 	if err != nil {
-		return AppsConnectionsOpenResult{}, errHttpRequestFailed.WithRootCause(err)
+		return AppsConnectionsOpenResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := appsConnectionsOpenResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return AppsConnectionsOpenResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appConnectionsOpenMethod)
+		return AppsConnectionsOpenResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appConnectionsOpenMethod)
 	}
 
 	if !resp.Ok {
-		return AppsConnectionsOpenResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appConnectionsOpenMethod)
+		return AppsConnectionsOpenResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appConnectionsOpenMethod)
 	}
 
 	return resp.AppsConnectionsOpenResult, nil
@@ -672,14 +672,14 @@ func (c *Client) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreame
 
 	b, err := c.postJSON(ctx, appDeveloperInstallMethod, token, "", body)
 	if err != nil {
-		return DeveloperAppInstallResult{}, "", errHttpRequestFailed.WithRootCause(err)
+		return DeveloperAppInstallResult{}, "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	var resp developerAppInstallResponse
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 
 	if err != nil {
-		return DeveloperAppInstallResult{}, "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDeveloperInstallMethod)
+		return DeveloperAppInstallResult{}, "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDeveloperInstallMethod)
 	}
 
 	if !resp.Ok {
@@ -694,10 +694,10 @@ func (c *Client) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreame
 			return DeveloperAppInstallResult{}, installState, err
 		}
 
-		return DeveloperAppInstallResult{}, "", slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDeveloperInstallMethod)
+		return DeveloperAppInstallResult{}, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDeveloperInstallMethod)
 	}
 
-	return resp.DeveloperAppInstallResult, types.SUCCESS, nil
+	return resp.DeveloperAppInstallResult, types.InstallSuccess, nil
 }
 
 // handleAppApprovalStates handles responses from the developerInstall API when admin apps approval (AAA) is on
@@ -773,9 +773,9 @@ func (c *Client) handleAppRequestEligibleState(ctx context.Context, IO iostreams
 		}
 
 		IO.PrintTrace(ctx, slacktrace.AdminAppApprovalRequestPending)
-		return types.REQUEST_PENDING, nil
+		return types.InstallRequestPending, nil
 	} else {
-		return types.REQUEST_NOT_SENT, nil
+		return types.InstallRequestNotSent, nil
 	}
 }
 
@@ -818,17 +818,17 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 
 		b, err := c.postJSON(ctx, appApprovalRequestCancelMethod, token, "", body)
 		if err != nil {
-			return "", errHttpRequestFailed.WithRootCause(err)
+			return "", errHTTPRequestFailed.WithRootCause(err)
 		}
 
 		appsApprovalsRequestsCancelResp := appsApprovalsRequestsCancelResponse{}
-		err = goutils.JsonUnmarshal(b, &appsApprovalsRequestsCancelResp)
+		err = goutils.JSONUnmarshal(b, &appsApprovalsRequestsCancelResp)
 		if err != nil {
-			return "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appApprovalRequestCancelMethod)
+			return "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appApprovalRequestCancelMethod)
 		}
 
 		if !appsApprovalsRequestsCancelResp.Ok {
-			return "", slackerror.NewApiError(
+			return "", slackerror.NewAPIError(
 				appsApprovalsRequestsCancelResp.Error,
 				appsApprovalsRequestsCancelResp.Description,
 				appsApprovalsRequestsCancelResp.Errors,
@@ -842,13 +842,13 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 			return "", err
 		}
 
-		if installState != types.REQUEST_PENDING {
-			return types.REQUEST_CANCELLED, nil
+		if installState != types.InstallRequestPending {
+			return types.InstallRequestCancelled, nil
 		} else {
 			return installState, nil
 		}
 	} else {
-		return types.REQUEST_PENDING, nil
+		return types.InstallRequestPending, nil
 	}
 }
 
@@ -879,17 +879,17 @@ func (c *Client) RequestAppApproval(ctx context.Context, token string, appID str
 
 	b, err := c.postJSON(ctx, appApprovalRequestCreateMethod, token, "", body)
 	if err != nil {
-		return AppsApprovalsRequestsCreateResult{}, errHttpRequestFailed.WithRootCause(err)
+		return AppsApprovalsRequestsCreateResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := appsApprovalsRequestsCreateResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return AppsApprovalsRequestsCreateResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appApprovalRequestCreateMethod)
+		return AppsApprovalsRequestsCreateResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appApprovalRequestCreateMethod)
 	}
 
 	if !resp.Ok {
-		return AppsApprovalsRequestsCreateResult{}, slackerror.NewApiError(
+		return AppsApprovalsRequestsCreateResult{}, slackerror.NewAPIError(
 			resp.Error,
 			resp.Description,
 			resp.Errors,

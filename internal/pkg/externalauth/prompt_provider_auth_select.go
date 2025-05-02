@@ -35,12 +35,12 @@ func ProviderAuthSelectPrompt(ctx context.Context, clients *shared.ClientFactory
 	for _, provider := range providers {
 		providerMap[provider.ProviderKey] = provider
 		selectedAuth := provider.SelectedAuth
-		if selectedAuth.ExternalTokenId == "" {
+		if selectedAuth.ExternalTokenID == "" {
 			providerOptions = append(providerOptions,
 				fmt.Sprintf("Key: %s, Name: %s, Selected Account: None", provider.ProviderKey, provider.ProviderName))
 		} else {
 			lastUpdated := time.Unix(int64(selectedAuth.DateUpdated), 0).Format(timeFormat)
-			providerOptions = append(providerOptions, fmt.Sprintf("Key: %s, Name: %s, Selected Account: %s, Last Updated: %s", provider.ProviderKey, provider.ProviderName, selectedAuth.ExternalUserId, lastUpdated))
+			providerOptions = append(providerOptions, fmt.Sprintf("Key: %s, Name: %s, Selected Account: %s, Last Updated: %s", provider.ProviderKey, provider.ProviderName, selectedAuth.ExternalUserID, lastUpdated))
 		}
 	}
 	if len(providerOptions) == 0 {

@@ -28,7 +28,7 @@ import (
 )
 
 type infoCmdFlags struct {
-	triggerId string
+	triggerID string
 }
 
 var infoFlags infoCmdFlags
@@ -54,7 +54,7 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&infoFlags.triggerId, "trigger-id", "", "the ID of the trigger")
+	cmd.Flags().StringVar(&infoFlags.triggerID, "trigger-id", "", "the ID of the trigger")
 
 	return cmd
 }
@@ -78,8 +78,8 @@ func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
-	if infoFlags.triggerId == "" {
-		infoFlags.triggerId, err = promptForTriggerID(ctx, cmd, clients, app, token, defaultLabels)
+	if infoFlags.triggerID == "" {
+		infoFlags.triggerID, err = promptForTriggerID(ctx, cmd, clients, app, token, defaultLabels)
 		if err != nil {
 			if slackerror.ToSlackError(err).Code == slackerror.ErrNoTriggers {
 				printNoTriggersMessage(ctx, clients.IO)
@@ -89,7 +89,7 @@ func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
-	requestedTrigger, err := clients.ApiInterface().WorkflowsTriggersInfo(ctx, token, infoFlags.triggerId)
+	requestedTrigger, err := clients.APIInterface().WorkflowsTriggersInfo(ctx, token, infoFlags.triggerID)
 	if err != nil {
 		return err
 	}

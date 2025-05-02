@@ -45,7 +45,7 @@ func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
@@ -57,12 +57,12 @@ func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.REMOTE,
+						FunctionRuntime: types.Remote,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -74,19 +74,19 @@ func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 		"errors if the project manifest cannot be retrieved": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 		"errors if the command is not run in a project": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookNotFound),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "",
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
 		},
 		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.MANIFEST_SOURCE_REMOTE,
+			mockManifestSource:   config.ManifestSourceRemote,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -141,19 +141,19 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 		"no params": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.APIInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
 
-				clientsMock.ApiInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.APIInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter the client secret", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("secret"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -169,26 +169,26 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret_key_1234")
+				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret_key_1234")
 			},
 		},
 		"with --provider": {
 			CmdArgs: []string{"--provider", "provider_a"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.APIInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_google",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						},
 					}, nil)
 
-				clientsMock.ApiInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.APIInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter the client secret", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("secret"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -204,24 +204,24 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret_key_1234")
+				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret_key_1234")
 			},
 		},
 		"with --secret": {
 			CmdArgs: []string{"--secret", "secret"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.APIInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.ApiInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.APIInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter the client secret", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("secret"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -237,24 +237,24 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret")
+				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret")
 			},
 		},
 		"with --provider and --secret": {
 			CmdArgs: []string{"--provider", "provider_a", "--secret", "secret"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.APIInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.ApiInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.APIInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter the client secret", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("secret"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -269,17 +269,17 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret")
+				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a", "secret")
 			},
 		},
 		"when list api returns error": {
 			CmdArgs: []string{"--provider", "provider_a", "--secret", "secret"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.APIInterface.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{}}, errors.New("test error"))
-				clientsMock.ApiInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl.com", nil)
+				clientsMock.APIInterface.On("AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl.com", nil)
 				clientsMock.IO.On("PasswordPrompt", mock.Anything, "Enter the client secret", iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("secret"),
 				})).Return(iostreams.PasswordPromptResponse{
@@ -295,7 +295,7 @@ func TestExternalAuthAddClientSecretCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"test error"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertNotCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a")
+				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalClientSecretAdd", mock.Anything, mock.Anything, fakeAppID, "provider_a")
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

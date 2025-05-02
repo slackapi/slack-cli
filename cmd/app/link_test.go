@@ -88,7 +88,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -146,7 +146,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
@@ -213,7 +213,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "deployed",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -282,7 +282,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -358,7 +358,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
@@ -417,7 +417,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "Deployed",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -440,7 +440,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_LOCAL); err != nil {
+				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Accept manifest source confirmation prompt
@@ -474,7 +474,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -509,7 +509,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_LOCAL); err != nil {
+				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Decline manifest source confirmation prompt
@@ -547,7 +547,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to local
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_LOCAL); err != nil {
+				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Mock manifest for Run-on-Slack app
@@ -555,7 +555,7 @@ func Test_Apps_Link(t *testing.T) {
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 					AppManifest: types.AppManifest{
 						Settings: &types.AppSettings{
-							FunctionRuntime: types.SLACK_HOSTED,
+							FunctionRuntime: types.SlackHosted,
 						},
 					},
 				}, nil)
@@ -585,7 +585,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -624,7 +624,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to local
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_LOCAL); err != nil {
+				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Mock manifest for Run-on-Slack app
@@ -661,7 +661,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.ApiInterface.On(
+				cm.APIInterface.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -760,7 +760,7 @@ func setupAppLinkCommandMocks(t *testing.T, ctx context.Context, cm *shared.Clie
 		require.FailNow(t, fmt.Sprintf("Failed to create the hooks file in the memory-based file system: %s", err))
 	}
 
-	if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_REMOTE); err != nil {
+	if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceRemote); err != nil {
 		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 	}
 

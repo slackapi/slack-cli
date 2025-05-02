@@ -31,7 +31,7 @@ func BulkPut(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	bulkPutResult, err := clients.ApiInterface().AppsDatastoreBulkPut(ctx, token, request)
+	bulkPutResult, err := clients.APIInterface().AppsDatastoreBulkPut(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}

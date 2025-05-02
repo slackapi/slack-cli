@@ -68,7 +68,7 @@ func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	// Add flags
-	cmd.Flags().StringVar(&runFlags.activityLevel, "activity-level", platform.ACTIVITY_MIN_LEVEL, "activity level to display")
+	cmd.Flags().StringVar(&runFlags.activityLevel, "activity-level", platform.ActivityMinLevelDefault, "activity level to display")
 	cmd.Flags().BoolVar(&runFlags.noActivity, "no-activity", false, "hide Slack Platform log activity")
 	cmd.Flags().BoolVar(&runFlags.cleanup, "cleanup", false, "uninstall the local app after exiting")
 	cmd.Flags().StringVar(&runFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
@@ -80,7 +80,7 @@ func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 		cmd.Flag("activity-level").DefValue = ""
 		cmd.Flag("activity-level").Usage = fmt.Sprintf(
 			"activity level to display (default \"%s\")\n  %s",
-			platform.ACTIVITY_MIN_LEVEL,
+			platform.ActivityMinLevelDefault,
 			style.Secondary("(trace, debug, info, warn, error, fatal)"),
 		)
 		cmd.Flag(cmdutil.OrgGrantWorkspaceFlag).Usage = cmdutil.OrgGrantWorkspaceDescription()
