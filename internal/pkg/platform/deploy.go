@@ -52,7 +52,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	}
 
 	// Validate auth session
-	authSession, err := clients.APIInterface().ValidateSession(ctx, token)
+	authSession, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {
 		return nil, slackerror.Wrap(err, slackerror.ErrSlackAuth)
 	}
@@ -152,19 +152,19 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, log *logger.L
 
 	//upload zip to s3
 	var startDeploy = time.Now()
-	s3Params, err := clients.APIInterface().GetPresignedS3PostParams(ctx, token, app.AppID)
+	s3Params, err := clients.API().GetPresignedS3PostParams(ctx, token, app.AppID)
 	if err != nil {
 		return app, slackerror.Wrapf(err, "failed generating s3 upload params %s", app.AppID)
 	}
 
-	fileName, err := clients.APIInterface().UploadPackageToS3(ctx, clients.Fs, app.AppID, s3Params, result.Filename)
+	fileName, err := clients.API().UploadPackageToS3(ctx, clients.Fs, app.AppID, s3Params, result.Filename)
 	if err != nil {
 		return app, slackerror.Wrapf(err, "failed uploading the zip file to s3 %s", app.AppID)
 	}
 
 	// upload
 	runtime := strings.ToLower(clients.Runtime.Name())
-	err = clients.APIInterface().UploadApp(ctx, token, runtime, app.AppID, fileName)
+	err = clients.API().UploadApp(ctx, token, runtime, app.AppID, fileName)
 	if err != nil {
 		return app, fmt.Errorf("error uploading app: %s", err)
 	}
@@ -179,7 +179,7 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, log *logger.L
 	var apiHost = clients.Config.APIHostResolved
 	if clients.AuthInterface().IsAPIHostSlackDev(apiHost) {
 		apiHostURL := fmt.Sprintf("%s/api/", apiHost)
-		_ = clients.APIInterface().AddVariable(ctx, token, app.AppID, "SLACK_API_URL", apiHostURL)
+		_ = clients.API().AddVariable(ctx, token, app.AppID, "SLACK_API_URL", apiHostURL)
 	}
 
 	return app, nil

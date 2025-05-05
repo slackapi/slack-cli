@@ -31,7 +31,7 @@ func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	deleteResult, err := clients.APIInterface().AppsDatastoreDelete(ctx, token, request)
+	deleteResult, err := clients.API().AppsDatastoreDelete(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}

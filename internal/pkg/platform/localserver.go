@@ -91,7 +91,7 @@ func (r *LocalServer) Start(ctx context.Context) error {
 		err := func() error {
 			// Get a socket connection address
 			r.clients.IO.PrintDebug(ctx, "Retrieving and establishing connection to WebSocket URL...")
-			result, err := r.clients.APIInterface().ConnectionsOpen(ctx, r.token)
+			result, err := r.clients.API().ConnectionsOpen(ctx, r.token)
 			if err != nil {
 				return slackerror.Wrap(err, slackerror.ErrSocketConnection).WithMessage("Error fetching socket connection URL")
 			}

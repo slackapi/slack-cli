@@ -256,7 +256,7 @@ func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Comm
 
 	parsedAppInfo := map[string]string{}
 
-	host := clients.APIInterface().Host()
+	host := clients.API().Host()
 	if appID := event.DataToString("appID"); appID != "" && host != "" {
 		parsedAppInfo["Dashboard"] = fmt.Sprintf("%s/apps/%s", host, appID)
 	}

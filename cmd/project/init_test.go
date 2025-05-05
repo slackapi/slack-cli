@@ -150,7 +150,7 @@ func Test_Project_InitCommand(t *testing.T) {
 					Option: "local",
 				}, nil)
 				// Mock status of app for footer
-				cm.APIInterface.On("GetAppStatus",
+				cm.API.On("GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
 					[]string{mockLinkAppID1},

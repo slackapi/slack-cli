@@ -409,7 +409,7 @@ func startQueryExport(ctx context.Context, clients *shared.ClientFactory, cmd *c
 		}
 
 		query.Limit = maxItemsToRead
-		queryResult, err := clients.APIInterface().AppsDatastoreQuery(ctx, token, query)
+		queryResult, err := clients.API().AppsDatastoreQuery(ctx, token, query)
 		if err != nil {
 			return err
 		}

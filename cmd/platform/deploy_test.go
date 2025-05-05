@@ -322,7 +322,7 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
-			clientsMock.APIInterface.On("Host").Return("https://slacker.com")
+			clientsMock.API.On("Host").Return("https://slacker.com")
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := NewDeployCommand(clients)

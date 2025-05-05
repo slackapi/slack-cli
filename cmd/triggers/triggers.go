@@ -110,7 +110,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 	token := config.GetContextToken(ctx)
 
 	// Get app owners & collaborators
-	collaborators, err := clients.APIInterface().ListCollaborators(ctx, token, app.AppID)
+	collaborators, err := clients.API().ListCollaborators(ctx, token, app.AppID)
 	if err != nil {
 		return []string{}, err
 	}
@@ -119,7 +119,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 			style.Indent(style.Secondary("Collaborators:")),
 		))
 		for _, collaborator := range collaborators {
-			userInfo, err := clients.APIInterface().UsersInfo(ctx, token, collaborator.ID)
+			userInfo, err := clients.API().UsersInfo(ctx, token, collaborator.ID)
 			if err != nil {
 				return []string{}, err
 			}
@@ -130,7 +130,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 		}
 	}
 	// Get trigger's ACL type
-	accessType, entitiesAccessList, err := clients.APIInterface().TriggerPermissionsList(ctx, token, t.ID)
+	accessType, entitiesAccessList, err := clients.API().TriggerPermissionsList(ctx, token, t.ID)
 	if err != nil {
 		return []string{}, err
 	}
@@ -153,7 +153,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))
 				for _, entity := range entitiesAccessList {
-					userInfo, err := clients.APIInterface().UsersInfo(ctx, token, entity)
+					userInfo, err := clients.API().UsersInfo(ctx, token, entity)
 					if err != nil {
 						return []string{}, err
 					}
@@ -170,7 +170,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				if len(namedEntitiesAccessMap["users"]) > 0 {
 
 					for _, entity := range namedEntitiesAccessMap["users"] {
-						userInfo, err := clients.APIInterface().UsersInfo(ctx, token, entity)
+						userInfo, err := clients.API().UsersInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -182,7 +182,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				}
 				if len(namedEntitiesAccessMap["channels"]) > 0 {
 					for _, entity := range namedEntitiesAccessMap["channels"] {
-						channelInfo, err := clients.APIInterface().ChannelsInfo(ctx, token, entity)
+						channelInfo, err := clients.API().ChannelsInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -194,7 +194,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				}
 				if len(namedEntitiesAccessMap["teams"]) > 0 {
 					for _, entity := range namedEntitiesAccessMap["teams"] {
-						teamInfo, err := clients.APIInterface().TeamsInfo(ctx, token, entity)
+						teamInfo, err := clients.API().TeamsInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -206,7 +206,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				}
 				if len(namedEntitiesAccessMap["organizations"]) > 0 {
 					for _, entity := range namedEntitiesAccessMap["organizations"] {
-						orgInfo, err := clients.APIInterface().TeamsInfo(ctx, token, entity)
+						orgInfo, err := clients.API().TeamsInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -353,7 +353,7 @@ func promptForTriggerID(ctx context.Context, cmd *cobra.Command, clients *shared
 		Limit: 0,     // 0 means no pagation
 		Type:  "all", // all means showing all types of triggers
 	}
-	triggers, _, err := clients.APIInterface().WorkflowsTriggersList(ctx, token, args)
+	triggers, _, err := clients.API().WorkflowsTriggersList(ctx, token, args)
 	if err != nil {
 		return "", err
 	}
@@ -373,7 +373,7 @@ func promptForTriggerID(ctx context.Context, cmd *cobra.Command, clients *shared
 	triggerLabels := []string{}
 	for _, tr := range triggers {
 		if labelOption == labelsIncludeAccessType {
-			accessType, _, err := clients.APIInterface().TriggerPermissionsList(ctx, token, tr.ID)
+			accessType, _, err := clients.API().TriggerPermissionsList(ctx, token, tr.ID)
 			if err != nil {
 				return "", err
 			}

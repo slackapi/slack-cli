@@ -32,7 +32,7 @@ import (
 // ClientsMock defines mocks that will override aspects of clients for testing purposes.
 type ClientsMock struct {
 	mock.Mock
-	APIInterface  *api.APIMock
+	API           *api.APIMock
 	AuthInterface *auth.AuthMock
 	AppClient     *app.Client
 	Browser       *slackdeps.BrowserMock
@@ -52,7 +52,7 @@ func NewClientsMock() *ClientsMock {
 	clientsMock := &ClientsMock{}
 
 	// Set the mocked members
-	clientsMock.APIInterface = &api.APIMock{}
+	clientsMock.API = &api.APIMock{}
 	clientsMock.AuthInterface = &auth.AuthMock{}
 	clientsMock.Browser = slackdeps.NewBrowserMock()
 	clientsMock.Cobra = slackdeps.NewCobraMock()
@@ -71,7 +71,7 @@ func NewClientsMock() *ClientsMock {
 
 // AddDefaultMocks installs the default mock actions to fallback on.
 func (m *ClientsMock) AddDefaultMocks() {
-	m.APIInterface.AddDefaultMocks()
+	m.API.AddDefaultMocks()
 	m.AuthInterface.AddDefaultMocks()
 	m.Browser.AddDefaultMocks()
 	m.Cobra.AddDefaultMocks()
@@ -91,7 +91,7 @@ func (m *ClientsMock) MockClientFactory() func(c *ClientFactory) {
 		clients.Os = m.Os
 		clients.IO = m.IO
 		clients.Fs = m.Fs
-		clients.APIInterface = func() api.APIInterface { return m.APIInterface }
+		clients.API = func() api.APIInterface { return m.API }
 		clients.AuthInterface = func() auth.AuthInterface { return m.AuthInterface }
 		clients.AppClient = func() *app.Client { return m.AppClient }
 		clients.HookExecutor = &m.HookExecutor

@@ -110,14 +110,14 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 		},
 		"should return error if session validation fails": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, slackerror.New("boomsies"))
+				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, slackerror.New("boomsies"))
 				return ctx
 			},
 			ExpectedError: slackerror.New("boomsies"),
 		},
 		"should return error if activity request fails": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.APIInterface.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("explosions"))
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("explosions"))
 				return ctx
 			},
 			ExpectedError: slackerror.New("explosions"),
@@ -127,11 +127,11 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				TailArg: false,
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.APIInterface.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
 				return ctx
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertNumberOfCalls(t, "Activity", 1)
+				cm.API.AssertNumberOfCalls(t, "Activity", 1)
 			},
 		},
 		"should return nil if TailArg is set and context is canceled": {
@@ -140,7 +140,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				PollingIntervalMS: 20, // poll activity every 20 ms
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.APIInterface.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
 				ctx, cancel := context.WithCancel(ctx)
 				go func() {
 					time.Sleep(time.Millisecond * 10) // cancel activity in 10 ms
@@ -150,7 +150,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// with the above polling/canceling setup, expectation is activity called only once.
-				cm.APIInterface.AssertNumberOfCalls(t, "Activity", 1)
+				cm.API.AssertNumberOfCalls(t, "Activity", 1)
 			},
 		},
 	} {
@@ -166,7 +166,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				ctxMock = tt.Setup(t, ctxMock, clientsMock)
 			}
 			// Setup generic test suite mocks
-			clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 			// Setup default mock actions
 			clientsMock.AddDefaultMocks()
 

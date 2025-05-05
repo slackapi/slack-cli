@@ -141,7 +141,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
@@ -152,7 +152,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl1.com", nil)
+				clientsMock.API.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl1.com", nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -161,7 +161,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalStart", mock.Anything, mock.Anything, fakeAppID, "provider_a")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalStart", mock.Anything, mock.Anything, fakeAppID, "provider_a")
 				clientsMock.Browser.AssertCalled(t, "OpenURL", "https://authorizationurl1.com")
 			},
 		},
@@ -169,7 +169,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 			CmdArgs:              []string{},
 			ExpectedErrorStrings: []string{"No client secret exists"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
@@ -180,7 +180,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 								ClientSecretExists: false, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl2.com/example", nil)
+				clientsMock.API.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl2.com/example", nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -189,7 +189,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalStart")
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalStart")
 				clientsMock.Browser.AssertNotCalled(t, "OpenURL")
 			},
 		},
@@ -197,7 +197,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 			CmdArgs:         []string{"--provider", "provider_a"},
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
@@ -208,7 +208,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl3.com/provider", nil)
+				clientsMock.API.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl3.com/provider", nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -217,7 +217,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalStart", mock.Anything, mock.Anything, fakeAppID, "provider_a")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalStart", mock.Anything, mock.Anything, fakeAppID, "provider_a")
 				clientsMock.Browser.AssertCalled(t, "OpenURL", "https://authorizationurl3.com/provider")
 			},
 		},
@@ -225,7 +225,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 			CmdArgs:              []string{"--provider", "provider_a"},
 			ExpectedErrorStrings: []string{"No client secret exists"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
@@ -237,7 +237,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 							},
 						}}, nil)
 				providerSelectTeardown = setupMockProviderSelection()
-				clientsMock.APIInterface.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl4.com/secret", nil)
+				clientsMock.API.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl4.com/secret", nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -246,18 +246,18 @@ func TestExternalAuthAddCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalStart")
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalStart")
 				clientsMock.Browser.AssertNotCalled(t, "OpenURL")
 			},
 		},
 		"when list api returns error": {
 			CmdArgs: []string{"--provider", "provider_a"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{}}, errors.New("test error"))
-				clientsMock.APIInterface.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl5.com/error", nil)
+				clientsMock.API.On("AppsAuthExternalStart", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("https://authorizationurl5.com/error", nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -267,7 +267,7 @@ func TestExternalAuthAddCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"test error"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalStart", mock.Anything, mock.Anything, fakeAppID, "provider_a")
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalStart", mock.Anything, mock.Anything, fakeAppID, "provider_a")
 				clientsMock.Browser.AssertNotCalled(t, "OpenURL")
 			},
 		},

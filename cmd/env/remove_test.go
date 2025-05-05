@@ -134,7 +134,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		"remove a variable using arguments": {
 			CmdArgs: []string{"ENV_NAME"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.APIInterface.On(
+				cm.API.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -143,7 +143,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					[]string{"example"},
 					nil,
 				)
-				cm.APIInterface.On(
+				cm.API.On(
 					"RemoveVariable",
 					mock.Anything,
 					mock.Anything,
@@ -157,7 +157,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"RemoveVariable",
 					mock.Anything,
@@ -177,7 +177,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		"remove a variable using prompt": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.APIInterface.On(
+				cm.API.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -186,7 +186,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					[]string{"example"},
 					nil,
 				)
-				cm.APIInterface.On(
+				cm.API.On(
 					"RemoveVariable",
 					mock.Anything,
 					mock.Anything,
@@ -216,14 +216,14 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
 				)
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"RemoveVariable",
 					mock.Anything,
@@ -236,7 +236,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 		"exit without errors when prompting zero environment variables": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.APIInterface.On(
+				cm.API.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -250,7 +250,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"ListVariables",
 					mock.Anything,

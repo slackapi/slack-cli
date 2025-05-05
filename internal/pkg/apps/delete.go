@@ -56,7 +56,7 @@ func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	log.Info("on_apps_delete_app_init")
 
 	// Delete app remotely via Slack API
-	err = clients.APIInterface().DeleteApp(ctx, config.GetContextToken(ctx), app.AppID)
+	err = clients.API().DeleteApp(ctx, config.GetContextToken(ctx), app.AppID)
 	if err != nil {
 		return app, err
 	}
@@ -91,7 +91,7 @@ func getAuthSession(ctx context.Context, clients *shared.ClientFactory, auth typ
 	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
 	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
 
-	authSession, err := clients.APIInterface().ValidateSession(ctx, token)
+	authSession, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {
 		return ctx, api.AuthSession{}, slackerror.Wrap(err, slackerror.ErrInvalidAuth)
 	}

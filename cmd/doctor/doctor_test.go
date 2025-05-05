@@ -55,7 +55,7 @@ func TestDoctorCommand(t *testing.T) {
 		clientsMock := shared.NewClientsMock()
 		clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{expectedCredentials}, nil)
 		clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
-		clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+		clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 		clientsMock.AddDefaultMocks()
 		pcm := &config.ProjectConfigMock{}
 		pcm.On("ReadProjectConfigFile", mock.Anything).Return(config.ProjectConfig{

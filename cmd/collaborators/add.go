@@ -85,7 +85,7 @@ func runAddCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *
 	if err != nil {
 		return err
 	}
-	err = clients.APIInterface().AddCollaborator(ctx, selection.Auth.Token, selection.App.AppID, slackUser)
+	err = clients.API().AddCollaborator(ctx, selection.Auth.Token, selection.App.AppID, slackUser)
 	if err != nil {
 		if clients.Config.WithExperimentOn(experiment.ReadOnlyAppCollaborators) && strings.Contains(err.Error(), "user_already_owner") {
 			cmd.Println()

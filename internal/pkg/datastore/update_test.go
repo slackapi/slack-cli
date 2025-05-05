@@ -51,7 +51,7 @@ func TestDatastoreUpdateArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.APIInterface.On("AppsDatastoreUpdate", mock.Anything, mock.Anything, tt.Query).
+			clientsMock.API.On("AppsDatastoreUpdate", mock.Anything, mock.Anything, tt.Query).
 				Return(tt.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 

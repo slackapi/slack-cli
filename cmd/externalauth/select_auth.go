@@ -92,7 +92,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 	}
 
 	// Get the oauth2 details for the app
-	externalAuths, err := clients.APIInterface().AppsAuthExternalList(
+	externalAuths, err := clients.API().AppsAuthExternalList(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
@@ -142,7 +142,7 @@ func runSelectAuthCommand(clients *shared.ClientFactory, cmd *cobra.Command) err
 		return slackerror.New("Account is not used in the selected workflow")
 	}
 
-	err = clients.APIInterface().AppsAuthExternalSelectAuth(
+	err = clients.API().AppsAuthExternalSelectAuth(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
