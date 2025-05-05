@@ -200,7 +200,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 			break
 		}
 		// Then, fallback to hooks in the deprecated project slack.json file
-		// TODO(semver:major) - Drop support on the next major
+		// DEPRECATED(semver:major) - Drop support on the next major
 		hooksJSONFilePath = filepath.Join(dirPath, "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
@@ -210,7 +210,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		// Next, search for the hooks files in the outdated path
 		// .slack/slack.json and display an error that this path
 		// is deprecated
-		// TODO(semver:major) - Drop support on the next major
+		// DEPRECATED(semver:major) - Drop support on the next major
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
@@ -220,7 +220,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		// Next, search for the hooks files in the outdated path
 		// .slack/cli.json and display an error that this path
 		// is deprecated
-		// TODO(semver:major) - Drop support on the next major
+		// DEPRECATED(semver:major) - Drop support on the next major
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "cli.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
