@@ -406,7 +406,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 func cleanup(ctx context.Context, clients *shared.ClientFactory) {
 	clients.IO.PrintDebug(ctx, "Starting root command cleanup routine")
 	// clean up any json in project .slack folder if needed
-	if _, sdkConfigExists := clients.SDKConfig.Exists(); sdkConfigExists {
+	if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
 		clients.AppClient().CleanUp()
 	}
 }
