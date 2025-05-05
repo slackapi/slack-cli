@@ -374,7 +374,7 @@ func (c *Client) SetAuth(ctx context.Context, auth types.SlackAuth) (types.Slack
 
 	allAuths, err := c.auths(ctx)
 	if err != nil {
-		return types.SlackAuth{}, "", fmt.Errorf("Failed to fetch user authorizations %s", err)
+		return types.SlackAuth{}, "", fmt.Errorf("failed to fetch user authorizations %s", err)
 	}
 	allAuths[auth.TeamID] = auth
 

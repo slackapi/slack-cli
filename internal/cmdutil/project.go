@@ -53,7 +53,7 @@ func IsSlackHostedProject(ctx context.Context, clients *shared.ClientFactory) er
 
 // IsValidProjectDirectory verifies that a command is run in a valid project directory and returns nil, otherwise returns an error
 func IsValidProjectDirectory(clients *shared.ClientFactory) error {
-	if err, _ := clients.SDKConfig.Exists(); err != nil {
+	if _, err := clients.SDKConfig.Exists(); err != nil {
 		return slackerror.New(slackerror.ErrInvalidAppDirectory)
 	}
 	return nil

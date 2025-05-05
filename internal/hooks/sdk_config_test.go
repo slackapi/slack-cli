@@ -40,7 +40,7 @@ func Test_SDKCLIConfig_Exists(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			err, exists := tt.sdkCLIConfig.Exists()
+			exists, err := tt.sdkCLIConfig.Exists()
 			require.Equal(t, tt.expectedError, err)
 			require.Equal(t, tt.exists, exists)
 		})

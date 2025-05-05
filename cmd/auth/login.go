@@ -146,7 +146,7 @@ func printAuthSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, credentialsPa
 
 // printAuthNextSteps suggests possible commands to run after logging in
 func printAuthNextSteps(ctx context.Context, clients *shared.ClientFactory) {
-	_, project := clients.SDKConfig.Exists()
+	project, _ := clients.SDKConfig.Exists()
 	if !project {
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 			Emoji: "bulb",
