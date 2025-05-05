@@ -586,7 +586,7 @@ When commands or flags need to be removed, follow these steps:
   - Print a warning `PrintWarning("DEPRECATED: Description about the deprecation and migration path")`
 - Internal functionality can be deprecated anytime
   - Add the comment `// DEPRECATED: Description about the deprecation and migration path`
-- Please add deprecation comments generously to help the person completely remove the feature and tests
+- Please add deprecation comments generously to help the next person completely remove the feature and tests
 
 </details>
 
