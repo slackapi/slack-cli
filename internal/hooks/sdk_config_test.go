@@ -61,13 +61,13 @@ func Test_ProtocolResolution(t *testing.T) {
 			}{
 				SupportedProtocols: ProtocolVersions{
 					"fake-news",
-					HOOK_PROTOCOL_V2,
+					HookProtocolV2,
 					"news-fake",
-					HOOK_PROTOCOL_DEFAULT,
+					HookProtocolDefault,
 				},
 			}},
 			check: func(t *testing.T, p Protocol) {
-				assert.Equal(t, p, HOOK_PROTOCOL_V2)
+				assert.Equal(t, p, HookProtocolV2)
 			},
 		},
 		"Returns default config if no valid protocols are present": {
@@ -82,13 +82,13 @@ func Test_ProtocolResolution(t *testing.T) {
 				},
 			}},
 			check: func(t *testing.T, p Protocol) {
-				assert.Equal(t, p, HOOK_PROTOCOL_DEFAULT)
+				assert.Equal(t, p, HookProtocolDefault)
 			},
 		},
 		"Returns default config if no protocols are present": {
 			config: SDKCLIConfig{},
 			check: func(t *testing.T, p Protocol) {
-				assert.Equal(t, p, HOOK_PROTOCOL_DEFAULT)
+				assert.Equal(t, p, HookProtocolDefault)
 			},
 		},
 	}

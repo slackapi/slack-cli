@@ -27,9 +27,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var appId = "appId"
+var appID = "appID"
 var token = "token"
-var installedProdApp = prompts.SelectedApp{Auth: types.SlackAuth{Token: token}, App: types.App{AppID: appId}}
+var installedProdApp = prompts.SelectedApp{Auth: types.SlackAuth{Token: token}, App: types.App{AppID: appID}}
 
 func TestExportCommand(t *testing.T) {
 	var appSelectTeardown func()
@@ -45,31 +45,31 @@ func TestExportCommand(t *testing.T) {
 			ExpectedErrorStrings: []string{"--workflow", "required"},
 		},
 		"with --step-id, API succeeds": {
-			CmdArgs:         []string{"--workflow", "#/workflows/my_workflow", "--step-id", "stepId"},
+			CmdArgs:         []string{"--workflow", "#/workflows/my_workflow", "--step-id", "stepID"},
 			ExpectedOutputs: []string{"Slackbot will DM you with a CSV file once it's ready"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
-				cm.ApiInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				cm.APIInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			Teardown: func() {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appId, "stepId")
+				cm.APIInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
 			},
 		},
 		"with --step-id, API fails": {
-			CmdArgs:              []string{"--workflow", "#/workflows/my_workflow", "--step-id", "stepId"},
+			CmdArgs:              []string{"--workflow", "#/workflows/my_workflow", "--step-id", "stepID"},
 			ExpectedErrorStrings: []string{"failed"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
-				cm.ApiInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("failed"))
+				cm.APIInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("failed"))
 			},
 			Teardown: func() {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appId, "stepId")
+				cm.APIInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

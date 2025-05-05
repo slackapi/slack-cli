@@ -28,7 +28,7 @@ import (
 )
 
 type deleteCmdFlags struct {
-	triggerId string
+	triggerID string
 }
 
 var deleteFlags deleteCmdFlags
@@ -55,7 +55,7 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&deleteFlags.triggerId, "trigger-id", "", "the ID of the trigger")
+	cmd.Flags().StringVar(&deleteFlags.triggerID, "trigger-id", "", "the ID of the trigger")
 
 	return &cmd
 }
@@ -79,8 +79,8 @@ func runDeleteCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		return err
 	}
 
-	if deleteFlags.triggerId == "" {
-		deleteFlags.triggerId, err = promptForTriggerID(ctx, cmd, clients, app, token, defaultLabels)
+	if deleteFlags.triggerID == "" {
+		deleteFlags.triggerID, err = promptForTriggerID(ctx, cmd, clients, app, token, defaultLabels)
 		if err != nil {
 			if slackerror.ToSlackError(err).Code == slackerror.ErrNoTriggers {
 				printNoTriggersMessage(ctx, clients.IO)
@@ -90,14 +90,14 @@ func runDeleteCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		}
 	}
 
-	err = clients.ApiInterface().WorkflowsTriggersDelete(ctx, token, deleteFlags.triggerId)
+	err = clients.APIInterface().WorkflowsTriggersDelete(ctx, token, deleteFlags.triggerID)
 	if err != nil {
 		return err
 	}
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "wastebasket",
-		Text:  fmt.Sprintf("Trigger '%s' deleted", deleteFlags.triggerId),
+		Text:  fmt.Sprintf("Trigger '%s' deleted", deleteFlags.triggerID),
 	}))
 	return nil
 }

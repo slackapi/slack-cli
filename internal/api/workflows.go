@@ -54,7 +54,7 @@ type TriggerRequest struct {
 	Description   string         `json:"description"`
 	Shortcut      *Shortcut      `json:"shortcut,omitempty"`
 	Workflow      string         `json:"workflow"`
-	WorkflowAppId string         `json:"workflow_app_id"`
+	WorkflowAppID string         `json:"workflow_app_id"`
 	Inputs        Inputs         `json:"inputs,omitempty"`
 	Event         *types.RawJSON `json:"event,omitempty"`
 	Schedule      *types.RawJSON `json:"schedule,omitempty"`
@@ -63,7 +63,7 @@ type TriggerRequest struct {
 }
 
 type triggerInfoRequest struct {
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 type triggerInfoResponse struct {
@@ -72,7 +72,7 @@ type triggerInfoResponse struct {
 }
 
 type triggerDeleteRequest struct {
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 type triggerDeleteResponse struct {
@@ -81,7 +81,7 @@ type triggerDeleteResponse struct {
 
 type TriggerUpdateRequest struct {
 	TriggerRequest
-	TriggerId string `json:"trigger_id"`
+	TriggerID string `json:"trigger_id"`
 }
 
 type triggerCreateOrUpdateErrorDetails []triggerCreateOrUpdateErrorDetail
@@ -117,7 +117,7 @@ func (e *TriggerCreateOrUpdateError) Error() string {
 }
 
 type TriggerListRequest struct {
-	AppId  string `json:"app_id,omitempty"`
+	AppID  string `json:"app_id,omitempty"`
 	Limit  int    `json:"limit,omitempty"`
 	Cursor string `json:"cursor,omitempty"`
 	Type   string `json:"type,omitempty"`
@@ -156,9 +156,9 @@ func (c *Client) WorkflowsTriggersUpdate(ctx context.Context, token string, trig
 }
 
 // WorkflowsTriggersDelete will delete an existing trigger using the method workflows.trigger.delete
-func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, triggerId string) error {
+func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, triggerID string) error {
 	deleteRequest := triggerDeleteRequest{
-		TriggerId: triggerId,
+		TriggerID: triggerID,
 	}
 
 	body, err := json.Marshal(deleteRequest)
@@ -168,17 +168,17 @@ func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, trig
 
 	b, err := c.postJSON(ctx, workflowsTriggersDeleteMethod, token, "", body)
 	if err != nil {
-		return errHttpRequestFailed.WithRootCause(err)
+		return errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := triggerDeleteResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersDeleteMethod)
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersDeleteMethod)
 	}
 
 	if !resp.Ok {
-		return slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersDeleteMethod)
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersDeleteMethod)
 	}
 
 	return nil
@@ -187,18 +187,18 @@ func (c *Client) WorkflowsTriggersDelete(ctx context.Context, token string, trig
 func (c *Client) workflowsTriggerSave(ctx context.Context, token string, method string, body []byte) (types.DeployedTrigger, error) {
 	b, err := c.postJSON(ctx, method, token, "", body)
 	if err != nil {
-		return types.DeployedTrigger{}, errHttpRequestFailed.WithRootCause(err)
+		return types.DeployedTrigger{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := triggerCreateOrUpdateResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.DeployedTrigger{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(method)
+		return types.DeployedTrigger{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(method)
 	}
 
 	if !resp.Ok {
 		errorDetails, missingParamError := parseMissingParameterErrors(resp.Errors)
-		err = slackerror.NewApiError(resp.Error, resp.Description, errorDetails, method)
+		err = slackerror.NewAPIError(resp.Error, resp.Description, errorDetails, method)
 		if missingParamError != nil {
 			return types.DeployedTrigger{}, &TriggerCreateOrUpdateError{
 				Err: err, MissingParameterDetail: *missingParamError}
@@ -239,7 +239,7 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 
 	b, err := c.postJSON(ctx, workflowsTriggersListMethod, token, "", body)
 	if err != nil {
-		return []types.DeployedTrigger{}, "", errHttpRequestFailed.WithRootCause(err)
+		return []types.DeployedTrigger{}, "", errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	// workflowTriggersListResponse details to be saved
@@ -249,22 +249,22 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 	}
 
 	resp := workflowTriggersListResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return []types.DeployedTrigger{}, "", errHttpResponseInvalid.WithRootCause(err).AddApiMethod(workflowsTriggersListMethod)
+		return []types.DeployedTrigger{}, "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(workflowsTriggersListMethod)
 	}
 
 	if !resp.Ok {
-		return []types.DeployedTrigger{}, "", slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersListMethod)
+		return []types.DeployedTrigger{}, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersListMethod)
 	}
 
 	return resp.Triggers, resp.extendedBaseResponse.ResponseMetadata.NextCursor, nil
 }
 
 // WorkflowsTriggersInfo will retrieve information on an existing trigger
-func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerId string) (types.DeployedTrigger, error) {
+func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerID string) (types.DeployedTrigger, error) {
 	infoRequest := triggerInfoRequest{
-		TriggerId: triggerId,
+		TriggerID: triggerID,
 	}
 
 	body, err := json.Marshal(infoRequest)
@@ -274,17 +274,17 @@ func (c *Client) WorkflowsTriggersInfo(ctx context.Context, token, triggerId str
 
 	b, err := c.postJSON(ctx, workflowsTriggersInfoMethod, token, "", body)
 	if err != nil {
-		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHttpRequestFailed, err))
+		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHTTPRequestFailed, err))
 	}
 
 	resp := triggerInfoResponse{}
 	err = json.Unmarshal(b, &resp)
 	if err != nil {
-		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHttpResponseInvalid, err))
+		return types.DeployedTrigger{}, errors.WithStack(fmt.Errorf("%s: %s", errHTTPResponseInvalid, err))
 	}
 
 	if !resp.Ok {
-		return types.DeployedTrigger{}, errors.WithStack(slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, workflowsTriggersInfoMethod))
+		return types.DeployedTrigger{}, errors.WithStack(slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersInfoMethod))
 	}
 
 	return resp.Trigger, nil

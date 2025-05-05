@@ -130,7 +130,6 @@ func TestExecuteContext(t *testing.T) {
 	}
 }
 
-// FYI: do not try to run this test in vscode using the run/debug test inline test helper; as the assertions in this test will fail in that context
 func TestVersionFlags(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 

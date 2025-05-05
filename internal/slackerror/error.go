@@ -49,7 +49,7 @@ type Error struct {
 	Cause       error        // TODO - Refactor 'Cause' to be 'Error' so that native Go error unwrapping works with a slackerror
 
 	// useful for api errors
-	ApiEndpoint string
+	APIEndpoint string
 }
 
 type constraint struct {
@@ -143,8 +143,8 @@ func (e *Error) Error() string {
 
 	var errStr, apiErr string
 
-	if err.ApiEndpoint != "" {
-		apiMethodText := style.Secondary("The following error was returned by the " + err.ApiEndpoint + " Slack API method")
+	if err.APIEndpoint != "" {
+		apiMethodText := style.Secondary("The following error was returned by the " + err.APIEndpoint + " Slack API method")
 		apiErr = fmt.Sprintf("%s\n\n%s", apiMethodText, style.Emoji("prohibited"))
 	}
 
@@ -158,13 +158,13 @@ func (e *Error) Error() string {
 	return errStr
 }
 
-// AddApiMethod will set the api endpoint for a slack error
+// AddAPIMethod will set the api endpoint for a slack error
 // It is useful for rendering API errors
-func (e *Error) AddApiMethod(endpoint string) *Error {
+func (e *Error) AddAPIMethod(endpoint string) *Error {
 	if e == nil {
 		return e
 	}
-	e.ApiEndpoint = endpoint
+	e.APIEndpoint = endpoint
 	return e
 }
 
@@ -363,8 +363,8 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 }
 
-// NewApiError returns an API error with details and error code
-func NewApiError(errorCode string, description string, details ErrorDetails, apiEndpoint string) *Error {
+// NewAPIError returns an API error with details and error code
+func NewAPIError(errorCode string, description string, details ErrorDetails, apiEndpoint string) *Error {
 	err := getErrorIfKnown(errorCode)
 	if err == nil {
 		if errorCode == "" {
@@ -375,7 +375,7 @@ func NewApiError(errorCode string, description string, details ErrorDetails, api
 	}
 	err.Description = description
 	err.Details = append(err.Details, details...)
-	err.ApiEndpoint = apiEndpoint
+	err.APIEndpoint = apiEndpoint
 	return err
 }
 
@@ -412,17 +412,17 @@ func Is(err error, errorCode string) bool {
 	return strings.Contains(err.Error(), errorCode)
 }
 
-// JsonUnmarshalError returns a human readable json unmarshal error for CLI users
+// JSONUnmarshalError returns a human readable json unmarshal error for CLI users
 // Simply displaying the json.Unmarshal errors have proven to be very confusing already.
 // This attempts to ensure the user understands that the CLI is trying to parse a JSON
 // but is running into some issues.
-func JsonUnmarshalError(err error, data []byte) *Error {
+func JSONUnmarshalError(err error, data []byte) *Error {
 	if err == nil {
 		return nil
 	}
 
 	contentToParse := style.Secondary(string(data[:]))
-	jsonErr := New(ErrUnableToParseJson)
+	jsonErr := New(ErrUnableToParseJSON)
 	jsonErr.Message = strings.Replace(jsonErr.Message, "<json>", contentToParse, 1)
 
 	transformedErr := ToSlackError(err)

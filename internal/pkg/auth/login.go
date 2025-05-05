@@ -37,11 +37,11 @@ const InvalidNoPromptFlags = "Invalid arguments, both --ticket and --challenge f
 
 // LoginWithClients ...
 func LoginWithClients(ctx context.Context, clients *shared.ClientFactory, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	return Login(ctx, clients.ApiInterface(), clients.AuthInterface(), clients.IO, userToken, noRotation)
+	return Login(ctx, clients.APIInterface(), clients.AuthInterface(), clients.IO, userToken, noRotation)
 }
 
 // Login takes the user through the Slack CLI login process
-func Login(ctx context.Context, apiClient api.ApiInterface, authClient auth.AuthInterface, io iostreams.IOStreamer, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
+func Login(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, io iostreams.IOStreamer, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.login")
 	defer span.Finish()
 
@@ -56,7 +56,7 @@ func Login(ctx context.Context, apiClient api.ApiInterface, authClient auth.Auth
 
 // createNewLoginWithUserToken function takes in an User Token (XOXP) and uses it to grab an existing auth
 // TODO (@Sarah) Remove this command
-func createNewLoginWithUserToken(ctx context.Context, apiClient api.ApiInterface, authClient auth.AuthInterface, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
+func createNewLoginWithUserToken(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "createNewLoginWithUserToken")
 	defer span.Finish()
@@ -82,10 +82,10 @@ func createNewLoginWithUserToken(ctx context.Context, apiClient api.ApiInterface
 		LastUpdated: time.Now(),
 	}
 
-	if !authClient.IsApiHostSlackProd(apiClient.Host()) {
+	if !authClient.IsAPIHostSlackProd(apiClient.Host()) {
 		// if we don't have a production apihost then save it in the credentials
 		var apiHost = apiClient.Host()
-		newAuth.ApiHost = &apiHost
+		newAuth.APIHost = &apiHost
 	}
 
 	// Grabbing the TeamDomain from the subdomain of the URL. Seems to work reliably on dev and prod workspaces
@@ -133,7 +133,7 @@ func createNewLoginWithUserToken(ctx context.Context, apiClient api.ApiInterface
 //  2. Wait for a challenge code to be submitted
 //  3. Submit a request to exchange the ticket for an Auth response containing an access token
 //  4. Saves auth as a credential
-func createNewAuth(ctx context.Context, apiClient api.ApiInterface, authClient auth.AuthInterface, io iostreams.IOStreamer, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
+func createNewAuth(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, io iostreams.IOStreamer, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
 	authTicket, err := requestAuthTicket(ctx, apiClient, io, noRotation)
 	if err != nil {
 		return types.SlackAuth{}, "", err
@@ -154,7 +154,7 @@ func createNewAuth(ctx context.Context, apiClient api.ApiInterface, authClient a
 
 // requestAuthTicket requests an auth ticket from Slack. The ticket must be submitted
 // by a valid user within their Slack workspace, then permissions must be granted
-func requestAuthTicket(ctx context.Context, apiClient api.ApiInterface, io iostreams.IOStreamer, noRotation bool) (string, error) {
+func requestAuthTicket(ctx context.Context, apiClient api.APIInterface, io iostreams.IOStreamer, noRotation bool) (string, error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "requestAuthTicket")
 	defer span.Finish()
@@ -202,7 +202,7 @@ func promptForChallengeCode(ctx context.Context, IO iostreams.IOStreamer) (strin
 }
 
 // saveNewAuth saves a new auth to the credentials and returns the auth
-func saveNewAuth(ctx context.Context, apiClient api.ApiInterface, authClient auth.AuthInterface, authResult api.ExchangeAuthTicketResult, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
+func saveNewAuth(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, authResult api.ExchangeAuthTicketResult, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "saveNewAuth")
 	defer span.Finish()
@@ -220,10 +220,10 @@ func saveNewAuth(ctx context.Context, apiClient api.ApiInterface, authClient aut
 		EnterpriseID:        authResult.EnterpriseID,
 	}
 
-	if !authClient.IsApiHostSlackProd(apiClient.Host()) {
+	if !authClient.IsAPIHostSlackProd(apiClient.Host()) {
 		// If not using a production api host then add to newAuth as apiHost
 		var apiHost = apiClient.Host()
-		newAuth.ApiHost = &apiHost
+		newAuth.APIHost = &apiHost
 	}
 
 	// Write to credentials json if serviceTokenFlag is false
@@ -250,11 +250,11 @@ func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg
 
 	// existing ticket request, try to exchange
 	if ticketArg != "" && challengeCodeArg != "" {
-		authExchangeRes, err := clients.ApiInterface().ExchangeAuthTicket(ctx, ticketArg, challengeCodeArg, version.Get())
+		authExchangeRes, err := clients.APIInterface().ExchangeAuthTicket(ctx, ticketArg, challengeCodeArg, version.Get())
 		if err != nil || !authExchangeRes.IsReady {
 			return types.SlackAuth{}, "", err
 		}
-		savedAuth, credentialsPath, err := saveNewAuth(ctx, clients.ApiInterface(), clients.AuthInterface(), authExchangeRes, noRotation)
+		savedAuth, credentialsPath, err := saveNewAuth(ctx, clients.APIInterface(), clients.AuthInterface(), authExchangeRes, noRotation)
 		if err != nil {
 			return types.SlackAuth{}, "", err
 		}
@@ -263,7 +263,7 @@ func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg
 
 	// brand new login
 	if ticketArg == "" && challengeCodeArg == "" {
-		_, err := requestAuthTicket(ctx, clients.ApiInterface(), clients.IO, noRotation)
+		_, err := requestAuthTicket(ctx, clients.APIInterface(), clients.IO, noRotation)
 		if err != nil {
 			return types.SlackAuth{}, "", err
 		}

@@ -130,7 +130,7 @@ func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
 
 	err = json.Unmarshal(configFileBytes, &config)
 	if err != nil {
-		return &config, slackerror.New(slackerror.ErrUnableToParseJson).
+		return &config, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of system-level config file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(path))

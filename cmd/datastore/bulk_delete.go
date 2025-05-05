@@ -146,14 +146,14 @@ func printBulkDeleteResult(clients *shared.ClientFactory, cmd *cobra.Command, de
 		datastore,
 	)
 
-	var failed_items = deleteResult.FailedItems
-	if len(failed_items) > 0 {
+	var failedItems = deleteResult.FailedItems
+	if len(failedItems) > 0 {
 		cmd.Printf(
 			style.Bold("%s Some items failed to be deleted and should be retried: \n\n"),
 			style.Emoji("warning"),
 		)
 
-		b, err := goutils.JsonMarshalUnescapedIndent(failed_items)
+		b, err := goutils.JSONMarshalUnescapedIndent(failedItems)
 		if err != nil {
 			return slackerror.New("Error during output indentation").WithRootCause(err)
 		}

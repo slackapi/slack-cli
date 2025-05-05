@@ -121,7 +121,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 			return nil
 		}
 
-		err = clients.ApiInterface().AppsAuthExternalDelete(
+		err = clients.APIInterface().AppsAuthExternalDelete(
 			ctx,
 			selection.Auth.Token,
 			selection.App.AppID,
@@ -142,7 +142,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 			return nil
 		}
 
-		err = clients.ApiInterface().AppsAuthExternalDelete(
+		err = clients.APIInterface().AppsAuthExternalDelete(
 			ctx,
 			selection.Auth.Token,
 			selection.App.AppID,
@@ -154,7 +154,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		}
 	} else {
 		// Get oauth2 providerAuths
-		providerAuths, err := clients.ApiInterface().AppsAuthExternalList(
+		providerAuths, err := clients.APIInterface().AppsAuthExternalList(
 			ctx,
 			selection.Auth.Token,
 			selection.App.AppID,
@@ -187,11 +187,11 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 			if err != nil {
 				return err
 			}
-			externalTokenArg := externalTokenInfo.ExternalTokenId
+			externalTokenArg := externalTokenInfo.ExternalTokenID
 			if externalTokenArg == "" {
 				return slackerror.New("Unable to get a provider selection")
 			}
-			err = clients.ApiInterface().AppsAuthExternalDelete(
+			err = clients.APIInterface().AppsAuthExternalDelete(
 				ctx,
 				selection.Auth.Token,
 				selection.App.AppID,
@@ -202,7 +202,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 				return err
 			}
 		} else {
-			err = clients.ApiInterface().AppsAuthExternalDelete(
+			err = clients.APIInterface().AppsAuthExternalDelete(
 				ctx,
 				selection.Auth.Token,
 				selection.App.AppID,

@@ -96,18 +96,18 @@ func Test_Permission_IsValid(t *testing.T) {
 		expectedIsValid bool
 	}{
 		{
-			name:            "APP_COLLABORATORS",
-			permission:      APP_COLLABORATORS,
+			name:            "Permission App Collaborators",
+			permission:      PermissionAppCollaborators,
 			expectedIsValid: true,
 		},
 		{
-			name:            "EVERYONE",
-			permission:      EVERYONE,
+			name:            "Permission Everyone",
+			permission:      PermissionEveryone,
 			expectedIsValid: true,
 		},
 		{
-			name:            "NAMED_ENTITIES",
-			permission:      NAMED_ENTITIES,
+			name:            "Permission Named Entities",
+			permission:      PermissionNamedEntities,
 			expectedIsValid: true,
 		},
 		{
@@ -142,18 +142,18 @@ func Test_Permission_ToString(t *testing.T) {
 		expectedString string
 	}{
 		{
-			name:           "APP_COLLABORATORS",
-			permission:     APP_COLLABORATORS,
+			name:           "Permission App Collaborators",
+			permission:     PermissionAppCollaborators,
 			expectedString: "app collaborators",
 		},
 		{
-			name:           "EVERYONE",
-			permission:     EVERYONE,
+			name:           "Permission Everyone",
+			permission:     PermissionEveryone,
 			expectedString: "everyone",
 		},
 		{
-			name:           "NAMED_ENTITIES",
-			permission:     NAMED_ENTITIES,
+			name:           "Permission Named Entities",
+			permission:     PermissionNamedEntities,
 			expectedString: "specific entities",
 		},
 		{

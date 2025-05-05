@@ -36,7 +36,7 @@ func TestLogoutCommand(t *testing.T) {
 		"logout of all teams": {
 			CmdArgs: []string{"--all"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+				clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
 				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, fakeAuthsByTeamSlice[0].Token).Return(nil)
@@ -60,7 +60,7 @@ func TestLogoutCommand(t *testing.T) {
 		"logout of single team by named domain via flag": {
 			CmdArgs: []string{"--team", "team1"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+				clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -84,7 +84,7 @@ func TestLogoutCommand(t *testing.T) {
 		"logout of single team by id via flag": {
 			CmdArgs: []string{"--team", "T2"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+				clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an authorization to revoke", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("team"),
@@ -133,7 +133,7 @@ func TestLogoutCommand(t *testing.T) {
 		"logout of a workspace by prompt": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+				clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return(fakeAuthsByTeamSlice, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an authorization to revoke", []string{
@@ -161,7 +161,7 @@ func TestLogoutCommand(t *testing.T) {
 		"automatically logout of the only available workspace available": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+				clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
 				clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash.slack.com")
 				clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					fakeAuthsByTeamSlice[0],
