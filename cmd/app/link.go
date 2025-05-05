@@ -292,7 +292,7 @@ func promptExistingApp(ctx context.Context, clients *shared.ClientFactory) (type
 
 // promptTeamSlackAuth retrieves an authenticated team from input
 func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
-	allAuths, err := clients.AuthInterface().Auths(ctx)
+	allAuths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return &types.SlackAuth{}, err
 	}
@@ -322,7 +322,7 @@ func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*t
 		return &types.SlackAuth{}, err
 	}
 	if selection.Prompt {
-		clients.AuthInterface().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
+		clients.Auth().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
 		return &allAuths[selection.Index], nil
 	}
 	teamMatch := false
@@ -341,7 +341,7 @@ func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*t
 	if !teamMatch {
 		return &types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound)
 	}
-	clients.AuthInterface().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
+	clients.Auth().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
 	return &allAuths[teamIndex], nil
 }
 

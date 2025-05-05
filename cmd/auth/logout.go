@@ -94,31 +94,31 @@ func handleAuthRemoval(ctx context.Context, clients *shared.ClientFactory, auth 
 	defer span.Finish()
 
 	// Update the API Host and Logstash Host to be the selected/default auth
-	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
-	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
 
 	// First, try to revoke the xoxe-xoxp (auth) token credential
 	var xoxpToken = auth.Token
-	if err := clients.AuthInterface().RevokeToken(ctx, xoxpToken); err != nil {
+	if err := clients.Auth().RevokeToken(ctx, xoxpToken); err != nil {
 		return err
 	}
 
 	// Next, try to revoke the refresh token xoxe-1 credential
 	var refreshToken = auth.RefreshToken
 	if refreshToken != "" {
-		if err := clients.AuthInterface().RevokeToken(ctx, refreshToken); err != nil {
+		if err := clients.Auth().RevokeToken(ctx, refreshToken); err != nil {
 			return err
 		}
 	}
 
 	// Once successfully revoked, remove from credentials.json
-	if _, err := clients.AuthInterface().DeleteAuth(ctx, auth); err != nil {
+	if _, err := clients.Auth().DeleteAuth(ctx, auth); err != nil {
 		return err
 	}
 
 	// Update the API Host and Logstash Host to be the selected/default auth
-	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
 
 	return nil
 }
@@ -136,7 +136,7 @@ func promptUserLogout(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	}
 
 	// Gather all available auths
-	auths, err := clients.AuthInterface().Auths(ctx)
+	auths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return []types.SlackAuth{}, err
 	}

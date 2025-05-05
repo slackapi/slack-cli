@@ -478,9 +478,9 @@ func TestAppAddCommand(t *testing.T) {
 func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *shared.ClientsMock) {
 	clientsMock.AddDefaultMocks()
 
-	clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
-	clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("logstash host")
 
 	manifestMock := &app.ManifestMockObject{}

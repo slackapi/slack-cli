@@ -129,10 +129,10 @@ func newValidateLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logge
 func gatherAuthenticationToken(ctx context.Context, clients *shared.ClientFactory) (auth types.SlackAuth, err error) {
 	defer func() {
 		if err == nil {
-			clients.AuthInterface().SetSelectedAuth(ctx, auth, clients.Config, clients.Os)
+			clients.Auth().SetSelectedAuth(ctx, auth, clients.Config, clients.Os)
 		}
 	}()
-	auths, err := clients.AuthInterface().Auths(ctx)
+	auths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return types.SlackAuth{}, err
 	}

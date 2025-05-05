@@ -34,8 +34,8 @@ func TestTokenCommand(t *testing.T) {
 		TeamID:   &mockOrgAuth.TeamID,
 		TeamName: &mockOrgAuth.TeamDomain,
 		URL:      &mockOrgAuthURL}, nil)
-	clientsMock.AuthInterface.On("AuthWithTeamDomain", mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.AuthInterface.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+	clientsMock.Auth.On("AuthWithTeamDomain", mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
+	clientsMock.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 

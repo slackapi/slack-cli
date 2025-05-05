@@ -102,9 +102,9 @@ func prepareCommonUninstallMocks(ctx context.Context, clients *shared.ClientFact
 	appSelectMock.On("AppSelectPrompt").Return(selectedProdApp, nil)
 
 	// Mock API calls
-	clientsMock.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
-	clientsMock.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("logstash host")
 
 	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{

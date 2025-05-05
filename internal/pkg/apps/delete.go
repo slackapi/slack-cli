@@ -88,8 +88,8 @@ func getAuthSession(ctx context.Context, clients *shared.ClientFactory, auth typ
 	// Update the APIHost with the selected login, this is important for commands that use the Login to temporarily
 	// get an auth without updating the default auth. It's less important for the Login command that terminals afterward,
 	// because on start up, the root command resolves the auth's current APIHost.
-	clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
-	clients.Config.LogstashHostResolved = clients.AuthInterface().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
 
 	authSession, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {

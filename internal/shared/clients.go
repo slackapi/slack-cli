@@ -44,16 +44,16 @@ import (
 
 // ClientFactory are shared clients and configurations for use across the CLI commands (cmd) and handlers (pkg).
 type ClientFactory struct {
-	API           func() api.APIInterface
-	AppClient     func() *app.Client
-	AuthInterface func() auth.AuthInterface
-	CLIVersion    string
-	Config        *config.Config
-	EventTracker  tracking.TrackingManager
-	HookExecutor  hooks.HookExecutor
-	IO            iostreams.IOStreamer
-	Runtime       runtime.Runtime
-	SDKConfig     hooks.SDKCLIConfig
+	API          func() api.APIInterface
+	AppClient    func() *app.Client
+	Auth         func() auth.AuthInterface
+	CLIVersion   string
+	Config       *config.Config
+	EventTracker tracking.TrackingManager
+	HookExecutor hooks.HookExecutor
+	IO           iostreams.IOStreamer
+	Runtime      runtime.Runtime
+	SDKConfig    hooks.SDKCLIConfig
 
 	// Browser can display or open URLs as webpages on the internet
 	Browser func() slackdeps.Browser
@@ -99,7 +99,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	clients.EventTracker = tracking.NewEventTracker()
 	clients.API = clients.defaultAPIFunc
 	clients.AppClient = clients.defaultAppClientFunc
-	clients.AuthInterface = clients.defaultAuthInterfaceFunc
+	clients.Auth = clients.defaultAuthFunc
 	clients.Browser = clients.defaultBrowserFunc
 
 	// Command-specific dependencies
@@ -144,8 +144,8 @@ func (c *ClientFactory) defaultAuthClientFunc() *auth.Client {
 	return auth.NewClient(c.API(), c.AppClient(), c.Config, c.IO, c.Fs)
 }
 
-// defaultAuthInterfaceFunc return a new Auth Interface
-func (c *ClientFactory) defaultAuthInterfaceFunc() auth.AuthInterface {
+// defaultAuthFunc return a new Auth Interface
+func (c *ClientFactory) defaultAuthFunc() auth.AuthInterface {
 	return c.defaultAuthClientFunc()
 }
 
