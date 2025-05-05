@@ -34,7 +34,6 @@ linters:
       checks:
         - all
         - '-ST1005' # disable rule 'Incorrectly formatted error string'
-        - '-ST1006' # disable rule 'Poorly chosen receiver name'
         - '-ST1008' # disable rule 'Function’s error value should be its last return value'
         - '-ST1023' # disable rule 'Redundant type in variable declaration'
         - '-QF1001' # disable rule 'Apply De Morgan’s law'
