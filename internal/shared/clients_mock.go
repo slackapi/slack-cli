@@ -91,7 +91,7 @@ func (m *ClientsMock) MockClientFactory() func(c *ClientFactory) {
 		clients.Os = m.Os
 		clients.IO = m.IO
 		clients.Fs = m.Fs
-		clients.APIInterface = func() api.APIInterface { return m.APIInterface }
+		clients.API = func() api.APIInterface { return m.APIInterface }
 		clients.AuthInterface = func() auth.AuthInterface { return m.AuthInterface }
 		clients.AppClient = func() *app.Client { return m.AppClient }
 		clients.HookExecutor = &m.HookExecutor

@@ -122,7 +122,7 @@ func FetchAppInstallStates(ctx context.Context, clients *shared.ClientFactory, a
 			continue
 		}
 
-		apiClient := clients.APIInterface()
+		apiClient := clients.API()
 		if auth.APIHost != nil {
 			// Most internal/api methods do not explicitly require the host to be set.
 			// Rather, they rely implicitly on host being set on the apiClient when the instance

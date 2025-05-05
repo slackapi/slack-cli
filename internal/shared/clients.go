@@ -44,20 +44,16 @@ import (
 
 // ClientFactory are shared clients and configurations for use across the CLI commands (cmd) and handlers (pkg).
 type ClientFactory struct {
-	// Internal dependencies
-
-	APIInterface func() api.APIInterface
-
-	AppClient    func() *app.Client
-	Config       *config.Config
-	SDKConfig    hooks.SDKCLIConfig
-	HookExecutor hooks.HookExecutor
-	IO           iostreams.IOStreamer
-	EventTracker tracking.TrackingManager
-
-	Runtime       runtime.Runtime
-	CLIVersion    string
+	API           func() api.APIInterface
+	AppClient     func() *app.Client
 	AuthInterface func() auth.AuthInterface
+	CLIVersion    string
+	Config        *config.Config
+	EventTracker  tracking.TrackingManager
+	HookExecutor  hooks.HookExecutor
+	IO            iostreams.IOStreamer
+	Runtime       runtime.Runtime
+	SDKConfig     hooks.SDKCLIConfig
 
 	// Browser can display or open URLs as webpages on the internet
 	Browser func() slackdeps.Browser
@@ -68,6 +64,9 @@ type ClientFactory struct {
 	// Os are a group of operating system functions following the `os` interface that are shared by all packages and enables testing & mocking
 	Os types.Os
 
+	// CleanupWaitGroup is a group of wait groups shared by all packages and allow functions to cleanup before the process terminates
+	CleanupWaitGroup sync.WaitGroup
+
 	// Cobra are a group of Cobra functions shared by all packages and enables tests & mocking
 	Cobra struct {
 		// GenMarkdownTree defaults to `doc.GenMarkdownTree(...)` and can be mocked to test specific use-cases
@@ -75,8 +74,6 @@ type ClientFactory struct {
 		//        a private member. The current thinking is that `NewCommand` would return a `SlackCommand` instead of `CobraCommand`
 		GenMarkdownTree func(cmd *cobra.Command, dir string) error
 	}
-
-	CleanupWaitGroup sync.WaitGroup
 }
 
 const sdkSlackDevDomainFlag = "sdk-slack-dev-domain"
@@ -100,7 +97,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 		IO: clients.IO,
 	}
 	clients.EventTracker = tracking.NewEventTracker()
-	clients.APIInterface = clients.defaultAPIInterfaceFunc
+	clients.API = clients.defaultAPIInterfaceFunc
 	clients.AppClient = clients.defaultAppClientFunc
 	clients.AuthInterface = clients.defaultAuthInterfaceFunc
 	clients.Browser = clients.defaultBrowserFunc
@@ -139,12 +136,12 @@ func (c *ClientFactory) defaultAPIInterfaceFunc() api.APIInterface {
 
 // defaultAppClientFunc return a new App Client
 func (c *ClientFactory) defaultAppClientFunc() *app.Client {
-	return app.NewClient(c.APIInterface(), c.Config, c.Fs, c.Os)
+	return app.NewClient(c.API(), c.Config, c.Fs, c.Os)
 }
 
 // defaultAuthClientFunc return a new Auth Client
 func (c *ClientFactory) defaultAuthClientFunc() *auth.Client {
-	return auth.NewClient(c.APIInterface(), c.AppClient(), c.Config, c.IO, c.Fs)
+	return auth.NewClient(c.API(), c.AppClient(), c.Config, c.IO, c.Fs)
 }
 
 // defaultAuthInterfaceFunc return a new Auth Interface

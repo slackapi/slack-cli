@@ -225,7 +225,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	}
 
 	appIDs := []string{app.AppID}
-	_, err = clients.APIInterface().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
+	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
 	if err != nil {
 		return err
 	}

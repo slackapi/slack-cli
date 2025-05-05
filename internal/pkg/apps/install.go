@@ -59,7 +59,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	}
 
 	// Get the token for the authenticated workspace
-	apiInterface := clients.APIInterface()
+	apiInterface := clients.API()
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
 	if err != nil {
@@ -144,7 +144,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		if err != nil {
 			return types.App{}, "", err
 		}
-		upstream, err := clients.APIInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
+		upstream, err := clients.API().ExportAppManifest(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return types.App{}, "", err
 		}
@@ -259,10 +259,10 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, app types.App, appManifest types.AppManifest) error {
 	var token = config.GetContextToken(ctx)
 
-	validationResult, err := clients.APIInterface().ValidateAppManifest(ctx, token, appManifest, app.AppID)
+	validationResult, err := clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 
 	if retryValidate := manifest.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
-		validationResult, err = clients.APIInterface().ValidateAppManifest(ctx, token, appManifest, app.AppID)
+		validationResult, err = clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 	}
 
 	if err := manifest.HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
@@ -344,7 +344,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, api.DeveloperAppInstallResult{}, "", nil
 	}
 
-	apiInterface := clients.APIInterface()
+	apiInterface := clients.API()
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
 	if err != nil {
@@ -438,7 +438,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		if err != nil {
 			return types.App{}, api.DeveloperAppInstallResult{}, "", err
 		}
-		upstream, err := clients.APIInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
+		upstream, err := clients.API().ExportAppManifest(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return types.App{}, api.DeveloperAppInstallResult{}, "", err
 		}
@@ -562,7 +562,7 @@ func configureHostedManifest(
 	if manifest.Settings.Interactivity == nil {
 		manifest.Settings.Interactivity = &types.ManifestInteractivity{}
 	}
-	host := clients.APIInterface().Host()
+	host := clients.API().Host()
 	manifest.Settings.Interactivity.IsEnabled = true
 	manifest.Settings.Interactivity.MessageMenuOptionsURL = host
 	manifest.Settings.Interactivity.RequestURL = host
@@ -626,7 +626,7 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 
 	// var iconResp apiclient.IconResult
 	var err error
-	_, err = clients.APIInterface().Icon(ctx, clients.Fs, token, appID, iconPath)
+	_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
 	if err != nil {
 		// TODO: separate the icon upload into a different function because if an error is returned
 		// the new app_id might be ignored and next time we'll create another app.
@@ -712,7 +712,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	upstream, err := clients.APIInterface().ExportAppManifest(ctx, auth.Token, app.AppID)
+	upstream, err := clients.API().ExportAppManifest(ctx, auth.Token, app.AppID)
 	if err != nil {
 		return false, err
 	}

@@ -64,7 +64,7 @@ func Activity(
 		return nil
 	}
 
-	authSession, err := clients.APIInterface().ValidateSession(ctx, token)
+	authSession, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, tok
 	span, ctx = opentracing.StartSpanFromContext(ctx, "getLatestActivity")
 	defer span.Finish()
 
-	var result, err = clients.APIInterface().Activity(ctx, xoxpToken, args)
+	var result, err = clients.API().Activity(ctx, xoxpToken, args)
 	if err != nil {
 		return 0, 0, err
 	}

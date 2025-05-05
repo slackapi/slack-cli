@@ -90,7 +90,7 @@ func runDeleteCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		}
 	}
 
-	err = clients.APIInterface().WorkflowsTriggersDelete(ctx, token, deleteFlags.triggerID)
+	err = clients.API().WorkflowsTriggersDelete(ctx, token, deleteFlags.triggerID)
 	if err != nil {
 		return err
 	}

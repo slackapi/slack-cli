@@ -89,7 +89,7 @@ func runExportCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		}
 	}
 
-	err = clients.APIInterface().StepsResponsesExport(ctx, token, exportFlags.workflow, appID, stepID)
+	err = clients.API().StepsResponsesExport(ctx, token, exportFlags.workflow, appID, stepID)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func runExportCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 }
 
 func pickStepFromPrompt(ctx context.Context, clients *shared.ClientFactory, token string, workflow string, appID string) (string, error) {
-	stepVersions, err := clients.APIInterface().StepsList(ctx, token, workflow, appID)
+	stepVersions, err := clients.API().StepsList(ctx, token, workflow, appID)
 	if err != nil {
 		return "", err
 	}

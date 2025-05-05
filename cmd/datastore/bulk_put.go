@@ -302,7 +302,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 		}
 
 		query.Items = currentBatch
-		bulkPutResult, err := clients.APIInterface().AppsDatastoreBulkPut(ctx, token, query)
+		bulkPutResult, err := clients.API().AppsDatastoreBulkPut(ctx, token, query)
 		if err != nil {
 			if len(err.(*slackerror.Error).Details) == 0 {
 				return err

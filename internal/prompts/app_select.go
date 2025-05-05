@@ -545,7 +545,7 @@ func getTokenApp(ctx context.Context, clients *shared.ClientFactory, token strin
 		return SelectedApp{}, err
 	}
 	var appStatus api.AppStatusResultAppInfo
-	if appStatusResult, err := clients.APIInterface().GetAppStatus(ctx, token, []string{appID}, auth.TeamID); err != nil {
+	if appStatusResult, err := clients.API().GetAppStatus(ctx, token, []string{appID}, auth.TeamID); err != nil {
 		return SelectedApp{}, err
 	} else if len(appStatusResult.Apps) != 1 || appStatusResult.Apps[0].AppID != appID {
 		return SelectedApp{}, slackerror.New(slackerror.ErrAppNotFound)
@@ -627,7 +627,7 @@ func getInstallationStatuses(ctx context.Context, clients *shared.ClientFactory,
 	startTimer := time.Now()
 
 	// Ensure that the client's host in this case is set to any apiHost provided
-	apiClient := clients.APIInterface()
+	apiClient := clients.API()
 	if apiHost != "" {
 		apiClient.SetHost(apiHost)
 	}
@@ -1687,7 +1687,7 @@ func TeamAppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env
 
 // OrgSelectWorkspacePrompt prompts the user to select a single workspace to grant app access to, or grant all workspaces within the org.
 func OrgSelectWorkspacePrompt(ctx context.Context, clients *shared.ClientFactory, orgDomain, token string, topOptionAllWorkspaces bool) (string, error) {
-	teams, paginationCursor, err := clients.APIInterface().AuthTeamsList(ctx, token, api.DefaultAuthTeamsListPageSize)
+	teams, paginationCursor, err := clients.API().AuthTeamsList(ctx, token, api.DefaultAuthTeamsListPageSize)
 	if err != nil {
 		return "", err
 	}
@@ -1824,7 +1824,7 @@ func appExists(app types.App) bool {
 // validateAuth checks if the auth for the selected app is valid and if not,
 // prompts the user to re-authenticate
 func validateAuth(ctx context.Context, clients *shared.ClientFactory, auth *types.SlackAuth) error {
-	apiClient := clients.APIInterface()
+	apiClient := clients.API()
 	if auth == nil {
 		auth = &types.SlackAuth{}
 	}

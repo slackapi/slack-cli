@@ -134,7 +134,7 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		TriggerRequest: triggerArg,
 	}
 
-	updatedTrigger, err := clients.APIInterface().WorkflowsTriggersUpdate(ctx, token, updateRequest)
+	updatedTrigger, err := clients.API().WorkflowsTriggersUpdate(ctx, token, updateRequest)
 	if extendedErr, ok := err.(*api.TriggerCreateOrUpdateError); ok {
 		// If the user used --workflow and the creation failed because we were missing the interactivity
 		// context, lets prompt and optionally add it
@@ -149,7 +149,7 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 			if shouldUpdate {
 				// TODO: based on the unit tests, I _think_ this should be the behaviour.. but needs a review.
 				// Assumption is: if trigger update fails due to missing interactivity, we prompt user to tweak their definition to include interactivity, recreate, and if successful, proceed.
-				updatedTrigger, innerErr = clients.APIInterface().WorkflowsTriggersUpdate(ctx, token, updateRequest)
+				updatedTrigger, innerErr = clients.API().WorkflowsTriggersUpdate(ctx, token, updateRequest)
 				if innerErr != nil {
 					return innerErr
 				} else {
