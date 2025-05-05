@@ -62,9 +62,9 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut")
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -85,7 +85,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Workflow:      "#/workflows/my_workflow",
 					WorkflowAppID: fakeAppID,
 				}
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
 		},
 		"pass all shortcut parameters": {
@@ -95,9 +95,9 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "unit tests", fakeAppID, "shortcut")
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -116,7 +116,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					Workflow:      "#/workflows/my_workflow",
 					WorkflowAppID: fakeAppID,
 				}
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
 		},
 		"pass --interactivity, default name": {
@@ -126,9 +126,9 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "unit tests", fakeAppID, "shortcut")
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -152,7 +152,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 						},
 					},
 				}
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
 		},
 		"pass --interactivity, custom name": {
@@ -162,9 +162,9 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "unit tests", fakeAppID, "shortcut")
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -188,7 +188,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 						},
 					},
 				}
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
 		},
 		"api call fails": {
@@ -197,7 +197,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, errors.New("invalid_auth"))
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, errors.New("invalid_auth"))
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
@@ -214,10 +214,10 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: always a) mock out calls and b) call AddDefaultMocks before making any clients.* calls
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "name", fakeAppID, "scheduled")
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(fakeTrigger, nil)
 				// no collaborators on app
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -246,7 +246,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 					WorkflowAppID: fakeAppID,
 					Schedule:      types.ToRawJSON(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
 				}
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, expectedTriggerRequest)
 			},
 		},
 		"--trigger-def, file missing": {
@@ -269,9 +269,9 @@ func TestTriggersCreateCommand(t *testing.T) {
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, nil)
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{{}}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{{}}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -288,7 +288,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				clientsMock.HookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"--trigger-def, not json, `get-trigger` hook missing": {
@@ -309,7 +309,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
@@ -364,12 +364,12 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 						Type: "slack#/types/interactivity",
 					},
 				}
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs).Return(types.DeployedTrigger{}, extendedErr)
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs).Return(types.DeployedTrigger{}, extendedErr)
 
 				fakeTrigger := createFakeTrigger(fakeTriggerID, "unit tests", fakeAppID, "shortcut")
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs).Return(fakeTrigger, nil)
-				clientsMock.APIInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.APIInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs).Return(fakeTrigger, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionEveryone, []string{}, nil).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
@@ -377,8 +377,8 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
 			},
 			Teardown: func() {
 				appSelectTeardown()
@@ -399,17 +399,17 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 						Type: "slack#/types/interactivity",
 					},
 				}
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs).Return(types.DeployedTrigger{}, extendedErr).Once()
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs).Return(types.DeployedTrigger{}, extendedErr).Once()
 
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs).Return(types.DeployedTrigger{}, errors.New("internal_error")).Once()
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs).Return(types.DeployedTrigger{}, errors.New("internal_error")).Once()
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestMissingInputs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, triggerRequestWithInteractivityInputs)
 			},
 			Teardown: func() {
 				appSelectTeardown()
@@ -430,14 +430,14 @@ func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 						Type: "number",
 					},
 				}
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, extendedErr)
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).Return(types.DeployedTrigger{}, extendedErr)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 			Teardown: func() {
 				appSelectTeardown()
@@ -491,7 +491,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 				}
 				appCommandMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(ctx, types.InstallSuccess, newDevApp.App, nil)
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, nil)
 				// Define default mocks
 				clientsMock.AddDefaultMocks()
@@ -502,7 +502,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				appCommandMock.AssertCalled(t, "RunAddCommand", mock.Anything, mock.Anything, &newDevApp, mock.Anything)
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"select a non-installed prod app": {
@@ -519,7 +519,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 				}
 				appCommandMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(ctx, types.InstallSuccess, newDevApp.App, nil)
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, nil)
 				// Define default mocks
 				clientsMock.AddDefaultMocks()
@@ -530,7 +530,7 @@ func TestTriggersCreateCommand_AppSelection(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
 				appCommandMock.AssertCalled(t, "RunAddCommand", mock.Anything, mock.Anything, &newProdApp, mock.Anything)
-				clientsMock.APIInterface.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
@@ -554,7 +554,7 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 			name: "Accept prompt to reinstall and create the trigger successfully",
 			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
 				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.InstallSuccess, types.App{}, nil)
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{Name: "trigger name", ID: "Ft123", Type: "shortcut"}, nil)
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Re-install app to apply local file changes and try again?", mock.Anything).Return(true, nil)
 			},
@@ -578,7 +578,7 @@ func TestTriggersCreateCommand_promptShouldInstallAndRetry(t *testing.T) {
 			name: "Accept prompt to reinstall but fail to create the trigger",
 			prepareMocks: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, appCmdMock *app.AppMock) {
 				appCmdMock.On("RunAddCommand", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(ctx, types.InstallSuccess, types.App{}, nil)
-				clientsMock.APIInterface.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("WorkflowsTriggersCreate", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.DeployedTrigger{}, errors.New("something_else_went_wrong"))
 				clientsMock.Os.On("UserHomeDir").Return("", nil) // Called by clients.IO.PrintError
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Re-install app to apply local file changes and try again?", mock.Anything).Return(true, nil)

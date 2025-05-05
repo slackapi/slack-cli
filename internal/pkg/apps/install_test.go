@@ -459,7 +459,7 @@ func TestInstall(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("IsTTY").Return(tt.mockIsTTY)
 			clientsMock.AddDefaultMocks()
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"CreateApp",
 				mock.Anything,
 				mock.Anything,
@@ -469,7 +469,7 @@ func TestInstall(t *testing.T) {
 				tt.mockAPICreate,
 				tt.mockAPICreateError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"DeveloperAppInstall",
 				mock.Anything,
 				mock.Anything,
@@ -484,7 +484,7 @@ func TestInstall(t *testing.T) {
 				tt.mockAPIInstallState,
 				tt.mockAPIInstallError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ExportAppManifest",
 				mock.Anything,
 				mock.Anything,
@@ -493,7 +493,7 @@ func TestInstall(t *testing.T) {
 				api.ExportAppResult{},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateAppManifest",
 				mock.Anything,
 				mock.Anything,
@@ -503,7 +503,7 @@ func TestInstall(t *testing.T) {
 				api.ValidateAppManifestResult{},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"UpdateApp",
 				mock.Anything,
 				mock.Anything,
@@ -515,7 +515,7 @@ func TestInstall(t *testing.T) {
 				tt.mockAPIUpdate,
 				tt.mockAPIUpdateError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
@@ -593,7 +593,7 @@ func TestInstall(t *testing.T) {
 			assert.Equal(t, tt.expectedInstallState, state)
 			assert.Equal(t, tt.expectedApp, app)
 			if tt.expectedUpdate {
-				clientsMock.APIInterface.AssertCalled(
+				clientsMock.API.AssertCalled(
 					t,
 					"UpdateApp",
 					mock.Anything,
@@ -603,9 +603,9 @@ func TestInstall(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				)
-				clientsMock.APIInterface.AssertNotCalled(t, "CreateApp")
+				clientsMock.API.AssertNotCalled(t, "CreateApp")
 			} else if tt.expectedCreate {
-				clientsMock.APIInterface.AssertCalled(
+				clientsMock.API.AssertCalled(
 					t,
 					"CreateApp",
 					mock.Anything,
@@ -613,9 +613,9 @@ func TestInstall(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				)
-				clientsMock.APIInterface.AssertNotCalled(t, "UpdateApp")
+				clientsMock.API.AssertNotCalled(t, "UpdateApp")
 			}
-			for _, call := range clientsMock.APIInterface.Calls {
+			for _, call := range clientsMock.API.Calls {
 				args := call.Arguments
 				switch call.Method {
 				case "CreateApp":
@@ -902,7 +902,7 @@ func TestInstallLocalApp(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("IsTTY").Return(tt.mockIsTTY)
 			clientsMock.AddDefaultMocks()
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"CreateApp",
 				mock.Anything,
 				mock.Anything,
@@ -912,7 +912,7 @@ func TestInstallLocalApp(t *testing.T) {
 				tt.mockAPICreate,
 				tt.mockAPICreateError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"DeveloperAppInstall",
 				mock.Anything,
 				mock.Anything,
@@ -927,7 +927,7 @@ func TestInstallLocalApp(t *testing.T) {
 				tt.mockAPIInstallState,
 				tt.mockAPIInstallError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ExportAppManifest",
 				mock.Anything,
 				mock.Anything,
@@ -936,7 +936,7 @@ func TestInstallLocalApp(t *testing.T) {
 				api.ExportAppResult{Manifest: tt.mockManifest},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateAppManifest",
 				mock.Anything,
 				mock.Anything,
@@ -946,7 +946,7 @@ func TestInstallLocalApp(t *testing.T) {
 				api.ValidateAppManifestResult{},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"UpdateApp",
 				mock.Anything,
 				mock.Anything,
@@ -958,7 +958,7 @@ func TestInstallLocalApp(t *testing.T) {
 				tt.mockAPIUpdate,
 				tt.mockAPIUpdateError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
@@ -1027,7 +1027,7 @@ func TestInstallLocalApp(t *testing.T) {
 			assert.Equal(t, tt.expectedInstallState, state)
 			assert.Equal(t, tt.expectedApp, app)
 			if tt.expectedUpdate {
-				clientsMock.APIInterface.AssertCalled(
+				clientsMock.API.AssertCalled(
 					t,
 					"UpdateApp",
 					mock.Anything,
@@ -1037,9 +1037,9 @@ func TestInstallLocalApp(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				)
-				clientsMock.APIInterface.AssertNotCalled(t, "CreateApp")
+				clientsMock.API.AssertNotCalled(t, "CreateApp")
 			} else if tt.expectedCreate {
-				clientsMock.APIInterface.AssertCalled(
+				clientsMock.API.AssertCalled(
 					t,
 					"CreateApp",
 					mock.Anything,
@@ -1047,9 +1047,9 @@ func TestInstallLocalApp(t *testing.T) {
 					mock.Anything,
 					mock.Anything,
 				)
-				clientsMock.APIInterface.AssertNotCalled(t, "UpdateApp")
+				clientsMock.API.AssertNotCalled(t, "UpdateApp")
 			}
-			for _, call := range clientsMock.APIInterface.Calls {
+			for _, call := range clientsMock.API.Calls {
 				args := call.Arguments
 				switch call.Method {
 				case "CreateApp":
@@ -1147,7 +1147,7 @@ func TestValidateManifestForInstall(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			tt.setup(clientsMock)
-			clientsMock.APIInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, tt.app.AppID).
+			clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, tt.app.AppID).
 				Return(tt.result, tt.err)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 

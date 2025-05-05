@@ -235,7 +235,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
-				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
 
 				itemsFile, err := cm.Fs.Create("my-file")
@@ -265,7 +265,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 			ExpectedOutputs: []string{"Some items failed to be imported"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
-				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
 
 				itemsFile, err := cm.Fs.Create("my-file")
@@ -308,7 +308,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 			ExpectedOutputs: []string{"Import will be limited to the first 5000 items in the file"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				*cm = *setupDatastoreMocks()
-				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil)
 
 				itemsFile, err := cm.Fs.Create("my-file")
@@ -338,10 +338,10 @@ func TestBulkPutCommandImport(t *testing.T) {
 				items, err := prepareImportMockData(itemsFile, 2, 0)
 				assert.NoError(t, err)
 
-				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{FailedItems: items[:1]}, nil).Once()
 
-				cm.APIInterface.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
+				cm.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreBulkPutResult{}, nil).Once()
 
 				*cf = *shared.NewClientFactory(cm.MockClientFactory())
@@ -350,8 +350,8 @@ func TestBulkPutCommandImport(t *testing.T) {
 				status, _ := importProgressSpinner.Status()
 				assert.Contains(t, status, "Successfully imported (2) items! (0) items failed to be imported. Total processed items is (2)")
 
-				cm.APIInterface.AssertNumberOfCalls(t, "AppsDatastoreBulkPut", 2)
-				cm.APIInterface.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
+				cm.API.AssertNumberOfCalls(t, "AppsDatastoreBulkPut", 2)
+				cm.API.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
 					Datastore: "Todos",
 					App:       "A0123456",
 					Items: []map[string]interface{}{
@@ -359,7 +359,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 						{"task_id": "0002", "task": "counting", "status": "ongoing"},
 					},
 				})
-				cm.APIInterface.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
+				cm.API.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
 					Datastore: "Todos",
 					App:       "A0123456",
 					Items: []map[string]interface{}{

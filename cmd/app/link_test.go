@@ -88,7 +88,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -146,7 +146,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
@@ -213,7 +213,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -282,7 +282,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -358,7 +358,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
@@ -417,7 +417,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "Deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -474,7 +474,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -585,7 +585,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -661,7 +661,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,

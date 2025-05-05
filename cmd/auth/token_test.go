@@ -30,7 +30,7 @@ func TestTokenCommand(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.AuthSession{UserID: &mockOrgAuth.UserID,
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.AuthSession{UserID: &mockOrgAuth.UserID,
 		TeamID:   &mockOrgAuth.TeamID,
 		TeamName: &mockOrgAuth.TeamDomain,
 		URL:      &mockOrgAuthURL}, nil)

@@ -239,7 +239,7 @@ func TestGetTeamApps(t *testing.T) {
 				tt.mockAuthWithTeamIDResponse,
 				tt.mockAuthWithTeamIDError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -249,7 +249,7 @@ func TestGetTeamApps(t *testing.T) {
 				tt.mockGetAppStatusResponse,
 				tt.mockGetAppStatusError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
@@ -374,7 +374,7 @@ func TestGetTokenApp(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, test.tokenErr)
-			clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(test.appStatus, test.statusErr)
 			clientsMock.AddDefaultMocks()
 
@@ -452,7 +452,7 @@ func Test_FilterAuthsByToken_Flags(t *testing.T) {
 	clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, team2Token).
 		Return(mockAuthTeam2, nil)
 
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(SetAuth, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, errors.New(slackerror.ErrCredentialsNotFound))
@@ -581,7 +581,7 @@ func TestPrompt_AppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *testi
 	// Auth is present but invalid
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	mockReauthentication(clientsMock)
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 
@@ -612,7 +612,7 @@ func TestPrompt_AppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *testi
 	require.NoError(t, err)
 	selection.Auth.LastUpdated = time.Time{} // ignore time for this test
 	require.Equal(t, fakeAuthsByTeamDomain[team1TeamDomain], selection.Auth)
-	clientsMock.APIInterface.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	clientsMock.API.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestPrompt_AppSelectPrompt_AuthsNoApps(t *testing.T) {
@@ -620,7 +620,7 @@ func TestPrompt_AppSelectPrompt_AuthsNoApps(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 	clientsMock.AddDefaultMocks()
@@ -695,7 +695,7 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, nil)
-			clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(test.appStatus, test.statusErr)
 			clientsMock.AddDefaultMocks()
 
@@ -725,13 +725,13 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowAllApps(t *tes
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -772,13 +772,13 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_ShowInstalledAppsO
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -820,13 +820,13 @@ func TestPrompt_AppSelectPrompt_AuthsWithDeployedAppInstalled_InstalledAppOnly_F
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -946,7 +946,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_InstalledAppOnly_Flag
 	mockAuthTeam2.Token = team2Token
 
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{
 				{AppID: "A1EXAMPLE01", Installed: true},
@@ -956,7 +956,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_InstalledAppOnly_Flag
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mockAuthTeam1.TeamID).Return(mockAuthTeam1, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mockAuthTeam2.TeamID).Return(mockAuthTeam2, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 
 	clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, team1Token).
 		Return(mockAuthTeam1, nil)
@@ -1098,7 +1098,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_MultiWorkspaceAllApps
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{
 				{AppID: "A1EXAMPLE01", Installed: true},
@@ -1107,7 +1107,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithBothEnvsInstalled_MultiWorkspaceAllApps
 			}}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -1224,7 +1224,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithHostedInstalled_AllApps_CreateNew(t *te
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{
 				{AppID: "A1EXAMPLE01", Installed: true},
@@ -1232,7 +1232,7 @@ func TestPrompt_AppSelectPrompt_AuthsWithHostedInstalled_AllApps_CreateNew(t *te
 			}}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -1303,8 +1303,8 @@ func TestPrompt_AppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 		})
 		clientsMock.AuthInterface.On(Auths, mock.Anything).Return(auths, nil)
 		clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-		clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
-		clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+		clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+		clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 			api.GetAppStatusResult{
 				Apps: []api.AppStatusResultAppInfo{
 					{AppID: deployedTeam1InstalledAppID, Installed: deployedTeam1AppIsInstalled},
@@ -1685,7 +1685,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -1695,7 +1695,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 				tt.mockTeam1Status,
 				tt.mockTeam1StatusError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -1705,7 +1705,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 				tt.mockTeam2Status,
 				tt.mockTeam2StatusError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
@@ -2302,7 +2302,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				tt.mockAuthWithToken,
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
@@ -2310,7 +2310,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				api.AuthSession{},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -2334,7 +2334,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -2353,7 +2353,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -2372,7 +2372,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -2396,7 +2396,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -2415,7 +2415,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				},
 				nil,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
@@ -2515,7 +2515,7 @@ func TestPrompt_TeamAppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *t
 	// Auth is present but invalid
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	mockReauthentication(clientsMock)
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 
@@ -2538,7 +2538,7 @@ func TestPrompt_TeamAppSelectPrompt_SelectedAuthExpired_UserReAuthenticates(t *t
 	require.NoError(t, err)
 	selection.Auth.LastUpdated = time.Time{} // ignore time for this test
 	require.Equal(t, fakeAuthsByTeamDomain[team1TeamDomain], selection.Auth)
-	clientsMock.APIInterface.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	clientsMock.API.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestPrompt_TeamAppSelectPrompt_NoAuths_UserReAuthenticates(t *testing.T) {
@@ -2548,7 +2548,7 @@ func TestPrompt_TeamAppSelectPrompt_NoAuths_UserReAuthenticates(t *testing.T) {
 	// No auths present
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return([]types.SlackAuth{}, nil)
 	mockReauthentication(clientsMock)
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 
@@ -2680,7 +2680,7 @@ func TestPrompt_TeamAppSelectPrompt_TokenAppFlag(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AuthInterface.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, nil)
-			clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(test.appStatus, test.statusErr)
 			clientsMock.AddDefaultMocks()
 
@@ -2746,7 +2746,7 @@ func TestPrompt_TeamAppSelectPrompt_NoApps(t *testing.T) {
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team1TeamID).Return(fakeAuthsByTeamDomain[team1TeamDomain], nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team2TeamID).Return(fakeAuthsByTeamDomain[team2TeamDomain], nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AddDefaultMocks()
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -3062,7 +3062,7 @@ func TestPrompt_TeamAppSelectPrompt_TokenFlag(t *testing.T) {
 
 		clientsMock := shared.NewClientsMock()
 
-		clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+		clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 			api.GetAppStatusResult{Apps: appInstallStatus}, nil)
 		clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 		clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).
@@ -3098,12 +3098,12 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}, {AppID: "A124", Installed: true}},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AddDefaultMocks()
 
@@ -3179,7 +3179,7 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagDomain(t *testing.T) 
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}},
 		}, nil)
@@ -3227,7 +3227,7 @@ func TestPrompt_TeamAppSelectPrompt_HostedAppsOnly_TeamFlagID(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}},
 		}, nil)
@@ -3275,12 +3275,12 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A1EXAMPLE01", Installed: true}, {AppID: "A124", Installed: true}},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team1TeamID).Return(fakeAuthsByTeamDomain[team1TeamDomain], nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team2TeamID).Return(fakeAuthsByTeamDomain[team2TeamDomain], nil)
 	clientsMock.AddDefaultMocks()
@@ -3359,7 +3359,7 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagDomain(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A124", Installed: true}},
 		}, nil)
@@ -3410,7 +3410,7 @@ func TestPrompt_TeamAppSelectPrompt_LocalAppsOnly_TeamFlagID(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: "A124", Installed: true}},
 		}, nil)
@@ -3461,7 +3461,7 @@ func TestPrompt_TeamAppSelectPrompt_AllApps(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{
 				{AppID: "A1EXAMPLE01", Installed: true},
@@ -3471,7 +3471,7 @@ func TestPrompt_TeamAppSelectPrompt_AllApps(t *testing.T) {
 			},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AddDefaultMocks()
 
@@ -3553,7 +3553,7 @@ func TestPrompt_TeamAppSelectPrompt_LegacyDevApps(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{
 				{AppID: "A1EXAMPLE01dev", Installed: true},
@@ -3561,7 +3561,7 @@ func TestPrompt_TeamAppSelectPrompt_LegacyDevApps(t *testing.T) {
 			},
 		}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AddDefaultMocks()
 
@@ -3637,7 +3637,7 @@ func TestPrompt_TeamAppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 
 	setupClientsMock := func() *shared.ClientsMock {
 		clientsMock := shared.NewClientsMock()
-		clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+		clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 			api.GetAppStatusResult{
 				Apps: []api.AppStatusResultAppInfo{
 					{AppID: deployedTeam1InstalledAppID, Installed: deployedTeam1AppIsInstalled},
@@ -3653,7 +3653,7 @@ func TestPrompt_TeamAppSelectPrompt_ShowExpectedLabels(t *testing.T) {
 			Token:      "xoxe.xoxp-2-token",
 		})
 		clientsMock.AuthInterface.On(Auths, mock.Anything).Return(auths, nil)
-		clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+		clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 		clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 		clientsMock.AddDefaultMocks()
 
@@ -3818,7 +3818,7 @@ func TestPrompt_TeamAppSelectPrompt_AllApps_TeamFlagID(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AddDefaultMocks()
@@ -3866,7 +3866,7 @@ func TestPrompt_TeamAppSelectPrompt_AllApps_Flags(t *testing.T) {
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return(fakeAuthsByTeamDomainSlice, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
 	clientsMock.AddDefaultMocks()
@@ -4032,7 +4032,7 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_HasW
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
 	// Auths
 	// Enterprise (org) Auth
@@ -4058,7 +4058,7 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_HasW
 	// Return one auth
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team1TeamID).Return(authTeam1, nil)
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, enterprise1TeamID).Return(authEnterprise1, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 
 	//
 	// This test uses a single auth - Mock the underlying auth
@@ -4239,7 +4239,7 @@ func TestPrompt_TeamAppSelectPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_Miss
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
 	mockReauthentication(clientsMock)
 
@@ -4428,7 +4428,7 @@ func TestPrompt_TeamAppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
 	// Auths
 	// Enterprise (org) Auth
@@ -4454,7 +4454,7 @@ func TestPrompt_TeamAppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth
 	// For this test we want to make sure that no auth is found for team1, and a credentials not found
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team1TeamID).Return(types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound))
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, enterprise1TeamID).Return(authEnterprise1, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 
 	// This test uses a single auth - the enterprise auth
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return([]types.SlackAuth{
@@ -4606,7 +4606,7 @@ func TestPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth_Has
 	// Set up mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.APIInterface.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
+	clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.GetAppStatusResult{}, nil)
 
 	// Auths
 	// Enterprise (org) Auth
@@ -4632,7 +4632,7 @@ func TestPrompt_AppSelectPrompt_EnterpriseWorkspaceApps_MissingWorkspaceAuth_Has
 	// For this test we want to make sure that no auth is found for team1, and a credentials not found
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, team1TeamID).Return(types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound))
 	clientsMock.AuthInterface.On(AuthWithTeamID, mock.Anything, enterprise1TeamID).Return(authEnterprise1, nil)
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 
 	// This test uses a single auth - the enterprise auth
 	clientsMock.AuthInterface.On(Auths, mock.Anything).Return([]types.SlackAuth{
@@ -4898,7 +4898,7 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 				Auth: types.SlackAuth{IsEnterpriseInstall: true},
 			},
 			mockPrompt: func(clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.On("AuthTeamsList", mock.Anything, mock.Anything, mock.Anything).Return(
+				clientsMock.API.On("AuthTeamsList", mock.Anything, mock.Anything, mock.Anything).Return(
 					[]types.TeamInfo{
 						{ID: "T1", Name: "team1"},
 						{ID: "T2", Name: "team2"},
@@ -4923,7 +4923,7 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 				Auth: types.SlackAuth{IsEnterpriseInstall: true},
 			},
 			mockPrompt: func(clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.On("AuthTeamsList", mock.Anything, mock.Anything, mock.Anything).Return(
+				clientsMock.API.On("AuthTeamsList", mock.Anything, mock.Anything, mock.Anything).Return(
 					[]types.TeamInfo{
 						{ID: "T1", Name: "team1"},
 						{ID: "T2", Name: "team2"},
@@ -4948,7 +4948,7 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 				Auth: types.SlackAuth{IsEnterpriseInstall: true},
 			},
 			mockPrompt: func(clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.On("AuthTeamsList", mock.Anything, mock.Anything, mock.Anything).Return(
+				clientsMock.API.On("AuthTeamsList", mock.Anything, mock.Anything, mock.Anything).Return(
 					[]types.TeamInfo{
 						{ID: "T1", Name: "team1"},
 						{ID: "T2", Name: "team2"},
@@ -5085,7 +5085,7 @@ func Test_ValidateAuth(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ExchangeAuthTicket",
 				mock.Anything,
 				mock.Anything,
@@ -5095,7 +5095,7 @@ func Test_ValidateAuth(t *testing.T) {
 				tt.apiExchangeAuthTicketResultResponse,
 				tt.apiExchangeAuthTicketResultError,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"GenerateAuthTicket",
 				mock.Anything,
 				mock.Anything,
@@ -5105,17 +5105,17 @@ func Test_ValidateAuth(t *testing.T) {
 				tt.apiGenerateAuthTicketResultError,
 			)
 			if tt.authProvided.APIHost != nil {
-				clientsMock.APIInterface.On(
+				clientsMock.API.On(
 					"Host",
 				).Return(
 					*tt.authProvided.APIHost,
 				)
 			}
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"SetHost",
 				mock.Anything,
 			)
-			clientsMock.APIInterface.On(
+			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				tt.authProvided.Token,
@@ -5175,7 +5175,7 @@ func Test_ValidateAuth(t *testing.T) {
 			tt.authProvided.LastUpdated = time.Time{} // ignore time for this test
 			assert.Equal(t, tt.expectedErr, err)
 			if tt.authExpected.APIHost != nil {
-				clientsMock.APIInterface.AssertCalled(t, "SetHost", *tt.authExpected.APIHost)
+				clientsMock.API.AssertCalled(t, "SetHost", *tt.authExpected.APIHost)
 			}
 			assert.Equal(t, tt.authExpected, tt.authProvided)
 		})
@@ -5186,20 +5186,20 @@ func Test_ValidateAuth(t *testing.T) {
 func mockReauthentication(clientsMock *shared.ClientsMock) {
 	// Default mocks
 	clientsMock.Os.AddDefaultMocks()
-	clientsMock.APIInterface.AddDefaultMocks()
+	clientsMock.API.AddDefaultMocks()
 	// Enable interactivity
 	clientsMock.IO.On("IsTTY").Return(true)
 	clientsMock.IO.AddDefaultMocks()
 
 	// Mock invalid auth response
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, fmt.Errorf(slackerror.ErrInvalidAuth))
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, fmt.Errorf(slackerror.ErrInvalidAuth))
 	clientsMock.AuthInterface.On("FilterKnownAuthErrors", mock.Anything, mock.Anything).Return(true, nil)
 	// Mocks for reauthentication
-	clientsMock.APIInterface.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
+	clientsMock.API.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
 	clientsMock.IO.On("InputPrompt", mock.Anything, "Enter challenge code", iostreams.InputPromptConfig{
 		Required: true,
 	}).Return("challengeCode", nil)
-	clientsMock.APIInterface.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{Token: fakeAuthsByTeamDomain[team1TeamDomain].Token, TeamDomain: team1TeamDomain,
+	clientsMock.API.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{Token: fakeAuthsByTeamDomain[team1TeamDomain].Token, TeamDomain: team1TeamDomain,
 		TeamID: team1TeamID, UserID: "U1"}, nil)
 	clientsMock.AuthInterface.On("IsAPIHostSlackProd", mock.Anything).Return(true)
 	clientsMock.AuthInterface.On("SetAuth", mock.Anything, mock.Anything).Return(types.SlackAuth{}, "", nil)

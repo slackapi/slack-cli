@@ -458,7 +458,7 @@ func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsTo
 				nextCursor = fmt.Sprintf("%d", i)
 
 			}
-			cm.APIInterface.On("AppsDatastoreQuery", mock.Anything, mock.Anything, mock.Anything).
+			cm.API.On("AppsDatastoreQuery", mock.Anything, mock.Anything, mock.Anything).
 				Return(types.AppDatastoreQueryResult{
 					Items:      append([]map[string]interface{}{}, data...),
 					NextCursor: nextCursor,

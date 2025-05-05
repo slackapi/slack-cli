@@ -49,13 +49,13 @@ func TestExportCommand(t *testing.T) {
 			ExpectedOutputs: []string{"Slackbot will DM you with a CSV file once it's ready"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
-				cm.APIInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				cm.API.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			Teardown: func() {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
+				cm.API.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
 			},
 		},
 		"with --step-id, API fails": {
@@ -63,13 +63,13 @@ func TestExportCommand(t *testing.T) {
 			ExpectedErrorStrings: []string{"failed"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
-				cm.APIInterface.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("failed"))
+				cm.API.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("failed"))
 			},
 			Teardown: func() {
 				appSelectTeardown()
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
+				cm.API.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
