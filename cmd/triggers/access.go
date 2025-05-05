@@ -748,7 +748,6 @@ func namedEntitiesAccessMap(entitiesAccessList []string) map[string][]string {
 func AddAppCollaboratorsToNamedEntities(ctx context.Context, clients *shared.ClientFactory, token string, appID string) error {
 	ctx = config.SetContextToken(ctx, token)
 
-	// TODO: this shite needs to use APIInterface but there is no dedicated interface to the collaborator APIs so I guess that's needed now.
 	collaborators, err := clients.API().ListCollaborators(ctx, token, appID)
 	if err != nil {
 		return err

@@ -97,7 +97,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 		IO: clients.IO,
 	}
 	clients.EventTracker = tracking.NewEventTracker()
-	clients.API = clients.defaultAPIInterfaceFunc
+	clients.API = clients.defaultAPIFunc
 	clients.AppClient = clients.defaultAppClientFunc
 	clients.AuthInterface = clients.defaultAuthInterfaceFunc
 	clients.Browser = clients.defaultBrowserFunc
@@ -129,8 +129,8 @@ func (c *ClientFactory) defaultAPIClientFunc() *api.Client {
 	return api.NewClient(nil, c.Config.APIHostResolved, c.IO)
 }
 
-// defaultAPIInterfaceFunc return a new API Client using the ConfigAPIHost
-func (c *ClientFactory) defaultAPIInterfaceFunc() api.APIInterface {
+// defaultAPIFunc return a new API Client using the ConfigAPIHost
+func (c *ClientFactory) defaultAPIFunc() api.APIInterface {
 	return c.defaultAPIClientFunc()
 }
 
