@@ -20,7 +20,7 @@ $ slack auth token
 $ slack auth token --no-prompt
 
 # Complete authentication using a ticket and challenge code
-$ slack auth token --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
+$ slack auth token --challenge 6d0a31c9 --ticket ISQWLiZT0tOMLO3YWNTJO0...
 ```
 
 ### Options

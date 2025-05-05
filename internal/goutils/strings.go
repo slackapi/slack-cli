@@ -155,7 +155,7 @@ func AddLogWhenValExist(title string, val string) string {
 	return ""
 }
 
-// UpperCaseTrimAll returns a formatted named_entites for trigger ACLs
+// UpperCaseTrimAll returns a formatted named_entities for trigger ACLs
 func UpperCaseTrimAll(namedEntities string) string {
 	return strings.ReplaceAll(strings.ToUpper(namedEntities), " ", "")
 }
