@@ -162,9 +162,9 @@ func TestAppsDeleteCommand(t *testing.T) {
 func prepareCommonDeleteMocks(t *testing.T, cf *shared.ClientFactory, cm *shared.ClientsMock) {
 	cm.AddDefaultMocks()
 
-	cm.AuthInterface.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
+	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
-	cm.AuthInterface.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
+	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("logstash host")
 
 	// Mock list command

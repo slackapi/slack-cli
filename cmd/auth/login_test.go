@@ -60,8 +60,8 @@ func TestLoginCommand(t *testing.T) {
 					TeamName: &mockOrgAuth.TeamDomain,
 					URL:      &mockOrgAuthURL,
 				}, nil)
-				cm.AuthInterface.On("IsAPIHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"AuthWithTeamDomain",
 					mock.Anything,
 					mock.Anything,
@@ -94,8 +94,8 @@ func TestLoginCommand(t *testing.T) {
 					},
 					nil,
 				)
-				cm.AuthInterface.On("IsAPIHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"SetAuth",
 					mock.Anything,
 					mock.Anything,
@@ -124,8 +124,8 @@ func TestLoginCommand(t *testing.T) {
 					},
 					nil,
 				)
-				cm.AuthInterface.On("IsAPIHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"SetAuth",
 					mock.Anything,
 					mock.Anything,
@@ -146,8 +146,8 @@ func TestLoginCommand(t *testing.T) {
 					Required: true,
 				}).Return(mockChallengeCode, nil)
 				cm.API.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, nil)
-				cm.AuthInterface.On("IsAPIHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"SetAuth",
 					mock.Anything,
 					mock.Anything,

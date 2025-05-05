@@ -177,7 +177,7 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, log *logger.L
 	//
 	// Note: This errors silently to continue deployment without any problem
 	var apiHost = clients.Config.APIHostResolved
-	if clients.AuthInterface().IsAPIHostSlackDev(apiHost) {
+	if clients.Auth().IsAPIHostSlackDev(apiHost) {
 		apiHostURL := fmt.Sprintf("%s/api/", apiHost)
 		_ = clients.API().AddVariable(ctx, token, app.AppID, "SLACK_API_URL", apiHostURL)
 	}

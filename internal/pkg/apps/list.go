@@ -45,7 +45,7 @@ func List(ctx context.Context, clients *shared.ClientFactory) ([]types.App, stri
 	}
 	// Update local run app names to include domain (when possible)
 	for i, devApp := range devApps {
-		if auth, err := clients.AuthInterface().AuthWithTeamID(ctx, devApp.TeamID); err == nil {
+		if auth, err := clients.Auth().AuthWithTeamID(ctx, devApp.TeamID); err == nil {
 			// modify for display
 			devApps[i].TeamDomain = fmt.Sprintf("%s %s", auth.TeamDomain, style.LocalRunNameTag)
 
@@ -102,12 +102,12 @@ func FetchAppInstallStates(ctx context.Context, clients *shared.ClientFactory, a
 	}
 
 	// Get all available authed workspaces
-	auths, err := clients.AuthInterface().Auths(ctx)
+	auths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return []types.App{}, err
 	}
 	if clients.Config.TokenFlag != "" {
-		if tokenAuth, err := clients.AuthInterface().AuthWithToken(ctx, clients.Config.TokenFlag); err != nil {
+		if tokenAuth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag); err != nil {
 			return []types.App{}, err
 		} else {
 			auths = append(auths, tokenAuth)

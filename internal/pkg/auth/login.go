@@ -37,7 +37,7 @@ const InvalidNoPromptFlags = "Invalid arguments, both --ticket and --challenge f
 
 // LoginWithClients ...
 func LoginWithClients(ctx context.Context, clients *shared.ClientFactory, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	return Login(ctx, clients.API(), clients.AuthInterface(), clients.IO, userToken, noRotation)
+	return Login(ctx, clients.API(), clients.Auth(), clients.IO, userToken, noRotation)
 }
 
 // Login takes the user through the Slack CLI login process
@@ -254,7 +254,7 @@ func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg
 		if err != nil || !authExchangeRes.IsReady {
 			return types.SlackAuth{}, "", err
 		}
-		savedAuth, credentialsPath, err := saveNewAuth(ctx, clients.API(), clients.AuthInterface(), authExchangeRes, noRotation)
+		savedAuth, credentialsPath, err := saveNewAuth(ctx, clients.API(), clients.Auth(), authExchangeRes, noRotation)
 		if err != nil {
 			return types.SlackAuth{}, "", err
 		}

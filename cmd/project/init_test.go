@@ -110,7 +110,7 @@ func Test_Project_InitCommand(t *testing.T) {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Mocks auths to match against team and app
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
 				}, nil)
