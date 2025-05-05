@@ -169,7 +169,7 @@ func getAppDirName(appName string) (string, error) {
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {
-		return "", fmt.Errorf("The app name you entered is reserved. Please try a different name.")
+		return "", fmt.Errorf("the app name you entered is reserved")
 	}
 	return appName, nil
 }
