@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5.4.0
+        uses: actions/setup-go@v5.5.0
         with:
           go-version: "1.24.3"
       - name: Lint
@@ -57,7 +57,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.2.2
       - name: Set up Go
-        uses: actions/setup-go@v5.4.0
+        uses: actions/setup-go@v5.5.0
         with:
           go-version: "1.24.3"
       - name: Report health score
