@@ -22,7 +22,7 @@ jobs:
           ref: main
           token: ${{ steps.credentials.outputs.token }}
       - name: Install Golang
-        uses: actions/setup-go@v5.4.0
+        uses: actions/setup-go@v5.5.0
         with:
           go-version: "stable"
       - name: Get the latest version
