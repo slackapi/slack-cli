@@ -4,7 +4,7 @@ Share feedback about your experience or project
 
 ### Synopsis
 
-Help us make the Slack Platform better by completing a survey
+Help us make the Slack Platform better with your feedback
 
 ```
 slack feedback [flags]
@@ -13,15 +13,16 @@ slack feedback [flags]
 ### Examples
 
 ```
-$ slack feedback  # Open a feedback survey in your browser
+$ slack feedback
 ```
 
 ### Options
 
 ```
   -h, --help          help for feedback
-      --name string   name of the survey:
-                         platform-improvements
+      --name string   name of the feedback:
+                         slack-cli
+                         slack-platform
                       
       --no-prompt     run command without prompts
 ```
