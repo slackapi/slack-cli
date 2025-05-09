@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Generate a GitHub token
         id: ghtoken
-        uses: actions/create-github-app-token@v2.0.2
+        uses: actions/create-github-app-token@v2.0.6
         with:
           app-id: ${{ secrets.GH_APP_ID_DOCS }}
           owner: slackapi

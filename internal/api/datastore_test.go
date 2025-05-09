@@ -82,7 +82,7 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpRequestFailed,
+			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
 		{
 			name: "response_unmarshal_error",
@@ -102,7 +102,7 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpResponseInvalid,
+			errMessage: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			name: "api_error",
@@ -205,7 +205,7 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpRequestFailed,
+			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
 		{
 			name: "response_unmarshal_error",
@@ -225,7 +225,7 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpResponseInvalid,
+			errMessage: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			name: "api_error",
@@ -323,7 +323,7 @@ func TestClient_AppsDatastoreQuery(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpRequestFailed,
+			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
 		{
 			name: "response_unmarshal_error",
@@ -340,7 +340,7 @@ func TestClient_AppsDatastoreQuery(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpResponseInvalid,
+			errMessage: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			name: "api_error",
@@ -433,7 +433,7 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpRequestFailed,
+			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
 		{
 			name: "response_unmarshal_error",
@@ -451,7 +451,7 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpResponseInvalid,
+			errMessage: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			name: "api_error",
@@ -547,7 +547,7 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpRequestFailed,
+			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
 		{
 			name: "response_unmarshal_error",
@@ -565,7 +565,7 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 				},
 			},
 			wantErr:    true,
-			errMessage: slackerror.ErrHttpResponseInvalid,
+			errMessage: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			name: "api_error",

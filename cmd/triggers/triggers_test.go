@@ -44,13 +44,13 @@ func TestTriggersCommand(t *testing.T) {
 	cmd := NewCommand(clients)
 	testutil.MockCmdIO(clients.IO, cmd)
 
-	clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return([]types.DeployedTrigger{}, "", nil)
+	clientsMock.API.On("WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything).Return([]types.DeployedTrigger{}, "", nil)
 
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}
 
-	clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything)
+	clientsMock.API.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, mock.Anything)
 
 }

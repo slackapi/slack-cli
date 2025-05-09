@@ -40,6 +40,8 @@ type SlackSurvey struct {
 	PromptDisplayText string
 	// PromptDescription is displayed beneath the `feedback` command prompt option
 	PromptDescription string
+	// SkipQueryParams is a flag to skip adding query params to the survey URL (optional, default false)
+	SkipQueryParams bool
 	// URL is the survey URL
 	URL url.URL
 	// Config returns either the project-level or system-level survey config
@@ -49,8 +51,6 @@ type SlackSurvey struct {
 	// Info prints additional information about the survey; displayed when the option is selected in `feedback`
 	// Info is optional
 	Info func(ctx context.Context, clients *shared.ClientFactory)
-	// Trace is a string consumed by tests to confirm that the Info text was displayed
-	Trace string
 	// Ask either prints text or prompts the user to complete the survey
 	// Potentially displayed after `run`/`deploy`/`doctor` (or other places where ShowSurveyMessages is called)
 	Ask func(ctx context.Context, clients *shared.ClientFactory) (bool, error)
@@ -63,13 +63,14 @@ const (
 	Always  Frequency = iota // We always want to ask
 	Once                     // Ask user to complete the survey only once
 	Monthly                  // Ask user to complete the survey once a month
+	Never                    // Do not ask the user to complete the survey
 )
 
 // Supported survey names
 const (
-	PlatformSurvey = "platform-improvements"
-	// TODO: uncomment when the survey is ready for release
-	//ProjectInfoSurvey = "project-info"
+	SlackCLIFeedback                = "slack-cli"
+	SlackPlatformFeedback           = "slack-platform"
+	SlackPlatformFeedbackDeprecated = "platform-improvements" // DEPRECATED(semver:major)
 )
 
 type SurveyConfigInterface interface {
@@ -80,20 +81,50 @@ type SurveyConfigInterface interface {
 // SurveyStore stores all available surveys.
 // New surveys should be added here.
 var SurveyStore = map[string]SlackSurvey{
-	// PlatformSurvey asks for general developer experience feedback
-	PlatformSurvey: {
-		Name:              PlatformSurvey,
-		PromptDisplayText: "Help make the Slack platform better",
-		PromptDescription: "Tell us about your experience as a Slack developer",
+	// SlackCLIFeedback asks for Slack CLI feedback using GitHub Issues
+	SlackCLIFeedback: {
+		Name:              SlackCLIFeedback,
+		PromptDisplayText: "Slack CLI",
+		PromptDescription: "Questions, issues, and feature requests about the Slack CLI",
+		SkipQueryParams:   true,
+		URL: url.URL{
+			RawPath: "https://github.com/slackapi/slack-cli/issues",
+		},
+		Info: func(ctx context.Context, clients *shared.ClientFactory) {
+			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
+				"%s\n%s\n",
+				style.Secondary("Ask questions, submit issues, or suggest features for the Slack CLI:"),
+				style.Secondary(style.Highlight("https://github.com/slackapi/slack-cli/issues")),
+			))
+		},
+		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
+			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+				Emoji: "love_letter",
+				Text:  "We would love to know how things are going",
+				Secondary: []string{
+					"Share your experience with " + style.Commandf(fmt.Sprintf("feedback --name %s", SlackCLIFeedback), false),
+				},
+			}))
+			return false, nil
+		},
+		Frequency: Never,
+		Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
+			return clients.Config.SystemConfig
+		},
+	},
+	// SlackPlatformFeedback asks for general developer experience feedback
+	SlackPlatformFeedback: {
+		Name:              SlackPlatformFeedback,
+		PromptDisplayText: "Slack Platform",
+		PromptDescription: "Developer support for the Slack Platform, Slack API, Block Kit, and more",
 		URL:               url.URL{RawPath: "https://docs.slack.dev/developer-support"},
 		Info: func(ctx context.Context, clients *shared.ClientFactory) {
 			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
 				"%s\n%s\n",
 				style.Secondary("You can send us a message at "+style.Highlight(email)),
-				style.Secondary("Or, survey your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
+				style.Secondary("Or, share your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
 			))
 		},
-		Trace: slacktrace.FeedbackMessage,
 		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
 			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 				Emoji: "love_letter",
@@ -134,6 +165,10 @@ func (s SlackSurvey) SetCompletedAtTimestamp(ctx context.Context, clients *share
 
 // ShouldAsk returns true if we should ask the user the complete the survey
 func (s SlackSurvey) ShouldAsk(cfg config.SurveyConfig) (bool, error) {
+	if s.Frequency == Never {
+		return false, nil
+	}
+
 	if cfg.AskedAt == "" { // survey has never been asked before
 		return true, nil
 	}
@@ -171,7 +206,8 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short:   "Share feedback about your experience or project",
 		Long:    "Help us make the Slack Platform better with your feedback",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "feedback", Meaning: "Open a feedback survey in your browser"},
+			{Command: "feedback", Meaning: "Choose to give feedback on part of the Slack Platform"},
+			{Command: fmt.Sprintf("feedback --name %s", SlackCLIFeedback), Meaning: "Give feedback on the Slack CLI"},
 		}),
 		PreRun: func(cmd *cobra.Command, args []string) {
 			clients.Config.SetFlags(cmd)
@@ -190,7 +226,7 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 	sort.Strings(surveyNames)
 	nameFlagDescription := style.Sectionf(style.TextSection{
-		Text:      "name of the survey:",
+		Text:      "name of the feedback:",
 		Secondary: surveyNames,
 	})
 	cmd.Flags().StringVar(&surveyNameFlag, "name", "", nameFlagDescription)
@@ -203,22 +239,25 @@ func NewFeedbackCommand(clients *shared.ClientFactory) *cobra.Command {
 // runFeedbackCommand will open the user's browser to the feedback survey webpage.
 func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	if len(SurveyStore) == 0 {
-		clients.IO.PrintInfo(ctx, false, "No surveys currently available; please try again later")
+		clients.IO.PrintInfo(ctx, false, "No feedback options currently available; please try again later")
 		return nil
+	}
+
+	// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
+	if surveyNameFlag == SlackPlatformFeedbackDeprecated {
+		surveyNameFlag = SlackPlatformFeedback
+		clients.IO.PrintWarning(ctx, "DEPRECATED: The '--name %s' flag is deprecated; use '--name %s' instead", SlackPlatformFeedbackDeprecated, SlackPlatformFeedback)
 	}
 
 	surveyNames, surveyPromptOptions := initSurveyOpts(ctx, clients, SurveyStore)
 
 	if _, ok := SurveyStore[surveyNameFlag]; !ok && surveyNameFlag != "" {
-		return slackerror.New("invalid_survey_name").
-			WithMessage("Invalid survey name provided: %s", surveyNameFlag).
-			WithRemediation("View survey options with %s", style.Commandf("feedback --help", false))
+		return slackerror.New(slackerror.ErrFeedbackNameInvalid).
+			WithMessage("Invalid feedback name provided: %s", surveyNameFlag)
 	}
 
 	if surveyNameFlag == "" && noPromptFlag {
-		return slackerror.New("survey_name_required").
-			WithMessage("Please provide a survey name or remove the --no-prompt flag").
-			WithRemediation("View survey options with %s", style.Commandf("feedback --help", false))
+		return slackerror.New(slackerror.ErrFeedbackNameRequired)
 	}
 
 	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
@@ -299,26 +338,31 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	if s.Info != nil {
 		s.Info(ctx, clients)
 	}
-	clients.IO.PrintTrace(ctx, s.Trace)
+
+	clients.IO.PrintTrace(ctx, slacktrace.FeedbackMessage, s.Name)
 
 	var err error
 	var ok bool
 	if !noPromptFlag {
-		ok, err = clients.IO.ConfirmPrompt(ctx, "Open survey in browser?", true)
+		ok, err = clients.IO.ConfirmPrompt(ctx, "Open in browser?", true)
 		if err != nil {
 			return err
 		}
 	}
 
-	u, err := addQueryParams(ctx, clients, s.URL.RawPath)
-	if err != nil {
-		return err
+	url := s.URL.RawPath
+
+	if !s.SkipQueryParams {
+		url, err = addQueryParams(ctx, clients, s.URL.RawPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	if ok { // Open survey in browser
-		clients.Browser().OpenURL(u)
+		clients.Browser().OpenURL(url)
 	} else { // Print survey URL
-		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Survey URL: \n", style.Secondary(u)))
+		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Feedback URL: \n", style.Secondary(url)))
 	}
 
 	// Record completion

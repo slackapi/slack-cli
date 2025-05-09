@@ -579,6 +579,18 @@ Many good things come to an end. This can sometimes include commands and flags.
 When commands or flags need to be removed, follow these steps:
 
 <details>
+<summary>Deprecating features</summary>
+
+- Public functionality should be deprecated on the next `semver:major` version
+  - Add the comment `// DEPRECATED(semver:major): Description about the deprecation and migration path`
+  - Print a warning `PrintWarning("DEPRECATED: Description about the deprecation and migration path")`
+- Internal functionality can be deprecated anytime
+  - Add the comment `// DEPRECATED: Description about the deprecation and migration path`
+- Please add deprecation comments generously to help the next person completely remove the feature and tests
+
+</details>
+
+<details>
 <summary>Deprecating commands</summary>
 
 - Display a deprecation notice on the command with the `Deprecated` attribute

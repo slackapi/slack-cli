@@ -160,13 +160,13 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	// - Update the manifest source to remote when its a GBP project with a local manifest.
 	// - Do not update manifest source for ROSI projects, because they can only be local manifests.
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	isManifestSourceRemote := manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE)
+	isManifestSourceRemote := manifestSource.Equals(config.ManifestSourceRemote)
 	isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
 
 	if err != nil || (!isManifestSourceRemote && !isSlackHostedProject) {
-		// When undefined, the default is config.MANIFEST_SOURCE_LOCAL
+		// When undefined, the default is config.ManifestSourceLocal
 		if !manifestSource.Exists() {
-			manifestSource = config.MANIFEST_SOURCE_LOCAL
+			manifestSource = config.ManifestSourceLocal
 		}
 
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
@@ -174,24 +174,24 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 			Text:  "Warning",
 			Secondary: []string{
 				"Existing apps have manifests configured by app settings",
-				"Linking existing apps requires the manifest source to be " + config.MANIFEST_SOURCE_REMOTE.String(),
-				fmt.Sprintf(`Manifest source can be "%s" or "%s"`, config.MANIFEST_SOURCE_LOCAL.String(), config.MANIFEST_SOURCE_REMOTE.String()),
+				"Linking existing apps requires the manifest source to be " + config.ManifestSourceRemote.String(),
+				fmt.Sprintf(`Manifest source can be "%s" or "%s"`, config.ManifestSourceLocal.String(), config.ManifestSourceRemote.String()),
 				" ",
 				fmt.Sprintf(style.Highlight(`Your manifest source is "%s"`), manifestSource.String()),
-				fmt.Sprintf("- %s: uses manifest from your project's source code for all apps", config.MANIFEST_SOURCE_LOCAL.String()),
-				fmt.Sprintf("- %s: uses manifest from app settings for each app", config.MANIFEST_SOURCE_REMOTE.String()),
+				fmt.Sprintf("- %s: uses manifest from your project's source code for all apps", config.ManifestSourceLocal.String()),
+				fmt.Sprintf("- %s: uses manifest from app settings for each app", config.ManifestSourceRemote.String()),
 				" ",
 				fmt.Sprintf("Current manifest source in %s:", style.Highlight(filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename))),
 				fmt.Sprintf(style.Highlight(`  %s: "%s"`), "manifest.source", manifestSource.String()),
 				" ",
 				fmt.Sprintf("Updating manifest source will be changed in %s:", style.Highlight(filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename))),
-				fmt.Sprintf(style.Highlight(`  %s: "%s"`), "manifest.source", config.MANIFEST_SOURCE_REMOTE),
+				fmt.Sprintf(style.Highlight(`  %s: "%s"`), "manifest.source", config.ManifestSourceRemote),
 			},
 		}))
 
 		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppManifestSourceConfirmPromptText, false)
 		if err != nil {
-			clients.IO.PrintDebug(ctx, "Error prompting to update the manifest source to %s: %s", config.MANIFEST_SOURCE_REMOTE, err)
+			clients.IO.PrintDebug(ctx, "Error prompting to update the manifest source to %s: %s", config.ManifestSourceRemote, err)
 			return err
 		}
 
@@ -201,16 +201,16 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 			return nil
 		}
 
-		if err := clients.Config.ProjectConfig.SetManifestSource(ctx, config.MANIFEST_SOURCE_REMOTE); err != nil {
+		if err := clients.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceRemote); err != nil {
 			// Log the error to the verbose output
 			clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 			// Display a user-friendly error with a workaround
 			slackErr := slackerror.New(slackerror.ErrProjectConfigManifestSource).
-				WithMessage("Failed to update the manifest source to %s", config.MANIFEST_SOURCE_REMOTE).
+				WithMessage("Failed to update the manifest source to %s", config.ManifestSourceRemote).
 				WithRemediation(
 					"You can manually update the manifest source by setting the following\nproperty in %s:\n  %s",
 					filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename),
-					fmt.Sprintf(`manifest.source: "%s"`, config.MANIFEST_SOURCE_REMOTE),
+					fmt.Sprintf(`manifest.source: "%s"`, config.ManifestSourceRemote),
 				).
 				WithRootCause(err)
 			clients.IO.PrintError(ctx, slackErr.Error())
@@ -225,7 +225,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	}
 
 	appIDs := []string{app.AppID}
-	_, err = clients.ApiInterface().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
+	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
 	if err != nil {
 		return err
 	}
@@ -292,7 +292,7 @@ func promptExistingApp(ctx context.Context, clients *shared.ClientFactory) (type
 
 // promptTeamSlackAuth retrieves an authenticated team from input
 func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
-	allAuths, err := clients.AuthInterface().Auths(ctx)
+	allAuths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return &types.SlackAuth{}, err
 	}
@@ -322,7 +322,7 @@ func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*t
 		return &types.SlackAuth{}, err
 	}
 	if selection.Prompt {
-		clients.AuthInterface().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
+		clients.Auth().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
 		return &allAuths[selection.Index], nil
 	}
 	teamMatch := false
@@ -341,7 +341,7 @@ func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*t
 	if !teamMatch {
 		return &types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound)
 	}
-	clients.AuthInterface().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
+	clients.Auth().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
 	return &allAuths[teamIndex], nil
 }
 

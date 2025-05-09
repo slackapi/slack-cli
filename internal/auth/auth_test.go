@@ -220,7 +220,7 @@ func Test_AuthGettersAndSetters(t *testing.T) {
 		require.NoError(t, err)
 		_, err = authClient.auths(ctx)
 		require.Error(t, err)
-		assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJson)
+		assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 	})
 }
 
@@ -245,23 +245,23 @@ func Test_AuthsRotation(t *testing.T) {
 		oneHourLater := timeNow + 60*60
 
 		// Fixtures
-		_defaultDevApiClientHost := defaultDevApiClientHost
-		_defaultProdApiClientHost := defaultProdApiClientHost
+		_defaultDevAPIClientHost := defaultDevAPIClientHost
+		_defaultProdAPIClientHost := defaultProdAPIClientHost
 		authATeamDomain := "workspace-a"
-		authATeamId := "T123456789A"
+		authATeamID := "T123456789A"
 		authBTeamDomain := "workspace-b"
-		authBTeamId := "T123456789B"
+		authBTeamID := "T123456789B"
 		authA := types.SlackAuth{
-			ApiHost:    &_defaultProdApiClientHost,
+			APIHost:    &_defaultProdAPIClientHost,
 			ExpiresAt:  oneHourLater,
 			TeamDomain: authATeamDomain,
-			TeamID:     authATeamId,
+			TeamID:     authATeamID,
 		}
 		authB := types.SlackAuth{
-			ApiHost:    &_defaultDevApiClientHost,
+			APIHost:    &_defaultDevAPIClientHost,
 			ExpiresAt:  oneHourLater,
 			TeamDomain: authBTeamDomain,
-			TeamID:     authBTeamId,
+			TeamID:     authBTeamID,
 		}
 		auths := types.AuthByTeamDomain{
 			authATeamDomain: authA,
@@ -273,14 +273,14 @@ func Test_AuthsRotation(t *testing.T) {
 		}
 
 		// setup api client
-		authClient.api = api.NewClient(&http.Client{}, defaultProdApiClientHost, authClient.io)
+		authClient.api = api.NewClient(&http.Client{}, defaultProdAPIClientHost, authClient.io)
 
 		// call the function
 		updatedAuths, err := authClient.auths(ctx)
 
 		// Assertions
-		require.Equal(t, authA, updatedAuths[authATeamId], "should return the same auth")
-		require.Equal(t, authB, updatedAuths[authBTeamId], "should return the same auth")
+		require.Equal(t, authA, updatedAuths[authATeamID], "should return the same auth")
+		require.Equal(t, authB, updatedAuths[authBTeamID], "should return the same auth")
 		require.NoError(t, err, "Should not return an error when the contents of credentials are valid")
 	})
 
@@ -292,39 +292,39 @@ func Test_AuthsRotation(t *testing.T) {
 		fiveMinutesAgo := timeNow - 60*5
 
 		// setup a fake api client since we don't want to make actual api calls
-		mockApiClient, teardown := api.NewFakeClient(t, api.FakeClientParams{
+		mockAPIClient, teardown := api.NewFakeClient(t, api.FakeClientParams{
 			ExpectedMethod:  "tooling.tokens.rotate",
 			ExpectedRequest: `refresh_token=valid-refresh-token`,
 			Response:        fmt.Sprintf(`{"ok":true,"token": "new-token", "exp": %d, "refresh_token": "new-valid-refresh-token"}`, oneHourLater),
 		})
 		defer teardown()
 
-		authClient.api = mockApiClient
-		fakeApiHost := mockApiClient.Host()
+		authClient.api = mockAPIClient
+		fakeAPIHost := mockAPIClient.Host()
 
 		// Fixtures
-		_defaultProdApiClientHost := defaultProdApiClientHost
+		_defaultProdAPIClientHost := defaultProdAPIClientHost
 		authATeamDomain := "workspace-a"
-		authATeamId := "T123456789A"
+		authATeamID := "T123456789A"
 		authBTeamDomain := "workspace-b"
-		authBTeamId := "T123456789B"
+		authBTeamID := "T123456789B"
 
 		workspaceAuthA := types.SlackAuth{
-			ApiHost:    &_defaultProdApiClientHost,
+			APIHost:    &_defaultProdAPIClientHost,
 			Token:      "goodToken",
 			ExpiresAt:  oneHourLater,
 			TeamDomain: authATeamDomain,
-			TeamID:     authATeamId,
+			TeamID:     authATeamID,
 		}
 
-		// use the fake api host as the Api host so that we don't end up making actual api calls
+		// use the fake api host as the API host so that we don't end up making actual api calls
 		workspaceAuthB := types.SlackAuth{
-			ApiHost:      &fakeApiHost,
+			APIHost:      &fakeAPIHost,
 			Token:        "expiredToken",
 			RefreshToken: "valid-refresh-token",
 			ExpiresAt:    fiveMinutesAgo,
 			TeamDomain:   authBTeamDomain,
-			TeamID:       authBTeamId,
+			TeamID:       authBTeamID,
 		}
 
 		auths := types.AuthByTeamDomain{
@@ -339,13 +339,13 @@ func Test_AuthsRotation(t *testing.T) {
 		updatedAuths, err := authClient.auths(ctx) // call the function
 		apiHostAfter := authClient.api.Host()      // track the api host after the function runs.
 
-		expectedWorkspaceAuthB := types.SlackAuth{ApiHost: &fakeApiHost, Token: "new-token", RefreshToken: "new-valid-refresh-token", ExpiresAt: oneHourLater}
+		expectedWorkspaceAuthB := types.SlackAuth{APIHost: &fakeAPIHost, Token: "new-token", RefreshToken: "new-valid-refresh-token", ExpiresAt: oneHourLater}
 
 		// Assertions
-		require.Equal(t, workspaceAuthA, updatedAuths[authATeamId], "should return the same auth")
-		require.Equal(t, expectedWorkspaceAuthB.Token, updatedAuths[authBTeamId].Token, "should return the renewed auth")
-		require.Equal(t, expectedWorkspaceAuthB.RefreshToken, updatedAuths[authBTeamId].RefreshToken, "should return the renewed auth")
-		require.Equal(t, expectedWorkspaceAuthB.ExpiresAt, updatedAuths[authBTeamId].ExpiresAt, "should return the renewed auth")
+		require.Equal(t, workspaceAuthA, updatedAuths[authATeamID], "should return the same auth")
+		require.Equal(t, expectedWorkspaceAuthB.Token, updatedAuths[authBTeamID].Token, "should return the renewed auth")
+		require.Equal(t, expectedWorkspaceAuthB.RefreshToken, updatedAuths[authBTeamID].RefreshToken, "should return the renewed auth")
+		require.Equal(t, expectedWorkspaceAuthB.ExpiresAt, updatedAuths[authBTeamID].ExpiresAt, "should return the renewed auth")
 		require.Equal(t, apiHostBefore, apiHostAfter, "api host before and after should be the same")
 		require.NoError(t, err, "Should not return an error when the contents of credentials are valid")
 	})
@@ -358,44 +358,44 @@ func Test_AuthsRotation(t *testing.T) {
 		fiveMinutesAgo := timeNow - 60*5
 
 		// setup a fake api client since we don't want to make actual api calls
-		mockApiClient, teardown := api.NewFakeClient(t, api.FakeClientParams{
+		mockAPIClient, teardown := api.NewFakeClient(t, api.FakeClientParams{
 			ExpectedMethod:  "tooling.tokens.rotate",
 			ExpectedRequest: `refresh_token=valid-refresh-token`,
 			Response:        `{"ok":false,"error": "invalid_auth"}`,
 		})
 		defer teardown()
 
-		authClient.api = mockApiClient
-		fakeApiHost := mockApiClient.Host()
+		authClient.api = mockAPIClient
+		fakeAPIHost := mockAPIClient.Host()
 
 		// Fixtures
-		_defaultProdApiClientHost := defaultProdApiClientHost
+		_defaultProdAPIClientHost := defaultProdAPIClientHost
 		authATeamDomain := "workspace-a"
-		authATeamId := "T123456789A"
+		authATeamID := "T123456789A"
 		authBTeamDomain := "workspace-b"
-		authBTeamId := "T123456789B"
+		authBTeamID := "T123456789B"
 
 		workspaceAuthA := types.SlackAuth{
-			ApiHost:    &_defaultProdApiClientHost,
+			APIHost:    &_defaultProdAPIClientHost,
 			Token:      "goodToken",
 			ExpiresAt:  oneHourLater,
 			TeamDomain: authATeamDomain,
-			TeamID:     authATeamId,
+			TeamID:     authATeamID,
 		}
 
-		// use the fake api host as the Api host so that we don't end up making actual api calls
+		// use the fake api host as the API host so that we don't end up making actual api calls
 		workspaceAuthB := types.SlackAuth{
-			ApiHost:      &fakeApiHost,
+			APIHost:      &fakeAPIHost,
 			Token:        "expiredToken",
 			RefreshToken: "valid-refresh-token",
 			ExpiresAt:    fiveMinutesAgo,
 			TeamDomain:   authBTeamDomain,
-			TeamID:       authBTeamId,
+			TeamID:       authBTeamID,
 		}
 
 		auths := types.AuthByTeamDomain{
-			authATeamId: workspaceAuthA,
-			authBTeamId: workspaceAuthB,
+			authATeamID: workspaceAuthA,
+			authBTeamID: workspaceAuthB,
 		}
 		_, err := authClient.setAuths(ctx, auths)
 		if err != nil {
@@ -405,10 +405,10 @@ func Test_AuthsRotation(t *testing.T) {
 		updatedAuths, err := authClient.auths(ctx) // call the function
 
 		// Assertions
-		require.Equal(t, workspaceAuthA, updatedAuths[authATeamId], "should return the same auth")
+		require.Equal(t, workspaceAuthA, updatedAuths[authATeamID], "should return the same auth")
 
 		// because the token rotation results in an error we expect the old stuff back
-		require.Equal(t, workspaceAuthB, updatedAuths[authBTeamId], "should return the same auth")
+		require.Equal(t, workspaceAuthB, updatedAuths[authBTeamID], "should return the same auth")
 
 		require.Equal(t, len(auths), len(updatedAuths), "we expect the same number of auths even if token rotation failed for one")
 		require.NoError(t, err, "Should not return an error when the contents of credentials are valid")
@@ -435,23 +435,23 @@ func Test_Auths(t *testing.T) {
 		oneHourLater := timeNow + 60*60
 
 		// Fixtures
-		_defaultDevApiClientHost := defaultDevApiClientHost
-		_defaultProdApiClientHost := defaultProdApiClientHost
+		_defaultDevAPIClientHost := defaultDevAPIClientHost
+		_defaultProdAPIClientHost := defaultProdAPIClientHost
 		authATeamDomain := "workspace-a"
-		authATeamId := "T123456789A"
+		authATeamID := "T123456789A"
 		authBTeamDomain := "workspace-b"
-		authBTeamId := "T123456789B"
+		authBTeamID := "T123456789B"
 		authA := types.SlackAuth{
-			ApiHost:    &_defaultProdApiClientHost,
+			APIHost:    &_defaultProdAPIClientHost,
 			ExpiresAt:  oneHourLater,
 			TeamDomain: authATeamDomain,
-			TeamID:     authATeamId,
+			TeamID:     authATeamID,
 		}
 		authB := types.SlackAuth{
-			ApiHost:    &_defaultDevApiClientHost,
+			APIHost:    &_defaultDevAPIClientHost,
 			ExpiresAt:  oneHourLater,
 			TeamDomain: authBTeamDomain,
-			TeamID:     authBTeamId,
+			TeamID:     authBTeamID,
 		}
 		auths := types.AuthByTeamDomain{
 			authATeamDomain: authA,
@@ -463,7 +463,7 @@ func Test_Auths(t *testing.T) {
 		}
 
 		// setup api client
-		authClient.api = api.NewClient(&http.Client{}, defaultProdApiClientHost, authClient.io)
+		authClient.api = api.NewClient(&http.Client{}, defaultProdAPIClientHost, authClient.io)
 
 		// call the function
 		updatedAuths, err := authClient.Auths(ctx)
@@ -519,8 +519,8 @@ func Test_migrateToAuthByTeamID(t *testing.T) {
 		// all auths must be present
 		require.Equal(t, 4, len(mockAuths))
 		for _, auth := range mockAuths {
-			teamId := auth.TeamID
-			if _, exists := updatedAuths[teamId]; !exists {
+			teamID := auth.TeamID
+			if _, exists := updatedAuths[teamID]; !exists {
 				require.FailNow(t, "missing auth after update")
 			}
 		}
@@ -548,7 +548,7 @@ func Test_SetSelectedAuth(t *testing.T) {
 		"associated authentication configurations are made": {
 			auth: types.SlackAuth{
 				TeamID:  "T001",
-				ApiHost: &mockAPIHost,
+				APIHost: &mockAPIHost,
 			},
 			expectedAPIHost: fmt.Sprintf("https://%s", mockAPIHost),
 			expectedAPIURL:  fmt.Sprintf("https://%s/api/", mockAPIHost),
@@ -559,13 +559,13 @@ func Test_SetSelectedAuth(t *testing.T) {
 			ctx, authClient, osMock := setup(t)
 			authClient.SetSelectedAuth(ctx, tt.auth, authClient.config, osMock)
 			assert.Equal(t, authClient.config.TeamFlag, tt.auth.TeamID)
-			assert.Equal(t, authClient.config.ApiHostResolved, tt.expectedAPIHost)
+			assert.Equal(t, authClient.config.APIHostResolved, tt.expectedAPIHost)
 			osMock.AssertCalled(t, "Setenv", "SLACK_API_URL", tt.expectedAPIURL)
 		})
 	}
 }
 
-func Test_IsApiHostSlackDev(t *testing.T) {
+func Test_IsAPIHostSlackDev(t *testing.T) {
 
 	var setup = func(t *testing.T) (context.Context, *Client) {
 		ctx := slackcontext.MockContext(t.Context())
@@ -581,25 +581,25 @@ func Test_IsApiHostSlackDev(t *testing.T) {
 	_, authClient := setup(t)
 
 	mockHostName := ""
-	mockHostName1 := "notAUrl"
+	mockHostName1 := "notAURL"
 	mockHostName2 := "https://doesnothaveprefix.com"
 	mockHostName3 := "https://dev1234.slack.com"
 	mockHostName4 := "https://dev.slack.com"
 
 	t.Run("Should validate api host slack dev", func(t *testing.T) {
-		res := authClient.IsApiHostSlackDev(mockHostName)
+		res := authClient.IsAPIHostSlackDev(mockHostName)
 		require.False(t, res)
 
-		res = authClient.IsApiHostSlackDev(mockHostName1)
+		res = authClient.IsAPIHostSlackDev(mockHostName1)
 		require.False(t, res)
 
-		res = authClient.IsApiHostSlackDev(mockHostName2)
+		res = authClient.IsAPIHostSlackDev(mockHostName2)
 		require.False(t, res)
 
-		res = authClient.IsApiHostSlackDev(mockHostName3)
+		res = authClient.IsAPIHostSlackDev(mockHostName3)
 		require.True(t, res)
 
-		res = authClient.IsApiHostSlackDev(mockHostName4)
+		res = authClient.IsAPIHostSlackDev(mockHostName4)
 		require.True(t, res)
 	})
 }

@@ -30,12 +30,12 @@ func TestTokenCommand(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 
 	clientsMock := shared.NewClientsMock()
-	clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.AuthSession{UserID: &mockOrgAuth.UserID,
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.AuthSession{UserID: &mockOrgAuth.UserID,
 		TeamID:   &mockOrgAuth.TeamID,
 		TeamName: &mockOrgAuth.TeamDomain,
 		URL:      &mockOrgAuthURL}, nil)
-	clientsMock.AuthInterface.On("AuthWithTeamDomain", mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
-	clientsMock.AuthInterface.On("IsApiHostSlackProd", mock.Anything).Return(true)
+	clientsMock.Auth.On("AuthWithTeamDomain", mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
+	clientsMock.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 

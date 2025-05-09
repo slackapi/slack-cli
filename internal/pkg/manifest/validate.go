@@ -40,7 +40,7 @@ func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, log *l
 		return nil, nil, slackerror.New(slackerror.ErrAuthToken)
 	}
 
-	_, err := clients.ApiInterface().ValidateSession(ctx, token)
+	_, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {
 		return nil, nil, slackerror.New(slackerror.ErrAuthToken).WithRootCause(err)
 	}
@@ -51,10 +51,10 @@ func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, log *l
 	}
 
 	// validate the manifest
-	validationResult, err := clients.ApiInterface().ValidateAppManifest(ctx, token, slackManifest.AppManifest, app.AppID)
+	validationResult, err := clients.API().ValidateAppManifest(ctx, token, slackManifest.AppManifest, app.AppID)
 
 	if retryValidate := HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
-		validationResult, err = clients.ApiInterface().ValidateAppManifest(ctx, token, slackManifest.AppManifest, app.AppID)
+		validationResult, err = clients.API().ValidateAppManifest(ctx, token, slackManifest.AppManifest, app.AppID)
 	}
 
 	if err := HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
@@ -82,7 +82,7 @@ func HandleConnectorNotInstalled(ctx context.Context, clients *shared.ClientFact
 		if detail.Code == slackerror.ErrConnectorNotInstalled {
 			attemptInstall = true
 			clients.IO.PrintDebug(ctx, "Attempting to install connector app: %s", detail.RelatedComponent)
-			_, err := clients.ApiInterface().CertifiedAppInstall(ctx, token, detail.RelatedComponent)
+			_, err := clients.API().CertifiedAppInstall(ctx, token, detail.RelatedComponent)
 			if err != nil {
 				clients.IO.PrintDebug(ctx, "Error installing connector app: %s", detail.RelatedComponent)
 			}
@@ -155,7 +155,7 @@ func attemptConnectorAppsApprovalRequests(ctx context.Context, clients *shared.C
 
 	for _, errorDetail := range approvalRequiredErrorDetails {
 		// Passing in an empty string for team_id here, meaning connectors will be requested at the org level
-		_, err := clients.ApiInterface().RequestAppApproval(ctx, token, errorDetail.RelatedComponent, "", reason, "", []string{})
+		_, err := clients.API().RequestAppApproval(ctx, token, errorDetail.RelatedComponent, "", reason, "", []string{})
 		if err != nil {
 			clients.IO.PrintDebug(ctx, "Error requesting approval for %s", errorDetail.RelatedComponent)
 			return err

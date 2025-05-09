@@ -33,9 +33,9 @@ func TokenSelectPrompt(ctx context.Context, clients *shared.ClientFactory, selec
 	var externalTokenMap = make(map[string]types.ExternalTokenInfo)
 	var selectedExternalToken types.ExternalTokenInfo
 	for _, externalToken := range selectedProviderAuth.ExternalTokens {
-		externalTokenMap[externalToken.ExternalUserId] = externalToken
+		externalTokenMap[externalToken.ExternalUserID] = externalToken
 		lastUpdated := time.Unix(int64(externalToken.DateUpdated), 0).Format(timeFormat)
-		externalTokenOptions = append(externalTokenOptions, fmt.Sprintf("Account: %s, Last Updated: %s", externalToken.ExternalUserId, lastUpdated))
+		externalTokenOptions = append(externalTokenOptions, fmt.Sprintf("Account: %s, Last Updated: %s", externalToken.ExternalUserID, lastUpdated))
 	}
 	if len(externalTokenOptions) == 0 {
 		return types.ExternalTokenInfo{}, slackerror.New("No connected accounts found").WithRemediation("A token can be added to this app by running %s", style.Commandf("external-auth add", true))

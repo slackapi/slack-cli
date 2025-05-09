@@ -47,7 +47,7 @@ func Test_LocalServer_Start(t *testing.T) {
 	}{
 		"should return an error if there was a problem asking for a WebSocket connection URL": {
 			Setup: func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock) {
-				cm.ApiInterface.On("ConnectionsOpen", mock.Anything, mock.Anything).Return(api.AppsConnectionsOpenResult{}, slackerror.New("no can do, pipes are clogged"))
+				cm.API.On("ConnectionsOpen", mock.Anything, mock.Anything).Return(api.AppsConnectionsOpenResult{}, slackerror.New("no can do, pipes are clogged"))
 			},
 			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
 				require.ErrorContains(t, server.Start(ctx), "pipes are clogged")
@@ -130,7 +130,7 @@ func Test_LocalServer_Start(t *testing.T) {
 			if tt.Setup != nil {
 				tt.Setup(t, clientsMock, clients, conn)
 			}
-			clientsMock.ApiInterface.On("ConnectionsOpen", mock.Anything, mock.Anything).Return(api.AppsConnectionsOpenResult{Url: wsFakeURL}, nil)
+			clientsMock.API.On("ConnectionsOpen", mock.Anything, mock.Anything).Return(api.AppsConnectionsOpenResult{URL: wsFakeURL}, nil)
 			// Setup default mock actions
 			conn.AddDefaultMocks()
 			clientsMock.AddDefaultMocks()

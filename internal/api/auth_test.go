@@ -123,7 +123,7 @@ func TestClient_RotateToken_OkDevHostRestoreTimeout(t *testing.T) {
 	c.host = devHost
 	c.httpClient.Timeout = 24 * time.Second
 	_, err := c.RotateToken(ctx, types.SlackAuth{
-		ApiHost:      &devHost,
+		APIHost:      &devHost,
 		Token:        `valid-token`,
 		RefreshToken: `valid-refresh-token`,
 	})

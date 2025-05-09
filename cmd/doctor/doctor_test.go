@@ -53,15 +53,15 @@ func TestDoctorCommand(t *testing.T) {
 	t.Run("creates a complete report", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
-		clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{expectedCredentials}, nil)
-		clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
-		clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+		clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{expectedCredentials}, nil)
+		clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+		clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 		clientsMock.AddDefaultMocks()
 		pcm := &config.ProjectConfigMock{}
 		pcm.On("ReadProjectConfigFile", mock.Anything).Return(config.ProjectConfig{
 			ProjectID: expectedProjectID,
 			Manifest: &config.ManifestConfig{
-				Source: config.MANIFEST_SOURCE_LOCAL.String(),
+				Source: config.ManifestSourceLocal.String(),
 			},
 		}, nil)
 		clientsMock.Config.ProjectConfig = pcm

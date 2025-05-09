@@ -49,7 +49,7 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts 
 	}
 
 	boundary := generateBoundary()
-	cmdArgVars = append(cmdArgVars, "--protocol="+HOOK_PROTOCOL_V2.String(), "--boundary="+boundary)
+	cmdArgVars = append(cmdArgVars, "--protocol="+HookProtocolV2.String(), "--boundary="+boundary)
 
 	e.IO.PrintDebug(ctx,
 		"starting hook command: %s %s\n", cmdArgs[0], strings.Join(cmdArgVars, " "),

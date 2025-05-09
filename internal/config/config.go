@@ -38,8 +38,8 @@ type Config struct {
 	// Raw flags (for metrics)
 	RawFlags []string
 	// Command flags
-	ApiHostFlag             string
-	ApiHostResolved         string
+	APIHostFlag             string
+	APIHostResolved         string
 	AppFlag                 string
 	AutoRequestAAAFlag      bool
 	ConfigDirFlag           string

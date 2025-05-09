@@ -32,18 +32,18 @@ import (
 // ClientsMock defines mocks that will override aspects of clients for testing purposes.
 type ClientsMock struct {
 	mock.Mock
-	ApiInterface  *api.ApiMock
-	AuthInterface *auth.AuthMock
-	AppClient     *app.Client
-	Browser       *slackdeps.BrowserMock
-	Config        *config.Config
-	Cobra         *slackdeps.CobraMock
-	EventTracker  *tracking.EventTrackerMock
-	Fs            *slackdeps.FsMock
-	IO            *iostreams.IOStreamsMock
-	Os            *slackdeps.OsMock
-	Stdout        *bytes.Buffer
-	HookExecutor  hooks.MockHookExecutor
+	API          *api.APIMock
+	Auth         *auth.AuthMock
+	AppClient    *app.Client
+	Browser      *slackdeps.BrowserMock
+	Config       *config.Config
+	Cobra        *slackdeps.CobraMock
+	EventTracker *tracking.EventTrackerMock
+	Fs           *slackdeps.FsMock
+	IO           *iostreams.IOStreamsMock
+	Os           *slackdeps.OsMock
+	Stdout       *bytes.Buffer
+	HookExecutor hooks.MockHookExecutor
 }
 
 // NewClientsMock will create a new ClientsMock that is ready to be applied to an existing clients with .MockClientFactory().
@@ -52,8 +52,8 @@ func NewClientsMock() *ClientsMock {
 	clientsMock := &ClientsMock{}
 
 	// Set the mocked members
-	clientsMock.ApiInterface = &api.ApiMock{}
-	clientsMock.AuthInterface = &auth.AuthMock{}
+	clientsMock.API = &api.APIMock{}
+	clientsMock.Auth = &auth.AuthMock{}
 	clientsMock.Browser = slackdeps.NewBrowserMock()
 	clientsMock.Cobra = slackdeps.NewCobraMock()
 	clientsMock.EventTracker = &tracking.EventTrackerMock{}
@@ -71,8 +71,8 @@ func NewClientsMock() *ClientsMock {
 
 // AddDefaultMocks installs the default mock actions to fallback on.
 func (m *ClientsMock) AddDefaultMocks() {
-	m.ApiInterface.AddDefaultMocks()
-	m.AuthInterface.AddDefaultMocks()
+	m.API.AddDefaultMocks()
+	m.Auth.AddDefaultMocks()
 	m.Browser.AddDefaultMocks()
 	m.Cobra.AddDefaultMocks()
 	m.EventTracker.AddDefaultMocks()
@@ -91,8 +91,8 @@ func (m *ClientsMock) MockClientFactory() func(c *ClientFactory) {
 		clients.Os = m.Os
 		clients.IO = m.IO
 		clients.Fs = m.Fs
-		clients.ApiInterface = func() api.ApiInterface { return m.ApiInterface }
-		clients.AuthInterface = func() auth.AuthInterface { return m.AuthInterface }
+		clients.API = func() api.APIInterface { return m.API }
+		clients.Auth = func() auth.AuthInterface { return m.Auth }
 		clients.AppClient = func() *app.Client { return m.AppClient }
 		clients.HookExecutor = &m.HookExecutor
 	}
