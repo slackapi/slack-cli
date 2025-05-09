@@ -40,7 +40,6 @@ linters:
         - '-QF1004' # disable rule 'Use strings.ReplaceAll instead of strings.Replace'
         - '-QF1008' # disable rule 'Omit embedded fields from selector'
         - '-QF1011' # disable rule 'Omit redundant type from variable declaration'
-        - '-ST1016' # disable rule 'Use consistent method receiver names'
       # https://golangci-lint.run/usage/linters/#staticcheck
       # https://staticcheck.dev/docs/configuration/options/#initialisms
       initialisms:

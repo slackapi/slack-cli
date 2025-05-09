@@ -85,11 +85,11 @@ func (c *Os) Glob(pattern string) (matches []string, err error) {
 }
 
 // Exit exits the program with a return code
-func (m *Os) Exit(code int) {
+func (c *Os) Exit(code int) {
 	os.Exit(code)
 }
 
 // Stdout returns the file descriptor for stdout
-func (m *Os) Stdout() types.File {
+func (c *Os) Stdout() types.File {
 	return os.Stdout
 }
