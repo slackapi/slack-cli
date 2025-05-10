@@ -340,9 +340,9 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	if err != nil {
 		return types.App{}, api.DeveloperAppInstallResult{}, "", err
 	}
-	if !manifestUpdates && !manifestCreates {
-		return app, api.DeveloperAppInstallResult{}, "", nil
-	}
+	// if !manifestUpdates && !manifestCreates {
+	// 	return app, api.DeveloperAppInstallResult{}, "", nil
+	// }
 
 	apiInterface := clients.API()
 	token := auth.Token
@@ -455,6 +455,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	}
 
 	// install the app
+	// TODO(@mwbrooks): for remote manifest source, we should get the manifest from the app settings
 	var botScopes []string
 	if manifest.OAuthConfig != nil {
 		botScopes = manifest.OAuthConfig.Scopes.Bot
@@ -465,9 +466,32 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		outgoingDomains = *manifest.OutgoingDomains
 	}
 
+	// When the manifest source is remote, we need to get the manifest from the app settings
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return app, api.DeveloperAppInstallResult{}, "", err
+		}
+		if manifestSource.Equals(config.ManifestSourceRemote) {
+			remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+			if err != nil {
+				return app, api.DeveloperAppInstallResult{}, "", err
+			}
+
+			if remoteManifest.OAuthConfig != nil {
+				botScopes = remoteManifest.OAuthConfig.Scopes.Bot
+			}
+
+			if remoteManifest.OutgoingDomains != nil {
+				outgoingDomains = *remoteManifest.OutgoingDomains
+			}
+		}
+	}
+
 	log.Info("app_install_start")
 	var installState types.InstallState
 	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
+
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)
 		return app, api.DeveloperAppInstallResult{}, "", err
@@ -644,11 +668,8 @@ func shouldCreateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return app.AppID == "", nil
 	}
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if err != nil {
-		return false, err
-	}
-	return app.AppID == "" && manifestSource == config.ManifestSourceLocal, nil
+	// TODO(@mwbrooks): delete the experiment check
+	return app.AppID == "", nil
 }
 
 // shouldCacheManifest decides if an app manifest hash should be saved to cache
