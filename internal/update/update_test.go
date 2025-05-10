@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -106,6 +107,110 @@ func Test_Update_HasUpdate(t *testing.T) {
 
 			// Test
 			require.Equal(t, tt.expectedReturnValue, updateNotification.HasUpdate())
+		})
+	}
+}
+
+func Test_Update_InstallUpdatesWithoutPrompt(t *testing.T) {
+	for name, tt := range map[string]struct {
+		dependencyHasUpdate   []bool
+		installUpdateErrors   []error
+		expectedErrorContains string
+	}{
+		"No dependencies have updates": {
+			dependencyHasUpdate:   []bool{false, false},
+			installUpdateErrors:   []error{nil, nil},
+			expectedErrorContains: "",
+		},
+		"Dependencies have updates, all install successfully": {
+			dependencyHasUpdate:   []bool{true, true},
+			installUpdateErrors:   []error{nil, nil},
+			expectedErrorContains: "",
+		},
+		"Dependencies have updates, first fails to install": {
+			dependencyHasUpdate:   []bool{true, false},
+			installUpdateErrors:   []error{assert.AnError, nil},
+			expectedErrorContains: "general error for testing",
+		},
+		"Dependencies have updates, second fails to install": {
+			dependencyHasUpdate:   []bool{true, true},
+			installUpdateErrors:   []error{nil, assert.AnError},
+			expectedErrorContains: "general error for testing",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			// Create clients
+			clients := shared.ClientFactory{
+				Config:    config.NewConfig(slackdeps.NewFsMock(), slackdeps.NewOsMock()),
+				SDKConfig: hooks.NewSDKConfigMock(),
+			}
+
+			// Create the mocks
+			var dependencies []Dependency
+
+			// Special handling for "first fails to install" case
+			if name == "Dependencies have updates, first fails to install" {
+				// Only create and add the first dependency since execution will stop after it fails
+				mockDep1 := new(mockDependency)
+				mockDep1.On("HasUpdate").Return(true, nil)
+				mockDep1.On("PrintUpdateNotification", mock.Anything).Return(false, nil)
+				mockDep1.On("InstallUpdate", mock.Anything).Return(assert.AnError)
+				dependencies = append(dependencies, mockDep1)
+
+				// Second dependency is never called due to early return
+				mockDep2 := new(mockDependency)
+				dependencies = append(dependencies, mockDep2)
+			} else {
+				// Handle all other test cases normally
+				for i, hasUpdate := range tt.dependencyHasUpdate {
+					mockDep := new(mockDependency)
+					mockDep.On("HasUpdate").Return(hasUpdate, nil)
+
+					// Only set expectations for PrintUpdateNotification and InstallUpdate
+					// if the dependency hasUpdate = true
+					if hasUpdate {
+						mockDep.On("PrintUpdateNotification", mock.Anything).Return(false, nil)
+						mockDep.On("InstallUpdate", mock.Anything).Return(tt.installUpdateErrors[i])
+					}
+
+					dependencies = append(dependencies, mockDep)
+				}
+			}
+
+			// Create updateNotification
+			updateNotification = &UpdateNotification{
+				clients:      &clients,
+				enabled:      true,
+				envDisabled:  "SLACK_SKIP_UPDATE",
+				hoursToWait:  defaultHoursToWait,
+				dependencies: dependencies,
+			}
+
+			// Create test cmd
+			cmd := &cobra.Command{}
+
+			// Test
+			err := updateNotification.InstallUpdatesWithoutPrompt(cmd)
+
+			if tt.expectedErrorContains != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.expectedErrorContains)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Only verify expectations on the first dependency for the "first fails" case
+			// since the second dependency should never be called
+			if name == "Dependencies have updates, first fails to install" {
+				mockDep1 := dependencies[0].(*mockDependency)
+				mockDep1.AssertExpectations(t)
+			} else {
+				// Verify all expectations were met for other cases
+				for _, dep := range dependencies {
+					mockDep := dep.(*mockDependency)
+					mockDep.AssertExpectations(t)
+				}
+			}
 		})
 	}
 }
