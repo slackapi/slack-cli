@@ -35,6 +35,17 @@ func (ms ManifestSource) String() string {
 	return string(ms)
 }
 
+// Human returns the string value as a human-friendly name
+func (ms ManifestSource) Human() string {
+	switch ms {
+	case ManifestSourceLocal:
+		return "project"
+	case ManifestSourceRemote:
+		return "app settings"
+	}
+	return ""
+}
+
 type ManifestConfig struct {
 	// Source of the manifest using either "local" or "remote" values
 	Source string `json:"source,omitempty"`

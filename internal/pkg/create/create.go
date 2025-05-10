@@ -32,6 +32,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/doctor"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/archiveutil"
+	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/deputil"
 	"github.com/slackapi/slack-cli/internal/experiment"
@@ -462,11 +463,19 @@ func InstallProjectDependencies(
 		manifestSource = config.ManifestSourceLocal
 	}
 
+	// Non-ROSI projects default to ManifestSourceRemote
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
+		if !isSlackHostedProject {
+			manifestSource = config.ManifestSourceRemote
+		}
+	}
+
 	if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
 		configJSONFilename := config.ProjectConfigJSONFilename
-		manifestSourceStyled := style.Highlight(manifestSource.String())
+		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
 			"Updated %s manifest source to %s",

@@ -133,7 +133,7 @@ func TestInfoCommand(t *testing.T) {
 					},
 				}, nil)
 				cf.AppClient().Manifest = manifestMock
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
@@ -162,7 +162,7 @@ func TestInfoCommand(t *testing.T) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.IO.AddDefaultMocks()
 				cm.Os.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).
