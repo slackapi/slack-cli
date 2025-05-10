@@ -31,7 +31,9 @@ var checkForUpdatesFunc = checkForUpdates
 const changelogURL = "https://docs.slack.dev/changelog"
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
-	return &cobra.Command{
+	var autoApprove bool
+	
+	cmd := &cobra.Command{
 		Use:     "upgrade",
 		Aliases: []string{"update"},
 		Short:   "Checks for available updates to the CLI or SDK",
@@ -44,16 +46,21 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "upgrade", Meaning: "Check for any available updates"},
+			{Command: "upgrade --auto-approve", Meaning: "Check for updates and automatically upgrade without confirmation"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return checkForUpdatesFunc(clients, cmd)
+			return checkForUpdatesFunc(clients, cmd, autoApprove)
 		},
 	}
+	
+	cmd.Flags().BoolVar(&autoApprove, "auto-approve", false, "automatically approve and install updates without prompting")
+	
+	return cmd
 }
 
 // checkForUpdates will check for CLI/SDK updates and print a message when no updates are available.
 // When there are updates, the function will *not* print a message because the root command handles printing update notifications.
-func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
+func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, autoApprove bool) error {
 	ctx := cmd.Context()
 	updateNotification := update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
 
@@ -70,6 +77,11 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	// Update notification messages are printed by the root command's persistent post-run (cmd/root.go).
 	// So this command only needs to print a message when everything is up-to-date.
 	if updateNotification.HasUpdate() {
+		if autoApprove {
+			// Automatically install updates without prompting when auto-approve flag is set
+			updateNotification.InstallUpdatesWithoutPrompt(cmd)
+			return nil
+		}
 		return nil
 	}
 

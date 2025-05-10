@@ -29,8 +29,8 @@ type UpdatePkgMock struct {
 	mock.Mock
 }
 
-func (m *UpdatePkgMock) CheckForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
-	args := m.Called(clients, cmd)
+func (m *UpdatePkgMock) CheckForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, autoApprove bool) error {
+	args := m.Called(clients, cmd, autoApprove)
 	return args.Error(0)
 }
 
@@ -49,11 +49,26 @@ func TestUpgradeCommand(t *testing.T) {
 	updatePkgMock := new(UpdatePkgMock)
 	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
 
-	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything).Return(nil)
+	// Test default behavior (no auto-approve)
+	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, false).Return(nil)
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Upgrade had unexpected error")
 	}
+	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, false)
 
-	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything)
+	// Test with auto-approve flag
+	cmd = NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--auto-approve"})
+	
+	updatePkgMock = new(UpdatePkgMock)
+	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
+	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, true).Return(nil)
+	
+	err = cmd.ExecuteContext(ctx)
+	if err != nil {
+		assert.Fail(t, "cmd.Upgrade with auto-approve had unexpected error")
+	}
+	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, true)
 }
