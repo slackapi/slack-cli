@@ -72,3 +72,38 @@ func TestUpgradeCommand(t *testing.T) {
 	}
 	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, true)
 }
+
+func TestUpgradeCommandWithAutoApproveError(t *testing.T) {
+	// Create a mock of UpdateNotification that returns an error on InstallUpdatesWithoutPrompt
+	originalCheckForUpdates := checkForUpdatesFunc
+	defer func() {
+		checkForUpdatesFunc = originalCheckForUpdates
+	}()
+
+	// Create mocks
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+
+	// Create clients that is mocked for testing
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	// Mock the checkForUpdates function to simulate an error during auto-approve updates
+	checkForUpdatesFunc = func(clients *shared.ClientFactory, cmd *cobra.Command, autoApprove bool) error {
+		if autoApprove {
+			return assert.AnError // Simulate error when auto-approve is true
+		}
+		return nil
+	}
+
+	// Create the command with auto-approve flag
+	cmd := NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--auto-approve"})
+
+	// Execute the command and verify it returns the error
+	err := cmd.ExecuteContext(ctx)
+
+	// Verify the error was properly propagated
+	assert.Error(t, err)
+	assert.Equal(t, assert.AnError, err)
+}
