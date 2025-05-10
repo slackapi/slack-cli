@@ -270,7 +270,7 @@ func (u *UpdateNotification) InstallUpdatesWithoutPrompt(cmd *cobra.Command) err
 			if err != nil {
 				return err
 			}
-			
+
 			// Install the update without prompting
 			cmd.Printf("%s Installing update automatically...\n", style.Styler().Green("✓").String())
 			if err := dependency.InstallUpdate(ctx); err != nil {

@@ -326,7 +326,7 @@ func (c *SDKDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 				return true, nil
 			}
 		}
-		
+
 		autoUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest versions now?", style.Emoji("rocket"))
 		return c.clients.IO.ConfirmPrompt(ctx, autoUpdatePrompt, false)
 	}

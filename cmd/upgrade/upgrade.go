@@ -32,7 +32,7 @@ const changelogURL = "https://docs.slack.dev/changelog"
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	var autoApprove bool
-	
+
 	cmd := &cobra.Command{
 		Use:     "upgrade",
 		Aliases: []string{"update"},
@@ -52,9 +52,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			return checkForUpdatesFunc(clients, cmd, autoApprove)
 		},
 	}
-	
+
 	cmd.Flags().BoolVar(&autoApprove, "auto-approve", false, "automatically approve and install updates without prompting")
-	
+
 	return cmd
 }
 
@@ -79,7 +79,9 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, autoAppr
 	if updateNotification.HasUpdate() {
 		if autoApprove {
 			// Automatically install updates without prompting when auto-approve flag is set
-			updateNotification.InstallUpdatesWithoutPrompt(cmd)
+			if err := updateNotification.InstallUpdatesWithoutPrompt(cmd); err != nil {
+				return err
+			}
 			return nil
 		}
 		return nil
