@@ -34,6 +34,9 @@ package-lock.json
 # VSCode extensions
 *.http
 
+# Cursor rules
+.cursor/rules
+
 # Temp log files
 *.log
 
