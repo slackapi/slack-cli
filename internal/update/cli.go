@@ -87,16 +87,24 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 			"\n   To update with Homebrew, run: %s\n\n",
 			style.CommandText(fmt.Sprintf("brew update && brew upgrade %s", processName)),
 		)
+		return false, nil
 	} else {
 		cmd.Printf(
 			"\n   To manually update, visit the download page:\n   %s\n\n",
 			style.CommandText("https://tools.slack.dev/slack-cli"),
 		)
+		
+		// Check for auto-approve from upgrade command
+		if cmd.Name() == "upgrade" && cmd.Flags().Changed("auto-approve") {
+			autoApprove, _ := cmd.Flags().GetBool("auto-approve")
+			if autoApprove {
+				return true, nil 
+			}
+		}
+		
 		selfUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest version now?", style.Emoji("rocket"))
 		return c.clients.IO.ConfirmPrompt(ctx, selfUpdatePrompt, false)
 	}
-
-	return false, nil
 
 	// TODO: Uncomment when open sourced to display the latest release URL that includes release notes
 	// cmd.Printf(

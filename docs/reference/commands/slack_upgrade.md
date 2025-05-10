@@ -18,12 +18,14 @@ slack upgrade [flags]
 
 ```
 $ slack upgrade  # Check for any available updates
+$ slack upgrade --auto-approve  # Check for updates and automatically upgrade without confirmation
 ```
 
 ### Options
 
 ```
-  -h, --help   help for upgrade
+      --auto-approve   automatically approve and install updates without prompting
+  -h, --help           help for upgrade
 ```
 
 ### Options inherited from parent commands
