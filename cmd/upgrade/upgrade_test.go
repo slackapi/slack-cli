@@ -61,11 +61,11 @@ func TestUpgradeCommand(t *testing.T) {
 	cmd = NewCommand(clients)
 	testutil.MockCmdIO(clients.IO, cmd)
 	cmd.SetArgs([]string{"--auto-approve"})
-	
+
 	updatePkgMock = new(UpdatePkgMock)
 	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
 	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, true).Return(nil)
-	
+
 	err = cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Upgrade with auto-approve had unexpected error")
