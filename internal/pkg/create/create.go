@@ -466,7 +466,7 @@ func InstallProjectDependencies(
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
 		configJSONFilename := config.ProjectConfigJSONFilename
-		manifestSourceStyled := style.Highlight(manifestSource.String())
+		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
 			"Updated %s manifest source to %s",

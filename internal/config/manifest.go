@@ -13,6 +13,8 @@
 
 package config
 
+import "fmt"
+
 type ManifestSource string
 
 const (
@@ -33,6 +35,17 @@ func (ms ManifestSource) Exists() bool {
 // String returns the string value of a manifest source
 func (ms ManifestSource) String() string {
 	return string(ms)
+}
+
+// Human returns the string value as a human-friendly name
+func (ms ManifestSource) Human() string {
+	switch ms {
+	case ManifestSourceLocal:
+		return fmt.Sprintf("project (%s)", ms.String())
+	case ManifestSourceRemote:
+		return fmt.Sprintf("app settings (%s)", ms.String())
+	}
+	return ""
 }
 
 type ManifestConfig struct {

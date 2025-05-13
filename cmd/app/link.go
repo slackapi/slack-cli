@@ -174,10 +174,10 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 			Text:  "Warning",
 			Secondary: []string{
 				"Existing apps have manifests configured by app settings",
-				"Linking existing apps requires the manifest source to be " + config.ManifestSourceRemote.String(),
-				fmt.Sprintf(`Manifest source can be "%s" or "%s"`, config.ManifestSourceLocal.String(), config.ManifestSourceRemote.String()),
+				"Linking existing apps requires the manifest source to use " + config.ManifestSourceRemote.Human(),
+				fmt.Sprintf(`Manifest source can be "%s" or "%s"`, config.ManifestSourceLocal.Human(), config.ManifestSourceRemote.Human()),
 				" ",
-				fmt.Sprintf(style.Highlight(`Your manifest source is "%s"`), manifestSource.String()),
+				fmt.Sprintf(style.Highlight(`Your manifest source is "%s"`), manifestSource.Human()),
 				fmt.Sprintf("- %s: uses manifest from your project's source code for all apps", config.ManifestSourceLocal.String()),
 				fmt.Sprintf("- %s: uses manifest from app settings for each app", config.ManifestSourceRemote.String()),
 				" ",
