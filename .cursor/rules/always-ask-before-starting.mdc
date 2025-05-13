@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.*
+alwaysApply: false
+---
+When recieving instructions about changes to be made, always prepare a plan and present it for approval before making any edits.

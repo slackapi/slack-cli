@@ -1,0 +1,6 @@
+---
+description: 
+globs: *.*
+alwaysApply: false
+---
+Never make unrelated changes to the project while making edits. Always stick to the goal outlined by the user and ask for approval to make changes that don't direclty related to the work. When unsure, err on the side of caution and ask the user.
