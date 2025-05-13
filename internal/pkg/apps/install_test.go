@@ -539,7 +539,7 @@ func TestInstall(t *testing.T) {
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			if tt.mockBoltExperiment {
-				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, experiment.BoltFrameworks)
+				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tt.mockManifestSource, nil)
 			}
@@ -982,7 +982,7 @@ func TestInstallLocalApp(t *testing.T) {
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			if tt.mockBoltExperiment {
-				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, experiment.BoltFrameworks)
+				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tt.mockManifestSource, nil)
 			}
