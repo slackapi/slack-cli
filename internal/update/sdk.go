@@ -319,10 +319,10 @@ func (c *SDKDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 
 	// If `install-update` hook available, prompt to auto-update
 	if c.clients.SDKConfig.Hooks.InstallUpdate.IsAvailable() {
-		// Check for auto-approve from upgrade command
-		if cmd.Name() == "upgrade" && cmd.Flags().Changed("auto-approve") {
-			autoApprove, _ := cmd.Flags().GetBool("auto-approve")
-			if autoApprove {
+		// Check for sdk flag from upgrade command
+		if cmd.Name() == "upgrade" && cmd.Flags().Changed("sdk") {
+			sdk, _ := cmd.Flags().GetBool("sdk")
+			if sdk {
 				return true, nil
 			}
 		}

@@ -1,0 +1,13 @@
+---
+description: 
+globs: *.go
+alwaysApply: false
+---
+After modifying any Go file:
+1. Check for a corresponding _test.go file in the same directory
+2. If found, inspect the test file to identify test cases related to your changes
+3. Recommend any tests to add, update, or remove to cover the new implementation and behavior
+
+When adding new flags or command options, be sure to add:
+1. Tests for the flag parsing/presence in help text
+2. Tests for the actual behavior when the flag is set or not set

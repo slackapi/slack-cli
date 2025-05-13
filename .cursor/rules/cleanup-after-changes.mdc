@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+After modifying any file:
+1. Use grep and/or search project index for the old feature name/variable names that were replaced
+2. Check for references in documentation, comments, and test files
+3. Look for any deprecated or unused code that can be safely removed or updated
+4. Update all related tests to reflect the new implementation
+5. Verify any usage examples in documentation are consistent with code changes

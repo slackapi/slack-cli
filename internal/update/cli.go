@@ -94,10 +94,10 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 			style.CommandText("https://tools.slack.dev/slack-cli"),
 		)
 
-		// Check for auto-approve from upgrade command
-		if cmd.Name() == "upgrade" && cmd.Flags().Changed("auto-approve") {
-			autoApprove, _ := cmd.Flags().GetBool("auto-approve")
-			if autoApprove {
+		// Check for cli flag from upgrade command
+		if cmd.Name() == "upgrade" && cmd.Flags().Changed("cli") {
+			cli, _ := cmd.Flags().GetBool("cli")
+			if cli {
 				return true, nil
 			}
 		}

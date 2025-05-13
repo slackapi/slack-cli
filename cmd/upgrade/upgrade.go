@@ -31,7 +31,8 @@ var checkForUpdatesFunc = checkForUpdates
 const changelogURL = "https://docs.slack.dev/changelog"
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
-	var autoApprove bool
+	var cli bool
+	var sdk bool
 
 	cmd := &cobra.Command{
 		Use:     "upgrade",
@@ -46,21 +47,24 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "upgrade", Meaning: "Check for any available updates"},
-			{Command: "upgrade --auto-approve", Meaning: "Check for updates and automatically upgrade without confirmation"},
+			{Command: "upgrade --cli", Meaning: "Check for CLI updates and automatically upgrade without confirmation"},
+			{Command: "upgrade --sdk", Meaning: "Check for SDK updates and automatically upgrade without confirmation"},
+			{Command: "upgrade --cli --sdk", Meaning: "Check for updates and automatically upgrade both CLI and SDK without confirmation"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return checkForUpdatesFunc(clients, cmd, autoApprove)
+			return checkForUpdatesFunc(clients, cmd, cli, sdk)
 		},
 	}
 
-	cmd.Flags().BoolVar(&autoApprove, "auto-approve", false, "automatically approve and install updates without prompting")
+	cmd.Flags().BoolVar(&cli, "cli", false, "automatically approve and install CLI updates without prompting")
+	cmd.Flags().BoolVar(&sdk, "sdk", false, "automatically approve and install SDK updates without prompting")
 
 	return cmd
 }
 
 // checkForUpdates will check for CLI/SDK updates and print a message when no updates are available.
 // When there are updates, the function will *not* print a message because the root command handles printing update notifications.
-func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, autoApprove bool) error {
+func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, cli bool, sdk bool) error {
 	ctx := cmd.Context()
 	updateNotification := update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
 
@@ -77,9 +81,9 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, autoAppr
 	// Update notification messages are printed by the root command's persistent post-run (cmd/root.go).
 	// So this command only needs to print a message when everything is up-to-date.
 	if updateNotification.HasUpdate() {
-		if autoApprove {
-			// Automatically install updates without prompting when auto-approve flag is set
-			if err := updateNotification.InstallUpdatesWithoutPrompt(cmd); err != nil {
+		// Automatically install updates without prompting when cli or sdk flags are set
+		if cli || sdk {
+			if err := updateNotification.InstallUpdatesWithComponentFlags(cmd, cli, sdk); err != nil {
 				return err
 			}
 			return nil

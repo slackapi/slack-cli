@@ -30,6 +30,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Functions for type checking that can be replaced in tests
+var isDependencyCLI = func(d Dependency) bool {
+	_, isCLI := d.(*CLIDependency)
+	return isCLI
+}
+
+var isDependencySDK = func(d Dependency) bool {
+	_, isSDK := d.(*SDKDependency)
+	return isSDK
+}
+
 // UpdateNotification checks for an update (non-blocking in the background or blocking).
 // It provides the release information for the latest update of each dependency.
 type UpdateNotification struct {
@@ -254,11 +265,48 @@ func newHTTPClient() (*http.Client, error) {
 }
 
 // InstallUpdatesWithoutPrompt automatically installs updates without prompting the user
-// This is used by the upgrade command when the --auto-approve flag is set
+// This is a legacy method maintained for backward compatibility
 func (u *UpdateNotification) InstallUpdatesWithoutPrompt(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 
 	for _, dependency := range u.Dependencies() {
+		hasUpdate, err := dependency.HasUpdate()
+		if err != nil {
+			return slackerror.Wrap(err, "An error occurred while fetching a dependency")
+		}
+
+		if hasUpdate {
+			// Print update notification but skip the confirmation prompt
+			_, err := dependency.PrintUpdateNotification(cmd)
+			if err != nil {
+				return err
+			}
+
+			// Install the update without prompting
+			cmd.Printf("%s Installing update automatically...\n", style.Styler().Green("✓").String())
+			if err := dependency.InstallUpdate(ctx); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// InstallUpdatesWithComponentFlags automatically installs updates for specified components
+// without prompting the user. This is used by the upgrade command when the --cli
+// or --sdk flags are set.
+func (u *UpdateNotification) InstallUpdatesWithComponentFlags(cmd *cobra.Command, cli bool, sdk bool) error {
+	ctx := cmd.Context()
+
+	for _, dependency := range u.Dependencies() {
+		// Skip dependencies that don't match the specified flags
+		if isDependencyCLI(dependency) && !cli {
+			continue
+		}
+		if isDependencySDK(dependency) && !sdk {
+			continue
+		}
+
 		hasUpdate, err := dependency.HasUpdate()
 		if err != nil {
 			return slackerror.Wrap(err, "An error occurred while fetching a dependency")

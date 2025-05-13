@@ -29,8 +29,8 @@ type UpdatePkgMock struct {
 	mock.Mock
 }
 
-func (m *UpdatePkgMock) CheckForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, autoApprove bool) error {
-	args := m.Called(clients, cmd, autoApprove)
+func (m *UpdatePkgMock) CheckForUpdates(clients *shared.ClientFactory, cmd *cobra.Command, cli bool, sdk bool) error {
+	args := m.Called(clients, cmd, cli, sdk)
 	return args.Error(0)
 }
 
@@ -49,32 +49,62 @@ func TestUpgradeCommand(t *testing.T) {
 	updatePkgMock := new(UpdatePkgMock)
 	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
 
-	// Test default behavior (no auto-approve)
-	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, false).Return(nil)
+	// Test default behavior (no flags)
+	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, false, false).Return(nil)
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Upgrade had unexpected error")
 	}
-	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, false)
+	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, false, false)
 
-	// Test with auto-approve flag
+	// Test with CLI flag
 	cmd = NewCommand(clients)
 	testutil.MockCmdIO(clients.IO, cmd)
-	cmd.SetArgs([]string{"--auto-approve"})
+	cmd.SetArgs([]string{"--cli"})
 
 	updatePkgMock = new(UpdatePkgMock)
 	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
-	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, true).Return(nil)
+	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, true, false).Return(nil)
 
 	err = cmd.ExecuteContext(ctx)
 	if err != nil {
-		assert.Fail(t, "cmd.Upgrade with auto-approve had unexpected error")
+		assert.Fail(t, "cmd.Upgrade with cli flag had unexpected error")
 	}
-	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, true)
+	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, true, false)
+
+	// Test with SDK flag
+	cmd = NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--sdk"})
+
+	updatePkgMock = new(UpdatePkgMock)
+	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
+	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, false, true).Return(nil)
+
+	err = cmd.ExecuteContext(ctx)
+	if err != nil {
+		assert.Fail(t, "cmd.Upgrade with sdk flag had unexpected error")
+	}
+	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, false, true)
+
+	// Test with both CLI and SDK flags
+	cmd = NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--cli", "--sdk"})
+
+	updatePkgMock = new(UpdatePkgMock)
+	checkForUpdatesFunc = updatePkgMock.CheckForUpdates
+	updatePkgMock.On("CheckForUpdates", mock.Anything, mock.Anything, true, true).Return(nil)
+
+	err = cmd.ExecuteContext(ctx)
+	if err != nil {
+		assert.Fail(t, "cmd.Upgrade with both cli and sdk flags had unexpected error")
+	}
+	updatePkgMock.AssertCalled(t, "CheckForUpdates", mock.Anything, mock.Anything, true, true)
 }
 
-func TestUpgradeCommandWithAutoApproveError(t *testing.T) {
-	// Create a mock of UpdateNotification that returns an error on InstallUpdatesWithoutPrompt
+func TestUpgradeCommandWithFlagError(t *testing.T) {
+	// Create a mock of UpdateNotification that returns an error on InstallUpdatesWithComponentFlags
 	originalCheckForUpdates := checkForUpdatesFunc
 	defer func() {
 		checkForUpdatesFunc = originalCheckForUpdates
@@ -87,21 +117,45 @@ func TestUpgradeCommandWithAutoApproveError(t *testing.T) {
 	// Create clients that is mocked for testing
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	// Mock the checkForUpdates function to simulate an error during auto-approve updates
-	checkForUpdatesFunc = func(clients *shared.ClientFactory, cmd *cobra.Command, autoApprove bool) error {
-		if autoApprove {
-			return assert.AnError // Simulate error when auto-approve is true
+	// Mock the checkForUpdates function to simulate an error during flag-based updates
+	checkForUpdatesFunc = func(clients *shared.ClientFactory, cmd *cobra.Command, cli bool, sdk bool) error {
+		if cli || sdk {
+			return assert.AnError // Simulate error when either flag is true
 		}
 		return nil
 	}
 
-	// Create the command with auto-approve flag
+	// Test with CLI flag causing error
 	cmd := NewCommand(clients)
 	testutil.MockCmdIO(clients.IO, cmd)
-	cmd.SetArgs([]string{"--auto-approve"})
+	cmd.SetArgs([]string{"--cli"})
 
 	// Execute the command and verify it returns the error
 	err := cmd.ExecuteContext(ctx)
+
+	// Verify the error was properly propagated
+	assert.Error(t, err)
+	assert.Equal(t, assert.AnError, err)
+
+	// Test with SDK flag causing error
+	cmd = NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--sdk"})
+
+	// Execute the command and verify it returns the error
+	err = cmd.ExecuteContext(ctx)
+
+	// Verify the error was properly propagated
+	assert.Error(t, err)
+	assert.Equal(t, assert.AnError, err)
+
+	// Test with both flags causing error
+	cmd = NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--cli", "--sdk"})
+
+	// Execute the command and verify it returns the error
+	err = cmd.ExecuteContext(ctx)
 
 	// Verify the error was properly propagated
 	assert.Error(t, err)
