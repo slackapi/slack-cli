@@ -32,8 +32,8 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		resultJson   string
-		expectedJson string
+		resultJSON   string
+		expectedJSON string
 		inputTrigger TriggerRequest
 		wantErr      bool
 		errMessage   string
@@ -43,70 +43,70 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeShortcut,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				Shortcut:      &Shortcut{},
 			},
-			expectedJson: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234"}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234"}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid shortcut, with inputs",
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeShortcut,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
 				Shortcut:      &Shortcut{},
 				Inputs:        inputs,
 			},
-			expectedJson: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234","inputs":{"test":{"value":"val"}}}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234","inputs":{"test":{"value":"val"}}}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid event",
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeEvent,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
-				Event:         types.ToRawJson(`{"event_type":"reaction_added","channel_ids":["C1234"]}`),
+				Event:         types.ToRawJSON(`{"event_type":"reaction_added","channel_ids":["C1234"]}`),
 			},
-			expectedJson: `{"type":"event","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","event":{"event_type":"reaction_added","channel_ids":["C1234"]}}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"event", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"event","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","event":{"event_type":"reaction_added","channel_ids":["C1234"]}}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"event", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid schedule",
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeScheduled,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
-				Schedule:      types.ToRawJson(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
+				Schedule:      types.ToRawJSON(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
 			},
-			expectedJson: `{"type":"scheduled","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","schedule":{"start_time":"2020-03-15","frequency":{"type":"daily"}}}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"scheduled", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"scheduled","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","schedule":{"start_time":"2020-03-15","frequency":{"type":"daily"}}}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"scheduled", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid webhook",
 			inputTrigger: TriggerRequest{
 				Type:          types.TriggerTypeWebhook,
 				Workflow:      "#/workflows/test",
-				WorkflowAppId: "A1234",
+				WorkflowAppID: "A1234",
 				Name:          "name",
 				Description:   "desc",
-				WebHook:       types.ToRawJson(`{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}`),
+				WebHook:       types.ToRawJSON(`{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}`),
 			},
-			expectedJson: `{"type":"webhook","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","webhook":{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"webhook", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"webhook","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","webhook":{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"webhook", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name:       "Propagates errors",
-			resultJson: `{"ok": false, "error":"invalid_scopes"}`,
+			resultJSON: `{"ok": false, "error":"invalid_scopes"}`,
 			wantErr:    true,
 			errMessage: "invalid_scopes",
 		},
@@ -119,12 +119,12 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, workflowsTriggersCreateMethod)
-				if tt.expectedJson != "" {
+				if tt.expectedJSON != "" {
 					payload, err := io.ReadAll(r.Body)
 					require.NoError(t, err)
-					require.Equal(t, tt.expectedJson, string(payload))
+					require.Equal(t, tt.expectedJSON, string(payload))
 				}
-				result := tt.resultJson
+				result := tt.resultJSON
 				_, err := fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -158,8 +158,8 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		resultJson   string
-		expectedJson string
+		resultJSON   string
+		expectedJSON string
 		input        TriggerUpdateRequest
 		wantErr      bool
 		errMessage   string
@@ -167,87 +167,87 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		{
 			name: "Valid shortcut",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					Shortcut:      &Shortcut{},
 				},
 			},
-			expectedJson: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234","trigger_id":"Ft123"}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234","trigger_id":"Ft123"}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid shortcut, with inputs",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeShortcut,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
 					Shortcut:      &Shortcut{},
 					Inputs:        inputs,
 				},
 			},
-			expectedJson: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234","inputs":{"test":{"value":"val"}},"trigger_id":"Ft123"}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"shortcut","name":"name","description":"desc","shortcut":{},"workflow":"#/workflows/test","workflow_app_id":"A1234","inputs":{"test":{"value":"val"}},"trigger_id":"Ft123"}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"shortcut", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid event",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeEvent,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
-					Event:         types.ToRawJson(`{"event_type":"reaction_added","channel_ids":["C1234"]}`),
+					Event:         types.ToRawJSON(`{"event_type":"reaction_added","channel_ids":["C1234"]}`),
 				},
 			},
-			expectedJson: `{"type":"event","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","event":{"event_type":"reaction_added","channel_ids":["C1234"]},"trigger_id":"Ft123"}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"event", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"event","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","event":{"event_type":"reaction_added","channel_ids":["C1234"]},"trigger_id":"Ft123"}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"event", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid schedule",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeScheduled,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
-					Schedule:      types.ToRawJson(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
+					Schedule:      types.ToRawJSON(`{"start_time":"2020-03-15","frequency":{"type":"daily"}}`),
 				},
 			},
-			expectedJson: `{"type":"scheduled","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","schedule":{"start_time":"2020-03-15","frequency":{"type":"daily"}},"trigger_id":"Ft123"}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"scheduled", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"scheduled","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","schedule":{"start_time":"2020-03-15","frequency":{"type":"daily"}},"trigger_id":"Ft123"}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"scheduled", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name: "Valid webhook",
 			input: TriggerUpdateRequest{
-				TriggerId: "Ft123",
+				TriggerID: "Ft123",
 				TriggerRequest: TriggerRequest{
 					Type:          types.TriggerTypeWebhook,
 					Workflow:      "#/workflows/test",
-					WorkflowAppId: "A1234",
+					WorkflowAppID: "A1234",
 					Name:          "name",
 					Description:   "desc",
-					WebHook:       types.ToRawJson(`{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}`),
+					WebHook:       types.ToRawJSON(`{"filter":{"root":{},"version":1},"channel_ids":["C1234"]}`),
 				},
 			},
-			expectedJson: `{"type":"webhook","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","webhook":{"filter":{"root":{},"version":1},"channel_ids":["C1234"]},"trigger_id":"Ft123"}`,
-			resultJson:   `{"ok": true, "trigger": {"id":"Ft123", "type":"webhook", "name":"name", "desc":"desc"}}`,
+			expectedJSON: `{"type":"webhook","name":"name","description":"desc","workflow":"#/workflows/test","workflow_app_id":"A1234","webhook":{"filter":{"root":{},"version":1},"channel_ids":["C1234"]},"trigger_id":"Ft123"}`,
+			resultJSON:   `{"ok": true, "trigger": {"id":"Ft123", "type":"webhook", "name":"name", "desc":"desc"}}`,
 		},
 		{
 			name:       "Propagates errors",
-			resultJson: `{"ok": false, "error":"invalid_scopes"}`,
+			resultJSON: `{"ok": false, "error":"invalid_scopes"}`,
 			wantErr:    true,
 			errMessage: "invalid_scopes",
 		},
@@ -260,12 +260,12 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, workflowsTriggersUpdateMethod)
-				if tt.expectedJson != "" {
+				if tt.expectedJSON != "" {
 					payload, err := io.ReadAll(r.Body)
 					require.NoError(t, err)
-					require.Equal(t, tt.expectedJson, string(payload))
+					require.Equal(t, tt.expectedJSON, string(payload))
 				}
-				result := tt.resultJson
+				result := tt.resultJSON
 				_, err := fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -296,17 +296,17 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 	tests := []struct {
 		name       string
-		resultJson string
+		resultJSON string
 		wantErr    bool
 		errMessage string
 	}{
 		{
 			name:       "OK result",
-			resultJson: `{"ok":true}`,
+			resultJSON: `{"ok":true}`,
 		},
 		{
 			name:       "Error result",
-			resultJson: `{"ok":false,"error":"invalid_scopes"}`,
+			resultJSON: `{"ok":false,"error":"invalid_scopes"}`,
 			wantErr:    true,
 			errMessage: "invalid_scopes",
 		},
@@ -318,11 +318,11 @@ func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, workflowsTriggersDeleteMethod)
-				expectedJson := `{"trigger_id":"FtABC"}`
+				expectedJSON := `{"trigger_id":"FtABC"}`
 				payload, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
-				require.Equal(t, expectedJson, string(payload))
-				result := tt.resultJson
+				require.Equal(t, expectedJSON, string(payload))
+				result := tt.resultJSON
 				_, err = fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -382,7 +382,7 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
-			expectedErrorContains: errHttpResponseInvalid.Code,
+			expectedErrorContains: errHTTPResponseInvalid.Code,
 		},
 		{
 			name:                  "Successful request",
@@ -438,7 +438,7 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 
 			// Execute test
 			args := TriggerListRequest{
-				AppId:  tt.argsAppID,
+				AppID:  tt.argsAppID,
 				Limit:  tt.argsLimit,
 				Cursor: tt.argsCursor,
 			}

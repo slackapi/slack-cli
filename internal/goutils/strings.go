@@ -160,8 +160,8 @@ func UpperCaseTrimAll(namedEntities string) string {
 	return strings.ReplaceAll(strings.ToUpper(namedEntities), " ", "")
 }
 
-// ToHttps returns url with https protocol
-func ToHttps(urlAddr string) string {
+// ToHTTPS returns url with https protocol
+func ToHTTPS(urlAddr string) string {
 	u, err := url.Parse(urlAddr)
 	if err != nil {
 		return urlAddr

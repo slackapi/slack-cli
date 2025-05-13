@@ -43,7 +43,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 			{
 				ProviderName:       "Google",
 				ProviderKey:        "provider_a",
-				ClientId:           "xxxxx",
+				ClientID:           "xxxxx",
 				ClientSecretExists: true,
 				ValidTokenExists:   false,
 			},
@@ -97,14 +97,14 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 			{
 				ProviderName:       "Google",
 				ProviderKey:        "provider_a",
-				ClientId:           "xxxxx",
+				ClientID:           "xxxxx",
 				ClientSecretExists: true,
 				ValidTokenExists:   true,
-				ExternalTokenIds:   []string{"Et0548LYDWCT"},
+				ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 				ExternalTokens: []types.ExternalTokenInfo{
 					{
-						ExternalTokenId: "Et0548LABCDE",
-						ExternalUserId:  "xyz@salesforce.com",
+						ExternalTokenID: "Et0548LABCDE",
+						ExternalUserID:  "xyz@salesforce.com",
 						DateUpdated:     1682021142,
 					},
 				},

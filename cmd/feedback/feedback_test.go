@@ -26,18 +26,19 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestFeedbackCommand(t *testing.T) {
-
 	t.Run("when there is only one survey option", func(t *testing.T) {
-
 		surveys := map[string]SlackSurvey{
-			PlatformSurvey: {
-				Name:              PlatformSurvey,
+			SlackPlatformFeedback: {
+				Name:              SlackPlatformFeedback,
 				PromptDisplayText: "Please complete this survey",
 				URL:               url.URL{RawPath: "https://survey.com"},
 				Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
@@ -53,31 +54,35 @@ func TestFeedbackCommand(t *testing.T) {
 
 		pcm := &config.ProjectConfigMock{}
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil)
-		pcm.On("GetSurveyConfig", mock.Anything, PlatformSurvey).Return(config.SurveyConfig{}, nil)
+		pcm.On("GetSurveyConfig", mock.Anything, SlackPlatformFeedback).Return(config.SurveyConfig{}, nil)
 		clientsMock.Config.ProjectConfig = pcm
 
 		scm := &config.SystemConfigMock{}
-		scm.On("GetSurveyConfig", mock.Anything, PlatformSurvey).Return(config.SurveyConfig{}, nil)
+		scm.On("GetSurveyConfig", mock.Anything, SlackPlatformFeedback).Return(config.SurveyConfig{}, nil)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil)
 		scm.On("SetSurveyConfig", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		clientsMock.Config.SystemConfig = scm
 
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true)
 		clientsMock.Browser.On("OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+		_surveys := SurveyStore
 		SurveyStore = surveys
+		defer func() { SurveyStore = _surveys }()
 
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
 		err := runFeedbackCommand(ctx, clients, cmd)
+
+		// Assertions
 		assert.NoError(t, err)
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
+		clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.FeedbackMessage, []string{SlackPlatformFeedback})
 	})
 
 	t.Run("when there are multiple survey options", func(t *testing.T) {
-
 		surveys := map[string]SlackSurvey{
 			"A_test": {
 				Name:              "A_test",
@@ -87,8 +92,8 @@ func TestFeedbackCommand(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 			},
-			PlatformSurvey: {
-				Name:              PlatformSurvey,
+			SlackPlatformFeedback: {
+				Name:              SlackPlatformFeedback,
 				PromptDisplayText: "PlatformSurvey survey",
 				URL:               url.URL{RawPath: "https://survey.com"},
 				Config: func(clients *shared.ClientFactory) SurveyConfigInterface {
@@ -128,23 +133,27 @@ func TestFeedbackCommand(t *testing.T) {
 			Index:  2,
 		}, nil)
 
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true)
 		clientsMock.Browser.On("OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+		_surveys := SurveyStore
 		SurveyStore = surveys
+		defer func() { SurveyStore = _surveys }()
 
 		// Execute test
 		cmd := NewFeedbackCommand(clients)
 		err := runFeedbackCommand(ctx, clients, cmd)
 		assert.NoError(t, err)
+
+		// Assertions
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
+		clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.FeedbackMessage, []string{SlackPlatformFeedback})
 	})
 }
 
 func TestShowSurveyMessages(t *testing.T) {
-
 	t.Run("surveys asked or not asked based on the stored config", func(t *testing.T) {
 		surveys := map[string]SlackSurvey{
 			// Should be asked once; already asked
@@ -217,7 +226,7 @@ func TestShowSurveyMessages(t *testing.T) {
 		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about B?", mock.Anything).Return(true)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil).Once()
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true).Once()
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true).Once()
 		clientsMock.Browser.On("OpenURL", "https://B.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil).Once()
 		pcm.On("SetSurveyConfig", mock.Anything, "B", mock.Anything).Return(nil).Once()
 
@@ -226,7 +235,7 @@ func TestShowSurveyMessages(t *testing.T) {
 		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about C?", mock.Anything).Return(true)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil).Once()
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open survey in browser?", mock.Anything).Return(true).Once()
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true).Once()
 		clientsMock.Browser.On("OpenURL", "https://C.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil).Once()
 		scm.On("SetSurveyConfig", mock.Anything, "C", mock.Anything).Return(nil).Once()
 
@@ -240,7 +249,9 @@ func TestShowSurveyMessages(t *testing.T) {
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+		_surveys := SurveyStore
 		SurveyStore = surveys
+		defer func() { SurveyStore = _surveys }()
 
 		// Execute test
 		err := ShowSurveyMessages(ctx, clients)
@@ -248,5 +259,61 @@ func TestShowSurveyMessages(t *testing.T) {
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://B.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 		clientsMock.Browser.AssertCalled(t, "OpenURL", "https://C.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli")
 	})
+}
 
+func Test_Feedback_FeedbackCommand(t *testing.T) {
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
+		"supports deprecated --name platform-improvements": {
+			CmdArgs: []string{"--name", "platform-improvements"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupFeedbackCommandMocks(t, ctx, cm, cf)
+			},
+			ExpectedOutputs: []string{
+				"feedback@slack.com",
+				"https://docs.slack.dev/developer-support",
+			},
+		},
+		"supports --name slack-cli": {
+			CmdArgs: []string{"--name", "slack-cli"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupFeedbackCommandMocks(t, ctx, cm, cf)
+			},
+			ExpectedOutputs: []string{
+				"Ask questions, submit issues, or suggest features for the Slack CLI",
+				"https://github.com/slackapi/slack-cli/issues",
+			},
+		},
+		"supports --name slack-platform": {
+			CmdArgs: []string{"--name", "slack-platform"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupFeedbackCommandMocks(t, ctx, cm, cf)
+			},
+			ExpectedOutputs: []string{
+				"feedback@slack.com",
+				"https://docs.slack.dev/developer-support",
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		cmd := NewFeedbackCommand(cf)
+		return cmd
+	})
+}
+
+// setupFeedbackCommandMocks prepares common mocks for these tests
+func setupFeedbackCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+	cm.AddDefaultMocks()
+
+	scm := &config.SystemConfigMock{}
+	scm.On("GetSurveyConfig", mock.Anything, mock.Anything).Return(config.SurveyConfig{}, nil)
+	scm.On("GetSystemID", mock.Anything).Return("systemID", nil)
+	scm.On("SetSurveyConfig", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	cm.Config.SystemConfig = scm
+
+	pcm := &config.ProjectConfigMock{}
+	pcm.On("GetSurveyConfig", mock.Anything, mock.Anything).Return(config.SurveyConfig{}, nil)
+	pcm.On("GetProjectID", mock.Anything).Return("projectID", nil)
+	cm.Config.ProjectConfig = pcm
+
+	cm.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(false)
 }

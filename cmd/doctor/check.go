@@ -260,7 +260,7 @@ func checkCLIConfig(ctx context.Context, clients *shared.ClientFactory) (Section
 func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section, error) {
 	section := Section{"Credentials", "your Slack authentication", []Section{}, []slackerror.Error{}}
 
-	authList, err := clients.AuthInterface().Auths(ctx)
+	authList, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return Section{}, slackerror.New(slackerror.ErrAuthToken).WithRootCause(err)
 	}
@@ -273,7 +273,7 @@ func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section,
 	// Teams
 	if len(authList) > 0 {
 		authSections := []Section{}
-		currentApiHost := clients.Config.ApiHostResolved
+		currentAPIHost := clients.Config.APIHostResolved
 		caser := cases.Title(language.English)
 		for _, authInfo := range authList {
 			checkDetails := []Section{
@@ -289,19 +289,19 @@ func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section,
 				{"Authorization level", caser.String(authInfo.AuthLevel()), []Section{}, []slackerror.Error{}},
 			}
 
-			if authInfo.ApiHost != nil {
-				hostSection := Section{"API Host", *authInfo.ApiHost, []Section{}, []slackerror.Error{}}
+			if authInfo.APIHost != nil {
+				hostSection := Section{"API Host", *authInfo.APIHost, []Section{}, []slackerror.Error{}}
 				checkDetails = append(checkDetails, hostSection)
 			}
 
 			// Validate session token
 			validitySection := Section{"Token status", "Valid", []Section{}, []slackerror.Error{}}
 
-			// TODO :: .ValidateSession() utilizes the host (ApiHost) assigned to the client making
+			// TODO :: .ValidateSession() utilizes the host (APIHost) assigned to the client making
 			// the call. This results in incorrectly deeming tokens invalid if using multiple workspaces
 			// with different API hosts. (cc: @mbrooks)
-			clients.Config.ApiHostResolved = clients.AuthInterface().ResolveApiHost(ctx, clients.Config.ApiHostFlag, &authInfo)
-			_, err := clients.ApiInterface().ValidateSession(ctx, authInfo.Token)
+			clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &authInfo)
+			_, err := clients.API().ValidateSession(ctx, authInfo.Token)
 			if err != nil {
 				validitySection.Value = "Invalid"
 			}
@@ -311,7 +311,7 @@ func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section,
 			authSections = append(authSections, authSection)
 		}
 
-		clients.Config.ApiHostResolved = currentApiHost
+		clients.Config.APIHostResolved = currentAPIHost
 
 		section.Subsections = authSections
 	}

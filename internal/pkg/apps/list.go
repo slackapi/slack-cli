@@ -45,7 +45,7 @@ func List(ctx context.Context, clients *shared.ClientFactory) ([]types.App, stri
 	}
 	// Update local run app names to include domain (when possible)
 	for i, devApp := range devApps {
-		if auth, err := clients.AuthInterface().AuthWithTeamID(ctx, devApp.TeamID); err == nil {
+		if auth, err := clients.Auth().AuthWithTeamID(ctx, devApp.TeamID); err == nil {
 			// modify for display
 			devApps[i].TeamDomain = fmt.Sprintf("%s %s", auth.TeamDomain, style.LocalRunNameTag)
 
@@ -80,34 +80,34 @@ func List(ctx context.Context, clients *shared.ClientFactory) ([]types.App, stri
 // FetchAppInstallStates fetches app installation status from the backend and sets the values on the given apps
 func FetchAppInstallStates(ctx context.Context, clients *shared.ClientFactory, apps []types.App) ([]types.App, error) {
 	// Sort apps by team and ID
-	appIdsByTeamId := map[string][]string{}
-	appIdsByEnterpriseTeamId := map[string][]string{}
-	appsByAppId := map[string]types.App{}
+	appIDsByTeamID := map[string][]string{}
+	appIDsByEnterpriseTeamID := map[string][]string{}
+	appsByAppID := map[string]types.App{}
 	for _, a := range apps {
 		// Add app by its team id
-		if appIdsByTeamId[a.TeamID] == nil {
-			appIdsByTeamId[a.TeamID] = []string{}
+		if appIDsByTeamID[a.TeamID] == nil {
+			appIDsByTeamID[a.TeamID] = []string{}
 		}
-		appIdsByTeamId[a.TeamID] = append(appIdsByTeamId[a.TeamID], a.AppID)
-		appsByAppId[a.AppID] = a
+		appIDsByTeamID[a.TeamID] = append(appIDsByTeamID[a.TeamID], a.AppID)
+		appsByAppID[a.AppID] = a
 
 		// If app is an enterprise workspace app, also add it by its enterprise teamID
 		if a.IsEnterpriseWorkspaceApp() {
-			if appIdsByEnterpriseTeamId[a.EnterpriseID] == nil {
-				appIdsByEnterpriseTeamId[a.EnterpriseID] = []string{}
+			if appIDsByEnterpriseTeamID[a.EnterpriseID] == nil {
+				appIDsByEnterpriseTeamID[a.EnterpriseID] = []string{}
 			}
-			appIdsByEnterpriseTeamId[a.EnterpriseID] = append(appIdsByEnterpriseTeamId[a.EnterpriseID], a.AppID)
-			appsByAppId[a.AppID] = a
+			appIDsByEnterpriseTeamID[a.EnterpriseID] = append(appIDsByEnterpriseTeamID[a.EnterpriseID], a.AppID)
+			appsByAppID[a.AppID] = a
 		}
 	}
 
 	// Get all available authed workspaces
-	auths, err := clients.AuthInterface().Auths(ctx)
+	auths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return []types.App{}, err
 	}
 	if clients.Config.TokenFlag != "" {
-		if tokenAuth, err := clients.AuthInterface().AuthWithToken(ctx, clients.Config.TokenFlag); err != nil {
+		if tokenAuth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag); err != nil {
 			return []types.App{}, err
 		} else {
 			auths = append(auths, tokenAuth)
@@ -118,16 +118,16 @@ func FetchAppInstallStates(ctx context.Context, clients *shared.ClientFactory, a
 	appToEnterpriseGrants := map[string][]types.EnterpriseGrant{}
 	for _, auth := range auths {
 
-		if len(appIdsByTeamId[auth.TeamID]) == 0 && len(appIdsByEnterpriseTeamId[auth.TeamID]) == 0 {
+		if len(appIDsByTeamID[auth.TeamID]) == 0 && len(appIDsByEnterpriseTeamID[auth.TeamID]) == 0 {
 			continue
 		}
 
-		apiClient := clients.ApiInterface()
-		if auth.ApiHost != nil {
+		apiClient := clients.API()
+		if auth.APIHost != nil {
 			// Most internal/api methods do not explicitly require the host to be set.
 			// Rather, they rely implicitly on host being set on the apiClient when the instance
 			// is created, (see internal/shared/clients.go). The value that the host is set
-			// to today, in turn relies on the global clients.Config.ApiHostResolved value
+			// to today, in turn relies on the global clients.Config.APIHostResolved value
 			// which in most cases is resolved once at the root of the command.
 			//
 			// For most cases, commands only require that a apiHost be set once. But in some cases,
@@ -137,7 +137,7 @@ func FetchAppInstallStates(ctx context.Context, clients *shared.ClientFactory, a
 			//
 			// Refer to types.SlackAuth where we optionally represent this apiHost value.
 			//
-			// It is an anti-pattern to set and reset a global ApiHostResolved value
+			// It is an anti-pattern to set and reset a global APIHostResolved value
 			// for each authorization that we must make a Slack API call for, since:
 			//
 			//  1. setting global value impacts other future instances of apiClient
@@ -148,21 +148,21 @@ func FetchAppInstallStates(ctx context.Context, clients *shared.ClientFactory, a
 			//  3. Since each new apiClient that is instantiated will default to the existing
 			//     global resolved host anyway, we can instead SetHost here without having to reset it
 			//
-			// So here we modify the host of this ApiClient instance,
+			// So here we modify the host of this APIClient instance,
 			// for each GetAppStatus (POST) request it makes.
-			apiClient.SetHost(*auth.ApiHost)
+			apiClient.SetHost(*auth.APIHost)
 		}
 
 		var appStatusResponse api.GetAppStatusResult
 		if auth.IsEnterpriseInstall {
-			var allApps = append(appIdsByEnterpriseTeamId[auth.TeamID], appIdsByTeamId[auth.TeamID]...)
+			var allApps = append(appIDsByEnterpriseTeamID[auth.TeamID], appIDsByTeamID[auth.TeamID]...)
 			appStatusResponse, err = apiClient.GetAppStatus(ctx, auth.Token, allApps, auth.TeamID)
 		} else {
-			appStatusResponse, err = apiClient.GetAppStatus(ctx, auth.Token, appIdsByTeamId[auth.TeamID], auth.TeamID)
+			appStatusResponse, err = apiClient.GetAppStatus(ctx, auth.Token, appIDsByTeamID[auth.TeamID], auth.TeamID)
 		}
 
 		if err != nil {
-			clients.IO.PrintDebug(ctx, "error fetching installation status for apps %v: %s", appIdsByTeamId[auth.TeamID], err.Error())
+			clients.IO.PrintDebug(ctx, "error fetching installation status for apps %v: %s", appIDsByTeamID[auth.TeamID], err.Error())
 			continue
 		}
 

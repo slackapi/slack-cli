@@ -89,7 +89,7 @@ func runAddCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	}
 
 	// Get the oauth2 provider keys
-	providerAuths, err := clients.ApiInterface().AppsAuthExternalList(
+	providerAuths, err := clients.API().AppsAuthExternalList(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
@@ -132,7 +132,7 @@ func runAddCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		return slackerror.New(fmt.Sprintf("Error: No client secret exists. Add one with %s", command))
 	}
 
-	authorizationUrl, err := clients.ApiInterface().AppsAuthExternalStart(
+	authorizationURL, err := clients.API().AppsAuthExternalStart(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
@@ -143,7 +143,7 @@ func runAddCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	}
 
 	clients.IO.PrintInfo(ctx, false, "Redirecting to browser...")
-	clients.Browser().OpenURL(authorizationUrl)
+	clients.Browser().OpenURL(authorizationURL)
 
 	return err
 }

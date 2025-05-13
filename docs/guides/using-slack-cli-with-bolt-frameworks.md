@@ -26,7 +26,7 @@ View more samples
 
 You will then be prompted to choose between **Bolt for JavaScript** or **Bolt for Python**. Choose your favorite flavor.
 
-Your app will be cloned from the respective [JavaScript](https://github.com/slack-samples/bolt-js-starter-template) or [Python](https://github.com/slack-samples/bolt-python-starter-template) project template on our Slack Platform Sample Code repository, and its project dependencies will be installed. Then, `cd` into your project folder. 
+Your app will be cloned from the respective [JavaScript](https://github.com/slack-samples/bolt-js-starter-template) or [Python](https://github.com/slack-samples/bolt-python-starter-template) project template on our Slack Platform Sample Code repository, and its project dependencies will be installed. Then, `cd` into your project folder.
 
 :::info
 
@@ -34,7 +34,7 @@ For Bolt for Python projects, automatic project dependency installation is curre
 
 :::
 
-To run your new app, use the `slack run` command with the experiment flag as follows:
+To run your new app, use the `slack run` command as follows:
 
 ```
 slack run

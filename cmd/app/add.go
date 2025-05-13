@@ -89,7 +89,7 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error 
 	if err != nil {
 		return err
 	}
-	if manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE) {
+	if manifestSource.Equals(config.ManifestSourceRemote) {
 		return slackerror.New(slackerror.ErrAppInstall).
 			WithMessage("Apps cannot be installed due to project configurations").
 			WithRemediation(

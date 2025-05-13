@@ -66,7 +66,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	if err = cmdutil.AppExists(app, selection.Auth); err != nil {
 		return err
 	}
-	collaborators, err := clients.ApiInterface().ListCollaborators(ctx, selection.Auth.Token, app.AppID)
+	collaborators, err := clients.API().ListCollaborators(ctx, selection.Auth.Token, app.AppID)
 	if err != nil {
 		return slackerror.Wrap(err, "Error listing collaborators")
 	}

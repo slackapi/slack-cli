@@ -30,7 +30,7 @@ func (c *Config) SetFlags(cmd *cobra.Command) {
 
 // InitializeGlobalFlags configures flags and creates links from cmd to config
 func (c *Config) InitializeGlobalFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().StringVar(&c.ApiHostFlag, "apihost", "", "Slack API host")
+	cmd.PersistentFlags().StringVar(&c.APIHostFlag, "apihost", "", "Slack API host")
 	cmd.PersistentFlags().StringVarP(&c.AppFlag, "app", "a", "", "use a specific app ID or environment")
 	cmd.PersistentFlags().StringVarP(&c.ConfigDirFlag, "config-dir", "", "", "use a custom path for system config directory")
 	cmd.PersistentFlags().BoolVarP(&c.DeprecatedDevAppFlag, "local-run", "l", false, "use the local run app created by the `run` command") // deprecated

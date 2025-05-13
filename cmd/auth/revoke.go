@@ -43,7 +43,7 @@ func NewRevokeCommand(clients *shared.ClientFactory) *cobra.Command {
 				return slackerror.New("Failed to collect a token to revoke").WithCode(slackerror.ErrNoTokenFound).WithRootCause(err)
 			}
 
-			if err := clients.AuthInterface().RevokeToken(ctx, token); err != nil {
+			if err := clients.Auth().RevokeToken(ctx, token); err != nil {
 				return err
 			}
 			printRevokeSuccess(ctx, clients)

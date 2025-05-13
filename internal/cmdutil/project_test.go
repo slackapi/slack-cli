@@ -39,39 +39,39 @@ func TestIsSlackHostedProject(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
 			mockManifestError:  nil,
-			mockManifestSource: config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource: config.ManifestSourceLocal,
 			expectedError:      nil,
 		},
 		"errors if the project does not have a slack function runtime": {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.REMOTE,
+						FunctionRuntime: types.Remote,
 					},
 				},
 			},
 			mockManifestError:  nil,
-			mockManifestSource: config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource: config.ManifestSourceLocal,
 			expectedError:      slackerror.New(slackerror.ErrAppNotHosted),
 		},
 		"errors if the project manifest cannot be gathered from hook": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 		"errors if the manifest source is configured to the remote": {
-			mockManifestSource: config.MANIFEST_SOURCE_REMOTE,
+			mockManifestSource: config.ManifestSourceRemote,
 			expectedError: slackerror.New(slackerror.ErrAppNotHosted).
 				WithDetails(slackerror.ErrorDetails{
 					{
 						Code:        slackerror.ErrInvalidManifestSource,
-						Message:     fmt.Sprintf("Slack hosted projects use \"%s\" manifest source", config.MANIFEST_SOURCE_LOCAL),
+						Message:     fmt.Sprintf("Slack hosted projects use \"%s\" manifest source", config.ManifestSourceLocal),
 						Remediation: fmt.Sprintf("This value can be changed in configuration: \"%s\"", config.GetProjectConfigJSONFilePath("")),
 					},
 				}),

@@ -29,13 +29,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var MOCK_BOUNDARY_STRING = "boundary-string"
-var SIXTY_FOUR_KB_STRING = string(make([]byte, (64*1024)+1))
-var FIVE_HUNDRED_TWELVE_KB_STRING = string(make([]byte, (512*1024)+1))
+var mockBoundaryString = "boundary-string"
+var sixtyFourKBString = string(make([]byte, (64*1024)+1))
+var fiveHundredTwelveKBString = string(make([]byte, (512*1024)+1))
 
 // mockBoundaryStringGenerator returns a random string for finding in tests
 func mockBoundaryStringGenerator() string {
-	return MOCK_BOUNDARY_STRING
+	return mockBoundaryString
 }
 
 func Test_Hook_Execute_V2_Protocol(t *testing.T) {
@@ -60,7 +60,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
-						MockStdout: []byte(MOCK_BOUNDARY_STRING + `{"message": "hello world"}` + MOCK_BOUNDARY_STRING),
+						MockStdout: []byte(mockBoundaryString + `{"message": "hello world"}` + mockBoundaryString),
 						Err:        nil,
 					},
 				},
@@ -81,13 +81,13 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
-						StdoutIO: io.NopCloser(strings.NewReader(MOCK_BOUNDARY_STRING + SIXTY_FOUR_KB_STRING + MOCK_BOUNDARY_STRING)),
+						StdoutIO: io.NopCloser(strings.NewReader(mockBoundaryString + sixtyFourKBString + mockBoundaryString)),
 						Err:      nil,
 					},
 				},
 			},
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
-				require.Equal(t, SIXTY_FOUR_KB_STRING, response)
+				require.Equal(t, sixtyFourKBString, response)
 				require.Equal(t, nil, err)
 				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `batman="robin"`)
 				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `yin="yang"`)
@@ -98,14 +98,14 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
-						StdoutIO: io.NopCloser(strings.NewReader("before" + MOCK_BOUNDARY_STRING + FIVE_HUNDRED_TWELVE_KB_STRING + MOCK_BOUNDARY_STRING + "after")),
+						StdoutIO: io.NopCloser(strings.NewReader("before" + mockBoundaryString + fiveHundredTwelveKBString + mockBoundaryString + "after")),
 						Err:      nil,
 					},
 				},
 			},
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.NoError(t, err)
-				require.Equal(t, FIVE_HUNDRED_TWELVE_KB_STRING, response)
+				require.Equal(t, fiveHundredTwelveKBString, response)
 			},
 		},
 		"failed command execution": {
@@ -128,7 +128,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				Env:  map[string]string{},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
-						StdoutIO: io.NopCloser(strings.NewReader("diagnostic info" + MOCK_BOUNDARY_STRING + MOCK_BOUNDARY_STRING + `{"message": "hello world"}` + MOCK_BOUNDARY_STRING)),
+						StdoutIO: io.NopCloser(strings.NewReader("diagnostic info" + mockBoundaryString + mockBoundaryString + `{"message": "hello world"}` + mockBoundaryString)),
 						StderrIO: io.NopCloser(strings.NewReader(``)),
 						Err:      nil,
 					},

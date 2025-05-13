@@ -40,15 +40,15 @@ import (
 
 // Constants
 const credentialsFileName = "credentials.json"
-const defaultProdApiClientHost = "https://slack.com"
-const defaultDevApiClientHost = "https://dev.slack.com"
+const defaultProdAPIClientHost = "https://slack.com"
+const defaultDevAPIClientHost = "https://dev.slack.com"
 const defaultHost = "slack.com"
 
 var localBuildGitSHAInVersionRegex = regexp.MustCompile(`(?mi)-g[a-f0-9]{1,40}$`)
 
 // Client can manage the state of the system's user/workspace authentications.
 type Client struct {
-	api       api.ApiInterface
+	api       api.APIInterface
 	appClient *app.Client
 	config    *config.Config
 	io        iostreams.IOStreamer
@@ -77,18 +77,18 @@ type AuthInterface interface {
 	// RevokeToken removes access for a given token, filtering known and safe errors
 	RevokeToken(ctx context.Context, token string) error
 
-	// ResolveApiHost returns the API Host based on the API Host Flag, Dev Flag, Project Config, and Stored Auth API Host.
-	ResolveApiHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string
+	// ResolveAPIHost returns the API Host based on the API Host Flag, Dev Flag, Project Config, and Stored Auth API Host.
+	ResolveAPIHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string
 	// ResolveLogstashHost returns the error log stash host based on API Host and CLI version
 	ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string
 
 	// MapAuthTokensToDomains groups tokens by API host then delineates the host
 	MapAuthTokensToDomains(ctx context.Context) string
 
-	// IsApiHostSlackProd returns true if host is a development endpoint target
-	IsApiHostSlackDev(host string) bool
-	// IsApiHostSlackProd returns true if host is the production endpoint target
-	IsApiHostSlackProd(host string) bool
+	// IsAPIHostSlackProd returns true if host is a development endpoint target
+	IsAPIHostSlackDev(host string) bool
+	// IsAPIHostSlackProd returns true if host is the production endpoint target
+	IsAPIHostSlackProd(host string) bool
 
 	// FilterKnownAuthErrors catches known error codes that can be ignored to allow
 	// the process to proceed safely without exiting.
@@ -96,7 +96,7 @@ type AuthInterface interface {
 }
 
 // NewClient returns a new, empty instance of the Client
-func NewClient(apiClient api.ApiInterface, appClient *app.Client, config *config.Config, io iostreams.IOStreamer, fs afero.Fs) *Client {
+func NewClient(apiClient api.APIInterface, appClient *app.Client, config *config.Config, io iostreams.IOStreamer, fs afero.Fs) *Client {
 	var client = Client{
 		api:       apiClient,
 		appClient: appClient,
@@ -217,7 +217,7 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 
 	err = json.Unmarshal(raw, &auths)
 	if err != nil {
-		return auths, slackerror.New(slackerror.ErrUnableToParseJson).
+		return auths, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of credentials file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(path))
@@ -317,13 +317,13 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 	// Store the current apiHost before rotation
 	// We need this because we need to restore
 	// the apiHost to what it was before rotating each of the user's auths
-	activeApiHostBeforeRotation := c.api.Host()
+	activeAPIHostBeforeRotation := c.api.Host()
 
-	if auth.ApiHost != nil {
-		c.api.SetHost(*auth.ApiHost)
-	} else if auth.ApiHost == nil || c.api.Host() == "" {
+	if auth.APIHost != nil {
+		c.api.SetHost(*auth.APIHost)
+	} else if auth.APIHost == nil || c.api.Host() == "" {
 		// always default to prod when we don't know what the api host is
-		c.api.SetHost(defaultProdApiClientHost)
+		c.api.SetHost(defaultProdAPIClientHost)
 	}
 
 	var result, err = c.api.RotateToken(ctx, auth)
@@ -338,7 +338,7 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 	auth.LastUpdated = time.Now()
 
 	// now restore the previous default apiHost
-	c.api.SetHost(activeApiHostBeforeRotation)
+	c.api.SetHost(activeAPIHostBeforeRotation)
 
 	return auth, true /* tokenIsUpdated */, nil
 }
@@ -374,7 +374,7 @@ func (c *Client) SetAuth(ctx context.Context, auth types.SlackAuth) (types.Slack
 
 	allAuths, err := c.auths(ctx)
 	if err != nil {
-		return types.SlackAuth{}, "", fmt.Errorf("Failed to fetch user authorizations %s", err)
+		return types.SlackAuth{}, "", fmt.Errorf("failed to fetch user authorizations %s", err)
 	}
 	allAuths[auth.TeamID] = auth
 
@@ -398,14 +398,14 @@ func (c *Client) SetSelectedAuth(ctx context.Context, auth types.SlackAuth, conf
 	//
 	// Often set after standard selections but custom authentication must set this
 	// unless the command is exiting right after, like 'login'.
-	config.ApiHostResolved = c.ResolveApiHost(ctx, config.ApiHostFlag, &auth)
-	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.ApiHostResolved, config.Version)
+	config.APIHostResolved = c.ResolveAPIHost(ctx, config.APIHostFlag, &auth)
+	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved, config.Version)
 
 	// Set environment variables for app development configurations and processes.
 	if _, ok := os.LookupEnv("SLACK_API_URL"); !ok {
 		_ = os.Setenv(
 			"SLACK_API_URL",
-			fmt.Sprintf("%s/api/", config.ApiHostResolved),
+			fmt.Sprintf("%s/api/", config.APIHostResolved),
 		)
 	}
 }
@@ -431,8 +431,8 @@ func (c *Client) DeleteAuth(ctx context.Context, auth types.SlackAuth) (types.Sl
 	return toDelete, nil
 }
 
-// IsApiHostSlackDev returns true if host is the Slack Dev endpoint (dev.slack.com, https://dev1234.api.slack.com, etc)
-func (c *Client) IsApiHostSlackDev(host string) bool {
+// IsAPIHostSlackDev returns true if host is the Slack Dev endpoint (dev.slack.com, https://dev1234.api.slack.com, etc)
+func (c *Client) IsAPIHostSlackDev(host string) bool {
 	if host == "" {
 		return false
 	}
@@ -450,13 +450,13 @@ func (c *Client) IsApiHostSlackDev(host string) bool {
 // Either we should always save the api hostname even when it's a prod auth,
 // or we should update this function to also return true if the api hostname
 // is empty/undefined
-// IsApiHostSlackProd returns true if host is the production endpoint target.
-func (c *Client) IsApiHostSlackProd(host string) bool {
-	return host == defaultProdApiClientHost
+// IsAPIHostSlackProd returns true if host is the production endpoint target.
+func (c *Client) IsAPIHostSlackProd(host string) bool {
+	return host == defaultProdAPIClientHost
 }
 
-// ResolveApiHost returns the API Host based on the API Host Flag, Dev Flag, Project Config, and Stored Auth API Host.
-func (c *Client) ResolveApiHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string {
+// ResolveAPIHost returns the API Host based on the API Host Flag, Dev Flag, Project Config, and Stored Auth API Host.
+func (c *Client) ResolveAPIHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string {
 	// TODO - Update this comment
 	// Here is the order of relevance / importance:
 	// 1. If the command is login
@@ -469,26 +469,26 @@ func (c *Client) ResolveApiHost(ctx context.Context, apiHostFlag string, customA
 	var isLoginCommand = goutils.Contains(os.Args, "login", true)
 	var apiHost string
 	if apiHostFlag != "" {
-		apiHost = goutils.ToHttps(apiHostFlag)
-		c.config.SlackDevFlag = c.IsApiHostSlackDev(apiHostFlag)
+		apiHost = goutils.ToHTTPS(apiHostFlag)
+		c.config.SlackDevFlag = c.IsAPIHostSlackDev(apiHostFlag)
 	} else if c.config.SlackDevFlag {
-		apiHost = defaultDevApiClientHost
+		apiHost = defaultDevAPIClientHost
 	} else if customAuth != nil {
 		// When a custom auth, we want to respect the APIHost
 		// When not set, we default to prod
-		if customAuth.ApiHost != nil {
-			apiHost = goutils.ToHttps(*customAuth.ApiHost)
+		if customAuth.APIHost != nil {
+			apiHost = goutils.ToHTTPS(*customAuth.APIHost)
 		} else {
-			apiHost = defaultProdApiClientHost
+			apiHost = defaultProdAPIClientHost
 		}
 	} else if isLoginCommand {
-		apiHost = defaultProdApiClientHost
+		apiHost = defaultProdAPIClientHost
 	} else {
-		apiHost = defaultProdApiClientHost
+		apiHost = defaultProdAPIClientHost
 	}
 
 	// when not on prod, warn the user to update SLACK_API_URL where possible
-	if apiHost != defaultProdApiClientHost {
+	if apiHost != defaultProdAPIClientHost {
 		// warn the user if the apihost is not the main slack production apihost to update SLACK_API_URL
 		c.io.PrintDebug(
 			ctx,
@@ -499,21 +499,21 @@ func (c *Client) ResolveApiHost(ctx context.Context, apiHostFlag string, customA
 
 	// warn the user if the apihost is not pointing to a dev instance
 	// but they have the dev flag on
-	if !c.IsApiHostSlackDev(apiHost) && c.config.SlackDevFlag {
+	if !c.IsAPIHostSlackDev(apiHost) && c.config.SlackDevFlag {
 		c.io.PrintWarning(ctx, "Warning: you are using the dev flag but you are signed into a production workspace or are using a custom apihost endpoint")
 	}
 
 	return apiHost
 }
 
-// TODO: how does this play together with ResolveApiHost above?
+// TODO: how does this play together with ResolveAPIHost above?
 // ResolveLogstashHost returns the error log stash host based on API Host and CLI version
 func (c *Client) ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string {
 	c.io.PrintDebug(ctx, "Resolving logstash host, %s, %s", apiHost, cliVersion)
 	if localBuildGitSHAInVersionRegex.Match([]byte(cliVersion)) {
 		return "https://dev.slackb.com/events/cli"
 	}
-	if c.IsApiHostSlackProd(apiHost) {
+	if c.IsAPIHostSlackProd(apiHost) {
 		return "https://slackb.com/events/cli"
 	}
 
@@ -533,8 +533,8 @@ func (c *Client) MapAuthTokensToDomains(ctx context.Context) string {
 	}
 
 	for _, auth := range auths {
-		if auth.ApiHost != nil {
-			u, err := url.Parse(*auth.ApiHost)
+		if auth.APIHost != nil {
+			u, err := url.Parse(*auth.APIHost)
 			if err != nil {
 				continue
 			}
