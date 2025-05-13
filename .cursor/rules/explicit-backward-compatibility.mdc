@@ -1,0 +1,27 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When modifying code, follow these guidelines for backward compatibility:
+
+1. **Remove unused code by default** - If code was added in the current PR and is unused, it should be removed entirely.
+
+2. **Only leave "legacy" code when explicitly instructed** - Only maintain backward compatibility for functions, methods, or APIs that are explicitly marked as needed for backward compatibility.
+
+3. **Proper deprecation workflow**:
+   - Mark deprecated code with clear comments (e.g., `// Deprecated: Use NewMethod instead. Will be removed in v2.0.0.`)
+   - Add a `@deprecated` tag in godoc comments
+   - For functions/methods: Create a wrapper that calls the new implementation and mark it as deprecated
+   - For types/interfaces: Create compatibility layer with clear upgrade path
+
+4. **Clean up strategy**:
+   - Keep track of deprecated code in a central tracking issue
+   - Set timeline for removal (typically 1-2 major versions later)
+   - Never silently remove public APIs without deprecation notice
+
+5. **Documentation**:
+   - Document the deprecated functionality
+   - Provide clear migration instructions
+
+By following these guidelines, we maintain a balance between API stability for users and keeping the codebase clean and maintainable. 

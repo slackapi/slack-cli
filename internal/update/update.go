@@ -264,34 +264,6 @@ func newHTTPClient() (*http.Client, error) {
 	return api.NewHTTPClient(api.HTTPClientOptions{TotalTimeOut: 60 * time.Second}), nil
 }
 
-// InstallUpdatesWithoutPrompt automatically installs updates without prompting the user
-// This is a legacy method maintained for backward compatibility
-func (u *UpdateNotification) InstallUpdatesWithoutPrompt(cmd *cobra.Command) error {
-	ctx := cmd.Context()
-
-	for _, dependency := range u.Dependencies() {
-		hasUpdate, err := dependency.HasUpdate()
-		if err != nil {
-			return slackerror.Wrap(err, "An error occurred while fetching a dependency")
-		}
-
-		if hasUpdate {
-			// Print update notification but skip the confirmation prompt
-			_, err := dependency.PrintUpdateNotification(cmd)
-			if err != nil {
-				return err
-			}
-
-			// Install the update without prompting
-			cmd.Printf("%s Installing update automatically...\n", style.Styler().Green("✓").String())
-			if err := dependency.InstallUpdate(ctx); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 // InstallUpdatesWithComponentFlags automatically installs updates for specified components
 // without prompting the user. This is used by the upgrade command when the --cli
 // or --sdk flags are set.
