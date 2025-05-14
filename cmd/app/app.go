@@ -32,8 +32,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:    "Install, uninstall, and list teams with the app installed",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "install", Meaning: "Install a production app to a team"},
-			{Command: "link", Meaning: "Link an existing app to the project"},
-			{Command: "list", Meaning: "List all teams with the app installed"},
+			{Command: "app link", Meaning: "Link an existing app to the project"},
+			{Command: "app list", Meaning: "List all teams with the app installed"},
 			{Command: "uninstall", Meaning: "Uninstall an app from a team"},
 			{Command: "delete", Meaning: "Delete an app and app info from a team"},
 		}),
