@@ -80,7 +80,7 @@ func Test_Project_InitCommand(t *testing.T) {
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", ".gitignore"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", "hooks.json"))
-				require.Contains(t, output, "Updated config.json manifest source to project (local)")
+				require.Contains(t, output, `Updated config.json manifest source to "project" (local)`)
 				// Assert prompt to add existing apps was called
 				cm.IO.AssertCalled(
 					t,

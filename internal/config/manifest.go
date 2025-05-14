@@ -41,9 +41,9 @@ func (ms ManifestSource) String() string {
 func (ms ManifestSource) Human() string {
 	switch ms {
 	case ManifestSourceLocal:
-		return fmt.Sprintf("project (%s)", ms.String())
+		return fmt.Sprintf(`"project" (%s)`, ms.String())
 	case ManifestSourceRemote:
-		return fmt.Sprintf("app settings (%s)", ms.String())
+		return fmt.Sprintf(`"app settings" (%s)`, ms.String())
 	}
 	return ms.String()
 }
