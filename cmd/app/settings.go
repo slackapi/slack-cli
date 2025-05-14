@@ -39,7 +39,7 @@ func NewSettingsCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Open app settings to configure an application in a web browser.",
 			"",
 			"Discovering new features and customizing an app manifest can be done from this",
-			fmt.Sprintf("intuitive interface for apps with a \"%s\" manifest.", config.ManifestSourceRemote.String()),
+			fmt.Sprintf("intuitive interface for apps with a \"%s\" manifest source.", config.ManifestSourceRemote.String()),
 			"",
 			"This command does not support apps deployed to Run on Slack infrastructure.",
 		}, "\n"),
