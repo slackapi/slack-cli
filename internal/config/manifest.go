@@ -45,7 +45,7 @@ func (ms ManifestSource) Human() string {
 	case ManifestSourceRemote:
 		return fmt.Sprintf("app settings (%s)", ms.String())
 	}
-	return ""
+	return ms.String()
 }
 
 type ManifestConfig struct {

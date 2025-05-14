@@ -114,6 +114,10 @@ func Test_Config_ManifestSource_Human(t *testing.T) {
 			a:        ManifestSourceRemote,
 			expected: "app settings (remote)",
 		},
+		"unknown manifest source uses String()": {
+			a:        "unknown",
+			expected: "unknown",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
