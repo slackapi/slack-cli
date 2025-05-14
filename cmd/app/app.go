@@ -65,6 +65,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.AddCommand(NewDeleteCommand(clients))
 	cmd.AddCommand(NewLinkCommand(clients))
 	cmd.AddCommand(NewListCommand(clients))
+	cmd.AddCommand(NewSettingsCommand(clients))
 	cmd.AddCommand(NewUninstallCommand(clients))
 
 	return cmd
