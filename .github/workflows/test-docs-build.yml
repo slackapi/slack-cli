@@ -1,0 +1,36 @@
+name: Test docs build
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+  workflow_dispatch:
+
+jobs:
+  test-docs-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4.2.2
+      
+    - name: Create minimal Docusaurus site for testing
+      run: |
+        npx create-docusaurus@latest test-site classic
+  
+        rm -rf test-site/docs/*
+        cp -r docs/* test-site/docs/
+        
+        # Create minimal sidebars config if it doesn't exist in docs
+        if [ ! -f docs/sidebars.js ]; then
+          echo "module.exports = {}" > test-site/sidebars.js
+        else
+          cp docs/sidebars.js test-site/sidebars.js
+        fi
+      
+    - name: Install dependencies and build
+      run: |
+        cd test-site
+        npm ci
+        npm run build

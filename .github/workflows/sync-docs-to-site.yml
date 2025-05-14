@@ -6,12 +6,8 @@ on:
       - main
     paths:
       - "docs/**"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "docs/**"
   workflow_dispatch:
+
 
 jobs:
   config-sync:
@@ -54,13 +50,12 @@ jobs:
           npm run build
 
       - name: Create a pull request
-        if: ${{ github.ref_name == github.event.repository.default_branch || github.event_name == 'workflow_dispatch' }}
         id: site-pr
         uses: peter-evans/create-pull-request@v7.0.8
         with:
           token: ${{ steps.ghtoken.outputs.token }}
-          title: "From ${{ github.event.repository.name }}: ${{ github.event.pull_request.title || 'manual docs sync' }}"
-          body: "${{ github.event.pull_request.body }}"
+          title: "From ${{ github.event.repository.name }}: Sync docs"
+          body: "Automated PR to sync documentation changes from ${{ github.event.repository.name }}"
           author: "slackapi[bot] <186980925+slackapi[bot]@users.noreply.github.com>"
           committer: "slackapi[bot] <186980925+slackapi[bot]@users.noreply.github.com>"
           commit-message: "Sync docs from ${{ github.event.repository.name }} to docs site repo"
@@ -72,4 +67,4 @@ jobs:
       - name: Output the pull request link
         if: ${{ steps.site-pr.outputs.pull-request-url }}
         run: |
-          echo "Pull request created: ${{ steps.site-pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "Pull request created: ${{ steps.site-pr.outputs.pull-request-url }}" >> $GITHUB_STEP_SUMMARY 
