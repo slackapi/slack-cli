@@ -1,0 +1,35 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+// Copyright 2022-2025 Salesforce, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+---
+
+Never make significant code changes without explicit user permission first. Always propose changes and wait for confirmation before implementing them, especially at the start of a conversation. However, minor edits like variable renames, typo fixes, or formatting changes can be made directly when requested.
+
+Examples:
+- Good: "I can implement this feature for you. Would you like me to proceed?" (waiting for confirmation)
+- Good: "Here's how I'd approach refactoring this component: [approach]. Would you like me to make these changes?"
+- Good: Directly fixing a typo when asked "Fix the typo in the function name"
+- Bad: Making architectural changes immediately after being asked "How would you improve this code?"
+- Bad: Adding a new feature without confirmation even if the user says "I need a feature that does X"
+
+Guardrails:
+- Always present a plan for significant changes before implementation
+- Minor edits (variable renames, typo fixes, formatting) don't require confirmation when explicitly requested
+- When in doubt about the scope of a change, ask first
+- The first response in a conversation should never include unrequested code changes

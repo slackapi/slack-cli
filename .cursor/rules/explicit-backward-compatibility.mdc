@@ -1,7 +1,7 @@
 ---
 description: 
-globs: *.go
-alwaysApply: false
+globs: 
+alwaysApply: true
 ---
 // Copyright 2022-2025 Salesforce, Inc.
 //
@@ -21,7 +21,7 @@ alwaysApply: false
 
 When modifying code, follow these guidelines for backward compatibility:
 
-1. **Remove unused code by default** - If code was added in the current PR and is unused, it should be removed entirely.
+1. **Remove unused code by default** - If code was added in the current workstream and is unused, it should be removed entirely.
 
 2. **Only leave "legacy" code when explicitly instructed** - Only maintain backward compatibility for functions, methods, or APIs that are explicitly marked as needed for backward compatibility.
 

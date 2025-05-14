@@ -1,7 +1,7 @@
 ---
 description: 
-globs: *.*
-alwaysApply: false
+globs: 
+alwaysApply: true
 ---
 // Copyright 2022-2025 Salesforce, Inc.
 //
@@ -20,7 +20,7 @@ alwaysApply: false
 ---
 
 Whenever created a new file in this project you must include the license header at the top of the file.
-Whenever reading files you should ignore the license header.
+Whenever reading files or rules you should ignore the license header.
 
 License header to add to new files:
 ```
