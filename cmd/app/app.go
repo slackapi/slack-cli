@@ -47,6 +47,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
+			// DEPRECATED(semver:major): remove the "workspace" alias
 			if cmd.CalledAs() == "workspace" {
 				clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
 					"\n%s It looks like you used %s. This command will be deprecated in an upcoming release.\n    You can now use %s instead of %s.\n ",
