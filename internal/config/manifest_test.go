@@ -84,11 +84,11 @@ func Test_Config_ManifestSource_String(t *testing.T) {
 		a        ManifestSource
 		expected string
 	}{
-		"project manifest source is local": {
+		"local manifest source": {
 			a:        ManifestSourceLocal,
 			expected: "local",
 		},
-		"remote manifest source is remote": {
+		"remote manifest source": {
 			a:        ManifestSourceRemote,
 			expected: "remote",
 		},
@@ -96,6 +96,32 @@ func Test_Config_ManifestSource_String(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := tt.a.String()
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func Test_Config_ManifestSource_Human(t *testing.T) {
+	tests := map[string]struct {
+		a        ManifestSource
+		expected string
+	}{
+		"local manifest source is the project (local)": {
+			a:        ManifestSourceLocal,
+			expected: `"project" (local)`,
+		},
+		"remote manifest source is app settings (remote)": {
+			a:        ManifestSourceRemote,
+			expected: `"app settings" (remote)`,
+		},
+		"unknown manifest source uses String()": {
+			a:        "unknown",
+			expected: "unknown",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := tt.a.Human()
 			assert.Equal(t, tt.expected, actual)
 		})
 	}
