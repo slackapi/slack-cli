@@ -173,8 +173,8 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 			Emoji: "warning",
 			Text:  "Warning",
 			Secondary: []string{
-				"Linking an existing app requires the app manifest source to be",
-				fmt.Sprintf("managed by %s.", config.ManifestSourceRemote.Human()),
+				"Linking an existing app requires the app manifest source to be managed by",
+				fmt.Sprintf("%s.", config.ManifestSourceRemote.Human()),
 				" ",
 				fmt.Sprintf(`App manifest source can be "%s" or "%s":`, config.ManifestSourceLocal.Human(), config.ManifestSourceRemote.Human()),
 				fmt.Sprintf("- %s: uses manifest from your project's source code for all apps", config.ManifestSourceLocal.String()),
