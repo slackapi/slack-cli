@@ -273,7 +273,7 @@ install_deno() {
 
         echo -e -n "🔍 Searching for the latest released Deno version..."
         latest_deno_version=$(curl -fs https://api.github.com/repos/denoland/deno/releases/latest | grep '"tag_name":' | cut -d '"' -f 4)
-        if [ $? -eq 0 ] && [ "$latest_deno_version" -ne "" ]; then
+        if [ $? -eq 0 ] && [ -n "$latest_deno_version" ]; then
             delay 0.2 " Found: ${latest_deno_version}"
         else
             delay 0.2 " Found: Unknown"

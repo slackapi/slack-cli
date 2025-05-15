@@ -128,20 +128,20 @@ func (apps *TeamApps) IsEmpty() bool {
 // Basically, treat as a convenience getter intended for use in the context where
 // you have a team you want to filter against and you don't care whether it's an
 // auth or an app that corresponds. E.g. when you are comparing to --team flags
-func (t *TeamApps) authOrAppTeamDomain() string {
-	if t.Auth.TeamDomain != "" && (t.Auth.TeamID == t.Hosted.App.TeamID || t.Auth.TeamID == t.Local.App.TeamID) {
+func (apps *TeamApps) authOrAppTeamDomain() string {
+	if apps.Auth.TeamDomain != "" && (apps.Auth.TeamID == apps.Hosted.App.TeamID || apps.Auth.TeamID == apps.Local.App.TeamID) {
 		// Auth whose team id matches either hosted or local app's team
 		// Can be safely returned
-		return t.Auth.TeamDomain
+		return apps.Auth.TeamDomain
 	}
 
 	// If we get here we might be missing an auth OR the auth doesn't
 	// match any included app team ids (that is the case when the auth is org
 	// resolved for a workspace app)
-	if t.Hosted.App.TeamID != "" {
-		return t.Hosted.App.TeamDomain
+	if apps.Hosted.App.TeamID != "" {
+		return apps.Hosted.App.TeamDomain
 	}
-	return t.Local.App.TeamDomain
+	return apps.Local.App.TeamDomain
 }
 
 // authOrAppTeamID greedily returns a team ID corresponding to the TeamApps
@@ -156,14 +156,14 @@ func (t *TeamApps) authOrAppTeamDomain() string {
 // Basically, treat as a convenience getter intended for use in the context where
 // you have a team you want to filter against and you don't care whether it's an
 // auth or an app that corresponds. E.g. when you are comparing to --team flags
-func (t *TeamApps) authOrAppTeamID() string {
-	if t.Auth.TeamID != "" && (t.Hosted.App.TeamID == t.Auth.TeamID || t.Local.App.TeamID == t.Auth.TeamID) {
-		return t.Auth.TeamID
+func (apps *TeamApps) authOrAppTeamID() string {
+	if apps.Auth.TeamID != "" && (apps.Hosted.App.TeamID == apps.Auth.TeamID || apps.Local.App.TeamID == apps.Auth.TeamID) {
+		return apps.Auth.TeamID
 	}
-	if t.Hosted.App.TeamID != "" {
-		return t.Hosted.App.TeamID
+	if apps.Hosted.App.TeamID != "" {
+		return apps.Hosted.App.TeamID
 	}
-	return t.Local.App.TeamID
+	return apps.Local.App.TeamID
 }
 
 // appTransferDisclaimer contains a notice of lost app management permissions

@@ -31,11 +31,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short:   "Install, uninstall, and list teams with the app installed",
 		Long:    "Install, uninstall, and list teams with the app installed",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "install", Meaning: "Install a production app to a team"},
-			{Command: "link", Meaning: "Link an existing app to the project"},
-			{Command: "list", Meaning: "List all teams with the app installed"},
-			{Command: "uninstall", Meaning: "Uninstall an app from a team"},
-			{Command: "delete", Meaning: "Delete an app and app info from a team"},
+			{Command: "app install", Meaning: "Install a production app to a team"},
+			{Command: "app link", Meaning: "Link an existing app to the project"},
+			{Command: "app list", Meaning: "List all teams with the app installed"},
+			{Command: "app uninstall", Meaning: "Uninstall an app from a team"},
+			{Command: "app delete", Meaning: "Delete an app and app info from a team"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -47,6 +47,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
+			// DEPRECATED(semver:major): remove the "workspace" alias
 			if cmd.CalledAs() == "workspace" {
 				clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
 					"\n%s It looks like you used %s. This command will be deprecated in an upcoming release.\n    You can now use %s instead of %s.\n ",

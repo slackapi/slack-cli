@@ -106,13 +106,17 @@ func Test_Config_ManifestSource_Human(t *testing.T) {
 		a        ManifestSource
 		expected string
 	}{
-		"local manifest source is the project": {
+		"local manifest source is the project (local)": {
 			a:        ManifestSourceLocal,
-			expected: "project",
+			expected: `"project" (local)`,
 		},
-		"remote manifest source is app settings": {
+		"remote manifest source is app settings (remote)": {
 			a:        ManifestSourceRemote,
-			expected: "app settings",
+			expected: `"app settings" (remote)`,
+		},
+		"unknown manifest source uses String()": {
+			a:        "unknown",
+			expected: "unknown",
 		},
 	}
 	for name, tt := range tests {

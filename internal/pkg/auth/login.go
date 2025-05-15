@@ -227,7 +227,7 @@ func saveNewAuth(ctx context.Context, apiClient api.APIInterface, authClient aut
 	}
 
 	// Write to credentials json if serviceTokenFlag is false
-	var filePath string = ""
+	var filePath = ""
 	if !noRotation {
 		_, credentialsLocation, err := authClient.SetAuth(ctx, newAuth)
 		if err != nil {
