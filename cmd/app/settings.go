@@ -71,6 +71,7 @@ func appSettingsCommandPreRunE(clients *shared.ClientFactory, cmd *cobra.Command
 	if err != nil {
 		return err
 	}
+	// Allow the force flag to ignore hosted apps and try to open app settings
 	if clients.Config.ForceFlag {
 		return nil
 	}
