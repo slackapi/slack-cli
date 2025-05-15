@@ -65,6 +65,50 @@ func Test_App_SettingsCommand(t *testing.T) {
 			},
 			ExpectedError: slackerror.New(slackerror.ErrAppHosted),
 		},
+		"opens a rosi application with the force flag": {
+			CmdArgs: []string{"--force"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cf.SDKConfig.WorkingDirectory = "."
+				projectConfigMock := config.NewProjectConfigMock()
+				projectConfigMock.On(
+					"GetManifestSource",
+					mock.Anything,
+				).Return(
+					config.ManifestSourceLocal,
+					nil,
+				)
+				cm.Config.ProjectConfig = projectConfigMock
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On(
+					"GetManifestLocal",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(
+					types.SlackYaml{
+						AppManifest: types.AppManifest{
+							Settings: &types.AppSettings{FunctionRuntime: types.SlackHosted},
+						},
+					},
+					nil,
+				)
+				cm.AppClient.Manifest = manifestMock
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectMock.On(
+					"AppSelectPrompt",
+				).Return(
+					prompts.SelectedApp{App: types.App{AppID: "A0101010101"}},
+					nil,
+				)
+				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := "https://api.slack.com/apps/A0101010101"
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
+			},
+		},
 		"requires an existing application": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
