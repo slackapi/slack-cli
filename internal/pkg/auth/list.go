@@ -31,7 +31,7 @@ func List(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger
 	defer span.Finish()
 
 	// Get a sorted list of userAuths
-	auths, err := clients.AuthInterface().Auths(ctx)
+	auths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return []types.SlackAuth{}, slackerror.Wrap(err, "Failed to get a list of user authorizations")
 	}

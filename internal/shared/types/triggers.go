@@ -136,7 +136,7 @@ type DeployedTrigger struct {
 	Description string          `json:"description"`
 	Usage       string          `json:"usage"`
 	Webhook     string          `json:"webhook_url"`
-	ShortcutUrl string          `json:"shortcut_url"`
+	ShortcutURL string          `json:"shortcut_url"`
 	Workflow    TriggerWorkflow `json:"workflow"`
 	Inputs      *RawJSON        `json:"inputs"`
 }

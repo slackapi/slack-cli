@@ -35,12 +35,12 @@ type ActivityResult struct {
 }
 
 type Activity struct {
-	TraceId       string                 `json:"trace_id,omitempty"`
+	TraceID       string                 `json:"trace_id,omitempty"`
 	Level         types.ActivityLevel    `json:"level,omitempty"`
 	EventType     types.EventType        `json:"event_type,omitempty"`
 	Source        string                 `json:"source,omitempty"`
 	ComponentType string                 `json:"component_type,omitempty"`
-	ComponentId   string                 `json:"component_id,omitempty"`
+	ComponentID   string                 `json:"component_id,omitempty"`
 	Payload       map[string]interface{} `json:"payload,omitempty"`
 	Created       int64                  `json:"created,omitempty"`
 }
@@ -68,12 +68,12 @@ func (c *Client) Activity(ctx context.Context, token string, activityRequest typ
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.Activity")
 	defer span.Finish()
 
-	if activityRequest.AppId == "" {
+	if activityRequest.AppID == "" {
 		return ActivityResult{}, slackerror.New("app is not deployed")
 	}
 
 	// Add the mandatory app_id field
-	url := fmt.Sprintf("%s?app_id=%s", appActivityMethod, activityRequest.AppId)
+	url := fmt.Sprintf("%s?app_id=%s", appActivityMethod, activityRequest.AppID)
 
 	// Along with any optional filters requested
 	url += fmt.Sprintf("&limit=%d", activityRequest.Limit)
@@ -98,31 +98,31 @@ func (c *Client) Activity(ctx context.Context, token string, activityRequest typ
 		url += fmt.Sprintf("&component_type=%s", activityRequest.ComponentType)
 	}
 
-	if activityRequest.ComponentId != "" {
-		url += fmt.Sprintf("&component_id=%s", activityRequest.ComponentId)
+	if activityRequest.ComponentID != "" {
+		url += fmt.Sprintf("&component_id=%s", activityRequest.ComponentID)
 	}
 
 	if activityRequest.Source != "" {
 		url += fmt.Sprintf("&source=%s", activityRequest.Source)
 	}
 
-	if activityRequest.TraceId != "" {
-		url += fmt.Sprintf("&trace_id=%s", activityRequest.TraceId)
+	if activityRequest.TraceID != "" {
+		url += fmt.Sprintf("&trace_id=%s", activityRequest.TraceID)
 	}
 
 	b, err := c.get(ctx, url, token, "")
 	if err != nil {
-		return ActivityResult{}, errHttpRequestFailed.WithRootCause(err)
+		return ActivityResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	resp := activityResponse{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return ActivityResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appActivityMethod)
+		return ActivityResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appActivityMethod)
 	}
 
 	if !resp.Ok {
-		return ActivityResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appActivityMethod)
+		return ActivityResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appActivityMethod)
 	}
 	resp.NextCursor = resp.ResponseMetadata.NextCursor
 

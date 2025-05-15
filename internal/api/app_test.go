@@ -196,7 +196,7 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 			},
 			want:       ValidateAppManifestResult{nil},
 			wantErr:    true,
-			wantErrVal: slackerror.NewApiError(errInvalidManifestCode, errInvalidManifestDesc, errorDetails, appManifestValidateMethod),
+			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, errInvalidManifestDesc, errorDetails, appManifestValidateMethod),
 		},
 		{
 			name: "returns warning with breaking_change",
@@ -233,7 +233,7 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 			},
 			want:       ValidateAppManifestResult{nil},
 			wantErr:    true,
-			wantErrVal: slackerror.NewApiError(errInvalidManifestCode, errInvalidManifestDesc, errorDetails, appManifestValidateMethod),
+			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, errInvalidManifestDesc, errorDetails, appManifestValidateMethod),
 		},
 		{
 			name: "returns an error invalid_manifest when error detail is due to connector not being installed",
@@ -250,7 +250,7 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 			},
 			want:       ValidateAppManifestResult{nil},
 			wantErr:    true,
-			wantErrVal: slackerror.NewApiError(errInvalidManifestCode, "", errorDetails2, appManifestValidateMethod),
+			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, "", errorDetails2, appManifestValidateMethod),
 		},
 	}
 	for _, tt := range tests {
@@ -284,7 +284,7 @@ func TestClient_GetPresignedS3PostParams_Ok(t *testing.T) {
 	result, err := c.GetPresignedS3PostParams(ctx, "token", "A123")
 	require.NoError(t, err)
 	require.Equal(t, "foo.tar.gz", result.FileName)
-	require.Equal(t, "example.com/upload", result.Url)
+	require.Equal(t, "example.com/upload", result.URL)
 	require.Equal(t, "cred", result.Fields.AmzCredentials)
 }
 
@@ -299,13 +299,13 @@ func TestClient_GetPresignedS3PostParams_CommonErrors(t *testing.T) {
 func TestClient_CertifiedAppInstall(t *testing.T) {
 	tests := []struct {
 		name       string
-		resultJson string
+		resultJSON string
 		wantErr    bool
 		err        string
 	}{
 		{
 			name:       "OK result",
-			resultJson: `{"ok":true}`,
+			resultJSON: `{"ok":true}`,
 		},
 	}
 	for _, tt := range tests {
@@ -315,11 +315,11 @@ func TestClient_CertifiedAppInstall(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, appCertifiedInstallMethod)
-				expectedJson := `{"app_id":"A123"}`
+				expectedJSON := `{"app_id":"A123"}`
 				payload, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
-				require.Equal(t, expectedJson, string(payload))
-				result := tt.resultJson
+				require.Equal(t, expectedJSON, string(payload))
+				result := tt.resultJSON
 				_, err = fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -327,9 +327,9 @@ func TestClient_CertifiedAppInstall(t *testing.T) {
 			defer ts.Close()
 			c := NewClient(&http.Client{}, ts.URL, nil)
 
-			mockAppId := "A123"
+			mockAppID := "A123"
 			// execute
-			_, err := c.CertifiedAppInstall(ctx, "token", mockAppId)
+			_, err := c.CertifiedAppInstall(ctx, "token", mockAppID)
 
 			// check
 			if (err != nil) != tt.wantErr {
@@ -363,16 +363,16 @@ func TestClient_InstallApp(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		resultJson string
+		resultJSON string
 		wantErr    bool
 		err        string
 	}{
 		{
 			name:       "OK result",
-			resultJson: `{"ok":true}`,
+			resultJSON: `{"ok":true}`,
 		}, {
 			name:       "Error result",
-			resultJson: `{"ok":false,"error":"invalid_app_id"}`,
+			resultJSON: `{"ok":false,"error":"invalid_app_id"}`,
 			wantErr:    true,
 			err:        "invalid_app_id",
 		},
@@ -386,11 +386,11 @@ func TestClient_InstallApp(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, appDeveloperInstallMethod)
-				expectedJson := `{"app_id":"A123"}`
+				expectedJSON := `{"app_id":"A123"}`
 				payload, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
-				require.Equal(t, expectedJson, string(payload))
-				result := tt.resultJson
+				require.Equal(t, expectedJSON, string(payload))
+				result := tt.resultJSON
 				_, err = fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -426,17 +426,17 @@ func TestClient_InstallApp(t *testing.T) {
 func TestClient_UninstallApp(t *testing.T) {
 	tests := []struct {
 		name       string
-		resultJson string
+		resultJSON string
 		wantErr    bool
 		errMessage string
 	}{
 		{
 			name:       "OK result",
-			resultJson: `{"ok":true}`,
+			resultJSON: `{"ok":true}`,
 		},
 		{
 			name:       "Error result",
-			resultJson: `{"ok":false,"error":"invalid_app_id"}`,
+			resultJSON: `{"ok":false,"error":"invalid_app_id"}`,
 			wantErr:    true,
 			errMessage: "invalid_app_id",
 		},
@@ -448,11 +448,11 @@ func TestClient_UninstallApp(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, appDeveloperUninstallMethod)
-				expectedJson := `{"app_id":"A123","team_id":"T123"}`
+				expectedJSON := `{"app_id":"A123","team_id":"T123"}`
 				payload, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
-				require.Equal(t, expectedJson, string(payload))
-				result := tt.resultJson
+				require.Equal(t, expectedJSON, string(payload))
+				result := tt.resultJSON
 				_, err = fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -483,17 +483,17 @@ func TestClient_UninstallApp(t *testing.T) {
 func TestClient_DeleteApp(t *testing.T) {
 	tests := []struct {
 		name       string
-		resultJson string
+		resultJSON string
 		wantErr    bool
 		errMessage string
 	}{
 		{
 			name:       "OK result",
-			resultJson: `{"ok":true}`,
+			resultJSON: `{"ok":true}`,
 		},
 		{
 			name:       "Error result",
-			resultJson: `{"ok":false,"error":"invalid_app_id"}`,
+			resultJSON: `{"ok":false,"error":"invalid_app_id"}`,
 			wantErr:    true,
 			errMessage: "invalid_app_id",
 		},
@@ -505,11 +505,11 @@ func TestClient_DeleteApp(t *testing.T) {
 			// prepare
 			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
 				require.Contains(t, r.URL.Path, appDeleteMethod)
-				expectedJson := `{"app_id":"A123"}`
+				expectedJSON := `{"app_id":"A123"}`
 				payload, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
-				require.Equal(t, expectedJson, string(payload))
-				result := tt.resultJson
+				require.Equal(t, expectedJSON, string(payload))
+				result := tt.resultJSON
 				_, err = fmt.Fprintln(w, result)
 				require.NoError(t, err)
 			}
@@ -590,10 +590,10 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 				}
 
 				if strings.Contains(r.URL.Path, appApprovalRequestCreateMethod) {
-					expectedJson := tt.requestJSON
+					expectedJSON := tt.requestJSON
 					payload, err := io.ReadAll(r.Body)
 					require.NoError(t, err)
-					require.Equal(t, expectedJson, string(payload))
+					require.Equal(t, expectedJSON, string(payload))
 					_, err = fmt.Fprintln(w, `{"ok":true}`)
 					require.NoError(t, err)
 				}

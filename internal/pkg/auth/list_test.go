@@ -49,7 +49,7 @@ func TestAuthList(t *testing.T) {
 	mockAuths := []types.SlackAuth{
 		authMockA,
 	}
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return(mockAuths, errors.New("There was an error"))
+	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, errors.New("There was an error"))
 
 	t.Run("Handles error getting auth slice", func(t *testing.T) {
 		_, err := List(ctx, clients, &logger.Logger{})
@@ -92,7 +92,7 @@ func TestAuthList_SortedAuths(t *testing.T) {
 		authB,
 	}
 
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return(mockAuths, nil)
+	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, nil)
 
 	_, err := List(ctx, clients, &logger.Logger{})
 	require.NoError(t, err)

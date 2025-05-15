@@ -28,7 +28,7 @@ import (
 
 // ManifestClient can manage the state of the project's app manifest file
 type ManifestClient struct {
-	apiClient        api.ApiInterface
+	apiClient        api.APIInterface
 	domainAuthTokens string
 	Env              map[string]string
 }
@@ -57,7 +57,7 @@ func SetManifestEnvTeamVars(manifestEnv map[string]string, appTeamDomain string,
 
 // NewManifestClient returns a new, empty instance of the ManifestClient
 func NewManifestClient(
-	apiClient api.ApiInterface,
+	apiClient api.APIInterface,
 	config *config.Config,
 ) *ManifestClient {
 	client := &ManifestClient{

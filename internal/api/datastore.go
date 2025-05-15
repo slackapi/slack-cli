@@ -76,7 +76,7 @@ func (c *Client) AppsDatastorePut(ctx context.Context, token string, request typ
 
 	b, err := c.postJSON(ctx, appDatastorePutMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastorePutResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastorePutResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -84,13 +84,13 @@ func (c *Client) AppsDatastorePut(ctx context.Context, token string, request typ
 		types.AppDatastorePutResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastorePutResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastorePutMethod)
+		return types.AppDatastorePutResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastorePutMethod)
 	}
 
 	if !resp.Ok {
-		return types.AppDatastorePutResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastorePutMethod)
+		return types.AppDatastorePutResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastorePutMethod)
 	}
 
 	return resp.AppDatastorePutResult, nil
@@ -119,7 +119,7 @@ func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request
 
 	b, err := c.postJSON(ctx, appDatastoreBulkPutMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreBulkPutResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreBulkPutResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -127,13 +127,13 @@ func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request
 		types.AppDatastoreBulkPutResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreBulkPutResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkPutMethod)
+		return types.AppDatastoreBulkPutResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreBulkPutMethod)
 	}
 
 	if !resp.Ok && len(resp.FailedItems) == 0 {
-		return types.AppDatastoreBulkPutResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkPutMethod)
+		return types.AppDatastoreBulkPutResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkPutMethod)
 	}
 
 	if resp.Datastore == "" {
@@ -166,7 +166,7 @@ func (c *Client) AppsDatastoreUpdate(ctx context.Context, token string, request 
 
 	b, err := c.postJSON(ctx, appDatastoreUpdateMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreUpdateResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreUpdateResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -174,13 +174,13 @@ func (c *Client) AppsDatastoreUpdate(ctx context.Context, token string, request 
 		types.AppDatastoreUpdateResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreUpdateResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreUpdateMethod)
+		return types.AppDatastoreUpdateResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreUpdateMethod)
 	}
 
 	if !resp.Ok {
-		return types.AppDatastoreUpdateResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreUpdateMethod)
+		return types.AppDatastoreUpdateResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreUpdateMethod)
 	}
 
 	return resp.AppDatastoreUpdateResult, nil
@@ -217,7 +217,7 @@ func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query typ
 
 	b, err := c.postJSON(ctx, appDatastoreQueryMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreQueryResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreQueryResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -225,13 +225,13 @@ func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query typ
 		types.AppDatastoreQueryResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreQueryResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreQueryMethod)
+		return types.AppDatastoreQueryResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreQueryMethod)
 	}
 
 	if !resp.Ok {
-		return types.AppDatastoreQueryResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreQueryMethod)
+		return types.AppDatastoreQueryResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreQueryMethod)
 	}
 
 	resp.NextCursor = resp.ResponseMetadata.NextCursor
@@ -266,7 +266,7 @@ func (c *Client) AppsDatastoreCount(ctx context.Context, token string, count typ
 
 	b, err := c.postJSON(ctx, appDatastoreCountMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreCountResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreCountResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -274,13 +274,13 @@ func (c *Client) AppsDatastoreCount(ctx context.Context, token string, count typ
 		types.AppDatastoreCountResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreCountResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreCountMethod)
+		return types.AppDatastoreCountResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreCountMethod)
 	}
 
 	if !resp.Ok {
-		return types.AppDatastoreCountResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreCountMethod)
+		return types.AppDatastoreCountResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreCountMethod)
 	}
 
 	return resp.AppDatastoreCountResult, nil
@@ -309,7 +309,7 @@ func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request 
 
 	b, err := c.postJSON(ctx, appDatastoreDeleteMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreDeleteResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreDeleteResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -317,13 +317,13 @@ func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request 
 		types.AppDatastoreDeleteResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreDeleteResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreDeleteMethod)
+		return types.AppDatastoreDeleteResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreDeleteMethod)
 	}
 
 	if !resp.Ok {
-		return types.AppDatastoreDeleteResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreDeleteMethod)
+		return types.AppDatastoreDeleteResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreDeleteMethod)
 	}
 
 	// the delete API doesn't return id or datastore (yet) so set it if empty
@@ -360,7 +360,7 @@ func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, requ
 
 	b, err := c.postJSON(ctx, appDatastoreBulkDeleteMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreBulkDeleteResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreBulkDeleteResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -368,13 +368,13 @@ func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, requ
 		types.AppDatastoreBulkDeleteResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreBulkDeleteResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkDeleteMethod)
+		return types.AppDatastoreBulkDeleteResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreBulkDeleteMethod)
 	}
 
 	if !resp.Ok && len(resp.FailedItems) == 0 {
-		return types.AppDatastoreBulkDeleteResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkDeleteMethod)
+		return types.AppDatastoreBulkDeleteResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkDeleteMethod)
 	}
 
 	if resp.Datastore == "" {
@@ -407,7 +407,7 @@ func (c *Client) AppsDatastoreGet(ctx context.Context, token string, request typ
 
 	b, err := c.postJSON(ctx, appDatastoreGetMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreGetResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreGetResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -415,13 +415,13 @@ func (c *Client) AppsDatastoreGet(ctx context.Context, token string, request typ
 		types.AppDatastoreGetResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreGetResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreGetMethod)
+		return types.AppDatastoreGetResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreGetMethod)
 	}
 
 	if !resp.Ok {
-		return types.AppDatastoreGetResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreGetMethod)
+		return types.AppDatastoreGetResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreGetMethod)
 	}
 
 	return resp.AppDatastoreGetResult, nil
@@ -450,7 +450,7 @@ func (c *Client) AppsDatastoreBulkGet(ctx context.Context, token string, request
 
 	b, err := c.postJSON(ctx, appDatastoreBulkGetMethod, token, "", body)
 	if err != nil {
-		return types.AppDatastoreBulkGetResult{}, errHttpRequestFailed.WithRootCause(err)
+		return types.AppDatastoreBulkGetResult{}, errHTTPRequestFailed.WithRootCause(err)
 	}
 
 	type responseWrapper struct {
@@ -458,13 +458,13 @@ func (c *Client) AppsDatastoreBulkGet(ctx context.Context, token string, request
 		types.AppDatastoreBulkGetResult
 	}
 	resp := responseWrapper{}
-	err = goutils.JsonUnmarshal(b, &resp)
+	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return types.AppDatastoreBulkGetResult{}, errHttpResponseInvalid.WithRootCause(err).AddApiMethod(appDatastoreBulkGetMethod)
+		return types.AppDatastoreBulkGetResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appDatastoreBulkGetMethod)
 	}
 
 	if !resp.Ok && len(resp.FailedItems) == 0 {
-		return types.AppDatastoreBulkGetResult{}, slackerror.NewApiError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkGetMethod)
+		return types.AppDatastoreBulkGetResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkGetMethod)
 	}
 
 	if resp.Datastore == "" {

@@ -50,7 +50,7 @@ type RunPkgMock struct {
 
 func (m *RunPkgMock) Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, runArgs platform.RunArgs) (*logger.LogEvent, types.InstallState, error) {
 	args := m.Called(ctx, clients, log, runArgs)
-	return log.SuccessEvent(), types.SUCCESS, args.Error(0)
+	return log.SuccessEvent(), types.InstallSuccess, args.Error(0)
 }
 
 func TestRunCommand_Flags(t *testing.T) {

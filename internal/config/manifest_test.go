@@ -26,18 +26,18 @@ func Test_Config_ManifestSource_Equals(t *testing.T) {
 		expected bool
 	}{
 		"matching project sources are equal": {
-			a:        MANIFEST_SOURCE_LOCAL,
-			b:        MANIFEST_SOURCE_LOCAL,
+			a:        ManifestSourceLocal,
+			b:        ManifestSourceLocal,
 			expected: true,
 		},
 		"matching remote sources are equal": {
-			a:        MANIFEST_SOURCE_REMOTE,
-			b:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceRemote,
+			b:        ManifestSourceRemote,
 			expected: true,
 		},
 		"different manifest sources are not equal": {
-			a:        MANIFEST_SOURCE_LOCAL,
-			b:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceLocal,
+			b:        ManifestSourceRemote,
 			expected: false,
 		},
 	}
@@ -55,11 +55,11 @@ func Test_Config_ManifestSource_Exists(t *testing.T) {
 		expected bool
 	}{
 		"project source exists": {
-			a:        MANIFEST_SOURCE_LOCAL,
+			a:        ManifestSourceLocal,
 			expected: true,
 		},
 		"remote source exists": {
-			a:        MANIFEST_SOURCE_REMOTE,
+			a:        ManifestSourceRemote,
 			expected: true,
 		},
 		"unknown source exists": {
@@ -84,18 +84,44 @@ func Test_Config_ManifestSource_String(t *testing.T) {
 		a        ManifestSource
 		expected string
 	}{
-		"project manifest source is local": {
-			a:        MANIFEST_SOURCE_LOCAL,
+		"local manifest source": {
+			a:        ManifestSourceLocal,
 			expected: "local",
 		},
-		"remote manifest source is remote": {
-			a:        MANIFEST_SOURCE_REMOTE,
+		"remote manifest source": {
+			a:        ManifestSourceRemote,
 			expected: "remote",
 		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := tt.a.String()
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
+}
+
+func Test_Config_ManifestSource_Human(t *testing.T) {
+	tests := map[string]struct {
+		a        ManifestSource
+		expected string
+	}{
+		"local manifest source is the project (local)": {
+			a:        ManifestSourceLocal,
+			expected: `"project" (local)`,
+		},
+		"remote manifest source is app settings (remote)": {
+			a:        ManifestSourceRemote,
+			expected: `"app settings" (remote)`,
+		},
+		"unknown manifest source uses String()": {
+			a:        "unknown",
+			expected: "unknown",
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := tt.a.Human()
 			assert.Equal(t, tt.expected, actual)
 		})
 	}

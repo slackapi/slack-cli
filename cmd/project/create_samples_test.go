@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var MOCK_REPOS = []create.GithubRepo{
+var mockGitHubRepos = []create.GithubRepo{
 	{
 		ID:              1,
 		Name:            "deno-mock-repo",
@@ -129,12 +129,12 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 }
 
 func TestSamples_FilterRepos(t *testing.T) {
-	filteredRepos := filterRepos(MOCK_REPOS, "deno")
+	filteredRepos := filterRepos(mockGitHubRepos, "deno")
 	assert.Equal(t, len(filteredRepos), 2, "Expected filteredRepos length to be 2")
 }
 
 func TestSamples_SortRepos(t *testing.T) {
-	sortedRepos := sortRepos(MOCK_REPOS)
+	sortedRepos := sortRepos(mockGitHubRepos)
 	assert.Equal(t, sortedRepos[0].StargazersCount, 50, "Expected sortedRepos[0].StargazersCount to equal 50")
 	assert.Equal(t, sortedRepos[0].Description, "This is a popular sample")
 	assert.Equal(t, sortedRepos[3].StargazersCount, 0, "Expected sortedRepos[3].StargazersCount to equal 0")
@@ -142,7 +142,7 @@ func TestSamples_SortRepos(t *testing.T) {
 }
 
 func TestSamples_CreateSelectOptions(t *testing.T) {
-	selectOptions := createSelectOptions(MOCK_REPOS)
+	selectOptions := createSelectOptions(mockGitHubRepos)
 	assert.Equal(t, len(selectOptions), 4, "Expected selectOptions length to be 4")
-	assert.Contains(t, selectOptions[0], MOCK_REPOS[0].Name, "Expected selectOptions[0] to contain MOCK_REPOS[0].Name")
+	assert.Contains(t, selectOptions[0], mockGitHubRepos[0].Name, "Expected selectOptions[0] to contain mockGitHubRepos[0].Name")
 }

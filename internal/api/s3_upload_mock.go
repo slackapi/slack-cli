@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (m *ApiMock) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID string, uploadParams GenerateS3PresignedPostResult, archiveFilePath string) (string, error) {
+func (m *APIMock) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID string, uploadParams GenerateS3PresignedPostResult, archiveFilePath string) (string, error) {
 	args := m.Called(ctx, fs, appID, uploadParams, archiveFilePath)
 	return args.String(0), args.Error(1)
 }

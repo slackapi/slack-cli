@@ -23,9 +23,9 @@ import (
 )
 
 // verifyCommonErrorCases provides several invalid or error JSON representations as responses to the HTTP request
-// made by the callApi function, and verifies that they are handled correctly. All Client methods that call
+// made by the callAPI function, and verifies that they are handled correctly. All Client methods that call
 // HTTP API endpoints should pass these tests.
-func verifyCommonErrorCases(t *testing.T, method string, callApi func(c *Client) error) {
+func verifyCommonErrorCases(t *testing.T, method string, callAPI func(c *Client) error) {
 	type commonErrorTestArgs struct {
 		Name          string
 		Response      string
@@ -41,12 +41,12 @@ func verifyCommonErrorCases(t *testing.T, method string, callApi func(c *Client)
 		{
 			Name:          "invalid json response error",
 			Response:      `{`,
-			ExpectedError: slackerror.ErrHttpResponseInvalid,
+			ExpectedError: slackerror.ErrHTTPResponseInvalid,
 		},
 		{
 			Name:          "response not ok with error and errors",
 			Response:      `{"ok": false, "error": "the error", "slack_cli_error_description": "the error", "errors": [{"message": "the errors"}]}`,
-			ExpectedError: slackerror.NewApiError("the error", "the error", slackerror.ErrorDetails{{Message: "the errors"}}, method).Error(),
+			ExpectedError: slackerror.NewAPIError("the error", "the error", slackerror.ErrorDetails{{Message: "the errors"}}, method).Error(),
 		},
 		{
 			Name:          "response not ok with error only",
@@ -72,7 +72,7 @@ func verifyCommonErrorCases(t *testing.T, method string, callApi func(c *Client)
 				Response:       args.Response,
 			})
 			defer teardown()
-			err := callApi(c)
+			err := callAPI(c)
 
 			require.Error(t, err)
 			require.Contains(t, err.Error(), args.ExpectedError)
@@ -85,8 +85,8 @@ func verifyCommonErrorCases(t *testing.T, method string, callApi func(c *Client)
 			StatusCode:     http.StatusInternalServerError,
 		})
 		defer teardown()
-		err := callApi(c)
+		err := callAPI(c)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), slackerror.ErrHttpRequestFailed)
+		require.Contains(t, err.Error(), slackerror.ErrHTTPRequestFailed)
 	})
 }

@@ -38,11 +38,11 @@ func TestRevokeCommand(t *testing.T) {
 					Flag:  true,
 					Value: "xoxp-example-1234",
 				}, nil)
-				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(nil)
+				clientsMock.Auth.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
-				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
+				clients.Auth.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
 			},
 		},
 		"require a set token value with the flag": {
@@ -54,7 +54,7 @@ func TestRevokeCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"Failed to collect a token to revoke", "no_token_found", "missing_flag"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
-				clients.AuthInterface.AssertNotCalled(t, "RevokeToken")
+				clients.Auth.AssertNotCalled(t, "RevokeToken")
 			},
 		},
 		"revoke a token input by prompt": {
@@ -66,11 +66,11 @@ func TestRevokeCommand(t *testing.T) {
 					Prompt: true,
 					Value:  "xoxp-example-1234",
 				}, nil)
-				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(nil)
+				clientsMock.Auth.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(nil)
 			},
 			ExpectedOutputs: []string{"Authorization successfully revoked"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
-				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
+				clients.Auth.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
 			},
 		},
 		"verify errors are gracefully handled during the revoke": {
@@ -82,11 +82,11 @@ func TestRevokeCommand(t *testing.T) {
 					Prompt: true,
 					Value:  "xoxp-example-1234",
 				}, nil)
-				clientsMock.AuthInterface.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(slackerror.New(slackerror.ErrNotAuthed))
+				clientsMock.Auth.On("RevokeToken", mock.Anything, "xoxp-example-1234").Return(slackerror.New(slackerror.ErrNotAuthed))
 			},
 			ExpectedError: slackerror.New(slackerror.ErrNotAuthed),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clients *shared.ClientsMock) {
-				clients.AuthInterface.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
+				clients.Auth.AssertCalled(t, "RevokeToken", mock.Anything, "xoxp-example-1234")
 				clients.IO.AssertNotCalled(t, "PrintTrace", mock.Anything, slacktrace.AuthRevokeSuccess)
 			},
 		},

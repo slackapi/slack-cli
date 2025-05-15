@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (m *ApiMock) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
+func (m *APIMock) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
 	args := m.Called(ctx, fs, token, iconFilePath)
 	return args.Get(0).(IconResult), args.Error(1)
 }

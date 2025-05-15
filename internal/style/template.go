@@ -111,7 +111,7 @@ func getTemplateFuncs() template.FuncMap {
 func PrintTemplate(w io.Writer, tmpl string, data any) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("Failed to create the template! %+v", r)
+			err = fmt.Errorf("failed to create the template: %+v", r)
 		}
 	}()
 	t := template.New("template")

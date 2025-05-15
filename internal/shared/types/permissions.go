@@ -58,9 +58,9 @@ type Permission string
 // Consumed in function distribution ACLs and trigger run ACLs
 // distribution type or access/permission type: 'everyone' | 'app_collaborators' | 'named_entities';
 const (
-	NAMED_ENTITIES    Permission = "named_entities"
-	APP_COLLABORATORS Permission = "app_collaborators"
-	EVERYONE          Permission = "everyone"
+	PermissionNamedEntities    Permission = "named_entities"
+	PermissionAppCollaborators Permission = "app_collaborators"
+	PermissionEveryone         Permission = "everyone"
 )
 
 // FunctionPermissions holds information for setting multiple function distributions
@@ -73,7 +73,7 @@ type FunctionPermissions struct {
 
 func (d Permission) IsValid() bool {
 	switch d {
-	case APP_COLLABORATORS, NAMED_ENTITIES, EVERYONE:
+	case PermissionAppCollaborators, PermissionNamedEntities, PermissionEveryone:
 		return true
 	}
 	return false
@@ -81,11 +81,11 @@ func (d Permission) IsValid() bool {
 
 func (d Permission) ToString() (userFriendlyString string) {
 	switch d {
-	case NAMED_ENTITIES:
+	case PermissionNamedEntities:
 		userFriendlyString = "specific entities"
-	case APP_COLLABORATORS:
+	case PermissionAppCollaborators:
 		userFriendlyString = "app collaborators"
-	case EVERYONE:
+	case PermissionEveryone:
 		userFriendlyString = "everyone"
 	}
 	return

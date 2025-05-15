@@ -139,8 +139,8 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	}
 
 	// Install project dependencies to add CLI support and cache dev dependencies.
-	// CLI created projects always default to config.MANIFEST_SOURCE_LOCAL.
-	InstallProjectDependencies(ctx, clients, projectDirPath, config.MANIFEST_SOURCE_LOCAL)
+	// CLI created projects always default to config.ManifestSourceLocal.
+	InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
 	clients.IO.PrintTrace(ctx, slacktrace.CreateDependenciesSuccess)
 
 	// Notify listeners that app directory is created
@@ -169,7 +169,7 @@ func getAppDirName(appName string) (string, error) {
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {
-		return "", fmt.Errorf("The app name you entered is reserved. Please try a different name.")
+		return "", fmt.Errorf("the app name you entered is reserved")
 	}
 	return appName, nil
 }
@@ -225,11 +225,11 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
-			zipFileUrl := generateGitZipFileUrl(template.path, gitBranch)
-			if zipFileUrl == "" {
+			zipFileURL := generateGitZipFileURL(template.path, gitBranch)
+			if zipFileURL == "" {
 				return slackerror.New(slackerror.ErrGitZipDownload)
 			}
-			resp, err := http.Get(zipFileUrl)
+			resp, err := http.Get(zipFileURL)
 			if err != nil {
 				return slackerror.New(slackerror.ErrGitZipDownload)
 			}
@@ -343,7 +343,7 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 
 // InstallProjectDependencies installs the project runtime dependencies or
 // continues with next steps if that fails. You can specify the manifestSource
-// for the project configuration file (default: MANIFEST_SOURCE_LOCAL)
+// for the project configuration file (default: ManifestSourceLocal)
 func InstallProjectDependencies(
 	ctx context.Context,
 	clients *shared.ClientFactory,
@@ -459,14 +459,14 @@ func InstallProjectDependencies(
 
 	// Set "manifest.source" in .slack/config.json
 	if !manifestSource.Exists() {
-		manifestSource = config.MANIFEST_SOURCE_LOCAL
+		manifestSource = config.ManifestSourceLocal
 	}
 
 	if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
 		configJSONFilename := config.ProjectConfigJSONFilename
-		manifestSourceStyled := style.Highlight(manifestSource.String())
+		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
 			"Updated %s manifest source to %s",
@@ -510,23 +510,23 @@ func InstallProjectDependencies(
 	return outputs
 }
 
-// generateGitZipFileUrl will return template's GitHub zip file download link
+// generateGitZipFileURL will return template's GitHub zip file download link
 // In the future, this function can be extended to support other Git hosts, such as GitLab.
 // TODO, @cchensh, we should get prepared for other non-Git hosts and refactor the create pkg
-func generateGitZipFileUrl(templateURL string, gitBranch string) string {
-	zipUrl := strings.Replace(templateURL, ".git", "", -1) + "/archive/refs/heads/"
+func generateGitZipFileURL(templateURL string, gitBranch string) string {
+	zipURL := strings.Replace(templateURL, ".git", "", -1) + "/archive/refs/heads/"
 
 	if gitBranch == "" {
-		mainUrl := zipUrl + "main.zip"
-		masterUrl := zipUrl + "master.zip"
-		zipUrl = deputil.UrlChecker(mainUrl)
-		if zipUrl == "" {
-			zipUrl = deputil.UrlChecker(masterUrl)
+		mainURL := zipURL + "main.zip"
+		masterURL := zipURL + "master.zip"
+		zipURL = deputil.URLChecker(mainURL)
+		if zipURL == "" {
+			zipURL = deputil.URLChecker(masterURL)
 		}
 	} else {
-		zipUrl = zipUrl + gitBranch + ".zip"
+		zipURL = zipURL + gitBranch + ".zip"
 	}
-	return zipUrl
+	return zipURL
 }
 
 func createGitArgs(templatePath string, dirPath string, gitBranch string) []string {
