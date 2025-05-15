@@ -31,11 +31,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short:   "Install, uninstall, and list teams with the app installed",
 		Long:    "Install, uninstall, and list teams with the app installed",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "install", Meaning: "Install a production app to a team"},
+			{Command: "app install", Meaning: "Install a production app to a team"},
 			{Command: "app link", Meaning: "Link an existing app to the project"},
 			{Command: "app list", Meaning: "List all teams with the app installed"},
-			{Command: "uninstall", Meaning: "Uninstall an app from a team"},
-			{Command: "delete", Meaning: "Delete an app and app info from a team"},
+			{Command: "app uninstall", Meaning: "Uninstall an app from a team"},
+			{Command: "app delete", Meaning: "Delete an app and app info from a team"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
