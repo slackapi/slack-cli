@@ -44,6 +44,8 @@ const (
 	AdminAppApprovalRequestRequired        = "SLACK_TRACE_ADMIN_APPROVAL_REQUIRED"
 	AppLinkStart                           = "SLACK_TRACE_APP_LINK_START"
 	AppLinkSuccess                         = "SLACK_TRACE_APP_LINK_SUCCESS"
+	AppSettingsStart                       = "SLACK_TRACE_APP_SETTINGS_START"
+	AppSettingsSuccess                     = "SLACK_TRACE_APP_SETTINGS_SUCCESS"
 	AuthListCount                          = "SLACK_TRACE_AUTH_LIST_COUNT"
 	AuthListInfo                           = "SLACK_TRACE_AUTH_LIST_INFO"
 	AuthListSuccess                        = "SLACK_TRACE_AUTH_LIST_SUCCESS"
