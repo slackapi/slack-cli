@@ -195,17 +195,17 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Detected a project using Deno",
 			},
 		},
-		"When no manifest source, default to local": {
+		"When no manifest source, default to project (local)": {
 			experiments: []string{"bolt"},
 			expectedOutputs: []string{
-				"Updated config.json manifest source to local",
+				`Updated config.json manifest source to "project" (local)`,
 			},
 		},
 		"When manifest source is provided, should set it": {
 			experiments:    []string{"bolt"},
 			manifestSource: config.ManifestSourceRemote,
 			expectedOutputs: []string{
-				"Updated config.json manifest source to remote",
+				`Updated config.json manifest source to "app settings" (remote)`,
 			},
 		},
 	}
