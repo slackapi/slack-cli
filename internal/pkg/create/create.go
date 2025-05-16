@@ -32,7 +32,6 @@ import (
 	"github.com/slackapi/slack-cli/cmd/doctor"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/archiveutil"
-	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/deputil"
 	"github.com/slackapi/slack-cli/internal/experiment"
@@ -458,19 +457,21 @@ func InstallProjectDependencies(
 		}
 	}
 
-	// Set "manifest.source" in .slack/config.json
+	// Default manifest source to ManifestSourceLocal
 	if !manifestSource.Exists() {
 		manifestSource = config.ManifestSourceLocal
 	}
 
-	// When the BoltInstall experiment is enabled, non-ROSI projects default to ManifestSourceRemote.
+	// When the BoltInstall experiment is enabled, set non-ROSI projects to ManifestSourceRemote.
 	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
-		if !isSlackHostedProject {
+		// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
+		isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
+		if !isDenoProject {
 			manifestSource = config.ManifestSourceRemote
 		}
 	}
 
+	// Set "manifest.source" in .slack/config.json
 	if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {

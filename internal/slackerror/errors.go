@@ -42,6 +42,7 @@ const (
 	ErrAppExists                                     = "app_add_exists"
 	ErrAppFlagRequired                               = "app_flag_required"
 	ErrAppFound                                      = "app_found"
+	ErrAppHosted                                     = "app_hosted"
 	ErrAppInstall                                    = "app_install_error"
 	ErrAppManifestAccess                             = "app_manifest_access_error"
 	ErrAppManifestCreate                             = "app_manifest_create_error"
@@ -379,6 +380,11 @@ Otherwise start your app for local development with: %s`,
 	ErrAppFound: {
 		Code:    ErrAppFound,
 		Message: "An app was found",
+	},
+
+	ErrAppHosted: {
+		Code:    ErrAppHosted,
+		Message: "App is configured for Run on Slack infrastructure",
 	},
 
 	ErrAppInstall: {
