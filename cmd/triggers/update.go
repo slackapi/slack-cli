@@ -139,7 +139,7 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		// If the user used --workflow and the creation failed because we were missing the interactivity
 		// context, lets prompt and optionally add it
 		if updateFlags.workflow != "" && extendedErr.MissingParameterDetail.Type == "slack#/types/interactivity" {
-			updateRequest.TriggerRequest.Inputs = api.Inputs{
+			updateRequest.Inputs = api.Inputs{
 				extendedErr.MissingParameterDetail.Name: &api.Input{Value: dataInteractivityPayload},
 			}
 			shouldUpdate, innerErr := updatePromptShouldRetryWithInteractivityFunc(cmd, clients.IO, triggerArg)
