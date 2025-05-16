@@ -566,42 +566,52 @@ func Test_SetSelectedAuth(t *testing.T) {
 }
 
 func Test_IsAPIHostSlackDev(t *testing.T) {
-
-	var setup = func(t *testing.T) (context.Context, *Client) {
-		ctx := slackcontext.MockContext(t.Context())
-		fsMock := slackdeps.NewFsMock()
-		osMock := slackdeps.NewOsMock()
-		osMock.AddDefaultMocks()
-		config := config.NewConfig(fsMock, osMock)
-		ioMock := iostreams.NewIOStreamsMock(config, fsMock, osMock)
-		ioMock.AddDefaultMocks()
-		authClient := NewClient(nil, nil, config, ioMock, fsMock)
-		return ctx, authClient
+	tests := map[string]struct {
+		hostname string
+		expected bool
+	}{
+		"blank host is false": {
+			hostname: "",
+			expected: false,
+		},
+		"not a url is false": {
+			hostname: "notAURL",
+			expected: false,
+		},
+		"unprefixed url is false": {
+			hostname: "https://doesnothaveprefix.com",
+			expected: false,
+		},
+		"production url is false": {
+			hostname: "https://slack.com",
+			expected: false,
+		},
+		"qa url is false": {
+			hostname: "https://qa.slack.com",
+			expected: false,
+		},
+		"numbered dev is true": {
+			hostname: "https://dev1234.slack.com",
+			expected: true,
+		},
+		"unnumbered dev is true": {
+			hostname: "https://dev.slack.com",
+			expected: true,
+		},
 	}
-	_, authClient := setup(t)
-
-	mockHostName := ""
-	mockHostName1 := "notAURL"
-	mockHostName2 := "https://doesnothaveprefix.com"
-	mockHostName3 := "https://dev1234.slack.com"
-	mockHostName4 := "https://dev.slack.com"
-
-	t.Run("Should validate api host slack dev", func(t *testing.T) {
-		res := authClient.IsAPIHostSlackDev(mockHostName)
-		require.False(t, res)
-
-		res = authClient.IsAPIHostSlackDev(mockHostName1)
-		require.False(t, res)
-
-		res = authClient.IsAPIHostSlackDev(mockHostName2)
-		require.False(t, res)
-
-		res = authClient.IsAPIHostSlackDev(mockHostName3)
-		require.True(t, res)
-
-		res = authClient.IsAPIHostSlackDev(mockHostName4)
-		require.True(t, res)
-	})
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.AddDefaultMocks()
+			config := config.NewConfig(fsMock, osMock)
+			ioMock := iostreams.NewIOStreamsMock(config, fsMock, osMock)
+			ioMock.AddDefaultMocks()
+			authClient := NewClient(nil, nil, config, ioMock, fsMock)
+			actual := authClient.IsAPIHostSlackDev(tt.hostname)
+			assert.Equal(t, tt.expected, actual)
+		})
+	}
 }
 
 func Test_FilterKnownAuthErrors(t *testing.T) {
