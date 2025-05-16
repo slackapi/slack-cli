@@ -464,13 +464,10 @@ func InstallProjectDependencies(
 
 	// When the BoltInstall experiment is enabled, set non-ROSI projects to ManifestSourceRemote.
 	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet
+		// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
 		isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
 		if !isDenoProject {
 			manifestSource = config.ManifestSourceRemote
-			if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
-				clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
-			}
 		}
 	}
 
