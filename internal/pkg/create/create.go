@@ -463,7 +463,7 @@ func InstallProjectDependencies(
 		manifestSource = config.ManifestSourceLocal
 	}
 
-	// Non-ROSI projects default to ManifestSourceRemote
+	// When the BoltInstall experiment is enabled, non-ROSI projects default to ManifestSourceRemote.
 	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
 		isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
 		if !isSlackHostedProject {

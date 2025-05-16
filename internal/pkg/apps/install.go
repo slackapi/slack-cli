@@ -340,9 +340,9 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	if err != nil {
 		return types.App{}, api.DeveloperAppInstallResult{}, "", err
 	}
-	// if !manifestUpdates && !manifestCreates {
-	// 	return app, api.DeveloperAppInstallResult{}, "", nil
-	// }
+	if !manifestUpdates && !manifestCreates {
+		return app, api.DeveloperAppInstallResult{}, "", nil
+	}
 
 	apiInterface := clients.API()
 	token := auth.Token
@@ -365,6 +365,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		clients.EventTracker.SetAuthEnterpriseID(*authSession.EnterpriseID)
 	}
 
+	// TODO(bolt-install): for remote manifest source, we should get the manifest from the app settings
 	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return app, api.DeveloperAppInstallResult{}, "", err
@@ -455,7 +456,6 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	}
 
 	// install the app
-	// TODO(@mwbrooks): for remote manifest source, we should get the manifest from the app settings
 	var botScopes []string
 	if manifest.OAuthConfig != nil {
 		botScopes = manifest.OAuthConfig.Scopes.Bot
@@ -466,7 +466,8 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		outgoingDomains = *manifest.OutgoingDomains
 	}
 
-	// When the manifest source is remote, we need to get the manifest from the app settings
+	// When the manifest source is remote, we need to use the manifest from the app settings
+	// for the developerInstall API call.
 	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
 		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 		if err != nil {
@@ -507,7 +508,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	}
 
 	//
-	// TODO(@mbrevoort) - Currently, cannot update the icon if app is not hosted
+	// TODO: Currently, cannot update the icon if app is not hosted.
 	//
 	// upload icon, default to icon.png
 	// var iconPath = slackYaml.Icon
@@ -668,8 +669,17 @@ func shouldCreateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return app.AppID == "", nil
 	}
-	// TODO(@mwbrooks): delete the experiment check
-	return app.AppID == "", nil
+
+	// When the BoltInstall experiment is enabled, apps can be created with any manifest source.
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		return app.AppID == "", nil
+	}
+
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return false, err
+	}
+	return app.AppID == "" && manifestSource == config.ManifestSourceLocal, nil
 }
 
 // shouldCacheManifest decides if an app manifest hash should be saved to cache
@@ -712,12 +722,14 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return true, nil
 	}
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if err != nil {
-		return false, err
-	}
-	if manifestSource.Equals(config.ManifestSourceRemote) {
-		return false, nil
+	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return false, err
+		}
+		if manifestSource.Equals(config.ManifestSourceRemote) {
+			return false, nil
+		}
 	}
 	if clients.Config.ForceFlag {
 		return true, nil
