@@ -136,8 +136,8 @@ func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request
 		return types.AppDatastoreBulkPutResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkPutMethod)
 	}
 
-	if resp.AppDatastoreBulkPutResult.Datastore == "" {
-		resp.AppDatastoreBulkPutResult.Datastore = request.Datastore
+	if resp.Datastore == "" {
+		resp.Datastore = request.Datastore
 	}
 
 	return resp.AppDatastoreBulkPutResult, nil
@@ -234,7 +234,7 @@ func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query typ
 		return types.AppDatastoreQueryResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreQueryMethod)
 	}
 
-	resp.AppDatastoreQueryResult.NextCursor = resp.baseResponse.ResponseMetadata.NextCursor
+	resp.NextCursor = resp.ResponseMetadata.NextCursor
 
 	return resp.AppDatastoreQueryResult, nil
 }
@@ -327,11 +327,11 @@ func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request 
 	}
 
 	// the delete API doesn't return id or datastore (yet) so set it if empty
-	if resp.AppDatastoreDeleteResult.ID == "" {
-		resp.AppDatastoreDeleteResult.ID = request.ID
+	if resp.ID == "" {
+		resp.ID = request.ID
 	}
-	if resp.AppDatastoreDeleteResult.Datastore == "" {
-		resp.AppDatastoreDeleteResult.Datastore = request.Datastore
+	if resp.Datastore == "" {
+		resp.Datastore = request.Datastore
 	}
 
 	return resp.AppDatastoreDeleteResult, nil
@@ -377,8 +377,8 @@ func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, requ
 		return types.AppDatastoreBulkDeleteResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkDeleteMethod)
 	}
 
-	if resp.AppDatastoreBulkDeleteResult.Datastore == "" {
-		resp.AppDatastoreBulkDeleteResult.Datastore = request.Datastore
+	if resp.Datastore == "" {
+		resp.Datastore = request.Datastore
 	}
 
 	return resp.AppDatastoreBulkDeleteResult, nil
@@ -467,8 +467,8 @@ func (c *Client) AppsDatastoreBulkGet(ctx context.Context, token string, request
 		return types.AppDatastoreBulkGetResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appDatastoreBulkGetMethod)
 	}
 
-	if resp.AppDatastoreBulkGetResult.Datastore == "" {
-		resp.AppDatastoreBulkGetResult.Datastore = request.Datastore
+	if resp.Datastore == "" {
+		resp.Datastore = request.Datastore
 	}
 
 	return resp.AppDatastoreBulkGetResult, nil

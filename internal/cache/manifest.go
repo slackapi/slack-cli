@@ -78,7 +78,7 @@ func (c *Cache) SetManifestHash(ctx context.Context, appID string, hash Hash) er
 	cache[appID] = ManifestCacheApp{
 		Hash: hash,
 	}
-	c.ManifestCache.Apps = cache
+	c.Apps = cache
 	return c.writeManifestCache(ctx)
 }
 
@@ -112,7 +112,7 @@ func (c *Cache) writeManifestCache(ctx context.Context) error {
 	if err != nil && !os.IsExist(err) {
 		return err
 	}
-	cache, err := json.MarshalIndent(c.ManifestCache.Apps, "", "  ")
+	cache, err := json.MarshalIndent(c.Apps, "", "  ")
 	if err != nil {
 		return err
 	}

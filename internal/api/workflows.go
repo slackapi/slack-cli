@@ -207,7 +207,7 @@ func (c *Client) workflowsTriggerSave(ctx context.Context, token string, method 
 		}
 	}
 
-	serverTrigger := resp.triggerResult.Trigger
+	serverTrigger := resp.Trigger
 
 	return serverTrigger, nil
 }
@@ -217,7 +217,7 @@ func parseMissingParameterErrors(details triggerCreateOrUpdateErrorDetails) ([]s
 	var missingParameterDetail *MissingParameterDetail
 	for _, detail := range details {
 		slackErrorDetails = append(slackErrorDetails, detail.ErrorDetail)
-		if detail.MissingParameterDetail.Name != "" {
+		if detail.Name != "" {
 			missingParameterDetail = &detail.MissingParameterDetail
 		}
 	}
@@ -258,7 +258,7 @@ func (c *Client) WorkflowsTriggersList(ctx context.Context, token string, listAr
 		return []types.DeployedTrigger{}, "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, workflowsTriggersListMethod)
 	}
 
-	return resp.Triggers, resp.extendedBaseResponse.ResponseMetadata.NextCursor, nil
+	return resp.Triggers, resp.ResponseMetadata.NextCursor, nil
 }
 
 // WorkflowsTriggersInfo will retrieve information on an existing trigger
