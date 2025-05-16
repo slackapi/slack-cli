@@ -113,6 +113,7 @@ func TestCreateGitArgs(t *testing.T) {
 func Test_Create_installProjectDependencies(t *testing.T) {
 	tests := map[string]struct {
 		experiments            []string
+		runtime                string
 		manifestSource         config.ManifestSource
 		existingFiles          map[string]string
 		expectedOutputs        []string
@@ -208,6 +209,19 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				`Updated config.json manifest source to "app settings" (remote)`,
 			},
 		},
+		"When bolt + bolt-install experiment and Deno project, should set manifest source to project (local)": {
+			experiments: []string{"bolt", "bolt-install"},
+			expectedOutputs: []string{
+				`Updated config.json manifest source to "project" (local)`,
+			},
+		},
+		"When bolt + bolt-install experiment and non-Deno project, should set manifest source to app settings (remote)": {
+			experiments: []string{"bolt", "bolt-install"},
+			runtime:     "node",
+			expectedOutputs: []string{
+				`Updated config.json manifest source to "app settings" (remote)`,
+			},
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -226,6 +240,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Os.On("Getwd").Return(projectDirPath, nil)
+			clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(`{}`, nil)
 			clientsMock.AddDefaultMocks()
 
 			// Set experiment flag
@@ -237,6 +252,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 
 			// Set runtime to be Deno (or node or whatever)
 			clients.SDKConfig.Runtime = "deno"
+			if tt.runtime != "" {
+				clients.SDKConfig.Runtime = tt.runtime
+			}
 
 			// Create project directory
 			if err := clients.Fs.MkdirAll(filepath.Dir(projectDirPath), 0755); err != nil {
