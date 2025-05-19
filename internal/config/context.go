@@ -20,18 +20,18 @@ import (
 
 type contextKey string
 
-const CONTEXT_TOKEN contextKey = "token"
-const CONTEXT_TEAM_ID contextKey = "team_id"
-const CONTEXT_TEAM_DOMAIN contextKey = "team_domain" // e.g. "subarachnoid"
-const CONTEXT_USER_ID contextKey = "user_id"
-const CONTEXT_ENTERPRISE_ID contextKey = "enterprise_id"
+const ContextToken contextKey = "token"
+const contextTeamID contextKey = "team_id"
+const contextTeamDomain contextKey = "team_domain" // e.g. "subarachnoid"
+const contextUserID contextKey = "user_id"
+const contextEnterpriseID contextKey = "enterprise_id"
 
 func SetContextToken(ctx context.Context, token string) context.Context {
-	return context.WithValue(ctx, CONTEXT_TOKEN, token)
+	return context.WithValue(ctx, ContextToken, token)
 }
 
 func GetContextToken(ctx context.Context) string {
-	token, ok := ctx.Value(CONTEXT_TOKEN).(string)
+	token, ok := ctx.Value(ContextToken).(string)
 	if !ok {
 		return ""
 	}
@@ -39,11 +39,11 @@ func GetContextToken(ctx context.Context) string {
 }
 
 func SetContextEnterpriseID(ctx context.Context, enterpriseID string) context.Context {
-	return context.WithValue(ctx, CONTEXT_ENTERPRISE_ID, enterpriseID)
+	return context.WithValue(ctx, contextEnterpriseID, enterpriseID)
 }
 
 func GetContextEnterpriseID(ctx context.Context) string {
-	enterpriseID, ok := ctx.Value(CONTEXT_ENTERPRISE_ID).(string)
+	enterpriseID, ok := ctx.Value(contextEnterpriseID).(string)
 	if !ok {
 		return ""
 	}
@@ -51,10 +51,10 @@ func GetContextEnterpriseID(ctx context.Context) string {
 }
 
 func SetContextTeamID(ctx context.Context, teamID string) context.Context {
-	return context.WithValue(ctx, CONTEXT_TEAM_ID, teamID)
+	return context.WithValue(ctx, contextTeamID, teamID)
 }
 func GetContextTeamID(ctx context.Context) string {
-	teamID, ok := ctx.Value(CONTEXT_TEAM_ID).(string)
+	teamID, ok := ctx.Value(contextTeamID).(string)
 	if !ok {
 		return ""
 	}
@@ -62,11 +62,11 @@ func GetContextTeamID(ctx context.Context) string {
 }
 
 func SetContextTeamDomain(ctx context.Context, teamDomain string) context.Context {
-	return context.WithValue(ctx, CONTEXT_TEAM_DOMAIN, teamDomain)
+	return context.WithValue(ctx, contextTeamDomain, teamDomain)
 }
 
 func GetContextTeamDomain(ctx context.Context) string {
-	teamDomain, ok := ctx.Value(CONTEXT_TEAM_DOMAIN).(string)
+	teamDomain, ok := ctx.Value(contextTeamDomain).(string)
 	if !ok {
 		return ""
 	}
@@ -74,11 +74,11 @@ func GetContextTeamDomain(ctx context.Context) string {
 }
 
 func SetContextUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, CONTEXT_USER_ID, userID)
+	return context.WithValue(ctx, contextUserID, userID)
 }
 
 func GetContextUserID(ctx context.Context) string {
-	userID, ok := ctx.Value(CONTEXT_USER_ID).(string)
+	userID, ok := ctx.Value(contextUserID).(string)
 	if !ok {
 		return ""
 	}

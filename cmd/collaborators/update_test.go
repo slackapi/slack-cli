@@ -41,7 +41,7 @@ func TestUpdateCommand(t *testing.T) {
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				// Mock APi call
-				clientsMock.ApiInterface.On("UpdateCollaborator", mock.Anything, mock.Anything,
+				clientsMock.API.On("UpdateCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{ID: "U123", PermissionType: types.READER}).Return(nil)
 			},
@@ -59,7 +59,7 @@ func TestUpdateCommand(t *testing.T) {
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				// Mock APi call
-				clientsMock.ApiInterface.On("UpdateCollaborator", mock.Anything, mock.Anything,
+				clientsMock.API.On("UpdateCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER}).Return(nil)
 			},

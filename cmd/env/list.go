@@ -88,7 +88,7 @@ func runEnvListCommandFunc(
 		return err
 	}
 
-	variableNames, err := clients.ApiInterface().ListVariables(
+	variableNames, err := clients.API().ListVariables(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,

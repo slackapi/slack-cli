@@ -133,10 +133,10 @@ func TestInfoCommand(t *testing.T) {
 					},
 				}, nil)
 				cf.AppClient().Manifest = manifestMock
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
-				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.MANIFEST_SOURCE_LOCAL, nil)
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -152,21 +152,21 @@ func TestInfoCommand(t *testing.T) {
 		},
 		"errors if project manifest source is remote with the bolt experiment": {
 			ExpectedError: slackerror.New(slackerror.ErrInvalidManifestSource).
-				WithMessage(`Cannot get manifest info from the "%s" source`, config.MANIFEST_SOURCE_REMOTE).
+				WithMessage(`Cannot get manifest info from the "%s" source`, config.ManifestSourceRemote).
 				WithRemediation("%s", strings.Join([]string{
 					fmt.Sprintf("Find the current manifest on app settings: %s", style.LinkText("https://api.slack.com/apps")),
-					fmt.Sprintf("Set \"manifest.source\" to \"%s\" in \"%s\" to continue", config.MANIFEST_SOURCE_LOCAL, filepath.Join(".slack", "config.json")),
+					fmt.Sprintf("Set \"manifest.source\" to \"%s\" in \"%s\" to continue", config.ManifestSourceLocal, filepath.Join(".slack", "config.json")),
 					fmt.Sprintf("Read about manifest sourcing with %s", style.Commandf("manifest info --help", false)),
 				}, "\n")),
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.IO.AddDefaultMocks()
 				cm.Os.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, experiment.BoltFrameworks)
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).
-					Return(config.ManifestSource(config.MANIFEST_SOURCE_REMOTE), nil)
+					Return(config.ManifestSource(config.ManifestSourceRemote), nil)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
 		},

@@ -137,7 +137,7 @@ func CheckUpdateHook(ctx context.Context, clients *shared.ClientFactory) (SDKRel
 	}
 	err = json.Unmarshal([]byte(checkUpdateResponse), &checkUpdate)
 	if err != nil {
-		return SDKReleaseInfo{}, slackerror.New(slackerror.ErrUnableToParseJson).
+		return SDKReleaseInfo{}, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse response from check-update hook").
 			WithRootCause(err)
 	}

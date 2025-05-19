@@ -104,7 +104,7 @@ func Test_SystemConfig_UserConfig(t *testing.T) {
 		_, err = systemConfig.UserConfig(ctx)
 
 		require.Error(t, err)
-		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJson)
+		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of system-level config file")
 	})
 }

@@ -54,14 +54,14 @@ func TestLoginCommand(t *testing.T) {
 			CmdArgs:         []string{"--auth", "xoxp-example"},
 			ExpectedOutputs: []string{deprecatedUserTokenMessage},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
 					TeamID:   &mockOrgAuth.TeamID,
 					TeamName: &mockOrgAuth.TeamDomain,
 					URL:      &mockOrgAuthURL,
 				}, nil)
-				cm.AuthInterface.On("IsApiHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"AuthWithTeamDomain",
 					mock.Anything,
 					mock.Anything,
@@ -81,7 +81,7 @@ func TestLoginCommand(t *testing.T) {
 			CmdArgs:               []string{"--ticket=example", "--challenge=tictactoe"},
 			ExpectedStdoutOutputs: []string{"Get started by creating a new app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On(
+				cm.API.On(
 					"ExchangeAuthTicket",
 					mock.Anything,
 					mock.Anything,
@@ -94,8 +94,8 @@ func TestLoginCommand(t *testing.T) {
 					},
 					nil,
 				)
-				cm.AuthInterface.On("IsApiHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"SetAuth",
 					mock.Anything,
 					mock.Anything,
@@ -111,7 +111,7 @@ func TestLoginCommand(t *testing.T) {
 			CmdArgs:               []string{"--ticket", "example", "--challenge", "tictactoe"},
 			ExpectedStdoutOutputs: []string{"Review existing installations of the app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On(
+				cm.API.On(
 					"ExchangeAuthTicket",
 					mock.Anything,
 					mock.Anything,
@@ -124,8 +124,8 @@ func TestLoginCommand(t *testing.T) {
 					},
 					nil,
 				)
-				cm.AuthInterface.On("IsApiHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"SetAuth",
 					mock.Anything,
 					mock.Anything,
@@ -141,13 +141,13 @@ func TestLoginCommand(t *testing.T) {
 		"happy path login with prompt flow should pass challenge code to ExchangeAuthTicket API": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
+				cm.API.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter challenge code", iostreams.InputPromptConfig{
 					Required: true,
 				}).Return(mockChallengeCode, nil)
-				cm.ApiInterface.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, nil)
-				cm.AuthInterface.On("IsApiHostSlackProd", mock.Anything).Return(true)
-				cm.AuthInterface.On(
+				cm.API.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, nil)
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On(
 					"SetAuth",
 					mock.Anything,
 					mock.Anything,
@@ -158,19 +158,19 @@ func TestLoginCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.ApiInterface.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mockChallengeCode, mock.Anything)
+				cm.API.AssertCalled(t, "ExchangeAuthTicket", mock.Anything, mock.Anything, mockChallengeCode, mock.Anything)
 			},
 		},
 		"should explode if ExchangeAuthTicket API fails": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.ApiInterface.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
+				cm.API.On("GenerateAuthTicket", mock.Anything, mock.Anything, mock.Anything).Return(api.GenerateAuthTicketResult{}, nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter challenge code", iostreams.InputPromptConfig{
 					Required: true,
 				}).Return(mockChallengeCode, nil)
-				cm.ApiInterface.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, slackerror.New(slackerror.ErrHttpResponseInvalid))
+				cm.API.On("ExchangeAuthTicket", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ExchangeAuthTicketResult{}, slackerror.New(slackerror.ErrHTTPResponseInvalid))
 			},
-			ExpectedError: slackerror.New(slackerror.ErrHttpResponseInvalid),
+			ExpectedError: slackerror.New(slackerror.ErrHTTPResponseInvalid),
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewLoginCommand(cf)

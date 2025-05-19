@@ -76,7 +76,7 @@ func TestClient_UploadPackageToS3(t *testing.T) {
 	client := NewClient(&http.Client{}, server.URL, nil)
 
 	s3Params := GenerateS3PresignedPostResult{
-		Url:      server.URL + "/s3upload",
+		URL:      server.URL + "/s3upload",
 		FileName: "foo.txt",
 		Fields: PresignedPostFields{
 			AmzCredentials:    creds,

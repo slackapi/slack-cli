@@ -35,7 +35,7 @@ type SlackAuth struct {
 	EnterpriseID        string    `json:"enterprise_id,omitempty"`
 	UserID              string    `json:"user_id"`
 	LastUpdated         time.Time `json:"last_updated,omitempty"`
-	ApiHost             *string   `json:"api_host,omitempty"`
+	APIHost             *string   `json:"api_host,omitempty"`
 	RefreshToken        string    `json:"refresh_token,omitempty"`
 	ExpiresAt           int       `json:"exp,omitempty"`
 	IsEnterpriseInstall bool      `json:"is_enterprise_install,omitempty"`
@@ -74,10 +74,10 @@ type AuthByTeamID map[string]SlackAuth
 type InstallState string
 
 const (
-	SUCCESS           InstallState = "SUCCESS"
-	REQUEST_PENDING   InstallState = "REQUEST_PENDING"
-	REQUEST_CANCELLED InstallState = "REQUEST_CANCELLED"
-	REQUEST_NOT_SENT  InstallState = "REQUEST_NOT_SENT"
+	InstallSuccess          InstallState = "SUCCESS"
+	InstallRequestPending   InstallState = "REQUEST_PENDING"
+	InstallRequestCancelled InstallState = "REQUEST_CANCELLED"
+	InstallRequestNotSent   InstallState = "REQUEST_NOT_SENT"
 )
 
 // ShouldRotateToken returns true if an auth credential can be rotated and also expires in <= 5min

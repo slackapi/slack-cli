@@ -162,7 +162,7 @@ func TestClient_RevokeToken_NotOk_MappedErrorMsgs(t *testing.T) {
 	require.Contains(t, err.Error(), "token_expired")
 }
 
-func TestClient_RevokeToken_JsonUnmarshalFail(t *testing.T) {
+func TestClient_RevokeToken_JSONUnmarshalFail(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: revokeTokenMethod,

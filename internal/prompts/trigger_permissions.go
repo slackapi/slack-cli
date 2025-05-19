@@ -32,9 +32,9 @@ func TriggerAccessLabels(current types.Permission) ([]string, []types.Permission
 	distributions := []types.Permission{}
 	distributionLabels := []string{}
 	optionLabels := map[types.Permission]string{
-		types.APP_COLLABORATORS: "app collaborators only",
-		types.EVERYONE:          "everyone",
-		types.NAMED_ENTITIES:    "specific entities",
+		types.PermissionAppCollaborators: "app collaborators only",
+		types.PermissionEveryone:         "everyone",
+		types.PermissionNamedEntities:    "specific entities",
 	}
 
 	distributionLabels = append(distributionLabels, fmt.Sprintf("%s (current)", optionLabels[current]))
@@ -130,7 +130,7 @@ func TriggerChooseNamedEntityPrompt(ctx context.Context, clients *shared.ClientF
 	}
 
 	shouldAddCollaborators := false
-	if strings.HasPrefix(selectedAction, "add_") && currentAccessType != types.NAMED_ENTITIES && !hasIncludeAppCollabFlag {
+	if strings.HasPrefix(selectedAction, "add_") && currentAccessType != types.PermissionNamedEntities && !hasIncludeAppCollabFlag {
 		shouldAddCollaborators, err = AddAppCollaboratorsToNamedEntitiesPrompt(ctx, clients.IO)
 		if err != nil {
 			return "", "", false, err

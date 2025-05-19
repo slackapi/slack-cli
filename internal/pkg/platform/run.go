@@ -51,7 +51,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	ctx = config.SetContextToken(ctx, runArgs.Auth.Token)
 
 	// Validate auth session
-	authSession, err := clients.ApiInterface().ValidateSession(ctx, runArgs.Auth.Token)
+	authSession, err := clients.API().ValidateSession(ctx, runArgs.Auth.Token)
 	if err != nil {
 		err = slackerror.Wrap(err, "No auth session found")
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
@@ -82,8 +82,8 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
 
-	if installState == types.REQUEST_PENDING || installState == types.REQUEST_CANCELLED || installState == types.REQUEST_NOT_SENT {
-		return log.SuccessEvent(), types.SUCCESS, nil
+	if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
+		return log.SuccessEvent(), types.InstallSuccess, nil
 	}
 
 	if runArgs.ShowTriggers {
@@ -111,7 +111,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	if value, ok := variables["SLACK_API_URL"]; ok {
 		_ = clients.Os.Setenv("SLACK_API_URL", value)
 	} else {
-		variables["SLACK_API_URL"] = fmt.Sprintf("%s/api/", clients.Config.ApiHostResolved)
+		variables["SLACK_API_URL"] = fmt.Sprintf("%s/api/", clients.Config.APIHostResolved)
 	}
 
 	var localHostedContext = LocalHostedContext{
@@ -194,13 +194,13 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	if err := <-errChan; err != nil {
 		switch slackerror.ToSlackError(err).Code {
 		case slackerror.ErrLocalAppRunCleanExit:
-			return log.SuccessEvent(), types.SUCCESS, nil
+			return log.SuccessEvent(), types.InstallSuccess, nil
 		case slackerror.ErrSDKHookInvocationFailed:
 			return nil, "", err
 		}
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
-	return log.SuccessEvent(), types.SUCCESS, nil
+	return log.SuccessEvent(), types.InstallSuccess, nil
 }
 
 func deleteAppOnTerminate(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, log *logger.Logger) {

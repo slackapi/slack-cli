@@ -52,7 +52,7 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 // runSamplesCommand prompts for a sample then clones with the create command
 func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-	sampler := api.NewHttpClient(api.HttpClientOptions{
+	sampler := api.NewHTTPClient(api.HTTPClientOptions{
 		TotalTimeOut: 60 * time.Second,
 	})
 	selectedSample, err := PromptSampleSelection(ctx, clients, sampler)

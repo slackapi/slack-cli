@@ -6,6 +6,12 @@ sidebar_label: Using with Bolt frameworks
 
 You can use the Slack CLI to streamline development of apps using [Bolt for JavaScript](/tools.slack.dev/bolt-js) and [Bolt for Python](/tools.slack.dev/bolt-python).
 
+:::info
+
+To create a Bolt app using features currently under development, refer to the [experiments](https://tools.slack.dev/slack-cli/reference/experiments) page.
+
+:::
+
 ## Getting started
 
 Creating a Bolt app via the Slack CLI is similar to creating other apps with the Slack CLI. Run the following command to begin:

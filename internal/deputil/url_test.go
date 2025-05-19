@@ -20,10 +20,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_urlChecker(t *testing.T) {
-	url := UrlChecker("https://github.com/slack-samples/deno-starter-template")
+func Test_URLChecker(t *testing.T) {
+	url := URLChecker("https://github.com/slack-samples/deno-starter-template")
 	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template", url, "should return url when url is valid")
 
-	url = UrlChecker("fake_url")
+	url = URLChecker("fake_url")
 	assert.Equal(t, "", url, "should return empty string when url is invalid")
 }
