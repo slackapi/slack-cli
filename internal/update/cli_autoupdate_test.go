@@ -26,7 +26,7 @@ func Test_CLI_getUpdateFileName(t *testing.T) {
 		operatingSystem  string
 		architecture     string
 		expectedFilename string
-		expectedError    error
+		expectedErrorF   string
 	}{
 		"darwin production x86_64": {
 			version:          "3.4.5",
@@ -88,13 +88,19 @@ func Test_CLI_getUpdateFileName(t *testing.T) {
 			architecture:     "amd64",
 			expectedFilename: "slack_cli_3.4.5-6-badaabad_windows_64-bit.zip",
 		},
+		"unknown production errors": {
+			version:         "3.4.5",
+			operatingSystem: "dragonfly",
+			architecture:    "amd64",
+			expectedErrorF:  "auto-updating for the operating system (dragonfly) is unsupported",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			filename, err := getUpdateFileName(tt.version, tt.operatingSystem, tt.architecture)
-			if tt.expectedError != nil {
+			if tt.expectedErrorF != "" {
 				require.Error(t, err)
-				require.Equal(t, tt.expectedError, err)
+				require.ErrorContains(t, err, tt.expectedErrorF)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tt.expectedFilename, filename)
