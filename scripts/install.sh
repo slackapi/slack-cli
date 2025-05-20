@@ -121,7 +121,17 @@ install_slack_cli() {
         #
 
         if [ "$(uname)" == "Darwin" ]; then
-                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_macOS_64-bit.tar.gz"
+            case "$(uname -m)" in
+                x86_64)
+                    slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_macOS_amd64.tar.gz"
+                    ;;
+                arm64 | aarch64)
+                    slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_macOS_arm64.tar.gz"
+                    ;;
+                *)
+                    slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_macOS_64-bit.tar.gz"
+                    ;;
+            esac
         elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
                 slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_64-bit.tar.gz"
         else
