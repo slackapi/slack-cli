@@ -43,7 +43,7 @@ jobs:
 
       - name: Update docs in docs site repo
         run: |
-          rsync -av --delete ./docs/ ./docs_repo/content/$REPO/
+          rsync -av --delete ./docs/ "./docs_repo/content/$REPO/"
         env:
           REPO: ${{ github.event.repository.name }}
 
