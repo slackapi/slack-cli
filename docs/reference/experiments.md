@@ -6,9 +6,8 @@ The Slack CLI has an experiment (`-e`) flag behind which we put features current
 
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
-* `bolt-install`: enables creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
-    * `slack create` and `slack init` now set manifest source to "app settings" (remote) for Bolt JS & Bolt Python projects ([PR#96](https://github.com/slackapi/slack-cli/pull/96)).
 * `read-only-collaborators`: enables creating and modifying collaborator permissions via the `slack collaborator` commands.
+* `experiment bolt-install`: enables creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
 
 ## Experiments changelog
 
