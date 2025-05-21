@@ -86,13 +86,13 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		return app, "", err
 	}
 
-	log.Data["appName"] = slackYaml.AppManifest.DisplayInformation.Name
+	log.Data["appName"] = slackYaml.DisplayInformation.Name
 	log.Data["isUpdate"] = app.AppID != ""
 	log.Data["teamName"] = *authSession.TeamName
 	log.Log("INFO", "app_install_manifest")
 
 	manifest := slackYaml.AppManifest
-	if slackYaml.AppManifest.IsFunctionRuntimeSlackHosted() {
+	if slackYaml.IsFunctionRuntimeSlackHosted() {
 		configureHostedManifest(ctx, clients, &manifest)
 	}
 
@@ -371,7 +371,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
 
-	log.Data["appName"] = slackYaml.AppManifest.DisplayInformation.Name
+	log.Data["appName"] = slackYaml.DisplayInformation.Name
 	log.Data["isUpdate"] = app.AppID != ""
 	log.Data["teamName"] = *authSession.TeamName
 	log.Log("INFO", "app_install_manifest")

@@ -524,7 +524,7 @@ func InstallProjectDependencies(
 // In the future, this function can be extended to support other Git hosts, such as GitLab.
 // TODO, @cchensh, we should get prepared for other non-Git hosts and refactor the create pkg
 func generateGitZipFileURL(templateURL string, gitBranch string) string {
-	zipURL := strings.Replace(templateURL, ".git", "", -1) + "/archive/refs/heads/"
+	zipURL := strings.ReplaceAll(templateURL, ".git", "") + "/archive/refs/heads/"
 
 	if gitBranch == "" {
 		mainURL := zipURL + "main.zip"
