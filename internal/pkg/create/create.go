@@ -38,6 +38,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -225,7 +226,8 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
-			zipFileURL := generateGitZipFileURL(template.path, gitBranch)
+			httpClient := slackdeps.NewHTTPClient(slackdeps.HTTPClientOptions{})
+			zipFileURL := generateGitZipFileURL(httpClient, template.path, gitBranch)
 			if zipFileURL == "" {
 				return slackerror.New(slackerror.ErrGitZipDownload)
 			}
@@ -520,18 +522,17 @@ func InstallProjectDependencies(
 	return outputs
 }
 
-// generateGitZipFileURL will return template's GitHub zip file download link
-// In the future, this function can be extended to support other Git hosts, such as GitLab.
-// TODO, @cchensh, we should get prepared for other non-Git hosts and refactor the create pkg
-func generateGitZipFileURL(templateURL string, gitBranch string) string {
+// generateGitZipFileURL will return the GitHub zip URL for a templateURL.
+func generateGitZipFileURL(httpClient slackdeps.HTTPClient, templateURL string, gitBranch string) string {
 	zipURL := strings.Replace(templateURL, ".git", "", -1) + "/archive/refs/heads/"
 
 	if gitBranch == "" {
 		mainURL := zipURL + "main.zip"
 		masterURL := zipURL + "master.zip"
-		zipURL = deputil.URLChecker(mainURL)
+
+		zipURL = deputil.URLChecker(httpClient, mainURL)
 		if zipURL == "" {
-			zipURL = deputil.URLChecker(masterURL)
+			zipURL = deputil.URLChecker(httpClient, masterURL)
 		}
 	} else {
 		zipURL = zipURL + gitBranch + ".zip"
