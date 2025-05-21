@@ -13,15 +13,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          # Number of commits to fetch. 0 indicates all history for all branches and tags.
-          # Default: 1
-          # TODO - We should not fetch all history.
-          #        But we need to fetch the latest tag to run `make test` and `make build`.
-          #        This is a workaround until we fetch the latest tag using the Makefile.
-          fetch-depth: 0
+          persist-credentials: false
       - name: Check license headers
-        uses: apache/skywalking-eyes@v0.7.0
+        uses: apache/skywalking-eyes@5c5b974209f0de5d905f37deb69369068ebfc15c # v0.7.0
         with:
           config: .licenserc.yml

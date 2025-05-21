@@ -130,7 +130,6 @@ func TestExecuteContext(t *testing.T) {
 	}
 }
 
-// FYI: do not try to run this test in vscode using the run/debug test inline test helper; as the assertions in this test will fail in that context
 func TestVersionFlags(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 
@@ -237,7 +236,7 @@ func Test_Aliases(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			err, output := testExecCmd(ctx, strings.Fields(tt.args))
+			output, err := testExecCmd(ctx, strings.Fields(tt.args))
 			require.NoError(t, err)
 			require.Contains(t, output, tt.expected)
 		})
@@ -245,7 +244,7 @@ func Test_Aliases(t *testing.T) {
 }
 
 // testExecCmd will execute the root cobra command with args and return the output
-func testExecCmd(ctx context.Context, args []string) (error, string) {
+func testExecCmd(ctx context.Context, args []string) (string, error) {
 	// Get command
 	cmd, clients := Init(ctx)
 
@@ -258,7 +257,7 @@ func testExecCmd(ctx context.Context, args []string) (error, string) {
 	cmd.SetArgs(args)
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
-	return nil, clientsMock.GetCombinedOutput()
+	return clientsMock.GetCombinedOutput(), nil
 }

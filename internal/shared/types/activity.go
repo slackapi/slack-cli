@@ -15,8 +15,8 @@
 package types
 
 type ActivityArgs struct {
-	TeamId            string
-	AppId             string
+	TeamID            string
+	AppID             string
 	TailArg           bool
 	Browser           bool
 	PollingIntervalMS int
@@ -27,9 +27,9 @@ type ActivityArgs struct {
 	MinLevel          string
 	EventType         string
 	ComponentType     string
-	ComponentId       string
+	ComponentID       string
 	Source            string
-	TraceId           string
+	TraceID           string
 }
 
 type ActivityLevel string
@@ -46,31 +46,31 @@ const (
 type EventType string
 
 const (
-	DATASTORE_REQUEST_RESULT            EventType = "datastore_request_result"
-	EXTERNAL_AUTH_MISSING_FUNCTION      EventType = "external_auth_missing_function"
-	EXTERNAL_AUTH_MISSING_SELECTED_AUTH EventType = "external_auth_missing_oauth_token_or_selected_auth"
-	EXTERNAL_AUTH_RESULT                EventType = "external_auth_result"
-	EXTERNAL_AUTH_STARTED               EventType = "external_auth_started"
-	EXTERNAL_AUTH_TOKEN_FETCH_RESULT    EventType = "external_auth_token_fetch_result"
-	FUNCTION_DEPLOYMENT                 EventType = "function_deployment"
-	FUNCTION_EXECUTION_OUTPUT           EventType = "function_execution_output"
-	TRIGGER_PAYLOAD_RECEIVED            EventType = "trigger_payload_received"
-	FUNCTION_EXECUTION_RESULT           EventType = "function_execution_result"
-	FUNCTION_EXECUTION_STARTED          EventType = "function_execution_started"
-	TRIGGER_EXECUTED                    EventType = "trigger_executed"
-	WORKFLOW_BILLING_RESULT             EventType = "workflow_billing_result"
-	WORKFLOW_BOT_INVITED                EventType = "workflow_bot_invited"
-	WORKFLOW_CREATED_FROM_TEMPLATE      EventType = "workflow_created_from_template"
-	WORKFLOW_EXECUTION_RESULT           EventType = "workflow_execution_result"
-	WORKFLOW_EXECUTION_STARTED          EventType = "workflow_execution_started"
-	WORKFLOW_PUBLISHED                  EventType = "workflow_published"
-	WORKFLOW_STEP_EXECUTION_RESULT      EventType = "workflow_step_execution_result"
-	WORKFLOW_STEP_STARTED               EventType = "workflow_step_started"
-	WORKFLOW_UNPUBLISHED                EventType = "workflow_unpublished"
+	DatastoreRequestResult          EventType = "datastore_request_result"
+	ExternalAuthMissingFunction     EventType = "external_auth_missing_function"
+	ExternalAuthMissingSelectedAuth EventType = "external_auth_missing_oauth_token_or_selected_auth"
+	ExternalAuthResult              EventType = "external_auth_result"
+	ExternalAuthStarted             EventType = "external_auth_started"
+	ExternalAuthTokenFetchResult    EventType = "external_auth_token_fetch_result"
+	FunctionDeployment              EventType = "function_deployment"
+	FunctionExecutionOutput         EventType = "function_execution_output"
+	FunctionExecutionResult         EventType = "function_execution_result"
+	FunctionExecutionStarted        EventType = "function_execution_started"
+	TriggerExecuted                 EventType = "trigger_executed"
+	TriggerPayloadReceived          EventType = "trigger_payload_received"
+	WorkflowBillingResult           EventType = "workflow_billing_result"
+	WorkflowBotInvited              EventType = "workflow_bot_invited"
+	WorkflowCreatedFromTemplate     EventType = "workflow_created_from_template"
+	WorkflowExecutionResult         EventType = "workflow_execution_result"
+	WorkflowExecutionStarted        EventType = "workflow_execution_started"
+	WorkflowPublished               EventType = "workflow_published"
+	WorkflowStepExecutionResult     EventType = "workflow_step_execution_result"
+	WorkflowStepStarted             EventType = "workflow_step_started"
+	WorkflowUnpublished             EventType = "workflow_unpublished"
 )
 
 type ActivityRequest struct {
-	AppId              string `json:"app_id"`
+	AppID              string `json:"app_id"`
 	NextCursor         string `json:"cursor,omitempty"`
 	Limit              int    `json:"limit,omitempty"`
 	MinimumDateCreated int64  `json:"min_date_created,omitempty"`
@@ -78,7 +78,7 @@ type ActivityRequest struct {
 	MinimumLogLevel    string `json:"min_log_level,omitempty"`
 	EventType          string `json:"log_event_type,omitempty"`
 	ComponentType      string `json:"component_type,omitempty"`
-	ComponentId        string `json:"component_id,omitempty"`
+	ComponentID        string `json:"component_id,omitempty"`
 	Source             string `json:"source,omitempty"`
-	TraceId            string `json:"trace_id,omitempty"`
+	TraceID            string `json:"trace_id,omitempty"`
 }

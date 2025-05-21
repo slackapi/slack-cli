@@ -61,7 +61,7 @@ func setupMockTokenSelection() func() {
 	var originalPromptFunc = tokenSelectionFunc
 	tokenSelectionFunc = externalAuthMock.TokenSelectPrompt
 	externalAuthMock.On("TokenSelectPrompt").Return(types.ExternalTokenInfo{
-		ExternalTokenId: "Et0548LABCDE",
+		ExternalTokenID: "Et0548LABCDE",
 	}, nil)
 	return func() {
 		tokenSelectionFunc = originalPromptFunc

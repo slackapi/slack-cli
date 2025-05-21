@@ -94,7 +94,7 @@ func TestDoctorCheckProjectConfig(t *testing.T) {
 			projectConfig: config.ProjectConfig{
 				ProjectID: "project-abcdef",
 				Manifest: &config.ManifestConfig{
-					Source: config.MANIFEST_SOURCE_LOCAL.String(),
+					Source: config.ManifestSourceLocal.String(),
 				},
 			},
 			expectedProjectSection: &Section{

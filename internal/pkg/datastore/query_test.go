@@ -109,7 +109,7 @@ func TestDatastoreQueryArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.ApiInterface.On("AppsDatastoreQuery", mock.Anything, mock.Anything, tt.Query).
+			clientsMock.API.On("AppsDatastoreQuery", mock.Anything, mock.Anything, tt.Query).
 				Return(tt.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 

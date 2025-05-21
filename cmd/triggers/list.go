@@ -94,11 +94,11 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	}
 
 	args := api.TriggerListRequest{
-		AppId: app.AppID,
+		AppID: app.AppID,
 		Limit: listFlags.triggerLimit,
 		Type:  listFlags.triggerType,
 	}
-	deployedTriggers, cursor, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
+	deployedTriggers, cursor, err := clients.API().WorkflowsTriggersList(ctx, token, args)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 
 	token := config.GetContextToken(ctx)
 	args := api.TriggerListRequest{
-		AppId:  app.AppID,
+		AppID:  app.AppID,
 		Limit:  listFlags.triggerLimit,
 		Cursor: cursor,
 		Type:   listFlags.triggerType,
@@ -172,7 +172,7 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 
 	for proceed && args.Cursor != "" {
 		proceed = false
-		deployedTriggers, nextCursor, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
+		deployedTriggers, nextCursor, err := clients.API().WorkflowsTriggersList(ctx, token, args)
 		if err != nil {
 			return err
 		}

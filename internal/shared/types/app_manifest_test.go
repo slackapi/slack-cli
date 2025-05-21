@@ -110,7 +110,7 @@ func Test_AppManifest_ConvertDataForRawJSON(t *testing.T) {
 	}
 }
 
-func Test_AppManifest_ToRawJson(t *testing.T) {
+func Test_AppManifest_ToRawJSON(t *testing.T) {
 	tests := map[string]struct {
 		have string
 		want *RawJSON
@@ -122,10 +122,10 @@ func Test_AppManifest_ToRawJson(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			if got := ToRawJson(tt.have); !reflect.DeepEqual(got, tt.want) {
+			if got := ToRawJSON(tt.have); !reflect.DeepEqual(got, tt.want) {
 				t.Log(got.Data)
 				t.Log(got.JSONData)
-				t.Errorf("ToRawJson() = %v, want %v", got, tt.want)
+				t.Errorf("ToRawJSON() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -178,22 +178,22 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 
 func Test_AppManifest_AppSettings_SiwsLinks(t *testing.T) {
 	expectedSiws := SiwsLinks{
-		InitiateUri: "an initiate uri",
+		InitiateURI: "an initiate uri",
 	}
 	tests := map[string]struct {
 		settings          *AppSettings
 		expectedSiwsLinks *SiwsLinks
-		expectedJson      string
+		expectedJSON      string
 	}{
 		"undefined incoming webhooks have no siws links": {
 			settings:          &AppSettings{},
 			expectedSiwsLinks: nil,
-			expectedJson:      `{}`,
+			expectedJSON:      `{}`,
 		},
 		"defined siws links have siws links": {
 			settings:          &AppSettings{SiwsLinks: &expectedSiws},
 			expectedSiwsLinks: &expectedSiws,
-			expectedJson:      `{"siws_links":{"initiate_uri":"an initiate uri"}}`,
+			expectedJSON:      `{"siws_links":{"initiate_uri":"an initiate uri"}}`,
 		},
 	}
 	for name, tt := range tests {
@@ -202,9 +202,9 @@ func Test_AppManifest_AppSettings_SiwsLinks(t *testing.T) {
 				Settings: tt.settings,
 			}
 			if tt.settings != nil {
-				actualJson, err := json.Marshal(tt.settings)
+				actualJSON, err := json.Marshal(tt.settings)
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedJson, string(actualJson))
+				assert.Equal(t, tt.expectedJSON, string(actualJSON))
 				assert.Equal(t, tt.expectedSiwsLinks, manifest.Settings.SiwsLinks)
 			} else {
 				assert.Nil(t, manifest.Settings)
@@ -221,17 +221,17 @@ func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 	tests := map[string]struct {
 		settings                      *AppSettings
 		expectedIncomingWebhooksLinks *IncomingWebhooks
-		expectedJson                  string
+		expectedJSON                  string
 	}{
 		"undefined incoming webhooks have no webhooks": {
 			settings:                      &AppSettings{},
 			expectedIncomingWebhooksLinks: nil,
-			expectedJson:                  `{}`,
+			expectedJSON:                  `{}`,
 		},
 		"defined incoming webhooks have webhooks": {
 			settings:                      &AppSettings{IncomingWebhooks: &expectedIncomingWebhooks},
 			expectedIncomingWebhooksLinks: &expectedIncomingWebhooks,
-			expectedJson:                  `{"incoming_webhooks":{"incoming_webhooks_enabled":false}}`,
+			expectedJSON:                  `{"incoming_webhooks":{"incoming_webhooks_enabled":false}}`,
 		},
 	}
 	for name, tt := range tests {
@@ -240,9 +240,9 @@ func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 				Settings: tt.settings,
 			}
 			if tt.settings != nil {
-				actualJson, err := json.Marshal(tt.settings)
+				actualJSON, err := json.Marshal(tt.settings)
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedJson, string(actualJson))
+				assert.Equal(t, tt.expectedJSON, string(actualJSON))
 				assert.Equal(t, tt.expectedIncomingWebhooksLinks, manifest.Settings.IncomingWebhooks)
 			} else {
 				assert.Nil(t, manifest.Settings)
@@ -270,17 +270,17 @@ func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 		"setting the function runtime to slack is hosted": {
 			settings:        &AppSettings{FunctionRuntime: "slack"},
 			expectedHosted:  true,
-			expectedRuntime: SLACK_HOSTED,
+			expectedRuntime: SlackHosted,
 		},
 		"setting the function runtime to remote is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "remote"},
 			expectedHosted:  false,
-			expectedRuntime: REMOTE,
+			expectedRuntime: Remote,
 		},
 		"setting the function runtime to local is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "local"},
 			expectedHosted:  false,
-			expectedRuntime: LOCALLY_RUN,
+			expectedRuntime: LocallyRun,
 		},
 		"setting the function runtime to random is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "sparkling-butterflies"},

@@ -24,7 +24,7 @@ import (
 const EnvTestVersion = "SLACK_TEST_VERSION"
 
 // Version is set with `git describe` at build time in the Makefile
-var Version = "dev"
+var Version = "v0.0.0-dev"
 
 // init attempts to update Version from an env var for testing purposes
 func init() {

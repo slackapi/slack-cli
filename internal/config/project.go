@@ -163,16 +163,16 @@ func (c *ProjectConfig) GetManifestSource(ctx context.Context) (ManifestSource, 
 	if projectConfig.Manifest != nil {
 		source := ManifestSource(strings.TrimSpace(projectConfig.Manifest.Source))
 		switch {
-		case source.Equals(MANIFEST_SOURCE_LOCAL), source.Equals(MANIFEST_SOURCE_REMOTE):
+		case source.Equals(ManifestSourceLocal), source.Equals(ManifestSourceRemote):
 			return source, nil
 		case !source.Exists():
-			return MANIFEST_SOURCE_LOCAL, nil
+			return ManifestSourceLocal, nil
 		default:
 			return "", slackerror.New(slackerror.ErrProjectConfigManifestSource)
 		}
 	}
 
-	return MANIFEST_SOURCE_LOCAL, nil
+	return ManifestSourceLocal, nil
 }
 
 // SetManifestSource saves the manifest source preference for the project
@@ -262,7 +262,7 @@ func (c *ProjectConfig) ReadProjectConfigFile(ctx context.Context) (ProjectConfi
 
 	err = json.Unmarshal(projectConfigFileBytes, &projectConfig)
 	if err != nil {
-		return projectConfig, slackerror.New(slackerror.ErrUnableToParseJson).
+		return projectConfig, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of project-level config file").
 			WithRootCause(err).
 			WithRemediation("Check that %s is valid JSON", style.HomePath(projectConfigFilePath))
@@ -316,7 +316,7 @@ func (c *ProjectConfig) GetProjectDirPath() (string, error) {
 	if _, err := c.fs.Stat(projectHooksJSONPath); os.IsNotExist(err) {
 
 		// Fallback check for slack.json and .slack/slack.json file
-		// TODO(semver:major): remove both fallbacks next major release
+		// DEPRECATED(semver:major): remove both fallbacks next major release
 		projectSlackJSONPath := filepath.Join(currentDir, "slack.json")
 		if _, err := c.fs.Stat(projectSlackJSONPath); err == nil {
 			return currentDir, nil

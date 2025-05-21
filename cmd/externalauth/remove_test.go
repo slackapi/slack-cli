@@ -44,12 +44,12 @@ func TestExternalAuthRemoveCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.SLACK_HOSTED,
+						FunctionRuntime: types.SlackHosted,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
 		},
@@ -57,12 +57,12 @@ func TestExternalAuthRemoveCommandPreRun(t *testing.T) {
 			mockManifestResponse: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Settings: &types.AppSettings{
-						FunctionRuntime: types.REMOTE,
+						FunctionRuntime: types.Remote,
 					},
 				},
 			},
 			mockManifestError:    nil,
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -74,7 +74,7 @@ func TestExternalAuthRemoveCommandPreRun(t *testing.T) {
 		"errors if the project manifest cannot be retrieved": {
 			mockManifestResponse: types.SlackYaml{},
 			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.MANIFEST_SOURCE_LOCAL,
+			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
@@ -85,7 +85,7 @@ func TestExternalAuthRemoveCommandPreRun(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
 		},
 		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.MANIFEST_SOURCE_REMOTE,
+			mockManifestSource:   config.ManifestSourceRemote,
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
@@ -142,18 +142,18 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: false, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.ApiInterface.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(nil)
+				clientsMock.API.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(nil)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
 				clientsMock.AddDefaultMocks()
 				// TODO this can probably be replaced by a helper that sets up an apps.json file in
@@ -162,75 +162,75 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "provider_a", "")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "provider_a", "")
 			},
 		},
 		"with --provider": {
 			CmdArgs:         []string{"--provider", "provider_a"},
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.ApiInterface.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.AddDefaultMocks()
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to remove all tokens for this app relevant to the specified provider from your current team/org?", mock.Anything).Return(true)
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "provider_a", "")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "provider_a", "")
 			},
 		},
 		"with --all": {
 			CmdArgs:         []string{"--all"},
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.ApiInterface.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to remove all tokens for this app from your current team/org?", mock.Anything).Return(true)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "", "")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "", "")
 			},
 		},
 		"with --all and --provider": {
 			CmdArgs:         []string{"--all", "--provider", "provider_a"},
 			ExpectedOutputs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{
 							{
 								ProviderName:       "Google",
 								ProviderKey:        "provider_a",
-								ClientId:           "xxxxx",
+								ClientID:           "xxxxx",
 								ClientSecretExists: true, ValidTokenExists: false,
 							},
 						}}, nil)
-				clientsMock.ApiInterface.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
@@ -238,24 +238,24 @@ func TestExternalAuthRemoveCommand(t *testing.T) {
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to remove all tokens for this app relevant to the specified provider from your current team/org?", mock.Anything).Return(true)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "provider_a", "")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "provider_a", "")
 			},
 		},
 		"with --all but no auth present": {
 			CmdArgs: []string{"--all"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.ApiInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{
 						Authorizations: []types.ExternalAuthorizationInfo{}}, errors.New("test error"))
-				clientsMock.ApiInterface.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.AddDefaultMocks()
 				err := clients.AppClient().SaveDeployed(ctx, fakeApp)
 				require.NoError(t, err, "Cant write apps.json")
 				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to remove all tokens for this app from your current team/org?", mock.Anything).Return(true)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "", "")
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalDelete", mock.Anything, mock.Anything, fakeAppID, "", "")
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

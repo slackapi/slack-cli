@@ -247,7 +247,7 @@ func (u *UpdateNotification) isLastUpdateCheckedAtGreaterThan(ctx context.Contex
 	return false
 }
 
-// newHttpClient returns an http.Client for checking the latest release on github.com.
-func newHttpClient() (*http.Client, error) {
-	return api.NewHttpClient(api.HttpClientOptions{TotalTimeOut: 60 * time.Second}), nil
+// newHTTPClient returns an http.Client for checking the latest release on github.com.
+func newHTTPClient() (*http.Client, error) {
+	return api.NewHTTPClient(api.HTTPClientOptions{TotalTimeOut: 60 * time.Second}), nil
 }

@@ -92,7 +92,7 @@ func runAddClientSecretCommand(clients *shared.ClientFactory, cmd *cobra.Command
 	}
 
 	// Get the oauth2 provider keys
-	providerAuths, err := clients.ApiInterface().AppsAuthExternalList(
+	providerAuths, err := clients.API().AppsAuthExternalList(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,
@@ -121,7 +121,7 @@ func runAddClientSecretCommand(clients *shared.ClientFactory, cmd *cobra.Command
 		clientSecret = response.Value
 	}
 
-	err = clients.ApiInterface().AppsAuthExternalClientSecretAdd(
+	err = clients.API().AppsAuthExternalClientSecretAdd(
 		ctx,
 		selection.Auth.Token,
 		selection.App.AppID,

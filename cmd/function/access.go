@@ -134,12 +134,12 @@ func handleUpdate(
 	if distributeFlags.file != "" {
 		return distributePermissionFile(ctx, clients, app, distributeFlags.file)
 	} else if distributeFlags.everyone || distributeFlags.appCollab {
-		distribution := types.EVERYONE
+		distribution := types.PermissionEveryone
 		if distributeFlags.appCollab {
-			distribution = types.APP_COLLABORATORS
+			distribution = types.PermissionAppCollaborators
 		}
 
-		_, err := clients.ApiInterface().FunctionDistributionSet(ctx, functionFlag, app.AppID, distribution, "")
+		_, err := clients.API().FunctionDistributionSet(ctx, functionFlag, app.AppID, distribution, "")
 		if err != nil {
 			return err
 		}
@@ -154,7 +154,7 @@ func handleUpdate(
 			return err
 		}
 
-		err = clients.ApiInterface().FunctionDistributionAddUsers(ctx, functionFlag, app.AppID, distributeFlags.users)
+		err = clients.API().FunctionDistributionAddUsers(ctx, functionFlag, app.AppID, distributeFlags.users)
 		if err != nil {
 			return err
 		}
@@ -170,7 +170,7 @@ func handleUpdate(
 			return slackerror.New(slackerror.ErrMissingFlag).WithRemediation("To revoke a user's access, pass in their user ID with the --users flag: `--users U12345`")
 		}
 
-		err := clients.ApiInterface().FunctionDistributionRemoveUsers(ctx, functionFlag, app.AppID, distributeFlags.users)
+		err := clients.API().FunctionDistributionRemoveUsers(ctx, functionFlag, app.AppID, distributeFlags.users)
 		if err != nil {
 			return err
 		}
@@ -187,7 +187,7 @@ func handleUpdate(
 			return err
 		}
 
-		if dist == types.NAMED_ENTITIES {
+		if dist == types.PermissionNamedEntities {
 			err := printEntityAccess(ctx, cmd, clients, app)
 			if err != nil {
 				return err
@@ -205,7 +205,7 @@ func handleUpdate(
 					return err
 				}
 
-				err = clients.ApiInterface().FunctionDistributionAddUsers(ctx, functionFlag, app.AppID, users)
+				err = clients.API().FunctionDistributionAddUsers(ctx, functionFlag, app.AppID, users)
 				if err != nil {
 					return err
 				}
@@ -216,7 +216,7 @@ func handleUpdate(
 					Text:  fmt.Sprintf("Function access granted to the provided %s", style.Pluralize("user", "users", len(users))),
 				})))
 			case "remove":
-				err = clients.ApiInterface().FunctionDistributionRemoveUsers(ctx, functionFlag, app.AppID, users)
+				err = clients.API().FunctionDistributionRemoveUsers(ctx, functionFlag, app.AppID, users)
 				if err != nil {
 					return err
 				}
@@ -228,7 +228,7 @@ func handleUpdate(
 			return printDistribution(ctx, cmd, clients, app)
 		}
 
-		_, err = clients.ApiInterface().FunctionDistributionSet(ctx, functionFlag, app.AppID, dist, "")
+		_, err = clients.API().FunctionDistributionSet(ctx, functionFlag, app.AppID, dist, "")
 		if err != nil {
 			return err
 		}
@@ -271,15 +271,15 @@ func distributePermissionFile(ctx context.Context, clients *shared.ClientFactory
 						),
 						Remediation: fmt.Sprintf(
 							"Replace it with '%s', '%s', or '%s'",
-							types.EVERYONE,
-							types.APP_COLLABORATORS,
-							types.NAMED_ENTITIES,
+							types.PermissionEveryone,
+							types.PermissionAppCollaborators,
+							types.PermissionNamedEntities,
 						),
 					},
 				})
 		}
 		switch permissions.Type {
-		case types.NAMED_ENTITIES:
+		case types.PermissionNamedEntities:
 			if len(permissions.UserIDs) == 0 {
 				clients.IO.PrintWarning(ctx, fmt.Sprintf(
 					"No users will have access to '%s'",
@@ -298,7 +298,7 @@ func distributePermissionFile(ctx context.Context, clients *shared.ClientFactory
 					permissions.Type,
 				))
 			}
-			_, err := clients.ApiInterface().FunctionDistributionSet(ctx, function, app.AppID, permissions.Type, "")
+			_, err := clients.API().FunctionDistributionSet(ctx, function, app.AppID, permissions.Type, "")
 			if err != nil {
 				return err
 			}
@@ -317,11 +317,11 @@ func updateNamedEntitiesDistribution(
 	entities []string,
 ) error {
 	updatedUsers := strings.Join(entities, ",")
-	_, err := clients.ApiInterface().FunctionDistributionSet(ctx, function, app.AppID, types.NAMED_ENTITIES, updatedUsers)
+	_, err := clients.API().FunctionDistributionSet(ctx, function, app.AppID, types.PermissionNamedEntities, updatedUsers)
 	if err != nil {
 		return err
 	}
-	_, currentUsers, err := clients.ApiInterface().FunctionDistributionList(ctx, function, app.AppID)
+	_, currentUsers, err := clients.API().FunctionDistributionList(ctx, function, app.AppID)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func updateNamedEntitiesDistribution(
 		}
 	}
 	removals := strings.Join(removalSlice, ",")
-	err = clients.ApiInterface().FunctionDistributionRemoveUsers(ctx, function, app.AppID, removals)
+	err = clients.API().FunctionDistributionRemoveUsers(ctx, function, app.AppID, removals)
 	if err != nil {
 		return err
 	}
@@ -348,12 +348,12 @@ func updateNamedEntitiesDistribution(
 
 // printDistribution formats and displays access information
 func printDistribution(ctx context.Context, cmd *cobra.Command, clients *shared.ClientFactory, app types.App) error {
-	dist, userAccessList, err := clients.ApiInterface().FunctionDistributionList(ctx, functionFlag, app.AppID)
+	dist, userAccessList, err := clients.API().FunctionDistributionList(ctx, functionFlag, app.AppID)
 	if err != nil {
 		return err
 	}
 	var entities string
-	if dist == types.APP_COLLABORATORS {
+	if dist == types.PermissionAppCollaborators {
 		entities = "app collaborators"
 	} else {
 		entities = "the following users"
@@ -361,7 +361,7 @@ func printDistribution(ctx context.Context, cmd *cobra.Command, clients *shared.
 	var emoji string
 	var secondary []string
 	switch {
-	case dist == types.EVERYONE:
+	case dist == types.PermissionEveryone:
 		emoji = "busts_in_silhouette"
 		secondary = append(secondary, types.GetAccessTypeDescriptionForEveryone(app))
 	case len(userAccessList) <= 0:
@@ -387,11 +387,11 @@ func printDistribution(ctx context.Context, cmd *cobra.Command, clients *shared.
 
 // printEntityAccess formats and displays the users with access to an app's functions
 func printEntityAccess(ctx context.Context, cmd *cobra.Command, clients *shared.ClientFactory, app types.App) error {
-	distType, users, err := clients.ApiInterface().FunctionDistributionList(ctx, functionFlag, app.AppID)
+	distType, users, err := clients.API().FunctionDistributionList(ctx, functionFlag, app.AppID)
 	if err != nil {
 		return err
 	}
-	if distType != types.NAMED_ENTITIES {
+	if distType != types.PermissionNamedEntities {
 		return nil
 	}
 	var emoji string
@@ -421,16 +421,16 @@ func printEntityAccess(ctx context.Context, cmd *cobra.Command, clients *shared.
 
 // handleDistributionType checks if the function's distribution type is named_entities and if not, updates it
 func handleDistributionType(ctx context.Context, clients *shared.ClientFactory, app types.App) error {
-	distType, _, err := clients.ApiInterface().FunctionDistributionList(ctx, functionFlag, app.AppID)
+	distType, _, err := clients.API().FunctionDistributionList(ctx, functionFlag, app.AppID)
 	if err != nil {
 		return err
 	}
 
-	if distType == types.NAMED_ENTITIES {
+	if distType == types.PermissionNamedEntities {
 		return nil
 	}
 
-	_, err = clients.ApiInterface().FunctionDistributionSet(ctx, functionFlag, app.AppID, types.NAMED_ENTITIES, "")
+	_, err = clients.API().FunctionDistributionSet(ctx, functionFlag, app.AppID, types.PermissionNamedEntities, "")
 	if err != nil {
 		return err
 	}
@@ -445,7 +445,7 @@ func AddCollaboratorsToNamedEntities(
 	app types.App,
 	token string,
 ) error {
-	collaborators, err := clients.ApiInterface().ListCollaborators(ctx, token, app.AppID)
+	collaborators, err := clients.API().ListCollaborators(ctx, token, app.AppID)
 	if err != nil {
 		return err
 	}
@@ -464,5 +464,5 @@ func AddCollaboratorsToNamedEntities(
 		return err
 	}
 
-	return clients.ApiInterface().FunctionDistributionAddUsers(ctx, functionFlag, app.AppID, userIDs)
+	return clients.API().FunctionDistributionAddUsers(ctx, functionFlag, app.AppID, userIDs)
 }

@@ -43,7 +43,7 @@ type accessCmdFlags struct {
 	everyone         bool
 	appCollab        bool
 	info             bool
-	triggerId        string
+	triggerID        string
 	channels         string
 	workspaces       string
 	organizations    string
@@ -76,7 +76,7 @@ func NewAccessCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&accessFlags.triggerId, "trigger-id", "T", "", "the ID of the trigger")
+	cmd.Flags().StringVarP(&accessFlags.triggerID, "trigger-id", "T", "", "the ID of the trigger")
 
 	cmd.Flags().StringVarP(&accessFlags.users, "users", "U", "", "a comma-separated list of Slack user IDs")
 	cmd.Flags().StringVarP(&accessFlags.channels, "channels", "C", "", "a comma-separated list of Slack channel IDs")
@@ -115,8 +115,8 @@ func runAccessCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	}
 
 	// Get trigger ID from flag or prompt
-	if accessFlags.triggerId == "" {
-		accessFlags.triggerId, err = promptForTriggerID(ctx, cmd, clients, app, token, labelsIncludeAccessType)
+	if accessFlags.triggerID == "" {
+		accessFlags.triggerID, err = promptForTriggerID(ctx, cmd, clients, app, token, labelsIncludeAccessType)
 		if err != nil {
 			if slackerror.ToSlackError(err).Code == slackerror.ErrNoTriggers {
 				printNoTriggersMessage(ctx, clients.IO)
@@ -132,7 +132,7 @@ func runAccessCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	}
 
 	// Get the current access for the trigger
-	currentAccessType, currentAuthorizedEntities, err := clients.ApiInterface().TriggerPermissionsList(ctx, token, accessFlags.triggerId)
+	currentAccessType, currentAuthorizedEntities, err := clients.API().TriggerPermissionsList(ctx, token, accessFlags.triggerID)
 	if err != nil {
 		return err
 	}
@@ -147,10 +147,10 @@ func runAccessCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 
 		if accessFlags.revoke {
-			if currentAccessType != types.NAMED_ENTITIES {
+			if currentAccessType != types.PermissionNamedEntities {
 				return slackerror.New("Trigger access permission is not set to specific entities, grant an entity access first")
 			} else {
-				accessType = types.NAMED_ENTITIES
+				accessType = types.PermissionNamedEntities
 			}
 		} else {
 			accessType, err = promptForAccessType(ctx, clients, token, currentAccessType)
@@ -163,15 +163,15 @@ func runAccessCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	}
 
 	// Set access type
-	if accessType == types.EVERYONE || accessType == types.APP_COLLABORATORS {
-		_, err = clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, "", accessType, "")
+	if accessType == types.PermissionEveryone || accessType == types.PermissionAppCollaborators {
+		_, err = clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, "", accessType, "")
 		if err != nil {
 			return err
 		}
 	}
 
 	// Add or remove users, channels, workspaces or organizations from the named_entities ACL as per flags or prompts
-	if accessType == types.NAMED_ENTITIES {
+	if accessType == types.PermissionNamedEntities {
 		err := manageNamedEntities(cmd, clients, selection.Auth.Token, selection.App, currentAccessType, currentAuthorizedEntities)
 		if err != nil {
 			return err
@@ -198,15 +198,15 @@ func promptForAccessType(ctx context.Context, clients *shared.ClientFactory, tok
 	if err != nil {
 		if slackerror.ToSlackError(err).Code == slackerror.ErrMismatchedFlags &&
 			types.IsNamedEntityFlag(clients.Config.Flags) {
-			return types.NAMED_ENTITIES, nil
+			return types.PermissionNamedEntities, nil
 		}
 		return *selectedPermission, err
 	} else if selection.Flag && types.IsNamedEntityFlag(clients.Config.Flags) {
-		return types.NAMED_ENTITIES, nil
+		return types.PermissionNamedEntities, nil
 	} else if selection.Flag && clients.Config.Flags.Lookup("app-collaborators").Changed {
-		return types.APP_COLLABORATORS, nil
+		return types.PermissionAppCollaborators, nil
 	} else if selection.Flag && clients.Config.Flags.Lookup("everyone").Changed {
-		return types.EVERYONE, nil
+		return types.PermissionEveryone, nil
 	} else if selection.Prompt {
 		return permissions[selection.Index], nil
 	}
@@ -216,14 +216,14 @@ func promptForAccessType(ctx context.Context, clients *shared.ClientFactory, tok
 // getPermissionTypeFromFlags returns the permission type from the flags
 func getPermissionTypeFromFlags() types.Permission {
 	if accessFlags.appCollab {
-		return types.APP_COLLABORATORS
+		return types.PermissionAppCollaborators
 	}
 
 	if accessFlags.users != "" || accessFlags.channels != "" || accessFlags.workspaces != "" || accessFlags.organizations != "" {
-		return types.NAMED_ENTITIES
+		return types.PermissionNamedEntities
 	}
 
-	return types.EVERYONE
+	return types.PermissionEveryone
 }
 
 func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, token string, app types.App, currentAccessType types.Permission, currentAuthorizedEntities []string) error {
@@ -246,7 +246,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 
 	// prompt if list of named_entities not passed in, and one of 'grant' or 'revoke' is not specified
 	if accessNamedEntities == 0 || accessFlags.grant == accessFlags.revoke {
-		named_entities := ""
+		namedEntities := ""
 		accessAction, err := prompts.TriggerChooseNamedEntityActionPrompt(ctx, clients)
 		if err != nil {
 			return err
@@ -258,7 +258,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		if accessNamedEntities > 0 {
 			if accessAction == "grant" {
 				accessFlags.grant = true
-				if !cmdutil.IsFlagChanged(cmd, "include-app-collaborators") && currentAccessType != types.NAMED_ENTITIES {
+				if !cmdutil.IsFlagChanged(cmd, "include-app-collaborators") && currentAccessType != types.PermissionNamedEntities {
 					includeAppCollaborators, err = prompts.AddAppCollaboratorsToNamedEntitiesPrompt(ctx, clients.IO)
 					if err != nil {
 						return err
@@ -275,7 +275,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 				return err
 			}
 
-			action, named_entities, includeAppCollaborators, err = prompts.TriggerChooseNamedEntityPrompt(ctx, clients, accessAction, currentAccessType, cmdutil.IsFlagChanged(cmd, "include-app-collaborators"))
+			action, namedEntities, includeAppCollaborators, err = prompts.TriggerChooseNamedEntityPrompt(ctx, clients, accessAction, currentAccessType, cmdutil.IsFlagChanged(cmd, "include-app-collaborators"))
 			// Overwrite includeAppCollaborators from TriggerChooseNamedEntityPrompt() if flag is set
 			if cmdutil.IsFlagChanged(cmd, "include-app-collaborators") {
 				includeAppCollaborators = accessFlags.includeAppCollab
@@ -289,17 +289,17 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 			}
 
 			if strings.Contains(action, "_user") {
-				accessFlags.users = named_entities
+				accessFlags.users = namedEntities
 			} else if strings.Contains(action, "_channel") {
-				accessFlags.channels = named_entities
+				accessFlags.channels = namedEntities
 			} else if strings.Contains(action, "_workspace") {
-				accessFlags.workspaces = named_entities
+				accessFlags.workspaces = namedEntities
 			} else if strings.Contains(action, "_organization") {
-				accessFlags.organizations = named_entities
+				accessFlags.organizations = namedEntities
 			}
 		}
 	} else {
-		if !cmdutil.IsFlagChanged(cmd, "include-app-collaborators") && currentAccessType != types.NAMED_ENTITIES && accessFlags.grant {
+		if !cmdutil.IsFlagChanged(cmd, "include-app-collaborators") && currentAccessType != types.PermissionNamedEntities && accessFlags.grant {
 			var err error
 			includeAppCollaborators, err = prompts.AddAppCollaboratorsToNamedEntitiesPrompt(ctx, clients.IO)
 			if err != nil {
@@ -308,7 +308,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 	}
 
-	if includeAppCollaborators && currentAccessType != types.NAMED_ENTITIES {
+	if includeAppCollaborators && currentAccessType != types.PermissionNamedEntities {
 		err := AddAppCollaboratorsToNamedEntities(ctx, clients, token, app.AppID)
 		if err != nil {
 			return err
@@ -348,20 +348,20 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 
 	switch action {
 	case "add_user":
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			if includeAppCollaborators {
-				err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.users, "users")
+				err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.users, "users")
 				if err != nil {
 					return err
 				}
 			} else {
-				_, err := clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, accessFlags.users, types.NAMED_ENTITIES, "users")
+				_, err := clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, accessFlags.users, types.PermissionNamedEntities, "users")
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.users, "users")
+			err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.users, "users")
 			if err != nil {
 				return err
 			}
@@ -371,14 +371,14 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("User", "Users", len(users)), style.Emoji("party_popper"))))
 
 	case "remove_user":
-		if currentAccessType == types.NAMED_ENTITIES && len(currentAuthorizedEntities) == 0 {
+		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
 			return slackerror.New("Access list is empty; cannot remove from an empty list")
 		}
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			return slackerror.New("Grant a user access first")
 		}
 
-		err := clients.ApiInterface().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerId, accessFlags.users, "users")
+		err := clients.API().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerID, accessFlags.users, "users")
 		if err != nil {
 			return err
 		}
@@ -387,20 +387,20 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("User", "Users", len(users)), style.Emoji("firecracker"))))
 
 	case "add_channel":
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			if includeAppCollaborators {
-				err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.channels, "channels")
+				err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.channels, "channels")
 				if err != nil {
 					return err
 				}
 			} else {
-				_, err := clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, accessFlags.channels, types.NAMED_ENTITIES, "channels")
+				_, err := clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, accessFlags.channels, types.PermissionNamedEntities, "channels")
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.channels, "channels")
+			err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.channels, "channels")
 			if err != nil {
 				return err
 			}
@@ -410,14 +410,14 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Channel", "Channels", len(channels)), style.Emoji("party_popper"))))
 
 	case "remove_channel":
-		if currentAccessType == types.NAMED_ENTITIES && len(currentAuthorizedEntities) == 0 {
+		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
 			return slackerror.New("Access list is empty; cannot remove from an empty list")
 		}
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			return slackerror.New("Grant a channel access first")
 		}
 
-		err := clients.ApiInterface().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerId, accessFlags.channels, "channels")
+		err := clients.API().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerID, accessFlags.channels, "channels")
 		if err != nil {
 			return err
 		}
@@ -426,20 +426,20 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Channel", "Channels", len(channels)), style.Emoji("firecracker"))))
 
 	case "add_workspace":
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			if includeAppCollaborators {
-				err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.workspaces, "workspaces")
+				err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.workspaces, "workspaces")
 				if err != nil {
 					return err
 				}
 			} else {
-				_, err := clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, accessFlags.workspaces, types.NAMED_ENTITIES, "workspaces")
+				_, err := clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, accessFlags.workspaces, types.PermissionNamedEntities, "workspaces")
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.workspaces, "workspaces")
+			err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.workspaces, "workspaces")
 			if err != nil {
 				return err
 			}
@@ -449,14 +449,14 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Workspace", "Workspaces", len(workspaces)), style.Emoji("party_popper"))))
 
 	case "remove_workspace":
-		if currentAccessType == types.NAMED_ENTITIES && len(currentAuthorizedEntities) == 0 {
+		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
 			return slackerror.New("Access list is empty; cannot remove from an empty list")
 		}
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			return slackerror.New("Grant a workspace access first")
 		}
 
-		err := clients.ApiInterface().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerId, accessFlags.workspaces, "workspaces")
+		err := clients.API().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerID, accessFlags.workspaces, "workspaces")
 		if err != nil {
 			return err
 		}
@@ -465,20 +465,20 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Workspace", "Workspaces", len(workspaces)), style.Emoji("firecracker"))))
 
 	case "add_organization":
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			if includeAppCollaborators {
-				err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.organizations, "organizations")
+				err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.organizations, "organizations")
 				if err != nil {
 					return err
 				}
 			} else {
-				_, err := clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, accessFlags.organizations, types.NAMED_ENTITIES, "organizations")
+				_, err := clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, accessFlags.organizations, types.PermissionNamedEntities, "organizations")
 				if err != nil {
 					return err
 				}
 			}
 		} else {
-			err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, accessFlags.organizations, "organizations")
+			err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, accessFlags.organizations, "organizations")
 			if err != nil {
 				return err
 			}
@@ -488,14 +488,14 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Organization", "Organizations", len(organizations)), style.Emoji("party_popper"))))
 
 	case "remove_organization":
-		if currentAccessType == types.NAMED_ENTITIES && len(currentAuthorizedEntities) == 0 {
+		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
 			return slackerror.New("Access list is empty; cannot remove from an empty list")
 		}
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			return slackerror.New("Grant an organization access first")
 		}
 
-		err := clients.ApiInterface().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerId, accessFlags.organizations, "organizations")
+		err := clients.API().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerID, accessFlags.organizations, "organizations")
 		if err != nil {
 			return err
 		}
@@ -504,16 +504,16 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Organization", "Organizations", len(organizations)), style.Emoji("firecracker"))))
 
 	case "add_entities":
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			index := 0
 			for namedEntityType, namedEntityVal := range namedEntitiesValMap() {
 				if index == 0 && !includeAppCollaborators {
-					_, trigger_set_err := clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, namedEntityVal, types.NAMED_ENTITIES, namedEntityType)
-					if trigger_set_err != nil {
-						return trigger_set_err
+					_, triggerSetErr := clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, namedEntityVal, types.PermissionNamedEntities, namedEntityType)
+					if triggerSetErr != nil {
+						return triggerSetErr
 					}
 				} else {
-					err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, namedEntityVal, namedEntityType)
+					err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, namedEntityVal, namedEntityType)
 					if err != nil {
 						return err
 					}
@@ -524,7 +524,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 			}
 		} else {
 			for namedEntityType, namedEntityVal := range namedEntitiesValMap() {
-				err := clients.ApiInterface().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerId, namedEntityVal, namedEntityType)
+				err := clients.API().TriggerPermissionsAddEntities(ctx, token, accessFlags.triggerID, namedEntityVal, namedEntityType)
 				if err != nil {
 					return err
 				}
@@ -534,15 +534,15 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 	case "remove_entities":
-		if currentAccessType == types.NAMED_ENTITIES && len(currentAuthorizedEntities) == 0 {
+		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
 			return slackerror.New("Access list is empty; cannot remove from an empty list")
 		}
-		if currentAccessType != types.NAMED_ENTITIES {
+		if currentAccessType != types.PermissionNamedEntities {
 			return slackerror.New("Grant an entity access first")
 		}
 
 		for namedEntityType, namedEntityVal := range namedEntitiesValMap() {
-			err := clients.ApiInterface().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerId, namedEntityVal, namedEntityType)
+			err := clients.API().TriggerPermissionsRemoveEntities(ctx, token, accessFlags.triggerID, namedEntityVal, namedEntityType)
 			if err != nil {
 				return err
 			}
@@ -557,19 +557,19 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 func printAccess(cmd *cobra.Command, clients *shared.ClientFactory, token string, app types.App) error {
 	ctx := cmd.Context()
 
-	accessType, userAccessList, err := clients.ApiInterface().TriggerPermissionsList(ctx, token, accessFlags.triggerId)
+	accessType, userAccessList, err := clients.API().TriggerPermissionsList(ctx, token, accessFlags.triggerID)
 	if err != nil {
 		clients.IO.PrintTrace(ctx, slacktrace.TriggersAccessError)
 		return err
 	}
 
-	if accessType == types.EVERYONE {
+	if accessType == types.PermissionEveryone {
 		var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
-		clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s", accessFlags.triggerId, everyoneAccessTypeDescription)
-	} else if accessType == types.APP_COLLABORATORS {
-		clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s:", accessFlags.triggerId, style.Pluralize("app collaborator", "app collaborators", len(userAccessList)))
+		clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s", accessFlags.triggerID, everyoneAccessTypeDescription)
+	} else if accessType == types.PermissionAppCollaborators {
+		clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s:", accessFlags.triggerID, style.Pluralize("app collaborator", "app collaborators", len(userAccessList)))
 		err = printAppCollaboratorsHelper(cmd, clients, token, userAccessList)
-	} else if accessType == types.NAMED_ENTITIES {
+	} else if accessType == types.PermissionNamedEntities {
 		err = printNamedEntitiesHelper(cmd, clients, token, userAccessList, "list")
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.TriggersAccessSuccess)
@@ -581,10 +581,10 @@ func printCurrentAuthorizedEntities(cmd *cobra.Command, clients *shared.ClientFa
 	ctx := cmd.Context()
 
 	cmd.Println()
-	if currentAccessType == types.EVERYONE {
+	if currentAccessType == types.PermissionEveryone {
 		var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
-		clients.IO.PrintInfo(ctx, false, "Trigger '%s' can be found and run by %s\n", accessFlags.triggerId, everyoneAccessTypeDescription)
-	} else if currentAccessType == (types.APP_COLLABORATORS) {
+		clients.IO.PrintInfo(ctx, false, "Trigger '%s' can be found and run by %s\n", accessFlags.triggerID, everyoneAccessTypeDescription)
+	} else if currentAccessType == (types.PermissionAppCollaborators) {
 		clients.IO.PrintInfo(ctx, false, "Access is currently granted to %s:", style.Pluralize("app collaborator", "app collaborators", len(currentAccessList)))
 		err := printAppCollaboratorsHelper(cmd, clients, token, currentAccessList)
 		if err != nil {
@@ -608,7 +608,7 @@ func printAppCollaboratorsHelper(cmd *cobra.Command, clients *shared.ClientFacto
 	}
 
 	for _, entity := range userAccessList {
-		userInfo, err := clients.ApiInterface().UsersInfo(ctx, token, entity)
+		userInfo, err := clients.API().UsersInfo(ctx, token, entity)
 		if err != nil {
 			return err
 		}
@@ -625,7 +625,7 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 		if action == "manage" {
 			clients.IO.PrintInfo(ctx, false, "Access is currently granted:")
 		} else if action == "list" {
-			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by:", accessFlags.triggerId)
+			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by:", accessFlags.triggerID)
 		}
 		clients.IO.PrintInfo(ctx, false, "nobody")
 		return nil
@@ -638,10 +638,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 		if action == "manage" {
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to %s:", userLabel)
 		} else if action == "list" {
-			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s:", accessFlags.triggerId, userLabel)
+			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by %s:", accessFlags.triggerID, userLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["users"] {
-			userInfo, err := clients.ApiInterface().UsersInfo(ctx, token, entity)
+			userInfo, err := clients.API().UsersInfo(ctx, token, entity)
 			if err != nil {
 				return err
 			}
@@ -653,10 +653,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 		if action == "manage" {
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to all members of %s:", channelLabel)
 		} else if action == "list" {
-			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerId, channelLabel)
+			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerID, channelLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["channels"] {
-			channelInfo, err := clients.ApiInterface().ChannelsInfo(ctx, token, entity)
+			channelInfo, err := clients.API().ChannelsInfo(ctx, token, entity)
 			if err != nil {
 				return err
 			}
@@ -668,10 +668,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 		if action == "manage" {
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to all members of %s:", teamLabel)
 		} else if action == "list" {
-			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerId, teamLabel)
+			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerID, teamLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["teams"] {
-			teamInfo, err := clients.ApiInterface().TeamsInfo(ctx, token, entity)
+			teamInfo, err := clients.API().TeamsInfo(ctx, token, entity)
 			if err != nil {
 				return err
 			}
@@ -683,10 +683,10 @@ func printNamedEntitiesHelper(cmd *cobra.Command, clients *shared.ClientFactory,
 		if action == "manage" {
 			clients.IO.PrintInfo(ctx, false, "\nAccess is currently granted to all members of %s:", orgLabel)
 		} else if action == "list" {
-			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerId, orgLabel)
+			clients.IO.PrintInfo(ctx, false, "\nTrigger '%s' can be found and run by all members of %s:", accessFlags.triggerID, orgLabel)
 		}
 		for _, entity := range namedEntitiesAccessMap["organizations"] {
-			orgInfo, err := clients.ApiInterface().TeamsInfo(ctx, token, entity)
+			orgInfo, err := clients.API().TeamsInfo(ctx, token, entity)
 			if err != nil {
 				return err
 			}
@@ -748,8 +748,7 @@ func namedEntitiesAccessMap(entitiesAccessList []string) map[string][]string {
 func AddAppCollaboratorsToNamedEntities(ctx context.Context, clients *shared.ClientFactory, token string, appID string) error {
 	ctx = config.SetContextToken(ctx, token)
 
-	// TODO: this shite needs to use ApiInterface but there is no dedicated interface to the collaborator APIs so I guess that's needed now.
-	collaborators, err := clients.ApiInterface().ListCollaborators(ctx, token, appID)
+	collaborators, err := clients.API().ListCollaborators(ctx, token, appID)
 	if err != nil {
 		return err
 	}
@@ -763,7 +762,7 @@ func AddAppCollaboratorsToNamedEntities(ctx context.Context, clients *shared.Cli
 		userIDs = userIDs + "," + collaborators[i].ID
 	}
 
-	_, err = clients.ApiInterface().TriggerPermissionsSet(ctx, token, accessFlags.triggerId, userIDs, types.NAMED_ENTITIES, "users")
+	_, err = clients.API().TriggerPermissionsSet(ctx, token, accessFlags.triggerID, userIDs, types.PermissionNamedEntities, "users")
 	if err != nil {
 		return err
 	}

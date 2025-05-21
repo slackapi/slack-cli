@@ -33,17 +33,35 @@ linters:
     staticcheck:
       checks:
         - all
-        - '-ST1003' # disable rule 'Poorly chosen identifier'
-        - '-ST1005' # disable rule 'Incorrectly formatted error string'
-        - '-ST1006' # disable rule 'Poorly chosen receiver name'
-        - '-ST1008' # disable rule 'Function’s error value should be its last return value'
         - '-QF1001' # disable rule 'Apply De Morgan’s law'
         - '-QF1012' # disable rule 'Use fmt.Fprintf instead of x.Write(fmt.Sprintf(...))'
         - '-QF1003' # disable rule 'Convert if/else-if chain to tagged switch'
-        - '-QF1004' # disable rule 'Use strings.ReplaceAll instead of strings.Replace'
-        - '-QF1008' # disable rule 'Omit embedded fields from selector'
-        - '-QF1011' # disable rule 'Omit redundant type from variable declaration'
-        - '-ST1016' # disable rule 'Use consistent method receiver names'
+      # https://golangci-lint.run/usage/linters/#staticcheck
+      # https://staticcheck.dev/docs/configuration/options/#initialisms
+      initialisms:
+        - "ACL"
+        - "API"
+        - "CLI"
+        - "EOF"
+        - "HTML"
+        - "HTTP"
+        - "HTTPS"
+        - "ID"
+        - "IP"
+        - "JSON"
+        - "SDK"
+        - "TCP"
+        - "TLS"
+        - "TS"
+        - "TTL"
+        - "UI"
+        - "URI"
+        - "URL"
+        - "UTF"
+        - "UTF8"
+        - "UUID"
+        - "XML"
+
 formatters:
   enable:
     - gofmt

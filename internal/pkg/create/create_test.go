@@ -74,18 +74,18 @@ func TestGetAvailableDirectory(t *testing.T) {
 	assert.Nil(t, err, "should not return an error")
 }
 
-func Test_generateGitZipFileUrl(t *testing.T) {
-	url := generateGitZipFileUrl("https://github.com/slack-samples/deno-starter-template", "pre-release-0316")
+func Test_generateGitZipFileURL(t *testing.T) {
+	url := generateGitZipFileURL("https://github.com/slack-samples/deno-starter-template", "pre-release-0316")
 	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/pre-release-0316.zip", url, "should return zip download link with branch")
 
-	url = generateGitZipFileUrl("https://github.com/slack-samples/deno-starter-template", "")
+	url = generateGitZipFileURL("https://github.com/slack-samples/deno-starter-template", "")
 	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip", url, "should return zip download link with main")
 
-	// TODO - We should mock the `deputil.UrlChecker` HTTP request so that the unit test is not dependent on the network activity and repo configuration
-	url = generateGitZipFileUrl("https://github.com/google/uuid", "")
+	// TODO - We should mock the `deputil.URLChecker` HTTP request so that the unit test is not dependent on the network activity and repo configuration
+	url = generateGitZipFileURL("https://github.com/google/uuid", "")
 	assert.Equal(t, "https://github.com/google/uuid/archive/refs/heads/master.zip", url, "should return zip download link with 'master' when 'main' branch doesn't exist")
 
-	url = generateGitZipFileUrl("fake_url", "")
+	url = generateGitZipFileURL("fake_url", "")
 	assert.Equal(t, "", url, "should return empty string when url is invalid")
 }
 
@@ -113,6 +113,7 @@ func TestCreateGitArgs(t *testing.T) {
 func Test_Create_installProjectDependencies(t *testing.T) {
 	tests := map[string]struct {
 		experiments            []string
+		runtime                string
 		manifestSource         config.ManifestSource
 		existingFiles          map[string]string
 		expectedOutputs        []string
@@ -129,7 +130,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			},
 			unexpectedOutputs: []string{
 				"Found project-name/.slack/hooks.json", // Behind bolt experiment
-				"project-name/slack.json",              // TODO(semver:major) Deprecated
+				"project-name/slack.json",              // DEPRECATED(semver:major): Now use hooks.json
 			},
 			expectedVerboseOutputs: []string{
 				"Detected a project using Deno",
@@ -137,7 +138,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		},
 		"When no bolt experiment and slack.json exists, should output adding .slack and caching steps": {
 			existingFiles: map[string]string{
-				"slack.json": "{}", // TODO(semver:major) Included with the template (deprecated path)
+				"slack.json": "{}", // DEPRECATED(semver:major): Included with the template (deprecated path)
 			},
 			expectedOutputs: []string{
 				"Added project-name/.slack",
@@ -188,24 +189,37 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			},
 			expectedOutputs: []string{
 				"Added project-name/.slack",
-				"Found project-name/slack.json", // TODO(semver:major) Deprecated
+				"Found project-name/slack.json", // DEPRECATED(semver:major): Now use hooks.json
 				"Cached dependencies with deno cache import_map.json",
 			},
 			expectedVerboseOutputs: []string{
 				"Detected a project using Deno",
 			},
 		},
-		"When no manifest source, default to local": {
+		"When no manifest source, default to project (local)": {
 			experiments: []string{"bolt"},
 			expectedOutputs: []string{
-				"Updated config.json manifest source to local",
+				`Updated config.json manifest source to "project" (local)`,
 			},
 		},
 		"When manifest source is provided, should set it": {
 			experiments:    []string{"bolt"},
-			manifestSource: config.MANIFEST_SOURCE_REMOTE,
+			manifestSource: config.ManifestSourceRemote,
 			expectedOutputs: []string{
-				"Updated config.json manifest source to remote",
+				`Updated config.json manifest source to "app settings" (remote)`,
+			},
+		},
+		"When bolt + bolt-install experiment and Deno project, should set manifest source to project (local)": {
+			experiments: []string{"bolt", "bolt-install"},
+			expectedOutputs: []string{
+				`Updated config.json manifest source to "project" (local)`,
+			},
+		},
+		"When bolt + bolt-install experiment and non-Deno project, should set manifest source to app settings (remote)": {
+			experiments: []string{"bolt", "bolt-install"},
+			runtime:     "node",
+			expectedOutputs: []string{
+				`Updated config.json manifest source to "app settings" (remote)`,
 			},
 		},
 	}
@@ -226,6 +240,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Os.On("Getwd").Return(projectDirPath, nil)
+			clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(`{}`, nil)
 			clientsMock.AddDefaultMocks()
 
 			// Set experiment flag
@@ -237,6 +252,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 
 			// Set runtime to be Deno (or node or whatever)
 			clients.SDKConfig.Runtime = "deno"
+			if tt.runtime != "" {
+				clients.SDKConfig.Runtime = tt.runtime
+			}
 
 			// Create project directory
 			if err := clients.Fs.MkdirAll(filepath.Dir(projectDirPath), 0755); err != nil {

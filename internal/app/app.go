@@ -35,7 +35,7 @@ type Client struct {
 
 // NewClient returns a client with access to the API
 func NewClient(
-	apiClient api.ApiInterface,
+	apiClient api.APIInterface,
 	config *config.Config,
 	fs afero.Fs,
 	os types.Os,

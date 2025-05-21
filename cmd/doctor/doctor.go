@@ -173,7 +173,7 @@ func doctorHook(ctx context.Context, clients *shared.ClientFactory) (DoctorHookJ
 	}
 	err = json.Unmarshal([]byte(getDoctorHookJSON), &doctorHookJSON)
 	if err != nil {
-		return DoctorHookJSON{}, slackerror.New(slackerror.ErrUnableToParseJson).
+		return DoctorHookJSON{}, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse response from doctor hook").
 			WithRootCause(err)
 	}

@@ -177,14 +177,14 @@ func printBulkPutResult(clients *shared.ClientFactory, cmd *cobra.Command, putRe
 		datastore,
 	)
 
-	var failed_items = putResult.FailedItems
-	if len(failed_items) > 0 {
+	var failedItems = putResult.FailedItems
+	if len(failedItems) > 0 {
 		cmd.Printf(
 			style.Bold("%s Some items failed to be inserted and should be retried: \n\n"),
 			style.Emoji("warning"),
 		)
 
-		b, err := goutils.JsonMarshalUnescapedIndent(failed_items)
+		b, err := goutils.JSONMarshalUnescapedIndent(failedItems)
 		if err != nil {
 			return slackerror.New("Error during output indentation").WithRootCause(err)
 		}
@@ -263,7 +263,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 				continue
 			}
 			var parsedNextItem map[string]interface{}
-			err = goutils.JsonUnmarshal([]byte(nextItem), &parsedNextItem)
+			err = goutils.JSONUnmarshal([]byte(nextItem), &parsedNextItem)
 			if err != nil {
 				err = logBulkPutImportError(errorLogFile, nextItem, "item couldn't be parsed as JSON")
 				if err != nil {
@@ -302,7 +302,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 		}
 
 		query.Items = currentBatch
-		bulkPutResult, err := clients.ApiInterface().AppsDatastoreBulkPut(ctx, token, query)
+		bulkPutResult, err := clients.API().AppsDatastoreBulkPut(ctx, token, query)
 		if err != nil {
 			if len(err.(*slackerror.Error).Details) == 0 {
 				return err
@@ -314,7 +314,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 				}
 				currentBatch = slices.Delete(currentBatch, idx, idx+1)
 
-				stringItem, err := goutils.JsonMarshalUnescaped(errorDetail.Item)
+				stringItem, err := goutils.JSONMarshalUnescaped(errorDetail.Item)
 				if err != nil {
 					return err
 				}
@@ -359,7 +359,7 @@ func logBulkPutImportError(file afero.File, item string, reason string) error {
 		Item:   item,
 		Reason: reason,
 	}
-	stringFailedItem, err := goutils.JsonMarshalUnescaped(failedItem)
+	stringFailedItem, err := goutils.JSONMarshalUnescaped(failedItem)
 	if err != nil {
 		return err
 	}

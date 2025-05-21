@@ -43,9 +43,9 @@ func ProviderSelectPrompt(ctx context.Context, clients *shared.ClientFactory, pr
 		if len(externalTokens) > 0 {
 			externalAccountsList := []string{}
 			for _, externalToken := range externalTokens {
-				externalAccountsList = append(externalAccountsList, externalToken.ExternalUserId)
+				externalAccountsList = append(externalAccountsList, externalToken.ExternalUserID)
 			}
-			providerOptions = append(providerOptions, fmt.Sprintf("Provider Key: %s\n  Provider Name: %s\n  Client ID: %s\n  Client Secret Exists? %s\n  Valid Tokens: %s\n", provider.ProviderKey, provider.ProviderName, provider.ClientId, secretExists, strings.Join(externalAccountsList, ", ")))
+			providerOptions = append(providerOptions, fmt.Sprintf("Provider Key: %s\n  Provider Name: %s\n  Client ID: %s\n  Client Secret Exists? %s\n  Valid Tokens: %s\n", provider.ProviderKey, provider.ProviderName, provider.ClientID, secretExists, strings.Join(externalAccountsList, ", ")))
 		} else {
 			var externalTokenExists string
 			if provider.ValidTokenExists {
@@ -53,7 +53,7 @@ func ProviderSelectPrompt(ctx context.Context, clients *shared.ClientFactory, pr
 			} else {
 				externalTokenExists = "No"
 			}
-			providerOptions = append(providerOptions, fmt.Sprintf("Provider Key: %s\n  Provider Name: %s\n  Client ID: %s\n  Client Secret Exists? %s\n  Valid Token Exists? %s\n", provider.ProviderKey, provider.ProviderName, provider.ClientId, secretExists, externalTokenExists))
+			providerOptions = append(providerOptions, fmt.Sprintf("Provider Key: %s\n  Provider Name: %s\n  Client ID: %s\n  Client Secret Exists? %s\n  Valid Token Exists? %s\n", provider.ProviderKey, provider.ProviderName, provider.ClientID, secretExists, externalTokenExists))
 		}
 	}
 	if len(providerOptions) == 0 {
