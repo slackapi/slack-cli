@@ -524,7 +524,7 @@ func InstallProjectDependencies(
 
 // generateGitZipFileURL will return the GitHub zip URL for a templateURL.
 func generateGitZipFileURL(httpClient slackdeps.HTTPClient, templateURL string, gitBranch string) string {
-  zipURL := strings.ReplaceAll(templateURL, ".git", "") + "/archive/refs/heads/"
+	zipURL := strings.ReplaceAll(templateURL, ".git", "") + "/archive/refs/heads/"
 
 	if gitBranch == "" {
 		mainURL := zipURL + "main.zip"
