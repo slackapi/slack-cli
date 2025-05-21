@@ -65,6 +65,7 @@ func NewHTTPClient(opts HTTPClientOptions) *http.Client {
 		return client
 	}
 
+	// TODO: Implement retry logic
 	client.Transport = &transport
 	return client
 }
