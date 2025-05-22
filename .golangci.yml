@@ -33,11 +33,9 @@ linters:
     staticcheck:
       checks:
         - all
-        - '-ST1023' # disable rule 'Redundant type in variable declaration'
         - '-QF1001' # disable rule 'Apply De Morgan’s law'
         - '-QF1012' # disable rule 'Use fmt.Fprintf instead of x.Write(fmt.Sprintf(...))'
         - '-QF1003' # disable rule 'Convert if/else-if chain to tagged switch'
-        - '-QF1004' # disable rule 'Use strings.ReplaceAll instead of strings.Replace'
       # https://golangci-lint.run/usage/linters/#staticcheck
       # https://staticcheck.dev/docs/configuration/options/#initialisms
       initialisms:
