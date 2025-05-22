@@ -685,11 +685,3 @@ workflows:
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
-      - s3-upload:
-          <<: *filters-tag-triggered-workflow-job
-          name: upload-to-s3-for-hermes
-          s3-target-path: cli
-          file-name: "hermes_*"
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-release
