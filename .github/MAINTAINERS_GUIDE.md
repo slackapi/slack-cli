@@ -568,7 +568,6 @@ The [`goreleaser`][goreleaser] package we use to build release snapshots needs
 updates in the following files on occasion:
 
 - `.circleci/config.yml`
-- `.goreleaser-dev.yml`
 - `.goreleaser.yml`
 
 Testing in our CI setup uses changes to these files when creating test builds.
