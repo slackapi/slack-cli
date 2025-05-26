@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/slackdeps"
+	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -28,28 +28,28 @@ func Test_URLChecker(t *testing.T) {
 	tests := map[string]struct {
 		url                 string
 		expectedURL         string
-		setupHTTPClientMock func(*slackdeps.HTTPClientMock)
+		setupHTTPClientMock func(*slackhttp.HTTPClientMock)
 	}{
 		"Returns the URL when the HTTP status code is http.StatusOK": {
 			url:         "https://github.com/slack-samples/deno-starter-template",
 			expectedURL: "https://github.com/slack-samples/deno-starter-template",
-			setupHTTPClientMock: func(httpClientMock *slackdeps.HTTPClientMock) {
-				resOK := slackdeps.MockHTTPResponse(http.StatusOK, "OK")
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				resOK := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
 				httpClientMock.On("Get", mock.Anything).Return(resOK, nil)
 			},
 		},
 		"Returns an empty string when the HTTP status code is not 200": {
 			url:         "https://github.com/slack-samples/template-not-found",
 			expectedURL: "",
-			setupHTTPClientMock: func(httpClientMock *slackdeps.HTTPClientMock) {
-				resNotFound := slackdeps.MockHTTPResponse(http.StatusNotFound, "Not Found")
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				resNotFound := slackhttp.MockHTTPResponse(http.StatusNotFound, "Not Found")
 				httpClientMock.On("Get", mock.Anything).Return(resNotFound, nil)
 			},
 		},
 		"Returns an empty string when the HTTPClient has an error": {
 			url:         "invalid_url",
 			expectedURL: "",
-			setupHTTPClientMock: func(httpClientMock *slackdeps.HTTPClientMock) {
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				httpClientMock.On("Get", mock.Anything).Return(nil, fmt.Errorf("HTTPClient error"))
 			},
 		},
@@ -57,7 +57,7 @@ func Test_URLChecker(t *testing.T) {
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
-			httpClientMock := &slackdeps.HTTPClientMock{}
+			httpClientMock := &slackhttp.HTTPClientMock{}
 			tt.setupHTTPClientMock(httpClientMock)
 
 			// Execute

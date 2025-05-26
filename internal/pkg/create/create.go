@@ -38,8 +38,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
@@ -226,7 +226,7 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
-			httpClient := slackdeps.NewHTTPClient(slackdeps.HTTPClientOptions{})
+			httpClient := slackhttp.NewHTTPClient(slackhttp.HTTPClientOptions{})
 			zipFileURL := generateGitZipFileURL(httpClient, template.path, gitBranch)
 			if zipFileURL == "" {
 				return slackerror.New(slackerror.ErrGitZipDownload)
@@ -523,7 +523,7 @@ func InstallProjectDependencies(
 }
 
 // generateGitZipFileURL will return the GitHub zip URL for a templateURL.
-func generateGitZipFileURL(httpClient slackdeps.HTTPClient, templateURL string, gitBranch string) string {
+func generateGitZipFileURL(httpClient slackhttp.HTTPClient, templateURL string, gitBranch string) string {
 	zipURL := strings.ReplaceAll(templateURL, ".git", "") + "/archive/refs/heads/"
 
 	if gitBranch == "" {
