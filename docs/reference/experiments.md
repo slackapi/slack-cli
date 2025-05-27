@@ -14,7 +14,7 @@ The following is a list of currently available experiments. We'll remove experim
 
 Below is a list of updates related to experiments.
 
-* **May 2025**: Added the experiment `experiment bolt-install` to enable creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
+* **May 2025**: Added the experiment `bolt-install` to enable creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
 * **February 2025**: Added full Bolt framework support to the Slack CLI and removed the features from behind the experiment flag. See the changelog announcement [here](https://docs.slack.dev/changelog/2025/02/27/slack-cli-release).
 * **August 2024**: Added the `bolt` experiment for the `slack create` command.
 * **January 2024**: Added the experiment `read-only-collaborators`.

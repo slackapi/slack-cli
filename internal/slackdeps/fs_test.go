@@ -12,24 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package deputil
+package slackdeps
 
 import (
-	"net/http"
+	"testing"
 
-	"github.com/slackapi/slack-cli/internal/slackhttp"
+	"github.com/spf13/afero"
+	"github.com/stretchr/testify/assert"
 )
 
-// URLChecker returns url if its status code is 200, otherwise returns empty string
-func URLChecker(httpClient slackhttp.HTTPClient, url string) string {
-	resp, err := httpClient.Get(url)
-	if err != nil {
-		return ""
+func Test_NewFs(t *testing.T) {
+	tests := map[string]struct {
+		expectedFsType afero.Fs
+	}{
+		"Returns an OsFs type": {
+			expectedFsType: &afero.OsFs{},
+		},
 	}
-	defer resp.Body.Close()
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			fs := NewFs()
 
-	if resp.StatusCode != http.StatusOK {
-		return ""
+			// Assertions
+			assert.IsType(t, tt.expectedFsType, fs)
+		})
 	}
-	return url
 }

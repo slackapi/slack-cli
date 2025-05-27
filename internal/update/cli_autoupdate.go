@@ -59,8 +59,8 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 
 	architecture := runtime.GOARCH
 	operatingSys := runtime.GOOS
-	c.clients.IO.PrintDebug(ctx, "Architecture: %s \nOS: %s", architecture, operatingSys)
-	fileName, err := getUpdateFileName(c.releaseInfo.Version, operatingSys)
+	c.clients.IO.PrintDebug(ctx, "Architecture: %s\nOS: %s", architecture, operatingSys)
+	fileName, err := getUpdateFileName(c.releaseInfo.Version, operatingSys, architecture)
 	if err != nil {
 		return err
 	}
@@ -245,19 +245,27 @@ func restoreBinary(updatedBinaryFolderPath string, newPathToOldBinary string, or
 	return nil
 }
 
-// getUpdateFilename returns name of the archive that contains the upgrade for the given version and OS
-func getUpdateFileName(version, operatingSys string) (filename string, err error) {
-	// You can get a list of all possible OS/architecture combinations with `go tool dist list | column -c 75 | column -t`
-	// TODO: account for architecture as well. M1 macs would have an arch of arm64 instead of the usual amd64
-	const binaryName = "slack_cli"
-	const architecture = "64-bit"
+// getUpdateFilename returns name of the archive that contains the upgrade for
+// the given version and OS.
+//
+// All possible OS/architecture combinations can be listed with the command:
+//
+//	go tool dist list | column -c 75 | column -t
+func getUpdateFileName(version, operatingSys, architecture string) (filename string, err error) {
 	switch operatingSys {
 	case "darwin":
-		filename = fmt.Sprintf("%s_%s_macOS_%s.zip", binaryName, version, architecture)
+		switch architecture {
+		case "amd64":
+			filename = fmt.Sprintf("slack_cli_%s_macOS_amd64.zip", version)
+		case "arm64":
+			filename = fmt.Sprintf("slack_cli_%s_macOS_arm64.zip", version)
+		default:
+			filename = fmt.Sprintf("slack_cli_%s_macOS_64-bit.zip", version)
+		}
 	case "linux":
-		filename = fmt.Sprintf("%s_%s_linux_%s.tar.gz", binaryName, version, architecture)
+		filename = fmt.Sprintf("slack_cli_%s_linux_64-bit.tar.gz", version)
 	case "windows":
-		filename = fmt.Sprintf("%s_%s_windows_%s.zip", binaryName, version, architecture)
+		filename = fmt.Sprintf("slack_cli_%s_windows_64-bit.zip", version)
 	default:
 		err = slackerror.New(fmt.Sprintf("auto-updating for the operating system (%s) is unsupported", operatingSys))
 		err = slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
