@@ -16,6 +16,7 @@ package create
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"testing"
 
@@ -23,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -75,18 +77,71 @@ func TestGetAvailableDirectory(t *testing.T) {
 }
 
 func Test_generateGitZipFileURL(t *testing.T) {
-	url := generateGitZipFileURL("https://github.com/slack-samples/deno-starter-template", "pre-release-0316")
-	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/pre-release-0316.zip", url, "should return zip download link with branch")
+	tests := map[string]struct {
+		templateURL         string
+		gitBranch           string
+		expectedURL         string
+		setupHTTPClientMock func(*slackhttp.HTTPClientMock)
+	}{
+		"Returns the zip URL using the main branch when no branch is provided": {
+			templateURL: "https://github.com/slack-samples/deno-starter-template",
+			gitBranch:   "",
+			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
+				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+			},
+		},
+		"Returns the zip URL using the master branch when no branch is provided and main branch doesn't exist": {
+			templateURL: "https://github.com/slack-samples/deno-starter-template",
+			gitBranch:   "",
+			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/master.zip",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
+				httpClientMock.On("Get", "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip").Return(nil, fmt.Errorf("HttpClient error"))
+				httpClientMock.On("Get", "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/master.zip").Return(res, nil)
+			},
+		},
+		"Returns the zip URL using the specified branch when a branch is provided": {
+			templateURL: "https://github.com/slack-samples/deno-starter-template",
+			gitBranch:   "pre-release-0316",
+			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/pre-release-0316.zip",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
+				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+			},
+		},
+		"Returns an empty string when the HTTP status code is not 200": {
+			templateURL: "https://github.com/slack-samples/deno-starter-template",
+			gitBranch:   "",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusNotFound, "Not Found")
+				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+			},
+		},
+		"Returns an empty string when the HTTPClient has an error": {
+			templateURL: "https://github.com/slack-samples/deno-starter-template",
+			gitBranch:   "",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				httpClientMock.On("Get", mock.Anything).Return(nil, fmt.Errorf("HTTPClient error"))
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Create mocks
+			httpClientMock := &slackhttp.HTTPClientMock{}
+			tt.setupHTTPClientMock(httpClientMock)
 
-	url = generateGitZipFileURL("https://github.com/slack-samples/deno-starter-template", "")
-	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip", url, "should return zip download link with main")
+			// Execute
+			url := generateGitZipFileURL(httpClientMock, tt.templateURL, tt.gitBranch)
 
-	// TODO - We should mock the `deputil.URLChecker` HTTP request so that the unit test is not dependent on the network activity and repo configuration
-	url = generateGitZipFileURL("https://github.com/google/uuid", "")
-	assert.Equal(t, "https://github.com/google/uuid/archive/refs/heads/master.zip", url, "should return zip download link with 'master' when 'main' branch doesn't exist")
-
-	url = generateGitZipFileURL("fake_url", "")
-	assert.Equal(t, "", url, "should return empty string when url is invalid")
+			// Assertions
+			assert.Equal(t, tt.expectedURL, url)
+		})
+	}
 }
 
 func TestCreateGitArgs(t *testing.T) {
