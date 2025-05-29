@@ -383,18 +383,39 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		clients.EventTracker.SetAuthEnterpriseID(*authSession.EnterpriseID)
 	}
 
-	// TODO(bolt-install): for remote manifest source, we should get the manifest from the app settings
-	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
-	if err != nil {
-		return app, api.DeveloperAppInstallResult{}, "", err
+	var slackManifest types.SlackYaml
+	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+		if err != nil {
+			return app, api.DeveloperAppInstallResult{}, "", err
+		}
+	} else {
+		// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
+		// if the manifest source is local or if we are creating a new app. Otherwise, we get the manifest
+		// from the app settings.
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return app, api.DeveloperAppInstallResult{}, "", err
+		}
+		if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+			slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+			if err != nil {
+				return app, api.DeveloperAppInstallResult{}, "", err
+			}
+		} else {
+			slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+			if err != nil {
+				return app, api.DeveloperAppInstallResult{}, "", err
+			}
+		}
 	}
 
-	log.Data["appName"] = slackYaml.DisplayInformation.Name
+	log.Data["appName"] = slackManifest.DisplayInformation.Name
 	log.Data["isUpdate"] = app.AppID != ""
 	log.Data["teamName"] = *authSession.TeamName
 	log.Log("INFO", "app_install_manifest")
 
-	manifest := slackYaml.AppManifest
+	manifest := slackManifest.AppManifest
 	appendLocalToDisplayName(&manifest)
 	if manifest.IsFunctionRuntimeSlackHosted() {
 		configureLocalManifest(ctx, clients, &manifest)
@@ -482,29 +503,6 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	outgoingDomains := []string{}
 	if manifest.OutgoingDomains != nil {
 		outgoingDomains = *manifest.OutgoingDomains
-	}
-
-	// When the manifest source is remote, we need to use the manifest from the app settings
-	// for the developerInstall API call.
-	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-		if err != nil {
-			return app, api.DeveloperAppInstallResult{}, "", err
-		}
-		if manifestSource.Equals(config.ManifestSourceRemote) {
-			remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
-			if err != nil {
-				return app, api.DeveloperAppInstallResult{}, "", err
-			}
-
-			if remoteManifest.OAuthConfig != nil {
-				botScopes = remoteManifest.OAuthConfig.Scopes.Bot
-			}
-
-			if remoteManifest.OutgoingDomains != nil {
-				outgoingDomains = *remoteManifest.OutgoingDomains
-			}
-		}
 	}
 
 	log.Info("app_install_start")
