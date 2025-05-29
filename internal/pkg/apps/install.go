@@ -54,9 +54,6 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	if err != nil {
 		return types.App{}, "", err
 	}
-	if !manifestUpdates && !manifestCreates {
-		return app, "", nil
-	}
 
 	// Get the token for the authenticated workspace
 	apiInterface := clients.API()
@@ -81,6 +78,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
+	// TODO(bolt-install): for remote manifest source, we should get the manifest from the app settings
 	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return app, "", err
@@ -173,6 +171,29 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	outgoingDomains := []string{}
 	if manifest.OutgoingDomains != nil {
 		outgoingDomains = *manifest.OutgoingDomains
+	}
+
+	// When the manifest source is remote, we need to use the manifest from the app settings
+	// for the developerInstall API call.
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return app, "", err
+		}
+		if manifestSource.Equals(config.ManifestSourceRemote) {
+			remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+			if err != nil {
+				return app, "", err
+			}
+
+			if remoteManifest.OAuthConfig != nil {
+				botScopes = remoteManifest.OAuthConfig.Scopes.Bot
+			}
+
+			if remoteManifest.OutgoingDomains != nil {
+				outgoingDomains = *remoteManifest.OutgoingDomains
+			}
+		}
 	}
 
 	log.Info("app_install_start")
@@ -339,9 +360,6 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	manifestCreates, err := shouldCreateManifest(ctx, clients, app)
 	if err != nil {
 		return types.App{}, api.DeveloperAppInstallResult{}, "", err
-	}
-	if !manifestUpdates && !manifestCreates {
-		return app, api.DeveloperAppInstallResult{}, "", nil
 	}
 
 	apiInterface := clients.API()
@@ -670,7 +688,7 @@ func shouldCreateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 		return app.AppID == "", nil
 	}
 
-	// When the BoltInstall experiment is enabled, apps can be created with any manifest source.
+	// When the BoltInstall experiment is enabled, apps can always be created with any manifest source.
 	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
 		return app.AppID == "", nil
 	}
@@ -722,14 +740,12 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return true, nil
 	}
-	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-		if err != nil {
-			return false, err
-		}
-		if manifestSource.Equals(config.ManifestSourceRemote) {
-			return false, nil
-		}
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return false, err
+	}
+	if manifestSource.Equals(config.ManifestSourceRemote) {
+		return false, nil
 	}
 	if clients.Config.ForceFlag {
 		return true, nil
