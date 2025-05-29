@@ -362,6 +362,12 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return types.App{}, api.DeveloperAppInstallResult{}, "", err
 	}
 
+	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		if !manifestUpdates && !manifestCreates {
+			return app, api.DeveloperAppInstallResult{}, "", nil
+		}
+	}
+
 	apiInterface := clients.API()
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
@@ -383,16 +389,11 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		clients.EventTracker.SetAuthEnterpriseID(*authSession.EnterpriseID)
 	}
 
+	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
+	// if the manifest source is local or if we are creating a new app. Otherwise, we get the manifest
+	// from the app settings.
 	var slackManifest types.SlackYaml
-	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
-		if err != nil {
-			return app, api.DeveloperAppInstallResult{}, "", err
-		}
-	} else {
-		// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
-		// if the manifest source is local or if we are creating a new app. Otherwise, we get the manifest
-		// from the app settings.
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
 		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 		if err != nil {
 			return app, api.DeveloperAppInstallResult{}, "", err
@@ -407,6 +408,11 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 			if err != nil {
 				return app, api.DeveloperAppInstallResult{}, "", err
 			}
+		}
+	} else {
+		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+		if err != nil {
+			return app, api.DeveloperAppInstallResult{}, "", err
 		}
 	}
 
