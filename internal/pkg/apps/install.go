@@ -54,6 +54,9 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	if err != nil {
 		return types.App{}, "", err
 	}
+	if !manifestUpdates && !manifestCreates {
+		return app, "", nil
+	}
 
 	// Get the token for the authenticated workspace
 	apiInterface := clients.API()
@@ -78,7 +81,6 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// TODO(bolt-install): for remote manifest source, we should get the manifest from the app settings
 	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return app, "", err
@@ -171,29 +173,6 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	outgoingDomains := []string{}
 	if manifest.OutgoingDomains != nil {
 		outgoingDomains = *manifest.OutgoingDomains
-	}
-
-	// When the manifest source is remote, we need to use the manifest from the app settings
-	// for the developerInstall API call.
-	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-		if err != nil {
-			return app, "", err
-		}
-		if manifestSource.Equals(config.ManifestSourceRemote) {
-			remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
-			if err != nil {
-				return app, "", err
-			}
-
-			if remoteManifest.OAuthConfig != nil {
-				botScopes = remoteManifest.OAuthConfig.Scopes.Bot
-			}
-
-			if remoteManifest.OutgoingDomains != nil {
-				outgoingDomains = *remoteManifest.OutgoingDomains
-			}
-		}
 	}
 
 	log.Info("app_install_start")
