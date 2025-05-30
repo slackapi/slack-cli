@@ -59,6 +59,7 @@ var AllExperiments = []Experiment{
 // EnabledExperiments is a list of experiments that are permanently enabled
 var EnabledExperiments = []Experiment{
 	BoltFrameworks,
+	BoltInstall,
 }
 
 // Includes checks that a supplied experiment is included within AllExperiments
