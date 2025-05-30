@@ -1162,7 +1162,9 @@ func flatAppSelectPrompt(
 			return SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired)
 		}
 	case ShowAllApps, ShowInstalledAndNewApps:
-		if manifestSource.Equals(config.ManifestSourceLocal) {
+		isManifestSourceLocal := manifestSource.Equals(config.ManifestSourceLocal)
+		isBoltInstallEnabled := clients.Config.WithExperimentOn(experiment.BoltInstall)
+		if isManifestSourceLocal || isBoltInstallEnabled {
 			option := Selection{
 				label: style.Secondary("Create a new app"),
 			}
