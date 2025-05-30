@@ -113,13 +113,21 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				Hook: HookScript{Command: "boom", Name: "sadpath"},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
-						Err: errors.New("explosion"),
+						Err:        errors.New("explosion"),
+						MockStderr: []byte("fireworks for the skies above"),
 					},
 				},
 			},
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.Equal(t, slackerror.New(slackerror.ErrSDKHookInvocationFailed).
-					WithMessage("Error running 'sadpath' command: explosion"), err)
+					WithMessage("Error running 'sadpath' command: explosion").
+					WithDetails(slackerror.ErrorDetails{
+						slackerror.ErrorDetail{
+							Message: "fireworks for the skies above",
+						},
+					}),
+					err,
+				)
 			},
 		},
 		"fail to parse payload due to improper boundary strings": {

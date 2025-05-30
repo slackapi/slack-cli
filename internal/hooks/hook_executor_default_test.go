@@ -90,7 +90,12 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 				},
 			},
 			expectedError: slackerror.New(slackerror.ErrSDKHookInvocationFailed).
-				WithMessage("Command for 'sadpath' returned an error: explosion\nthere was a problem compiling your app"),
+				WithMessage("Error running 'sadpath' command: explosion").
+				WithDetails(slackerror.ErrorDetails{
+					slackerror.ErrorDetail{
+						Message: "there was a problem compiling your app",
+					},
+				}),
 			expectedResponse: "",
 		},
 		"successful deploy command": {
