@@ -369,8 +369,11 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	}
 
 	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
-	// if the manifest source is local or if we are creating a new app. Otherwise, we get the manifest
-	// from the app settings.
+	// if the manifest source is local or if we are creating a new app. After an app is created,
+	// app settings becomes the source of truth for remote manifests, so updates and installs always
+	// get the latest manifest from app settings.
+	// When the BoltInstall experiment is disabled, we get the manifest from the local file because
+	// this is how the original implementation worked.
 	var slackManifest types.SlackYaml
 	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
 		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
