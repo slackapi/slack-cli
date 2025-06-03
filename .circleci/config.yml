@@ -64,6 +64,10 @@ commands:
           name: Generate dev and prod archives
           command: |
             ./scripts/archive.sh << parameters.artifact_dir >> $BUILD_VERSION
+      - run:
+          name: Check expected artifacts exist
+          command: |
+            ./scripts/archive-test.sh << parameters.artifact_dir >> $BUILD_VERSION
   retrieve-oidc-secrets:
     description: "Retrieves secrets from Slack"
     parameters:
