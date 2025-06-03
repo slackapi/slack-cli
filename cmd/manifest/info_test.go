@@ -17,20 +17,15 @@ package manifest
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
-	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -113,7 +108,7 @@ func TestInfoCommand(t *testing.T) {
 				assert.Equal(t, string(manifest)+"\n", cm.GetStdoutOutput())
 			},
 		},
-		"gathers manifest.source from project configurations with the bolt experiment": {
+		"gathers manifest.source local from project configurations": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
@@ -133,8 +128,6 @@ func TestInfoCommand(t *testing.T) {
 					},
 				}, nil)
 				cf.AppClient().Manifest = manifestMock
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
@@ -150,24 +143,40 @@ func TestInfoCommand(t *testing.T) {
 				assert.Equal(t, string(manifest)+"\n", cm.GetStdoutOutput())
 			},
 		},
-		"errors if project manifest source is remote with the bolt experiment": {
-			ExpectedError: slackerror.New(slackerror.ErrInvalidManifestSource).
-				WithMessage(`Cannot get manifest info from the "%s" source`, config.ManifestSourceRemote).
-				WithRemediation("%s", strings.Join([]string{
-					fmt.Sprintf("Find the current manifest on app settings: %s", style.LinkText("https://api.slack.com/apps")),
-					fmt.Sprintf("Set \"manifest.source\" to \"%s\" in \"%s\" to continue", config.ManifestSourceLocal, filepath.Join(".slack", "config.json")),
-					fmt.Sprintf("Read about manifest sourcing with %s", style.Commandf("manifest info --help", false)),
-				}, "\n")),
+		"gathers manifest.source remote from project configurations": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.IO.AddDefaultMocks()
 				cm.Os.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).
 					Return(config.ManifestSource(config.ManifestSourceRemote), nil)
 				cm.Config.ProjectConfig = mockProjectConfig
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
+					AppManifest: types.AppManifest{
+						DisplayInformation: types.DisplayInformation{
+							Name: "app005",
+						},
+					},
+				}, nil)
+				cf.AppClient().Manifest = manifestMock
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{
+					App:  types.App{AppID: "A005"},
+					Auth: types.SlackAuth{Token: "xapp-example-005"},
+				}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				mockManifest := types.AppManifest{
+					DisplayInformation: types.DisplayInformation{
+						Name: "app005",
+					},
+				}
+				manifest, err := json.MarshalIndent(mockManifest, "", "  ")
+				require.NoError(t, err)
+				assert.Equal(t, string(manifest)+"\n", cm.GetStdoutOutput())
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

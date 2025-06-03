@@ -340,8 +340,11 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	if err != nil {
 		return types.App{}, api.DeveloperAppInstallResult{}, "", err
 	}
-	if !manifestUpdates && !manifestCreates {
-		return app, api.DeveloperAppInstallResult{}, "", nil
+
+	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		if !manifestUpdates && !manifestCreates {
+			return app, api.DeveloperAppInstallResult{}, "", nil
+		}
 	}
 
 	apiInterface := clients.API()
@@ -365,17 +368,42 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		clients.EventTracker.SetAuthEnterpriseID(*authSession.EnterpriseID)
 	}
 
-	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
-	if err != nil {
-		return app, api.DeveloperAppInstallResult{}, "", err
+	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
+	// if the manifest source is local or if we are creating a new app. After an app is created,
+	// app settings becomes the source of truth for remote manifests, so updates and installs always
+	// get the latest manifest from app settings.
+	// When the BoltInstall experiment is disabled, we get the manifest from the local file because
+	// this is how the original implementation worked.
+	var slackManifest types.SlackYaml
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return app, api.DeveloperAppInstallResult{}, "", err
+		}
+		if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+			slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+			if err != nil {
+				return app, api.DeveloperAppInstallResult{}, "", err
+			}
+		} else {
+			slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+			if err != nil {
+				return app, api.DeveloperAppInstallResult{}, "", err
+			}
+		}
+	} else {
+		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+		if err != nil {
+			return app, api.DeveloperAppInstallResult{}, "", err
+		}
 	}
 
-	log.Data["appName"] = slackYaml.DisplayInformation.Name
+	log.Data["appName"] = slackManifest.DisplayInformation.Name
 	log.Data["isUpdate"] = app.AppID != ""
 	log.Data["teamName"] = *authSession.TeamName
 	log.Log("INFO", "app_install_manifest")
 
-	manifest := slackYaml.AppManifest
+	manifest := slackManifest.AppManifest
 	appendLocalToDisplayName(&manifest)
 	if manifest.IsFunctionRuntimeSlackHosted() {
 		configureLocalManifest(ctx, clients, &manifest)
@@ -468,6 +496,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	log.Info("app_install_start")
 	var installState types.InstallState
 	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
+
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)
 		return app, api.DeveloperAppInstallResult{}, "", err
@@ -483,7 +512,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	}
 
 	//
-	// TODO(@mbrevoort) - Currently, cannot update the icon if app is not hosted
+	// TODO: Currently, cannot update the icon if app is not hosted.
 	//
 	// upload icon, default to icon.png
 	// var iconPath = slackYaml.Icon
@@ -644,6 +673,12 @@ func shouldCreateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return app.AppID == "", nil
 	}
+
+	// When the BoltInstall experiment is enabled, apps can always be created with any manifest source.
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		return app.AppID == "", nil
+	}
+
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return false, err

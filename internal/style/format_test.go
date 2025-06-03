@@ -382,6 +382,10 @@ func TestLocalRunDisplayNamePlain(t *testing.T) {
 			mockAppName:     "",
 			expectedAppName: " (local)",
 		},
+		"the local tag is not appended to a name that already has it": {
+			mockAppName:     "bizz (local)",
+			expectedAppName: "bizz (local)",
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
