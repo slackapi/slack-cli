@@ -106,7 +106,7 @@ func generateMD5FromRandomString() string {
 	const length = 10
 
 	randomBytes := make([]byte, 0)
-	for i := 0; i < length; i++ {
+	for range length {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(alphanumericCharacters))))
 		if err != nil {
 			return "3561f3a3c5576e2ce0dc0d1e268bb9b2" // Return default value to continue execution

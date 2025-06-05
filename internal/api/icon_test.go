@@ -73,8 +73,8 @@ func TestClient_IconSuccess(t *testing.T) {
 	myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{100, 100}})
 
 	// This loop just fills the image with random data
-	for x := 0; x < 100; x++ {
-		for y := 0; y < 100; y++ {
+	for x := range 100 {
+		for y := range 100 {
 			c := color.RGBA{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)), 255}
 			myimage.Set(x, y, c)
 		}
