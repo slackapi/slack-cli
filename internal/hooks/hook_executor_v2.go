@@ -86,8 +86,14 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts 
 
 	cmd := opts.Exec.Command(cmdEnvVars, &stdout, stderr, opts.Stdin, cmdArgs[0], cmdArgVars...)
 	if err = cmd.Run(); err != nil {
+		// Include stderr outputs in error details if these aren't streamed
+		details := slackerror.ErrorDetails{}
+		if opts.Stderr == nil {
+			details = append(details, slackerror.ErrorDetail{Message: strings.TrimSpace(bufferr.String())})
+		}
 		return "", slackerror.New(slackerror.ErrSDKHookInvocationFailed).
-			WithMessage("Error running '%s' command: %s", opts.Hook.Name, err)
+			WithMessage("Error running '%s' command: %s", opts.Hook.Name, err).
+			WithDetails(details)
 	}
 	return buffout.String(), nil
 }
