@@ -72,8 +72,14 @@ func (e *HookExecutorDefaultProtocol) Execute(ctx context.Context, opts HookExec
 
 	response := strings.TrimSpace(buffout.String())
 	if err != nil {
+		// Include stderr outputs in error details if these aren't streamed
+		details := slackerror.ErrorDetails{}
+		if opts.Stderr == nil {
+			details = append(details, slackerror.ErrorDetail{Message: strings.TrimSpace(bufferr.String())})
+		}
 		return "", slackerror.New(slackerror.ErrSDKHookInvocationFailed).
-			WithMessage("Command for '%s' returned an error: %s\n%s", opts.Hook.Name, err, strings.TrimSpace(bufferr.String()))
+			WithMessage("Error running '%s' command: %s", opts.Hook.Name, err).
+			WithDetails(details)
 	}
 
 	// Special handling for the baseline protocol for the `start` hook
