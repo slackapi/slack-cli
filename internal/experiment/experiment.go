@@ -32,7 +32,11 @@ type Experiment string
 const (
 	// BoltFrameworks experiment adds CLI support for Bolt JavaScript & Bolt Python.
 	// These frameworks will be introducing remote function support.
-	BoltFrameworks = "bolt"
+	BoltFrameworks Experiment = "bolt"
+
+	// BoltInstall experiment enables developerInstall to work with Bolt projects that
+	//  manage their app manifest on app settings (remote manifest).
+	BoltInstall Experiment = "bolt-install"
 
 	// The ReadOnlyAppCollaborators experiment enables creating and modifying collaborator
 	// permissions via the `collaborator` commands.
@@ -46,6 +50,7 @@ const (
 // AllExperiment is a list of all available experiments that can be enabled
 var AllExperiments = []Experiment{
 	BoltFrameworks,
+	BoltInstall,
 	ReadOnlyAppCollaborators,
 	Placeholder,
 }
@@ -54,6 +59,7 @@ var AllExperiments = []Experiment{
 // EnabledExperiments is a list of experiments that are permanently enabled
 var EnabledExperiments = []Experiment{
 	BoltFrameworks,
+	BoltInstall,
 }
 
 // Includes checks that a supplied experiment is included within AllExperiments

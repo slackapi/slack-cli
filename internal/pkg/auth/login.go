@@ -37,7 +37,7 @@ const InvalidNoPromptFlags = "Invalid arguments, both --ticket and --challenge f
 
 // LoginWithClients ...
 func LoginWithClients(ctx context.Context, clients *shared.ClientFactory, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	return Login(ctx, clients.APIInterface(), clients.AuthInterface(), clients.IO, userToken, noRotation)
+	return Login(ctx, clients.API(), clients.Auth(), clients.IO, userToken, noRotation)
 }
 
 // Login takes the user through the Slack CLI login process
@@ -227,7 +227,7 @@ func saveNewAuth(ctx context.Context, apiClient api.APIInterface, authClient aut
 	}
 
 	// Write to credentials json if serviceTokenFlag is false
-	var filePath string = ""
+	var filePath = ""
 	if !noRotation {
 		_, credentialsLocation, err := authClient.SetAuth(ctx, newAuth)
 		if err != nil {
@@ -250,11 +250,11 @@ func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg
 
 	// existing ticket request, try to exchange
 	if ticketArg != "" && challengeCodeArg != "" {
-		authExchangeRes, err := clients.APIInterface().ExchangeAuthTicket(ctx, ticketArg, challengeCodeArg, version.Get())
+		authExchangeRes, err := clients.API().ExchangeAuthTicket(ctx, ticketArg, challengeCodeArg, version.Get())
 		if err != nil || !authExchangeRes.IsReady {
 			return types.SlackAuth{}, "", err
 		}
-		savedAuth, credentialsPath, err := saveNewAuth(ctx, clients.APIInterface(), clients.AuthInterface(), authExchangeRes, noRotation)
+		savedAuth, credentialsPath, err := saveNewAuth(ctx, clients.API(), clients.Auth(), authExchangeRes, noRotation)
 		if err != nil {
 			return types.SlackAuth{}, "", err
 		}
@@ -263,7 +263,7 @@ func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg
 
 	// brand new login
 	if ticketArg == "" && challengeCodeArg == "" {
-		_, err := requestAuthTicket(ctx, clients.APIInterface(), clients.IO, noRotation)
+		_, err := requestAuthTicket(ctx, clients.API(), clients.IO, noRotation)
 		if err != nil {
 			return types.SlackAuth{}, "", err
 		}

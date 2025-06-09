@@ -83,7 +83,7 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		Workflows: []types.WorkflowsInfo{
 			{
 				WorkflowID: "Wf0548LABCD1",
-				CallBackID: "my_callback_id1",
+				CallbackID: "my_callback_id1",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_a",
@@ -102,7 +102,7 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 			},
 			{
 				WorkflowID: "Wf0548LABCD2",
-				CallBackID: "my_callback_id2",
+				CallbackID: "my_callback_id2",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_a",
@@ -160,7 +160,7 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, selectedWorkflow, types.WorkflowsInfo{
 			WorkflowID: "Wf0548LABCD2",
-			CallBackID: "my_callback_id2",
+			CallbackID: "my_callback_id2",
 			Providers: []types.ProvidersInfo{
 				{
 					ProviderKey:  "provider_a",

@@ -39,6 +39,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
@@ -169,7 +170,7 @@ func getAppDirName(appName string) (string, error) {
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {
-		return "", fmt.Errorf("The app name you entered is reserved. Please try a different name.")
+		return "", fmt.Errorf("the app name you entered is reserved")
 	}
 	return appName, nil
 }
@@ -225,7 +226,8 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
-			zipFileURL := generateGitZipFileURL(template.path, gitBranch)
+			httpClient := slackhttp.NewHTTPClient(slackhttp.HTTPClientOptions{})
+			zipFileURL := generateGitZipFileURL(httpClient, template.path, gitBranch)
 			if zipFileURL == "" {
 				return slackerror.New(slackerror.ErrGitZipDownload)
 			}
@@ -457,16 +459,28 @@ func InstallProjectDependencies(
 		}
 	}
 
-	// Set "manifest.source" in .slack/config.json
+	// Default manifest source to ManifestSourceLocal
 	if !manifestSource.Exists() {
 		manifestSource = config.ManifestSourceLocal
 	}
 
+	// When the BoltInstall experiment is enabled, set non-ROSI projects to ManifestSourceRemote.
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
+		if clients.Runtime != nil {
+			isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
+			if !isDenoProject {
+				manifestSource = config.ManifestSourceRemote
+			}
+		}
+	}
+
+	// Set "manifest.source" in .slack/config.json
 	if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
 		configJSONFilename := config.ProjectConfigJSONFilename
-		manifestSourceStyled := style.Highlight(manifestSource.String())
+		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
 			"Updated %s manifest source to %s",
@@ -510,18 +524,17 @@ func InstallProjectDependencies(
 	return outputs
 }
 
-// generateGitZipFileURL will return template's GitHub zip file download link
-// In the future, this function can be extended to support other Git hosts, such as GitLab.
-// TODO, @cchensh, we should get prepared for other non-Git hosts and refactor the create pkg
-func generateGitZipFileURL(templateURL string, gitBranch string) string {
-	zipURL := strings.Replace(templateURL, ".git", "", -1) + "/archive/refs/heads/"
+// generateGitZipFileURL will return the GitHub zip URL for a templateURL.
+func generateGitZipFileURL(httpClient slackhttp.HTTPClient, templateURL string, gitBranch string) string {
+	zipURL := strings.TrimSuffix(templateURL, ".git") + "/archive/refs/heads/"
 
 	if gitBranch == "" {
 		mainURL := zipURL + "main.zip"
 		masterURL := zipURL + "master.zip"
-		zipURL = deputil.URLChecker(mainURL)
+
+		zipURL = deputil.URLChecker(httpClient, mainURL)
 		if zipURL == "" {
-			zipURL = deputil.URLChecker(masterURL)
+			zipURL = deputil.URLChecker(httpClient, masterURL)
 		}
 	} else {
 		zipURL = zipURL + gitBranch + ".zip"

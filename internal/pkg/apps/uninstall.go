@@ -56,7 +56,7 @@ func Uninstall(ctx context.Context, clients *shared.ClientFactory, log *logger.L
 
 	// Uninstall the app
 	log.Info("on_apps_uninstall_app_init")
-	err = clients.APIInterface().UninstallApp(ctx, token, app.AppID, app.TeamID)
+	err = clients.API().UninstallApp(ctx, token, app.AppID, app.TeamID)
 	if err != nil {
 		return app, err
 	}

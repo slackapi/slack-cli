@@ -268,7 +268,10 @@ func ExampleTemplatef(template string) string {
 
 // LocalRunDisplayName appends the (local) tag to apps created by the run command
 func LocalRunDisplayName(name string) string {
-	return name + " " + LocalRunNameTag
+	if !strings.HasSuffix(name, LocalRunNameTag) {
+		name = name + " " + LocalRunNameTag
+	}
+	return name
 }
 
 // AppIDLabel formats the appID to indicate the installation status

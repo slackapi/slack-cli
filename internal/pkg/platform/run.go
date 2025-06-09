@@ -51,7 +51,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	ctx = config.SetContextToken(ctx, runArgs.Auth.Token)
 
 	// Validate auth session
-	authSession, err := clients.APIInterface().ValidateSession(ctx, runArgs.Auth.Token)
+	authSession, err := clients.API().ValidateSession(ctx, runArgs.Auth.Token)
 	if err != nil {
 		err = slackerror.Wrap(err, "No auth session found")
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)

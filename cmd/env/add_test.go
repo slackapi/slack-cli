@@ -149,7 +149,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				setupEnvAddCommandMocks(ctx, cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -187,7 +187,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -218,7 +218,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -258,7 +258,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"AddVariable",
 					mock.Anything,
@@ -288,5 +288,5 @@ func setupEnvAddCommandMocks(ctx context.Context, cm *shared.ClientsMock, cf *sh
 
 	cm.Config.Flags.String("value", "", "mock value flag")
 
-	cm.APIInterface.On("AddVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	cm.API.On("AddVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 }

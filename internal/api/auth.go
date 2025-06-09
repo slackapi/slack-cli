@@ -110,7 +110,7 @@ func (c *Client) ExchangeAuthTicket(ctx context.Context, ticket string, challeng
 	}
 
 	// ExchangeAuthTicketResult must have a token to be valid
-	if resp.ExchangeAuthTicketResult.Token == "" {
+	if resp.Token == "" {
 		return ExchangeAuthTicketResult{}, slackerror.New(fmt.Sprintf("No token returned from the following Slack API method %s. Login can not be completed.", exchangeAuthTicketMethod))
 	}
 

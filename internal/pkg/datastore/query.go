@@ -31,7 +31,7 @@ func Query(ctx context.Context, clients *shared.ClientFactory, log *logger.Logge
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	queryResult, err := clients.APIInterface().AppsDatastoreQuery(ctx, token, request)
+	queryResult, err := clients.API().AppsDatastoreQuery(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}

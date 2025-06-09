@@ -89,7 +89,7 @@ func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
-	requestedTrigger, err := clients.APIInterface().WorkflowsTriggersInfo(ctx, token, infoFlags.triggerID)
+	requestedTrigger, err := clients.API().WorkflowsTriggersInfo(ctx, token, infoFlags.triggerID)
 	if err != nil {
 		return err
 	}

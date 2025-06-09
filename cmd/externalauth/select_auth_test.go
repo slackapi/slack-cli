@@ -202,7 +202,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		Workflows: []types.WorkflowsInfo{
 			{
 				WorkflowID: "Wf0548LABCD1",
-				CallBackID: "my_callback_id1",
+				CallbackID: "my_callback_id1",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_c",
@@ -225,7 +225,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			{
 				WorkflowID: "Wf0548LABCD2",
-				CallBackID: "my_callback_id2",
+				CallbackID: "my_callback_id2",
 				Providers: []types.ProvidersInfo{
 					{
 						ProviderKey:  "provider_a",
@@ -244,19 +244,19 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 		"list api returns error": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(types.ExternalAuthorizationInfoLists{}, errors.New("test error"))
 			},
 			ExpectedErrorStrings: []string{"test error"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with no tokens and no params": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutTokens, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -265,13 +265,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"No workflows found that require developer authorization"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything)
 			},
 		},
 		"list with no tokens and workflow flag": {
 			CmdArgs: []string{"--workflow", "#/workflows/workflow_callback"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutTokens, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -283,13 +283,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"Workflow not found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with no workflows and no params": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutWorkflows, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -298,13 +298,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"No workflows found that require developer authorization"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with no workflows and workflow flag": {
 			CmdArgs: []string{"--workflow", "#/workflows/workflow_callback"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithoutWorkflows, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -316,13 +316,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"Workflow not found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and no param": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -342,13 +342,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"No connected accounts found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and invalid workflow param": {
 			CmdArgs: []string{"--workflow", "#/workflows/workflow_callback"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -374,16 +374,16 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"Workflow not found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and valid workflow param": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("workflow"),
 				})).Return(iostreams.SelectPromptResponse{
@@ -399,13 +399,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"No connected accounts found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and valid workflow invalid provider": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "test_provider"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -423,13 +423,13 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"Provider is not used in the selected workflow"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and valid workflow valid provider": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_b"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
@@ -449,16 +449,16 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"No connected accounts found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and valid workflow valid provider with tokens": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_a"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("workflow"),
 				})).Return(iostreams.SelectPromptResponse{
@@ -481,16 +481,16 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{"Workflow #/workflows/my_callback_id2 will use developer account xyz2@salesforce.com when making calls to provider_a APIs"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and valid workflow valid provider invalid account": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_a", "--external-account", "test_account"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("workflow"),
 				})).Return(iostreams.SelectPromptResponse{
@@ -512,16 +512,16 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"Account is not used in the selected workflow"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"list with workflows and valid workflow valid provider valid account": {
 			CmdArgs: []string{"--workflow", "#/workflows/my_callback_id2", "--provider", "provider_a", "--external-account", "xyz2@salesforce.com"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("AppsAuthExternalList",
+				clientsMock.API.On("AppsAuthExternalList",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(sampleListReturnWithWorkflows, nil)
-				clientsMock.APIInterface.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				clientsMock.API.On("AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("workflow"),
 				})).Return(iostreams.SelectPromptResponse{
@@ -543,7 +543,7 @@ func TestExternalAuthSelectAuthCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{"Workflow #/workflows/my_callback_id2 will use developer account xyz2@salesforce.com when making calls to provider_a APIs"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.APIInterface.AssertCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertCalled(t, "AppsAuthExternalSelectAuth", mock.Anything, mock.Anything, fakeAppID, mock.Anything, mock.Anything, mock.Anything)
 			},
 		}}, func(clients *shared.ClientFactory) *cobra.Command {
 		cmd := NewSelectAuthCommand(clients)

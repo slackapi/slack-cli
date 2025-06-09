@@ -135,7 +135,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	// def file for dev and prod.
 	triggerArg.WorkflowAppID = app.AppID
 
-	createdTrigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+	createdTrigger, err := clients.API().WorkflowsTriggersCreate(ctx, token, triggerArg)
 	if extendedErr, ok := err.(*api.TriggerCreateOrUpdateError); ok {
 		// If the user used --workflow and the creation failed because we were missing the interactivity
 		// context, lets prompt and optionally add it
@@ -149,7 +149,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 				return err
 			}
 			if retryTriggerCreate {
-				createdTrigger, err = clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+				createdTrigger, err = clients.API().WorkflowsTriggersCreate(ctx, token, triggerArg)
 			}
 		}
 	}
@@ -215,7 +215,7 @@ func promptShouldInstallAndRetry(ctx context.Context, clients *shared.ClientFact
 			return types.DeployedTrigger{}, false, nil
 		}
 
-		trigger, err := clients.APIInterface().WorkflowsTriggersCreate(ctx, token, triggerArg)
+		trigger, err := clients.API().WorkflowsTriggersCreate(ctx, token, triggerArg)
 		if err != nil {
 			return types.DeployedTrigger{}, false, err
 		}

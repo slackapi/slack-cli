@@ -59,8 +59,8 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 
 	architecture := runtime.GOARCH
 	operatingSys := runtime.GOOS
-	c.clients.IO.PrintDebug(ctx, "Architecture: %s \nOS: %s", architecture, operatingSys)
-	fileName, err := getUpdateFileName(c.releaseInfo.Version, operatingSys)
+	c.clients.IO.PrintDebug(ctx, "Architecture: %s\nOS: %s", architecture, operatingSys)
+	fileName, err := getUpdateFileName(c.releaseInfo.Version, operatingSys, architecture)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 	configDir, err := c.clients.Config.SystemConfig.SlackConfigDir(ctx)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to get config directory")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	c.clients.IO.PrintDebug(ctx, "Downloading cli from %s", link)
@@ -80,14 +80,14 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 	err = download(link, dstFilePath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to download the binary")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 	c.clients.IO.PrintDebug(ctx, "Downloaded to: %s", dstFilePath)
 
 	executablePath, err := os.Executable()
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to get current process name")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	currentBinaryPath, err := getCurrentResolvedBinaryPath(ctx, c.clients, executablePath)
@@ -122,20 +122,20 @@ func UpgradeFromLocalFile(cliUpgradeData cliUpgrade) error {
 	updatedBinaryPath, err := ExtractArchive(cliUpgradeData.UpgradeArchivePath, updatedBinaryFolderPath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to extract the upgrade archive")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	// Deletes the archive file after extraction
 	err = os.Remove(cliUpgradeData.UpgradeArchivePath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to remove the downloaded archive")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	backupPathToOldBinary, err := backupBinary(cliUpgradeData, binaryFolderPath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to backup binary")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	fmt.Print(style.SectionSecondaryf("Updating to version %s: %s", cliUpgradeData.NewVersion, cliUpgradeData.ExistingBinaryPath))
@@ -145,7 +145,7 @@ func UpgradeFromLocalFile(cliUpgradeData cliUpgrade) error {
 	err = os.Link(updatedBinaryPath, cliUpgradeData.ExistingBinaryPath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to create hardlink")
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	binaryName := filepath.Base(cliUpgradeData.ExistingBinaryPath)
@@ -158,7 +158,7 @@ func UpgradeFromLocalFile(cliUpgradeData cliUpgrade) error {
 		restoreErr := restoreBinary(updatedBinaryFolderPath, backupPathToOldBinary, cliUpgradeData.ExistingBinaryPath)
 		if restoreErr != nil {
 			restoreErr = slackerror.Wrapf(err, "failed to restore backup")
-			return slackerror.Wrapf(restoreErr, slackerror.ErrCliAutoupdate)
+			return slackerror.Wrapf(restoreErr, slackerror.ErrCLIAutoUpdate)
 		}
 		return err
 	}
@@ -176,7 +176,7 @@ func download(url string, dstFilePath string) error {
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		err = slackerror.Wrapf(err, "http status code %d, not 200", resp.StatusCode)
-		return slackerror.Wrap(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrap(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	// Create the file
@@ -205,7 +205,7 @@ func backupBinary(cliUpgradeData cliUpgrade, binaryFolderPath string) (string, e
 	err := os.MkdirAll(backupFolderForCurrentBinary, os.ModePerm)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to make backup directory")
-		return "", slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return "", slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	binaryName := filepath.Base(cliUpgradeData.ExistingBinaryPath)
@@ -216,7 +216,7 @@ func backupBinary(cliUpgradeData cliUpgrade, binaryFolderPath string) (string, e
 	err = os.Rename(cliUpgradeData.ExistingBinaryPath, newPathToOldBinary)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to move current binary to backup directory")
-		return "", slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return "", slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 	cliUpgradeData.PrintDebug("Moved old %s binary from %s to: %s", cliUpgradeData.CurrentVersion, cliUpgradeData.ExistingBinaryPath, newPathToOldBinary)
 	return newPathToOldBinary, nil
@@ -245,22 +245,30 @@ func restoreBinary(updatedBinaryFolderPath string, newPathToOldBinary string, or
 	return nil
 }
 
-// getUpdateFilename returns name of the archive that contains the upgrade for the given version and OS
-func getUpdateFileName(version, operatingSys string) (filename string, err error) {
-	// You can get a list of all possible OS/architecture combinations with `go tool dist list | column -c 75 | column -t`
-	// TODO: account for architecture as well. M1 macs would have an arch of arm64 instead of the usual amd64
-	const binaryName = "slack_cli"
-	const architecture = "64-bit"
+// getUpdateFilename returns name of the archive that contains the upgrade for
+// the given version and OS.
+//
+// All possible OS/architecture combinations can be listed with the command:
+//
+//	go tool dist list | column -c 75 | column -t
+func getUpdateFileName(version, operatingSys, architecture string) (filename string, err error) {
 	switch operatingSys {
 	case "darwin":
-		filename = fmt.Sprintf("%s_%s_macOS_%s.zip", binaryName, version, architecture)
+		switch architecture {
+		case "amd64":
+			filename = fmt.Sprintf("slack_cli_%s_macOS_amd64.zip", version)
+		case "arm64":
+			filename = fmt.Sprintf("slack_cli_%s_macOS_arm64.zip", version)
+		default:
+			filename = fmt.Sprintf("slack_cli_%s_macOS_64-bit.zip", version)
+		}
 	case "linux":
-		filename = fmt.Sprintf("%s_%s_linux_%s.tar.gz", binaryName, version, architecture)
+		filename = fmt.Sprintf("slack_cli_%s_linux_64-bit.tar.gz", version)
 	case "windows":
-		filename = fmt.Sprintf("%s_%s_windows_%s.zip", binaryName, version, architecture)
+		filename = fmt.Sprintf("slack_cli_%s_windows_64-bit.zip", version)
 	default:
 		err = slackerror.New(fmt.Sprintf("auto-updating for the operating system (%s) is unsupported", operatingSys))
-		err = slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		err = slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 	return
 }
@@ -281,7 +289,7 @@ func getCurrentResolvedBinaryPath(ctx context.Context, clients *shared.ClientFac
 	pathToOldBinary, err := filepath.EvalSymlinks(executablePath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to get path to actual binary")
-		return "", slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return "", slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 	clients.IO.PrintDebug(ctx, "isSymLink: %s", pathToOldBinary)
 	if pathToOldBinary == executablePath {
@@ -319,7 +327,7 @@ func verifyUpgrade(cliUpgradeData cliUpgrade) error {
 		if exitError, ok := err.(*exec.ExitError); ok {
 			err = slackerror.New(fmt.Sprintf("running '%s version' after upgrade failed with error: %d.",
 				cliUpgradeData.ExecutablePath, exitError.ExitCode()))
-			return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+			return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 		}
 	}
 
@@ -330,7 +338,7 @@ func verifyUpgrade(cliUpgradeData cliUpgrade) error {
 	if !versionMatches {
 		err = slackerror.New(fmt.Sprintf("versions did not match. Expected version %s was not in the version output: %s.",
 			cliUpgradeData.NewVersion, string(commandOutput)))
-		return slackerror.Wrapf(err, slackerror.ErrCliAutoupdate)
+		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
 	}
 
 	return nil

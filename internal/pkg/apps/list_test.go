@@ -98,7 +98,7 @@ func TestAppsList_FetchInstallStates_NoAuthsShouldReturnUnknownState(t *testing.
 
 	apps, err := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp, team2LocalApp})
 	require.NoError(t, err)
-	clientsMock.APIInterface.AssertNotCalled(t, "GetAppStatus")
+	clientsMock.API.AssertNotCalled(t, "GetAppStatus")
 
 	require.Contains(t, apps, team1DeployedApp)
 	require.Contains(t, apps, team2LocalApp)
@@ -112,7 +112,7 @@ func TestAppsList_FetchInstallStates_HasEnterpriseApp_HasEnterpriseAuth(t *testi
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 		authEnterprise1,
 	}, nil)
 	clientsMock.AddDefaultMocks()
@@ -121,7 +121,7 @@ func TestAppsList_FetchInstallStates_HasEnterpriseApp_HasEnterpriseAuth(t *testi
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 	// Return installed true
-	clientsMock.APIInterface.On("GetAppStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+	clientsMock.API.On("GetAppStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: team1AppID, Installed: true}},
 		}, nil)
@@ -138,16 +138,16 @@ func TestAppsList_FetchInstallStates_TokenFlag(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 
-	clientsMock.AuthInterface.On("Auths", mock.Anything).
+	clientsMock.Auth.On("Auths", mock.Anything).
 		Return([]types.SlackAuth{authTeam1}, nil)
-	clientsMock.AuthInterface.On("AuthWithToken", mock.Anything, team2Token).
+	clientsMock.Auth.On("AuthWithToken", mock.Anything, team2Token).
 		Return(authTeam2, nil)
 
-	clientsMock.APIInterface.On("GetAppStatus", mock.Anything, team1Token, []string{team1DeployedApp.AppID}, team1TeamID).Return(
+	clientsMock.API.On("GetAppStatus", mock.Anything, team1Token, []string{team1DeployedApp.AppID}, team1TeamID).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: team1DeployedApp.AppID, Installed: true}},
 		}, nil)
-	clientsMock.APIInterface.On("GetAppStatus", mock.Anything, team2Token, []string{team2LocalApp.AppID}, team2TeamID).Return(
+	clientsMock.API.On("GetAppStatus", mock.Anything, team2Token, []string{team2LocalApp.AppID}, team2TeamID).Return(
 		api.GetAppStatusResult{
 			Apps: []api.AppStatusResultAppInfo{{AppID: team2LocalApp.AppID, Installed: false}},
 		}, nil)
@@ -160,7 +160,7 @@ func TestAppsList_FetchInstallStates_TokenFlag(t *testing.T) {
 	apps, err := FetchAppInstallStates(ctx, clients, []types.App{team1DeployedApp, team2LocalApp})
 	require.NoError(t, err)
 	require.Len(t, apps, 2)
-	clientsMock.APIInterface.AssertNumberOfCalls(t, "GetAppStatus", 2)
+	clientsMock.API.AssertNumberOfCalls(t, "GetAppStatus", 2)
 
 	for _, app := range apps {
 		switch app.AppID {
@@ -175,9 +175,9 @@ func TestAppsList_FetchInstallStates_TokenFlag(t *testing.T) {
 func TestAppsList_FetchInstallStates_InvalidTokenFlag(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.AuthInterface.On("Auths", mock.Anything).
+	clientsMock.Auth.On("Auths", mock.Anything).
 		Return([]types.SlackAuth{}, nil)
-	clientsMock.AuthInterface.On("AuthWithToken", mock.Anything, mock.Anything).
+	clientsMock.Auth.On("AuthWithToken", mock.Anything, mock.Anything).
 		Return(types.SlackAuth{}, slackerror.New(slackerror.ErrHTTPRequestFailed))
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())

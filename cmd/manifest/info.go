@@ -73,7 +73,7 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(
 		&manifestFlags.source,
 		manifestFlagSource,
-		config.ManifestSourceLocal.String(),
+		"",
 		fmt.Sprintf(
 			"source of the app manifest (\"%s\" or \"%s\")",
 			config.ManifestSourceLocal.String(),

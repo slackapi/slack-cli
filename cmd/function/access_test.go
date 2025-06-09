@@ -42,10 +42,10 @@ func TestFunctionDistributionCommand(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				// set distribution
-				clientsMock.APIInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.PermissionAppCollaborators, mock.Anything).
+				clientsMock.API.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.PermissionAppCollaborators, mock.Anything).
 					Return([]types.FunctionDistributionUser{}, nil).Once()
 
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionAppCollaborators, []types.FunctionDistributionUser{}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
@@ -68,16 +68,16 @@ func TestFunctionDistributionCommand(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				// check if distribution type is named_entities
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionAppCollaborators, []types.FunctionDistributionUser{}, nil).Once()
 				// set distribution type to named_entities
-				clientsMock.APIInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.PermissionNamedEntities, mock.Anything).
+				clientsMock.API.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.PermissionNamedEntities, mock.Anything).
 					Return([]types.FunctionDistributionUser{}, nil).Once()
 				// add users
-				clientsMock.APIInterface.On("FunctionDistributionAddUsers", mock.Anything, mock.Anything, mock.Anything, "U00,U01").
+				clientsMock.API.On("FunctionDistributionAddUsers", mock.Anything, mock.Anything, mock.Anything, "U00,U01").
 					Return(nil).Once()
 				// print access
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionNamedEntities, []types.FunctionDistributionUser{{UserName: "user 0", ID: "U00"}, {UserName: "user 1", ID: "U01"}}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
@@ -99,13 +99,13 @@ func TestFunctionDistributionCommand(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				// check if distribution type is named_entities
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionNamedEntities, []types.FunctionDistributionUser{{UserName: "user 0", ID: "U00"}, {UserName: "user 1", ID: "U01"}}, nil).Once()
 				// remove users
-				clientsMock.APIInterface.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, "U00").
+				clientsMock.API.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, "U00").
 					Return(nil).Once()
 				// print access
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.PermissionNamedEntities, []types.FunctionDistributionUser{{UserName: "user 1", ID: "U01"}}, nil).Once()
 
 				clientsMock.AddDefaultMocks()
@@ -125,7 +125,7 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				"everyone in the workspace",
 			},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, "F1234", fakeApp.AppID).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, "F1234", fakeApp.AppID).
 					Return(types.PermissionEveryone, []types.FunctionDistributionUser{}, nil).Once()
 				clientsMock.AddDefaultMocks()
 
@@ -134,9 +134,9 @@ func TestFunctionDistributionCommand(t *testing.T) {
 				require.NoError(t, err, "Cant write apps.json")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertNotCalled(t, "FunctionDistributionAddUsers")
-				cm.APIInterface.AssertNotCalled(t, "FunctionDistributionRemoveUsers")
-				cm.APIInterface.AssertNotCalled(t, "FunctionDistributionSet")
+				cm.API.AssertNotCalled(t, "FunctionDistributionAddUsers")
+				cm.API.AssertNotCalled(t, "FunctionDistributionRemoveUsers")
+				cm.API.AssertNotCalled(t, "FunctionDistributionSet")
 			},
 			Teardown: func() {
 				appSelectTeardown()
@@ -333,12 +333,12 @@ func TestFunctionDistributionCommand_PermissionsFile(t *testing.T) {
 			err := afero.WriteFile(clientsMock.Fs, tt.filename, []byte(tt.data), 0644)
 			require.NoError(t, err)
 			for function, permissions := range tt.functions {
-				clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, function, mock.Anything).
+				clientsMock.API.On("FunctionDistributionList", mock.Anything, function, mock.Anything).
 					Return(permissions.currentType, permissions.currentEntities, nil)
 			}
-			clientsMock.APIInterface.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			clientsMock.API.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(nil)
-			clientsMock.APIInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			clientsMock.API.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return([]types.FunctionDistributionUser{}, nil)
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -359,7 +359,7 @@ func TestFunctionDistributionCommand_PermissionsFile(t *testing.T) {
 					entityIDs = append(entityIDs, entity.ID)
 				}
 				entities := strings.Join(entityIDs, ",")
-				clientsMock.APIInterface.AssertCalled(t, "FunctionDistributionSet", mock.Anything, function, app.AppID, permissions.expectedType, entities)
+				clientsMock.API.AssertCalled(t, "FunctionDistributionSet", mock.Anything, function, app.AppID, permissions.expectedType, entities)
 			}
 		})
 	}
@@ -403,13 +403,13 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.APIInterface.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.PermissionNamedEntities, mock.Anything).
+			clientsMock.API.On("FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, types.PermissionNamedEntities, mock.Anything).
 				Return([]types.FunctionDistributionUser{}, nil).
 				Run(func(args mock.Arguments) {
-					clientsMock.APIInterface.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
+					clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
 						Return(types.PermissionNamedEntities, tt.currentEntities, nil).
 						Run(func(args mock.Arguments) {
-							clientsMock.APIInterface.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+							clientsMock.API.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 								Return(nil)
 						})
 				})
@@ -420,10 +420,10 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 
 			err := updateNamedEntitiesDistribution(ctx, clients, app, function, tt.updatedEntities)
 			assert.NoError(t, err)
-			clientsMock.APIInterface.AssertCalled(t, "FunctionDistributionList", mock.Anything, function, app.AppID)
+			clientsMock.API.AssertCalled(t, "FunctionDistributionList", mock.Anything, function, app.AppID)
 			entities := strings.Join(tt.updatedEntities, ",")
-			clientsMock.APIInterface.AssertCalled(t, "FunctionDistributionSet", mock.Anything, function, app.AppID, types.PermissionNamedEntities, entities)
-			clientsMock.APIInterface.AssertCalled(t, "FunctionDistributionRemoveUsers", mock.Anything, function, app.AppID, tt.removedEntities)
+			clientsMock.API.AssertCalled(t, "FunctionDistributionSet", mock.Anything, function, app.AppID, types.PermissionNamedEntities, entities)
+			clientsMock.API.AssertCalled(t, "FunctionDistributionRemoveUsers", mock.Anything, function, app.AppID, tt.removedEntities)
 		})
 	}
 }

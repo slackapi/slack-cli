@@ -57,7 +57,7 @@ func Test_Apps_Link(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"saves information about the provided deployed app": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
 				}, nil)
@@ -88,7 +88,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -114,7 +114,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"saves information about the provided local app": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
 				}, nil)
@@ -146,7 +146,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
@@ -173,7 +173,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"avoids overwriting an app saved in json without confirmation": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
 				}, nil)
@@ -213,7 +213,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -242,7 +242,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"avoids overwriting a matching app id for the team without confirmation": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
 				}, nil)
@@ -282,7 +282,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -317,7 +317,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"completes overwriting an app saved in json with confirmation": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
 				}, nil)
@@ -358,7 +358,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "local",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
@@ -385,7 +385,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"refuses to write an app with app id not existing upstream": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
 				}, nil)
@@ -417,7 +417,7 @@ func Test_Apps_Link(t *testing.T) {
 					Prompt: true,
 					Option: "Deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -433,7 +433,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"accepting manifest source prompt should save information about the provided deployed app": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
 				}, nil)
@@ -474,7 +474,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -540,7 +540,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"manifest source prompt should not display for Run-on-Slack apps with local manifest source": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
 				}, nil)
@@ -585,7 +585,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,
@@ -617,7 +617,7 @@ func Test_Apps_Link(t *testing.T) {
 		},
 		"manifest source prompt should display for GBP apps with local manifest source": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
 				}, nil)
@@ -661,7 +661,7 @@ func Test_Apps_Link(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
-				cm.APIInterface.On(
+				cm.API.On(
 					"GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth1.Token,

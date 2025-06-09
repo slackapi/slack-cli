@@ -80,7 +80,7 @@ func Test_Project_InitCommand(t *testing.T) {
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", ".gitignore"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", "hooks.json"))
-				require.Contains(t, output, "Updated config.json manifest source to local")
+				require.Contains(t, output, `Updated config.json manifest source to "project" (local)`)
 				// Assert prompt to add existing apps was called
 				cm.IO.AssertCalled(
 					t,
@@ -110,7 +110,7 @@ func Test_Project_InitCommand(t *testing.T) {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Mocks auths to match against team and app
-				cm.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
 				}, nil)
@@ -150,7 +150,7 @@ func Test_Project_InitCommand(t *testing.T) {
 					Option: "local",
 				}, nil)
 				// Mock status of app for footer
-				cm.APIInterface.On("GetAppStatus",
+				cm.API.On("GetAppStatus",
 					mock.Anything,
 					mockLinkSlackAuth2.Token,
 					[]string{mockLinkAppID1},

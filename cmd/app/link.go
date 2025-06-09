@@ -173,13 +173,14 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 			Emoji: "warning",
 			Text:  "Warning",
 			Secondary: []string{
-				"Existing apps have manifests configured by app settings",
-				"Linking existing apps requires the manifest source to be " + config.ManifestSourceRemote.String(),
-				fmt.Sprintf(`Manifest source can be "%s" or "%s"`, config.ManifestSourceLocal.String(), config.ManifestSourceRemote.String()),
+				"Linking an existing app requires the app manifest source to be managed by",
+				fmt.Sprintf("%s.", config.ManifestSourceRemote.Human()),
 				" ",
-				fmt.Sprintf(style.Highlight(`Your manifest source is "%s"`), manifestSource.String()),
+				fmt.Sprintf(`App manifest source can be %s or %s:`, config.ManifestSourceLocal.Human(), config.ManifestSourceRemote.Human()),
 				fmt.Sprintf("- %s: uses manifest from your project's source code for all apps", config.ManifestSourceLocal.String()),
 				fmt.Sprintf("- %s: uses manifest from app settings for each app", config.ManifestSourceRemote.String()),
+				" ",
+				fmt.Sprintf(style.Highlight(`Your manifest source is set to %s.`), manifestSource.Human()),
 				" ",
 				fmt.Sprintf("Current manifest source in %s:", style.Highlight(filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename))),
 				fmt.Sprintf(style.Highlight(`  %s: "%s"`), "manifest.source", manifestSource.String()),
@@ -225,7 +226,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	}
 
 	appIDs := []string{app.AppID}
-	_, err = clients.APIInterface().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
+	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
 	if err != nil {
 		return err
 	}
@@ -292,7 +293,7 @@ func promptExistingApp(ctx context.Context, clients *shared.ClientFactory) (type
 
 // promptTeamSlackAuth retrieves an authenticated team from input
 func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
-	allAuths, err := clients.AuthInterface().Auths(ctx)
+	allAuths, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return &types.SlackAuth{}, err
 	}
@@ -322,7 +323,7 @@ func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*t
 		return &types.SlackAuth{}, err
 	}
 	if selection.Prompt {
-		clients.AuthInterface().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
+		clients.Auth().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
 		return &allAuths[selection.Index], nil
 	}
 	teamMatch := false
@@ -341,7 +342,7 @@ func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*t
 	if !teamMatch {
 		return &types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound)
 	}
-	clients.AuthInterface().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
+	clients.Auth().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
 	return &allAuths[teamIndex], nil
 }
 

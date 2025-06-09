@@ -260,7 +260,7 @@ func checkCLIConfig(ctx context.Context, clients *shared.ClientFactory) (Section
 func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section, error) {
 	section := Section{"Credentials", "your Slack authentication", []Section{}, []slackerror.Error{}}
 
-	authList, err := clients.AuthInterface().Auths(ctx)
+	authList, err := clients.Auth().Auths(ctx)
 	if err != nil {
 		return Section{}, slackerror.New(slackerror.ErrAuthToken).WithRootCause(err)
 	}
@@ -300,8 +300,8 @@ func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section,
 			// TODO :: .ValidateSession() utilizes the host (APIHost) assigned to the client making
 			// the call. This results in incorrectly deeming tokens invalid if using multiple workspaces
 			// with different API hosts. (cc: @mbrooks)
-			clients.Config.APIHostResolved = clients.AuthInterface().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &authInfo)
-			_, err := clients.APIInterface().ValidateSession(ctx, authInfo.Token)
+			clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &authInfo)
+			_, err := clients.API().ValidateSession(ctx, authInfo.Token)
 			if err != nil {
 				validitySection.Value = "Invalid"
 			}

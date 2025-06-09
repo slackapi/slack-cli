@@ -51,7 +51,7 @@ func Test_ManifestValidate_Success(t *testing.T) {
 		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with no error
-		clientsMock.APIInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{}, nil)
+		clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{}, nil)
 
 		// Test
 		logEvent, _, err := ManifestValidate(ctx, clients, log, appMock, authMock.Token)
@@ -67,7 +67,7 @@ func Test_ManifestValidate_Warnings(t *testing.T) {
 		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with no error
-		clientsMock.APIInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{
+		clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{
 			Warnings: slackerror.Warnings{
 				slackerror.Warning{
 					Code: "dummy warning",
@@ -91,7 +91,7 @@ func Test_ManifestValidate_Error(t *testing.T) {
 		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with an error
-		clientsMock.APIInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+		clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
 			api.ValidateAppManifestResult{},
 			slackerror.New("a dummy error").WithDetails(slackerror.ErrorDetails{
 				slackerror.ErrorDetail{
@@ -112,7 +112,7 @@ func Test_ManifestValidate_Error_ErrConnectorNotInstalled(t *testing.T) {
 		ctx, clients, clientsMock, log, appMock, authMock := setupCommonMocks(t)
 
 		// Mock manifest validation api result with an error and error details
-		clientsMock.APIInterface.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{
+		clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(api.ValidateAppManifestResult{
 			Warnings: nil,
 		}, slackerror.New("a dummy error").WithDetails(slackerror.ErrorDetails{
 			slackerror.ErrorDetail{
@@ -130,7 +130,7 @@ func Test_ManifestValidate_Error_ErrConnectorNotInstalled(t *testing.T) {
 		}))
 
 		// Mock CertifiedAppInstall method success
-		clientsMock.APIInterface.On("CertifiedAppInstall", mock.Anything, authMock.Token, mock.Anything).Return(api.CertifiedInstallResult{}, nil)
+		clientsMock.API.On("CertifiedAppInstall", mock.Anything, authMock.Token, mock.Anything).Return(api.CertifiedInstallResult{}, nil)
 
 		// Test
 		_, _, err := ManifestValidate(ctx, clients, log, appMock, authMock.Token)
@@ -140,10 +140,10 @@ func Test_ManifestValidate_Error_ErrConnectorNotInstalled(t *testing.T) {
 		// even after successful CertifiedAppInstall call.
 		assert.Error(t, err)
 
-		clientsMock.APIInterface.AssertCalled(t, "CertifiedAppInstall", mock.Anything, authMock.Token, "A12345")
-		clientsMock.APIInterface.AssertCalled(t, "CertifiedAppInstall", mock.Anything, authMock.Token, "A56789")
-		clientsMock.APIInterface.AssertNumberOfCalls(t, "CertifiedAppInstall", 2)
-		clientsMock.APIInterface.AssertNumberOfCalls(t, "ValidateAppManifest", 2)
+		clientsMock.API.AssertCalled(t, "CertifiedAppInstall", mock.Anything, authMock.Token, "A12345")
+		clientsMock.API.AssertCalled(t, "CertifiedAppInstall", mock.Anything, authMock.Token, "A56789")
+		clientsMock.API.AssertNumberOfCalls(t, "CertifiedAppInstall", 2)
+		clientsMock.API.AssertNumberOfCalls(t, "ValidateAppManifest", 2)
 	})
 }
 
@@ -175,15 +175,15 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 
 		clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
 		clientsMock.IO.On("InputPrompt", mock.Anything, mock.Anything, mock.Anything).Return(testReason, nil)
-		clientsMock.APIInterface.On("RequestAppApproval", mock.Anything, authMock.Token, mock.Anything, mock.Anything, testReason, mock.Anything, mock.Anything).Return(api.AppsApprovalsRequestsCreateResult{}, nil)
+		clientsMock.API.On("RequestAppApproval", mock.Anything, authMock.Token, mock.Anything, mock.Anything, testReason, mock.Anything, mock.Anything).Return(api.AppsApprovalsRequestsCreateResult{}, nil)
 
 		// Test
 		err := HandleConnectorApprovalRequired(ctx, clients, authMock.Token, testErr)
 
 		assert.NoError(t, err)
-		clientsMock.APIInterface.AssertCalled(t, "RequestAppApproval", mock.Anything, authMock.Token, "A12345", mock.Anything, testReason, mock.Anything, mock.Anything)
-		clientsMock.APIInterface.AssertCalled(t, "RequestAppApproval", mock.Anything, authMock.Token, "A56789", mock.Anything, testReason, mock.Anything, mock.Anything)
-		clientsMock.APIInterface.AssertNumberOfCalls(t, "RequestAppApproval", 2)
+		clientsMock.API.AssertCalled(t, "RequestAppApproval", mock.Anything, authMock.Token, "A12345", mock.Anything, testReason, mock.Anything, mock.Anything)
+		clientsMock.API.AssertCalled(t, "RequestAppApproval", mock.Anything, authMock.Token, "A56789", mock.Anything, testReason, mock.Anything, mock.Anything)
+		clientsMock.API.AssertNumberOfCalls(t, "RequestAppApproval", 2)
 		assert.Equal(t, len(testErr.Details), 1)
 	})
 
@@ -204,7 +204,7 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 		err := HandleConnectorApprovalRequired(ctx, clients, authMock.Token, testErr)
 
 		assert.NoError(t, err)
-		clientsMock.APIInterface.AssertNumberOfCalls(t, "RequestAppApproval", 0)
+		clientsMock.API.AssertNumberOfCalls(t, "RequestAppApproval", 0)
 		assert.Equal(t, len(testErr.Details), 0)
 	})
 
@@ -221,13 +221,13 @@ func Test_HandleConnectorApprovalRequired(t *testing.T) {
 
 		clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
 		clientsMock.IO.On("InputPrompt", mock.Anything, mock.Anything, mock.Anything).Return(testReason, nil)
-		clientsMock.APIInterface.On("RequestAppApproval", mock.Anything, authMock.Token, mock.Anything, mock.Anything, testReason, mock.Anything, mock.Anything).Return(api.AppsApprovalsRequestsCreateResult{}, slackerror.New("dummy error"))
+		clientsMock.API.On("RequestAppApproval", mock.Anything, authMock.Token, mock.Anything, mock.Anything, testReason, mock.Anything, mock.Anything).Return(api.AppsApprovalsRequestsCreateResult{}, slackerror.New("dummy error"))
 
 		// Test
 		err := HandleConnectorApprovalRequired(ctx, clients, authMock.Token, testErr)
 
 		assert.Error(t, err)
-		clientsMock.APIInterface.AssertNumberOfCalls(t, "RequestAppApproval", 1)
+		clientsMock.API.AssertNumberOfCalls(t, "RequestAppApproval", 1)
 	})
 }
 
@@ -244,7 +244,7 @@ func setupCommonMocks(t *testing.T) (ctx context.Context, clients *shared.Client
 	})
 
 	// Mock valid auth session
-	clientsMock.APIInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 
 	// Mock the manifest
 	manifestMock := &app.ManifestMockObject{}

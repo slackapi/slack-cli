@@ -50,7 +50,7 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 	}()
 
 	// Ensure the error log file exists
-	var errorLogFilePath string = filepath.Join(logFolder, filename)
+	var errorLogFilePath = filepath.Join(logFolder, filename)
 
 	// TODO: this os reference should probably be something that is dependency injected for easier testing
 	errorLogFile, err := os.OpenFile(errorLogFilePath, permissions, 0600)
@@ -99,7 +99,7 @@ func (io *IOStreams) FlushToLogFile(ctx context.Context, prefix, errStr string) 
 	}
 
 	// Ensure the error log file exists
-	var errorLogFilePath string = filepath.Join(logFolder, filename)
+	var errorLogFilePath = filepath.Join(logFolder, filename)
 
 	errorLogFile, err := io.fs.OpenFile(errorLogFilePath, permissions, 0600)
 	if err != nil {
@@ -126,7 +126,7 @@ func (io *IOStreams) FinishLogFile(ctx context.Context) {
 	logFolder, _ := io.config.SystemConfig.LogsDir(ctx)
 
 	// Ensure the error log file exists
-	var errorLogFilePath string = filepath.Join(logFolder, filename)
+	var errorLogFilePath = filepath.Join(logFolder, filename)
 
 	// TODO: this os reference should probably be something that is dependency injected for easier testing
 	errorLogFile, err := os.OpenFile(errorLogFilePath, permissions, 0600)

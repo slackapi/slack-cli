@@ -132,7 +132,7 @@ func Test_Env_ListCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"list variables using arguments": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.APIInterface.On(
+				cm.API.On(
 					"ListVariables",
 					mock.Anything,
 					mock.Anything,
@@ -150,7 +150,7 @@ func Test_Env_ListCommand(t *testing.T) {
 				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.APIInterface.AssertCalled(
+				cm.API.AssertCalled(
 					t,
 					"ListVariables",
 					mock.Anything,

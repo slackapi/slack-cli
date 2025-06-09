@@ -203,7 +203,7 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 	if err != nil {
 		return auths, err
 	}
-	var path string = filepath.Join(dir, credentialsFileName)
+	var path = filepath.Join(dir, credentialsFileName)
 
 	if _, err := c.fs.Stat(path); os.IsNotExist(err) {
 		return auths, err
@@ -374,7 +374,7 @@ func (c *Client) SetAuth(ctx context.Context, auth types.SlackAuth) (types.Slack
 
 	allAuths, err := c.auths(ctx)
 	if err != nil {
-		return types.SlackAuth{}, "", fmt.Errorf("Failed to fetch user authorizations %s", err)
+		return types.SlackAuth{}, "", fmt.Errorf("failed to fetch user authorizations %s", err)
 	}
 	allAuths[auth.TeamID] = auth
 

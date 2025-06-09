@@ -44,20 +44,16 @@ import (
 
 // ClientFactory are shared clients and configurations for use across the CLI commands (cmd) and handlers (pkg).
 type ClientFactory struct {
-	// Internal dependencies
-
-	APIInterface func() api.APIInterface
-
+	API          func() api.APIInterface
 	AppClient    func() *app.Client
+	Auth         func() auth.AuthInterface
+	CLIVersion   string
 	Config       *config.Config
-	SDKConfig    hooks.SDKCLIConfig
+	EventTracker tracking.TrackingManager
 	HookExecutor hooks.HookExecutor
 	IO           iostreams.IOStreamer
-	EventTracker tracking.TrackingManager
-
-	Runtime       runtime.Runtime
-	CliVersion    string
-	AuthInterface func() auth.AuthInterface
+	Runtime      runtime.Runtime
+	SDKConfig    hooks.SDKCLIConfig
 
 	// Browser can display or open URLs as webpages on the internet
 	Browser func() slackdeps.Browser
@@ -68,6 +64,9 @@ type ClientFactory struct {
 	// Os are a group of operating system functions following the `os` interface that are shared by all packages and enables testing & mocking
 	Os types.Os
 
+	// CleanupWaitGroup is a group of wait groups shared by all packages and allow functions to cleanup before the process terminates
+	CleanupWaitGroup sync.WaitGroup
+
 	// Cobra are a group of Cobra functions shared by all packages and enables tests & mocking
 	Cobra struct {
 		// GenMarkdownTree defaults to `doc.GenMarkdownTree(...)` and can be mocked to test specific use-cases
@@ -75,8 +74,6 @@ type ClientFactory struct {
 		//        a private member. The current thinking is that `NewCommand` would return a `SlackCommand` instead of `CobraCommand`
 		GenMarkdownTree func(cmd *cobra.Command, dir string) error
 	}
-
-	CleanupWaitGroup sync.WaitGroup
 }
 
 const sdkSlackDevDomainFlag = "sdk-slack-dev-domain"
@@ -100,9 +97,9 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 		IO: clients.IO,
 	}
 	clients.EventTracker = tracking.NewEventTracker()
-	clients.APIInterface = clients.defaultAPIInterfaceFunc
+	clients.API = clients.defaultAPIFunc
 	clients.AppClient = clients.defaultAppClientFunc
-	clients.AuthInterface = clients.defaultAuthInterfaceFunc
+	clients.Auth = clients.defaultAuthFunc
 	clients.Browser = clients.defaultBrowserFunc
 
 	// Command-specific dependencies
@@ -115,8 +112,8 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	// Used by the APIClient for its userAgent
 	// Currently needed because trying to get the version of the CLI from pkg/version/version.go would cause a circular dependency
 	// We can get rid of this once we refactor the code relationship between pkg/ and internal/
-	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CliVersion is retained for future code refactor purpose and serve SetVersion function
-	clients.CliVersion = ""
+	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CLIVersion is retained for future code refactor purpose and serve SetVersion function
+	clients.CLIVersion = ""
 
 	// Custom values set by functional options
 	// Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
@@ -132,23 +129,23 @@ func (c *ClientFactory) defaultAPIClientFunc() *api.Client {
 	return api.NewClient(nil, c.Config.APIHostResolved, c.IO)
 }
 
-// defaultAPIInterfaceFunc return a new API Client using the ConfigAPIHost
-func (c *ClientFactory) defaultAPIInterfaceFunc() api.APIInterface {
+// defaultAPIFunc return a new API Client using the ConfigAPIHost
+func (c *ClientFactory) defaultAPIFunc() api.APIInterface {
 	return c.defaultAPIClientFunc()
 }
 
 // defaultAppClientFunc return a new App Client
 func (c *ClientFactory) defaultAppClientFunc() *app.Client {
-	return app.NewClient(c.APIInterface(), c.Config, c.Fs, c.Os)
+	return app.NewClient(c.API(), c.Config, c.Fs, c.Os)
 }
 
 // defaultAuthClientFunc return a new Auth Client
 func (c *ClientFactory) defaultAuthClientFunc() *auth.Client {
-	return auth.NewClient(c.APIInterface(), c.AppClient(), c.Config, c.IO, c.Fs)
+	return auth.NewClient(c.API(), c.AppClient(), c.Config, c.IO, c.Fs)
 }
 
-// defaultAuthInterfaceFunc return a new Auth Interface
-func (c *ClientFactory) defaultAuthInterfaceFunc() auth.AuthInterface {
+// defaultAuthFunc return a new Auth Interface
+func (c *ClientFactory) defaultAuthFunc() auth.AuthInterface {
 	return c.defaultAuthClientFunc()
 }
 
@@ -200,7 +197,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 			break
 		}
 		// Then, fallback to hooks in the deprecated project slack.json file
-		// TODO(semver:major) - Drop support on the next major
+		// DEPRECATED(semver:major) - Drop support on the next major
 		hooksJSONFilePath = filepath.Join(dirPath, "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
@@ -210,7 +207,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		// Next, search for the hooks files in the outdated path
 		// .slack/slack.json and display an error that this path
 		// is deprecated
-		// TODO(semver:major) - Drop support on the next major
+		// DEPRECATED(semver:major) - Drop support on the next major
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "slack.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
@@ -220,11 +217,11 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		// Next, search for the hooks files in the outdated path
 		// .slack/cli.json and display an error that this path
 		// is deprecated
-		// TODO(semver:major) - Drop support on the next major
+		// DEPRECATED(semver:major) - Drop support on the next major
 		hooksJSONFilePath = filepath.Join(dirPath, ".slack", "cli.json")
 		info, err = c.Fs.Stat(hooksJSONFilePath)
 		if err == nil && !info.IsDir() {
-			return slackerror.New(slackerror.ErrCliConfigLocationError)
+			return slackerror.New(slackerror.ErrCLIConfigLocationError)
 		}
 		// Return an error if the current path is the project root, identified by the
 		// .slack directory, because no hooks file was found
@@ -331,7 +328,7 @@ func DebugMode(c *ClientFactory) {
 // SetVersion is a functional option that sets the Cli version that the API Client references
 // Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
 func SetVersion(version string) func(c *ClientFactory) {
-	return func(c *ClientFactory) { c.CliVersion = version }
+	return func(c *ClientFactory) { c.CLIVersion = version }
 }
 
 // getDevHostname returns the hostname of the given URL if it is dev or a numbered dev instance

@@ -14,11 +14,15 @@
 
 package deputil
 
-import "net/http"
+import (
+	"net/http"
 
-// URLChecker returns url if it's status code is 200, otherwise returns empty string
-func URLChecker(url string) string {
-	resp, err := http.Get(url)
+	"github.com/slackapi/slack-cli/internal/slackhttp"
+)
+
+// URLChecker returns url if its status code is 200, otherwise returns empty string
+func URLChecker(httpClient slackhttp.HTTPClient, url string) string {
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return ""
 	}

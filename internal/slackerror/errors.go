@@ -42,6 +42,7 @@ const (
 	ErrAppExists                                     = "app_add_exists"
 	ErrAppFlagRequired                               = "app_flag_required"
 	ErrAppFound                                      = "app_found"
+	ErrAppHosted                                     = "app_hosted"
 	ErrAppInstall                                    = "app_install_error"
 	ErrAppManifestAccess                             = "app_manifest_access_error"
 	ErrAppManifestCreate                             = "app_manifest_create_error"
@@ -73,11 +74,11 @@ const (
 	ErrConnectorDenied                               = "connector_denied"
 	ErrConnectorNotInstalled                         = "connector_not_installed"
 	ErrChannelNotFound                               = "channel_not_found"
-	ErrCliAutoupdate                                 = "cli_autoupdate_error"
-	ErrCliConfigLocationError                        = "cli_config_location_error"
-	ErrCliConfigInvalid                              = "cli_config_invalid"
-	ErrCliReadError                                  = "cli_read_error"
-	ErrCliUpdateRequired                             = "cli_update_required" // Slack API error code
+	ErrCLIAutoUpdate                                 = "cli_autoupdate_error"
+	ErrCLIConfigLocationError                        = "cli_config_location_error"
+	ErrCLIConfigInvalid                              = "cli_config_invalid"
+	ErrCLIReadError                                  = "cli_read_error"
+	ErrCLIUpdateRequired                             = "cli_update_required" // Slack API error code
 	ErrCommentRequired                               = "comment_required"
 	ErrConnectedOrgDenied                            = "connected_org_denied"
 	ErrConnectedTeamDenied                           = "connected_team_denied"
@@ -103,6 +104,8 @@ const (
 	ErrFailedToGetUser                               = "failed_to_get_user"
 	ErrFailedToSaveExtensionLogs                     = "failed_to_save_extension_logs"
 	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
+	ErrFeedbackNameInvalid                           = "feedback_name_invalid"
+	ErrFeedbackNameRequired                          = "feedback_name_required"
 	ErrFileRejected                                  = "file_rejected"
 	ErrForbiddenTeam                                 = "forbidden_team"
 	ErrFreeTeamNotAllowed                            = "free_team_not_allowed"
@@ -379,6 +382,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "An app was found",
 	},
 
+	ErrAppHosted: {
+		Code:    ErrAppHosted,
+		Message: "App is configured for Run on Slack infrastructure",
+	},
+
 	ErrAppInstall: {
 		Code:    ErrAppInstall,
 		Message: "Couldn't install your app to a workspace",
@@ -550,14 +558,14 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "Try adding your app as a member to the channel.",
 	},
 
-	ErrCliAutoupdate: {
-		Code:        ErrCliAutoupdate,
+	ErrCLIAutoUpdate: {
+		Code:        ErrCLIAutoUpdate,
 		Message:     "Couldn't auto-update this command-line tool",
 		Remediation: "You can manually install the latest version from:\nhttps://tools.slack.dev/slack-cli",
 	},
 
-	ErrCliConfigLocationError: {
-		Code:    ErrCliConfigLocationError,
+	ErrCLIConfigLocationError: {
+		Code:    ErrCLIConfigLocationError,
 		Message: fmt.Sprintf("The %s configuration file is not supported", filepath.Join(".slack", "cli.json")),
 		Remediation: strings.Join([]string{
 			"This version of the CLI no longer supports this configuration file.",
@@ -565,20 +573,20 @@ Otherwise start your app for local development with: %s`,
 		}, "\n"),
 	},
 
-	ErrCliReadError: {
-		Code:        ErrCliReadError,
+	ErrCLIReadError: {
+		Code:        ErrCLIReadError,
 		Message:     "There was an error reading configuration",
 		Remediation: "Check your config.json file.",
 	},
 
-	ErrCliConfigInvalid: {
-		Code:        ErrCliConfigInvalid,
+	ErrCLIConfigInvalid: {
+		Code:        ErrCLIConfigInvalid,
 		Message:     "Configuration invalid",
 		Remediation: "Check your config.json file.",
 	},
 
-	ErrCliUpdateRequired: {
-		Code:        ErrCliUpdateRequired,
+	ErrCLIUpdateRequired: {
+		Code:        ErrCLIUpdateRequired,
 		Message:     "Slack API requires the latest version of the Slack CLI",
 		Remediation: fmt.Sprintf("You can upgrade to the latest version of the Slack CLI using the command: %s", style.Commandf("upgrade", false)),
 	},
@@ -709,6 +717,21 @@ Otherwise start your app for local development with: %s`,
 	ErrFailToGetTeamsForRestrictedUser: {
 		Code:    ErrFailToGetTeamsForRestrictedUser,
 		Message: "Failed to get teams for restricted user",
+	},
+
+	ErrFeedbackNameInvalid: {
+		Code:        ErrFeedbackNameInvalid,
+		Message:     "The name of the feedback is invalid",
+		Remediation: fmt.Sprintf("View the feedback options with %s", style.Commandf("feedback --help", false)),
+	},
+
+	ErrFeedbackNameRequired: {
+		Code:    ErrFeedbackNameRequired,
+		Message: "The name of the feedback is required",
+		Remediation: strings.Join([]string{
+			"Please provide a --name <string> flag or remove the --no-prompt flag",
+			fmt.Sprintf("View feedback options with %s", style.Commandf("feedback --help", false)),
+		}, "\n"),
 	},
 
 	ErrFileRejected: {

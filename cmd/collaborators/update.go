@@ -108,7 +108,7 @@ func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []
 		return err
 	}
 
-	err = clients.APIInterface().UpdateCollaborator(ctx, selection.Auth.Token, app.AppID, slackUser)
+	err = clients.API().UpdateCollaborator(ctx, selection.Auth.Token, app.AppID, slackUser)
 	if err != nil {
 		return slackerror.Wrap(err, "Error updating collaborator")
 	}

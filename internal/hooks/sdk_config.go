@@ -46,11 +46,11 @@ type SDKCLIConfig struct {
 }
 
 // Exists returns true when the SDKCLIConfig was successfully loaded, otherwise false with an error
-func (s *SDKCLIConfig) Exists() (error, bool) {
+func (s *SDKCLIConfig) Exists() (bool, error) {
 	if strings.TrimSpace(s.WorkingDirectory) == "" {
-		return slackerror.New(slackerror.ErrInvalidSlackProjectDirectory), false
+		return false, slackerror.New(slackerror.ErrInvalidSlackProjectDirectory)
 	}
-	return nil, true
+	return true, nil
 }
 
 type ProtocolVersions []Protocol

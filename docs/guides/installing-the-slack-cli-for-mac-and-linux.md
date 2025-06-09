@@ -86,6 +86,8 @@ Solution: Sudo actions within the scripts were removed so as not to create any s
 </TabItem>
 <TabItem value="Manual" label="Manual Installation">
 
+Manual installation allows you to omit the Deno installation if you don't need it. Deno is needed if you are creating [workflow apps](https://docs.slack.dev/workflows). If you intend to solely use the CLI for Bolt apps, you do not need Deno. If you forgo the Deno installation, skip to step 3.
+
 **1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/deno-slack-sdk/guides/installing-deno) for more details.
 
 **2\. Verify that Deno is installed and in your path.**
@@ -105,9 +107,9 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.0.5_macOS_64-bit.tar.gz"><strong>Download for macOS (.tar.gz)</strong></a>
+<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.3.0_macOS_64-bit.tar.gz"><strong>Download for macOS (.tar.gz)</strong></a>
 
-<ts-icon class="ts_icon_plug"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.0.5_linux_64-bit.tar.gz"><strong>Download for Linux (.tar.gz)</strong></a>
+<ts-icon class="ts_icon_plug"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.3.0_linux_64-bit.tar.gz"><strong>Download for Linux (.tar.gz)</strong></a>
 
 **5\. Add the** `slack` **CLI to your path.**
 
@@ -120,7 +122,7 @@ typescript 4.*
 
 ```
 $ slack version
-Using slack v3.0.5
+Using slack v3.3.0
 ```
 
 **7\. Verify that all dependencies have been installed.**

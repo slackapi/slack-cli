@@ -90,7 +90,7 @@ func Test_ClientFactory_InitSDKConfig(t *testing.T) {
 			mockHooksJSONContent:  "{}",
 			mockHooksJSONFilePath: filepath.Join(slackdeps.MockHomeDirectory, "project", ".slack", "cli.json"),
 			mockWorkingDirectory:  filepath.Join(slackdeps.MockHomeDirectory, "project"),
-			expectedError:         slackerror.New(slackerror.ErrCliConfigLocationError),
+			expectedError:         slackerror.New(slackerror.ErrCLIConfigLocationError),
 		},
 		"errors if no project configuration file can be found": {
 			mockHooksJSONContent:  "{}",
@@ -234,7 +234,7 @@ func Test_ClientFactory_InitSDKConfigFromJSON_brokenGetHooks(t *testing.T) {
 	err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON))
 	require.Error(t, err)
 	assert.Equal(t, slackerror.New(slackerror.ErrSDKHookInvocationFailed).Code, slackerror.ToSlackError(err).Code)
-	assert.Contains(t, slackerror.ToSlackError(err).Message, "Command for 'GetHooks' returned an error")
+	assert.Contains(t, slackerror.ToSlackError(err).Message, "Error running 'GetHooks' command")
 }
 
 func Test_ClientFactory_InitSDKConfigFromJSON_brokenJSONFile(t *testing.T) {

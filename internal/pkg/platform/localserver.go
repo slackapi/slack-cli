@@ -91,7 +91,7 @@ func (r *LocalServer) Start(ctx context.Context) error {
 		err := func() error {
 			// Get a socket connection address
 			r.clients.IO.PrintDebug(ctx, "Retrieving and establishing connection to WebSocket URL...")
-			result, err := r.clients.APIInterface().ConnectionsOpen(ctx, r.token)
+			result, err := r.clients.API().ConnectionsOpen(ctx, r.token)
 			if err != nil {
 				return slackerror.Wrap(err, slackerror.ErrSocketConnection).WithMessage("Error fetching socket connection URL")
 			}
@@ -428,7 +428,7 @@ type SocketEvent struct {
 func sendWebSocketMessage(c WebSocketConnection, linkResponse *LinkResponse) error {
 	// Validate the response
 	if linkResponse == nil {
-		return slackerror.Wrap(fmt.Errorf("Websocket response message cannot be empty"), slackerror.ErrSocketConnection)
+		return slackerror.Wrap(fmt.Errorf("websocket response message cannot be empty"), slackerror.ErrSocketConnection)
 	}
 
 	// Prepare response for websocket

@@ -98,7 +98,7 @@ func (md *Metadata) httpClientRequest(method string, host string, data interface
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.WithStack(fmt.Errorf("Slack CLI metadata responded with an unexpected status code %d from url %s", res.StatusCode, host))
+		return errors.WithStack(fmt.Errorf("CLI metadata responded with an unexpected status code %d from url %s", res.StatusCode, host))
 	}
 
 	var bytes []byte

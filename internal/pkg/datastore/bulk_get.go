@@ -31,7 +31,7 @@ func BulkGet(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	getResult, err := clients.APIInterface().AppsDatastoreBulkGet(ctx, token, request)
+	getResult, err := clients.API().AppsDatastoreBulkGet(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}
