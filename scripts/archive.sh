@@ -53,7 +53,15 @@ main() {
     macos_targz_file_path_latest_arm64="$DIST_DIR/slack_cli_latest_macOS_arm64.tar.gz"
 
     macos_zip_file_path_universal="$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.zip"
+    macos_zip_file_path_amd64="$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.zip"
+    macos_zip_file_path_arm64="$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.zip"
     macos_zip_file_path_universal_legacy="$DIST_DIR/slack_cli_${VERSION}_macos.zip"
+
+    echo "-> Creating macOS versioned tar.gz files"
+    unzip_tar "$macos_zip_file_path_universal" "$macos_targz_file_path_version_universal"
+    unzip_tar "$macos_zip_file_path_amd64" "$macos_targz_file_path_version_amd64"
+    unzip_tar "$macos_zip_file_path_arm64" "$macos_targz_file_path_version_arm64"
+    ls -l "$DIST_DIR"/*_"$VERSION"_macOS*
 
     echo "-> Creating macOS development tar.gz files"
     cp "$macos_targz_file_path_version_universal" "$macos_targz_file_path_dev_universal"
@@ -84,6 +92,16 @@ main() {
     echo "-> Creating Linux production tar.gz file"
     cp "$linux_targz_file_path_version" "$linux_targz_file_path_latest"
     ls -l "$DIST_DIR"/*latest_linux*
+}
+
+# Repackage tarballs with the signed zip
+unzip_tar() {
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+    unzip "$1" -d "$tmpdir"
+    mkdir "$tmpdir/bin"
+    mv "$tmpdir/slack" "$tmpdir/bin/slack"
+    tar -C "$tmpdir" -zcvf "$2" .
 }
 
 main "$@"

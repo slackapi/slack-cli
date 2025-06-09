@@ -277,6 +277,10 @@ jobs:
             echo "Will use RELEASE_REF=${RELEASE_REF}"
             echo "export RELEASE_REF=${RELEASE_REF}" >> $BASH_ENV
             echo "export RELEASE_REF=${RELEASE_REF}" >> << parameters.artifact_dir >>/release_ref
+      - run:
+          name: Delete non-signed archive
+          command: |
+            rm << parameters.artifact_dir >>/slack_*_macOS_*.tar.gz
       - generate-archives:
           artifact_dir: << parameters.artifact_dir >>
       - run:
