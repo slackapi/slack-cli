@@ -119,13 +119,14 @@ func (c *Client) TriggerPermissionsSet(ctx context.Context, token, triggerID, en
 	values.Add("trigger_id", triggerID)
 	values.Add("permission_type", string(permissionType))
 	if permissionType == types.PermissionNamedEntities && len(entities) > 0 {
-		if entityType == "users" {
+		switch entityType {
+		case "users":
 			values.Add("user_ids", entities)
-		} else if entityType == "channels" {
+		case "channels":
 			values.Add("channel_ids", entities)
-		} else if entityType == "workspaces" {
+		case "workspaces":
 			values.Add("team_ids", entities)
-		} else if entityType == "organizations" {
+		case "organizations":
 			values.Add("org_ids", entities)
 		}
 	}
@@ -167,13 +168,14 @@ func (c *Client) TriggerPermissionsAddEntities(ctx context.Context, token, trigg
 	var values = url.Values{}
 	values.Add("token", token)
 	values.Add("trigger_id", triggerID)
-	if entityType == "users" {
+	switch entityType {
+	case "users":
 		values.Add("user_ids", entities)
-	} else if entityType == "channels" {
+	case "channels":
 		values.Add("channel_ids", entities)
-	} else if entityType == "workspaces" {
+	case "workspaces":
 		values.Add("team_ids", entities)
-	} else if entityType == "organizations" {
+	case "organizations":
 		values.Add("org_ids", entities)
 	}
 
@@ -214,13 +216,14 @@ func (c *Client) TriggerPermissionsRemoveEntities(ctx context.Context, token, tr
 	var values = url.Values{}
 	values.Add("token", token)
 	values.Add("trigger_id", triggerID)
-	if entityType == "users" {
+	switch entityType {
+	case "users":
 		values.Add("user_ids", entities)
-	} else if entityType == "channels" {
+	case "channels":
 		values.Add("channel_ids", entities)
-	} else if entityType == "workspaces" {
+	case "workspaces":
 		values.Add("team_ids", entities)
-	} else if entityType == "organizations" {
+	case "organizations":
 		values.Add("org_ids", entities)
 	}
 

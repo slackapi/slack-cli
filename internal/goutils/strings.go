@@ -52,9 +52,10 @@ func ExtractFirstJSONFromString(s string) string {
 
 	var stack = []rune{}
 	for i := start; i < len(s); i++ {
-		if s[i] == '{' {
+		switch s[i] {
+		case '{':
 			stack = append(stack, rune(s[i]))
-		} else if s[i] == '}' {
+		case '}':
 			stack = stack[:len(stack)-1] // pop last item
 			end = i                      // we found a potential ending bracket
 		}
