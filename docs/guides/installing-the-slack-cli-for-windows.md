@@ -108,6 +108,8 @@ Solution: For the installer to work correctly, your PowerShell session's [langua
 </TabItem>
 <TabItem value="Manual" label="Manual Installation">
 
+Manual installation allows you to omit the Deno installation if you don't need it. Deno is needed if you are creating [workflow apps](https://docs.slack.dev/workflows). If you intend to solely use the CLI for Bolt apps, you do not need Deno. If you forgo the Deno installation, skip to step 3.
+
 **1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/deno-slack-sdk/guides/installing-deno) for more details.
 
 **2\. Verify that Deno is installed and in your path.**
