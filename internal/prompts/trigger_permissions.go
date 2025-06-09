@@ -75,7 +75,8 @@ func TriggerChooseNamedEntityPrompt(ctx context.Context, clients *shared.ClientF
 		"cancel",
 	}
 
-	if accessAction == "grant" {
+	switch accessAction {
+	case "grant":
 		actions = []string{
 			"add_user",
 			"add_channel",
@@ -90,7 +91,7 @@ func TriggerChooseNamedEntityPrompt(ctx context.Context, clients *shared.ClientF
 			"grant an organization access",
 			"cancel",
 		}
-	} else if accessAction == "revoke" {
+	case "revoke":
 		actions = []string{
 			"remove_user",
 			"remove_channel",

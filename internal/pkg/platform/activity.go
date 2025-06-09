@@ -366,7 +366,8 @@ func triggerExecutedToString(activity api.Activity) (result string) {
 	msgs := []string{}
 
 	// Additional consideration for errors
-	if activity.Level == types.INFO {
+	switch activity.Level {
+	case types.INFO:
 		trigger, ok := activity.Payload["trigger"].(map[string]interface{})
 		if ok {
 			caser := cases.Title(language.English)
@@ -374,7 +375,7 @@ func triggerExecutedToString(activity api.Activity) (result string) {
 		} else {
 			msgs = append(msgs, fmt.Sprintf("Trigger successfully started execution of function '%s'", activity.Payload["function_name"]))
 		}
-	} else if activity.Level == types.ERROR {
+	case types.ERROR:
 		msgs = append(msgs, fmt.Sprintf("Trigger for workflow '%s' failed: %s", activity.Payload["function_name"], activity.Payload["reason"]))
 		// Default format for the errors message is the raw, json-encoded string
 		var payloadErrors = []string{fmt.Sprintf("• %s", activity.Payload["errors"])}
