@@ -64,6 +64,10 @@ commands:
           name: Generate dev and prod archives
           command: |
             ./scripts/archive.sh << parameters.artifact_dir >> $BUILD_VERSION
+      - run:
+          name: Check expected artifacts exist
+          command: |
+            ./scripts/archive-test.sh << parameters.artifact_dir >> $BUILD_VERSION
   retrieve-oidc-secrets:
     description: "Retrieves secrets from Slack"
     parameters:
@@ -276,7 +280,7 @@ jobs:
       - run:
           name: Delete non-signed archive
           command: |
-            rm << parameters.artifact_dir >>/slack_*_macOS_64-bit.tar.gz
+            rm << parameters.artifact_dir >>/slack_*_macOS_*.tar.gz
       - generate-archives:
           artifact_dir: << parameters.artifact_dir >>
       - run:

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2022-2025 Salesforce, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,88 +12,96 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+set -e
 
 #
 # USAGE:
 #   ./scripts/archive-test.sh <release version>
 #
 # EXAMPLES:
-#   This script now executed inside goreleaser, if you need to run the script alone, make sure you have macOS and Linux original archives in ./dist
-#   - ./scripts/archive-test.sh 1.5.0
+#   Artifacts are built with GoReleaser and should be packaged into various
+#   release archives before running this script:
+#
+#   $ make build-snapshot
+#   $ ./scripts/archive.sh ./dist 3.3.0
+#   $ ./scripts/archive-test.sh ./dist 3.3.0
+#
 # DESCRIPTION:
-#   Create the development tar.gz archives used by the `install-dev.sh` script.
+#   Confirm the expected tar.gz and zip bundles exist for a packaged version.
 #
-#   Generates macOS and Linux archives.
-#
-#   After generating the archive, the script will test the archive by
-#   extracting it and looking for `bin/slack` for macOS binary
-#   Linux archive is generated directorily from original binary
+#   Various binaries are extracted and checked for existence and permissions.
 
-DIST_DIR="dist"
+DIST_DIR=${1}
 
 main() {
-    if [ $# -lt 1 ]; then
-        echo "Release version is required"
+    if [ $# -lt 2 ]; then
+        echo "Missing parameters: $0 <path> <version>"
         exit 1
     fi
 
-    VERSION=${1}
+    VERSION=${2}
 
-    echo "Creating macOS archive:"
+    echo "Checking macOS archives"
+    check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_dev_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_dev_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_dev_macOS_arm64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_latest_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_latest_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_latest_macOS_arm64.tar.gz"
 
-    src_file_path="$DIST_DIR/slack-macos_darwin_amd64/slack_cli_${VERSION}_macos.zip"
-    echo "-> Source archive: $src_file_path"
+    check_zip "$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.zip"
+    check_zip "$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.zip"
+    check_zip "$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.zip"
+    check_zip "$DIST_DIR/slack_cli_${VERSION}_macos.zip"
 
-    targz_dir_path="$DIST_DIR/slack_mac_dev_64-bit"
-    targz_file_path="$DIST_DIR/slack_mac_dev_64-bit.tar.gz"
+    echo "Checking Linux archives"
+    check_tar "$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
 
-    echo "-> Creating dist directory: $targz_dir_path"
-    mkdir -p "$targz_dir_path"
+    echo "Checking Windows archives"
+    check_exe "$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"
 
-    echo "-> Extracting: $targz_dir_path"
-    unzip "$src_file_path" -d "$targz_dir_path"
+    echo "Success! Archives exist!"
+}
 
-    echo "-> Moving $targz_dir_path/slack to $targz_dir_path/bin/slack"
-    mkdir "$targz_dir_path/bin"
-    mv "$targz_dir_path/slack" "$targz_dir_path/bin/slack"
+check_exe() {
+    echo "-> Testing executable exists: $1"
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+    unzip -q "$1" -d "$tmpdir"
 
-    echo "-> Creating tar.gz file: $targz_file_path"
-    tar -C "$targz_dir_path" -zcvf "$targz_file_path" .
+    file "$tmpdir/bin/slack.exe" | grep -q 'PE32' || {
+        echo "-> Failed to find executable: $1"
+        exit 1
+    }
+}
 
-    echo "-> Cleaning up: $targz_dir_path"
-    rm -R "$targz_dir_path"
+check_tar() {
+    echo "-> Testing executable exists: $1"
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+    tar -xzf "$1" -C "$tmpdir"
 
-    echo "-> Testing tar.gz file..."
-    mkdir "$targz_dir_path"
-    tar -zxvf "$targz_file_path" -C "$targz_dir_path"
-
-    if [ $(command -v "$targz_dir_path/bin/slack") ]; then
-      echo "-> Found bin/slack"
-      rm -R "$targz_dir_path"
-    else
-      echo "-> Missing bin/slack"
+    if ! [[ -x "$tmpdir/bin/slack" ]]; then
+        echo "-> Failed to find executable: $1"
+        return 1
     fi
+}
 
-    echo "-> Everything looks good!"
-    echo "-> macOS archive: $targz_file_path"
+check_zip() {
+    echo "-> Testing executable exists: $1"
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+    unzip -q "$1" -d "$tmpdir"
 
-    echo "Creating Linux archive:"
-
-    linux_src_file_path="$DIST_DIR/slack_linux_amd64/"
-    linux_targz_file_path="$DIST_DIR/slack_linux_dev_64-bit.tar.gz"
-
-    if [ $(command -v "$linux_src_file_path/bin/slack") ]; then
-      echo "-> Found bin/slack"
-    else
-      echo "-> Missing bin/slack"
-      exit
+    if ! [[ -x "$tmpdir/slack" ]]; then
+        echo "-> Failed to find executable: $1"
+        return 1
     fi
-
-    echo "-> Creating tar.gz file: $targz_file_path"
-    tar -czvf "$linux_targz_file_path" -C "$linux_src_file_path" .
-
-    echo "-> Linux archive: $linux_targz_file_path"
 }
 
 main "$@"
