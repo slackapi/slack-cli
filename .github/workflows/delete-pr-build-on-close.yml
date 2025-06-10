@@ -65,6 +65,18 @@ jobs:
               echo "Failed to find $TAG_NAME, trying next..."
             fi
             sleep 1
+
+            FEATURE_TAG_NAME="${TAGS}-${REF}-feature"
+            echo "Identified feature-release tagname as 🔪: $FEATURE_TAG_NAME"
+
+            # Delete a feature-release
+            if GH_DEBUG=1 gh release --repo="slackapi/slack-cli" delete "$FEATURE_TAG_NAME" -y --cleanup-tag; then
+              echo "Successfully deleted $FEATURE_TAG_NAME"
+              RELEASE_FOUND=0
+            else
+              echo "Failed to find $FEATURE_TAG_NAME, trying next..."
+            fi
+            sleep 1
           done
           if [ "$RELEASE_FOUND" -ne 0 ]; then
             echo "No matching pre-releases tag was found for the branch $TAG_NAME in recent versions"

@@ -470,12 +470,10 @@ jobs:
             export JOB_PARAMS=$(
                 jq -n \
                     --arg j S3_UPLOAD \
-                    --arg ct "$CIRCLE_TAG" \
-                    --arg cs "$CIRCLE_SHA1" \
                     --arg ad << parameters.artifact_dir >> \
                     --arg p << parameters.s3-target-path >> \
                     --arg fn << parameters.file-name >> \
-                    '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, CIRCLE_TAG: $ct, CIRCLE_SHA1: $cs, S3_TARGET_PATH: $p, FILE_NAME: $fn}'
+                    '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, S3_TARGET_PATH: $p, FILE_NAME: $fn}'
             )
             if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=${CIRCLE_TAG%-feature}; else export GIT_REF=$CIRCLE_BRANCH; fi
             sudo /Library/circleci/runner-entrypoint.sh $GIT_REF "$JOB_PARAMS"
