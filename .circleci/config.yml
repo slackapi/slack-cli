@@ -211,7 +211,7 @@ jobs:
                     --arg pn << parameters.prod_name >> \
                     '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, PROD_NAME: $pn}'
             )
-            if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=${CIRCLE_TAG%-feature}; else export GIT_REF=$CIRCLE_BRANCH; fi
+            if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=$CIRCLE_TAG; else export GIT_REF=$CIRCLE_BRANCH; fi
             sudo bash /Library/circleci/runner-entrypoint.sh $GIT_REF "$JOB_PARAMS"
           no_output_timeout: 45m
       - store_artifacts:
@@ -475,7 +475,7 @@ jobs:
                     --arg fn << parameters.file-name >> \
                     '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, S3_TARGET_PATH: $p, FILE_NAME: $fn}'
             )
-            if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=${CIRCLE_TAG%-feature}; else export GIT_REF=$CIRCLE_BRANCH; fi
+            if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=$CIRCLE_TAG; else export GIT_REF=$CIRCLE_BRANCH; fi
             sudo /Library/circleci/runner-entrypoint.sh $GIT_REF "$JOB_PARAMS"
           no_output_timeout: 45m
       - store_artifacts:
