@@ -682,7 +682,7 @@ git push origin v3.4.5-feat-something-feature  # Start the build on push
 After a few minutes these changes can be installed using the install script:
 
 ```bash
-curl -fsSL https://downloads.slack-edge.com/slack-cli/install-dev.sh | bash -s -- -v v3.4.5-feat-something-feature
+curl -fsSL https://downloads.slack-edge.com/slack-cli/install-dev.sh | bash -s -- -v 3.4.5-feat-something-feature
 ```
 
 ## Workflow
