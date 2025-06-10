@@ -33,7 +33,7 @@ commands:
       - run:
           name: Output BUILD_VERSION env var based on recent git tag and type of build
           command: |
-            BUILD_VERSION=$(git describe --tags --match 'v*.*.*' --exclude '*feature');
+            BUILD_VERSION=$(git describe --tags --match 'v*.*.*');
             echo "git tag-based BUILD_VERSION: $BUILD_VERSION"
             if [[ "<< parameters.release_ref >>" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
               # if release tag starts with semver, then this is either a prod or feature build. use the release tag, then, as build version too.
