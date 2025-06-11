@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2022-2025 Salesforce, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,29 +15,14 @@
 
 set -euo pipefail
 
-APP_ZIP_PATTERN="${PROD_NAME}*macOS_64-bit.zip"
+cd "${ARTIFACTS_DIR}"
 
-cd ${ARTIFACTS_DIR} && APP_ZIP=$(find . -type f -iname "${APP_ZIP_PATTERN}");
-
-echo $APP_ZIP
-
-APP_ZIP_NAME=${APP_ZIP:2}
-
-echo "$APP_ZIP_NAME"
-
-unzip $APP_ZIP_NAME
-
-rm $APP_ZIP_NAME
-
-ls -l ${ARTIFACTS_DIR}
-
-codesign --force --deep --verbose --verify --sign "Developer ID Application: SLACK TECHNOLOGIES L.L.C. (BQR82RBBHL)" --options runtime "${PROD_NAME}"
-
-codesign -vvv --deep --strict "${PROD_NAME}"
-
-zip -r "${APP_ZIP_NAME}" "${PROD_NAME}"
-
-xcrun notarytool submit "${APP_ZIP_NAME}" -p "HERMES_NOTARY"
-
-
-
+for package in "${PROD_NAME}"*macOS_*.zip; do
+    echo "Signing: ${package}"
+    unzip "${package}"
+    codesign --force --deep --verbose --verify --sign "Developer ID Application: SLACK TECHNOLOGIES L.L.C. (BQR82RBBHL)" --options runtime "${PROD_NAME}"
+    codesign -vvv --deep --strict "${PROD_NAME}"
+    zip -r "${package}" "${PROD_NAME}"
+    rm "${PROD_NAME}"
+    xcrun notarytool submit "${package}" -p "HERMES_NOTARY"
+done
