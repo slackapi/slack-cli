@@ -19,6 +19,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -134,6 +135,14 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 				payload, err := io.ReadAll(req.Body)
 				require.NoError(t, err)
 				require.Contains(t, string(payload), fmt.Sprintf("\"cli_version\":\"%s\"", "4.2.0"))
+			},
+		},
+		"should include os and arch build information": {
+			assertOnRequest: func(t *testing.T, req *http.Request) {
+				payload, err := io.ReadAll(req.Body)
+				require.NoError(t, err)
+				require.Contains(t, string(payload), fmt.Sprintf("\"arch\":\"%s\"", runtime.GOARCH))
+				require.Contains(t, string(payload), fmt.Sprintf("\"os\":\"%s\"", runtime.GOOS))
 			},
 		},
 	}
