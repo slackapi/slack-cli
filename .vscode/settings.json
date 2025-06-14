@@ -20,6 +20,7 @@
     "slackdeps",
     "slackerror",
     "slackhq",
+    "slackmock",
     "slacktrace",
     "tabletests",
     "testutil"

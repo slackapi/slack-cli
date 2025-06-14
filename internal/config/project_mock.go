@@ -68,11 +68,6 @@ func (m *ProjectConfigMock) SetSurveyConfig(ctx context.Context, id string, surv
 	return args.Error(0)
 }
 
-func (m *ProjectConfigMock) ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error) {
-	args := m.Called(ctx)
-	return args.Get(0).(ProjectConfig), args.Error(1)
-}
-
 // Cache returns a persistent mock cache
 func (m *ProjectConfigMock) Cache() cache.Cacher {
 	args := m.Called()

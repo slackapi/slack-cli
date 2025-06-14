@@ -26,7 +26,9 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/test/slackmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -144,10 +146,13 @@ func TestDoctorCheckProjectConfig(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			pcm := &config.ProjectConfigMock{}
-			pcm.On("ReadProjectConfigFile", mock.Anything).Return(tt.projectConfig, nil)
-			clientsMock.Config.ProjectConfig = pcm
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			slackmock.CreateProject(t, ctx, clients.Fs, clients.Os, slackdeps.MockWorkingDirectory)
+
+			_, err := config.WriteProjectConfigFile(ctx, clients.Fs, clients.Os, tt.projectConfig)
+			require.NoError(t, err)
+
 			expected := Section{
 				Label:       "Configurations",
 				Value:       "your project's CLI settings",

@@ -55,7 +55,6 @@ type ProjectConfigManager interface {
 	SetManifestSource(ctx context.Context, source ManifestSource) error
 	GetSurveyConfig(ctx context.Context, name string) (SurveyConfig, error)
 	SetSurveyConfig(ctx context.Context, name string, surveyConfig SurveyConfig) error
-	ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error)
 
 	Cache() cache.Cacher
 }
@@ -117,7 +116,7 @@ func (c *ProjectConfig) GetProjectID(ctx context.Context) (string, error) {
 	span, ctx = opentracing.StartSpanFromContext(ctx, "GetProjectID")
 	defer span.Finish()
 
-	var projectConfig, err = c.ReadProjectConfigFile(ctx)
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
 		return "", err
 	}
@@ -131,7 +130,7 @@ func (c *ProjectConfig) SetProjectID(ctx context.Context, projectID string) (str
 	span, _ = opentracing.StartSpanFromContext(ctx, "SetProjectID")
 	defer span.Finish()
 
-	var projectConfig, err = c.ReadProjectConfigFile(ctx)
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
 		return "", err
 	}
@@ -152,7 +151,7 @@ func (c *ProjectConfig) GetManifestSource(ctx context.Context) (ManifestSource, 
 	span, ctx = opentracing.StartSpanFromContext(ctx, "GetManifestSource")
 	defer span.Finish()
 
-	var projectConfig, err = c.ReadProjectConfigFile(ctx)
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
 		return "", err
 	}
@@ -176,7 +175,7 @@ func (c *ProjectConfig) GetManifestSource(ctx context.Context) (ManifestSource, 
 func (c *ProjectConfig) SetManifestSource(ctx context.Context, source ManifestSource) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SetManifestSource")
 	defer span.Finish()
-	projectConfig, err := c.ReadProjectConfigFile(ctx)
+	projectConfig, err := ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
 		return err
 	}
@@ -197,7 +196,7 @@ func (c *ProjectConfig) GetSurveyConfig(ctx context.Context, name string) (Surve
 	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSurveyConfig")
 	defer span.Finish()
 
-	var projectConfig, err = c.ReadProjectConfigFile(ctx)
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
 		return SurveyConfig{}, err
 	}
@@ -216,7 +215,7 @@ func (c *ProjectConfig) SetSurveyConfig(ctx context.Context, name string, survey
 	span, ctx = opentracing.StartSpanFromContext(ctx, "SetSurveyConfig")
 	defer span.Finish()
 
-	var projectConfig, err = c.ReadProjectConfigFile(ctx)
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
 		return err
 	}
@@ -235,24 +234,24 @@ func (c *ProjectConfig) SetSurveyConfig(ctx context.Context, name string, survey
 }
 
 // ReadProjectConfigFile reads the project-level config.json file
-func (c *ProjectConfig) ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error) {
+func ReadProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os) (ProjectConfig, error) {
 	var span opentracing.Span
 	span, _ = opentracing.StartSpanFromContext(ctx, "ReadProjectConfigFile")
 	defer span.Finish()
 
 	var projectConfig ProjectConfig
 
-	projectDirPath, err := GetProjectDirPath(c.fs, c.os)
+	projectDirPath, err := GetProjectDirPath(fs, os)
 	if err != nil {
 		return projectConfig, err
 	}
 
-	if !ProjectConfigJSONFileExists(c.fs, c.os, projectDirPath) {
+	if !ProjectConfigJSONFileExists(fs, os, projectDirPath) {
 		return projectConfig, nil
 	}
 
 	var projectConfigFilePath = GetProjectConfigJSONFilePath(projectDirPath)
-	projectConfigFileBytes, err := afero.ReadFile(c.fs, projectConfigFilePath)
+	projectConfigFileBytes, err := afero.ReadFile(fs, projectConfigFilePath)
 	if err != nil {
 		return projectConfig, err
 	}

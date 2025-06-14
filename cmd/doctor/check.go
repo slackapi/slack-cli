@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/deputil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
@@ -132,7 +133,7 @@ func checkProjectConfig(ctx context.Context, clients *shared.ClientFactory) Sect
 		Label: "Configurations",
 		Value: "your project's CLI settings",
 	}
-	projectConfig, err := clients.Config.ProjectConfig.ReadProjectConfigFile(ctx)
+	projectConfig, err := config.ReadProjectConfigFile(ctx, clients.Fs, clients.Os)
 	if err != nil {
 		if slackerror.ToSlackError(err).Code != slackerror.ErrInvalidAppDirectory {
 			section.Errors = append(section.Errors, *slackerror.ToSlackError(err))

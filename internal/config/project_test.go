@@ -282,8 +282,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		os.AddDefaultMocks()
 		// Do not add the project mocks
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectConfigData, err := projectConfig.ReadProjectConfigFile(ctx)
+		projectConfigData, err := ReadProjectConfigFile(ctx, fs, os)
 		require.Error(t, err)
 		require.Empty(t, projectConfigData)
 	})
@@ -303,8 +302,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		_, err := fs.Stat(GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory))
 		require.True(t, os.IsNotExist(err))
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectConfigFile, err := projectConfig.ReadProjectConfigFile(ctx)
+		projectConfigFile, err := ReadProjectConfigFile(ctx, fs, os)
 		require.NoError(t, err)
 		require.Empty(t, projectConfigFile) // Currently, the default is an empty config.json ("{}") but this may change in the future
 	})
@@ -325,11 +323,10 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 			Surveys:   map[string]SurveyConfig{},
 		}
 
-		projectConfig := NewProjectConfig(fs, os)
 		_, err := WriteProjectConfigFile(ctx, fs, os, expectedProjectConfig)
 		require.NoError(t, err)
 
-		projectConfigFile, err := projectConfig.ReadProjectConfigFile(ctx)
+		projectConfigFile, err := ReadProjectConfigFile(ctx, fs, os)
 		require.NoError(t, err)
 		require.Equal(t, expectedProjectConfig, projectConfigFile)
 	})
@@ -341,7 +338,6 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 
 		os.AddDefaultMocks()
 		addProjectMocks(t, fs)
-		projectConfig := NewProjectConfig(fs, os)
 
 		projectDirPath, err := GetProjectDirPath(fs, os)
 		require.NoError(t, err)
@@ -351,7 +347,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		err = afero.WriteFile(fs, projectConfigFilePath, []byte(expectedConfigFileData), 0600)
 		require.NoError(t, err)
 
-		_, err = projectConfig.ReadProjectConfigFile(ctx)
+		_, err = ReadProjectConfigFile(ctx, fs, os)
 		require.Error(t, err)
 		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of project-level config file")
@@ -398,8 +394,7 @@ func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 		require.NoError(t, err)
 
 		// Assert reading the written file contents
-		projectConfig := NewProjectConfig(fs, os)
-		actualProjectConfig, err := projectConfig.ReadProjectConfigFile(ctx)
+		actualProjectConfig, err := ReadProjectConfigFile(ctx, fs, os)
 		require.NoError(t, err)
 
 		// Assert the written file has the same content as the original

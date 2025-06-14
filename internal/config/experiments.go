@@ -36,7 +36,7 @@ func (c *Config) LoadExperiments(
 	}
 	printDebug(ctx, fmt.Sprintf("active flag experiments: %s", experiments))
 	// Load from project config file
-	projectConfig, err := c.ProjectConfig.ReadProjectConfigFile(ctx)
+	projectConfig, err := ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil && slackerror.ToSlackError(err).Code != slackerror.ErrInvalidAppDirectory {
 		printDebug(ctx, fmt.Sprintf("failed to parse project-level config file: %s", err))
 	} else if err == nil {
