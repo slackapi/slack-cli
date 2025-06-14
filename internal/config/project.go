@@ -56,7 +56,6 @@ type ProjectConfigManager interface {
 	GetSurveyConfig(ctx context.Context, name string) (SurveyConfig, error)
 	SetSurveyConfig(ctx context.Context, name string, surveyConfig SurveyConfig) error
 	ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error)
-	WriteProjectConfigFile(ctx context.Context, projectConfig ProjectConfig) (string, error)
 
 	Cache() cache.Cacher
 }
@@ -139,7 +138,7 @@ func (c *ProjectConfig) SetProjectID(ctx context.Context, projectID string) (str
 
 	projectConfig.ProjectID = projectID
 
-	_, err = c.WriteProjectConfigFile(ctx, projectConfig)
+	_, err = WriteProjectConfigFile(ctx, c.fs, c.os, projectConfig)
 	if err != nil {
 		return "", err
 	}
@@ -185,7 +184,7 @@ func (c *ProjectConfig) SetManifestSource(ctx context.Context, source ManifestSo
 		projectConfig.Manifest = &ManifestConfig{}
 	}
 	projectConfig.Manifest.Source = source.String()
-	_, err = c.WriteProjectConfigFile(ctx, projectConfig)
+	_, err = WriteProjectConfigFile(ctx, c.fs, c.os, projectConfig)
 	if err != nil {
 		return err
 	}
@@ -227,7 +226,7 @@ func (c *ProjectConfig) SetSurveyConfig(ctx context.Context, name string, survey
 		CompletedAt: surveyConfig.CompletedAt,
 	}
 
-	_, err = c.WriteProjectConfigFile(ctx, projectConfig)
+	_, err = WriteProjectConfigFile(ctx, c.fs, c.os, projectConfig)
 	if err != nil {
 		return err
 	}
@@ -273,7 +272,7 @@ func (c *ProjectConfig) ReadProjectConfigFile(ctx context.Context) (ProjectConfi
 }
 
 // WriteProjectConfigFile writes the project-level config.json file
-func (c *ProjectConfig) WriteProjectConfigFile(ctx context.Context, projectConfig ProjectConfig) (string, error) {
+func WriteProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os, projectConfig ProjectConfig) (string, error) {
 	var span opentracing.Span
 	span, _ = opentracing.StartSpanFromContext(ctx, "WriteProjectConfigFile")
 	defer span.Finish()
@@ -283,13 +282,13 @@ func (c *ProjectConfig) WriteProjectConfigFile(ctx context.Context, projectConfi
 		return "", err
 	}
 
-	projectDirPath, err := GetProjectDirPath(c.fs, c.os)
+	projectDirPath, err := GetProjectDirPath(fs, os)
 	if err != nil {
 		return "", err
 	}
 
 	projectConfigFilePath := GetProjectConfigJSONFilePath(projectDirPath)
-	err = afero.WriteFile(c.fs, projectConfigFilePath, projectConfigBytes, 0600)
+	err = afero.WriteFile(fs, projectConfigFilePath, projectConfigBytes, 0644)
 	if err != nil {
 		return "", err
 	}

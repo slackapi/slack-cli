@@ -104,7 +104,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 
 		// Set a project_id that should not be overwritten
 		expectedProjectID := uuid.New().String()
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: expectedProjectID})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: expectedProjectID})
 		require.NoError(t, err)
 
 		projectID, err := projectConfig.InitProjectID(ctx, false)
@@ -128,7 +128,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 
 		// Set a project_id that should be overwritten
 		expectedProjectID := uuid.New().String()
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: expectedProjectID})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: expectedProjectID})
 		require.NoError(t, err)
 
 		projectID, err := projectConfig.InitProjectID(ctx, true)
@@ -171,7 +171,7 @@ func Test_ProjectConfig_GetProjectID(t *testing.T) {
 
 		// Set a project_id that has whitespace padding
 		const paddedProjectID = "   abc-123   "
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: paddedProjectID})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: paddedProjectID})
 		require.NoError(t, err)
 
 		projectID, err := projectConfig.GetProjectID(ctx)
@@ -213,7 +213,7 @@ func Test_ProjectConfig_SetProjectID(t *testing.T) {
 		projectConfig := NewProjectConfig(fs, os)
 
 		// Set a project_id that will be replaced later
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: uuid.New().String()})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: uuid.New().String()})
 		require.NoError(t, err)
 
 		var expectedProjectID = uuid.New().String()
@@ -326,7 +326,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		}
 
 		projectConfig := NewProjectConfig(fs, os)
-		_, err := projectConfig.WriteProjectConfigFile(ctx, expectedProjectConfig)
+		_, err := WriteProjectConfigFile(ctx, fs, os, expectedProjectConfig)
 		require.NoError(t, err)
 
 		projectConfigFile, err := projectConfig.ReadProjectConfigFile(ctx)
@@ -372,8 +372,7 @@ func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 			ProjectID: uuid.New().String(),
 		}
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectConfigData, err := projectConfig.WriteProjectConfigFile(ctx, defaultProjectConfig)
+		projectConfigData, err := WriteProjectConfigFile(ctx, fs, os, defaultProjectConfig)
 		require.Error(t, err)
 		require.Empty(t, projectConfigData)
 	})
@@ -395,11 +394,11 @@ func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 		}
 
 		// Assert writing the config file
-		projectConfig := NewProjectConfig(fs, os)
-		_, err := projectConfig.WriteProjectConfigFile(ctx, expectedProjectConfig)
+		_, err := WriteProjectConfigFile(ctx, fs, os, expectedProjectConfig)
 		require.NoError(t, err)
 
 		// Assert reading the written file contents
+		projectConfig := NewProjectConfig(fs, os)
 		actualProjectConfig, err := projectConfig.ReadProjectConfigFile(ctx)
 		require.NoError(t, err)
 

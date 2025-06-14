@@ -73,11 +73,6 @@ func (m *ProjectConfigMock) ReadProjectConfigFile(ctx context.Context) (ProjectC
 	return args.Get(0).(ProjectConfig), args.Error(1)
 }
 
-func (m *ProjectConfigMock) WriteProjectConfigFile(ctx context.Context, projectConfig ProjectConfig) (string, error) {
-	args := m.Called(ctx, projectConfig)
-	return args.String(0), args.Error(1)
-}
-
 // Cache returns a persistent mock cache
 func (m *ProjectConfigMock) Cache() cache.Cacher {
 	args := m.Called()
