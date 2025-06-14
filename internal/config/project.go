@@ -57,7 +57,6 @@ type ProjectConfigManager interface {
 	SetSurveyConfig(ctx context.Context, name string, surveyConfig SurveyConfig) error
 	ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error)
 	WriteProjectConfigFile(ctx context.Context, projectConfig ProjectConfig) (string, error)
-	ProjectConfigJSONFileExists(projectDirPath string) bool
 
 	Cache() cache.Cacher
 }
@@ -249,7 +248,7 @@ func (c *ProjectConfig) ReadProjectConfigFile(ctx context.Context) (ProjectConfi
 		return projectConfig, err
 	}
 
-	if !c.ProjectConfigJSONFileExists(projectDirPath) {
+	if !ProjectConfigJSONFileExists(c.fs, c.os, projectDirPath) {
 		return projectConfig, nil
 	}
 
@@ -299,9 +298,9 @@ func (c *ProjectConfig) WriteProjectConfigFile(ctx context.Context, projectConfi
 }
 
 // ProjectConfigJSONFileExists returns true if the .slack/config.json file exists
-func (c *ProjectConfig) ProjectConfigJSONFileExists(projectDirPath string) bool {
+func ProjectConfigJSONFileExists(fs afero.Fs, os types.Os, projectDirPath string) bool {
 	var projectConfigFilePath = GetProjectConfigJSONFilePath(projectDirPath)
-	_, err := c.fs.Stat(projectConfigFilePath)
+	_, err := fs.Stat(projectConfigFilePath)
 	return !os.IsNotExist(err)
 }
 

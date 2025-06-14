@@ -78,11 +78,6 @@ func (m *ProjectConfigMock) WriteProjectConfigFile(ctx context.Context, projectC
 	return args.String(0), args.Error(1)
 }
 
-func (m *ProjectConfigMock) ProjectConfigJSONFileExists(projectDirPath string) bool {
-	args := m.Called(projectDirPath)
-	return args.Bool(0)
-}
-
 // Cache returns a persistent mock cache
 func (m *ProjectConfigMock) Cache() cache.Cacher {
 	args := m.Called()

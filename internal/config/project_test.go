@@ -423,8 +423,7 @@ func Test_ProjectConfig_ProjectConfigJSONFileExists(t *testing.T) {
 		err := afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
 
-		projectConfig := NewProjectConfig(fs, os)
-		exists := projectConfig.ProjectConfigJSONFileExists(slackdeps.MockWorkingDirectory)
+		exists := ProjectConfigJSONFileExists(fs, os, slackdeps.MockWorkingDirectory)
 		require.True(t, exists)
 	})
 
@@ -441,8 +440,7 @@ func Test_ProjectConfig_ProjectConfigJSONFileExists(t *testing.T) {
 		// Remove .slack/config.json and ignore errors (errors when file does not exist)
 		_ = fs.Remove(GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory))
 
-		projectConfig := NewProjectConfig(fs, os)
-		exists := projectConfig.ProjectConfigJSONFileExists(slackdeps.MockWorkingDirectory)
+		exists := ProjectConfigJSONFileExists(fs, os, slackdeps.MockWorkingDirectory)
 		require.False(t, exists)
 	})
 }
