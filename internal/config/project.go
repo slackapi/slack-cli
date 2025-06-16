@@ -52,7 +52,6 @@ type ProjectConfigManager interface {
 	GetProjectID(ctx context.Context) (string, error)
 	SetProjectID(ctx context.Context, projectID string) (string, error)
 	GetManifestSource(ctx context.Context) (ManifestSource, error)
-	SetManifestSource(ctx context.Context, source ManifestSource) error
 	GetSurveyConfig(ctx context.Context, name string) (SurveyConfig, error)
 	SetSurveyConfig(ctx context.Context, name string, surveyConfig SurveyConfig) error
 
@@ -172,10 +171,10 @@ func (c *ProjectConfig) GetManifestSource(ctx context.Context) (ManifestSource, 
 }
 
 // SetManifestSource saves the manifest source preference for the project
-func (c *ProjectConfig) SetManifestSource(ctx context.Context, source ManifestSource) error {
+func SetManifestSource(ctx context.Context, fs afero.Fs, os types.Os, source ManifestSource) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SetManifestSource")
 	defer span.Finish()
-	projectConfig, err := ReadProjectConfigFile(ctx, c.fs, c.os)
+	projectConfig, err := ReadProjectConfigFile(ctx, fs, os)
 	if err != nil {
 		return err
 	}
@@ -183,7 +182,7 @@ func (c *ProjectConfig) SetManifestSource(ctx context.Context, source ManifestSo
 		projectConfig.Manifest = &ManifestConfig{}
 	}
 	projectConfig.Manifest.Source = source.String()
-	_, err = WriteProjectConfigFile(ctx, c.fs, c.os, projectConfig)
+	_, err = WriteProjectConfigFile(ctx, fs, os, projectConfig)
 	if err != nil {
 		return err
 	}

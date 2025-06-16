@@ -263,7 +263,7 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 			initial, err := config.GetManifestSource(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedManifestSourceDefault, initial)
-			err = config.SetManifestSource(ctx, tt.mockManifestSource)
+			err = SetManifestSource(ctx, fs, os, tt.mockManifestSource)
 			require.NoError(t, err)
 			actual, err := config.GetManifestSource(ctx)
 			assert.Equal(t, tt.expectedError, err)

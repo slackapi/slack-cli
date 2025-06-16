@@ -202,7 +202,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 			return nil
 		}
 
-		if err := clients.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceRemote); err != nil {
+		if err := config.SetManifestSource(ctx, clients.Fs, clients.Os, config.ManifestSourceRemote); err != nil {
 			// Log the error to the verbose output
 			clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 			// Display a user-friendly error with a workaround

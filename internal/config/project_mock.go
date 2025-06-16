@@ -53,11 +53,6 @@ func (m *ProjectConfigMock) GetManifestSource(ctx context.Context) (ManifestSour
 	return args.Get(0).(ManifestSource), args.Error(1)
 }
 
-func (m *ProjectConfigMock) SetManifestSource(ctx context.Context, source ManifestSource) error {
-	args := m.Called(ctx, source)
-	return args.Error(0)
-}
-
 func (m *ProjectConfigMock) GetSurveyConfig(ctx context.Context, id string) (SurveyConfig, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(SurveyConfig), args.Error(1)
