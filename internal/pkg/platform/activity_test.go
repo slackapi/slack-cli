@@ -120,10 +120,10 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				TailArg: false,
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("explosions"))
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("mock_broken_logs"))
 				return ctx
 			},
-			ExpectedError: slackerror.New("explosions"),
+			ExpectedError: slackerror.New("mock_broken_logs"),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNumberOfCalls(t, "Activity", 1)
 			},
@@ -189,7 +189,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				PollingIntervalMS: 20, // poll activity every 20 ms
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("explosions"))
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("mock_broken_logs"))
 				ctx, cancel := context.WithCancel(ctx)
 				go func() {
 					time.Sleep(time.Millisecond * 50) // cancel activity in 50 ms
