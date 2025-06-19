@@ -115,23 +115,91 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 			},
 			ExpectedError: slackerror.New("boomsies"),
 		},
-		"should return error if activity request fails": {
+		"should return error from Activity API request if TailArg is not set": {
+			Args: types.ActivityArgs{
+				TailArg: false,
+			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
 				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("explosions"))
 				return ctx
 			},
 			ExpectedError: slackerror.New("explosions"),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNumberOfCalls(t, "Activity", 1)
+			},
 		},
 		"should return nil and invoke Activity API only once if TailArg is not set": {
 			Args: types.ActivityArgs{
-				TailArg: false,
+				TailArg:           false,
+				IdleTimeoutM:      1,
+				PollingIntervalMS: 20, // poll activity every 20 ms
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
-				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).
+					Return(api.ActivityResult{
+						Activities: []api.Activity{
+							{
+								Level:       types.WARN,
+								ComponentID: "a123",
+								TraceID:     "tr123",
+							},
+							{
+								Level:       types.ERROR,
+								ComponentID: "a456",
+								TraceID:     "tr456",
+							},
+						},
+					}, nil)
+				ctx, cancel := context.WithCancel(ctx)
+				go func() {
+					time.Sleep(time.Millisecond * 50) // cancel activity in 50 ms
+					cancel()
+				}()
 				return ctx
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNumberOfCalls(t, "Activity", 1)
+				assert.Contains(t, cm.GetStdoutOutput(), "[warn] [a123] (Trace=tr123)")
+				assert.Contains(t, cm.GetStdoutOutput(), "[error] [a456] (Trace=tr456)")
+			},
+		},
+		"should return nil and invoke Activity API twice if TailArg is set but idle": {
+			Args: types.ActivityArgs{
+				TailArg:           true,
+				IdleTimeoutM:      0,
+				PollingIntervalMS: 20, // poll activity every 20 ms
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, nil)
+				ctx, cancel := context.WithCancel(ctx)
+				go func() {
+					time.Sleep(time.Millisecond * 50) // cancel activity in 50 ms
+					cancel()
+				}()
+				return ctx
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNumberOfCalls(t, "Activity", 2)
+			},
+		},
+		"should continue if TailArg is set and activity request fails": {
+			Args: types.ActivityArgs{
+				TailArg:           true,
+				IdleTimeoutM:      1,
+				PollingIntervalMS: 20, // poll activity every 20 ms
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New("explosions"))
+				ctx, cancel := context.WithCancel(ctx)
+				go func() {
+					time.Sleep(time.Millisecond * 50) // cancel activity in 50 ms
+					cancel()
+				}()
+				return ctx
+			},
+			ExpectedError: nil,
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNumberOfCalls(t, "Activity", 3)
 			},
 		},
 		"should return nil if TailArg is set and context is canceled": {
@@ -172,6 +240,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 
 			err := Activity(ctxMock, clients, &logger.Logger{}, tt.Args)
 			if tt.ExpectedError != nil {
+				require.Error(t, err)
 				assert.Contains(t, err.Error(), tt.ExpectedError.Error(), err)
 			} else {
 				require.NoError(t, err)
