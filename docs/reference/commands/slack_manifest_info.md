@@ -32,7 +32,7 @@ $ slack manifest info --source remote
 
 ```
   -h, --help            help for info
-      --source string   source of the app manifest ("local" or "remote") (default "local")
+      --source string   source of the app manifest ("local" or "remote")
 ```
 
 ### Options inherited from parent commands

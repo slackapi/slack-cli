@@ -13,11 +13,12 @@ slack app [flags]
 ### Examples
 
 ```
-$ slack install    # Install a production app to a team
-$ slack link       # Link an existing app to the project
-$ slack list       # List all teams with the app installed
-$ slack uninstall  # Uninstall an app from a team
-$ slack delete     # Delete an app and app info from a team
+$ slack app install    # Install a production app to a team
+$ slack app link       # Link an existing app to the project
+$ slack app list       # List all teams with the app installed
+$ slack app settings   # Open app settings in a web browser
+$ slack app uninstall  # Uninstall an app from a team
+$ slack app delete     # Delete an app and app info from a team
 ```
 
 ### Options
@@ -47,5 +48,6 @@ $ slack delete     # Delete an app and app info from a team
 * [slack app install](slack_app_install)	 - Install the app to a team
 * [slack app link](slack_app_link)	 - Add an existing app to the project
 * [slack app list](slack_app_list)	 - List teams with the app installed
+* [slack app settings](slack_app_settings)	 - Open app settings for configurations
 * [slack app uninstall](slack_app_uninstall)	 - Uninstall the app from a team
 

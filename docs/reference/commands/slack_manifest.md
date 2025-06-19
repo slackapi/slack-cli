@@ -31,7 +31,7 @@ $ slack manifest validate
 
 ```
   -h, --help            help for manifest
-      --source string   source of the app manifest ("local" or "remote") (default "local")
+      --source string   source of the app manifest ("local" or "remote")
 ```
 
 ### Options inherited from parent commands

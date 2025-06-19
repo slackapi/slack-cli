@@ -97,9 +97,11 @@ and some ways to remediate them.
 
 **Message**: Deployment to Slack is not currently supported for apps with `runOnSlack` set as false
 
-**Remediation**: Learn about building apps with the Deno Slack SDK: tools.slack.dev/deno-slack-sdk/
-If you are using a Bolt framework, deployment is supported under an experiment.
-Add a deploy hook then run: `slack deploy --experiment=bolt`
+**Remediation**: Learn about building apps with the Deno Slack SDK:
+
+https://tools.slack.dev/deno-slack-sdk
+
+If you are using a Bolt framework, add a deploy hook then run: `slack deploy`
 
 Otherwise start your app for local development with: `slack run`
 
@@ -121,13 +123,19 @@ Otherwise start your app for local development with: `slack run`
 
 **Message**: The --app flag must be provided
 
-**Remediation**: Choose a specific app with ``--app <app_id>``
+**Remediation**: Choose a specific app with `--app <app_id>`
 
 ---
 
 ### app_found {#app_found}
 
 **Message**: An app was found
+
+---
+
+### app_hosted {#app_hosted}
+
+**Message**: App is configured for Run on Slack infrastructure
 
 ---
 
@@ -319,7 +327,8 @@ Learn more: https://slack.com/help/articles/201980108-Add-people-to-a-channel
 
 **Message**: Couldn't auto-update this command-line tool
 
-**Remediation**: You can manually install the latest version from http://localhost:3000/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux.
+**Remediation**: You can manually install the latest version from:
+https://tools.slack.dev/slack-cli
 
 ---
 
@@ -404,6 +413,12 @@ Approval is pending review
 **Message**: A connector requires installation before it can be used
 
 **Remediation**: Request installation for the given connector
+
+---
+
+### context_value_not_found {#context_value_not_found}
+
+**Message**: The context value could not be found
 
 ---
 
@@ -536,6 +551,23 @@ Approval is pending review
 ### failed_to_save_extension_logs {#failed_to_save_extension_logs}
 
 **Message**: Couldn't save the logs
+
+---
+
+### feedback_name_invalid {#feedback_name_invalid}
+
+**Message**: The name of the feedback is invalid
+
+**Remediation**: View the feedback options with `slack feedback --help`
+
+---
+
+### feedback_name_required {#feedback_name_required}
+
+**Message**: The name of the feedback is required
+
+**Remediation**: Please provide a `--name <string>` flag or remove the `--no-prompt` flag
+View feedback options with `slack feedback --help`
 
 ---
 
@@ -673,6 +705,8 @@ Approval is pending review
 
 **Remediation**: A valid Slack project includes the Slack hooks file: .slack/hooks.json
 
+If this is a Slack project, you can initialize it with `slack init`
+
 ---
 
 ### invalid_app_flag {#invalid_app_flag}
@@ -680,7 +714,7 @@ Approval is pending review
 **Message**: The provided --app flag value is not valid
 
 **Remediation**: Specify the environment with --app local or --app deployed
-Or choose a specific app with ``--app <app_id>``
+Or choose a specific app with `--app <app_id>`
 
 ---
 
@@ -1251,12 +1285,16 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 **Message**: A script in .slack/hooks.json was not found
 
-**Remediation**: Hook scripts are defined in the Slack hooks file ('.slack/hooks.json').
-Every app requires a Slack hooks file and you can find a working example at:
+**Remediation**: Hook scripts are defined in one of these Slack hooks files:
+- slack.json
+- .slack/hooks.json
 
-https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json
+Every app requires a Slack hooks file and you can find an example at:
+https://github.com/slack-samples/deno-starter-template/blob/main/slack.json
 
-After creating the hooks file, you must install related hook dependencies.
+You can create a hooks file manually or with the `slack init` command.
+
+When manually creating the hooks file, you must install the hook dependencies.
 
 ---
 
@@ -1338,7 +1376,7 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 
 **Message**: The --team flag must be provided
 
-**Remediation**: Choose a specific team with ``--team <team_domain>`` or ``--team <team_id>``
+**Remediation**: Choose a specific team with `--team <team_domain>` or `--team <team_id>`
 
 ---
 

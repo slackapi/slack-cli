@@ -8,7 +8,7 @@ Checks for available updates to the CLI or the SDKs of a project
 
 If there are any, then you will be prompted to upgrade
 
-The changelog can be found at [https://docs.slack.dev/changelog/](https://docs.slack.dev/changelog/)
+The changelog can be found at [https://docs.slack.dev/changelog](https://docs.slack.dev/changelog)
 
 ```
 slack upgrade [flags]

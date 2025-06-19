@@ -6,7 +6,7 @@ Slack command-line tool
 
 CLI to create, run, and deploy Slack apps
 
-Get started by reading the docs: [https://tools.slack.dev/deno-slack-sdk](/deno-slack-sdk)
+Get started by reading the docs: [https://tools.slack.dev/slack-cli](https://tools.slack.dev/slack-cli)
 
 ```
 slack <command> <subcommand> [flags]

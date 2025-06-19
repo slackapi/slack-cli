@@ -1,32 +1,34 @@
-## slack feedback
+## slack app settings
 
-Share feedback about your experience or project
+Open app settings for configurations
 
 ### Synopsis
 
-Help us make the Slack Platform better with your feedback
+Open app settings to configure an application in a web browser.
+
+Discovering new features and customizing an app manifest can be done from this
+web interface for apps with a "remote" manifest source.
+
+This command does not support apps deployed to Run on Slack infrastructure.
 
 ```
-slack feedback [flags]
+slack app settings [flags]
 ```
 
 ### Examples
 
 ```
-# Choose to give feedback on part of the Slack Platform
-$ slack feedback
-$ slack feedback --name slack-cli  # Give feedback on the Slack CLI
+# Open app settings for a prompted app
+$ slack app settings
+
+# Open app settings for a specific app
+$ slack app settings --app A0123456789
 ```
 
 ### Options
 
 ```
-  -h, --help          help for feedback
-      --name string   name of the feedback:
-                         slack-cli
-                         slack-platform
-                      
-      --no-prompt     run command without prompts
+  -h, --help   help for settings
 ```
 
 ### Options inherited from parent commands
@@ -45,5 +47,5 @@ $ slack feedback --name slack-cli  # Give feedback on the Slack CLI
 
 ### SEE ALSO
 
-* [slack](slack)	 - Slack command-line tool
+* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

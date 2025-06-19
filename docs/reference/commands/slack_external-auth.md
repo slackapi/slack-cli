@@ -9,7 +9,7 @@ Adjust external authorization and authentication providers of a workflow app.
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Explore providers: [Integrating with external auth providers](/guides/integrating-with-services-requiring-external-authentication/)
+Explore providers: [https://tools.slack.dev/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication](https://tools.slack.dev/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication)
 
 ```
 slack external-auth <subcommand> [flags]
