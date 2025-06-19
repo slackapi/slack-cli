@@ -729,7 +729,7 @@ Otherwise start your app for local development with: %s`,
 		Code:    ErrFeedbackNameRequired,
 		Message: "The name of the feedback is required",
 		Remediation: strings.Join([]string{
-			"Please provide a --name <string> flag or remove the --no-prompt flag",
+			"Please provide a `--name <string>` flag or remove the `--no-prompt` flag",
 			fmt.Sprintf("View feedback options with %s", style.Commandf("feedback --help", false)),
 		}, "\n"),
 	},
