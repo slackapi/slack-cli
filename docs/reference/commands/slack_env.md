@@ -1,8 +1,8 @@
-## slack env
+# `slack env`
 
 Add, remove, or list environment variables
 
-### Synopsis
+## Synopsis
 
 Add, remove, or list environment variables for apps deployed to Slack managed
 infrastructure.
@@ -10,13 +10,13 @@ infrastructure.
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Explore more: [Environment variables](/slack-cli/guides/using-environment-variables-with-the-slack-cli)
+Explore more: [https://tools.slack.dev/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://tools.slack.dev/slack-cli/guides/using-environment-variables-with-the-slack-cli)
 
 ```
 slack env <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack env add MAGIC_PASSWORD abracadbra  # Add an environment variable
@@ -28,13 +28,13 @@ $ slack env list
 $ slack env remove MAGIC_PASSWORD
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for env
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -48,7 +48,7 @@ $ slack env remove MAGIC_PASSWORD
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack env add](slack_env_add)	 - Add an environment variable to the app

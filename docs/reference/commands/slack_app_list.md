@@ -1,8 +1,8 @@
-## slack app list
+# `slack app list`
 
 List teams with the app installed
 
-### Synopsis
+## Synopsis
 
 List all teams that have installed the app
 
@@ -10,13 +10,13 @@ List all teams that have installed the app
 slack app list [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack app list  # List all teams with the app installed
 ```
 
-### Options
+## Options
 
 ```
       --all-org-workspace-grants   display all workspace grants for an app
@@ -24,7 +24,7 @@ $ slack app list  # List all teams with the app installed
   -h, --help                       help for list
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -38,7 +38,7 @@ $ slack app list  # List all teams with the app installed
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

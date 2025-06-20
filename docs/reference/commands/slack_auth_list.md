@@ -1,8 +1,8 @@
-## slack auth list
+# `slack auth list`
 
 List all authorized accounts
 
-### Synopsis
+## Synopsis
 
 List all authorized accounts
 
@@ -10,19 +10,19 @@ List all authorized accounts
 slack auth list [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack auth list  # List all authorized accounts
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for list
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -36,7 +36,7 @@ $ slack auth list  # List all authorized accounts
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack auth](slack_auth)	 - Add and remove local team authorizations
 
