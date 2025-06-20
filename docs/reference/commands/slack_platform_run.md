@@ -1,8 +1,8 @@
-## slack platform run
+# `slack platform run`
 
 Start a local server to develop and run the app locally
 
-### Synopsis
+## Synopsis
 
 Start a local server to develop and run the app locally while watching for file changes
 
@@ -10,7 +10,7 @@ Start a local server to develop and run the app locally while watching for file 
 slack platform run [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Start a local development server
@@ -23,7 +23,7 @@ $ slack platform run --activity-level debug
 $ slack platform run --cleanup
 ```
 
-### Options
+## Options
 
 ```
       --activity-level string        activity level to display (default "info")
@@ -35,7 +35,7 @@ $ slack platform run --cleanup
                                        (or 'all' for all workspaces in the org)
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -49,7 +49,7 @@ $ slack platform run --cleanup
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack platform](slack_platform)	 - Deploy and run apps on the Slack Platform
 

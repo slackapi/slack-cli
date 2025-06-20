@@ -1,8 +1,8 @@
-## slack function access
+# `slack function access`
 
 Adjust who can access functions published from an app
 
-### Synopsis
+## Synopsis
 
 Adjust who can **access** functions published by an app when building a workflow in
 Workflow Builder.
@@ -19,7 +19,7 @@ only.
 slack function access [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Select a function and choose access options
@@ -36,7 +36,7 @@ $ slack function access --name callback_id --revoke \
 $ slack function access --info
 ```
 
-### Options
+## Options
 
 ```
   -A, --app-collaborators   grant access to only fellow app collaborators
@@ -50,7 +50,7 @@ $ slack function access --info
   -U, --users string        a comma-separated list of Slack user IDs
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -64,7 +64,7 @@ $ slack function access --info
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack function](slack_function)	 - Manage the functions of an app
 

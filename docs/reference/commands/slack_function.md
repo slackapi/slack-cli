@@ -1,8 +1,8 @@
-## slack function
+# `slack function`
 
 Manage the functions of an app
 
-### Synopsis
+## Synopsis
 
 Functions are pieces of logic that complete the puzzle of workflows in Workflow
 Builder. Whatever that puzzle might be.
@@ -16,7 +16,7 @@ Learn more about functions: [https://tools.slack.dev/deno-slack-sdk/guides/creat
 slack function <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Select a function and choose distribution options
@@ -29,13 +29,13 @@ $ slack function distribute --name callback_id --everyone
 $ slack function distribute --info
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for function
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -49,7 +49,7 @@ $ slack function distribute --info
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack function access](slack_function_access)	 - Adjust who can access functions published from an app
