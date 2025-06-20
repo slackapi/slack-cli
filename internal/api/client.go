@@ -69,9 +69,18 @@ type responseMetadata struct {
 }
 
 var (
-	errInvalidArguments    = slackerror.New(slackerror.ErrInvalidArguments)
+	// FIXME: errInvalidArguments should be returned as a new error from within
+	// the API method call to avoid changing values for this error pointer across
+	// API calls.
+	errInvalidArguments = slackerror.New(slackerror.ErrInvalidArguments)
+	// FIXME: errHTTPResponseInvalid should be returned as a new error right after
+	// the API .JSONUnmarshal function call to avoid changing values for this error
+	// pointer across API calls.
 	errHTTPResponseInvalid = slackerror.New(slackerror.ErrHTTPResponseInvalid)
-	errHTTPRequestFailed   = slackerror.New(slackerror.ErrHTTPRequestFailed)
+	// FIXME: errHTTPRequestFailed should be returned as a new error right after
+	// the API .get call methods to avoid changing values for this error pointer
+	// across API calls.
+	errHTTPRequestFailed = slackerror.New(slackerror.ErrHTTPRequestFailed)
 )
 
 // NewClient accepts an httpClient to facilitate making http requests to Slack.

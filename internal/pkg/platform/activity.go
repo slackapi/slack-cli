@@ -88,11 +88,12 @@ func Activity(
 	}
 
 	latestCreatedTimestamp, _, err := printLatestActivity(ctx, clients, token, activityRequest, token)
-	if err != nil {
-		return err
-	}
 
+	// Return an error from the activity API if the logs are not being tailed
 	if !args.TailArg {
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -108,9 +109,11 @@ func Activity(
 		case <-ticker.C:
 			// Try to grab new logs using the last logs timestamp
 			activityRequest.MinimumDateCreated = latestCreatedTimestamp + 1
+
+			// Avoid exit on error from the activity API when tailing logs
 			newLatestCreatedTimestamp, count, err := printLatestActivity(ctx, clients, token, activityRequest, token)
 			if err != nil {
-				return slackerror.New(slackerror.ErrStreamingActivityLogs).WithRootCause(err)
+				clients.IO.PrintDebug(ctx, "%s\n", err)
 			}
 
 			if count > 0 {
