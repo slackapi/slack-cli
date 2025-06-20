@@ -25,7 +25,7 @@ import (
 const MockHomeDirectory = "/Users/user.name"
 
 // MockWorkingDirectory is the default returned by Getwd().
-const MockWorkingDirectory = "/Users/user.name/app"
+const MockWorkingDirectory = "/Users/user.name/project"
 
 // MockCustomConfigDirectory is a custom config directory for ConfigDirFlag
 const MockCustomConfigDirectory = "/tmp/tmp.user.name.123"
@@ -50,6 +50,7 @@ func (m *OsMock) AddDefaultMocks() {
 	m.On("UserHomeDir").Return(MockHomeDirectory, nil)
 	m.On("GetExecutionDir").Return(MockHomeDirectory, nil)
 	m.On("SetExecutionDir", mock.Anything)
+	m.On("IsNotExist", nil).Return(false)
 	m.On("IsNotExist", mock.Anything).Return(true)
 	m.On("Exit", mock.Anything).Return()
 	m.On("Stat", mock.Anything).Return()

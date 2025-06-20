@@ -58,7 +58,6 @@ type ProjectConfigManager interface {
 	ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error)
 	WriteProjectConfigFile(ctx context.Context, projectConfig ProjectConfig) (string, error)
 	ProjectConfigJSONFileExists(projectDirPath string) bool
-	GetProjectDirPath() (string, error)
 
 	Cache() cache.Cacher
 }
@@ -95,7 +94,7 @@ func (c *ProjectConfig) InitProjectID(ctx context.Context, overwriteExistingProj
 	defer span.Finish()
 
 	// Check that current directory is a project
-	if _, err := c.GetProjectDirPath(); err != nil {
+	if _, err := GetProjectDirPath(c.fs, c.os); err != nil {
 		return "", err
 	}
 
@@ -245,7 +244,7 @@ func (c *ProjectConfig) ReadProjectConfigFile(ctx context.Context) (ProjectConfi
 
 	var projectConfig ProjectConfig
 
-	projectDirPath, err := c.GetProjectDirPath()
+	projectDirPath, err := GetProjectDirPath(c.fs, c.os)
 	if err != nil {
 		return projectConfig, err
 	}
@@ -285,7 +284,7 @@ func (c *ProjectConfig) WriteProjectConfigFile(ctx context.Context, projectConfi
 		return "", err
 	}
 
-	projectDirPath, err := c.GetProjectDirPath()
+	projectDirPath, err := GetProjectDirPath(c.fs, c.os)
 	if err != nil {
 		return "", err
 	}
@@ -308,21 +307,21 @@ func (c *ProjectConfig) ProjectConfigJSONFileExists(projectDirPath string) bool 
 
 // GetProjectDirPath returns the path to the project directory or an error if not a Slack project
 // TODO(@mbrooks) Standardize the definition of a validate project directory and merge with `cmdutil.ValidProjectDirectoryOrExit`
-func (c *ProjectConfig) GetProjectDirPath() (string, error) {
-	currentDir, _ := c.os.Getwd()
+func GetProjectDirPath(fs afero.Fs, os types.Os) (string, error) {
+	currentDir, _ := os.Getwd()
 
 	// Verify project-level hooks.json exists
 	projectHooksJSONPath := GetProjectHooksJSONFilePath(currentDir)
-	if _, err := c.fs.Stat(projectHooksJSONPath); os.IsNotExist(err) {
+	if _, err := fs.Stat(projectHooksJSONPath); os.IsNotExist(err) {
 
 		// Fallback check for slack.json and .slack/slack.json file
 		// DEPRECATED(semver:major): remove both fallbacks next major release
 		projectSlackJSONPath := filepath.Join(currentDir, "slack.json")
-		if _, err := c.fs.Stat(projectSlackJSONPath); err == nil {
+		if _, err := fs.Stat(projectSlackJSONPath); err == nil {
 			return currentDir, nil
 		}
 		projectDotSlackSlackJSONPath := filepath.Join(currentDir, ".slack", "slack.json")
-		if _, err := c.fs.Stat(projectDotSlackSlackJSONPath); err == nil {
+		if _, err := fs.Stat(projectDotSlackSlackJSONPath); err == nil {
 			return currentDir, nil
 		}
 		return "", slackerror.New(slackerror.ErrInvalidAppDirectory)
@@ -333,7 +332,7 @@ func (c *ProjectConfig) GetProjectDirPath() (string, error) {
 
 // Cache loads the cached project values
 func (c *ProjectConfig) Cache() cache.Cacher {
-	path, err := c.GetProjectDirPath()
+	path, err := GetProjectDirPath(c.fs, c.os)
 	if err != nil {
 		return &cache.Cache{}
 	}

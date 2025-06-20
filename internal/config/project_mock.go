@@ -83,11 +83,6 @@ func (m *ProjectConfigMock) ProjectConfigJSONFileExists(projectDirPath string) b
 	return args.Bool(0)
 }
 
-func (m *ProjectConfigMock) GetProjectDirPath() (string, error) {
-	args := m.Called()
-	return args.String(0), args.Error(1)
-}
-
 // Cache returns a persistent mock cache
 func (m *ProjectConfigMock) Cache() cache.Cacher {
 	args := m.Called()
