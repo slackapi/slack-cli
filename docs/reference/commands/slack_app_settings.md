@@ -1,27 +1,34 @@
-# `slack auth`
+# `slack app settings`
 
-Add and remove local team authorizations
+Open app settings for configurations
 
 ## Synopsis
 
-Add and remove local team authorizations
+Open app settings to configure an application in a web browser.
+
+Discovering new features and customizing an app manifest can be done from this
+web interface for apps with a "remote" manifest source.
+
+This command does not support apps deployed to Run on Slack infrastructure.
 
 ```
-slack auth <subcommand> [flags]
+slack app settings [flags]
 ```
 
 ## Examples
 
 ```
-$ slack auth list    # List all authorized accounts
-$ slack auth login   # Log in to a Slack account
-$ slack auth logout  # Log out of a team
+# Open app settings for a prompted app
+$ slack app settings
+
+# Open app settings for a specific app
+$ slack app settings --app A0123456789
 ```
 
 ## Options
 
 ```
-  -h, --help   help for auth
+  -h, --help   help for settings
 ```
 
 ## Options inherited from parent commands
@@ -40,10 +47,5 @@ $ slack auth logout  # Log out of a team
 
 ## SEE ALSO
 
-* [slack](slack)	 - Slack command-line tool
-* [slack auth list](slack_auth_list)	 - List all authorized accounts
-* [slack auth login](slack_auth_login)	 - Log in to a Slack account
-* [slack auth logout](slack_auth_logout)	 - Log out of a team
-* [slack auth revoke](slack_auth_revoke)	 - Revoke an authentication token
-* [slack auth token](slack_auth_token)	 - Collect a service token
+* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

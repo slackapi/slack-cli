@@ -1,8 +1,8 @@
-## slack init
+# `slack init`
 
 Initialize a project to work with the Slack CLI
 
-### Synopsis
+## Synopsis
 
 Initializes a project to support the Slack CLI.
 
@@ -30,19 +30,19 @@ Adds an existing app to your project (optional):
 slack init [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack init  # Initialize a project
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for init
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -56,7 +56,7 @@ $ slack init  # Initialize a project
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

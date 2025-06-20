@@ -1,8 +1,8 @@
-## slack env add
+# `slack env add`
 
 Add an environment variable to the app
 
-### Synopsis
+## Synopsis
 
 Add an environment variable to an app deployed to Slack managed infrastructure.
 
@@ -15,7 +15,7 @@ other apps can attempt to run the command with the --force flag.
 slack env add <name> <value> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Prompt for an environment variable
@@ -26,14 +26,14 @@ $ slack env add MAGIC_PASSWORD abracadbra  # Add an environment variable
 $ slack env add SECRET_PASSWORD
 ```
 
-### Options
+## Options
 
 ```
   -h, --help           help for add
       --value string   set the environment variable value
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -47,7 +47,7 @@ $ slack env add SECRET_PASSWORD
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack env](slack_env)	 - Add, remove, or list environment variables
 
