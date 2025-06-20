@@ -1,8 +1,8 @@
-## slack datastore bulk-put
+# `slack datastore bulk-put`
 
 Create or replace a list of items in a datastore
 
-### Synopsis
+## Synopsis
 
 Create or replace a list of items in a datastore.
 
@@ -13,7 +13,7 @@ other apps can attempt to run the command with the --force flag.
 slack datastore bulk-put <expression> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Create or replace two new entries in the datastore
@@ -23,7 +23,7 @@ $ slack datastore bulk-put --datastore tasks '{"items": [{"id": "12", "descripti
 $ slack datastore bulk-put '{"datastore": "tasks", "items": [{"id": "12", "description": "Create a PR", "status": "Done"}, {"id": "42", "description": "Approve a PR", "status": "Pending"}]}'
 ```
 
-### Options
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -33,7 +33,7 @@ $ slack datastore bulk-put '{"datastore": "tasks", "items": [{"id": "12", "descr
       --unstable           kick the tires of experimental features
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -47,7 +47,7 @@ $ slack datastore bulk-put '{"datastore": "tasks", "items": [{"id": "12", "descr
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 

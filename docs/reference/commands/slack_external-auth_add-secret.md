@@ -1,8 +1,8 @@
-## slack external-auth add-secret
+# `slack external-auth add-secret`
 
 Add the client secret for a provider
 
-### Synopsis
+## Synopsis
 
 Add the client secret for an external provider of a workflow app.
 
@@ -15,7 +15,7 @@ other apps can attempt to run the command with the --force flag.
 slack external-auth add-secret [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Input the client secret for an app and provider
@@ -25,7 +25,7 @@ $ slack external-auth add-secret
 $ slack external-auth add-secret -p github -x ghp_token
 ```
 
-### Options
+## Options
 
 ```
   -h, --help              help for add-secret
@@ -33,7 +33,7 @@ $ slack external-auth add-secret -p github -x ghp_token
   -x, --secret string     external auth client secret for the provider
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -47,7 +47,7 @@ $ slack external-auth add-secret -p github -x ghp_token
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
 
