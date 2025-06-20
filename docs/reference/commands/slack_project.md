@@ -1,8 +1,8 @@
-## slack project
+# `slack project`
 
 Create, manage, and doctor a project
 
-### Synopsis
+## Synopsis
 
 Create, manage, and doctor a project and its configuration files.
 
@@ -16,7 +16,7 @@ Check your project health and diagnose problems with the **doctor** command.
 slack project <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Creates a new Slack project from an optional template
@@ -29,13 +29,13 @@ $ slack project init
 $ slack project samples
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for project
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -49,7 +49,7 @@ $ slack project samples
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack project create](slack_project_create)	 - Create a new Slack project

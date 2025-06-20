@@ -107,9 +107,11 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.3.0_macOS_64-bit.tar.gz"><strong>Download for macOS (.tar.gz)</strong></a>
+<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.4.0_macOS_arm64.tar.gz"><strong>Download for macOS Apple Silicon (.tar.gz)</strong></a>
 
-<ts-icon class="ts_icon_plug"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.3.0_linux_64-bit.tar.gz"><strong>Download for Linux (.tar.gz)</strong></a>
+<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.4.0_macOS_amd64.tar.gz"><strong>Download for macOS Intel (.tar.gz)</strong></a>
+
+<ts-icon class="ts_icon_plug"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.4.0_linux_64-bit.tar.gz"><strong>Download for Linux (.tar.gz)</strong></a>
 
 **5\. Add the** `slack` **CLI to your path.**
 
@@ -122,7 +124,7 @@ typescript 4.*
 
 ```
 $ slack version
-Using slack v3.3.0
+Using slack v3.4.0
 ```
 
 **7\. Verify that all dependencies have been installed.**

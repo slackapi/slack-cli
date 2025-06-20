@@ -1,8 +1,8 @@
-## slack trigger
+# `slack trigger`
 
 List details of existing triggers
 
-### Synopsis
+## Synopsis
 
 List details of existing triggers
 
@@ -10,7 +10,7 @@ List details of existing triggers
 slack trigger [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Select who can run a trigger
@@ -30,13 +30,13 @@ $ slack trigger list
 $ slack trigger update --trigger-id Ft01234ABCD
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for trigger
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -50,7 +50,7 @@ $ slack trigger update --trigger-id Ft01234ABCD
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack trigger access](slack_trigger_access)	 - Manage who can use your triggers

@@ -1,8 +1,8 @@
-## slack project samples
+# `slack project samples`
 
 List available sample apps
 
-### Synopsis
+## Synopsis
 
 List and create an app from the available samples
 
@@ -10,13 +10,13 @@ List and create an app from the available samples
 slack project samples [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack samples  # Select a sample app to create
 ```
 
-### Options
+## Options
 
 ```
   -b, --branch string     name of git branch to checkout
@@ -24,7 +24,7 @@ $ slack samples  # Select a sample app to create
   -t, --template string   template URL for your app
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -38,7 +38,7 @@ $ slack samples  # Select a sample app to create
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack project](slack_project)	 - Create, manage, and doctor a project
 

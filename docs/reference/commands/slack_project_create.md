@@ -1,8 +1,8 @@
-## slack project create
+# `slack project create`
 
 Create a new Slack project
 
-### Synopsis
+## Synopsis
 
 Create a new Slack project on your local machine from an optional template
 
@@ -10,7 +10,7 @@ Create a new Slack project on your local machine from an optional template
 slack project create [name] [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Create a new project from a template
@@ -20,7 +20,7 @@ $ slack create my-project
 $ slack create my-project -t slack-samples/deno-hello-world
 ```
 
-### Options
+## Options
 
 ```
   -b, --branch string     name of git branch to checkout
@@ -28,7 +28,7 @@ $ slack create my-project -t slack-samples/deno-hello-world
   -t, --template string   template URL for your app
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -42,7 +42,7 @@ $ slack create my-project -t slack-samples/deno-hello-world
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack project](slack_project)	 - Create, manage, and doctor a project
 

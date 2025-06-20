@@ -1,18 +1,18 @@
-## slack
+# `slack`
 
 Slack command-line tool
 
-### Synopsis
+## Synopsis
 
 CLI to create, run, and deploy Slack apps
 
-Get started by reading the docs: [https://tools.slack.dev/deno-slack-sdk](/deno-slack-sdk)
+Get started by reading the docs: [https://tools.slack.dev/slack-cli](https://tools.slack.dev/slack-cli)
 
 ```
 slack <command> <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack login   # Log in to your Slack account
@@ -22,7 +22,7 @@ $ slack run     # Start a local development server
 $ slack deploy  # Deploy to the Slack Platform
 ```
 
-### Options
+## Options
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -37,7 +37,7 @@ $ slack deploy  # Deploy to the Slack Platform
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack activity](slack_activity)	 - Display the app activity logs from the Slack Platform
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed

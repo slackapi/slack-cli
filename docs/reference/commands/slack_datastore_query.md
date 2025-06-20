@@ -1,8 +1,8 @@
-## slack datastore query
+# `slack datastore query`
 
 Query a datastore for items
 
-### Synopsis
+## Synopsis
 
 Query a datastore for items.
 
@@ -13,7 +13,7 @@ other apps can attempt to run the command with the --force flag.
 slack datastore query <expression> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Collect a limited set of items from the datastore
@@ -29,7 +29,7 @@ $ slack datastore query --datastore tasks '{"expression": "#status = :status", "
 $ slack datastore query '{"datastore": "tasks", "expression": "#status = :status", "expression_attributes": {"#status": "status"}, "expression_values": {":status": "In Progress"}}'
 ```
 
-### Options
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -40,7 +40,7 @@ $ slack datastore query '{"datastore": "tasks", "expression": "#status = :status
       --unstable           kick the tires of experimental features
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -54,7 +54,7 @@ $ slack datastore query '{"datastore": "tasks", "expression": "#status = :status
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 
