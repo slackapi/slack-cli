@@ -1,8 +1,8 @@
-## slack external-auth remove
+# `slack external-auth remove`
 
 Remove the saved tokens for a provider
 
-### Synopsis
+## Synopsis
 
 Remove tokens saved to external authentication providers of a workflow app.
 
@@ -16,7 +16,7 @@ other apps can attempt to run the command with the --force flag.
 slack external-auth remove [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Remove a token from the selected provider
@@ -32,7 +32,7 @@ $ slack external-auth remove --all -p github
 $ slack external-auth remove --all
 ```
 
-### Options
+## Options
 
 ```
   -A, --all               remove tokens for all providers or the specified provider
@@ -40,7 +40,7 @@ $ slack external-auth remove --all
   -p, --provider string   the external auth Provider Key to remove a token for
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -54,7 +54,7 @@ $ slack external-auth remove --all
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
 

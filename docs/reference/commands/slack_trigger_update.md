@@ -1,8 +1,8 @@
-## slack trigger update
+# `slack trigger update`
 
 Updates an existing trigger
 
-### Synopsis
+## Synopsis
 
 Updates an existing trigger with the provided definition. Only supports full replacement, no partial update.
 
@@ -10,7 +10,7 @@ Updates an existing trigger with the provided definition. Only supports full rep
 slack trigger update --trigger-id <id> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Update a trigger definition with a selected file
@@ -21,7 +21,7 @@ $ slack trigger update --trigger-id Ft01234ABCD \
     --workflow "#/workflows/my_workflow" --title "Updated trigger"
 ```
 
-### Options
+## Options
 
 ```
       --description string          the description of this trigger
@@ -44,7 +44,7 @@ $ slack trigger update --trigger-id Ft01234ABCD \
                                       "#/workflows/<workflow_callback_id>"
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -58,7 +58,7 @@ $ slack trigger update --trigger-id Ft01234ABCD \
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack trigger](slack_trigger)	 - List details of existing triggers
 

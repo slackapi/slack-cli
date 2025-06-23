@@ -1,8 +1,8 @@
-## slack datastore update
+# `slack datastore update`
 
 Create or update an item in a datastore
 
-### Synopsis
+## Synopsis
 
 Create or update an item in a datastore.
 
@@ -13,7 +13,7 @@ other apps can attempt to run the command with the --force flag.
 slack datastore update <expression> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Update the entry in the datastore
@@ -23,7 +23,7 @@ $ slack datastore update --datastore tasks '{"item": {"id": "42", "description":
 $ slack datastore update '{"datastore": "tasks", "item": {"id": "42", "description": "Create a PR", "status": "Done"}}'
 ```
 
-### Options
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -32,7 +32,7 @@ $ slack datastore update '{"datastore": "tasks", "item": {"id": "42", "descripti
       --unstable           kick the tires of experimental features
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -46,7 +46,7 @@ $ slack datastore update '{"datastore": "tasks", "item": {"id": "42", "descripti
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 

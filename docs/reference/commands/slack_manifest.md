@@ -1,8 +1,8 @@
-## slack manifest
+# `slack manifest`
 
 Print the app manifest of a project or app
 
-### Synopsis
+## Synopsis
 
 Get the manifest of an app using either the "remote" values on app settings
 or from the "local" configurations.
@@ -17,7 +17,7 @@ Project configurations use the "get-manifest" hook from ".slack/hooks.json".
 slack manifest [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Display the app manifest for the current project
@@ -27,14 +27,14 @@ $ slack manifest info
 $ slack manifest validate
 ```
 
-### Options
+## Options
 
 ```
   -h, --help            help for manifest
-      --source string   source of the app manifest ("local" or "remote") (default "local")
+      --source string   source of the app manifest ("local" or "remote")
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -48,7 +48,7 @@ $ slack manifest validate
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack manifest info](slack_manifest_info)	 - Print the app manifest of a project or app

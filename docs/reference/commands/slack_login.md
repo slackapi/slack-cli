@@ -1,8 +1,8 @@
-## slack login
+# `slack login`
 
 Log in to a Slack account
 
-### Synopsis
+## Synopsis
 
 Log in to a Slack account in your team
 
@@ -10,7 +10,7 @@ Log in to a Slack account in your team
 slack login [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Login to a Slack account with prompts
@@ -26,7 +26,7 @@ $ slack auth login --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
 $ slack auth login --token xoxp-...
 ```
 
-### Options
+## Options
 
 ```
       --challenge string   provide a challenge code for pre-authenticated login
@@ -36,7 +36,7 @@ $ slack auth login --token xoxp-...
       --token string       provide a token for a pre-authenticated login
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -49,7 +49,7 @@ $ slack auth login --token xoxp-...
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 
