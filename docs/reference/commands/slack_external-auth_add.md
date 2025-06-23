@@ -1,8 +1,8 @@
-## slack external-auth add
+# `slack external-auth add`
 
 Initiate the OAuth2 flow for a provider
 
-### Synopsis
+## Synopsis
 
 Initiate the OAuth2 flow for an external auth provider of a workflow app.
 
@@ -13,7 +13,7 @@ other apps can attempt to run the command with the --force flag.
 slack external-auth add [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Select a provider to initiate the OAuth2 flow for
@@ -23,14 +23,14 @@ $ slack external-auth add
 $ slack external-auth add -p github
 ```
 
-### Options
+## Options
 
 ```
   -h, --help              help for add
   -p, --provider string   the external auth Provider Key to add a secret to
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -44,7 +44,7 @@ $ slack external-auth add -p github
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
 

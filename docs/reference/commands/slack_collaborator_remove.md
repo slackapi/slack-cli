@@ -1,8 +1,8 @@
-## slack collaborator remove
+# `slack collaborator remove`
 
 Remove a collaborator from an app
 
-### Synopsis
+## Synopsis
 
 Remove a collaborator from an app by Slack email address or user ID
 
@@ -10,7 +10,7 @@ Remove a collaborator from an app by Slack email address or user ID
 slack collaborator remove [email|user_id] [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack collaborator remove                # Remove collaborator on prompt
@@ -18,13 +18,13 @@ $ slack collaborator remove bot@slack.com  # Remove collaborator by email
 $ slack collaborator remove USLACKBOT      # Remove collaborator using ID
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for remove
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -38,7 +38,7 @@ $ slack collaborator remove USLACKBOT      # Remove collaborator using ID
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack collaborator](slack_collaborator)	 - Manage app collaborators
 

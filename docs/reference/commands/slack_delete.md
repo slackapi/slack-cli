@@ -1,8 +1,8 @@
-## slack delete
+# `slack delete`
 
 Delete the app
 
-### Synopsis
+## Synopsis
 
 Uninstall the app from the team and permanently delete the app and all of its data
 
@@ -10,7 +10,7 @@ Uninstall the app from the team and permanently delete the app and all of its da
 slack delete [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Delete an app and app info from a team
@@ -20,13 +20,13 @@ $ slack app delete
 $ slack app delete --team T0123456 --app local
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for delete
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -40,7 +40,7 @@ $ slack app delete --team T0123456 --app local
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

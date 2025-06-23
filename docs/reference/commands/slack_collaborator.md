@@ -1,8 +1,8 @@
-## slack collaborator
+# `slack collaborator`
 
 Manage app collaborators
 
-### Synopsis
+## Synopsis
 
 Manage app collaborators
 
@@ -10,7 +10,7 @@ Manage app collaborators
 slack collaborator <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack collaborator add bots@slack.com  # Add a collaborator from email
@@ -20,13 +20,13 @@ $ slack collaborator list                # List all of the collaborators
 $ slack collaborator remove USLACKBOT
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for collaborator
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -40,7 +40,7 @@ $ slack collaborator remove USLACKBOT
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack collaborator add](slack_collaborator_add)	 - Add a new collaborator to the app

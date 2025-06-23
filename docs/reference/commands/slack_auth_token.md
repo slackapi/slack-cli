@@ -1,8 +1,8 @@
-## slack auth token
+# `slack auth token`
 
 Collect a service token
 
-### Synopsis
+## Synopsis
 
 Log in to a Slack account in your team
 
@@ -10,7 +10,7 @@ Log in to a Slack account in your team
 slack auth token [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Create a service token with prompts
@@ -23,7 +23,7 @@ $ slack auth token --no-prompt
 $ slack auth token --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
 ```
 
-### Options
+## Options
 
 ```
       --challenge string   provide a challenge code for pre-authenticated login
@@ -32,7 +32,7 @@ $ slack auth token --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
       --ticket string      provide an auth ticket value
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -46,7 +46,7 @@ $ slack auth token --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack auth](slack_auth)	 - Add and remove local team authorizations
 

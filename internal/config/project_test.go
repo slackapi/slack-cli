@@ -343,7 +343,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		addProjectMocks(t, fs)
 		projectConfig := NewProjectConfig(fs, os)
 
-		projectDirPath, err := projectConfig.GetProjectDirPath()
+		projectDirPath, err := GetProjectDirPath(fs, os)
 		require.NoError(t, err)
 		projectConfigFilePath := GetProjectConfigJSONFilePath(projectDirPath)
 
@@ -462,8 +462,7 @@ func Test_ProjectConfig_GetProjectDirPath(t *testing.T) {
 		err := fs.Remove(GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory))
 		require.NoError(t, err)
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectDirPath, err := projectConfig.GetProjectDirPath()
+		projectDirPath, err := GetProjectDirPath(fs, os)
 		require.Error(t, err)
 		require.Empty(t, projectDirPath)
 	})
@@ -478,8 +477,7 @@ func Test_ProjectConfig_GetProjectDirPath(t *testing.T) {
 		// Use project mocks to create project in filesystem
 		addProjectMocks(t, fs)
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectDirPath, err := projectConfig.GetProjectDirPath()
+		projectDirPath, err := GetProjectDirPath(fs, os)
 		require.NoError(t, err)
 		require.Equal(t, slackdeps.MockWorkingDirectory, projectDirPath) // MockWorkingDirectory is the test's project directory
 	})
@@ -796,6 +794,6 @@ func addProjectMocks(t require.TestingT, fs afero.Fs) {
 	require.NoError(t, err)
 
 	// Fixture: project/.slack/hooks.json file
-	err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
+	err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0644)
 	require.NoError(t, err)
 }

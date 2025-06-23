@@ -1,8 +1,8 @@
-## slack app link
+# `slack app link`
 
 Add an existing app to the project
 
-### Synopsis
+## Synopsis
 
 Saves an existing app to a project to be available to other commands.
 
@@ -19,7 +19,7 @@ Only one app can exist for each combination of Team ID and environment.
 slack app link [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Add an existing app to a project
@@ -29,14 +29,14 @@ $ slack app link
 $ slack app link --team T0123456789 --app A0123456789 --environment deployed
 ```
 
-### Options
+## Options
 
 ```
   -E, --environment string   environment to save existing app (local, deployed)
   -h, --help                 help for link
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -50,7 +50,7 @@ $ slack app link --team T0123456789 --app A0123456789 --environment deployed
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

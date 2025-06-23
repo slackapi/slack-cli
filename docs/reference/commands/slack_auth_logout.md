@@ -1,8 +1,8 @@
-## slack auth logout
+# `slack auth logout`
 
 Log out of a team
 
-### Synopsis
+## Synopsis
 
 Log out of a team, removing any local credentials
 
@@ -10,21 +10,21 @@ Log out of a team, removing any local credentials
 slack auth logout [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack auth logout        # Select a team to log out of
 $ slack auth logout --all  # Log out of all team
 ```
 
-### Options
+## Options
 
 ```
   -A, --all    logout of all workspaces
   -h, --help   help for logout
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -38,7 +38,7 @@ $ slack auth logout --all  # Log out of all team
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack auth](slack_auth)	 - Add and remove local team authorizations
 

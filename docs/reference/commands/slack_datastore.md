@@ -1,8 +1,8 @@
-## slack datastore
+# `slack datastore`
 
 Interact with an app's datastore
 
-### Synopsis
+## Synopsis
 
 Interact with the items stored in an app's datastore.
 
@@ -15,7 +15,7 @@ Discover the datastores: [https://tools.slack.dev/deno-slack-sdk/guides/using-da
 slack datastore <subcommand> <expression> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Add a new entry to the datastore
@@ -46,13 +46,13 @@ $ slack datastore query --datastore tasks '{"expression": "#status = :status", "
 $ slack datastore count --datastore tasks
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for datastore
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -66,7 +66,7 @@ $ slack datastore count --datastore tasks
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack datastore bulk-delete](slack_datastore_bulk-delete)	 - Delete multiple items from a datastore
