@@ -29,14 +29,17 @@ var samplesGitBranchFlag string
 
 func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "samples",
+		Use:     "samples [name]",
 		Aliases: []string{"sample"},
 		Short:   "List available sample apps",
 		Long:    "List and create an app from the available samples",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "samples", Meaning: "Select a sample app to create"},
+			{
+				Meaning: "Select a sample app to create",
+				Command: "samples my-project",
+			},
 		}),
-		Args: cobra.MaximumNArgs(0),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
 			return runSamplesCommand(clients, cmd, args)
