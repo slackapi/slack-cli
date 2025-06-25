@@ -495,6 +495,9 @@ func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, erro
 		return nil, nil
 	}
 	for _, opt := range flagset {
+		if opt == nil {
+			continue
+		}
 		if !opt.Changed {
 			continue
 		} else if flag != nil {
