@@ -447,7 +447,11 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 		return SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingOptions)
 	}
 	if !io.IsTTY() {
-		return SelectPromptResponse{}, errInteractivityFlags(cfg)
+		if cfg.IsRequired() {
+			return SelectPromptResponse{}, errInteractivityFlags(cfg)
+		} else {
+			return SelectPromptResponse{}, nil
+		}
 	}
 
 	defaultSelectTemplate := survey.SelectQuestionTemplate
