@@ -53,18 +53,10 @@ var mockLinkSlackAuth2 = types.SlackAuth{
 
 func Test_Project_InitCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"requires bolt experiment": {
-			CmdArgs: []string{},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				// Do not set experiment flag
-				setupProjectInitCommandMocks(t, ctx, cm, cf, false)
-			},
-			ExpectedErrorStrings: []string{"Command requires the Bolt Framework experiment"},
-		},
 		"init a project and do not link an existing app": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupProjectInitCommandMocks(t, ctx, cm, cf, true)
+				setupProjectInitCommandMocks(t, ctx, cm, cf)
 				// Do not link an existing app
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(false, nil)
 			},
@@ -115,7 +107,7 @@ func Test_Project_InitCommand(t *testing.T) {
 					mockLinkSlackAuth1,
 				}, nil)
 				// Default setup
-				setupProjectInitCommandMocks(t, ctx, cm, cf, true)
+				setupProjectInitCommandMocks(t, ctx, cm, cf)
 				// Do not link an existing app
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(true, nil)
 				// Mock prompt to link an existing app
@@ -222,17 +214,11 @@ func Test_Project_InitCommand(t *testing.T) {
 }
 
 // setupProjectInitCommandMocks prepares common mocks for these tests
-func setupProjectInitCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory, boltExperimentEnabled bool) {
+func setupProjectInitCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	// Mocks
 	projectDirPath := "/path/to/project-name"
 	cm.Os.On("Getwd").Return(projectDirPath, nil)
 	cm.AddDefaultMocks()
-
-	// Set experiment flag
-	if boltExperimentEnabled {
-		cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "bolt")
-		cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-	}
 
 	// Create project directory
 	if err := cm.Fs.MkdirAll(filepath.Dir(projectDirPath), 0755); err != nil {
