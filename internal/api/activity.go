@@ -112,13 +112,13 @@ func (c *Client) Activity(ctx context.Context, token string, activityRequest typ
 
 	b, err := c.get(ctx, url, token, "")
 	if err != nil {
-		return ActivityResult{}, errHTTPRequestFailed.WithRootCause(err)
+		return ActivityResult{}, slackerror.New(slackerror.ErrHTTPRequestFailed).WithRootCause(err)
 	}
 
 	resp := activityResponse{}
 	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return ActivityResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appActivityMethod)
+		return ActivityResult{}, slackerror.New(slackerror.ErrHTTPResponseInvalid).WithRootCause(err).AddAPIMethod(appActivityMethod)
 	}
 
 	if !resp.Ok {
