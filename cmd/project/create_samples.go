@@ -24,6 +24,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/spf13/pflag"
 )
 
 //go:embed samples.tmpl
@@ -36,13 +38,48 @@ func PromptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 		return "", err
 	}
 
-	projectType := "deno"
-	filteredRepos := filterRepos(sampleRepos, projectType)
+	projectTypes := []string{}
+	selection, err := clients.IO.SelectPrompt(ctx, "Select a language:",
+		[]string{
+			fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+			fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+			fmt.Sprintf("Deno Slack SDK %s", style.Secondary("Deno")),
+		},
+		iostreams.SelectPromptConfig{
+			Flags: []*pflag.Flag{
+				clients.Config.Flags.Lookup("language"),
+				clients.Config.Flags.Lookup("template"), // Skip filtering with a template
+			},
+			Required: false,
+		},
+	)
+	if err != nil {
+		return "", err
+	} else if selection.Prompt {
+		switch selection.Index {
+		case 0:
+			projectTypes = []string{"bolt-js", "bolt-ts"}
+		case 1:
+			projectTypes = []string{"bolt-python"}
+		case 2:
+			projectTypes = []string{"deno"}
+		}
+	} else if selection.Flag {
+		projectTypes = []string{selection.Option}
+	}
+
+	filteredRepos := []create.GithubRepo{}
+	if len(projectTypes) <= 0 {
+		filteredRepos = sampleRepos
+	}
+	for _, language := range projectTypes {
+		filteredRepos = append(filteredRepos, filterRepos(sampleRepos, language)...)
+	}
 	sortedRepos := sortRepos(filteredRepos)
 	selectOptions := createSelectOptions(sortedRepos)
 
 	var selectedTemplate string
-	selection, err := clients.IO.SelectPrompt(ctx, "Select a sample to build upon:", selectOptions, iostreams.SelectPromptConfig{
+	selection, err = clients.IO.SelectPrompt(ctx, "Select a sample to build upon:", selectOptions, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
 			return sortedRepos[index].Description + "\n  https://github.com/" + sortedRepos[index].FullName
 		},
