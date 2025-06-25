@@ -440,7 +440,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
+				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Accept manifest source confirmation prompt
@@ -509,7 +509,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to project to trigger confirmation prompt
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
+				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Decline manifest source confirmation prompt
@@ -547,7 +547,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to local
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
+				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Mock manifest for Run-on-Slack app
@@ -624,7 +624,7 @@ func Test_Apps_Link(t *testing.T) {
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
 				// Set manifest source to local
-				if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceLocal); err != nil {
+				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
 				// Mock manifest for Run-on-Slack app
@@ -760,7 +760,7 @@ func setupAppLinkCommandMocks(t *testing.T, ctx context.Context, cm *shared.Clie
 		require.FailNow(t, fmt.Sprintf("Failed to create the hooks file in the memory-based file system: %s", err))
 	}
 
-	if err := cm.Config.ProjectConfig.SetManifestSource(ctx, config.ManifestSourceRemote); err != nil {
+	if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceRemote); err != nil {
 		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 	}
 
