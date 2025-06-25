@@ -26,6 +26,7 @@ import (
 // Flags
 var samplesTemplateURLFlag string
 var samplesGitBranchFlag string
+var samplesLanguageFlag string
 
 func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -45,7 +46,7 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	cmd.Flags().StringVarP(&samplesTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&samplesGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
-	cmd.Flags().StringVar(&samplesTemplateURLFlag, "language", "", "framework of the app runtime\n  ex: \"bolt-js\", \"bolt-python\", \"deno\"")
+	cmd.Flags().StringVar(&samplesLanguageFlag, "language", "", "framework from the app runtime\n  ex: \"bolt-js\", \"bolt-python\", \"deno\"")
 
 	return cmd
 }
