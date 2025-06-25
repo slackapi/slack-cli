@@ -55,7 +55,7 @@ func TestSamplesCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a template to build from:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Option: "slack-samples/deno-starter-template",
