@@ -637,7 +637,7 @@ func TestAppClient_CleanupSlackFolder(t *testing.T) {
 	assert.True(t, ac.apps.IsEmpty(), "an unexpected app was found")
 
 	require.NoError(t, err)
-	assert.False(t, ac.config.ProjectConfig.ProjectConfigJSONFileExists(wd),
+	assert.False(t, config.ProjectConfigJSONFileExists(ac.fs, ac.os, wd),
 		"an unexpected config was found")
 
 	dotSlackFolder := filepath.Dir(pathToAppsJSON)
