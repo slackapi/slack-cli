@@ -30,14 +30,17 @@ var samplesLanguageFlag string
 
 func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "samples",
+		Use:     "samples [name]",
 		Aliases: []string{"sample"},
 		Short:   "List available sample apps",
 		Long:    "List and create an app from the available samples",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "samples", Meaning: "Select a sample app to create"},
+			{
+				Meaning: "Select a sample app to create",
+				Command: "samples my-project",
+			},
 		}),
-		Args: cobra.MaximumNArgs(0),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
 			return runSamplesCommand(clients, cmd, args)
@@ -77,9 +80,7 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 
 	// If preferred directory name is passed in as an argument to the `create`
 	// command first, honor that preference and use it to create the project
-	if len(args) > 0 {
-		createCmd.SetArgs([]string{args[0]})
-	}
+	createCmd.SetArgs(args)
 
 	// Execute the `create` command with the set flag
 	return createCmd.ExecuteContext(ctx)

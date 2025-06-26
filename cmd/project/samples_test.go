@@ -32,7 +32,7 @@ import (
 func TestSamplesCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"creates a template from a trusted sample": {
-			CmdArgs: []string{},
+			CmdArgs: []string{"my-sample-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				createPkg.GetSampleRepos = func(client createPkg.Sampler) ([]createPkg.GithubRepo, error) {
 					repos := []createPkg.GithubRepo{
@@ -72,8 +72,11 @@ func TestSamplesCommand(t *testing.T) {
 						nil,
 					)
 				CreateFunc = func(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, createArgs createPkg.CreateArgs) (appDirPath string, err error) {
-					return "", nil
+					return createArgs.AppName, nil
 				}
+			},
+			ExpectedOutputs: []string{
+				"cd my-sample-app/",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				for _, call := range cm.IO.Calls {
