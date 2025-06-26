@@ -104,7 +104,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 
 		// Set a project_id that should not be overwritten
 		expectedProjectID := uuid.New().String()
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: expectedProjectID})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: expectedProjectID})
 		require.NoError(t, err)
 
 		projectID, err := projectConfig.InitProjectID(ctx, false)
@@ -128,7 +128,7 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 
 		// Set a project_id that should be overwritten
 		expectedProjectID := uuid.New().String()
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: expectedProjectID})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: expectedProjectID})
 		require.NoError(t, err)
 
 		projectID, err := projectConfig.InitProjectID(ctx, true)
@@ -171,7 +171,7 @@ func Test_ProjectConfig_GetProjectID(t *testing.T) {
 
 		// Set a project_id that has whitespace padding
 		const paddedProjectID = "   abc-123   "
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: paddedProjectID})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: paddedProjectID})
 		require.NoError(t, err)
 
 		projectID, err := projectConfig.GetProjectID(ctx)
@@ -213,7 +213,7 @@ func Test_ProjectConfig_SetProjectID(t *testing.T) {
 		projectConfig := NewProjectConfig(fs, os)
 
 		// Set a project_id that will be replaced later
-		_, err := projectConfig.WriteProjectConfigFile(ctx, ProjectConfig{ProjectID: uuid.New().String()})
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: uuid.New().String()})
 		require.NoError(t, err)
 
 		var expectedProjectID = uuid.New().String()
@@ -263,7 +263,7 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 			initial, err := config.GetManifestSource(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedManifestSourceDefault, initial)
-			err = config.SetManifestSource(ctx, tt.mockManifestSource)
+			err = SetManifestSource(ctx, fs, os, tt.mockManifestSource)
 			require.NoError(t, err)
 			actual, err := config.GetManifestSource(ctx)
 			assert.Equal(t, tt.expectedError, err)
@@ -282,8 +282,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		os.AddDefaultMocks()
 		// Do not add the project mocks
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectConfigData, err := projectConfig.ReadProjectConfigFile(ctx)
+		projectConfigData, err := ReadProjectConfigFile(ctx, fs, os)
 		require.Error(t, err)
 		require.Empty(t, projectConfigData)
 	})
@@ -303,8 +302,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		_, err := fs.Stat(GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory))
 		require.True(t, os.IsNotExist(err))
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectConfigFile, err := projectConfig.ReadProjectConfigFile(ctx)
+		projectConfigFile, err := ReadProjectConfigFile(ctx, fs, os)
 		require.NoError(t, err)
 		require.Empty(t, projectConfigFile) // Currently, the default is an empty config.json ("{}") but this may change in the future
 	})
@@ -325,11 +323,10 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 			Surveys:   map[string]SurveyConfig{},
 		}
 
-		projectConfig := NewProjectConfig(fs, os)
-		_, err := projectConfig.WriteProjectConfigFile(ctx, expectedProjectConfig)
+		_, err := WriteProjectConfigFile(ctx, fs, os, expectedProjectConfig)
 		require.NoError(t, err)
 
-		projectConfigFile, err := projectConfig.ReadProjectConfigFile(ctx)
+		projectConfigFile, err := ReadProjectConfigFile(ctx, fs, os)
 		require.NoError(t, err)
 		require.Equal(t, expectedProjectConfig, projectConfigFile)
 	})
@@ -341,7 +338,6 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 
 		os.AddDefaultMocks()
 		addProjectMocks(t, fs)
-		projectConfig := NewProjectConfig(fs, os)
 
 		projectDirPath, err := GetProjectDirPath(fs, os)
 		require.NoError(t, err)
@@ -351,7 +347,7 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		err = afero.WriteFile(fs, projectConfigFilePath, []byte(expectedConfigFileData), 0600)
 		require.NoError(t, err)
 
-		_, err = projectConfig.ReadProjectConfigFile(ctx)
+		_, err = ReadProjectConfigFile(ctx, fs, os)
 		require.Error(t, err)
 		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of project-level config file")
@@ -372,8 +368,7 @@ func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 			ProjectID: uuid.New().String(),
 		}
 
-		projectConfig := NewProjectConfig(fs, os)
-		projectConfigData, err := projectConfig.WriteProjectConfigFile(ctx, defaultProjectConfig)
+		projectConfigData, err := WriteProjectConfigFile(ctx, fs, os, defaultProjectConfig)
 		require.Error(t, err)
 		require.Empty(t, projectConfigData)
 	})
@@ -395,12 +390,11 @@ func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {
 		}
 
 		// Assert writing the config file
-		projectConfig := NewProjectConfig(fs, os)
-		_, err := projectConfig.WriteProjectConfigFile(ctx, expectedProjectConfig)
+		_, err := WriteProjectConfigFile(ctx, fs, os, expectedProjectConfig)
 		require.NoError(t, err)
 
 		// Assert reading the written file contents
-		actualProjectConfig, err := projectConfig.ReadProjectConfigFile(ctx)
+		actualProjectConfig, err := ReadProjectConfigFile(ctx, fs, os)
 		require.NoError(t, err)
 
 		// Assert the written file has the same content as the original
@@ -423,8 +417,7 @@ func Test_ProjectConfig_ProjectConfigJSONFileExists(t *testing.T) {
 		err := afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
 
-		projectConfig := NewProjectConfig(fs, os)
-		exists := projectConfig.ProjectConfigJSONFileExists(slackdeps.MockWorkingDirectory)
+		exists := ProjectConfigJSONFileExists(fs, os, slackdeps.MockWorkingDirectory)
 		require.True(t, exists)
 	})
 
@@ -441,8 +434,7 @@ func Test_ProjectConfig_ProjectConfigJSONFileExists(t *testing.T) {
 		// Remove .slack/config.json and ignore errors (errors when file does not exist)
 		_ = fs.Remove(GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory))
 
-		projectConfig := NewProjectConfig(fs, os)
-		exists := projectConfig.ProjectConfigJSONFileExists(slackdeps.MockWorkingDirectory)
+		exists := ProjectConfigJSONFileExists(fs, os, slackdeps.MockWorkingDirectory)
 		require.False(t, exists)
 	})
 }
