@@ -65,7 +65,16 @@ func PromptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 			projectTypes = []string{"deno"}
 		}
 	} else if selection.Flag {
-		projectTypes = []string{selection.Option}
+		switch strings.ToLower(strings.TrimSpace(selection.Option)) {
+		case "node":
+			projectTypes = []string{"bolt-js", "bolt-ts"}
+		case "python":
+			projectTypes = []string{"bolt-python"}
+		case "deno":
+			projectTypes = []string{"deno"}
+		default:
+			projectTypes = []string{selection.Option}
+		}
 	}
 
 	filteredRepos := []create.GithubRepo{}
