@@ -47,6 +47,14 @@ func TestSamplesCommand(t *testing.T) {
 					}
 					return repos, nil
 				}
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Index:  2,
+							Prompt: true,
+						},
+						nil,
+					)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a sample to build upon:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
