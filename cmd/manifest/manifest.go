@@ -17,12 +17,10 @@ package manifest
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -51,8 +49,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Use:   "manifest",
 		Short: "Print the app manifest of a project or app",
 		Long: strings.Join([]string{
-			fmt.Sprintf("Get the manifest of an app using either the \"%s\" values on app settings", config.MANIFEST_SOURCE_REMOTE.String()),
-			fmt.Sprintf("or from the \"%s\" configurations.", config.MANIFEST_SOURCE_LOCAL.String()),
+			fmt.Sprintf("Get the manifest of an app using either the \"%s\" values on app settings", config.ManifestSourceRemote.String()),
+			fmt.Sprintf("or from the \"%s\" configurations.", config.ManifestSourceLocal.String()),
 			"",
 			"Subcommands unlock additional engagements and interactions with the manifest.",
 			"",
@@ -86,11 +84,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(
 		&manifestFlags.source,
 		manifestFlagSource,
-		config.MANIFEST_SOURCE_LOCAL.String(),
+		"",
 		fmt.Sprintf(
 			"source of the app manifest (\"%s\" or \"%s\")",
-			config.MANIFEST_SOURCE_LOCAL.String(),
-			config.MANIFEST_SOURCE_REMOTE.String(),
+			config.ManifestSourceLocal.String(),
+			config.ManifestSourceRemote.String(),
 		),
 	)
 
@@ -101,48 +99,42 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 // should be used based on the "--source" flag
 func getManifestSource(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) (config.ManifestSource, error) {
 	if clients.Config.AppFlag != "" {
-		if cmd.Flag(manifestFlagSource).Changed && !config.ManifestSource(manifestFlags.source).Equals(config.MANIFEST_SOURCE_REMOTE) {
+		if cmd.Flag(manifestFlagSource).Changed && !config.ManifestSource(manifestFlags.source).Equals(config.ManifestSourceRemote) {
 			return "", slackerror.New(slackerror.ErrMismatchedFlags).
 				WithMessage(
 					"The \"--%s\" flag must be \"%s\" when using \"--app\"",
 					manifestFlagSource,
-					config.MANIFEST_SOURCE_REMOTE.String(),
+					config.ManifestSourceRemote.String(),
 				)
 		}
-		return config.MANIFEST_SOURCE_REMOTE, nil
+		return config.ManifestSourceRemote, nil
 	}
-	if clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		if !cmd.Flag(manifestFlagSource).Changed {
-			manifestConfigSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-			if err != nil {
-				return "", err
-			}
-			switch {
-			case manifestConfigSource.Equals(config.MANIFEST_SOURCE_LOCAL):
-				return manifestConfigSource, nil
-			case manifestConfigSource.Equals(config.MANIFEST_SOURCE_REMOTE):
-				return "", slackerror.New(slackerror.ErrInvalidManifestSource).
-					WithMessage(`Cannot get manifest info from the "%s" source`, config.MANIFEST_SOURCE_REMOTE).
-					WithRemediation("%s", strings.Join([]string{
-						fmt.Sprintf("Find the current manifest on app settings: %s", style.LinkText("https://api.slack.com/apps")),
-						fmt.Sprintf("Set \"manifest.source\" to \"%s\" in \"%s\" to continue", config.MANIFEST_SOURCE_LOCAL, filepath.Join(".slack", "config.json")),
-						fmt.Sprintf("Read about manifest sourcing with %s", style.Commandf("manifest info --help", false)),
-					}, "\n"))
-			}
+	if cmd.Flag(manifestFlagSource).Changed {
+		switch {
+		case config.ManifestSource(manifestFlags.source).Equals(config.ManifestSourceLocal):
+			return config.ManifestSourceLocal, nil
+		case config.ManifestSource(manifestFlags.source).Equals(config.ManifestSourceRemote):
+			return config.ManifestSourceRemote, nil
+		default:
+			return "", slackerror.New(slackerror.ErrInvalidFlag).
+				WithMessage(
+					"The \"--%s\" flag must be \"%s\" or \"%s\"",
+					manifestFlagSource,
+					config.ManifestSourceLocal,
+					config.ManifestSourceRemote,
+				)
 		}
 	}
+	manifestConfigSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return "", err
+	}
 	switch {
-	case config.ManifestSource(manifestFlags.source).Equals(config.MANIFEST_SOURCE_LOCAL):
-		return config.MANIFEST_SOURCE_LOCAL, nil
-	case config.ManifestSource(manifestFlags.source).Equals(config.MANIFEST_SOURCE_REMOTE):
-		return config.MANIFEST_SOURCE_REMOTE, nil
+	case manifestConfigSource.Equals(config.ManifestSourceLocal):
+		return manifestConfigSource, nil
+	case manifestConfigSource.Equals(config.ManifestSourceRemote):
+		return manifestConfigSource, nil
 	default:
-		return "", slackerror.New(slackerror.ErrInvalidFlag).
-			WithMessage(
-				"The \"--%s\" flag must be \"%s\" or \"%s\"",
-				manifestFlagSource,
-				config.MANIFEST_SOURCE_LOCAL,
-				config.MANIFEST_SOURCE_REMOTE,
-			)
+		return "", slackerror.New(slackerror.ErrInvalidManifestSource)
 	}
 }

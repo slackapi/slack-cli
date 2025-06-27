@@ -52,7 +52,7 @@ func TestCache_Manifest(t *testing.T) {
 			cache := NewCache(fsMock, osMock, projectDirPath)
 			err = cache.SetManifestHash(ctx, tt.mockAppID, tt.mockCache.Hash)
 			require.NoError(t, err)
-			cache.ManifestCache.Apps = map[string]ManifestCacheApp{
+			cache.Apps = map[string]ManifestCacheApp{
 				tt.mockAppID: tt.mockCache,
 			}
 			hash, err := cache.GetManifestHash(ctx, tt.mockAppID)
@@ -77,7 +77,7 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 					Name: "slackbot[bot]",
 				},
 				Settings: &types.AppSettings{
-					FunctionRuntime: types.SLACK_HOSTED,
+					FunctionRuntime: types.SlackHosted,
 					EventSubscriptions: &types.ManifestEventSubscriptions{
 						BotEvents:  []string{"chat:write"},
 						UserEvents: []string{"channels:read"},
@@ -96,7 +96,7 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 						UserEvents: []string{"channels:read"},
 						BotEvents:  []string{"chat:write"},
 					},
-					FunctionRuntime: types.SLACK_HOSTED,
+					FunctionRuntime: types.SlackHosted,
 				},
 			},
 			expectedHash: "49691953b3bb36cad1333949846ad9f9c1fde9f12a395674dd2bbdafabccdd0c",

@@ -45,7 +45,7 @@ func Test_ClientFactory_FunctionalOptions(t *testing.T) {
 	require.True(t, clients.Config.SlackDevFlag, "default should be true")
 }
 
-const GET_HOOKS_BIN = `#!/bin/sh
+const getHooksScript = `#!/bin/sh
 	echo "{\"hooks\": {\"start\": \"echo 'start' $@\"}}"
 `
 
@@ -90,25 +90,25 @@ func Test_ClientFactory_InitSDKConfig(t *testing.T) {
 			mockHooksJSONContent:  "{}",
 			mockHooksJSONFilePath: filepath.Join(slackdeps.MockHomeDirectory, "project", ".slack", "cli.json"),
 			mockWorkingDirectory:  filepath.Join(slackdeps.MockHomeDirectory, "project"),
-			expectedError:         slackerror.New(slackerror.ErrCliConfigLocationError),
+			expectedError:         slackerror.New(slackerror.ErrCLIConfigLocationError),
 		},
 		"errors if no project configuration file can be found": {
 			mockHooksJSONContent:  "{}",
 			mockHooksJSONFilePath: filepath.Join(slackdeps.MockHomeDirectory, "project", ".slack", "apps.json"),
 			mockWorkingDirectory:  filepath.Join(slackdeps.MockHomeDirectory, "project"),
-			expectedError:         slackerror.New(slackerror.ErrHooksJsonLocation),
+			expectedError:         slackerror.New(slackerror.ErrHooksJSONLocation),
 		},
 		"errors if no project configuration directory exists": {
 			mockHooksJSONContent:  "{}",
 			mockHooksJSONFilePath: filepath.Join(slackdeps.MockHomeDirectory, "project", "package.json"),
 			mockWorkingDirectory:  filepath.Join(slackdeps.MockHomeDirectory, "project"),
-			expectedError:         slackerror.New(slackerror.ErrHooksJsonLocation),
+			expectedError:         slackerror.New(slackerror.ErrHooksJSONLocation),
 		},
 		"errors if no project configuration directory exists and searched upward to system root directory": {
 			mockHooksJSONContent:  "{}",
 			mockHooksJSONFilePath: filepath.Join("path", "outside", "home", "to", "project", "package.json"),
 			mockWorkingDirectory:  filepath.Join("path", "outside", "home", "to", "project"),
-			expectedError:         slackerror.New(slackerror.ErrHooksJsonLocation),
+			expectedError:         slackerror.New(slackerror.ErrHooksJSONLocation),
 		},
 	}
 	for name, tt := range tests {
@@ -133,8 +133,8 @@ func Test_ClientFactory_InitSDKConfigFromJSON(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	path := setupGetHooksScript(t)
 	clients := NewClientFactory()
-	getHooksJson := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	getHooksJSON := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	require.True(t, clients.SDKConfig.Hooks.GetHooks.IsAvailable())
@@ -147,9 +147,9 @@ func Test_ClientFactory_InitSDKConfigFromJSON_reflectionSetsNameProperty(t *test
 	ctx := slackcontext.MockContext(t.Context())
 	path := setupGetHooksScript(t)
 	clients := NewClientFactory()
-	getHooksJson := fmt.Sprintf(`{"hooks":{"get-hooks": "%s", "get-trigger": "echo {}", "": "echo {}"}}`, path)
+	getHooksJSON := fmt.Sprintf(`{"hooks":{"get-hooks": "%s", "get-trigger": "echo {}", "": "echo {}"}}`, path)
 	// Execute test
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	// Check
@@ -162,9 +162,9 @@ func Test_ClientFactory_InitSDKConfigFromJSON_numberedDevInstance(t *testing.T) 
 	ctx := slackcontext.MockContext(t.Context())
 	path := setupGetHooksScript(t)
 	clients := NewClientFactory()
-	getHooksJson := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
-	clients.Config.ApiHostResolved = "https://dev1234.slack.com"
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	getHooksJSON := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
+	clients.Config.APIHostResolved = "https://dev1234.slack.com"
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	require.True(t, clients.SDKConfig.Hooks.GetHooks.IsAvailable())
@@ -176,9 +176,9 @@ func Test_ClientFactory_InitSDKConfigFromJSON_dev(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	path := setupGetHooksScript(t)
 	clients := NewClientFactory()
-	getHooksJson := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
-	clients.Config.ApiHostResolved = "https://dev.slack.com"
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	getHooksJSON := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
+	clients.Config.APIHostResolved = "https://dev.slack.com"
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	require.True(t, clients.SDKConfig.Hooks.GetHooks.IsAvailable())
@@ -190,9 +190,9 @@ func Test_ClientFactory_InitSDKConfigFromJSON_qa(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	path := setupGetHooksScript(t)
 	clients := NewClientFactory()
-	getHooksJson := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
-	clients.Config.ApiHostResolved = "https://qa.slack.com"
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	getHooksJSON := fmt.Sprintf(`{"hooks":{"get-hooks": "%s"}}`, path)
+	clients.Config.APIHostResolved = "https://qa.slack.com"
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	require.True(t, clients.SDKConfig.Hooks.GetHooks.IsAvailable())
@@ -204,8 +204,8 @@ func Test_ClientFactory_InitSDKConfigFromJSON_mergesExistingFile(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	path := setupGetHooksScript(t)
 	clients := NewClientFactory()
-	getHooksJson := fmt.Sprintf(`{"hooks":{"get-hooks": "%s", "start": "foobar"}}`, path)
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	getHooksJSON := fmt.Sprintf(`{"hooks":{"get-hooks": "%s", "start": "foobar"}}`, path)
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	require.True(t, clients.SDKConfig.Hooks.GetHooks.IsAvailable())
@@ -216,10 +216,10 @@ func Test_ClientFactory_InitSDKConfigFromJSON_mergesExistingFile(t *testing.T) {
 func Test_ClientFactory_InitSDKConfigFromJSON_noGetHooks(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clients := NewClientFactory()
-	getHooksJson := `{"hooks":{"start": "foobar"}}`
-	clients.Config.ApiHostResolved = "https://dev1234.slack.com"
+	getHooksJSON := `{"hooks":{"start": "foobar"}}`
+	clients.Config.APIHostResolved = "https://dev1234.slack.com"
 	clients.Config.SlackDevFlag = true
-	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson)); err != nil {
+	if err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON)); err != nil {
 		t.Errorf("error init'ing SDK from JSON %s", err)
 	}
 	require.False(t, clients.SDKConfig.Hooks.GetHooks.IsAvailable())
@@ -230,26 +230,26 @@ func Test_ClientFactory_InitSDKConfigFromJSON_noGetHooks(t *testing.T) {
 func Test_ClientFactory_InitSDKConfigFromJSON_brokenGetHooks(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clients := NewClientFactory()
-	getHooksJson := `{"hooks":{"get-hooks": "unknown-command"}}`
-	err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson))
+	getHooksJSON := `{"hooks":{"get-hooks": "unknown-command"}}`
+	err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON))
 	require.Error(t, err)
 	assert.Equal(t, slackerror.New(slackerror.ErrSDKHookInvocationFailed).Code, slackerror.ToSlackError(err).Code)
-	assert.Contains(t, slackerror.ToSlackError(err).Message, "Command for 'GetHooks' returned an error")
+	assert.Contains(t, slackerror.ToSlackError(err).Message, "Error running 'GetHooks' command")
 }
 
 func Test_ClientFactory_InitSDKConfigFromJSON_brokenJSONFile(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clients := NewClientFactory()
-	getHooksJson := `{"hooks":{"get-hooks":`
-	err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJson))
+	getHooksJSON := `{"hooks":{"get-hooks":`
+	err := clients.InitSDKConfigFromJSON(ctx, []byte(getHooksJSON))
 	require.Error(t, err)
-	assert.Equal(t, slackerror.New(slackerror.ErrUnableToParseJson).Code, slackerror.ToSlackError(err).Code)
+	assert.Equal(t, slackerror.New(slackerror.ErrUnableToParseJSON).Code, slackerror.ToSlackError(err).Code)
 }
 
 func setupGetHooksScript(t *testing.T) string {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "get-hooks.sh")
-	err := os.WriteFile(path, []byte(GET_HOOKS_BIN), 0700)
+	err := os.WriteFile(path, []byte(getHooksScript), 0700)
 	if err != nil {
 		t.Errorf("Failed to write file %s", err)
 	}

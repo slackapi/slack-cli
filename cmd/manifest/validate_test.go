@@ -93,7 +93,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_ZeroUserAuth(t *te
 
 	// Mock zero user auths
 	mockAuths := []types.SlackAuth{}
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return(mockAuths, nil)
+	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, nil)
 	clientsMock.AddDefaultMocks()
 
 	// A failed selection/prompt should raise an error
@@ -111,14 +111,14 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 		{
 			Token:        "mocktokenval",
 			TeamDomain:   "mock",
-			TeamID:       "mockteamId",
+			TeamID:       "mockteamID",
 			UserID:       "mockuser",
 			LastUpdated:  time.Time{},
 			RefreshToken: "refresh",
 			ExpiresAt:    0,
 		},
 	}
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return(mockAuths, nil)
+	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, nil)
 	clientsMock.AddDefaultMocks()
 
 	// Create clients that is mocked for testing
@@ -143,7 +143,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 	// Should execute without error
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
-	clientsMock.AuthInterface.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	clientsMock.Auth.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAuth(t *testing.T) {
@@ -177,7 +177,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 		{
 			Token:        "mocktokenval",
 			TeamDomain:   "mock",
-			TeamID:       "mockteamId",
+			TeamID:       "mockteamID",
 			UserID:       "mockuser",
 			LastUpdated:  time.Time{},
 			RefreshToken: "refresh",
@@ -186,15 +186,15 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 		{
 			Token:        "mocktokenval",
 			TeamDomain:   "mock2",
-			TeamID:       "mockteamId",
+			TeamID:       "mockteamID",
 			UserID:       "mockuser",
 			LastUpdated:  time.Time{},
 			RefreshToken: "refresh",
 			ExpiresAt:    0,
 		},
 	}
-	clientsMock.AuthInterface.On("Auths", mock.Anything).Return(mockAuths, nil)
-	clientsMock.AuthInterface.On("AuthWithTeamDomain", mock.Anything, "mock2").Return(mockAuths[1], nil)
+	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, nil)
+	clientsMock.Auth.On("AuthWithTeamDomain", mock.Anything, "mock2").Return(mockAuths[1], nil)
 	clientsMock.AddDefaultMocks()
 
 	// Mock the manifest validate package
@@ -205,7 +205,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 	// Should execute without error
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
-	clientsMock.AuthInterface.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	clientsMock.Auth.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestManifestValidateCommand_HandleOtherErrors(t *testing.T) {

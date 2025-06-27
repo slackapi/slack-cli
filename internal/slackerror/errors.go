@@ -42,6 +42,7 @@ const (
 	ErrAppExists                                     = "app_add_exists"
 	ErrAppFlagRequired                               = "app_flag_required"
 	ErrAppFound                                      = "app_found"
+	ErrAppHosted                                     = "app_hosted"
 	ErrAppInstall                                    = "app_install_error"
 	ErrAppManifestAccess                             = "app_manifest_access_error"
 	ErrAppManifestCreate                             = "app_manifest_create_error"
@@ -73,11 +74,11 @@ const (
 	ErrConnectorDenied                               = "connector_denied"
 	ErrConnectorNotInstalled                         = "connector_not_installed"
 	ErrChannelNotFound                               = "channel_not_found"
-	ErrCliAutoupdate                                 = "cli_autoupdate_error"
-	ErrCliConfigLocationError                        = "cli_config_location_error"
-	ErrCliConfigInvalid                              = "cli_config_invalid"
-	ErrCliReadError                                  = "cli_read_error"
-	ErrCliUpdateRequired                             = "cli_update_required" // Slack API error code
+	ErrCLIAutoUpdate                                 = "cli_autoupdate_error"
+	ErrCLIConfigLocationError                        = "cli_config_location_error"
+	ErrCLIConfigInvalid                              = "cli_config_invalid"
+	ErrCLIReadError                                  = "cli_read_error"
+	ErrCLIUpdateRequired                             = "cli_update_required" // Slack API error code
 	ErrCommentRequired                               = "comment_required"
 	ErrConnectedOrgDenied                            = "connected_org_denied"
 	ErrConnectedTeamDenied                           = "connected_team_denied"
@@ -103,6 +104,8 @@ const (
 	ErrFailedToGetUser                               = "failed_to_get_user"
 	ErrFailedToSaveExtensionLogs                     = "failed_to_save_extension_logs"
 	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
+	ErrFeedbackNameInvalid                           = "feedback_name_invalid"
+	ErrFeedbackNameRequired                          = "feedback_name_required"
 	ErrFileRejected                                  = "file_rejected"
 	ErrForbiddenTeam                                 = "forbidden_team"
 	ErrFreeTeamNotAllowed                            = "free_team_not_allowed"
@@ -112,10 +115,10 @@ const (
 	ErrGitClone                                      = "git_clone_error"
 	ErrGitZipDownload                                = "git_zip_download_error"
 	ErrHomeDirectoryAccessFailed                     = "home_directory_access_failed"
-	ErrHooksJsonLocation                             = "hooks_json_location_error"
+	ErrHooksJSONLocation                             = "hooks_json_location_error"
 	ErrHostAppsDisallowUserScopes                    = "hosted_apps_disallow_user_scopes"
-	ErrHttpRequestFailed                             = "http_request_failed"
-	ErrHttpResponseInvalid                           = "http_response_invalid"
+	ErrHTTPRequestFailed                             = "http_request_failed"
+	ErrHTTPResponseInvalid                           = "http_response_invalid"
 	ErrInsecureRequest                               = "insecure_request"
 	ErrInstallationDenied                            = "installation_denied"
 	ErrInstallationFailed                            = "installation_failed"
@@ -124,13 +127,13 @@ const (
 	ErrInvalidApp                                    = "invalid_app"
 	ErrInvalidAppDirectory                           = "invalid_app_directory"
 	ErrInvalidAppFlag                                = "invalid_app_flag"
-	ErrInvalidAppId                                  = "invalid_app_id"
+	ErrInvalidAppID                                  = "invalid_app_id"
 	ErrInvalidArgs                                   = "invalid_args"
 	ErrInvalidArgumentsCustomizableInputs            = "invalid_arguments_customizable_inputs"
 	ErrInvalidArguments                              = "invalid_arguments"
 	ErrInvalidAuth                                   = "invalid_auth"
 	ErrInvalidChallenge                              = "invalid_challenge"
-	ErrInvalidChannelId                              = "invalid_channel_id"
+	ErrInvalidChannelID                              = "invalid_channel_id"
 	ErrInvalidCursor                                 = "invalid_cursor"
 	ErrInvalidDistributionType                       = "invalid_distribution_type"
 	ErrInvalidFlag                                   = "invalid_flag"
@@ -140,8 +143,8 @@ const (
 	ErrInvalidParameters                             = "invalid_parameters"
 	ErrInvalidPermissionType                         = "invalid_permission_type"
 	ErrInvalidRefreshToken                           = "invalid_refresh_token"
-	ErrInvalidRequestId                              = "invalid_request_id"
-	ErrInvalidResourceId                             = "invalid_resource_id"
+	ErrInvalidRequestID                              = "invalid_request_id"
+	ErrInvalidResourceID                             = "invalid_resource_id"
 	ErrInvalidResourceType                           = "invalid_resource_type"
 	ErrInvalidS3Key                                  = "invalid_s3_key"
 	ErrInvalidScopes                                 = "invalid_scopes"
@@ -156,11 +159,11 @@ const (
 	ErrInvalidTriggerEventType                       = "invalid_trigger_event_type"
 	ErrInvalidTriggerInputs                          = "invalid_trigger_inputs"
 	ErrInvalidTriggerType                            = "invalid_trigger_type"
-	ErrInvalidUserId                                 = "invalid_user_id"
+	ErrInvalidUserID                                 = "invalid_user_id"
 	ErrInvalidWebhookConfig                          = "invalid_webhook_config"
 	ErrInvalidWebhookSchemaRef                       = "invalid_webhook_schema_ref"
-	ErrInvalidWorkflowAppId                          = "invalid_workflow_app_id"
-	ErrInvalidWorkflowId                             = "invalid_workflow_id"
+	ErrInvalidWorkflowAppID                          = "invalid_workflow_app_id"
+	ErrInvalidWorkflowID                             = "invalid_workflow_id"
 	ErrIsRestricted                                  = "is_restricted"
 	ErrLocalAppNotFound                              = "local_app_not_found"
 	ErrLocalAppNotSupported                          = "local_app_not_supported"
@@ -169,7 +172,7 @@ const (
 	ErrLocalAppRunCleanExit                          = "local_app_run_clean_exit"
 	ErrMethodNotSupported                            = "method_not_supported"
 	ErrMismatchedFlags                               = "mismatched_flags"
-	ErrMissingAppId                                  = "missing_app_id"
+	ErrMissingAppID                                  = "missing_app_id"
 	ErrMissingAppTeamID                              = "missing_app_team_id"
 	ErrMissingChallenge                              = "missing_challenge"
 	ErrMissingExperiment                             = "missing_experiment"
@@ -204,7 +207,7 @@ const (
 	ErrProviderNotFound                              = "provider_not_found"
 	ErrPrompt                                        = "prompt_error"
 	ErrPublishedAppOnly                              = "published_app_only"
-	ErrRequestIdOrAppIdIsRequired                    = "request_id_or_app_id_is_required"
+	ErrRequestIDOrAppIDIsRequired                    = "request_id_or_app_id_is_required"
 	ErrRatelimited                                   = "ratelimited"
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
@@ -216,8 +219,8 @@ const (
 	ErrServiceLimitsExceeded                         = "service_limits_exceeded"
 	ErrSharedChannelDenied                           = "shared_channel_denied"
 	ErrSlackAuth                                     = "slack_auth_error"
-	ErrSlackJsonLocation                             = "slack_json_location_error"
-	ErrSlackSlackJsonLocation                        = "slack_slack_json_location_error"
+	ErrSlackJSONLocation                             = "slack_json_location_error"
+	ErrSlackSlackJSONLocation                        = "slack_slack_json_location_error"
 	ErrSocketConnection                              = "socket_connection_error"
 	ErrScopesExceedAppConfig                         = "scopes_exceed_app_config"
 	ErrStreamingActivityLogs                         = "streaming_activity_logs_error"
@@ -245,19 +248,19 @@ const (
 	ErrTriggerUpdate                                 = "trigger_update_error"
 	ErrUnableToDelete                                = "unable_to_delete"
 	ErrUnableToOpenFile                              = "unable_to_open_file"
-	ErrUnableToParseJson                             = "unable_to_parse_json"
+	ErrUnableToParseJSON                             = "unable_to_parse_json"
 	ErrUninstallHalted                               = "uninstall_halted"
 	ErrUnknownFileType                               = "unknown_file_type"
-	ErrUnknownFunctionId                             = "unknown_function_id"
+	ErrUnknownFunctionID                             = "unknown_function_id"
 	ErrUnknownMethod                                 = "unknown_method"
 	ErrUnknownWebhookSchemaRef                       = "unknown_webhook_schema_ref"
-	ErrUnknownWorkflowId                             = "unknown_workflow_id"
+	ErrUnknownWorkflowID                             = "unknown_workflow_id"
 	ErrUntrustedSource                               = "untrusted_source"
 	ErrUnsupportedFileName                           = "unsupported_file_name"
 	ErrUserAlreadyOwner                              = "user_already_owner"
 	ErrUserAlreadyRequested                          = "user_already_requested"
 	ErrUserCannotManageApp                           = "user_cannot_manage_app"
-	ErrUserIdIsRequired                              = "user_id_is_required"
+	ErrUserIDIsRequired                              = "user_id_is_required"
 	ErrUserNotFound                                  = "user_not_found"
 	ErrUserRemovedFromTeam                           = "user_removed_from_team"
 	ErrWorkflowNotFound                              = "workflow_not_found"
@@ -377,6 +380,11 @@ Otherwise start your app for local development with: %s`,
 	ErrAppFound: {
 		Code:    ErrAppFound,
 		Message: "An app was found",
+	},
+
+	ErrAppHosted: {
+		Code:    ErrAppHosted,
+		Message: "App is configured for Run on Slack infrastructure",
 	},
 
 	ErrAppInstall: {
@@ -550,14 +558,14 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "Try adding your app as a member to the channel.",
 	},
 
-	ErrCliAutoupdate: {
-		Code:        ErrCliAutoupdate,
+	ErrCLIAutoUpdate: {
+		Code:        ErrCLIAutoUpdate,
 		Message:     "Couldn't auto-update this command-line tool",
 		Remediation: "You can manually install the latest version from:\nhttps://tools.slack.dev/slack-cli",
 	},
 
-	ErrCliConfigLocationError: {
-		Code:    ErrCliConfigLocationError,
+	ErrCLIConfigLocationError: {
+		Code:    ErrCLIConfigLocationError,
 		Message: fmt.Sprintf("The %s configuration file is not supported", filepath.Join(".slack", "cli.json")),
 		Remediation: strings.Join([]string{
 			"This version of the CLI no longer supports this configuration file.",
@@ -565,20 +573,20 @@ Otherwise start your app for local development with: %s`,
 		}, "\n"),
 	},
 
-	ErrCliReadError: {
-		Code:        ErrCliReadError,
+	ErrCLIReadError: {
+		Code:        ErrCLIReadError,
 		Message:     "There was an error reading configuration",
 		Remediation: "Check your config.json file.",
 	},
 
-	ErrCliConfigInvalid: {
-		Code:        ErrCliConfigInvalid,
+	ErrCLIConfigInvalid: {
+		Code:        ErrCLIConfigInvalid,
 		Message:     "Configuration invalid",
 		Remediation: "Check your config.json file.",
 	},
 
-	ErrCliUpdateRequired: {
-		Code:        ErrCliUpdateRequired,
+	ErrCLIUpdateRequired: {
+		Code:        ErrCLIUpdateRequired,
 		Message:     "Slack API requires the latest version of the Slack CLI",
 		Remediation: fmt.Sprintf("You can upgrade to the latest version of the Slack CLI using the command: %s", style.Commandf("upgrade", false)),
 	},
@@ -711,6 +719,21 @@ Otherwise start your app for local development with: %s`,
 		Message: "Failed to get teams for restricted user",
 	},
 
+	ErrFeedbackNameInvalid: {
+		Code:        ErrFeedbackNameInvalid,
+		Message:     "The name of the feedback is invalid",
+		Remediation: fmt.Sprintf("View the feedback options with %s", style.Commandf("feedback --help", false)),
+	},
+
+	ErrFeedbackNameRequired: {
+		Code:    ErrFeedbackNameRequired,
+		Message: "The name of the feedback is required",
+		Remediation: strings.Join([]string{
+			"Please provide a `--name <string>` flag or remove the `--no-prompt` flag",
+			fmt.Sprintf("View feedback options with %s", style.Commandf("feedback --help", false)),
+		}, "\n"),
+	},
+
 	ErrFileRejected: {
 		Code:    ErrFileRejected,
 		Message: "Not an acceptable S3 file",
@@ -759,8 +782,8 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "A Slack directory is required for retrieving/storing auth credentials and config data. Check permissions on your system.",
 	},
 
-	ErrHooksJsonLocation: {
-		Code:        ErrHooksJsonLocation,
+	ErrHooksJSONLocation: {
+		Code:        ErrHooksJSONLocation,
 		Message:     "Missing the Slack hooks file from project configurations",
 		Remediation: fmt.Sprintf("A `%s` file must be present in the project's `.slack` directory.", filepath.Join(".slack", "hooks.json")),
 	},
@@ -770,13 +793,13 @@ Otherwise start your app for local development with: %s`,
 		Message: "Hosted apps do not support user scopes",
 	},
 
-	ErrHttpRequestFailed: {
-		Code:    ErrHttpRequestFailed,
+	ErrHTTPRequestFailed: {
+		Code:    ErrHTTPRequestFailed,
 		Message: "HTTP request failed",
 	},
 
-	ErrHttpResponseInvalid: {
-		Code:    ErrHttpResponseInvalid,
+	ErrHTTPResponseInvalid: {
+		Code:    ErrHTTPResponseInvalid,
 		Message: "Received an invalid response from the server",
 	},
 
@@ -829,8 +852,8 @@ Otherwise start your app for local development with: %s`,
 		Remediation: fmt.Sprintf("Specify the environment with %s or %s\nOr choose a specific app with %s", style.Highlight("--app local"), style.Highlight("--app deployed"), style.Highlight("--app <app_id>")),
 	},
 
-	ErrInvalidAppId: {
-		Code:        ErrInvalidAppId,
+	ErrInvalidAppID: {
+		Code:        ErrInvalidAppID,
 		Message:     "App ID may be invalid for this user account and workspace",
 		Remediation: "Check to make sure you are signed into the correct workspace for this app and you have the required permissions to perform this action.",
 	},
@@ -865,8 +888,8 @@ Otherwise start your app for local development with: %s`,
 		Remediation: fmt.Sprintf("The previous slash command and challenge code have now expired. To retry, use %s, paste the slash command in any Slack channel, and enter the challenge code displayed by Slack. It is easiest to copy & paste the challenge code.", style.Commandf("login", false)),
 	},
 
-	ErrInvalidChannelId: {
-		Code:        ErrInvalidChannelId,
+	ErrInvalidChannelID: {
+		Code:        ErrInvalidChannelID,
 		Message:     "Channel ID specified doesn't exist or you do not have permissions to access it",
 		Remediation: "Channel ID appears to be formatted correctly. Check if this channel exists on the current team and that you have permissions to access it.",
 	},
@@ -920,13 +943,13 @@ Otherwise start your app for local development with: %s`,
 		Message: "The given refresh token is invalid",
 	},
 
-	ErrInvalidRequestId: {
-		Code:    ErrInvalidRequestId,
+	ErrInvalidRequestID: {
+		Code:    ErrInvalidRequestID,
 		Message: "The request_id passed is invalid",
 	},
 
-	ErrInvalidResourceId: {
-		Code:    ErrInvalidResourceId,
+	ErrInvalidResourceID: {
+		Code:    ErrInvalidResourceID,
 		Message: "The resource_id for the given resource_type is invalid",
 	},
 
@@ -1006,8 +1029,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "The provided trigger type is not recognized",
 	},
 
-	ErrInvalidUserId: {
-		Code:    ErrInvalidUserId,
+	ErrInvalidUserID: {
+		Code:    ErrInvalidUserID,
 		Message: "A value passed as a user_id is invalid",
 	},
 
@@ -1021,13 +1044,13 @@ Otherwise start your app for local development with: %s`,
 		Message: "Unable to parse the schema ref",
 	},
 
-	ErrInvalidWorkflowAppId: {
-		Code:    ErrInvalidWorkflowAppId,
+	ErrInvalidWorkflowAppID: {
+		Code:    ErrInvalidWorkflowAppID,
 		Message: "A value passed as workflow_app_id is invalid or missing",
 	},
 
-	ErrInvalidWorkflowId: {
-		Code:    ErrInvalidWorkflowId,
+	ErrInvalidWorkflowID: {
+		Code:    ErrInvalidWorkflowID,
 		Message: "A value passed as a workflow ID is invalid",
 	},
 
@@ -1066,8 +1089,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "The provided flags cannot be used together",
 	},
 
-	ErrMissingAppId: {
-		Code:    ErrMissingAppId,
+	ErrMissingAppID: {
+		Code:    ErrMissingAppID,
 		Message: "workflow_app_id is required to update via workflow reference",
 	},
 
@@ -1253,8 +1276,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "This action is only permitted for published app IDs",
 	},
 
-	ErrRequestIdOrAppIdIsRequired: {
-		Code:    ErrRequestIdOrAppIdIsRequired,
+	ErrRequestIDOrAppIDIsRequired: {
+		Code:    ErrRequestIDOrAppIDIsRequired,
 		Message: "Must include a request_id or app_id",
 	},
 
@@ -1329,8 +1352,8 @@ Otherwise start your app for local development with: %s`,
 		Remediation: fmt.Sprintf("Use the command %s to login and %s to install your app", style.Commandf("login", false), style.Commandf("install", false)),
 	},
 
-	ErrSlackJsonLocation: {
-		Code:    ErrSlackJsonLocation,
+	ErrSlackJSONLocation: {
+		Code:    ErrSlackJSONLocation,
 		Message: "The slack.json configuration file is deprecated",
 		Remediation: strings.Join([]string{
 			"Next major version of the CLI will no longer support this configuration file.",
@@ -1338,8 +1361,8 @@ Otherwise start your app for local development with: %s`,
 		}, "\n"),
 	},
 
-	ErrSlackSlackJsonLocation: {
-		Code:    ErrSlackSlackJsonLocation,
+	ErrSlackSlackJSONLocation: {
+		Code:    ErrSlackSlackJSONLocation,
 		Message: fmt.Sprintf("The %s configuration file is deprecated", filepath.Join(".slack", "slack.json")),
 		Remediation: strings.Join([]string{
 			"Next major version of the CLI will no longer support this configuration file.",
@@ -1486,8 +1509,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "Error with file upload",
 	},
 
-	ErrUnableToParseJson: {
-		Code:    ErrUnableToParseJson,
+	ErrUnableToParseJSON: {
+		Code:    ErrUnableToParseJSON,
 		Message: "`<json>` Couldn't be parsed as a json object",
 	},
 
@@ -1501,8 +1524,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "Unknown file type, must be application/zip",
 	},
 
-	ErrUnknownFunctionId: {
-		Code:    ErrUnknownFunctionId,
+	ErrUnknownFunctionID: {
+		Code:    ErrUnknownFunctionID,
 		Message: "The provided function_id was not found",
 	},
 
@@ -1522,13 +1545,13 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "Use --force flag or set trust_unknown_sources: true in config.json file to disable warning",
 	},
 
-	ErrUnknownWorkflowId: {
-		Code:    ErrUnknownWorkflowId,
+	ErrUnknownWorkflowID: {
+		Code:    ErrUnknownWorkflowID,
 		Message: "The provided workflow_id was not found for this app",
 	},
 
-	ErrUserIdIsRequired: {
-		Code:    ErrUserIdIsRequired,
+	ErrUserIDIsRequired: {
+		Code:    ErrUserIDIsRequired,
 		Message: "Must include a user_id to cancel request for an app with app_id",
 	},
 

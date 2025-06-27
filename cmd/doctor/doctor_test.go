@@ -28,7 +28,9 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/test/slackmock"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -53,18 +55,20 @@ func TestDoctorCommand(t *testing.T) {
 	t.Run("creates a complete report", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
-		clientsMock.AuthInterface.On("Auths", mock.Anything).Return([]types.SlackAuth{expectedCredentials}, nil)
-		clientsMock.AuthInterface.On("ResolveApiHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
-		clientsMock.ApiInterface.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
+		clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{expectedCredentials}, nil)
+		clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api.slack.com")
+		clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 		clientsMock.AddDefaultMocks()
-		pcm := &config.ProjectConfigMock{}
-		pcm.On("ReadProjectConfigFile", mock.Anything).Return(config.ProjectConfig{
+
+		slackmock.CreateProject(t, ctx, clientsMock.Fs, clientsMock.Os, slackdeps.MockWorkingDirectory)
+		_, err := config.WriteProjectConfigFile(ctx, clientsMock.Fs, clientsMock.Os, config.ProjectConfig{
 			ProjectID: expectedProjectID,
 			Manifest: &config.ManifestConfig{
-				Source: config.MANIFEST_SOURCE_LOCAL.String(),
+				Source: config.ManifestSourceLocal.String(),
 			},
-		}, nil)
-		clientsMock.Config.ProjectConfig = pcm
+		})
+		require.NoError(t, err)
+
 		scm := &config.SystemConfigMock{}
 		scm.On("GetSurveyConfig", mock.Anything, mock.Anything).Return(config.SurveyConfig{}, nil)
 		scm.On("SetSurveyConfig", mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -88,7 +92,7 @@ func TestDoctorCommand(t *testing.T) {
 
 		cmd := NewDoctorCommand(clients)
 		testutil.MockCmdIO(clients.IO, cmd)
-		err := cmd.ExecuteContext(ctx)
+		err = cmd.ExecuteContext(ctx)
 		require.NoError(t, err)
 
 		report, err := performChecks(ctx, clients)

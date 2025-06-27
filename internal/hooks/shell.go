@@ -40,7 +40,7 @@ type ShellCommand interface {
 type ShellExec struct{}
 
 // command sets arguments for the shell supported by the current operating system
-func (_ ShellExec) command(name string, arg ...string) *exec.Cmd {
+func (ShellExec) command(name string, arg ...string) *exec.Cmd {
 	script := fmt.Sprintf("%s %s", name, strings.Join(arg, " "))
 	switch {
 	case runtime.GOOS == "windows":

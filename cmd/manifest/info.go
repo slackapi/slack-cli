@@ -39,8 +39,8 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 		Use:   "info",
 		Short: "Print the app manifest of a project or app",
 		Long: strings.Join([]string{
-			fmt.Sprintf("Get the manifest of an app using either the \"%s\" values on app settings", config.MANIFEST_SOURCE_REMOTE.String()),
-			fmt.Sprintf("or from the \"%s\" configurations.", config.MANIFEST_SOURCE_LOCAL.String()),
+			fmt.Sprintf("Get the manifest of an app using either the \"%s\" values on app settings", config.ManifestSourceRemote.String()),
+			fmt.Sprintf("or from the \"%s\" configurations.", config.ManifestSourceLocal.String()),
 			"",
 			"The manifest on app settings represents the latest version of the manifest.",
 			"",
@@ -73,11 +73,11 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(
 		&manifestFlags.source,
 		manifestFlagSource,
-		config.MANIFEST_SOURCE_LOCAL.String(),
+		"",
 		fmt.Sprintf(
 			"source of the app manifest (\"%s\" or \"%s\")",
-			config.MANIFEST_SOURCE_LOCAL.String(),
-			config.MANIFEST_SOURCE_REMOTE.String(),
+			config.ManifestSourceLocal.String(),
+			config.ManifestSourceRemote.String(),
 		),
 	)
 	return cmd
@@ -105,9 +105,9 @@ func getManifestInfo(ctx context.Context, clients *shared.ClientFactory, cmd *co
 		return types.AppManifest{}, err
 	}
 	switch {
-	case source.Equals(config.MANIFEST_SOURCE_LOCAL):
+	case source.Equals(config.ManifestSourceLocal):
 		return getManifestInfoProject(ctx, clients)
-	case source.Equals(config.MANIFEST_SOURCE_REMOTE):
+	case source.Equals(config.ManifestSourceRemote):
 		return getManifestInfoRemote(ctx, clients)
 	default:
 		return types.AppManifest{}, slackerror.New(slackerror.ErrInvalidManifestSource)

@@ -33,7 +33,7 @@ commands:
       - run:
           name: Output BUILD_VERSION env var based on recent git tag and type of build
           command: |
-            BUILD_VERSION=$(git describe --tags --match 'v*.*.*' --exclude '*feature');
+            BUILD_VERSION=$(git describe --tags --match 'v*.*.*');
             echo "git tag-based BUILD_VERSION: $BUILD_VERSION"
             if [[ "<< parameters.release_ref >>" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
               # if release tag starts with semver, then this is either a prod or feature build. use the release tag, then, as build version too.
@@ -64,6 +64,10 @@ commands:
           name: Generate dev and prod archives
           command: |
             ./scripts/archive.sh << parameters.artifact_dir >> $BUILD_VERSION
+      - run:
+          name: Check expected artifacts exist
+          command: |
+            ./scripts/archive-test.sh << parameters.artifact_dir >> $BUILD_VERSION
   retrieve-oidc-secrets:
     description: "Retrieves secrets from Slack"
     parameters:
@@ -109,7 +113,7 @@ jobs:
         default: "dev-build"
     docker: # run the steps with Docker
       # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
-      - image: cimg/go:1.24.2
+      - image: cimg/go:1.24.4
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
       - restore_cache: # restores saved cache if no changes are detected since last run
@@ -276,7 +280,7 @@ jobs:
       - run:
           name: Delete non-signed archive
           command: |
-            rm << parameters.artifact_dir >>/slack_*_macOS_64-bit.tar.gz
+            rm << parameters.artifact_dir >>/slack_*_macOS_*.tar.gz
       - generate-archives:
           artifact_dir: << parameters.artifact_dir >>
       - run:
@@ -466,12 +470,10 @@ jobs:
             export JOB_PARAMS=$(
                 jq -n \
                     --arg j S3_UPLOAD \
-                    --arg ct "$CIRCLE_TAG" \
-                    --arg cs "$CIRCLE_SHA1" \
                     --arg ad << parameters.artifact_dir >> \
                     --arg p << parameters.s3-target-path >> \
                     --arg fn << parameters.file-name >> \
-                    '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, CIRCLE_TAG: $ct, CIRCLE_SHA1: $cs, S3_TARGET_PATH: $p, FILE_NAME: $fn}'
+                    '{JOB_NAME: $j, ARTIFACTS_DIR: $ad, S3_TARGET_PATH: $p, FILE_NAME: $fn}'
             )
             if [ -n "${CIRCLE_TAG}" ]; then export GIT_REF=$CIRCLE_TAG; else export GIT_REF=$CIRCLE_BRANCH; fi
             sudo /Library/circleci/runner-entrypoint.sh $GIT_REF "$JOB_PARAMS"
@@ -609,7 +611,7 @@ workflows:
           <<: *filters-tag-triggered-workflow-job
           name: upload-to-s3-for-install-macOS-feature-build
           s3-target-path: slack-cli
-          file-name: "slack_cli_*feature_macOS_64-bit.tar.gz"
+          file-name: "slack_cli_*feature_macOS_*.tar.gz"
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
@@ -657,7 +659,7 @@ workflows:
           <<: *filters-tag-triggered-workflow-job
           name: upload-to-s3-for-autoupdate-macos
           s3-target-path: slack-cli
-          file-name: "slack_cli_*_macOS_64-bit.zip"
+          file-name: "slack_cli_*_macOS_*.zip"
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
@@ -682,14 +684,6 @@ workflows:
           name: upload-to-s3-for-autoupdate-targz
           s3-target-path: cli
           file-name: "slack_cli_[0-9]*.tar.gz"
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-release
-      - s3-upload:
-          <<: *filters-tag-triggered-workflow-job
-          name: upload-to-s3-for-hermes
-          s3-target-path: cli
-          file-name: "hermes_*"
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release

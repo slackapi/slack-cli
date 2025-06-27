@@ -23,20 +23,20 @@ import (
 func Test_Protocol_String(t *testing.T) {
 	var p Protocol
 
-	p = HOOK_PROTOCOL_DEFAULT
-	require.Equal(t, string(HOOK_PROTOCOL_DEFAULT), p.String())
+	p = HookProtocolDefault
+	require.Equal(t, string(HookProtocolDefault), p.String())
 
-	p = HOOK_PROTOCOL_V2
-	require.Equal(t, string(HOOK_PROTOCOL_V2), p.String())
+	p = HookProtocolV2
+	require.Equal(t, string(HookProtocolV2), p.String())
 }
 
 func Test_Protocol_Valid(t *testing.T) {
 	var p Protocol
 
-	p = HOOK_PROTOCOL_DEFAULT
+	p = HookProtocolDefault
 	require.True(t, p.Valid())
 
-	p = HOOK_PROTOCOL_V2
+	p = HookProtocolV2
 	require.True(t, p.Valid())
 
 	p = "invalid_protocol"

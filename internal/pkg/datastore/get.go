@@ -31,7 +31,7 @@ func Get(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	// Get auth token
 	var token = config.GetContextToken(ctx)
 
-	getResult, err := clients.ApiInterface().AppsDatastoreGet(ctx, token, request)
+	getResult, err := clients.API().AppsDatastoreGet(ctx, token, request)
 	if err != nil {
 		return nil, err
 	}

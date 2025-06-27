@@ -41,11 +41,23 @@ builds:
       - darwin
     goarch:
       - amd64
+      - arm64
     hooks:
       post: |-
         sh -c '
-        zip ./dist/slack_cli_{{.Env.BUILD_VERSION}}_macOS_64-bit.zip ./dist/slack-macos_darwin_amd64_v1/bin/slack -j
+        zip ./dist/slack_cli_{{ .Env.BUILD_VERSION }}_macOS_{{ .Arch }}.zip ./dist/slack-macos_{{ .Target }}/bin/slack -j
         '
+
+universal_binaries:
+  - id: slack-macos
+    name_template: bin/slack
+    replace: false
+    hooks:
+      post: |-
+        sh -c '
+        zip ./dist/slack_cli_{{.Env.BUILD_VERSION}}_macOS_64-bit.zip ./dist/slack-macos_darwin_all/bin/slack -j
+        '
+
 archives:
   - id: slack
     ids:
@@ -60,11 +72,11 @@ archives:
     name_template: >-
       {{- .ProjectName }}_
       {{- .Env.BUILD_VERSION }}_
-      {{- if eq .Os "darwin" }}macOS
-      {{- else }}{{ .Os }}{{ end }}_
-      {{- if eq .Arch "amd64" }}64-bit
-      {{- else if eq .Arch "386" }}32-bit
-      {{- else }}{{ .Arch }}{{ end }}
+      {{- if eq .Os "darwin" -}}
+        macOS_{{ if eq .Arch "all" }}64-bit{{ else }}{{ .Arch }}{{ end }}
+      {{- else -}}
+        {{ .Os }}_{{ if eq .Arch "amd64" }}64-bit{{ else }}{{ .Arch }}{{ end }}
+      {{- end }}
 
 snapshot:
   version_template: "{{ .Env.BUILD_VERSION }}"

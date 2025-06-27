@@ -1,8 +1,8 @@
-## slack auth
+# `slack auth`
 
 Add and remove local team authorizations
 
-### Synopsis
+## Synopsis
 
 Add and remove local team authorizations
 
@@ -10,7 +10,7 @@ Add and remove local team authorizations
 slack auth <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 $ slack auth list    # List all authorized accounts
@@ -18,13 +18,13 @@ $ slack auth login   # Log in to a Slack account
 $ slack auth logout  # Log out of a team
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for auth
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -38,7 +38,7 @@ $ slack auth logout  # Log out of a team
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack auth list](slack_auth_list)	 - List all authorized accounts

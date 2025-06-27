@@ -15,15 +15,56 @@
 package deputil
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func Test_urlChecker(t *testing.T) {
-	url := UrlChecker("https://github.com/slack-samples/deno-starter-template")
-	assert.Equal(t, "https://github.com/slack-samples/deno-starter-template", url, "should return url when url is valid")
+func Test_URLChecker(t *testing.T) {
+	tests := map[string]struct {
+		url                 string
+		expectedURL         string
+		setupHTTPClientMock func(*slackhttp.HTTPClientMock)
+	}{
+		"Returns the URL when the HTTP status code is http.StatusOK": {
+			url:         "https://github.com/slack-samples/deno-starter-template",
+			expectedURL: "https://github.com/slack-samples/deno-starter-template",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				resOK := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
+				httpClientMock.On("Get", mock.Anything).Return(resOK, nil)
+			},
+		},
+		"Returns an empty string when the HTTP status code is not 200": {
+			url:         "https://github.com/slack-samples/template-not-found",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				resNotFound := slackhttp.MockHTTPResponse(http.StatusNotFound, "Not Found")
+				httpClientMock.On("Get", mock.Anything).Return(resNotFound, nil)
+			},
+		},
+		"Returns an empty string when the HTTPClient has an error": {
+			url:         "invalid_url",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				httpClientMock.On("Get", mock.Anything).Return(nil, fmt.Errorf("HTTPClient error"))
+			},
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Create mocks
+			httpClientMock := &slackhttp.HTTPClientMock{}
+			tt.setupHTTPClientMock(httpClientMock)
 
-	url = UrlChecker("fake_url")
-	assert.Equal(t, "", url, "should return empty string when url is invalid")
+			// Execute
+			url := URLChecker(httpClientMock, tt.url)
+
+			// Assertions
+			assert.Equal(t, tt.expectedURL, url)
+		})
+	}
 }

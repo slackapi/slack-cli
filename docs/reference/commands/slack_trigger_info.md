@@ -1,8 +1,8 @@
-## slack trigger info
+# `slack trigger info`
 
 Get details for a specific trigger
 
-### Synopsis
+## Synopsis
 
 Get details for a specific trigger
 
@@ -10,7 +10,7 @@ Get details for a specific trigger
 slack trigger info --trigger-id <id> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Get details for a specific trigger in a selected workspace
@@ -20,14 +20,14 @@ $ slack trigger info --trigger-id Ft01234ABCD
 $ slack trigger info --trigger-id Ft01234ABCD --app A0123456
 ```
 
-### Options
+## Options
 
 ```
   -h, --help                help for info
       --trigger-id string   the ID of the trigger
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -41,7 +41,7 @@ $ slack trigger info --trigger-id Ft01234ABCD --app A0123456
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack trigger](slack_trigger)	 - List details of existing triggers
 

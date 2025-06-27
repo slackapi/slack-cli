@@ -43,19 +43,19 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 	authorizationInfo := types.ExternalAuthorizationInfo{
 		ProviderName:       "Google",
 		ProviderKey:        "provider_a",
-		ClientId:           "xxxxx",
+		ClientID:           "xxxxx",
 		ClientSecretExists: true,
 		ValidTokenExists:   true,
-		ExternalTokenIds:   []string{"Et0548LYDWCT"},
+		ExternalTokenIDs:   []string{"Et0548LYDWCT"},
 		ExternalTokens: []types.ExternalTokenInfo{
 			{
-				ExternalTokenId: "Et0548LABCD1",
-				ExternalUserId:  "xyz@salesforce.com",
+				ExternalTokenID: "Et0548LABCD1",
+				ExternalUserID:  "xyz@salesforce.com",
 				DateUpdated:     1682021142,
 			},
 			{
-				ExternalTokenId: "Et0548LABCDE2",
-				ExternalUserId:  "xyz2@salesforce.com",
+				ExternalTokenID: "Et0548LABCDE2",
+				ExternalUserID:  "xyz2@salesforce.com",
 				DateUpdated:     1682021192,
 			},
 		},
@@ -98,8 +98,8 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 		selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)
 		require.NoError(t, err)
 		require.Equal(t, selectedToken, types.ExternalTokenInfo{
-			ExternalTokenId: "Et0548LABCDE2",
-			ExternalUserId:  "xyz2@salesforce.com",
+			ExternalTokenID: "Et0548LABCDE2",
+			ExternalUserID:  "xyz2@salesforce.com",
 			DateUpdated:     1682021192,
 		})
 		clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an external account", mock.Anything, mock.Anything)

@@ -52,9 +52,10 @@ func ExtractFirstJSONFromString(s string) string {
 
 	var stack = []rune{}
 	for i := start; i < len(s); i++ {
-		if s[i] == '{' {
+		switch s[i] {
+		case '{':
 			stack = append(stack, rune(s[i]))
-		} else if s[i] == '}' {
+		case '}':
 			stack = stack[:len(stack)-1] // pop last item
 			end = i                      // we found a potential ending bracket
 		}
@@ -160,8 +161,8 @@ func UpperCaseTrimAll(namedEntities string) string {
 	return strings.ReplaceAll(strings.ToUpper(namedEntities), " ", "")
 }
 
-// ToHttps returns url with https protocol
-func ToHttps(urlAddr string) string {
+// ToHTTPS returns url with https protocol
+func ToHTTPS(urlAddr string) string {
 	u, err := url.Parse(urlAddr)
 	if err != nil {
 		return urlAddr

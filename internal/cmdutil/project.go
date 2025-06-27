@@ -30,7 +30,7 @@ func IsSlackHostedProject(ctx context.Context, clients *shared.ClientFactory) er
 		return err
 	}
 	switch {
-	case manifestSource.Equals(config.MANIFEST_SOURCE_LOCAL):
+	case manifestSource.Equals(config.ManifestSourceLocal):
 		manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
@@ -38,12 +38,12 @@ func IsSlackHostedProject(ctx context.Context, clients *shared.ClientFactory) er
 		if !manifest.IsFunctionRuntimeSlackHosted() {
 			return slackerror.New(slackerror.ErrAppNotHosted)
 		}
-	case manifestSource.Equals(config.MANIFEST_SOURCE_REMOTE):
+	case manifestSource.Equals(config.ManifestSourceRemote):
 		return slackerror.New(slackerror.ErrAppNotHosted).
 			WithDetails(slackerror.ErrorDetails{
 				{
 					Code:        slackerror.ErrInvalidManifestSource,
-					Message:     fmt.Sprintf("Slack hosted projects use \"%s\" manifest source", config.MANIFEST_SOURCE_LOCAL),
+					Message:     fmt.Sprintf("Slack hosted projects use \"%s\" manifest source", config.ManifestSourceLocal),
 					Remediation: fmt.Sprintf("This value can be changed in configuration: \"%s\"", config.GetProjectConfigJSONFilePath("")),
 				},
 			})
@@ -53,7 +53,7 @@ func IsSlackHostedProject(ctx context.Context, clients *shared.ClientFactory) er
 
 // IsValidProjectDirectory verifies that a command is run in a valid project directory and returns nil, otherwise returns an error
 func IsValidProjectDirectory(clients *shared.ClientFactory) error {
-	if err, _ := clients.SDKConfig.Exists(); err != nil {
+	if _, err := clients.SDKConfig.Exists(); err != nil {
 		return slackerror.New(slackerror.ErrInvalidAppDirectory)
 	}
 	return nil

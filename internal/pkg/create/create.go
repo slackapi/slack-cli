@@ -39,6 +39,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
@@ -139,8 +140,8 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	}
 
 	// Install project dependencies to add CLI support and cache dev dependencies.
-	// CLI created projects always default to config.MANIFEST_SOURCE_LOCAL.
-	InstallProjectDependencies(ctx, clients, projectDirPath, config.MANIFEST_SOURCE_LOCAL)
+	// CLI created projects always default to config.ManifestSourceLocal.
+	InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
 	clients.IO.PrintTrace(ctx, slacktrace.CreateDependenciesSuccess)
 
 	// Notify listeners that app directory is created
@@ -169,7 +170,7 @@ func getAppDirName(appName string) (string, error) {
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {
-		return "", fmt.Errorf("The app name you entered is reserved. Please try a different name.")
+		return "", fmt.Errorf("the app name you entered is reserved")
 	}
 	return appName, nil
 }
@@ -225,11 +226,12 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
-			zipFileUrl := generateGitZipFileUrl(template.path, gitBranch)
-			if zipFileUrl == "" {
+			httpClient := slackhttp.NewHTTPClient(slackhttp.HTTPClientOptions{})
+			zipFileURL := generateGitZipFileURL(httpClient, template.path, gitBranch)
+			if zipFileURL == "" {
 				return slackerror.New(slackerror.ErrGitZipDownload)
 			}
-			resp, err := http.Get(zipFileUrl)
+			resp, err := http.Get(zipFileURL)
 			if err != nil {
 				return slackerror.New(slackerror.ErrGitZipDownload)
 			}
@@ -343,7 +345,7 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 
 // InstallProjectDependencies installs the project runtime dependencies or
 // continues with next steps if that fails. You can specify the manifestSource
-// for the project configuration file (default: MANIFEST_SOURCE_LOCAL)
+// for the project configuration file (default: ManifestSourceLocal)
 func InstallProjectDependencies(
 	ctx context.Context,
 	clients *shared.ClientFactory,
@@ -457,16 +459,28 @@ func InstallProjectDependencies(
 		}
 	}
 
-	// Set "manifest.source" in .slack/config.json
+	// Default manifest source to ManifestSourceLocal
 	if !manifestSource.Exists() {
-		manifestSource = config.MANIFEST_SOURCE_LOCAL
+		manifestSource = config.ManifestSourceLocal
 	}
 
-	if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
+	// When the BoltInstall experiment is enabled, set non-ROSI projects to ManifestSourceRemote.
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
+		if clients.Runtime != nil {
+			isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
+			if !isDenoProject {
+				manifestSource = config.ManifestSourceRemote
+			}
+		}
+	}
+
+	// Set "manifest.source" in .slack/config.json
+	if err := config.SetManifestSource(ctx, clients.Fs, clients.Os, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
 		configJSONFilename := config.ProjectConfigJSONFilename
-		manifestSourceStyled := style.Highlight(manifestSource.String())
+		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
 			"Updated %s manifest source to %s",
@@ -510,23 +524,22 @@ func InstallProjectDependencies(
 	return outputs
 }
 
-// generateGitZipFileUrl will return template's GitHub zip file download link
-// In the future, this function can be extended to support other Git hosts, such as GitLab.
-// TODO, @cchensh, we should get prepared for other non-Git hosts and refactor the create pkg
-func generateGitZipFileUrl(templateURL string, gitBranch string) string {
-	zipUrl := strings.Replace(templateURL, ".git", "", -1) + "/archive/refs/heads/"
+// generateGitZipFileURL will return the GitHub zip URL for a templateURL.
+func generateGitZipFileURL(httpClient slackhttp.HTTPClient, templateURL string, gitBranch string) string {
+	zipURL := strings.TrimSuffix(templateURL, ".git") + "/archive/refs/heads/"
 
 	if gitBranch == "" {
-		mainUrl := zipUrl + "main.zip"
-		masterUrl := zipUrl + "master.zip"
-		zipUrl = deputil.UrlChecker(mainUrl)
-		if zipUrl == "" {
-			zipUrl = deputil.UrlChecker(masterUrl)
+		mainURL := zipURL + "main.zip"
+		masterURL := zipURL + "master.zip"
+
+		zipURL = deputil.URLChecker(httpClient, mainURL)
+		if zipURL == "" {
+			zipURL = deputil.URLChecker(httpClient, masterURL)
 		}
 	} else {
-		zipUrl = zipUrl + gitBranch + ".zip"
+		zipURL = zipURL + gitBranch + ".zip"
 	}
-	return zipUrl
+	return zipURL
 }
 
 func createGitArgs(templatePath string, dirPath string, gitBranch string) []string {

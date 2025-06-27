@@ -110,7 +110,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 	token := config.GetContextToken(ctx)
 
 	// Get app owners & collaborators
-	collaborators, err := clients.ApiInterface().ListCollaborators(ctx, token, app.AppID)
+	collaborators, err := clients.API().ListCollaborators(ctx, token, app.AppID)
 	if err != nil {
 		return []string{}, err
 	}
@@ -119,7 +119,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 			style.Indent(style.Secondary("Collaborators:")),
 		))
 		for _, collaborator := range collaborators {
-			userInfo, err := clients.ApiInterface().UsersInfo(ctx, token, collaborator.ID)
+			userInfo, err := clients.API().UsersInfo(ctx, token, collaborator.ID)
 			if err != nil {
 				return []string{}, err
 			}
@@ -130,30 +130,31 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 		}
 	}
 	// Get trigger's ACL type
-	accessType, entitiesAccessList, err := clients.ApiInterface().TriggerPermissionsList(ctx, token, t.ID)
+	accessType, entitiesAccessList, err := clients.API().TriggerPermissionsList(ctx, token, t.ID)
 	if err != nil {
 		return []string{}, err
 	}
 	// Get trigger's ACL entities details
 	if singleTriggerInfo {
-		if accessType != types.EVERYONE && len(entitiesAccessList) <= 0 {
+		if accessType != types.PermissionEveryone && len(entitiesAccessList) <= 0 {
 			triggerText = append(triggerText, fmt.Sprintf(
 				style.Indent(style.Secondary("  %s")),
 				"nobody",
 			))
 		} else {
-			if accessType == types.EVERYONE {
+			switch accessType {
+			case types.PermissionEveryone:
 				var everyoneAccessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 				triggerText = append(triggerText, fmt.Sprintf(
 					style.Indent(style.Secondary("Can be found and used by:\n  %s")),
 					style.Indent(style.Secondary(everyoneAccessTypeDescription)),
 				))
-			} else if accessType == types.APP_COLLABORATORS {
+			case types.PermissionAppCollaborators:
 				triggerText = append(triggerText, fmt.Sprint(
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))
 				for _, entity := range entitiesAccessList {
-					userInfo, err := clients.ApiInterface().UsersInfo(ctx, token, entity)
+					userInfo, err := clients.API().UsersInfo(ctx, token, entity)
 					if err != nil {
 						return []string{}, err
 					}
@@ -162,7 +163,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 						userInfo.RealName, style.Secondary("@"+userInfo.Profile.DisplayName), style.Secondary(userInfo.ID),
 					))
 				}
-			} else if accessType == types.NAMED_ENTITIES {
+			case types.PermissionNamedEntities:
 				triggerText = append(triggerText, fmt.Sprint(
 					style.Indent(style.Secondary("Can be found and used by:")),
 				))
@@ -170,7 +171,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				if len(namedEntitiesAccessMap["users"]) > 0 {
 
 					for _, entity := range namedEntitiesAccessMap["users"] {
-						userInfo, err := clients.ApiInterface().UsersInfo(ctx, token, entity)
+						userInfo, err := clients.API().UsersInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -182,7 +183,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				}
 				if len(namedEntitiesAccessMap["channels"]) > 0 {
 					for _, entity := range namedEntitiesAccessMap["channels"] {
-						channelInfo, err := clients.ApiInterface().ChannelsInfo(ctx, token, entity)
+						channelInfo, err := clients.API().ChannelsInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -194,7 +195,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				}
 				if len(namedEntitiesAccessMap["teams"]) > 0 {
 					for _, entity := range namedEntitiesAccessMap["teams"] {
-						teamInfo, err := clients.ApiInterface().TeamsInfo(ctx, token, entity)
+						teamInfo, err := clients.API().TeamsInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -206,7 +207,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 				}
 				if len(namedEntitiesAccessMap["organizations"]) > 0 {
 					for _, entity := range namedEntitiesAccessMap["organizations"] {
-						orgInfo, err := clients.ApiInterface().TeamsInfo(ctx, token, entity)
+						orgInfo, err := clients.API().TeamsInfo(ctx, token, entity)
 						if err != nil {
 							return []string{}, err
 						}
@@ -220,7 +221,7 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 		}
 	} else {
 		accessTypeDescription := accessType.ToString()
-		if accessType == types.EVERYONE {
+		if accessType == types.PermissionEveryone {
 			accessTypeDescription = types.GetAccessTypeDescriptionForEveryone(app)
 		}
 
@@ -235,9 +236,9 @@ func sprintTrigger(ctx context.Context, t types.DeployedTrigger, clients *shared
 			style.Indent(style.Faint(style.Underline(t.Webhook))))
 	}
 
-	if t.ShortcutUrl != "" {
+	if t.ShortcutURL != "" {
 		triggerText = append(triggerText,
-			style.Indent(style.Faint(style.Underline(t.ShortcutUrl))))
+			style.Indent(style.Faint(style.Underline(t.ShortcutURL))))
 	}
 
 	if t.Type == "event" {
@@ -349,11 +350,11 @@ const (
 
 func promptForTriggerID(ctx context.Context, cmd *cobra.Command, clients *shared.ClientFactory, app types.App, token string, labelOption promptForTriggerIDLabelOption) (string, error) {
 	args := api.TriggerListRequest{
-		AppId: app.AppID,
+		AppID: app.AppID,
 		Limit: 0,     // 0 means no pagation
 		Type:  "all", // all means showing all types of triggers
 	}
-	triggers, _, err := clients.ApiInterface().WorkflowsTriggersList(ctx, token, args)
+	triggers, _, err := clients.API().WorkflowsTriggersList(ctx, token, args)
 	if err != nil {
 		return "", err
 	}
@@ -373,7 +374,7 @@ func promptForTriggerID(ctx context.Context, cmd *cobra.Command, clients *shared
 	triggerLabels := []string{}
 	for _, tr := range triggers {
 		if labelOption == labelsIncludeAccessType {
-			accessType, _, err := clients.ApiInterface().TriggerPermissionsList(ctx, token, tr.ID)
+			accessType, _, err := clients.API().TriggerPermissionsList(ctx, token, tr.ID)
 			if err != nil {
 				return "", err
 			}

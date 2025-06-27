@@ -211,7 +211,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 	// Ensure user is okay to proceed if template source is from a non-trusted source
 	switch selectedTemplate {
 	case viewMoreSamples:
-		sampler := api.NewHttpClient(api.HttpClientOptions{
+		sampler := api.NewHTTPClient(api.HTTPClientOptions{
 			TotalTimeOut: 60 * time.Second,
 		})
 		selectedSample, err := PromptSampleSelection(ctx, clients, sampler)

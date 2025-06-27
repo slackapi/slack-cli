@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright 2022-2025 Salesforce, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,115 +12,96 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -eo
+set -e
 
 # USAGE:
 #   ./scripts/archive.sh <artifact path> <release version>
 #
 # EXAMPLES:
-#   This script now executed inside goreleaser, if you need to run the script alone, make sure you have macOS and Linux original archives in your artificate path
-#   - ./scripts/archive.sh /artifacts 1.5.0
+#   Artifacts are built with GoReleaser and must exist before running this
+#   script:
+#
+#   $ make build-snapshot
+#   $ ./scripts/archive.sh ./dist 3.3.0
 #
 # DESCRIPTION:
-#   Create the development and production tar.gz archives used by the `install.sh` and `install-dev.sh`scripts.
+#   Create the development and production tar.gz and zip archives. These are
+#   used in the `install.sh` and `install-dev.sh` scripts.
 #
-#   Generates macOS and Linux archives.
-
-#   After generating the archive for macOS, the script will test the archive by
-#   extracting it and looking for `bin/slack`
-#   Linux archive is generated directorily from original binary,
-#   the  script will check if `bin/slack` for Linux exits or not first
+#   Tests for correct packaging is done with the `archive-test.sh` script.
 
 DIST_DIR=${1}
 
 main() {
     if [ $# -lt 2 ]; then
-        echo "Missing parameters"
+        echo "Missing parameters: $0 <path> <version>"
         exit 1
     fi
 
     VERSION=${2}
 
-    echo "Creating macOS archives:"
+    echo "Creating macOS archives"
 
-    mac_src_file_path="$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.zip"
-    echo "-> Source archive: $mac_src_file_path"
+    macos_targz_file_path_version_universal="$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.tar.gz"
+    macos_targz_file_path_version_amd64="$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.tar.gz"
+    macos_targz_file_path_version_arm64="$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.tar.gz"
+    macos_targz_file_path_dev_universal="$DIST_DIR/slack_cli_dev_macOS_64-bit.tar.gz"
+    macos_targz_file_path_dev_amd64="$DIST_DIR/slack_cli_dev_macOS_amd64.tar.gz"
+    macos_targz_file_path_dev_arm64="$DIST_DIR/slack_cli_dev_macOS_arm64.tar.gz"
+    macos_targz_file_path_latest_universal="$DIST_DIR/slack_cli_latest_macOS_64-bit.tar.gz"
+    macos_targz_file_path_latest_amd64="$DIST_DIR/slack_cli_latest_macOS_amd64.tar.gz"
+    macos_targz_file_path_latest_arm64="$DIST_DIR/slack_cli_latest_macOS_arm64.tar.gz"
 
-    mac_targz_dir_path="$DIST_DIR/slack_mac_64-bit"
-    macos_dev_targz_file_path="$DIST_DIR/slack_cli_dev_macOS_64-bit.tar.gz"
-    macos_prod_targz_file_path="$DIST_DIR/slack_cli_latest_macOS_64-bit.tar.gz"
-    macos_prod_targz_file_path_2="$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.tar.gz"
-    macos_prod_zip_file_path="$DIST_DIR/slack_cli_${VERSION}_macos.zip"
+    macos_zip_file_path_universal="$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.zip"
+    macos_zip_file_path_amd64="$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.zip"
+    macos_zip_file_path_arm64="$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.zip"
+    macos_zip_file_path_universal_legacy="$DIST_DIR/slack_cli_${VERSION}_macos.zip"
 
-    echo "-> Creating dist directory: $mac_targz_dir_path"
-    mkdir -p "$mac_targz_dir_path"
+    echo "-> Creating macOS versioned tar.gz files"
+    unzip_tar "$macos_zip_file_path_universal" "$macos_targz_file_path_version_universal"
+    unzip_tar "$macos_zip_file_path_amd64" "$macos_targz_file_path_version_amd64"
+    unzip_tar "$macos_zip_file_path_arm64" "$macos_targz_file_path_version_arm64"
+    ls -l "$DIST_DIR"/*_"$VERSION"_macOS*
 
-    echo "-> Extracting: $mac_targz_dir_path"
-    unzip "$mac_src_file_path" -d "$mac_targz_dir_path"
+    echo "-> Creating macOS development tar.gz files"
+    cp "$macos_targz_file_path_version_universal" "$macos_targz_file_path_dev_universal"
+    cp "$macos_targz_file_path_version_amd64" "$macos_targz_file_path_dev_amd64"
+    cp "$macos_targz_file_path_version_arm64" "$macos_targz_file_path_dev_arm64"
+    ls -l "$DIST_DIR"/*dev_macOS*
 
-    echo "-> Moving $mac_targz_dir_path/slack to $mac_targz_dir_path/bin/slack"
-    mkdir "$mac_targz_dir_path/bin"
-    mv "$mac_targz_dir_path/slack" "$mac_targz_dir_path/bin/slack"
+    echo "-> Creating macOS latest tar.gz files"
+    cp "$macos_targz_file_path_version_universal" "$macos_targz_file_path_latest_universal"
+    cp "$macos_targz_file_path_version_amd64" "$macos_targz_file_path_latest_amd64"
+    cp "$macos_targz_file_path_version_arm64" "$macos_targz_file_path_latest_arm64"
+    ls -l "$DIST_DIR"/*latest_macOS*
 
-    echo "-> Creating macOS development tar.gz file: $macos_dev_targz_file_path"
-    tar -C "$mac_targz_dir_path" -zcvf "$macos_dev_targz_file_path" .
+    echo "-> Creating macOS legacy .zip file for auto-update"
+    cp "$macos_zip_file_path_universal" "$macos_zip_file_path_universal_legacy"
+    ls -l "$DIST_DIR"/*_macos.zip
 
-    echo "-> Creating macOS production tar.gz file: $macos_prod_targz_file_path"
-    tar -C "$mac_targz_dir_path" -zcvf "$macos_prod_targz_file_path" .
-    tar -C "$mac_targz_dir_path" -zcvf "$macos_prod_targz_file_path_2" .
+    echo "Creating Linux archives"
 
-    echo "-> Creating macOS .zip file with old name for auto-update:
-    $macos_prod_zip_file_path"
-    cp -i "$mac_src_file_path" "$macos_prod_zip_file_path"
+    linux_targz_file_path_version="$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    linux_targz_file_path_dev="$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
+    linux_targz_file_path_latest="$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
 
-    echo "-> Cleaning up: $mac_targz_dir_path"
-    rm -R "$mac_targz_dir_path"
+    echo "-> Creating Linux development tar.gz file"
+    cp "$linux_targz_file_path_version" "$linux_targz_file_path_dev"
+    ls -l "$DIST_DIR"/*dev_linux*
 
-    echo "-> Testing macOs development tar.gz file..."
-    mkdir "$mac_targz_dir_path"
-    tar -zxvf "$macos_dev_targz_file_path" -C "$mac_targz_dir_path"
+    echo "-> Creating Linux production tar.gz file"
+    cp "$linux_targz_file_path_version" "$linux_targz_file_path_latest"
+    ls -l "$DIST_DIR"/*latest_linux*
+}
 
-    if [ $(command -v "$mac_targz_dir_path/bin/slack") ]; then
-        echo "-> Found bin/slack"
-        rm -R "$mac_targz_dir_path"
-    else
-        echo "-> Missing development bin/slack"
-    fi
-
-    echo "-> Testing macOs production tar.gz file..."
-    mkdir "$mac_targz_dir_path"
-    tar -zxvf "$macos_prod_targz_file_path" -C "$mac_targz_dir_path"
-
-    if [ $(command -v "$mac_targz_dir_path/bin/slack") ]; then
-        echo "-> Found bin/slack"
-        rm -R "$mac_targz_dir_path"
-    else
-        echo "-> Missing production bin/slack"
-    fi
-
-    echo "-> Everything looks good!"
-    echo "-> macOS archive: $targz_file_path"
-
-    echo "Creating Linux archives:"
-
-    linux_src_file_path="$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
-    linux_dev_targz_file_path="$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
-    linux_prod_targz_file_path="$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
-
-    if [ -f "$linux_src_file_path" ]; then
-        echo "-> Found linux binary archive"
-    else
-        echo "-> Missing linux binary archive"
-        exit
-    fi
-
-    echo "-> Creating development Linux tar.gz file: $linux_dev_targz_file_path"
-    cp "$linux_src_file_path" "$linux_dev_targz_file_path"
-    echo "-> Linux development archive: $linux_dev_targz_file_path"
-
-    echo "-> Creating production Linux tar.gz file: $linux_prod_targz_file_path"
-    cp "$linux_src_file_path" "$linux_prod_targz_file_path"
-    echo "-> Linux development archive: $linux_prod_targz_file_path"
+# Repackage tarballs with the signed zip
+unzip_tar() {
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+    unzip "$1" -d "$tmpdir"
+    mkdir "$tmpdir/bin"
+    mv "$tmpdir/slack" "$tmpdir/bin/slack"
+    tar -C "$tmpdir" -zcvf "$2" .
 }
 
 main "$@"

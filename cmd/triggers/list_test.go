@@ -40,12 +40,12 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
 				}
-				clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return([]types.DeployedTrigger{}, "", nil)
+				clientsMock.API.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return([]types.DeployedTrigger{}, "", nil)
 
 				clientsMock.AddDefaultMocks()
 			},
@@ -57,7 +57,7 @@ func TestTriggersListCommand(t *testing.T) {
 				"There are no triggers installed for the app",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
 
@@ -68,20 +68,20 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
 				}
-				clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return(
+				clientsMock.API.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return(
 					[]types.DeployedTrigger{
 						createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut"),
 					},
 					"",
 					nil,
 				)
-				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil)
 
 				clientsMock.AddDefaultMocks()
 			},
@@ -94,7 +94,7 @@ func TestTriggersListCommand(t *testing.T) {
 				"everyone in the workspace",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
 
@@ -105,20 +105,20 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
 				}
-				clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return(
+				clientsMock.API.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return(
 					[]types.DeployedTrigger{
 						createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut"),
 					},
 					"",
 					nil,
 				)
-				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil)
 
 				clientsMock.AddDefaultMocks()
 			},
@@ -131,7 +131,7 @@ func TestTriggersListCommand(t *testing.T) {
 				"everyone in all workspaces in this org granted to this app",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
 
@@ -142,12 +142,12 @@ func TestTriggersListCommand(t *testing.T) {
 
 				// Mock API responses
 				triggerListRequestArgs = api.TriggerListRequest{
-					AppId:  fakeAppID,
+					AppID:  fakeAppID,
 					Limit:  listFlags.triggerLimit,
 					Cursor: "",
 					Type:   listFlags.triggerType,
 				}
-				clientsMock.ApiInterface.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return(
+				clientsMock.API.On("WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs).Return(
 					[]types.DeployedTrigger{
 						createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "shortcut"),
 						createFakeTrigger(fakeTriggerID, fakeTriggerName, fakeAppID, "scheduled"),
@@ -155,8 +155,8 @@ func TestTriggersListCommand(t *testing.T) {
 					"",
 					nil,
 				)
-				clientsMock.ApiInterface.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
-				clientsMock.ApiInterface.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.EVERYONE, []string{}, nil)
+				clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
+				clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).Return(types.PermissionEveryone, []string{}, nil)
 
 				clientsMock.AddDefaultMocks()
 			},
@@ -169,7 +169,7 @@ func TestTriggersListCommand(t *testing.T) {
 				fmt.Sprintf("Trigger ID: %s (%s)", fakeTriggerID, "scheduled"),
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock) {
-				clientsMock.ApiInterface.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
+				clientsMock.API.AssertCalled(t, "WorkflowsTriggersList", mock.Anything, mock.Anything, triggerListRequestArgs)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

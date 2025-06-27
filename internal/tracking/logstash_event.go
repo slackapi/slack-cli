@@ -48,6 +48,7 @@ type EventData struct {
 
 // EventContext contains information / metadata about the CLI session
 type EventContext struct {
+	Arch             string   `json:"arch"`
 	Binary           string   `json:"bin"`
 	CLIVersion       string   `json:"cli_version"`
 	Command          string   `json:"command,omitempty"`

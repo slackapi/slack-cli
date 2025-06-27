@@ -13,7 +13,7 @@ name: Delete pre-release when a branch is deleted
 # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-pull_request-workflow-when-a-pull-request-merges
 # See https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request_target
 on:
-  pull_request_target:
+  pull_request_target: # zizmor: ignore[dangerous-triggers]
     types:
       - closed
 
@@ -63,6 +63,18 @@ jobs:
               RELEASE_FOUND=0
             else
               echo "Failed to find $TAG_NAME, trying next..."
+            fi
+            sleep 1
+
+            FEATURE_TAG_NAME="${TAGS}-${REF}-feature"
+            echo "Identified feature-release tagname as 🔪: $FEATURE_TAG_NAME"
+
+            # Delete a feature-release
+            if GH_DEBUG=1 gh release --repo="slackapi/slack-cli" delete "$FEATURE_TAG_NAME" -y --cleanup-tag; then
+              echo "Successfully deleted $FEATURE_TAG_NAME"
+              RELEASE_FOUND=0
+            else
+              echo "Failed to find $FEATURE_TAG_NAME, trying next..."
             fi
             sleep 1
           done

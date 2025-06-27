@@ -49,7 +49,7 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts 
 	}
 
 	boundary := generateBoundary()
-	cmdArgVars = append(cmdArgVars, "--protocol="+HOOK_PROTOCOL_V2.String(), "--boundary="+boundary)
+	cmdArgVars = append(cmdArgVars, "--protocol="+HookProtocolV2.String(), "--boundary="+boundary)
 
 	e.IO.PrintDebug(ctx,
 		"starting hook command: %s %s\n", cmdArgs[0], strings.Join(cmdArgVars, " "),
@@ -86,8 +86,14 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts 
 
 	cmd := opts.Exec.Command(cmdEnvVars, &stdout, stderr, opts.Stdin, cmdArgs[0], cmdArgVars...)
 	if err = cmd.Run(); err != nil {
+		// Include stderr outputs in error details if these aren't streamed
+		details := slackerror.ErrorDetails{}
+		if opts.Stderr == nil {
+			details = append(details, slackerror.ErrorDetail{Message: strings.TrimSpace(bufferr.String())})
+		}
 		return "", slackerror.New(slackerror.ErrSDKHookInvocationFailed).
-			WithMessage("Error running '%s' command: %s", opts.Hook.Name, err)
+			WithMessage("Error running '%s' command: %s", opts.Hook.Name, err).
+			WithDetails(details)
 	}
 	return buffout.String(), nil
 }
@@ -100,7 +106,7 @@ func generateMD5FromRandomString() string {
 	const length = 10
 
 	randomBytes := make([]byte, 0)
-	for i := 0; i < length; i++ {
+	for range length {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(alphanumericCharacters))))
 		if err != nil {
 			return "3561f3a3c5576e2ce0dc0d1e268bb9b2" // Return default value to continue execution

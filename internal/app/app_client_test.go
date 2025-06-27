@@ -122,7 +122,7 @@ func Test_AppClient_SaveLocalApps(t *testing.T) {
 }
 
 // Test that pre-existing deployed app details get read from apps.json
-func Test_AppClient_ReadDeployedApps_ExistingAppsJson(t *testing.T) {
+func Test_AppClient_ReadDeployedApps_ExistingAppsJSON(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
 	jsonContents := []byte(`{
@@ -145,7 +145,7 @@ func Test_AppClient_ReadDeployedApps_ExistingAppsJson(t *testing.T) {
 }
 
 // Test that a missing apps.json writes an empty apps.json
-func Test_AppClient_ReadDeployedApps_NoAppsJson(t *testing.T) {
+func Test_AppClient_ReadDeployedApps_NoAppsJSON(t *testing.T) {
 	ac, _, _, pathToAppsJSON, _, teardown := setup(t)
 	defer teardown(t)
 	err := ac.readDeployedApps()
@@ -162,11 +162,11 @@ func Test_AppClient_ReadDeployedApps_BrokenAppsJSON(t *testing.T) {
 	require.NoError(t, err)
 	err = ac.readDeployedApps()
 	require.Error(t, err)
-	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJson)
+	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 }
 
 // Test that pre-existing dev app details get read from apps.dev.json
-func Test_AppClient_ReadDevApps_ExistingAppsJson(t *testing.T) {
+func Test_AppClient_ReadDevApps_ExistingAppsJSON(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
 	jsonContents := []byte(`{
@@ -187,7 +187,7 @@ func Test_AppClient_ReadDevApps_ExistingAppsJson(t *testing.T) {
 }
 
 // Test that a missing apps.dev.json writes an empty apps.dev.json
-func Test_AppClient_ReadDevApps_NoAppsJson(t *testing.T) {
+func Test_AppClient_ReadDevApps_NoAppsJSON(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
 	defer teardown(t)
 	err := ac.readLocalApps()
@@ -204,7 +204,7 @@ func Test_AppClient_ReadDevApps_BrokenAppsJSON(t *testing.T) {
 	require.NoError(t, err)
 	err = ac.readLocalApps()
 	require.Error(t, err)
-	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJson)
+	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 }
 
 // Test that a team flag config defines the default app name in an empty AppClient
@@ -637,7 +637,7 @@ func TestAppClient_CleanupSlackFolder(t *testing.T) {
 	assert.True(t, ac.apps.IsEmpty(), "an unexpected app was found")
 
 	require.NoError(t, err)
-	assert.False(t, ac.config.ProjectConfig.ProjectConfigJSONFileExists(wd),
+	assert.False(t, config.ProjectConfigJSONFileExists(ac.fs, ac.os, wd),
 		"an unexpected config was found")
 
 	dotSlackFolder := filepath.Dir(pathToAppsJSON)
@@ -652,7 +652,7 @@ func TestAppClient_CleanupSlackFolder(t *testing.T) {
 		"an unexpected error occurred while stating the .slack directory")
 }
 
-func TestAppClient_CleanupAppsJsonFiles(t *testing.T) {
+func TestAppClient_CleanupAppsJSONFiles(t *testing.T) {
 	blankAppsJSONExample := []byte(`{}`)
 	appsJSONExample := []byte(`{
   "apps": {

@@ -10,7 +10,7 @@ guide is **not** for you. You can of course keep reading though.
 - [Tools](#tools): the development tooling for this codebase
 - [Project layout](#project-layout): an overview of project directories
 - [Tasks](#tasks): common things done during development
-- [Development build](#development-build): for releases with the latest changes
+- [Releases](#releases): when releasing the latest changes
 - [Workflow](#workflow): around changes and contributions
 - [Everything else](#everything-else): and all of those other things
 
@@ -568,7 +568,6 @@ The [`goreleaser`][goreleaser] package we use to build release snapshots needs
 updates in the following files on occasion:
 
 - `.circleci/config.yml`
-- `.goreleaser-dev.yml`
 - `.goreleaser.yml`
 
 Testing in our CI setup uses changes to these files when creating test builds.
@@ -577,6 +576,18 @@ Testing in our CI setup uses changes to these files when creating test builds.
 
 Many good things come to an end. This can sometimes include commands and flags.
 When commands or flags need to be removed, follow these steps:
+
+<details>
+<summary>Deprecating features</summary>
+
+- Public functionality should be deprecated on the next `semver:major` version
+  - Add the comment `// DEPRECATED(semver:major): Description about the deprecation and migration path`
+  - Print a warning `PrintWarning("DEPRECATED: Description about the deprecation and migration path")`
+- Internal functionality can be deprecated anytime
+  - Add the comment `// DEPRECATED: Description about the deprecation and migration path`
+- Please add deprecation comments generously to help the next person completely remove the feature and tests
+
+</details>
 
 <details>
 <summary>Deprecating commands</summary>
@@ -611,14 +622,22 @@ Slack CLI:
 - slack.com
 - slackb.com
 
-## Development build
+## Releases
+
+On regular occasion and a recurring schedule the latest changes are tagged for
+release.
+
+- [Development build](#development-build)
+- [Feature tag](#feature-tags)
+
+### Development build
 
 The development build comes in 2 flavours:
 
 1. Development build GitHub release
 2. Development build install script
 
-### 1. Development build GitHub release
+#### 1. Development build GitHub release
 
 A development build and recent changelog is generated each night from `main`
 with all of the latest changes. Builds are released with the `dev-build` tag and
@@ -635,7 +654,7 @@ Each release page contains:
 The development build and release automation is performed from the `deploy-dev`
 job in the [`.circleci/config.yml`][circleci] file.
 
-### 2. Development build install script
+#### 2. Development build install script
 
 An installation script for the development build provides the same `dev-build`
 release tag but with magic setup:
@@ -647,6 +666,24 @@ curl -fsSL https://downloads.slack-edge.com/slack-cli/install-dev.sh | bash -s s
 Changes to the actual installation scripts are made through other channels and
 might become outdated between releases. These scripts can still be found in the
 [`scripts/`][scripts] directory in the meantime.
+
+### Feature tags
+
+Unreleased changes that haven't landed on `main` can be shared and installed
+using feature tags.
+
+Create a new tag in the following format on a branch of a pull request:
+
+```bash
+git tag v3.4.5-[example-branch-name]-feature   # Replace with the branch
+git push origin v3.4.5-feat-something-feature  # Start the build on push
+```
+
+After a few minutes these changes can be installed using the install script:
+
+```bash
+curl -fsSL https://downloads.slack-edge.com/slack-cli/install-dev.sh | bash -s -- -v 3.4.5-feat-something-feature
+```
 
 ## Workflow
 

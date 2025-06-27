@@ -30,7 +30,7 @@ func NewProjectConfigMock() *ProjectConfigMock {
 }
 
 func (m *ProjectConfigMock) AddDefaultMocks() {
-	m.On("GetManifestSource", mock.Anything).Return(MANIFEST_SOURCE_LOCAL, nil)
+	m.On("GetManifestSource", mock.Anything).Return(ManifestSourceLocal, nil)
 }
 
 func (m *ProjectConfigMock) InitProjectID(ctx context.Context, overwriteExistingProjectID bool) (string, error) {
@@ -53,11 +53,6 @@ func (m *ProjectConfigMock) GetManifestSource(ctx context.Context) (ManifestSour
 	return args.Get(0).(ManifestSource), args.Error(1)
 }
 
-func (m *ProjectConfigMock) SetManifestSource(ctx context.Context, source ManifestSource) error {
-	args := m.Called(ctx, source)
-	return args.Error(0)
-}
-
 func (m *ProjectConfigMock) GetSurveyConfig(ctx context.Context, id string) (SurveyConfig, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(SurveyConfig), args.Error(1)
@@ -66,26 +61,6 @@ func (m *ProjectConfigMock) GetSurveyConfig(ctx context.Context, id string) (Sur
 func (m *ProjectConfigMock) SetSurveyConfig(ctx context.Context, id string, surveyConfig SurveyConfig) error {
 	args := m.Called(ctx, id, surveyConfig)
 	return args.Error(0)
-}
-
-func (m *ProjectConfigMock) ReadProjectConfigFile(ctx context.Context) (ProjectConfig, error) {
-	args := m.Called(ctx)
-	return args.Get(0).(ProjectConfig), args.Error(1)
-}
-
-func (m *ProjectConfigMock) WriteProjectConfigFile(ctx context.Context, projectConfig ProjectConfig) (string, error) {
-	args := m.Called(ctx, projectConfig)
-	return args.String(0), args.Error(1)
-}
-
-func (m *ProjectConfigMock) ProjectConfigJSONFileExists(projectDirPath string) bool {
-	args := m.Called(projectDirPath)
-	return args.Bool(0)
-}
-
-func (m *ProjectConfigMock) GetProjectDirPath() (string, error) {
-	args := m.Called()
-	return args.String(0), args.Error(1)
 }
 
 // Cache returns a persistent mock cache

@@ -1,21 +1,21 @@
-## slack external-auth
+# `slack external-auth`
 
 Adjust settings of external authentication providers
 
-### Synopsis
+## Synopsis
 
 Adjust external authorization and authentication providers of a workflow app.
 
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Explore providers: [Integrating with external auth providers](/guides/integrating-with-services-requiring-external-authentication/)
+Explore providers: [https://tools.slack.dev/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication](https://tools.slack.dev/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication)
 
 ```
 slack external-auth <subcommand> [flags]
 ```
 
-### Examples
+## Examples
 
 ```
 # Initiate OAuth2 flow for a selected provider
@@ -31,13 +31,13 @@ $ slack external-auth remove
 $ slack external-auth select-auth
 ```
 
-### Options
+## Options
 
 ```
   -h, --help   help for external-auth
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -51,7 +51,7 @@ $ slack external-auth select-auth
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack external-auth add](slack_external-auth_add)	 - Initiate the OAuth2 flow for a provider

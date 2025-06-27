@@ -42,9 +42,9 @@ var maxDateCreated int64
 var minLevel string
 var eventType string
 var componentType string
-var componentId string
+var componentID string
 var source string
-var traceId string
+var traceID string
 
 // Create handle to the function for testing
 // TODO - Stopgap until we learn the correct way to structure our code for testing.
@@ -72,25 +72,25 @@ func NewActivityCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&tailArg, "tail", "t", false, "continuously poll for new activity")
-	cmd.Flags().IntVarP(&pollingIntervalS, "interval", "i", platform.ACTIVITY_POLLING_INTERVAL_SECONDS, "polling interval in seconds")
-	cmd.Flags().IntVarP(&idleTimeoutM, "idle", "", platform.ACTIVITY_IDLE_TIMEOUT, "time to poll without results before exiting\n  in minutes")
+	cmd.Flags().IntVarP(&pollingIntervalS, "interval", "i", platform.ActivityPollingIntervalDefault, "polling interval in seconds")
+	cmd.Flags().IntVarP(&idleTimeoutM, "idle", "", platform.ActivityIdleTimeoutDefault, "time to poll without results before exiting\n  in minutes")
 	cmd.Flags().BoolVarP(&browser, "browser", "", false, "open the default web browser to the log activity")
-	cmd.Flags().StringVar(&minLevel, "level", "", fmt.Sprintf("minimum log level to display (default \"%s\")\n  (trace, debug, info, warn, error, fatal)", platform.ACTIVITY_MIN_LEVEL))
-	cmd.Flags().IntVar(&limit, "limit", platform.ACTIVITY_LIMIT, "limit the amount of logs retrieved")
+	cmd.Flags().StringVar(&minLevel, "level", "", fmt.Sprintf("minimum log level to display (default \"%s\")\n  (trace, debug, info, warn, error, fatal)", platform.ActivityMinLevelDefault))
+	cmd.Flags().IntVar(&limit, "limit", platform.ActivityLimitDefault, "limit the amount of logs retrieved")
 	cmd.Flags().Int64Var(&minDateCreated, "min-date-created", 0, "minimum timestamp to filter\n  (unix timestamp in microseconds)")
 	cmd.Flags().Int64Var(&maxDateCreated, "max-date-created", 0, "maximum timestamp to filter\n  (unix timestamp in microseconds)")
 	cmd.Flags().StringVar(&eventType, "event", "", "event type to filter")
 	cmd.Flags().StringVar(&componentType, "component", "", "component type to filter")
-	cmd.Flags().StringVar(&componentId, "component-id", "", "component id to filter\n  (either a function id or workflow id)")
+	cmd.Flags().StringVar(&componentID, "component-id", "", "component id to filter\n  (either a function id or workflow id)")
 	cmd.Flags().StringVar(&source, "source", "", "source (slack or developer) to filter")
-	cmd.Flags().StringVar(&traceId, "trace-id", "", "trace id to filter")
+	cmd.Flags().StringVar(&traceID, "trace-id", "", "trace id to filter")
 
 	// Hidden flags
 	_ = cmd.Flags().MarkHidden("browser") // Hide until editing apps from the App Config UI is available
 
 	// Set defaults
 	if minLevel == "" {
-		minLevel = platform.ACTIVITY_MIN_LEVEL
+		minLevel = platform.ActivityMinLevelDefault
 	}
 
 	return cmd
@@ -113,8 +113,8 @@ func runActivityCommand(clients *shared.ClientFactory, cmd *cobra.Command, args 
 	ctx = config.SetContextToken(ctx, selection.Auth.Token)
 
 	activityArgs := types.ActivityArgs{
-		TeamId:            selection.Auth.TeamID,
-		AppId:             selection.App.AppID,
+		TeamID:            selection.Auth.TeamID,
+		AppID:             selection.App.AppID,
 		TailArg:           tailArg,
 		Browser:           browser,
 		PollingIntervalMS: pollingIntervalS * 1000,
@@ -125,9 +125,9 @@ func runActivityCommand(clients *shared.ClientFactory, cmd *cobra.Command, args 
 		MinLevel:          minLevel,
 		EventType:         eventType,
 		ComponentType:     componentType,
-		ComponentId:       componentId,
+		ComponentID:       componentID,
 		Source:            source,
-		TraceId:           traceId,
+		TraceID:           traceID,
 	}
 
 	log := newActivityLogger(cmd)

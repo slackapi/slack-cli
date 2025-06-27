@@ -119,7 +119,21 @@ install_slack_cli() {
         #
 
         if [ "$(uname)" == "Darwin" ]; then
+            if version_lt "$SLACK_CLI_DEV_VERSION" "3.3.0"; then
                 slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_64-bit.tar.gz"
+            else
+                case "$(uname -m)" in
+                    x86_64)
+                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_amd64.tar.gz"
+                        ;;
+                    arm64 | aarch64)
+                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_arm64.tar.gz"
+                        ;;
+                    *)
+                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_64-bit.tar.gz"
+                        ;;
+                esac
+            fi
         elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
                 slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_64-bit.tar.gz"
         else
@@ -274,7 +288,7 @@ install_deno() {
 
         echo -e -n "🔍 Searching for the latest released Deno version..."
         latest_deno_version=$(curl -fs https://api.github.com/repos/denoland/deno/releases/latest | grep '"tag_name":' | cut -d '"' -f 4)
-        if [ $? -eq 0 ] && [ "$latest_deno_version" -ne "" ]; then
+        if [ $? -eq 0 ] && [ -n "$latest_deno_version" ]; then
             delay 0.2 " Found: ${latest_deno_version}"
         else
             delay 0.2 " Found: Unknown"

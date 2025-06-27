@@ -1,32 +1,35 @@
-## slack feedback
+# `slack feedback`
 
 Share feedback about your experience or project
 
-### Synopsis
+## Synopsis
 
-Help us make the Slack Platform better by completing a survey
+Help us make the Slack Platform better with your feedback
 
 ```
 slack feedback [flags]
 ```
 
-### Examples
+## Examples
 
 ```
-$ slack feedback  # Open a feedback survey in your browser
+# Choose to give feedback on part of the Slack Platform
+$ slack feedback
+$ slack feedback --name slack-cli  # Give feedback on the Slack CLI
 ```
 
-### Options
+## Options
 
 ```
   -h, --help          help for feedback
-      --name string   name of the survey:
-                         platform-improvements
+      --name string   name of the feedback:
+                         slack-cli
+                         slack-platform
                       
       --no-prompt     run command without prompts
 ```
 
-### Options inherited from parent commands
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -40,7 +43,7 @@ $ slack feedback  # Open a feedback survey in your browser
   -v, --verbose              print debug logging and additional info
 ```
 
-### SEE ALSO
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

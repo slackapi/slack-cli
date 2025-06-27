@@ -447,7 +447,11 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 		return SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingOptions)
 	}
 	if !io.IsTTY() {
-		return SelectPromptResponse{}, errInteractivityFlags(cfg)
+		if cfg.IsRequired() {
+			return SelectPromptResponse{}, errInteractivityFlags(cfg)
+		} else {
+			return SelectPromptResponse{}, nil
+		}
 	}
 
 	defaultSelectTemplate := survey.SelectQuestionTemplate
@@ -491,6 +495,9 @@ func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, erro
 		return nil, nil
 	}
 	for _, opt := range flagset {
+		if opt == nil {
+			continue
+		}
 		if !opt.Changed {
 			continue
 		} else if flag != nil {
@@ -505,7 +512,7 @@ func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, erro
 func errInteractivityFlags(cfg PromptConfig) error {
 	flags := cfg.GetFlags()
 	var remediation string
-	var helpMessage string = "Learn more about this command with `--help`"
+	var helpMessage = "Learn more about this command with `--help`"
 
 	if len(flags) == 1 {
 		remediation = fmt.Sprintf("Try running the command with the `--%s` flag included", flags[0].Name)
