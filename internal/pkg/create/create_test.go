@@ -193,40 +193,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		unexpectedOutputs      []string
 		expectedVerboseOutputs []string
 	}{
-		"When no bolt experiment and hooks.json exists, should output found .slack and caching steps": {
-			existingFiles: map[string]string{
-				".slack/hooks.json": "{}", // Included with the template
-			},
-			expectedOutputs: []string{
-				"Found project-name/.slack",
-				"Cached dependencies with deno cache import_map.json",
-			},
-			unexpectedOutputs: []string{
-				"Found project-name/.slack/hooks.json", // Behind bolt experiment
-				"project-name/slack.json",              // DEPRECATED(semver:major): Now use hooks.json
-			},
-			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
-			},
-		},
-		"When no bolt experiment and slack.json exists, should output adding .slack and caching steps": {
-			existingFiles: map[string]string{
-				"slack.json": "{}", // DEPRECATED(semver:major): Included with the template (deprecated path)
-			},
-			expectedOutputs: []string{
-				"Added project-name/.slack",
-				"Cached dependencies with deno cache import_map.json",
-			},
-			unexpectedOutputs: []string{
-				"project-name/.slack/hooks.json", // Behind bolt experiment, file doesn't exist
-				"project-name/slack.json",        // Behind bolt experiment, file exists
-			},
-			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
-			},
-		},
-		"When bolt experiment, should output added .slack, hooks.json, .gitignore, and caching": {
-			experiments: []string{"bolt"},
+		"Should output added .slack, hooks.json, .gitignore, and caching": {
 			expectedOutputs: []string{
 				"Added project-name/.slack",
 				"Added project-name/.slack/.gitignore",
@@ -237,8 +204,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Detected a project using Deno",
 			},
 		},
-		"When bolt experiment and hooks.json exists, should output found .slack and hooks.json": {
-			experiments: []string{"bolt"},
+		"When hooks.json exists, should output found .slack and hooks.json": {
 			existingFiles: map[string]string{
 				".slack/hooks.json": "{}",
 			},
@@ -255,8 +221,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Detected a project using Deno",
 			},
 		},
-		"When bolt experiment and slack.json exists, should output added .slack": {
-			experiments: []string{"bolt"},
+		"When slack.json exists, should output added .slack": {
 			existingFiles: map[string]string{
 				"slack.json": "{}",
 			},
@@ -270,26 +235,24 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			},
 		},
 		"When no manifest source, default to project (local)": {
-			experiments: []string{"bolt"},
 			expectedOutputs: []string{
 				`Updated config.json manifest source to "project" (local)`,
 			},
 		},
 		"When manifest source is provided, should set it": {
-			experiments:    []string{"bolt"},
 			manifestSource: config.ManifestSourceRemote,
 			expectedOutputs: []string{
 				`Updated config.json manifest source to "app settings" (remote)`,
 			},
 		},
-		"When bolt + bolt-install experiment and Deno project, should set manifest source to project (local)": {
-			experiments: []string{"bolt", "bolt-install"},
+		"When bolt-install experiment and Deno project, should set manifest source to project (local)": {
+			experiments: []string{"bolt-install"},
 			expectedOutputs: []string{
 				`Updated config.json manifest source to "project" (local)`,
 			},
 		},
-		"When bolt + bolt-install experiment and non-Deno project, should set manifest source to app settings (remote)": {
-			experiments: []string{"bolt", "bolt-install"},
+		"When bolt-install experiment and non-Deno project, should set manifest source to app settings (remote)": {
+			experiments: []string{"bolt-install"},
 			runtime:     "node",
 			expectedOutputs: []string{
 				`Updated config.json manifest source to "app settings" (remote)`,

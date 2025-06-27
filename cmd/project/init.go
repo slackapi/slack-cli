@@ -21,7 +21,6 @@ import (
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -82,12 +81,6 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 // projectInitCommandPreRunE determines if the command is supported for a project
 // and configures flags
 func projectInitCommandPreRunE(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
-	// Require the Bolt Framework experiment to run this command
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		return slackerror.New("Command requires the Bolt Framework experiment").
-			WithRemediation(`Run the command with the experiment flag "-e %s"`, experiment.BoltFrameworks)
-	}
-
 	clients.Config.SetFlags(cmd)
 	return nil
 }

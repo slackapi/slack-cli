@@ -393,56 +393,50 @@ func InstallProjectDependencies(
 	}
 
 	// Create .slack/.gitignore file
-	if clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		gitignoreFilePath, err := config.CreateProjectConfigDirDotGitIgnoreFile(clients.Fs, projectDirPath)
-		dotSlackDirPathRel, _ := filepath.Rel(filepath.Dir(projectDirPath), gitignoreFilePath)
-		dotSlackDirPathRelStyled := style.Highlight(dotSlackDirPathRel)
+	gitignoreFilePath, err := config.CreateProjectConfigDirDotGitIgnoreFile(clients.Fs, projectDirPath)
+	gitignoreFilePathRel, _ := filepath.Rel(filepath.Dir(projectDirPath), gitignoreFilePath)
+	gitignoreFilePathRelStyled := style.Highlight(gitignoreFilePathRel)
 
-		switch {
-		case os.IsExist(err):
-			outputs = append(outputs, fmt.Sprintf("Found %s", dotSlackDirPathRelStyled))
-		case err != nil:
-			outputs = append(outputs, fmt.Sprintf("Error adding the file %s: %s", dotSlackDirPathRel, err))
-		default:
-			outputs = append(outputs, fmt.Sprintf("Added %s", dotSlackDirPathRelStyled))
-		}
+	switch {
+	case os.IsExist(err):
+		outputs = append(outputs, fmt.Sprintf("Found %s", gitignoreFilePathRelStyled))
+	case err != nil:
+		outputs = append(outputs, fmt.Sprintf("Error adding the file %s: %s", gitignoreFilePathRel, err))
+	default:
+		outputs = append(outputs, fmt.Sprintf("Added %s", gitignoreFilePathRelStyled))
 	}
 
 	// Create .slack/config.json file
-	if clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		configJSONFilePath, err := config.CreateProjectConfigJSONFile(clients.Fs, projectDirPath)
-		configJSONFilePathRel, _ := filepath.Rel(filepath.Dir(projectDirPath), configJSONFilePath)
-		configJSONFilePathRelStyled := style.Highlight(configJSONFilePathRel)
+	configJSONFilePath, err := config.CreateProjectConfigJSONFile(clients.Fs, projectDirPath)
+	configJSONFilePathRel, _ := filepath.Rel(filepath.Dir(projectDirPath), configJSONFilePath)
+	configJSONFilePathRelStyled := style.Highlight(configJSONFilePathRel)
 
-		switch {
-		case os.IsExist(err):
-			outputs = append(outputs, fmt.Sprintf("Found %s", configJSONFilePathRelStyled))
-		case err != nil:
-			outputs = append(outputs, fmt.Sprintf("Error adding the file %s: %s", configJSONFilePathRel, err))
-		default:
-			outputs = append(outputs, fmt.Sprintf("Added %s", configJSONFilePathRelStyled))
-		}
+	switch {
+	case os.IsExist(err):
+		outputs = append(outputs, fmt.Sprintf("Found %s", configJSONFilePathRelStyled))
+	case err != nil:
+		outputs = append(outputs, fmt.Sprintf("Error adding the file %s: %s", configJSONFilePathRel, err))
+	default:
+		outputs = append(outputs, fmt.Sprintf("Added %s", configJSONFilePathRelStyled))
 	}
 
 	// Create .slack/hooks.json file
-	if clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		var hooksJSONTemplate = []byte("{}")
-		if clients.Runtime != nil {
-			hooksJSONTemplate = clients.Runtime.HooksJSONTemplate()
-		}
+	var hooksJSONTemplate = []byte("{}")
+	if clients.Runtime != nil {
+		hooksJSONTemplate = clients.Runtime.HooksJSONTemplate()
+	}
 
-		hooksJSONFilePath, err := config.CreateProjectHooksJSONFile(clients.Fs, projectDirPath, hooksJSONTemplate)
-		hooksJSONFilePathRel, _ := filepath.Rel(filepath.Dir(projectDirPath), hooksJSONFilePath)
-		hooksJSONFilePathRelStyled := style.Highlight(hooksJSONFilePathRel)
+	hooksJSONFilePath, err := config.CreateProjectHooksJSONFile(clients.Fs, projectDirPath, hooksJSONTemplate)
+	hooksJSONFilePathRel, _ := filepath.Rel(filepath.Dir(projectDirPath), hooksJSONFilePath)
+	hooksJSONFilePathRelStyled := style.Highlight(hooksJSONFilePathRel)
 
-		switch {
-		case os.IsExist(err):
-			outputs = append(outputs, fmt.Sprintf("Found %s", hooksJSONFilePathRelStyled))
-		case err != nil:
-			outputs = append(outputs, fmt.Sprintf("Error adding the file %s: %s", hooksJSONFilePathRel, err))
-		default:
-			outputs = append(outputs, fmt.Sprintf("Added %s", hooksJSONFilePathRelStyled))
-		}
+	switch {
+	case os.IsExist(err):
+		outputs = append(outputs, fmt.Sprintf("Found %s", hooksJSONFilePathRelStyled))
+	case err != nil:
+		outputs = append(outputs, fmt.Sprintf("Error adding the file %s: %s", hooksJSONFilePathRel, err))
+	default:
+		outputs = append(outputs, fmt.Sprintf("Added %s", hooksJSONFilePathRelStyled))
 	}
 
 	// Set "project_id" in .slack/config.json

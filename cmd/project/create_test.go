@@ -23,9 +23,9 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -41,43 +41,75 @@ func (m *CreateClientMock) Create(ctx context.Context, clients *shared.ClientFac
 }
 
 func TestCreateCommand(t *testing.T) {
-	// Create mocks
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
+	var createClientMock *CreateClientMock
 
-	// Create clients that is mocked for testing
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	// Create the command
-	cmd := NewCreateCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	createClientMock := new(CreateClientMock)
-
-	createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
-	clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a template to build from:", mock.Anything, mock.Anything).
-		Return(
-			iostreams.SelectPromptResponse{
-				Option: "slack-samples/deno-starter-template",
-				Flag:   true,
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"creates a bolt application from prompts": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0,
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0,
+						},
+						nil,
+					)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
 			},
-			nil,
-		)
-
-	CreateFunc = createClientMock.Create
-
-	err := cmd.ExecuteContext(ctx)
-	if err != nil {
-		assert.Fail(t, "cmd.Execute had unexpected error")
-	}
-
-	template, err := create.ResolveTemplateURL("slack-samples/deno-starter-template")
-	require.NoError(t, err)
-	expected := create.CreateArgs{
-		Template: template,
-	}
-	createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
+				require.NoError(t, err)
+				expected := create.CreateArgs{
+					Template: template,
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+			},
+		},
+		"creates a deno application from flags": {
+			CmdArgs: []string{"--template", "slack-samples/deno-starter-template"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Flag:   true,
+							Option: "slack-samples/deno-starter-template",
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Flag:   true,
+							Option: "slack-samples/deno-starter-template",
+						},
+						nil,
+					)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/deno-starter-template")
+				require.NoError(t, err)
+				expected := create.CreateArgs{
+					Template: template,
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCreateCommand(cf)
+	})
 }
 
 func TestCreateCommand_confirmExternalTemplateSelection(t *testing.T) {
@@ -233,56 +265,4 @@ func TestCreateCommand_confirmExternalTemplateSelection(t *testing.T) {
 			tt.expect(confirmed, err, cm, scm)
 		})
 	}
-}
-
-func Test_CreateCommand_BoltExperiment(t *testing.T) {
-	// Create mocks
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-
-	// Create clients that is mocked for testing
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	// Set experiment flag
-	clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "bolt")
-	clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
-
-	// Create the command
-	cmd := NewCreateCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	createClientMock := new(CreateClientMock)
-
-	createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
-	clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
-		Return(
-			iostreams.SelectPromptResponse{
-				Prompt: true,
-				Index:  0,
-			},
-			nil,
-		)
-	clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
-		Return(
-			iostreams.SelectPromptResponse{
-				Prompt: true,
-				Index:  0,
-			},
-			nil,
-		)
-
-	CreateFunc = createClientMock.Create
-
-	err := cmd.ExecuteContext(ctx)
-	if err != nil {
-		assert.Fail(t, "cmd.Execute had unexpected error")
-	}
-
-	template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
-	require.NoError(t, err)
-	expected := create.CreateArgs{
-		Template: template,
-	}
-	createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
 }
