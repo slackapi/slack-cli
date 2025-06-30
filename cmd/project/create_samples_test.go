@@ -112,6 +112,16 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 			clientsMock.IO.On(
 				"SelectPrompt",
 				mock.Anything,
+				"Select a language:",
+				mock.Anything,
+				mock.Anything,
+			).Return(iostreams.SelectPromptResponse{
+				Index:  2,
+				Prompt: true,
+			}, nil)
+			clientsMock.IO.On(
+				"SelectPrompt",
+				mock.Anything,
 				"Select a sample to build upon:",
 				mock.Anything,
 				iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{

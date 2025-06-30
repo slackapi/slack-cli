@@ -377,6 +377,7 @@ func chooseSurveyPrompt(ctx context.Context, clients *shared.ClientFactory, surv
 	selection, err := clients.IO.SelectPrompt(ctx, msg, surveyPromptOptions,
 		iostreams.SelectPromptConfig{
 			Flag:     clients.Config.Flags.Lookup("name"),
+			Required: true,
 			PageSize: 4,
 			Description: func(value string, index int) string {
 				if index < len(surveyNames) {

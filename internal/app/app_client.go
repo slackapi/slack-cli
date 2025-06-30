@@ -251,7 +251,7 @@ func (ac *AppClient) CleanUp() {
 
 	// if there are no tracked apps anymore and no config file, remove the .slack folder.
 	// otherwise remove .slack/apps*.json files that contain no apps.
-	if ac.apps.IsEmpty() && !ac.config.ProjectConfig.ProjectConfigJSONFileExists(wd) {
+	if ac.apps.IsEmpty() && !config.ProjectConfigJSONFileExists(ac.fs, ac.os, wd) {
 		var deployedAppsJSONFilePath = filepath.Join(wd, deployedAppsFilename)
 		var dotSlackFolder = filepath.Dir(deployedAppsJSONFilePath)
 		_ = ac.fs.RemoveAll(dotSlackFolder)

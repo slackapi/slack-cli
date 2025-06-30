@@ -447,7 +447,11 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 		return SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingOptions)
 	}
 	if !io.IsTTY() {
-		return SelectPromptResponse{}, errInteractivityFlags(cfg)
+		if cfg.IsRequired() {
+			return SelectPromptResponse{}, errInteractivityFlags(cfg)
+		} else {
+			return SelectPromptResponse{}, nil
+		}
 	}
 
 	defaultSelectTemplate := survey.SelectQuestionTemplate
@@ -491,6 +495,9 @@ func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, erro
 		return nil, nil
 	}
 	for _, opt := range flagset {
+		if opt == nil {
+			continue
+		}
 		if !opt.Changed {
 			continue
 		} else if flag != nil {

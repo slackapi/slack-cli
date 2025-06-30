@@ -470,7 +470,7 @@ func InstallProjectDependencies(
 	}
 
 	// Set "manifest.source" in .slack/config.json
-	if err := clients.Config.ProjectConfig.SetManifestSource(ctx, manifestSource); err != nil {
+	if err := config.SetManifestSource(ctx, clients.Fs, clients.Os, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
 		configJSONFilename := config.ProjectConfigJSONFilename
