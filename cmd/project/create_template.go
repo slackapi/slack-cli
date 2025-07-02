@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -30,88 +29,50 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func getSelectionPrompt(clients *shared.ClientFactory) string {
-	switch clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-	case true:
-		return "Select a language:"
-	default:
-		return "Select a template to build from:"
-	}
-}
-
-func getSelectionPromptForCategory(clients *shared.ClientFactory) string {
-	return "Select an app:"
-}
-
 func getSelectionOptions(clients *shared.ClientFactory, categoryID string) []promptObject {
 	if strings.TrimSpace(categoryID) == "" {
 		categoryID = "slack-cli#getting-started"
 	}
 
-	switch clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-	case true:
-		// App categories and templates
-		templatePromptObjects := map[string]([]promptObject){
-			"slack-cli#getting-started": []promptObject{
-				{
-					Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
-					Repository: "slack-samples/bolt-js-starter-template",
-				},
-				{
-					Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
-					Repository: "slack-samples/bolt-python-starter-template",
-				},
-			},
-			"slack-cli#automation-apps": {
-				{
-					Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
-					Repository: "slack-samples/bolt-js-custom-function-template",
-				},
-				{
-					Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
-					Repository: "slack-samples/bolt-python-custom-function-template",
-				},
-				{
-					Title:      fmt.Sprintf("Deno Slack SDK %s", style.Secondary("Deno")),
-					Repository: "slack-samples/deno-starter-template",
-				},
-			},
-			"slack-cli#ai-apps": {
-				{
-					Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
-					Repository: "slack-samples/bolt-js-assistant-template",
-				},
-				{
-					Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
-					Repository: "slack-samples/bolt-python-assistant-template",
-				},
-			},
-		}
-
-		return templatePromptObjects[categoryID]
-	default:
-		return []promptObject{
+	// App categories and templates
+	templatePromptObjects := map[string]([]promptObject){
+		"slack-cli#getting-started": []promptObject{
 			{
-				Title:       "Issue submission (default sample)",
-				Repository:  "slack-samples/deno-issue-submission",
-				Description: "Basic app that demonstrates an issue submission workflow",
+				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+				Repository: "slack-samples/bolt-js-starter-template",
 			},
 			{
-				Title:       "Scaffolded template",
-				Repository:  "slack-samples/deno-starter-template",
-				Description: "Solid foundation that includes a Slack datastore",
+				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+				Repository: "slack-samples/bolt-python-starter-template",
+			},
+		},
+		"slack-cli#automation-apps": {
+			{
+				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+				Repository: "slack-samples/bolt-js-custom-function-template",
 			},
 			{
-				Title:       "Blank template",
-				Repository:  "slack-samples/deno-blank-template",
-				Description: "A, well.. blank project",
+				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+				Repository: "slack-samples/bolt-python-custom-function-template",
 			},
 			{
-				Title:      "View more samples",
-				Repository: viewMoreSamples,
+				Title:      fmt.Sprintf("Deno Slack SDK %s", style.Secondary("Deno")),
+				Repository: "slack-samples/deno-starter-template",
 			},
-		}
+		},
+		"slack-cli#ai-apps": {
+			{
+				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+				Repository: "slack-samples/bolt-js-assistant-template",
+			},
+			{
+				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+				Repository: "slack-samples/bolt-python-assistant-template",
+			},
+		},
 	}
+
+	return templatePromptObjects[categoryID]
 }
 
 func getSelectionOptionsForCategory(clients *shared.ClientFactory) []promptObject {
@@ -142,34 +103,32 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 	var selectedTemplate string
 
 	// Prompt for the category
-	if clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		promptForCategory := getSelectionPromptForCategory(clients)
-		optionsForCategory := getSelectionOptionsForCategory(clients)
-		titlesForCategory := make([]string, len(optionsForCategory))
-		for i, m := range optionsForCategory {
-			titlesForCategory[i] = m.Title
-		}
-		templateForCategory := getSelectionTemplate(clients)
+	promptForCategory := "Select an app:"
+	optionsForCategory := getSelectionOptionsForCategory(clients)
+	titlesForCategory := make([]string, len(optionsForCategory))
+	for i, m := range optionsForCategory {
+		titlesForCategory[i] = m.Title
+	}
+	templateForCategory := getSelectionTemplate(clients)
 
-		// Print a trace with info about the category title options provided by CLI
-		clients.IO.PrintTrace(ctx, slacktrace.CreateCategoryOptions, strings.Join(titlesForCategory, ", "))
+	// Print a trace with info about the category title options provided by CLI
+	clients.IO.PrintTrace(ctx, slacktrace.CreateCategoryOptions, strings.Join(titlesForCategory, ", "))
 
-		// Prompt to choose a category
-		selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return optionsForCategory[index].Description
-			},
-			Flag:     clients.Config.Flags.Lookup("template"),
-			Required: true,
-			Template: templateForCategory,
-		})
-		if err != nil {
-			return create.Template{}, slackerror.ToSlackError(err)
-		} else if selection.Flag {
-			selectedTemplate = selection.Option
-		} else if selection.Prompt {
-			categoryID = optionsForCategory[selection.Index].Repository
-		}
+	// Prompt to choose a category
+	selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
+		Description: func(value string, index int) string {
+			return optionsForCategory[index].Description
+		},
+		Flag:     clients.Config.Flags.Lookup("template"),
+		Required: true,
+		Template: templateForCategory,
+	})
+	if err != nil {
+		return create.Template{}, slackerror.ToSlackError(err)
+	} else if selection.Flag {
+		selectedTemplate = selection.Option
+	} else if selection.Prompt {
+		categoryID = optionsForCategory[selection.Index].Repository
 	}
 
 	// Set template to view more samples, so the sample prompt is triggered
@@ -179,7 +138,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 
 	// Prompt for the template
 	if selectedTemplate == "" {
-		prompt := getSelectionPrompt(clients)
+		prompt := "Select a language:"
 		options := getSelectionOptions(clients, categoryID)
 		titles := make([]string, len(options))
 		for i, m := range options {
@@ -276,9 +235,7 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 // project template during creation
 func getSelectionTemplate(clients *shared.ClientFactory) string {
 	samplesURL := style.LinkText("https://docs.slack.dev/samples")
-	switch clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-	case true:
-		return fmt.Sprintf(`
+	return fmt.Sprintf(`
 {{- define "option"}}
 {{- if eq .SelectedIndex .CurrentIndex }}{{color .Config.Icons.SelectFocus.Format }}{{ .Config.Icons.SelectFocus.Text }} {{else}}{{color "default+hb"}}  {{end}}
 {{- .CurrentOpt.Value}}{{color "reset"}}{{ if ne ($.GetDescription .CurrentOpt) "" }}{{"\n  "}}{{color "250"}}{{ $.GetDescription .CurrentOpt }}{{"\n"}}{{end}}
@@ -297,27 +254,5 @@ func getSelectionTemplate(clients *shared.ClientFactory) string {
   {{- "Guided tutorials can be found at %s"}}{{color "reset"}}
 {{end}}
 `,
-			samplesURL)
-	default:
-		return fmt.Sprintf(`
-{{- define "option"}}
-{{- if eq .SelectedIndex .CurrentIndex }}{{color .Config.Icons.SelectFocus.Format }}{{ .Config.Icons.SelectFocus.Text }} {{else}}{{color "default+hb"}}  {{end}}
-{{- .CurrentOpt.Value}}{{color "reset"}}{{ if ne ($.GetDescription .CurrentOpt) "" }}{{"\n  "}}{{color "250"}}{{ $.GetDescription .CurrentOpt }}{{"\n"}}{{end}}
-{{- color "reset"}}
-{{end}}
-{{- if .ShowHelp }}{{- color .Config.Icons.Help.Format }}{{ .Config.Icons.Help.Text }} {{ .Help }}{{color "reset"}}{{"\n"}}{{end}}
-{{- color .Config.Icons.Question.Format }}{{ .Config.Icons.Question.Text }} {{color "reset"}}
-{{- color "default+hb"}}{{ .Message }}{{color "reset"}}
-{{- if .ShowAnswer}}{{color "39+b"}} {{.Answer}}{{color "reset"}}
-{{- else}}
-  {{- " "}}{{- color "39+b"}}[Use arrows to move]{{color "reset"}}
-  {{- "\n\n"}}
-  {{- range $ix, $option := .PageEntries}}
-    {{- template "option" $.IterateOption $ix $option}}
-  {{- end}}
-  {{"Guided tutorials can be found at %s"}}{{color "reset"}}
-{{end}}
-`,
-			samplesURL)
-	}
+		samplesURL)
 }

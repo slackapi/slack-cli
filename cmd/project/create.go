@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -193,9 +192,8 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 		isDenoProject = strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
 	}
 
-	// Display the original next steps section when the Bolt Experiment is OFF
-	// or when the Bolt Experiment is ON and a Deno SDK project is created
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) || isDenoProject {
+	// Include documentation and information about ROSI for deno apps
+	if isDenoProject {
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 			Emoji: "compass",
 			Text:  "Explore the documentation to learn more",
