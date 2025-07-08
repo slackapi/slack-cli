@@ -113,7 +113,7 @@ function install_slack_cli {
     }
   }
   catch {
-    Write-Error "Installer cannot find latest Slack CLI release version!"
+    Write-Error "Installer cannot find latest Slack CLI release version"
     throw
   }
 
@@ -345,9 +345,9 @@ function next_step_message {
 }
 
 trap {
-    Write-Host "`nWe would love to know how things are going. Really. All of it."
-    Write-Host "Share installation issues: https://github.com/slackapi/slack-cli/issues"
-    exit 1
+  Write-Host "`nWe would love to know how things are going. Really. All of it."
+  Write-Host "Share installation issues: https://github.com/slackapi/slack-cli/issues"
+  exit 1
 }
 
 install_slack_cli $Alias $Version
