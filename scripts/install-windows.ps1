@@ -67,7 +67,7 @@ function check_slack_binary_exist() {
 
         Write-Host "`nTry using an alias when installing to avoid name conflicts:"
         Write-Host "`nirm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -Alias your-preferred-alias | iex"
-        Exit;
+        throw
       }
     }
     $message = "It is the same Slack CLI! Upgrading to the latest version..."
@@ -113,7 +113,8 @@ function install_slack_cli {
     }
   }
   catch {
-    throw "`nInstaller cannot find latest Slack CLI release version"
+    Write-Error "Installer cannot find latest Slack CLI release version!"
+    throw
   }
 
   $slack_cli_dir = "${Home}\AppData\Local\slack-cli"
@@ -131,20 +132,23 @@ function install_slack_cli {
             $slack_cli_dir = $alternative_slack_cli_dir
           }
           catch {
-            throw "`nInstaller cannot create folder in $($alternative_slack_cli_dir). `nPlease manually create $($slack_cli_dir) folder and re-run the installation script"
+            Write-Error "Installer cannot create folder in $($alternative_slack_cli_dir). `nPlease manually create $($slack_cli_dir) folder and re-run the installation script"
+            throw
           }
         }
       }
     }
   }
   catch {
-    throw "`nInstaller cannot create folder for Slack CLI, `nPlease manually create $($slack_cli_dir) folder and re-run the installation script"
+    Write-Error "Installer cannot create folder for Slack CLI, `nPlease manually create $($slack_cli_dir) folder and re-run the installation script"
+    throw
   }
   try {
     Invoke-WebRequest -Uri "https://downloads.slack-edge.com/slack-cli/slack_cli_$($SLACK_CLI_VERSION)_windows_64-bit.zip" -OutFile "$($slack_cli_dir)\slack_cli.zip"
   }
   catch {
-    throw "`nInstaller cannot download Slack CLI"
+    Write-Error "Installer cannot download Slack CLI"
+    throw
   }
 
   $slack_cli_bin_dir = "$($slack_cli_dir)\bin"
@@ -234,7 +238,8 @@ function install_deno {
         Write-Host "Comparing the currently installed Deno version... Found: v$deno_version_local"
       }
       else {
-        throw "Deno is not installed! Please install Deno to at least v$MIN_DENO_VERSION and try again."
+        Write-Error "Deno is not installed! Please install Deno to at least v$MIN_DENO_VERSION and try again."
+        throw
       }
 
       if ($deno_version_latest -eq "v$deno_version_local") {
@@ -253,7 +258,8 @@ function install_deno {
           Write-Host "Nice! Your Deno version has been updated and is ready!"
         }
         catch {
-          throw "`nDeno is not installed, please install deno manually to at least $MIN_DENO_VERSION and re-run this script."
+          Write-Error "Deno is not installed, please install deno manually to at least $MIN_DENO_VERSION and re-run this script."
+          throw
         }
       }
       else {
@@ -271,7 +277,8 @@ function install_deno {
         Write-Host "Your Deno version is compatible with the Slack CLI!"
       }
       catch {
-        throw "`nDeno is not installed, please install Deno manually to at least $MIN_DENO_VERSION and re-run this script."
+        Write-Error "Deno is not installed, please install Deno manually to at least $MIN_DENO_VERSION and re-run this script."
+        throw
       }
     }
   }
@@ -330,9 +337,17 @@ function next_step_message {
       Write-Host "   Then, authorize your CLI in your workspace with ``$confirmed_alias login``.`n"
     }
     catch {
-      throw "`nSlack CLI is not installed.`nPlease reach out to feedback@slack.com to share the issues you are facing.`nMeanwhile you can try the manual installation: https://tools.slack.dev/slack-cli`n"
+      Write-Error "Slack CLI was not installed."
+      Write-Host "`nFind help troubleshooting: https://tools.slack.dev/slack-cli"
+      throw
     }
   }
+}
+
+trap {
+    Write-Host "`nWe would love to know how things are going. Really. All of it."
+    Write-Host "Share installation issues: https://github.com/slackapi/slack-cli/issues"
+    exit 1
 }
 
 install_slack_cli $Alias $Version
