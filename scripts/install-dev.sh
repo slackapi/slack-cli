@@ -31,7 +31,7 @@ while getopts "v:d" flag; do
                                 SLACK_CLI_DEV_VERSION=$OPTARG
                         else
                                 echo "Slack CLI requires a valid semver version number." >&2
-                                exit 1
+                                return 1
                         fi
                         ;;
                 d)
@@ -102,8 +102,8 @@ install_slack_cli() {
 
                                 echo -e "🔖 Try using an alias when installing to avoid name conflicts:\n"
 
-                                echo -e "curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s your-preferred-alias\n"
-                                exit 1
+                                echo -e "curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s your-preferred-alias"
+                                return 1
                         fi
                 else
                         if [ "$SLACK_CLI_DEV_VERSION" == "dev" ]; then
@@ -140,7 +140,7 @@ install_slack_cli() {
                 echo "🛑 Error: This installer is only supported on Linux and macOS"
                 echo "🔖 Try using a different installation method:"
                 echo "🔗 https://tools.slack.dev/slack-cli"
-                exit 1
+                return 1
         fi
 
         slack_cli_install_dir="$HOME/.slack/dev-build"
@@ -169,15 +169,15 @@ install_slack_cli() {
         if [ ! -d /usr/local/bin ]; then
             echo -e "⚠️  The /usr/local/bin directory does not exist!"
             echo -e "🔐 Please create /usr/local/bin directory first and try again..."
-            exit 1
+            return 1
         fi
         if [ -w /usr/local/bin ]; then
                 ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"
         else
                 echo -e "⚠️  Failed to create a symbolic link!"
                 delay 0.1 "🔖 The installer doesn't have write access to /usr/local/bin"
-                echo -e "🔐 Please check the permission and try again..."
-                exit 1
+                echo -e "🔐 Please check permission and try again..."
+                return 1
         fi
 
         if [ $(command -v $SLACK_CLI_NAME) ]; then
@@ -272,7 +272,7 @@ maybe_update_deno_version() {
                                                 [Yy]*) deno upgrade --version $MIN_DENO_VERSION ;;
                                                 *)
                                                         echo "Please upgrade deno manually to at least $MIN_DENO_VERSION and re-run this script."
-                                                        exit
+                                                        return
                                                         ;;
                                         esac
                                         ;;
@@ -323,7 +323,7 @@ install_deno() {
                                 ln -sf "$deno_path" /usr/local/bin/deno
                         else
                                 echo -e "Installer doesn't have write access to /usr/local/bin to create a symbolic link. Please check permission and try again"
-                                exit 1
+                                return 1
                         fi
                 fi
         fi
@@ -349,9 +349,15 @@ install_deno_vscode_extension() {
 }
 
 feedback_message() {
-        if [ $(command -v $SLACK_CLI_NAME) ]; then
+        CODE=$?
+        if [ $CODE -eq 0 ] && [ $(command -v $SLACK_CLI_NAME) ]; then
                 echo -e "\n💌 We would love to know how things are going. Really. All of it."
                 echo -e "   Survey your development experience with \`$SLACK_CLI_NAME feedback\`"
+        else
+                echo -e "\x1b[0m"
+                echo -e "💌 We would love to know how things are going. Really. All of it."
+                echo -e "   Submit installation issues: https://github.com/slackapi/slack-cli/issues"
+                exit $CODE
         fi
 }
 
@@ -369,8 +375,11 @@ next_step_message() {
 }
 
 main() {
-        set -e
+        trap 'feedback_message' ERR
+
+        set -eE
         install_slack_cli "$@"
+
         sleep 0.1
         install_deno
 
