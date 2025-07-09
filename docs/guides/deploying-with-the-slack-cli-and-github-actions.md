@@ -92,6 +92,6 @@ Your GitHub repository is now set up for team collaboration! Your team members c
 
 Check out these articles to expand your knowledge and skills of automated deployments and the Slack CLI:
 
-➡️ [CI/CD overview and setup](https://tools.slack.dev/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli)
+➡️ [CI/CD overview and setup](/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli)
 
 ➡️ [CI/CD authorization](/slack-cli/guides/authorizing-the-slack-cli#ci-cd)
