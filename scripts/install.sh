@@ -353,7 +353,7 @@ feedback_message() {
                 echo -e "   Survey your development experience with \`$SLACK_CLI_NAME feedback\`"
         else
                 echo -e "\n💌 We would love to know how things are going. Really. All of it."
-                echo -e "   Share installation issues: https://github.com/slackapi/slack-cli/issues"
+                echo -e "   Submit installation issues: https://github.com/slackapi/slack-cli/issues"
         fi
 }
 

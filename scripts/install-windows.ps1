@@ -346,7 +346,7 @@ function next_step_message {
 
 trap {
   Write-Host "`nWe would love to know how things are going. Really. All of it."
-  Write-Host "Share installation issues: https://github.com/slackapi/slack-cli/issues"
+  Write-Host "Submit installation issues: https://github.com/slackapi/slack-cli/issues"
   exit 1
 }
 
