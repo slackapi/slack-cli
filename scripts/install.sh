@@ -348,12 +348,15 @@ install_deno_vscode_extension() {
 }
 
 feedback_message() {
-        if [ $? -eq 0 ] && [ $(command -v $SLACK_CLI_NAME) ]; then
+        CODE=$?
+        if [ $CODE -eq 0 ] && [ $(command -v $SLACK_CLI_NAME) ]; then
                 echo -e "\n💌 We would love to know how things are going. Really. All of it."
                 echo -e "   Survey your development experience with \`$SLACK_CLI_NAME feedback\`"
         else
-                echo -e "\n💌 We would love to know how things are going. Really. All of it."
+                echo -e "\x1b[0m"
+                echo -e "💌 We would love to know how things are going. Really. All of it."
                 echo -e "   Submit installation issues: https://github.com/slackapi/slack-cli/issues"
+                exit $CODE
         fi
 }
 
@@ -373,7 +376,7 @@ next_step_message() {
 main() {
         trap 'feedback_message' ERR
 
-        set -e
+        set -eE
         install_slack_cli "$@"
 
         sleep 0.1
