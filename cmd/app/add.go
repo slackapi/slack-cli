@@ -101,12 +101,18 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 		// TODO(semver:major): Remove defaulting to deployed and require the environment flag to be set.
 		if clients.Config.TeamFlag != "" && addFlags.environmentFlag == "" {
 			addFlags.environmentFlag = "deployed"
-			isProductionApp = true
 			clients.IO.PrintDebug(ctx,
 				"Defaulting app environment to deployed because team flag is provided. "+
 					"Please use '--environment deployed' to avoid breaking changes in the next major version.",
 			)
-		} else {
+		}
+
+		switch addFlags.environmentFlag {
+		case "deployed":
+			isProductionApp = true
+		case "local":
+			isProductionApp = false
+		default:
 			// Prompt for deployed or local app environment.
 			isProductionApp, err = promptIsProduction(ctx, clients)
 			if err != nil {
