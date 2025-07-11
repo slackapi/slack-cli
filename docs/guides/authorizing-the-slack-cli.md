@@ -72,9 +72,9 @@ Setting up a CI/CD pipeline requires authorization using a service token. Servic
 
 To get a service token, you'll use the `slack auth token` command to get a `slackauthticket`, which you'll copy and paste into your workspace to exchange for the service token. The service token will not be saved to your `credentials.json` file; instead, it is presented in the terminal for you to copy and paste for use in your CI/CD pipeline. Once copied, you'll use the `slack login --auth <your-service-token>` command to authorize your Slack CLI. Detailed instructions are below.
 
-:::info
+:::info[The service token will not conflict with your regular authentication token.] 
 
-The service token will not conflict with your regular authentication token; you can continue using your regular authentication token within the Slack CLI while using the service token for your CI/CD pipeline.
+You can continue using your regular authentication token within the Slack CLI while using the service token for your CI/CD pipeline.
 
 :::
 
