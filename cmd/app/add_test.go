@@ -414,6 +414,79 @@ func TestAppAddCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, "T123", mock.Anything)
 			},
 		},
+		// TODO(semver:major): Remove this test when the defaulting to deployed is removed.
+		"adds a new deployed app when team flag is provided and environment flag is not set": {
+			CmdArgs:         []string{"--team", "T123"},
+			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
+
+				// Mock TeamSelector prompt to return "team1"
+				appSelectMock := prompts.NewAppSelectMock()
+				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
+				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+
+				// Mock valid session for team1
+				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+					UserID:   &mockAuthTeam1.UserID,
+					TeamID:   &mockAuthTeam1.TeamID,
+					TeamName: &mockAuthTeam1.TeamDomain,
+				}, nil)
+
+				// Mock a clean ValidateAppManifest result
+				cm.API.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+					api.ValidateAppManifestResult{
+						Warnings: slackerror.Warnings{},
+					}, nil,
+				)
+
+				// Mock Host
+				cm.API.On("Host").Return("")
+
+				// Mock a successful CreateApp call and return our mocked AppID
+				cm.API.On("CreateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+					api.CreateAppResult{
+						AppID: mockAppTeam1.AppID,
+					},
+					nil,
+				)
+
+				// Mock a successful DeveloperAppInstall
+				cm.API.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+					api.DeveloperAppInstallResult{
+						AppID: mockAppTeam1.AppID,
+						APIAccessTokens: struct {
+							Bot      string "json:\"bot,omitempty\""
+							AppLevel string "json:\"app_level,omitempty\""
+							User     string "json:\"user,omitempty\""
+						}{},
+					},
+					types.InstallSuccess,
+					nil,
+				)
+
+				// Mock existing and updated cache
+				cm.API.On(
+					"ExportAppManifest",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(
+					api.ExportAppResult{},
+					nil,
+				)
+				mockProjectCache := cache.NewCacheMock()
+				mockProjectCache.On("GetManifestHash", mock.Anything, mock.Anything).
+					Return(cache.Hash(""), nil)
+				mockProjectCache.On("NewManifestHash", mock.Anything, mock.Anything).
+					Return(cache.Hash("xoxo"), nil)
+				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
+					Return(nil)
+				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("Cache").Return(mockProjectCache)
+				cm.Config.ProjectConfig = mockProjectConfig
+			},
+		},
 		"When admin approval request is pending, outputs instructions": {
 			CmdArgs:         []string{"--" + cmdutil.OrgGrantWorkspaceFlag, "T123"},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing", "Your request to install the app is pending", "complete installation by re-running"},
@@ -558,14 +631,16 @@ func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *s
 	listPkgMock.On("List").Return(nil)
 
 	// Mock the prompt to select the app environment.
-	clientsMock.IO.On("SelectPrompt",
-		mock.Anything,
-		"Choose the app environment",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(iostreams.SelectPromptResponse{
-		Flag:   true,
-		Option: appEnvironment,
-	}, nil)
+	if appEnvironment != "" {
+		clientsMock.IO.On("SelectPrompt",
+			mock.Anything,
+			"Choose the app environment",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(iostreams.SelectPromptResponse{
+			Flag:   true,
+			Option: appEnvironment,
+		}, nil)
+	}
 }

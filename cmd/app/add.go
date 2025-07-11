@@ -42,6 +42,7 @@ var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
 
 type addCmdFlags struct {
 	orgGrantWorkspaceID string
+	environmentFlag     string
 }
 
 var addFlags addCmdFlags
@@ -72,6 +73,7 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&addFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
+	cmd.Flags().StringVarP(&addFlags.environmentFlag, "environment", "E", "", "environment of app (local, deployed)")
 
 	return cmd
 }
@@ -91,10 +93,24 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error 
 // RunAddCommand executes the workspace install command, prints output, and returns any errors.
 func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (context.Context, types.InstallState, types.App, error) {
 	if selection == nil {
-		// Prompt for deployed or local app environment.
-		isProductionApp, err := promptIsProduction(ctx, clients)
-		if err != nil {
-			return ctx, "", types.App{}, err
+		var isProductionApp bool
+		var err error
+
+		// When team flag is provided, default app environment to deployed if not specified.
+		// TODO(semver:major): Remove defaulting to deployed and require the environment flag to be set.
+		if clients.Config.TeamFlag != "" && addFlags.environmentFlag == "" {
+			addFlags.environmentFlag = "deployed"
+			isProductionApp = true
+			clients.IO.PrintDebug(ctx,
+				"Defaulting app environment to deployed because team flag is provided. "+
+					"Please use '--environment deployed' to avoid breaking changes in the next major version.",
+			)
+		} else {
+			// Prompt for deployed or local app environment.
+			isProductionApp, err = promptIsProduction(ctx, clients)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
 		}
 
 		var appEnvironmentType prompts.AppEnvironmentType
