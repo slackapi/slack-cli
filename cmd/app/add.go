@@ -57,6 +57,7 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "app install", Meaning: "Install a production app to a team"},
 			{Command: "app install --team T0123456", Meaning: "Install a production app to a specific team"},
+			{Command: "app install --team T0123456 --environment local", Meaning: "Install a local dev app to a specific team"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
