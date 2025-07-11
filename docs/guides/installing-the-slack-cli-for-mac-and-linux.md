@@ -12,9 +12,9 @@ The Slack CLI is a set of tools critical to building workflow apps. This is your
 
 ⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
 
-:::info
+:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.] 
 
-The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`. If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
+If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
 
 :::
 
@@ -79,6 +79,7 @@ curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -d
 Error: _Failed to create a symbolic link! The installer doesn't have write access to /usr/local/bin. Please check permission and try again..._
 
 Solution: Sudo actions within the scripts were removed so as not to create any security concerns. The `$HOME` env var is updated to `/root` &mdash; however, the installer is using `$HOME` for both Deno and the SDK install, which causes the whole install to be placed under `/root`, making both Deno and the SDK unusable for users without root permissions.
+
 * For users who do not have root permissions, run the sudo actions manually as follows: `sudo mkdir -p -m 775 /usr/local/bin`, then `sudo ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"` where `$slack_cli_bin_path` is typically `$HOME/.slack/bin/slack` and `$SLACK_CLI_NAME` is typically the alias (by default it’s `slack`).
 * For users who do have root permissions, you can run the installation script as `sudo curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash`. In this case, the script is executed as root.
 
@@ -101,23 +102,22 @@ v8 10.*
 typescript 4.*
 ```
 
-**3\. Download and install
-   [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), a
-   dependency of the** `slack` **CLI.**
+**3\. Download and install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), a dependency of the** `slack` **CLI.**
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.0_macOS_arm64.tar.gz"><strong>Download for macOS Apple Silicon (.tar.gz)</strong></a>
+🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.0_macOS_arm64.tar.gz)
 
-<ts-icon class="ts_icon_apple"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.0_macOS_amd64.tar.gz"><strong>Download for macOS Intel (.tar.gz)</strong></a>
+🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.0_macOS_amd64.tar.gz)
 
-<ts-icon class="ts_icon_plug"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.0_linux_64-bit.tar.gz"><strong>Download for Linux (.tar.gz)</strong></a>
+🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.0_linux_64-bit.tar.gz)
 
 **5\. Add the** `slack` **CLI to your path.**
 
-:::info
-  <p><strong>Existing</strong> <code>slack</code> <strong>binary in path?</strong></p>
-  <p>If you have another CLI tool in your path called <code>slack</code>, we recommend renaming our slack binary to a different name before adding it to your path. See the <strong>Automated installation</strong> tab for more details.</p>
+:::info[Existing `slack` binary in path?]
+
+If you have another CLI tool in your path called `slack`, we recommend renaming our slack binary to a different name before adding it to your path. See the **Automated installation** tab for more details.
+
 :::
 
 **6\. Verify that** `slack` **is installed and in your path.**
@@ -165,8 +165,7 @@ In addition, if you attempt to run the `slack run` command without this dependen
 
 Ensure that `deno-slack-hooks` is installed at the project level and that the version is not less than `v1.3.0`.
 
-**8\. [Install the VSCode extension for
-   Deno](/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
+**8\. [Install the VSCode extension for Deno](/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
 
 </TabItem>
 </Tabs>

@@ -4,11 +4,11 @@ sidebar_label: Using with Bolt frameworks
 
 # Using the Slack CLI with Bolt frameworks
 
-You can use the Slack CLI to streamline development of apps using [Bolt for JavaScript](/tools.slack.dev/bolt-js) and [Bolt for Python](/tools.slack.dev/bolt-python).
+You can use the Slack CLI to streamline development of apps using [Bolt for JavaScript](/bolt-js) and [Bolt for Python](/bolt-python).
 
-:::info
+:::info[Feeling adventurous?]
 
-To create a Bolt app using features currently under development, refer to the [experiments](https://tools.slack.dev/slack-cli/reference/experiments) page.
+To create a Bolt app using features currently under development, refer to the [experiments](/slack-cli/reference/experiments) page.
 
 :::
 
@@ -34,9 +34,9 @@ You will then be prompted to choose between **Bolt for JavaScript** or **Bolt fo
 
 Your app will be cloned from the respective [JavaScript](https://github.com/slack-samples/bolt-js-starter-template) or [Python](https://github.com/slack-samples/bolt-python-starter-template) project template on our Slack Platform Sample Code repository, and its project dependencies will be installed. Then, `cd` into your project folder. 
 
-:::info
+:::info[For Bolt for Python projects, automatic project dependency installation is currently unsupported, and will need to be done manually.] 
 
-For Bolt for Python projects, automatic project dependency installation is currently unsupported, and will need to be done manually. For more information, refer to [Getting started with Bolt for Python](https://tools.slack.dev/bolt-python/getting-started).
+For more information, refer to [Getting started with Bolt for Python](/bolt-python/getting-started).
 
 :::
 

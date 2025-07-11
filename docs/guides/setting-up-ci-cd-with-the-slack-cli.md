@@ -168,9 +168,7 @@ This also includes calling Deno's [task runner](https://deno.land/manual/tools/t
 
 ✨  **For more information about creating unit tests**, refer to [Testing custom functions](/deno-slack-sdk/guides/creating-custom-functions#testing).
 
-:::info
-
-If you've created your project by [cloning one of our sample apps](/deno-slack-sdk/guides/creating-an-app), note that the `.github` folder will not be included. You'll need to create it yourself, but you can use the handy dandy **Copy** button next to the code samples on this page to get started!
+:::info[If you've created your project by [cloning one of our sample apps](/deno-slack-sdk/guides/creating-an-app), note that the `.github` folder will not be included. You'll need to create it yourself, but you can use the handy dandy **Copy** button next to the code samples on this page to get started!]
 
 :::
 

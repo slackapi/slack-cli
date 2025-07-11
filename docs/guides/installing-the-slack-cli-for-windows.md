@@ -12,15 +12,13 @@ The Slack CLI is a set of tools critical to building workflow apps. This is your
 
 ⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
 
-:::info
+:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.] 
 
-The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`. If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
+If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
 
 :::
 
-:::warning
-
-**PowerShell is required for installing the Slack CLI on Windows machines.** An alternative shell will not work.
+:::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
 
 :::
 
@@ -33,17 +31,11 @@ The minimum required Slack CLI version for Enterprise Grid as of September 19th,
 irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 | iex
 ```
 
-:::warning
-
-PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.
+:::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
 
 :::
 
-This will install the Slack CLI and all required dependencies, including [Deno](/deno-slack-sdk/guides/installing-deno),
-the runtime environment for workflow apps. If you have VSCode installed,
-the [VSCode Deno
-extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno)
-will be installed.
+This will install the Slack CLI and all required dependencies, including [Deno](/deno-slack-sdk/guides/installing-deno), the runtime environment for workflow apps. If you have VSCode installed, the [VSCode Deno extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) will be installed.
 
 <details>
 <summary>Optional: Use an alias for the Slack CLI binary</summary>
@@ -63,9 +55,7 @@ You can also use the `-Alias` flag as described within **Optional: customize ins
 <details>
 <summary>Optional: customize installation using flags</summary>
 
-There are several flags available to customize the installation. Since flags
-cannot be passed to remote scripts, you must first download the installation
-script to a local file:
+There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the installation script to a local file:
 
 ```zsh
 irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -outfile 'install-windows.ps1'
@@ -123,9 +113,7 @@ v8 10.*
 typescript 4.*
 ```
 
-**3\. Download and install
-   [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), a
-   dependency of the** `slack` **CLI.**
+**3\. Download and install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), a dependency of the** `slack` **CLI.**
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
@@ -133,9 +121,9 @@ typescript 4.*
 
 **5\. Add the** `slack` **CLI to your path.**
 
-:::info
-  <p><strong>Existing</strong> <code>slack</code> <strong>binary in path?</strong></p>
-  <p>If you have another CLI tool in your path called <code>slack</code>, we recommend renaming our slack binary to a different name before adding it to your path. See the <strong>Automated installation</strong> tab for more details.</p>
+:::info[Existing `slack` binary in path?]
+
+If you have another CLI tool in your path called `slack`, we recommend renaming our slack binary to a different name before adding it to your path. See the **Automated installation** tab for more details.
 
 :::
 

@@ -32,9 +32,7 @@ rd -r $HOME\AppData\Local\slack-cli
 
 where `$HOME` is substituted for the full path, e.g. `C:\Users\<your_username>`.
 
-:::warning
-
-**As with installation, PowerShell is required for uninstallation of the Slack CLI from Windows machines.** An alternative shell will not work.
+:::warning[As with installation, PowerShell is required for uninstallation of the Slack CLI from Windows machines; an alternative shell will not work.]
 
 :::
 
