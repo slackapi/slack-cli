@@ -54,8 +54,11 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	if err != nil {
 		return types.App{}, "", err
 	}
-	if !manifestUpdates && !manifestCreates {
-		return app, "", nil
+
+	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		if !manifestUpdates && !manifestCreates {
+			return app, "", nil
+		}
 	}
 
 	// Get the token for the authenticated workspace
@@ -81,22 +84,47 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	slackYaml, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
-	if err != nil {
-		return app, "", err
+	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
+	// if the manifest source is local or if we are creating a new app. After an app is created,
+	// app settings becomes the source of truth for remote manifests, so updates and installs always
+	// get the latest manifest from app settings.
+	// When the BoltInstall experiment is disabled, we get the manifest from the local file because
+	// this is how the original implementation worked.
+	var slackManifest types.SlackYaml
+	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return app, "", err
+		}
+		if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+			slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+			if err != nil {
+				return app, "", err
+			}
+		} else {
+			slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+			if err != nil {
+				return app, "", err
+			}
+		}
+	} else {
+		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+		if err != nil {
+			return app, "", err
+		}
 	}
 
-	log.Data["appName"] = slackYaml.DisplayInformation.Name
+	log.Data["appName"] = slackManifest.DisplayInformation.Name
 	log.Data["isUpdate"] = app.AppID != ""
 	log.Data["teamName"] = *authSession.TeamName
 	log.Log("INFO", "app_install_manifest")
 
-	manifest := slackYaml.AppManifest
-	if slackYaml.IsFunctionRuntimeSlackHosted() {
+	manifest := slackManifest.AppManifest
+	if slackManifest.IsFunctionRuntimeSlackHosted() {
 		configureHostedManifest(ctx, clients, &manifest)
 	}
 
-	err = validateManifestForInstall(ctx, clients, app, manifest)
+	err = validateManifestForInstall(ctx, clients, token, app, manifest)
 	if err != nil {
 		return app, "", err
 	}
@@ -124,6 +152,9 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		app.AppID = result.AppID
 		app.TeamID = *authSession.TeamID
 		app.TeamDomain = auth.TeamDomain
+		// TODO: add enterprise ID and user ID to app? See InstallLocalApp.
+		// app.EnterpriseID = config.GetContextEnterpriseID(ctx)
+		// app.UserID = *authSession.UserID
 	}
 
 	appManageURL := fmt.Sprintf("%s/apps", apiInterface.Host())
@@ -197,7 +228,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 	}
 
 	// upload icon, default to icon.png
-	var iconPath = slackYaml.Icon
+	var iconPath = slackManifest.Icon
 	if iconPath == "" {
 		if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
 			iconPath = "icon.png"
@@ -213,7 +244,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		} else {
 			log.Info("app_install_icon_success")
 		}
-		// TODO(@mbrevoort) reoptimize
+		// TODO: Optimization.
 		// Save a md5 hash of the icon in environments.yaml
 		// var iconHash string
 		// iconHash, err = getIconHash(iconPath)
@@ -257,9 +288,7 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 	clients.IO.PrintInfo(ctx, false, status)
 }
 
-func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, app types.App, appManifest types.AppManifest) error {
-	var token = config.GetContextToken(ctx)
-
+func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, token string, app types.App, appManifest types.AppManifest) error {
 	validationResult, err := clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 
 	if retryValidate := manifest.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
@@ -329,8 +358,7 @@ func validateManifestForInstall(ctx context.Context, clients *shared.ClientFacto
 
 // InstallLocalApp installs a non-hosted local app to a workspace.
 func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGrantWorkspaceID string, log *logger.Logger, auth types.SlackAuth, app types.App) (types.App, api.DeveloperAppInstallResult, types.InstallState, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "installLocalApp")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "installLocalApp")
 	defer span.Finish()
 
 	manifestUpdates, err := shouldUpdateManifest(ctx, clients, app, auth)
@@ -367,6 +395,8 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	if authSession.EnterpriseID != nil {
 		ctx = config.SetContextEnterpriseID(ctx, *authSession.EnterpriseID)
 		clients.EventTracker.SetAuthEnterpriseID(*authSession.EnterpriseID)
+		// TODO: add enterprise ID to app? See Install.
+		// app.EnterpriseID = *authSession.EnterpriseID
 	}
 
 	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
@@ -410,7 +440,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		configureLocalManifest(ctx, clients, &manifest)
 	}
 
-	err = validateManifestForInstall(ctx, clients, app, manifest)
+	err = validateManifestForInstall(ctx, clients, token, app, manifest)
 	if err != nil {
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
