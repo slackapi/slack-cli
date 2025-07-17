@@ -1252,8 +1252,6 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
 			},
 		},
-		// "returns selection for app id flag and team id flag after reauthentication": {
-		// },
 		"errors if app id flag has a team id flag that does not match": {
 			mockAuths: fakeAuthsByTeamDomainSlice,
 			mockAppsDeployed: []types.App{
@@ -1389,7 +1387,7 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
 			},
 		},
-		"returns new application with team id flag and token flag if app not saved": {
+		"returns new application with token flag and team id flag if app not saved": {
 			mockAuthWithToken:          fakeAuthsByTeamDomain[team1TeamDomain],
 			mockAuthWithTeamIDError:    slackerror.New(slackerror.ErrCredentialsNotFound),
 			mockAuthWithTeamIDTeamID:   team1TeamID,
