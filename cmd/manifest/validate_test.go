@@ -58,7 +58,7 @@ func TestManifestValidateCommand(t *testing.T) {
 
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
 
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
@@ -89,7 +89,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_ZeroUserAuth(t *te
 	// Mock a failed AppSelectPrompt
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired))
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired))
 
 	// Mock zero user auths
 	mockAuths := []types.SlackAuth{}
@@ -133,7 +133,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 	// Mock a failed AppSelectPrompt
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired))
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired))
 
 	// Mock the manifest validate package
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
@@ -163,7 +163,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 	// Mock a failed AppSelectPrompt
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired))
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired))
 	clientsMock.IO.On("SelectPrompt", mock.Anything, prompts.SelectTeamPrompt, mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 		Flag: clients.Config.Flags.Lookup("team"),
 	})).Return(iostreams.SelectPromptResponse{
@@ -227,7 +227,7 @@ func TestManifestValidateCommand_HandleOtherErrors(t *testing.T) {
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
 	errMsg := "Unrelated error"
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, slackerror.New(errMsg))
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, slackerror.New(errMsg))
 
 	err := cmd.ExecuteContext(ctx)
 	require.ErrorContains(t, err, errMsg)

@@ -281,21 +281,22 @@ func TestGetTokenApp(t *testing.T) {
 
 func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 	tests := map[string]struct {
-		tokenFlag    string
-		tokenAuth    types.SlackAuth
-		appFlag      string
-		appStatus    api.GetAppStatusResult
-		statusErr    error
-		selectStatus AppInstallStatus
-		expectedApp  SelectedApp
-		expectedErr  error
+		tokenFlag         string
+		tokenAuth         types.SlackAuth
+		appFlag           string
+		appStatus         api.GetAppStatusResult
+		appStatusErr      error
+		selectEnvironment AppEnvironmentType
+		selectStatus      AppInstallStatus
+		expectedApp       SelectedApp
+		expectedErr       error
 	}{
 		"error if an error occurred while collecting app info": {
 			tokenFlag:    team1Token,
 			tokenAuth:    fakeAuthsByTeamDomain[team1TeamDomain],
 			appFlag:      localTeam1UninstalledApp.AppID,
 			appStatus:    api.GetAppStatusResult{},
-			statusErr:    slackerror.New(slackerror.ErrAppNotFound),
+			appStatusErr: slackerror.New(slackerror.ErrAppNotFound),
 			selectStatus: ShowAllApps,
 			expectedApp:  SelectedApp{},
 			expectedErr:  slackerror.New(slackerror.ErrAppNotFound),
@@ -311,7 +312,7 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 					Hosted:    true,
 				}},
 			},
-			statusErr:    nil,
+			appStatusErr: nil,
 			selectStatus: ShowInstalledAppsOnly,
 			expectedApp:  SelectedApp{},
 			expectedErr:  slackerror.New(slackerror.ErrInstallationRequired),
@@ -324,14 +325,34 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 				Apps: []api.AppStatusResultAppInfo{{
 					AppID:     deployedTeam1InstalledAppID,
 					Installed: deployedTeam1AppIsInstalled,
-					Hosted:    true,
+					Hosted:    false,
 				}},
 			},
-			statusErr:    nil,
+			appStatusErr: nil,
 			selectStatus: ShowInstalledAppsOnly,
 			expectedApp: SelectedApp{
 				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
 				App:  deployedTeam1InstalledApp,
+			},
+			expectedErr: nil,
+		},
+		"returns app details without respect to the app environment": {
+			tokenFlag: team2Token,
+			tokenAuth: fakeAuthsByTeamDomain[team2TeamDomain],
+			appFlag:   deployedTeam2UninstalledAppID,
+			appStatus: api.GetAppStatusResult{
+				Apps: []api.AppStatusResultAppInfo{{
+					AppID:     deployedTeam2UninstalledAppID,
+					Installed: deployedTeam2AppIsInstalled,
+					Hosted:    true,
+				}},
+			},
+			appStatusErr:      nil,
+			selectEnvironment: ShowLocalOnly,
+			selectStatus:      ShowInstalledAndUninstalledApps,
+			expectedApp: SelectedApp{
+				Auth: fakeAuthsByTeamDomain[team2TeamDomain],
+				App:  deployedTeam2UninstalledApp,
 			},
 			expectedErr: nil,
 		},
@@ -344,17 +365,21 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 			clientsMock.Auth.On(AuthWithToken, mock.Anything, test.tokenFlag).
 				Return(test.tokenAuth, nil)
 			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-				Return(test.appStatus, test.statusErr)
+				Return(test.appStatus, test.appStatusErr)
+			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+				TeamName: &test.tokenAuth.TeamDomain,
+				TeamID:   &test.tokenAuth.TeamID,
+			}, nil)
 			clientsMock.AddDefaultMocks()
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			clients.Config.TokenFlag = test.tokenFlag
 			clients.Config.AppFlag = test.appFlag
 
-			selection, err := AppSelectPrompt(ctx, clients, test.selectStatus)
+			selection, err := AppSelectPrompt(ctx, clients, ShowAllEnvironments, test.selectStatus)
 
-			if test.statusErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.statusErr, err)
+			if test.appStatusErr != nil && assert.Error(t, err) {
+				require.Equal(t, test.appStatusErr, err)
 			} else if test.expectedErr != nil && assert.Error(t, err) {
 				require.Equal(t, test.expectedErr, err)
 			} else {
@@ -619,7 +644,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 	}
 }
 
-func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
+func TestPrompt_AppSelectPrompt(t *testing.T) {
 	tests := map[string]struct {
 		mockAuths                  []types.SlackAuth
 		mockAuthWithTeamIDError    error
@@ -1353,151 +1378,11 @@ func TestPrompt_AppSelectPrompt_FlatAppSelectPrompt(t *testing.T) {
 				err := clients.AppClient().SaveLocal(ctx, app)
 				require.NoError(t, err)
 			}
-			selectedApp, err := flatAppSelectPrompt(ctx, clients, tt.appPromptConfigEnvironment, tt.appPromptConfigStatus)
+			selectedApp, err := AppSelectPrompt(ctx, clients, tt.appPromptConfigEnvironment, tt.appPromptConfigStatus)
 			require.Equal(t, tt.expectedError, err)
 			require.Equal(t, tt.expectedSelection, selectedApp)
 			require.Contains(t, clientsMock.GetStdoutOutput(), tt.expectedStdout)
 			require.Contains(t, clientsMock.GetStderrOutput(), tt.expectedStderr)
-		})
-	}
-}
-
-//
-// TeamAppSelectPrompt tests
-//
-
-func TestPrompt_TeamAppSelectPrompt_TokenAppFlag(t *testing.T) {
-	tests := map[string]struct {
-		tokenFlag    string
-		tokenAuth    types.SlackAuth
-		appFlag      string
-		appStatus    api.GetAppStatusResult
-		statusErr    error
-		saveLocal    []types.App
-		selectEnv    AppEnvironmentType
-		selectStatus AppInstallStatus
-		expectedApp  SelectedApp
-		expectedErr  error
-	}{
-		"error if an error occurred while collecting app info": {
-			tokenFlag:    team1Token,
-			tokenAuth:    fakeAuthsByTeamDomain[team1TeamDomain],
-			appFlag:      localTeam1UninstalledApp.AppID,
-			appStatus:    api.GetAppStatusResult{},
-			statusErr:    slackerror.New(slackerror.ErrAppNotFound),
-			selectEnv:    ShowHostedOnly,
-			selectStatus: ShowAllApps,
-			expectedApp:  SelectedApp{},
-			expectedErr:  slackerror.New(slackerror.ErrAppNotFound),
-		},
-		"continue if a saved local app is used for a deployed only prompt": {
-			tokenFlag: team1Token,
-			tokenAuth: fakeAuthsByTeamDomain[team1TeamDomain],
-			appFlag:   localTeam1UninstalledApp.AppID,
-			appStatus: api.GetAppStatusResult{
-				Apps: []api.AppStatusResultAppInfo{{
-					AppID:     localTeam1UninstalledAppID,
-					Installed: localTeam1AppIsInstalled,
-					Hosted:    false,
-				}},
-			},
-			statusErr:    nil,
-			saveLocal:    []types.App{localTeam1UninstalledApp},
-			selectEnv:    ShowHostedOnly,
-			selectStatus: ShowAllApps,
-			expectedApp: SelectedApp{
-				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
-				App:  localTeam1UninstalledApp,
-			},
-			expectedErr: slackerror.New(slackerror.ErrLocalAppNotSupported),
-		},
-		"error if a deployed app is used for a local only prompt": {
-			tokenFlag: team2Token,
-			tokenAuth: fakeAuthsByTeamDomain[team2TeamDomain],
-			appFlag:   deployedTeam2UninstalledApp.AppID,
-			appStatus: api.GetAppStatusResult{
-				Apps: []api.AppStatusResultAppInfo{{
-					AppID:     deployedTeam2UninstalledApp.AppID,
-					Installed: deployedTeam2AppIsInstalled,
-					Hosted:    true,
-				}},
-			},
-			statusErr:    nil,
-			selectEnv:    ShowLocalOnly,
-			selectStatus: ShowAllApps,
-			expectedApp:  SelectedApp{},
-			expectedErr:  slackerror.New(slackerror.ErrDeployedAppNotSupported),
-		},
-		"error if an uninstalled app is used for an installed only prompt": {
-			tokenFlag: team2Token,
-			tokenAuth: fakeAuthsByTeamDomain[team2TeamDomain],
-			appFlag:   deployedTeam2UninstalledApp.AppID,
-			appStatus: api.GetAppStatusResult{
-				Apps: []api.AppStatusResultAppInfo{{
-					AppID:     deployedTeam2UninstalledApp.AppID,
-					Installed: deployedTeam2AppIsInstalled,
-					Hosted:    true,
-				}},
-			},
-			statusErr:    nil,
-			selectEnv:    ShowHostedOnly,
-			selectStatus: ShowInstalledAppsOnly,
-			expectedApp:  SelectedApp{},
-			expectedErr:  slackerror.New(slackerror.ErrInstallationRequired),
-		},
-		"returns known information about the request app": {
-			tokenFlag: team1Token,
-			tokenAuth: fakeAuthsByTeamDomain[team1TeamDomain],
-			appFlag:   deployedTeam1InstalledAppID,
-			appStatus: api.GetAppStatusResult{
-				Apps: []api.AppStatusResultAppInfo{{
-					AppID:     deployedTeam1InstalledAppID,
-					Installed: deployedTeam1AppIsInstalled,
-					Hosted:    true,
-				}},
-			},
-			statusErr:    nil,
-			selectEnv:    ShowHostedOnly,
-			selectStatus: ShowInstalledAppsOnly,
-			expectedApp: SelectedApp{
-				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
-				App:  deployedTeam1InstalledApp,
-			},
-			expectedErr: nil,
-		},
-	}
-
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := slackcontext.MockContext(t.Context())
-			clientsMock := shared.NewClientsMock()
-			clientsMock.Auth.On(AuthWithToken, mock.Anything, test.tokenFlag).
-				Return(test.tokenAuth, nil)
-			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-				Return(test.appStatus, test.statusErr)
-			clientsMock.AddDefaultMocks()
-
-			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			for _, app := range test.saveLocal {
-				err := clients.AppClient().SaveLocal(ctx, app)
-				require.NoError(t, err)
-			}
-			clients.Config.TokenFlag = test.tokenFlag
-			clients.Config.AppFlag = test.appFlag
-
-			selection, err := TeamAppSelectPrompt(ctx, clients, test.selectEnv, test.selectStatus)
-
-			if test.statusErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.statusErr, err)
-			} else if test.expectedErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.expectedErr, err)
-			} else {
-				require.NoError(t, err)
-				assert.Equal(t, test.expectedApp.Auth, selection.Auth)
-				expectedApp := test.expectedApp.App
-				expectedApp.UserID = test.expectedApp.Auth.UserID
-				assert.Equal(t, expectedApp, selection.App)
-			}
 		})
 	}
 }

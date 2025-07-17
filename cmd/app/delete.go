@@ -71,7 +71,7 @@ func RunDeleteCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	}
 
 	// Get the app auth selection from the flag or prompt
-	selection, err := deleteAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAndUninstalledApps)
+	selection, err := deleteAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		if slackerror.ToSlackError(err).Code == slackerror.ErrInstallationRequired {
 			return types.App{}, nil

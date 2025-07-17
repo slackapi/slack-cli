@@ -45,7 +45,7 @@ var runFlags runCmdFlags
 // TODO - Stopgap until we learn the correct way to structure our code for testing.
 var runFunc = platform.Run
 var runRunCommandFunc = RunRunCommand
-var runTeamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
+var runAppSelectPromptFunc = prompts.AppSelectPrompt
 
 func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -99,7 +99,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 	ctx := cmd.Context()
 
 	// Get the workspace from the flag or prompt
-	selection, err := runTeamAppSelectPromptFunc(ctx, clients, prompts.ShowLocalOnly, prompts.ShowAllApps)
+	selection, err := runAppSelectPromptFunc(ctx, clients, prompts.ShowLocalOnly, prompts.ShowAllApps)
 	if err != nil {
 		switch slackerror.ToSlackError(err).Code {
 		case slackerror.ErrDeployedAppNotSupported:

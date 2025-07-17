@@ -374,8 +374,8 @@ func showOptionsForNewAppCreation(app types.App, status AppInstallStatus) bool {
 	return !appExists(app) && (status == ShowAllApps || status == ShowInstalledAndNewApps)
 }
 
-// flatAppSelectPrompt reveals options for apps that match the install status
-func flatAppSelectPrompt(
+// AppSelectPrompt reveals options for apps that match the install status
+func AppSelectPrompt(
 	ctx context.Context,
 	clients *shared.ClientFactory,
 	environment AppEnvironmentType,
@@ -388,14 +388,17 @@ func flatAppSelectPrompt(
 	case environment.Equals(ShowAllEnvironments) && types.IsAppFlagEnvironment(clients.Config.AppFlag):
 		switch {
 		case types.IsAppFlagDeploy(clients.Config.AppFlag):
-			return flatAppSelectPrompt(ctx, clients, ShowHostedOnly, status)
+			return AppSelectPrompt(ctx, clients, ShowHostedOnly, status)
 		case types.IsAppFlagLocal(clients.Config.AppFlag):
-			return flatAppSelectPrompt(ctx, clients, ShowLocalOnly, status)
+			return AppSelectPrompt(ctx, clients, ShowLocalOnly, status)
 		}
 	case environment.Equals(ShowLocalOnly) && types.IsAppFlagDeploy(clients.Config.AppFlag):
 		return SelectedApp{}, slackerror.New(slackerror.ErrDeployedAppNotSupported)
 	case environment.Equals(ShowHostedOnly) && types.IsAppFlagLocal(clients.Config.AppFlag):
 		return SelectedApp{}, slackerror.New(slackerror.ErrLocalAppNotSupported)
+	case clients.Config.AppFlag != "" && !types.IsAppFlagValid(clients.Config.AppFlag):
+		return SelectedApp{}, slackerror.New(slackerror.ErrInvalidAppFlag).
+			WithRemediation("Choose a specific app with %s", style.Highlight("--app <app_id>"))
 	}
 	defer func() {
 		if err != nil {
@@ -622,7 +625,7 @@ func flatAppSelectPrompt(
 	case selection.Prompt && options[selection.Index].label != creation:
 		return options[selection.Index].app, nil
 	case selection.Prompt && options[selection.Index].label == creation:
-		team, err := flatTeamSelectPrompt(ctx, clients)
+		team, err := teamSelectPrompt(ctx, clients)
 		if err != nil {
 			return SelectedApp{}, err
 		}
@@ -648,30 +651,8 @@ func flatAppSelectPrompt(
 	return SelectedApp{}, slackerror.New(slackerror.ErrAppNotFound)
 }
 
-// AppSelectPrompt prompts the user to select a workspace then environment for the current command,
-// returning the selected app. This app might require installation before use if `status == ShowAllApps`.
-func AppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, status AppInstallStatus) (SelectedApp, error) {
-	var appFlag = clients.Config.AppFlag     // e.g. 'local', 'deploy', 'deployed', A12345
-	var tokenFlag = clients.Config.TokenFlag // e.g. xoxe.xoxp.xxxx
-
-	if clients.Config.SkipLocalFs() {
-		clients.IO.PrintDebug(ctx, "selecting app based on token value and app id value '%s'", appFlag)
-		selection, err := getTokenApp(ctx, clients, tokenFlag, appFlag)
-		if err != nil {
-			return SelectedApp{}, err
-		}
-		if status == ShowInstalledAppsOnly && selection.App.InstallStatus != types.AppStatusInstalled {
-			return SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired)
-		}
-		clients.Auth().SetSelectedAuth(ctx, selection.Auth, clients.Config, clients.Os)
-		return selection, nil
-	}
-
-	return flatAppSelectPrompt(ctx, clients, ShowAllEnvironments, status)
-}
-
-// flatTeamSelectPrompt shows choices for authenticated teams
-func flatTeamSelectPrompt(
+// teamSelectPrompt shows choices for authenticated teams
+func teamSelectPrompt(
 	ctx context.Context,
 	clients *shared.ClientFactory,
 ) (
@@ -751,50 +732,6 @@ func flatTeamSelectPrompt(
 		return options[selection.Index].auth, nil
 	}
 	return types.SlackAuth{}, slackerror.New(slackerror.ErrTeamNotFound)
-}
-
-// TeamAppSelectPrompt prompts the user to select an app from a specified team environment,
-// returning the selected app. This app might require installation before use if `status == ShowAllApps`.
-func TeamAppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env AppEnvironmentType, status AppInstallStatus) (SelectedApp, error) {
-	var appFlag = clients.Config.AppFlag
-	var tokenFlag = clients.Config.TokenFlag
-
-	// Error if an invalid or mismatched --app flag is provided
-	if appFlag != "" && !types.IsAppFlagValid(appFlag) {
-		return SelectedApp{}, slackerror.New(slackerror.ErrInvalidAppFlag).
-			WithRemediation("Choose a specific app with %s", style.Highlight("--app <app_id>"))
-	}
-	if env == ShowHostedOnly && types.IsAppFlagLocal(appFlag) {
-		return SelectedApp{}, slackerror.New(slackerror.ErrLocalAppNotSupported)
-	}
-	if env == ShowLocalOnly && types.IsAppFlagDeploy(appFlag) {
-		return SelectedApp{}, slackerror.New(slackerror.ErrDeployedAppNotSupported)
-	}
-
-	if clients.Config.SkipLocalFs() {
-		clients.IO.PrintDebug(ctx, "selecting app based on token value and app id value '%s'", appFlag)
-		selection, err := getTokenApp(ctx, clients, tokenFlag, appFlag)
-		if err != nil {
-			return SelectedApp{}, err
-		}
-		if status == ShowInstalledAppsOnly && selection.App.InstallStatus != types.AppStatusInstalled {
-			return SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired)
-		}
-		clients.Auth().SetSelectedAuth(ctx, selection.Auth, clients.Config, clients.Os)
-		// The development status of an app cannot be determined when local app files
-		// do not exist. This defaults to "false" for these cases.
-		//
-		// Commands such as "platform run" might allow unknown development statuses so
-		// we return both the selection and an error here.
-		if selection.App.IsDev && env == ShowHostedOnly {
-			return selection, slackerror.New(slackerror.ErrLocalAppNotSupported)
-		} else if !selection.App.IsDev && env == ShowLocalOnly {
-			return selection, slackerror.New(slackerror.ErrDeployedAppNotSupported)
-		}
-		return selection, nil
-	}
-
-	return flatAppSelectPrompt(ctx, clients, env, status)
 }
 
 // OrgSelectWorkspacePrompt prompts the user to select a single workspace to grant app access to, or grant all workspaces within the org.

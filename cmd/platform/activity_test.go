@@ -65,7 +65,7 @@ func TestActivity_Command(t *testing.T) {
 
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
 
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {

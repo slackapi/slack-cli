@@ -26,8 +26,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// teamAppSelectPromptFunc is a handle to the TeamAppSelectPrompt that can be mocked in tests
-var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
+// appSelectPromptFunc is a handle to the AppSelectPrompt that can be mocked in tests
+var appSelectPromptFunc = prompts.AppSelectPrompt
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{

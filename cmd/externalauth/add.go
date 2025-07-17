@@ -83,7 +83,7 @@ func runAddCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	// Get the app selection and accompanying auth from the prompt
 	// Note: Only installed apps will be shown in the prompt as installation is required for this command.
 	//       This is consistent with the experience for other commands that require installation.
-	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

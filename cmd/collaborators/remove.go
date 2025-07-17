@@ -59,7 +59,7 @@ func runRemoveCommandFunc(ctx context.Context, clients *shared.ClientFactory, cm
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "cmd.Collaborators.Remove")
 	defer span.Finish()
-	selection, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		return err
 	}

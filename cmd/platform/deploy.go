@@ -41,7 +41,6 @@ import (
 // Create handle to Deploy function for testing
 // TODO - Stopgap until we learn the correct way to structure our code for testing.
 var deployFunc = platform.Deploy
-var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
 
 // TODO - Same as above, but probably even worse
 var runAddCommandFunc = app.RunAddCommand
@@ -79,7 +78,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 				deploySpinner.Stop()
 			}()
 
-			selection, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
+			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
 			if err != nil {
 				return err
 			}

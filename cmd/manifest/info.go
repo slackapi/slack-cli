@@ -129,7 +129,7 @@ func getManifestInfoProject(ctx context.Context, clients *shared.ClientFactory) 
 
 // getManifestInfoRemote gathers app manifest information from app settings
 func getManifestInfoRemote(ctx context.Context, clients *shared.ClientFactory) (types.AppManifest, error) {
-	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowInstalledAndUninstalledApps)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		return types.AppManifest{}, err
 	}
