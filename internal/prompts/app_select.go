@@ -24,8 +24,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	authpkg "github.com/slackapi/slack-cli/internal/pkg/auth"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -476,10 +474,6 @@ func AppSelectPrompt(
 			filtered[id] = app
 		}
 	}
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if err != nil {
-		return SelectedApp{}, err
-	}
 	type Selection struct {
 		app   SelectedApp
 		label string
@@ -524,58 +518,54 @@ func AppSelectPrompt(
 			return SelectedApp{}, slackerror.New(slackerror.ErrInstallationRequired)
 		}
 	case ShowAllApps, ShowInstalledAndNewApps:
-		isManifestSourceLocal := manifestSource.Equals(config.ManifestSourceLocal)
-		isBoltInstallEnabled := clients.Config.WithExperimentOn(experiment.BoltInstall)
-		if isManifestSourceLocal || isBoltInstallEnabled {
-			option := Selection{
-				label: style.Secondary("Create a new app"),
-			}
-			options = append(options, option)
-			switch {
-			case types.IsAppID(clients.Config.AppFlag):
-				// Skip to match the app ID later
-			case teamFlag != "":
-				// Check for an existing app ID
-				selections := []SelectedApp{}
-				for _, app := range filtered {
-					switch teamFlag {
-					case app.App.TeamID, app.App.TeamDomain:
-						switch {
-						case environment.Equals(ShowAllEnvironments):
-							selections = append(selections, app)
-						case environment.Equals(ShowHostedOnly) && !app.App.IsDev:
-							selections = append(selections, app)
-						case environment.Equals(ShowLocalOnly) && app.App.IsDev:
-							selections = append(selections, app)
-						}
+		option := Selection{
+			label: style.Secondary("Create a new app"),
+		}
+		options = append(options, option)
+		switch {
+		case types.IsAppID(clients.Config.AppFlag):
+			// Skip to match the app ID later
+		case teamFlag != "":
+			// Check for an existing app ID
+			selections := []SelectedApp{}
+			for _, app := range filtered {
+				switch teamFlag {
+				case app.App.TeamID, app.App.TeamDomain:
+					switch {
+					case environment.Equals(ShowAllEnvironments):
+						selections = append(selections, app)
+					case environment.Equals(ShowHostedOnly) && !app.App.IsDev:
+						selections = append(selections, app)
+					case environment.Equals(ShowLocalOnly) && app.App.IsDev:
+						selections = append(selections, app)
 					}
 				}
-				switch len(selections) {
-				case 0:
-					// Skip to create a new app
-				case 1:
-					return selections[0], nil
-				default:
-					return SelectedApp{}, slackerror.New(slackerror.ErrAppFound).
-						WithMessage("Multiple apps exist for the provided team")
-				}
-				// Create a new app if none exists
-				auths, err := getAuths(ctx, clients)
-				if err != nil {
-					return SelectedApp{}, err
-				}
-				for _, auth := range auths {
-					switch teamFlag {
-					case auth.TeamID, auth.TeamDomain:
-						app := SelectedApp{
-							App:  types.NewApp(),
-							Auth: auth,
-						}
-						return app, nil
-					}
-				}
-				return SelectedApp{}, slackerror.New(slackerror.ErrTeamNotFound)
 			}
+			switch len(selections) {
+			case 0:
+				// Skip to create a new app
+			case 1:
+				return selections[0], nil
+			default:
+				return SelectedApp{}, slackerror.New(slackerror.ErrAppFound).
+					WithMessage("Multiple apps exist for the provided team")
+			}
+			// Create a new app if none exists
+			auths, err := getAuths(ctx, clients)
+			if err != nil {
+				return SelectedApp{}, err
+			}
+			for _, auth := range auths {
+				switch teamFlag {
+				case auth.TeamID, auth.TeamDomain:
+					app := SelectedApp{
+						App:  types.NewApp(),
+						Auth: auth,
+					}
+					return app, nil
+				}
+			}
+			return SelectedApp{}, slackerror.New(slackerror.ErrTeamNotFound)
 		}
 	}
 	labels := []string{}

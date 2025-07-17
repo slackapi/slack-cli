@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -655,7 +654,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 		mockFlagApp                string
 		mockFlagTeam               string
 		mockFlagToken              string
-		mockManifestSource         config.ManifestSource
 		appPromptConfigEnvironment AppEnvironmentType
 		appPromptConfigOptions     []string
 		appPromptConfigStatus      AppInstallStatus
@@ -702,7 +700,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 					UserID:     team2UserID,
 				},
 			},
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowAllEnvironments,
 			appPromptConfigOptions: []string{
 				"A1 team1 T1",
@@ -727,7 +724,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 		"returns new application if selected": {
 			mockAuths:                  fakeAuthsByTeamDomainSlice,
 			mockAppsDeployed:           []types.App{},
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigOptions: []string{
 				"Create a new app",
@@ -746,7 +742,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 		"errors if installation required and no apps saved": {
 			mockAuths:                  fakeAuthsByTeamDomainSlice,
 			mockAppsDeployed:           []types.App{},
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigStatus:      ShowInstalledAppsOnly,
 			expectedError:              slackerror.New(slackerror.ErrInstallationRequired),
@@ -772,7 +767,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			appPromptResponseOption:  "Create a new app",
 			teamPromptResponseFlag:   true,
 			teamPromptResponseOption: team1TeamDomain,
-			mockManifestSource:       config.ManifestSourceLocal,
 			expectedError: slackerror.New(slackerror.ErrAppExists).
 				WithDetails(slackerror.ErrorDetails{{
 					Message: `The app "A1" already exists for team "team1" (T1)`,
@@ -783,7 +777,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockAuths:                  fakeAuthsByTeamDomainSlice,
 			mockFlagApp:                "deployed",
 			mockFlagTeam:               team1TeamID,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigStatus:      ShowInstalledAndNewApps,
 			expectedSelection: SelectedApp{
@@ -791,7 +784,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
 			},
 		},
-		"selects existing application for app environment flag and team id flag if app saved": {
+		"returns existing application for app environment flag and team id flag if app saved": {
 			mockAuths: fakeAuthsByTeamDomainSlice,
 			mockAppsDeployed: []types.App{
 				{
@@ -802,7 +795,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			},
 			mockFlagApp:                "deployed",
 			mockFlagTeam:               team2TeamID,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigStatus:      ShowAllApps,
 			expectedSelection: SelectedApp{
@@ -851,6 +843,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				"A1 team1 T1",
 				"A2 team2 T2",
 			},
+			appPromptConfigStatus:   ShowInstalledAndUninstalledApps,
 			appPromptResponsePrompt: true,
 			appPromptResponseIndex:  1,
 			expectedSelection: SelectedApp{
@@ -1049,7 +1042,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockFlagTeam:               "TNOTFOUND",
 			appPromptConfigEnvironment: ShowAllEnvironments,
 			appPromptConfigStatus:      ShowAllApps,
-			expectedError:              slackerror.New(slackerror.ErrAppNotFound),
+			expectedError:              slackerror.New(slackerror.ErrTeamNotFound),
 		},
 		"errors if deployed app environment flag for local app prompt": {
 			mockFlagApp:                "deploy",
@@ -1064,7 +1057,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 		"errors if deployed app environment flag and team id flag for local app prompt": {
 			mockFlagApp:                "deployed",
 			mockFlagTeam:               team1TeamID,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowLocalOnly,
 			appPromptConfigStatus:      ShowInstalledAndNewApps,
 			expectedError:              slackerror.New(slackerror.ErrDeployedAppNotSupported),
@@ -1072,14 +1064,12 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 		"errors if local app environment flag and team id flag for hosted app prompt": {
 			mockFlagApp:                "local",
 			mockFlagTeam:               team1TeamID,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigStatus:      ShowInstalledAndNewApps,
 			expectedError:              slackerror.New(slackerror.ErrLocalAppNotSupported),
 		},
 		"errors if team id flag does not have authorization": {
 			mockFlagTeam:               team1TeamID,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigStatus:      ShowInstalledAndNewApps,
 			expectedError:              slackerror.New(slackerror.ErrTeamNotFound),
@@ -1128,7 +1118,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockAuthWithTeamIDTeamID:   team1TeamID,
 			mockFlagTeam:               team1TeamID,
 			mockFlagToken:              fakeAuthsByTeamDomain[team1TeamDomain].Token,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigStatus:      ShowInstalledAndNewApps,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			expectedSelection: SelectedApp{
@@ -1145,7 +1134,6 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockAuthWithTeamIDTeamID:   team1TeamID,
 			mockFlagTeam:               team1TeamID,
 			mockFlagToken:              fakeAuthsByTeamDomain[team1TeamDomain].Token,
-			mockManifestSource:         config.ManifestSourceLocal,
 			appPromptConfigStatus:      ShowAllApps,
 			appPromptConfigEnvironment: ShowLocalOnly,
 			expectedSelection: SelectedApp{
@@ -1361,16 +1349,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				nil,
 			)
 			clientsMock.AddDefaultMocks()
-			projectConfigMock := config.NewProjectConfigMock()
-			projectConfigMock.On(
-				"GetManifestSource",
-				mock.Anything,
-			).Return(
-				tt.mockManifestSource,
-				nil,
-			)
 			clientsMock.Config.AppFlag = tt.mockFlagApp
-			clientsMock.Config.ProjectConfig = projectConfigMock
 			clientsMock.Config.TeamFlag = tt.mockFlagTeam
 			clientsMock.Config.TokenFlag = tt.mockFlagToken
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
