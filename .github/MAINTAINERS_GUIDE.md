@@ -118,7 +118,12 @@ command not found: golangci-lint
 ```
 
 You may need to update your `$PATH` environment variable with `$GOPATH/bin`:
-1. Open your terminal's configuration file (e.g. `~/.zshrc`)
+1. Open your terminal's configuration file (e.g. `~/.zshrc`):
+
+    ```bash
+    $ vim ~/.zshrc
+    ```
+    
 2. Add the following:
 
     ```bash
