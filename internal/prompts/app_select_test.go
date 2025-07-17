@@ -983,6 +983,10 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
 			},
 		},
+		"errors if app id flag is not valid": {
+			mockFlagApp:   "123",
+			expectedError: slackerror.New(slackerror.ErrInvalidAppFlag),
+		},
 		"errors if app id flag has a team id flag that does not match": {
 			mockAuths: fakeAuthsByTeamDomainSlice,
 			mockAppsDeployed: []types.App{

@@ -397,8 +397,7 @@ func AppSelectPrompt(
 	case environment.Equals(ShowHostedOnly) && types.IsAppFlagLocal(clients.Config.AppFlag):
 		return SelectedApp{}, slackerror.New(slackerror.ErrLocalAppNotSupported)
 	case clients.Config.AppFlag != "" && !types.IsAppFlagValid(clients.Config.AppFlag):
-		return SelectedApp{}, slackerror.New(slackerror.ErrInvalidAppFlag).
-			WithRemediation("Choose a specific app with %s", style.Highlight("--app <app_id>"))
+		return SelectedApp{}, slackerror.New(slackerror.ErrInvalidAppFlag)
 	}
 	defer func() {
 		if err != nil {
