@@ -1616,8 +1616,6 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 
 // Test_ValidateAuth tests edge cases of the reauthentication logic for certain
 // errors
-//
-// Successful reauthentication in other functions might use default mocks below
 func Test_ValidateAuth(t *testing.T) {
 	apiHostDev := "https://dev.slack.com"
 	tests := map[string]struct {
