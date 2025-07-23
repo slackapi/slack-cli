@@ -36,7 +36,7 @@ import (
 var runAddCommandFunc = RunAddCommand
 var appInstallProdAppFunc = apps.Add
 var appInstallDevAppFunc = apps.InstallLocalApp
-var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
+var appSelectPromptFunc = prompts.AppSelectPrompt
 
 // Flags
 
@@ -111,7 +111,7 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error 
 // RunAddCommand executes the workspace install command, prints output, and returns any errors.
 func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (context.Context, types.InstallState, types.App, error) {
 	if selection == nil {
-		selected, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
+		selected, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
 		if err != nil {
 			return ctx, "", types.App{}, err
 		}

@@ -102,8 +102,8 @@ func TestListCommand(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			appSelectMock := prompts.NewAppSelectMock()
-			teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-			appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: tt.app, Auth: types.SlackAuth{}}, nil)
+			appSelectPromptFunc = appSelectMock.AppSelectPrompt
+			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: tt.app, Auth: types.SlackAuth{}}, nil)
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).

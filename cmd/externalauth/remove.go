@@ -95,7 +95,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
 
 	// Get the app selection and accompanying auth from the prompt
-	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

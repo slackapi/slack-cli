@@ -35,8 +35,8 @@ func TestAddCommand(t *testing.T) {
 				cm.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
@@ -59,8 +59,8 @@ func TestAddCommand(t *testing.T) {
 				cm.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
@@ -84,8 +84,8 @@ func TestAddCommand(t *testing.T) {
 				cm.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Mock API call
 				cm.API.On("AddCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)

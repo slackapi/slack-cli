@@ -31,14 +31,8 @@ func NewAppSelectMock() *AppSelectMock {
 	return &AppSelectMock{}
 }
 
-// TeamAppSelectPrompt mocks the workspace selection prompt
-func (m *AppSelectMock) TeamAppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, runEnv AppEnvironmentType, status AppInstallStatus) (SelectedApp, error) {
-	args := m.Called()
-	return args.Get(0).(SelectedApp), args.Error(1)
-}
-
 // AppSelectPrompt mocks the app selection prompt
-func (m *AppSelectMock) AppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, status AppInstallStatus) (SelectedApp, error) {
-	args := m.Called()
+func (m *AppSelectMock) AppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env AppEnvironmentType, status AppInstallStatus) (SelectedApp, error) {
+	args := m.Called(ctx, clients, env, status)
 	return args.Get(0).(SelectedApp), args.Error(1)
 }

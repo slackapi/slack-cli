@@ -348,7 +348,7 @@ func TestCountCommand(t *testing.T) {
 		}
 		appSelectMock := prompts.NewAppSelectMock()
 		appSelectPromptFunc = appSelectMock.AppSelectPrompt
-		appSelectMock.On("AppSelectPrompt").
+		appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).
 			Return(prompts.SelectedApp{App: types.App{AppID: "A001"}}, nil)
 		return cmd
 	})

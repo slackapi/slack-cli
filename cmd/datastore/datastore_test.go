@@ -59,7 +59,7 @@ func setupDatastoreMocks() *shared.ClientsMock {
 	// Select the same example app each time
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{
 		App: types.App{AppID: mockAppID},
 	}, nil)
 

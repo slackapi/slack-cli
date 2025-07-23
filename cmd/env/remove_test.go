@@ -153,8 +153,8 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					nil,
 				)
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(
@@ -212,8 +212,8 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					nil,
 				)
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(
@@ -246,8 +246,8 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					nil,
 				)
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(

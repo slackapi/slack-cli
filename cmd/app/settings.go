@@ -96,7 +96,7 @@ func appSettingsCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	ctx := cmd.Context()
 	clients.IO.PrintTrace(ctx, slacktrace.AppSettingsStart)
 
-	app, err := settingsAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAndUninstalledApps)
+	app, err := settingsAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		return err
 	}

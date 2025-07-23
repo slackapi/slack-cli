@@ -77,7 +77,7 @@ func NewGetCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Get the app auth selection from the flag or prompt
-			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 			if err != nil {
 				return err
 			}

@@ -55,7 +55,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
 				deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{
 					Auth: types.SlackAuth{TeamDomain: fakeDeployedApp.TeamDomain},
 					App:  fakeDeployedApp,
 				}, nil)
@@ -89,7 +89,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
 				deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{
 					Auth: types.SlackAuth{TeamDomain: fakeLocalApp.TeamDomain},
 					App:  fakeLocalApp,
 				}, nil)
@@ -122,7 +122,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
 				deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{
 					Auth: types.SlackAuth{TeamDomain: fakeDeployedApp.TeamDomain},
 					App:  fakeDeployedApp,
 				}, nil)
@@ -149,7 +149,7 @@ func TestAppsDeleteCommand(t *testing.T) {
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 				appSelectMock := prompts.NewAppSelectMock()
 				deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{App: fakeDeployedApp}, nil)
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: fakeDeployedApp}, nil)
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
