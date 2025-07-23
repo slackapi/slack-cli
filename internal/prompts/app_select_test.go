@@ -807,6 +807,27 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				Auth: fakeAuthsByTeamDomain[team2TeamDomain],
 			},
 		},
+		"returns installed application for app environment flag and team id flag if app saved": {
+			mockAuths: fakeAuthsByTeamDomainSlice,
+			mockAppsLocal: []types.App{
+				localTeam2InstalledApp,
+			},
+			mockFlagApp:                "local",
+			mockFlagTeam:               team2TeamID,
+			appPromptConfigEnvironment: ShowAllEnvironments,
+			appPromptConfigStatus:      ShowInstalledAppsOnly,
+			expectedSelection: SelectedApp{
+				App: types.App{
+					AppID:         localTeam2InstalledAppID,
+					TeamDomain:    team2TeamDomain,
+					TeamID:        team2TeamID,
+					UserID:        team2UserID,
+					IsDev:         true,
+					InstallStatus: types.AppStatusInstalled,
+				},
+				Auth: fakeAuthsByTeamDomain[team2TeamDomain],
+			},
+		},
 		"returns filtered deployed apps for app environment flag before selection": {
 			mockAuths: fakeAuthsByTeamDomainSlice,
 			mockAppsDeployed: []types.App{
@@ -944,6 +965,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockFlagApp:                deployedTeam1InstalledAppID,
 			mockFlagTeam:               team1TeamID,
 			appPromptConfigEnvironment: ShowHostedOnly,
+			appPromptConfigStatus:      ShowAllApps,
 			expectedSelection: SelectedApp{
 				App: types.App{
 					AppID:         deployedTeam1InstalledAppID,
@@ -966,6 +988,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockFlagApp:                deployedTeam1InstalledAppID,
 			mockFlagTeam:               team1TeamDomain,
 			appPromptConfigEnvironment: ShowAllEnvironments,
+			appPromptConfigStatus:      ShowAllApps,
 			expectedSelection: SelectedApp{
 				App: types.App{
 					AppID:         deployedTeam1InstalledAppID,
@@ -1015,6 +1038,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			mockFlagApp:                "local",
 			mockFlagTeam:               team1TeamID,
 			appPromptConfigEnvironment: ShowAllEnvironments,
+			appPromptConfigStatus:      ShowAllApps,
 			expectedSelection: SelectedApp{
 				App: types.App{
 					AppID:         localTeam1UninstalledAppID,
@@ -1139,6 +1163,20 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			expectedSelection: SelectedApp{
 				App:  localTeam1UninstalledApp,
 				Auth: fakeAuthsByTeamDomain[team1TeamDomain],
+			},
+		},
+		"returns selection for token flag if one app saved": {
+			mockAppsLocal: []types.App{
+				localTeam1UninstalledApp,
+				localTeam2InstalledApp,
+			},
+			mockAuthWithToken:        fakeAuthsByTeamDomain[team2TeamDomain],
+			mockAuthWithTeamIDError:  slackerror.New(slackerror.ErrCredentialsNotFound),
+			mockAuthWithTeamIDTeamID: mock.Anything,
+			mockFlagToken:            fakeAuthsByTeamDomain[team2TeamDomain].Token,
+			expectedSelection: SelectedApp{
+				App:  localTeam2InstalledApp,
+				Auth: fakeAuthsByTeamDomain[team2TeamDomain],
 			},
 		},
 		"errors if token flag and team id flag do not match": {
@@ -1578,8 +1616,6 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 
 // Test_ValidateAuth tests edge cases of the reauthentication logic for certain
 // errors
-//
-// Successful reauthentication in other functions might use default mocks below
 func Test_ValidateAuth(t *testing.T) {
 	apiHostDev := "https://dev.slack.com"
 	tests := map[string]struct {
