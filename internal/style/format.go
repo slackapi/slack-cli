@@ -274,26 +274,6 @@ func LocalRunDisplayName(name string) string {
 	return name
 }
 
-// AppIDLabel formats the appID to indicate the installation status
-func AppIDLabel(appID string, isUninstalled bool) string {
-	if appID != "" && isUninstalled {
-		return "\x1b[0m" + Secondary(appID) + Secondary(" (uninstalled)")
-	}
-
-	return "\x1b[0m" + Selector(appID)
-}
-
-// AppSelectLabel formats a label with the environment and installed status of an app
-func AppSelectLabel(environment string, appID string, isUninstalled bool) string {
-	return fmt.Sprintf("%s %s", environment, AppIDLabel(appID, isUninstalled))
-}
-
-// TeamAppSelectLabel formats an app select label for a team app.
-// The environment of this app is implied by the prompting function.
-func TeamAppSelectLabel(teamDomain string, teamID string, appID string, isUninstalled bool) string {
-	return fmt.Sprintf("%s %s", TeamSelectLabel(teamDomain, teamID), AppIDLabel(appID, isUninstalled))
-}
-
 // TeamSelectLabel formats a team label with the teamID
 func TeamSelectLabel(teamDomain string, teamID string) string {
 	return fmt.Sprintf("%s %s", teamDomain, Faint(teamID))
