@@ -217,8 +217,8 @@ func TestRunCommand_Flags(t *testing.T) {
 			})
 
 			appSelectMock := prompts.NewAppSelectMock()
-			appSelectMock.On("TeamAppSelectPrompt").Return(tt.selectedAppAuth, tt.selectedAppErr)
-			runTeamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
+			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowLocalOnly, prompts.ShowAllApps).Return(tt.selectedAppAuth, tt.selectedAppErr)
+			runAppSelectPromptFunc = appSelectMock.AppSelectPrompt
 
 			runPkgMock := new(RunPkgMock)
 			runFunc = runPkgMock.Run

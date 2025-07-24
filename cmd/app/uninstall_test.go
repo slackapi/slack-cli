@@ -84,7 +84,7 @@ func TestAppsUninstall(t *testing.T) {
 				prepareCommonUninstallMocks(ctx, cf, cm)
 				appSelectMock := prompts.NewAppSelectMock()
 				uninstallAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{App: fakeApp}, nil)
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{App: fakeApp}, nil)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
@@ -99,7 +99,7 @@ func prepareCommonUninstallMocks(ctx context.Context, clients *shared.ClientFact
 	// Mock App Selection
 	appSelectMock := prompts.NewAppSelectMock()
 	uninstallAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(selectedProdApp, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(selectedProdApp, nil)
 
 	// Mock API calls
 	clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).

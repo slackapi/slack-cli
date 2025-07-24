@@ -78,7 +78,7 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	defer span.Finish()
 
 	// Get the app selection and accompanying auth from the flag or prompt
-	selection, err := updateAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := updateAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

@@ -66,7 +66,7 @@ func runDeleteCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	defer span.Finish()
 
 	// Get the app from the flag or prompt
-	selection, err := deleteAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := deleteAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

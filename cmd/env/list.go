@@ -78,7 +78,7 @@ func runEnvListCommandFunc(
 ) error {
 	ctx := cmd.Context()
 
-	selection, err := teamAppSelectPromptFunc(
+	selection, err := appSelectPromptFunc(
 		ctx,
 		clients,
 		prompts.ShowHostedOnly,

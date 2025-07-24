@@ -181,7 +181,7 @@ func TestTriggersInfoCommand_AppSelection(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				var originalPromptFunc = createAppSelectPromptFunc
 				createAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, errors.New("error"))
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, errors.New("error"))
 				appSelectTeardown = func() {
 					createAppSelectPromptFunc = originalPromptFunc
 				}
@@ -233,7 +233,7 @@ func setupMockInfoAppSelection(selectedApp prompts.SelectedApp) func() {
 	appSelectMock := prompts.NewAppSelectMock()
 	var originalPromptFunc = infoAppSelectPromptFunc
 	infoAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(selectedApp, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(selectedApp, nil)
 	return func() {
 		infoAppSelectPromptFunc = originalPromptFunc
 	}

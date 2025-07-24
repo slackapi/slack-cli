@@ -82,7 +82,7 @@ func TestInfoCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(
 					prompts.SelectedApp{
 						App:  types.App{AppID: "A001"},
 						Auth: types.SlackAuth{Token: "xapp"}}, nil)
@@ -112,7 +112,7 @@ func TestInfoCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(
 					prompts.SelectedApp{
 						App:  types.App{AppID: "A004"},
 						Auth: types.SlackAuth{Token: "xapp"}}, nil)
@@ -163,7 +163,7 @@ func TestInfoCommand(t *testing.T) {
 				cf.AppClient().Manifest = manifestMock
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{
 					App:  types.App{AppID: "A005"},
 					Auth: types.SlackAuth{Token: "xapp-example-005"},
 				}, nil)

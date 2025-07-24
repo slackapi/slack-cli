@@ -84,8 +84,8 @@ func TestDeployCommand(t *testing.T) {
 	}, nil)
 
 	appSelectMock := prompts.NewAppSelectMock()
-	appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{}, nil)
-	teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{}, nil)
+	appSelectPromptFunc = appSelectMock.AppSelectPrompt
 
 	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{

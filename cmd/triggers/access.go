@@ -102,7 +102,7 @@ func runAccessCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	defer span.Finish()
 
 	// Get the app selection and accompanying auth from the flag or prompt
-	selection, err := accessAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := accessAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

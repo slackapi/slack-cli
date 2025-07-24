@@ -93,7 +93,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	defer span.Finish()
 
 	// Get the app selection and accompanying auth from the flag or prompt
-	selection, err := createAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAndNewApps)
+	selection, err := createAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndNewApps)
 	if err != nil {
 		return err
 	}

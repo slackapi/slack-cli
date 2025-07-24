@@ -35,8 +35,8 @@ func TestUpdateCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
@@ -53,8 +53,8 @@ func TestUpdateCommand(t *testing.T) {
 				clientsMock.AddDefaultMocks()
 				// Mock App Selection
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Set experiment flag
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)

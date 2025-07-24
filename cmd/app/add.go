@@ -36,7 +36,7 @@ import (
 var runAddCommandFunc = RunAddCommand
 var appInstallProdAppFunc = apps.Add
 var appInstallDevAppFunc = apps.InstallLocalApp
-var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
+var appSelectPromptFunc = prompts.AppSelectPrompt
 
 // Flags
 
@@ -127,7 +127,7 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 			appEnvironmentType = prompts.ShowLocalOnly
 		}
 
-		selected, err := teamAppSelectPromptFunc(ctx, clients, appEnvironmentType, prompts.ShowAllApps)
+		selected, err := appSelectPromptFunc(ctx, clients, appEnvironmentType, prompts.ShowAllApps)
 		if err != nil {
 			return ctx, "", types.App{}, err
 		}

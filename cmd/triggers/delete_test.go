@@ -117,7 +117,7 @@ func TestTriggersDeleteCommand_AppSelection(t *testing.T) {
 				appSelectTeardown = setupMockDeleteAppSelection(installedProdApp)
 				appSelectMock := prompts.NewAppSelectMock()
 				deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt").Return(prompts.SelectedApp{}, errors.New("selection error"))
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, errors.New("selection error"))
 			},
 			Teardown: func() {
 				appSelectTeardown()
@@ -166,7 +166,7 @@ func setupMockDeleteAppSelection(selectedApp prompts.SelectedApp) func() {
 	appSelectMock := prompts.NewAppSelectMock()
 	var originalPromptFunc = deleteAppSelectPromptFunc
 	deleteAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(selectedApp, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(selectedApp, nil)
 	return func() {
 		deleteAppSelectPromptFunc = originalPromptFunc
 	}

@@ -126,8 +126,8 @@ func TestAppAddCommand(t *testing.T) {
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
@@ -198,8 +198,8 @@ func TestAppAddCommand(t *testing.T) {
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
@@ -270,8 +270,8 @@ func TestAppAddCommand(t *testing.T) {
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: mockAppTeam1, Auth: mockAuthTeam1}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{App: mockAppTeam1, Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
@@ -350,8 +350,8 @@ func TestAppAddCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm, "deployed")
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: mockAppTeam1}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{App: mockAppTeam1}, nil)
 			},
 		},
 		"adds a new deployed app to an org with a workspace grant": {
@@ -361,8 +361,8 @@ func TestAppAddCommand(t *testing.T) {
 				prepareAddMocks(t, cf, cm, "deployed")
 				// Select workspace
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
 				// Mock calls
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
@@ -422,8 +422,8 @@ func TestAppAddCommand(t *testing.T) {
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
@@ -495,8 +495,8 @@ func TestAppAddCommand(t *testing.T) {
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
 
 				// Mock valid session for team1
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
@@ -566,8 +566,8 @@ func TestAppAddCommand(t *testing.T) {
 				prepareAddMocks(t, cf, cm, "deployed")
 				// Select workspace
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
 				// Mock calls
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,
@@ -622,8 +622,8 @@ func TestAppAddCommand(t *testing.T) {
 				prepareAddMocks(t, cf, cm, "deployed")
 				// Select workspace
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
 				// Mock calls
 				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 					UserID:   &mockOrgAuth.UserID,

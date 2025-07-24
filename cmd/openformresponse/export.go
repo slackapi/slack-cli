@@ -68,7 +68,7 @@ func runExportCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.open-form-response.export")
 	defer span.Finish()
 
-	selection, err := exportAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := exportAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

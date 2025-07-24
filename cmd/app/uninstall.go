@@ -66,7 +66,7 @@ func RunUninstallCommand(ctx context.Context, clients *shared.ClientFactory, cmd
 	}
 
 	// Get the workspace from the flag or prompt
-	selection, err := uninstallAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := uninstallAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		if slackerror.ToSlackError(err).Code == slackerror.ErrInstallationRequired {
 			return types.App{}, nil

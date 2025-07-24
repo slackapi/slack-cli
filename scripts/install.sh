@@ -380,6 +380,10 @@ main() {
         install_slack_cli "$@"
 
         sleep 0.1
+        >&2 echo -e "\x1b[1m⚠️  Warning: Starting on September 1, 2025, Deno will no longer be installed with this script!\x1b[0m"
+        >&2 echo -e "⚠️  Warning: Apps built with Deno should install Deno separately:"
+        >&2 echo -e "⚠️  Warning: https://docs.deno.com/runtime/getting_started/installation/"
+        echo -e ""
         install_deno
 
         echo
