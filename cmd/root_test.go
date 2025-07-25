@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -81,19 +82,41 @@ func TestRootCommand(t *testing.T) {
 
 func TestExecuteContext(t *testing.T) {
 	tests := map[string]struct {
-		expectedErr      error
-		expectedExitCode iostreams.ExitCode
-		expectedOutputs  []string
+		mockErr           error
+		mockRuntime       string
+		expectedExitCode  iostreams.ExitCode
+		expectedOutputs   []string
+		unexpectedOutputs []string
 	}{
 		"Command successfully executes": {
-			expectedErr:      nil,
+			mockErr:          nil,
 			expectedExitCode: iostreams.ExitOK,
 		},
 		"Command fails execution and returns an error": {
-			expectedErr:      fmt.Errorf("command failed"),
+			mockErr:          fmt.Errorf("command failed"),
 			expectedExitCode: iostreams.ExitError,
 			expectedOutputs: []string{
 				"command failed",
+			},
+		},
+		"Command fails execution with a missing hook and missing runtime": {
+			mockErr:          slackerror.New(slackerror.ErrSDKHookNotFound),
+			expectedExitCode: iostreams.ExitError,
+			expectedOutputs: []string{
+				slackerror.New(slackerror.ErrRuntimeNotFound).
+					WithRootCause(slackerror.New(slackerror.ErrSDKHookNotFound).WithRemediation("")).
+					Error(),
+			},
+		},
+		"Command fails execution with a missing hook and existing runtime": {
+			mockErr:          slackerror.New(slackerror.ErrSDKHookNotFound),
+			mockRuntime:      "sh",
+			expectedExitCode: iostreams.ExitError,
+			expectedOutputs: []string{
+				slackerror.New(slackerror.ErrSDKHookNotFound).Error(),
+			},
+			unexpectedOutputs: []string{
+				slackerror.ErrRuntimeNotFound,
 			},
 		},
 	}
@@ -105,15 +128,18 @@ func TestExecuteContext(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clientsMock.EventTracker.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
+				clients.SDKConfig.Runtime = tt.mockRuntime
+			})
 
 			// Mock command
 			cmd := &cobra.Command{
 				Use: "mock [flags]",
 				RunE: func(cmd *cobra.Command, args []string) error {
-					return tt.expectedErr
+					return tt.mockErr
 				},
 			}
+			testutil.MockCmdIO(clientsMock.IO, cmd)
 
 			// Execute the command
 			ExecuteContext(ctx, cmd, clients)
@@ -125,6 +151,9 @@ func TestExecuteContext(t *testing.T) {
 
 			for _, expectedOutput := range tt.expectedOutputs {
 				require.Contains(t, output, expectedOutput)
+			}
+			for _, unexpectedOutputs := range tt.unexpectedOutputs {
+				require.NotContains(t, output, unexpectedOutputs)
 			}
 		})
 	}
