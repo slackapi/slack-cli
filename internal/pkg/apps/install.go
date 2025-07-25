@@ -154,7 +154,6 @@ func Install(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 		app.TeamDomain = auth.TeamDomain
 		// TODO: add enterprise ID and user ID to app? See InstallLocalApp.
 		// app.EnterpriseID = config.GetContextEnterpriseID(ctx)
-		// app.UserID = *authSession.UserID
 	}
 
 	appManageURL := fmt.Sprintf("%s/apps", apiInterface.Host())
