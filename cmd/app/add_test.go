@@ -420,6 +420,18 @@ func TestAppAddCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
 
+				// Mock SelectPrompt to receive "--environment local"
+				cm.IO.On("SelectPrompt",
+					mock.Anything,
+					"Choose the app environment",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(iostreams.SelectPromptResponse{
+					Flag:   true,
+					Option: "local",
+				}, nil)
+
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
@@ -492,6 +504,19 @@ func TestAppAddCommand(t *testing.T) {
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
+
+				// Mock SelectPrompt to receive "--environment deployed"
+				// It would be better to remove this mock and rely on the SelectPrompt implementation, but we require other parts of IO to be mocked.
+				cm.IO.On("SelectPrompt",
+					mock.Anything,
+					"Choose the app environment",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(iostreams.SelectPromptResponse{
+					Flag:   true,
+					Option: "deployed",
+				}, nil)
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
@@ -674,6 +699,7 @@ func TestAppAddCommand(t *testing.T) {
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		cmd := NewAddCommand(cf)
 		cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
+		cf.Config.SetFlags(cmd)
 		return cmd
 	})
 }
