@@ -8,13 +8,14 @@ The following is a list of currently available experiments. We'll remove experim
 
 * `bolt-install`: enables creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
     * `slack create` and `slack init` now set manifest source to "app settings" (remote) for Bolt JS & Bolt Python projects ([PR#96](https://github.com/slackapi/slack-cli/pull/96)).
+    * `slack run` and `slack install` support creating and installing Bolt Framework apps that have the manifest source set to "app settings (remote)" ([PR#111](https://github.com/slackapi/slack-cli/pull/111), [PR#154](https://github.com/slackapi/slack-cli/pull/154)).
 * `read-only-collaborators`: enables creating and modifying collaborator permissions via the `slack collaborator` commands.
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
 
-* **June 2025**: 
+* **June 2025**:
     * Updated the `slack run` command to create and install new and existing Bolt framework projects configured with app settings as the source of truth (remote manifest).
     * Added support for creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest). New Bolt projects are now configured to have apps managed by app settings rather than by project. When running a project for local development, the app and bot tokens are automatically set, and no longer require developers to export them as environment variables. Existing Bolt projects will continue to work with a project (local) manifest, and linking an app from app settings will configure the project to be managed by app settings (remote manifest). In an upcoming release, support for installing and deploying apps managed by app settings will be implemented.
 * **May 2025**: Added the experiment `bolt-install` to enable creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
