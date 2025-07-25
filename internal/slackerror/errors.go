@@ -1293,8 +1293,8 @@ Otherwise start your app for local development with: %s`,
 
 	ErrRuntimeNotFound: {
 		Code:        ErrRuntimeNotFound,
-		Message:     "The SDK language runtime executable was not found",
-		Remediation: "Make sure the required language runtime has been installed",
+		Message:     "The hook runtime executable was not found",
+		Remediation: "Make sure the required runtime has been installed to run hook scripts.",
 	},
 
 	ErrRuntimeNotSupported: {
