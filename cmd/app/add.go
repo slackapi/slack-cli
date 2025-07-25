@@ -107,14 +107,14 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 			}
 			clients.Config.Flags.Lookup("environment").Changed = true
 
-			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			clients.IO.PrintInfo(ctx, false, "\n"+style.Sectionf(style.TextSection{
 				Emoji: "warning",
 				Text:  "Warning: Default App Environment",
 				Secondary: []string{
-					"App environment is set to deployed when the --team flag is provided.",
-					"The next major version will change how this works.",
+					"App environment is set to deployed when only the --team flag is provided.",
+					"The next major version will change this behavior.",
 					"When the --team flag is provided, the --environment flag will be required.",
-					"Use '--environment deployed' to avoid breaking changes.",
+					"Add the '--environment deployed' to avoid breaking changes.",
 				},
 			}))
 		}
