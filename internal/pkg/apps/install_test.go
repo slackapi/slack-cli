@@ -55,8 +55,8 @@ func TestInstall(t *testing.T) {
 		mockBoltExperiment      bool
 		mockConfirmPrompt       bool
 		mockIsTTY               bool
-		mockLocalManifest       types.SlackYaml
-		mockRemoteManifest      types.SlackYaml
+		mockManifestAppLocal    types.SlackYaml
+		mockManifestAppRemote   types.SlackYaml
 		mockManifestHashInitial cache.Hash
 		mockManifestHashUpdated cache.Hash
 		mockManifestSource      config.ManifestSource
@@ -89,7 +89,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockBoltExperiment: true,
 			mockManifestSource: config.ManifestSourceLocal,
-			mockLocalManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
@@ -148,7 +148,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockBoltExperiment: true,
 			mockManifestSource: config.ManifestSourceLocal,
-			mockLocalManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
@@ -210,7 +210,7 @@ func TestInstall(t *testing.T) {
 			mockConfirmPrompt:  true,
 			mockIsTTY:          true,
 			mockManifestSource: config.ManifestSourceLocal,
-			mockLocalManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
@@ -272,7 +272,7 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockLocalManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "example-3",
@@ -320,7 +320,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockBoltExperiment: true,
 			mockManifestSource: config.ManifestSourceRemote,
-			mockLocalManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
@@ -439,7 +439,7 @@ func TestInstall(t *testing.T) {
 			mockBoltExperiment: true,
 			mockConfirmPrompt:  false,
 			mockIsTTY:          true,
-			mockLocalManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
@@ -479,7 +479,7 @@ func TestInstall(t *testing.T) {
 				UserID:   &mockUserID,
 			},
 			mockBoltExperiment: true,
-			mockRemoteManifest: types.SlackYaml{
+			mockManifestAppRemote: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
@@ -590,8 +590,8 @@ func TestInstall(t *testing.T) {
 				)
 			}
 			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockLocalManifest, nil)
-			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockRemoteManifest, nil)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifestAppLocal, nil)
+			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifestAppRemote, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			if tt.mockBoltExperiment {
