@@ -5,14 +5,13 @@ slug: /slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
 
 # Installing the Slack CLI for Mac & Linux
 
-
 The Slack CLI is a set of tools critical to building workflow apps. This is your one-stop shop for those tools.
 
 ✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
 
 ⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
 
-:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.] 
+:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.]
 
 If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
 
@@ -32,6 +31,7 @@ the runtime environment for workflow apps. If you have VSCode installed,
 the [VSCode Deno
 extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno)
 will be installed.
+
 <details>
 <summary>Optional: Use an alias for the Slack CLI binary</summary>
 
@@ -61,14 +61,17 @@ If you don't rename the slack binary to a different name, the installation scrip
 There are two optional flags available to customize the installation.
 
 1. Specify a version you'd like to install using the version flag, `-v`. The absence of this flag will ensure the latest Slack CLI version is installed.
+
 ```
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v 2.1.0
 ```
 
 2. Skip the Deno installation by using the `-d` flag, like this:
+
 ```
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -d
 ```
+
 </details>
 
 <details>
@@ -140,12 +143,12 @@ $ slack doctor
 If you have upgraded your CLI version but your `deno-slack-hooks` version is less than `v1.3.0`, when running `slack doctor`, you will see the following near the end of the output:
 
 ```
-✔ Configurations (your project's CLI settings)
+    ✔ Configurations (your project's CLI settings)
         Project ID: 1a2b3c4d-ef5g-67hi-8j9k1l2m3n4o
 
     ✘ Runtime (foundations for the application)
         Error: The `doctor` hook was not found (sdk_hook_not_found)
-        Suggestion: Ensure this hook is implemented in your `slack.json`
+        Suggestion: Debug responses from the Slack hooks file (.slack/hooks.json)
 
     ✔ Dependencies (requisites for development)
         deno_slack_hooks: 1.2.3 → 1.3.0 (supported version)
@@ -156,10 +159,13 @@ In addition, if you attempt to run the `slack run` command without this dependen
 ```
 🚫 The `start` script was not found (sdk_hook_not_found)
 
-    💡 Suggestion
-        Hook scripts are defined in the Slack configuration file ('slack.json').
-        Every app requires a 'slack.json' file and you can find a working example at:
-        https://github.com/slack-samples/deno-starter-template/blob/main/slack.json
+💡 Suggestion
+    Hook scripts are defined in one of these Slack hooks files:
+    - slack.json
+    - .slack/hooks.json
+
+    Every app requires a Slack hooks file and you can find a working example at:
+    https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json
 
 ```
 

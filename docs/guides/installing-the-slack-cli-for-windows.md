@@ -5,14 +5,13 @@ slug: /slack-cli/guides/installing-the-slack-cli-for-windows
 
 # Installing the Slack CLI for Windows
 
-
 The Slack CLI is a set of tools critical to building workflow apps. This is your one-stop shop for those tools.
 
 ✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
 
 ⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
 
-:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.] 
+:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.]
 
 If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
 
@@ -128,6 +127,7 @@ If you have another CLI tool in your path called `slack`, we recommend renaming 
 :::
 
 **6\. Verify that** `slack` **is installed and in your path:**
+
 ```
 $ slack version
 Using slack v3.5.1
@@ -136,6 +136,7 @@ Using slack v3.5.1
 **7\. Verify that all dependencies have been installed.**
 
 Run the following command:
+
 ```
 $ slack doctor
 ```
@@ -150,7 +151,7 @@ If you have upgraded your CLI version but your `deno-slack-hooks` version is les
 
     ✘ Runtime (foundations for the application)
         Error: The `doctor` hook was not found (sdk_hook_not_found)
-        Suggestion: Ensure this hook is implemented in your `slack.json`
+        Suggestion: Debug responses from the Slack hooks file (.slack/hooks.json)
 
     ✔ Dependencies (requisites for development)
         deno_slack_hooks: 1.2.3 → 1.3.0 (supported version)
@@ -159,18 +160,20 @@ If you have upgraded your CLI version but your `deno-slack-hooks` version is les
 In addition, if you attempt to run the `slack run` command without this dependency installed, you will see a similar error in your console:
 
 ```
-    🚫 The `start` script was not found (sdk_hook_not_found)
+🚫 The `start` script was not found (sdk_hook_not_found)
 
-    💡 Suggestion
-        Hook scripts are defined in the Slack configuration file ('slack.json').
-        Every app requires a 'slack.json' file and you can find a working example at:
-        https://github.com/slack-samples/deno-starter-template/blob/main/slack.json
+💡 Suggestion
+    Hook scripts are defined in one of these Slack hooks files:
+    - slack.json
+    - .slack/hooks.json
+
+    Every app requires a Slack hooks file and you can find a working example at:
+    https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json
 ```
 
 Ensure that `deno-slack-hooks` is installed at the project level and that the version is not less than `v1.3.0`.
 
-**8\. [Install the VSCode extension for
-   Deno](/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
+**8\. [Install the VSCode extension for Deno](/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
 
 </TabItem>
 </Tabs>
