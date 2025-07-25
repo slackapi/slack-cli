@@ -95,9 +95,6 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 // RunAddCommand executes the workspace install command, prints output, and returns any errors.
 func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (context.Context, types.InstallState, types.App, error) {
 	if selection == nil {
-		var isProductionApp bool
-		var err error
-
 		// When team flag is provided, default app environment to deployed if not specified.
 		// TODO(semver:major): Remove defaulting to deployed and require the environment flag to be set.
 		if clients.Config.TeamFlag != "" && addFlags.environmentFlag == "" {
@@ -120,7 +117,7 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 		}
 
 		// Prompt for deployed or local app environment.
-		isProductionApp, err = promptIsProduction(ctx, clients)
+		isProductionApp, err := promptIsProduction(ctx, clients)
 		if err != nil {
 			return ctx, "", types.App{}, err
 		}
