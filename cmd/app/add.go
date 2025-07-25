@@ -61,7 +61,7 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			return preRunAddCommand(ctx, clients)
+			return preRunAddCommand(ctx, clients, cmd)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
@@ -80,7 +80,7 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 }
 
 // preRunAddCommand confirms an app is available for installation
-func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error {
+func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
 		return err
@@ -88,6 +88,7 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error 
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return nil
 	}
+	clients.Config.SetFlags(cmd)
 	return nil
 }
 
@@ -100,26 +101,31 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 		// When team flag is provided, default app environment to deployed if not specified.
 		// TODO(semver:major): Remove defaulting to deployed and require the environment flag to be set.
 		if clients.Config.TeamFlag != "" && addFlags.environmentFlag == "" {
-			addFlags.environmentFlag = "deployed"
-			clients.IO.PrintDebug(ctx,
-				"Defaulting app environment to deployed because team flag is provided. "+
-					"Please use '--environment deployed' to avoid breaking changes in the next major version.",
-			)
-		}
-
-		switch addFlags.environmentFlag {
-		case "deployed":
-			isProductionApp = true
-		case "local":
-			isProductionApp = false
-		default:
-			// Prompt for deployed or local app environment.
-			isProductionApp, err = promptIsProduction(ctx, clients)
+			err := clients.Config.Flags.Lookup("environment").Value.Set("deployed")
 			if err != nil {
 				return ctx, "", types.App{}, err
 			}
+			clients.Config.Flags.Lookup("environment").Changed = true
+
+			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+				Emoji: "warning",
+				Text:  "Warning: Default App Environment",
+				Secondary: []string{
+					"App environment is set to deployed when the --team flag is provided.",
+					"The next major version will change how this works.",
+					"When the --team flag is provided, the --environment flag will be required.",
+					"Use '--environment deployed' to avoid breaking changes.",
+				},
+			}))
 		}
 
+		// Prompt for deployed or local app environment.
+		isProductionApp, err = promptIsProduction(ctx, clients)
+		if err != nil {
+			return ctx, "", types.App{}, err
+		}
+
+		// Set the app environment type based on the prompt.
 		var appEnvironmentType prompts.AppEnvironmentType
 		if isProductionApp {
 			appEnvironmentType = prompts.ShowHostedOnly
