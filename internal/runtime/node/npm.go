@@ -17,7 +17,10 @@ package node
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -37,6 +40,37 @@ type NPM interface {
 type NPMClient struct {
 }
 
+// PackageJSON represents the structure of package.json
+type PackageJSON struct {
+	PackageManager string `json:"packageManager"`
+}
+
+// detectPackageManager reads package.json and returns the appropriate package manager command
+func detectPackageManager(dirPath string) string {
+	packageJSONPath := filepath.Join(dirPath, "package.json")
+	
+	// Read package.json
+	data, err := os.ReadFile(packageJSONPath)
+	if err != nil {
+		return "npm" // Default to npm if can't read package.json
+	}
+	
+	var pkg PackageJSON
+	if err := json.Unmarshal(data, &pkg); err != nil {
+		return "npm" // Default to npm if can't parse JSON
+	}
+	
+	// Parse packageManager field (e.g., "pnpm@8.0.0" -> "pnpm")
+	if pkg.PackageManager != "" {
+		parts := strings.Split(pkg.PackageManager, "@")
+		if len(parts) > 0 {
+			return parts[0]
+		}
+	}
+	
+	return "npm" // Default to npm
+}
+
 // InstallAllPackages installs all packages by running a command similar to `npm install .`
 func (n *NPMClient) InstallAllPackages(ctx context.Context, dirPath string, hookExecutor hooks.HookExecutor, ios iostreams.IOStreamer) (string, error) {
 	// Internal hook implementation with a preferred install command
@@ -45,9 +79,22 @@ func (n *NPMClient) InstallAllPackages(ctx context.Context, dirPath string, hook
 	//
 	// TODO: The SDK should implement this hook instead of hardcoding the command
 	//       An internal hook is used for streaming install outputs to debug logs
+	
+	packageManager := detectPackageManager(dirPath)
+	var command string
+	
+	switch packageManager {
+	case "yarn":
+		command = "yarn install --verbose"
+	case "pnpm":
+		command = "pnpm install --reporter=default"
+	default:
+		command = "npm install --no-package-lock --no-audit --progress=false --loglevel=verbose ."
+	}
+	
 	hookScript := hooks.HookScript{
 		Name:    "InstallProjectDependencies",
-		Command: "npm install --no-package-lock --no-audit --progress=false --loglevel=verbose .",
+		Command: command,
 	}
 
 	stdout := bytes.Buffer{}
@@ -76,9 +123,21 @@ func (n *NPMClient) InstallDevPackage(ctx context.Context, pkgName string, dirPa
 	npmSpan, _ := opentracing.StartSpanFromContext(ctx, "npm.install.slack-cli-hooks")
 	defer npmSpan.Finish()
 
+	packageManager := detectPackageManager(dirPath)
+	var command string
+	
+	switch packageManager {
+	case "yarn":
+		command = fmt.Sprintf("yarn add --dev %s", pkgName)
+	case "pnpm":
+		command = fmt.Sprintf("pnpm add --save-dev %s", pkgName)
+	default:
+		command = fmt.Sprintf("npm install --save-dev --no-audit --progress=false --loglevel=verbose %s", pkgName)
+	}
+
 	hookScript := hooks.HookScript{
 		Name:    "InstallProjectDependencies",
-		Command: fmt.Sprintf("npm install --save-dev --no-audit --progress=false --loglevel=verbose %s", pkgName),
+		Command: command,
 	}
 
 	stdout := bytes.Buffer{}
@@ -107,9 +166,21 @@ func (n *NPMClient) ListPackage(ctx context.Context, pkgName string, dirPath str
 	npmSpan, _ := opentracing.StartSpanFromContext(ctx, "npm.list")
 	defer npmSpan.Finish()
 
+	packageManager := detectPackageManager(dirPath)
+	var command string
+	
+	switch packageManager {
+	case "yarn":
+		command = fmt.Sprintf("yarn list --pattern %s --depth=0", pkgName)
+	case "pnpm":
+		command = fmt.Sprintf("pnpm list %s --depth 0", pkgName)
+	default:
+		command = fmt.Sprintf("npm list %s --depth 0", pkgName)
+	}
+
 	hookScript := hooks.HookScript{
 		Name:    "InstallProjectDependencies",
-		Command: fmt.Sprintf("npm list %s --depth 0", pkgName),
+		Command: command,
 	}
 
 	stdout := bytes.Buffer{}

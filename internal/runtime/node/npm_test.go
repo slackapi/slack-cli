@@ -16,6 +16,8 @@ package node
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -229,6 +231,255 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 			// Assertions
 			require.Equal(t, tt.expectedPkgVersion, pkgVersion)
 			require.Equal(t, tt.expectedPkgExists, pkgExists)
+		})
+	}
+}
+
+func Test_detectPackageManager(t *testing.T) {
+	tests := map[string]struct {
+		packageJSON      string
+		expectedManager  string
+	}{
+		"npm default when no packageManager field": {
+			packageJSON: `{"name": "test-project", "version": "1.0.0"}`,
+			expectedManager: "npm",
+		},
+		"npm when packageManager is npm": {
+			packageJSON: `{"name": "test-project", "packageManager": "npm@9.0.0"}`,
+			expectedManager: "npm",
+		},
+		"yarn when packageManager is yarn": {
+			packageJSON: `{"name": "test-project", "packageManager": "yarn@3.6.0"}`,
+			expectedManager: "yarn",
+		},
+		"pnpm when packageManager is pnpm": {
+			packageJSON: `{"name": "test-project", "packageManager": "pnpm@8.6.0"}`,
+			expectedManager: "pnpm",
+		},
+		"npm default when package.json doesn't exist": {
+			packageJSON: "",
+			expectedManager: "npm",
+		},
+		"npm default when package.json is invalid JSON": {
+			packageJSON: `{"name": "test-project", "version":}`,
+			expectedManager: "npm",
+		},
+		"packageManager without version": {
+			packageJSON: `{"name": "test-project", "packageManager": "yarn"}`,
+			expectedManager: "yarn",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Create temporary directory
+			tmpDir, err := os.MkdirTemp("", "test-detect-package-manager")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			// Create package.json if content provided
+			if tt.packageJSON != "" {
+				packageJSONPath := filepath.Join(tmpDir, "package.json")
+				err := os.WriteFile(packageJSONPath, []byte(tt.packageJSON), 0644)
+				require.NoError(t, err)
+			}
+
+			// Test
+			manager := detectPackageManager(tmpDir)
+
+			// Assertions
+			require.Equal(t, tt.expectedManager, manager)
+		})
+	}
+}
+
+func Test_NPMClient_InstallAllPackages_PackageManagerDetection(t *testing.T) {
+	tests := map[string]struct {
+		packageJSON     string
+		expectedCommand string
+	}{
+		"uses npm by default": {
+			packageJSON:     `{"name": "test-project"}`,
+			expectedCommand: "npm install --no-package-lock --no-audit --progress=false --loglevel=verbose .",
+		},
+		"uses yarn when specified": {
+			packageJSON:     `{"name": "test-project", "packageManager": "yarn@3.6.0"}`,
+			expectedCommand: "yarn install --verbose",
+		},
+		"uses pnpm when specified": {
+			packageJSON:     `{"name": "test-project", "packageManager": "pnpm@8.6.0"}`,
+			expectedCommand: "pnpm install --reporter=default",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			ctx := slackcontext.MockContext(t.Context())
+			
+			// Create temporary directory with package.json
+			tmpDir, err := os.MkdirTemp("", "test-package-manager")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			packageJSONPath := filepath.Join(tmpDir, "package.json")
+			err = os.WriteFile(packageJSONPath, []byte(tt.packageJSON), 0644)
+			require.NoError(t, err)
+
+			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			cfg := config.NewConfig(fs, os)
+			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
+			ios.AddDefaultMocks()
+
+			// Mock hook executor to capture the command
+			var actualCommand string
+			mockHookExecutor := &hooks.MockHookExecutor{}
+			mockHookExecutor.On("Execute", mock.Anything, mock.MatchedBy(func(opts hooks.HookExecOpts) bool {
+				actualCommand = opts.Hook.Command
+				return true
+			})).
+				Run(func(args mock.Arguments) {
+					opts := args.Get(1).(hooks.HookExecOpts)
+					_, err := opts.Stdout.Write([]byte("install successful"))
+					require.NoError(t, err)
+				}).
+				Return("", nil)
+
+			// Test
+			npm := NPMClient{}
+			_, err = npm.InstallAllPackages(ctx, tmpDir, mockHookExecutor, ios)
+
+			// Assertions
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedCommand, actualCommand)
+		})
+	}
+}
+
+func Test_NPMClient_InstallDevPackage_PackageManagerDetection(t *testing.T) {
+	tests := map[string]struct {
+		packageJSON     string
+		expectedCommand string
+	}{
+		"uses npm by default": {
+			packageJSON:     `{"name": "test-project"}`,
+			expectedCommand: "npm install --save-dev --no-audit --progress=false --loglevel=verbose test-package",
+		},
+		"uses yarn when specified": {
+			packageJSON:     `{"name": "test-project", "packageManager": "yarn@3.6.0"}`,
+			expectedCommand: "yarn add --dev test-package",
+		},
+		"uses pnpm when specified": {
+			packageJSON:     `{"name": "test-project", "packageManager": "pnpm@8.6.0"}`,
+			expectedCommand: "pnpm add --save-dev test-package",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			ctx := slackcontext.MockContext(t.Context())
+			
+			// Create temporary directory with package.json
+			tmpDir, err := os.MkdirTemp("", "test-package-manager")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			packageJSONPath := filepath.Join(tmpDir, "package.json")
+			err = os.WriteFile(packageJSONPath, []byte(tt.packageJSON), 0644)
+			require.NoError(t, err)
+
+			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			cfg := config.NewConfig(fs, os)
+			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
+			ios.AddDefaultMocks()
+
+			// Mock hook executor to capture the command
+			var actualCommand string
+			mockHookExecutor := &hooks.MockHookExecutor{}
+			mockHookExecutor.On("Execute", mock.Anything, mock.MatchedBy(func(opts hooks.HookExecOpts) bool {
+				actualCommand = opts.Hook.Command
+				return true
+			})).
+				Run(func(args mock.Arguments) {
+					opts := args.Get(1).(hooks.HookExecOpts)
+					_, err := opts.Stdout.Write([]byte("install successful"))
+					require.NoError(t, err)
+				}).
+				Return("", nil)
+
+			// Test
+			npm := NPMClient{}
+			_, err = npm.InstallDevPackage(ctx, "test-package", tmpDir, mockHookExecutor, ios)
+
+			// Assertions
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedCommand, actualCommand)
+		})
+	}
+}
+
+func Test_NPMClient_ListPackage_PackageManagerDetection(t *testing.T) {
+	tests := map[string]struct {
+		packageJSON     string
+		expectedCommand string
+	}{
+		"uses npm by default": {
+			packageJSON:     `{"name": "test-project"}`,
+			expectedCommand: "npm list test-package --depth 0",
+		},
+		"uses yarn when specified": {
+			packageJSON:     `{"name": "test-project", "packageManager": "yarn@3.6.0"}`,
+			expectedCommand: "yarn list --pattern test-package --depth=0",
+		},
+		"uses pnpm when specified": {
+			packageJSON:     `{"name": "test-project", "packageManager": "pnpm@8.6.0"}`,
+			expectedCommand: "pnpm list test-package --depth 0",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup
+			ctx := slackcontext.MockContext(t.Context())
+			
+			// Create temporary directory with package.json
+			tmpDir, err := os.MkdirTemp("", "test-package-manager")
+			require.NoError(t, err)
+			defer os.RemoveAll(tmpDir)
+
+			packageJSONPath := filepath.Join(tmpDir, "package.json")
+			err = os.WriteFile(packageJSONPath, []byte(tt.packageJSON), 0644)
+			require.NoError(t, err)
+
+			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			cfg := config.NewConfig(fs, os)
+			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
+			ios.AddDefaultMocks()
+
+			// Mock hook executor to capture the command
+			var actualCommand string
+			mockHookExecutor := &hooks.MockHookExecutor{}
+			mockHookExecutor.On("Execute", mock.Anything, mock.MatchedBy(func(opts hooks.HookExecOpts) bool {
+				actualCommand = opts.Hook.Command
+				return true
+			})).
+				Run(func(args mock.Arguments) {
+					opts := args.Get(1).(hooks.HookExecOpts)
+					_, err := opts.Stdout.Write([]byte("test-package@1.0.0"))
+					require.NoError(t, err)
+				}).
+				Return("", nil)
+
+			// Test
+			npm := NPMClient{}
+			_, _ = npm.ListPackage(ctx, "test-package", tmpDir, mockHookExecutor, ios)
+
+			// Assertions
+			require.Equal(t, tt.expectedCommand, actualCommand)
 		})
 	}
 }
