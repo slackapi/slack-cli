@@ -364,6 +364,10 @@ jobs:
         type: string
         description: "What CLI release tag should be used during testing?"
         default: dev-build
+      manual_trigger_windows:
+        type: boolean
+        description: "Whether this is a Windows-specific test run"
+        default: false
     steps:
       - checkout
       - retrieve-oidc-secrets
@@ -400,13 +404,13 @@ jobs:
             TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
               --header 'Content-Type: application/json' \
               -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
-              --data "{\"branch\":\"${BRANCH_NAME}\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
+              --data "{\"branch\":\"${BRANCH_NAME}\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\",\"manual_trigger_windows\":<< parameters.manual_trigger_windows >>}}" | jq '.id')
             if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
               echo "Performing the standard test suite found on the \"main\" branch of the end-to-end tests"
               TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
                 --header 'Content-Type: application/json' \
                 -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
-                --data "{\"branch\":\"main\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\"}}" | jq '.id')
+                --data "{\"branch\":\"main\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\",\"manual_trigger_windows\":<< parameters.manual_trigger_windows >>}}" | jq '.id')
             else
               echo "Performing the changed tests on the \"$BRANCH_NAME\" branch of the end-to-end tests"
             fi
@@ -687,3 +691,34 @@ workflows:
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
+
+  # production tests are run separate from deployment to avoid errors with tags.
+  prod-build-test-e2e-test:
+    when:
+      matches:
+        pattern: "^v(\\d+\\.)?(\\d+\\.)?(\\d+)$"
+        value: << pipeline.git.tag >>
+    jobs:
+      - build:
+          <<: *filters-tag-triggered-workflow-job
+          context: slack-cli-release
+          release_ref: << pipeline.git.tag >>
+      - create-github-release-and-artifacts:
+          requires:
+            - build
+          context: slack-cli-release
+          release_ref: << pipeline.git.branch >>
+      - e2e-test:
+          name: e2e-test-unix
+          e2e_target_branch: "main"
+          manual_trigger_windows: false
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
+      - e2e-test:
+          name: e2e-test-windows
+          e2e_target_branch: "main"
+          manual_trigger_windows: true
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
