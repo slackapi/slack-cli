@@ -695,14 +695,16 @@ workflows:
   # production tests are run separate from deployment to avoid errors with tags.
   prod-build-test-e2e-test:
     when:
-      matches:
-        pattern: "^v(\\d+\\.)?(\\d+\\.)?(\\d+)$"
-        value: << pipeline.git.tag >>
+      and:
+        - not:
+            equal: [main, << pipeline.git.branch >>]
+        - not: << pipeline.git.tag >>
+        - equal:
+            [<< pipeline.parameters.run_local_build_test_workflow >>, false]
     jobs:
       - build:
-          <<: *filters-tag-triggered-workflow-job
           context: slack-cli-release
-          release_ref: << pipeline.git.tag >>
+          release_ref: << pipeline.git.branch >>
       - create-github-release-and-artifacts:
           requires:
             - build
