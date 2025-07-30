@@ -92,6 +92,20 @@ main() {
     echo "-> Creating Linux production tar.gz file"
     cp "$linux_targz_file_path_version" "$linux_targz_file_path_latest"
     ls -l "$DIST_DIR"/*latest_linux*
+
+    echo "Creating Windows archives"
+
+    windows_zip_file_path_version="$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"
+    windows_zip_file_path_dev="$DIST_DIR/slack_cli_dev_windows_64-bit.zip"
+    windows_zip_file_path_latest="$DIST_DIR/slack_cli_latest_windows_64-bit.zip"
+
+    echo "-> Creating Windows development zip file"
+    cp "$windows_zip_file_path_version" "$windows_zip_file_path_dev"
+    ls -l "$DIST_DIR"/*dev_windows*
+
+    echo "-> Creating Windows production zip file"
+    cp "$windows_zip_file_path_version" "$windows_zip_file_path_latest"
+    ls -l "$DIST_DIR"/*latest_windows*
 }
 
 # Repackage tarballs with the signed zip
