@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
@@ -307,7 +308,9 @@ func triggerRequestFromFlags(flags createCmdFlags, isDev bool) api.TriggerReques
 
 func triggerRequestViaHook(ctx context.Context, clients *shared.ClientFactory, path string, isDev bool) (api.TriggerRequest, error) {
 	if !clients.SDKConfig.Hooks.GetTrigger.IsAvailable() {
-		return api.TriggerRequest{}, slackerror.New(slackerror.ErrSDKHookGetTriggerNotFound)
+		return api.TriggerRequest{}, slackerror.New(slackerror.ErrSDKHookNotFound).
+			WithMessage("The `get-trigger` hook script in `%s` was not found", filepath.Join(".slack", "hooks.json")).
+			WithRemediation("Try defining your trigger by specifying a json file instead.")
 	}
 
 	hookExecOpts := hooks.HookExecOpts{

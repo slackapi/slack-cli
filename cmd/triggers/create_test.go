@@ -27,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -293,7 +294,7 @@ func TestTriggersCreateCommand(t *testing.T) {
 		},
 		"--trigger-def, not json, `get-trigger` hook missing": {
 			CmdArgs:              []string{"--trigger-def", "triggers/shortcut.ts"},
-			ExpectedErrorStrings: []string{"sdk_hook_get_trigger_not_found"},
+			ExpectedErrorStrings: []string{slackerror.ErrSDKHookNotFound},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
 				// TODO: testing chicken and egg: we need the default mocks in place before we can use any of the `clients` methods
