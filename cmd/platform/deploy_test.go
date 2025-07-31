@@ -111,6 +111,7 @@ func TestDeployCommand(t *testing.T) {
 
 func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	tests := map[string]struct {
+		app            types.App
 		manifest       types.SlackYaml
 		manifestError  error
 		manifestSource config.ManifestSource
@@ -144,6 +145,20 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			manifestSource: config.ManifestSourceLocal,
 			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
 		},
+		"succeeds if the app exists and the manifest source is remote": {
+			app: types.App{
+				AppID: "A123",
+			},
+			manifestSource: config.ManifestSourceRemote,
+			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
+		},
+		"succeeds if the app does not exist and the manifest source is remote": {
+			app: types.App{
+				AppID: "",
+			},
+			manifestSource: config.ManifestSourceRemote,
+			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -152,6 +167,7 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.manifest, tt.manifestError)
+				manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.manifest, tt.manifestError)
 				clients.AppClient().Manifest = manifestMock
 				projectConfigMock := config.NewProjectConfigMock()
 				projectConfigMock.On("GetManifestSource", mock.Anything).
@@ -160,7 +176,11 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 				clients.SDKConfig.Hooks.Deploy.Command = tt.deployScript
 			})
-			err := hasValidDeploymentMethod(ctx, clients, types.App{}, types.SlackAuth{})
+			app := types.App{}
+			if tt.app.AppID != "" {
+				app = tt.app
+			}
+			err := hasValidDeploymentMethod(ctx, clients, app, types.SlackAuth{})
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(
