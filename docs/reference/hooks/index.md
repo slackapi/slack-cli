@@ -10,7 +10,7 @@ Hooks are small scripts that are _executed_ by the CLI and _implemented_ by the 
 
 The `hooks.json` file allows the CLI and SDK a standard way to communicate while remaining decoupled and abstracted. This interface is a key design of the Slack CLI: many application and project level tasks are delegated from the CLI to the SDK. This delegation, decoupling and abstraction allows for language-agnostic SDK implementations.
 
-## Core Concepts {#core-concepts}
+## Core concepts {#core-concepts}
 
 ### Hooks: How the CLI and the SDK communicate {#communication}
 
@@ -69,7 +69,7 @@ An additive approach to hook names or configuration settings allows us to keep h
 
 For example, the hook name `run-v2` may be the successor to the hook named `run`. The SDK can implement either hook and the CLI will trigger the latest version, possibly falling back to earlier versions of the hook where applicable. The CLI can also warn of impending removal of older hooks, providing hints to the developer when tooling behaviour changes.
 
-## Hook Specification {#specification}
+## Hook specification {#specification}
 
 Hooks are entry points for the CLI to initiate inter-process communication with the SDK. SDKs should implement one hook: `get-hooks`. It is the recommended approach for SDKs to enable communication with the CLI (for more details, see the [Hook Resolution](#hook-resolution) section).
 
