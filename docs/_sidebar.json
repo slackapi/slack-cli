@@ -49,6 +49,11 @@
                 "type": "doc",
                 "id": "slack-cli/reference/experiments",
                 "label": "Experiments"
+            },
+            {
+                "type": "doc",
+                "id": "slack-cli/reference/hooks",
+                "label": "Hooks"
             }
         ]
     }
