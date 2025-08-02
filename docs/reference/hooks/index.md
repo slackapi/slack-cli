@@ -79,12 +79,12 @@ A hook encapsulates an isolated piece of functionality that the SDK provides to 
 
 The following Slack CLI commands invoke hooks:
 
-| Command               | Hook(s)                           |
-| --------------------- | --------------------------------- |
-| `slack manifest info` | [`get-manifest`](#get-manifest)                    |
-| `slack deploy`        | [`get-manifest`](#get-manifest), [`build`](#build), ['deploy'](#deploy) |
-| `slack run`              | ['get-manifest'](#get-manifest), [`start`](#start)           |
-| `slack update`        | [`check-update`](#check-update)             |
+| Command               | Hook(s)                                                                 |
+| --------------------- | ----------------------------------------------------------------------- |
+| `slack manifest info` | [`get-manifest`](#get-manifest)                                         |
+| `slack deploy`        | [`get-manifest`](#get-manifest), [`build`](#build), [`deploy`](#deploy) |
+| `slack run`           | [`get-manifest`](#get-manifest), [`start`](#start)                      |
+| `slack update`        | [`check-update`](#check-update)                                         |
 
 More details on these hooks can be found in their dedication sections below.
 
@@ -102,9 +102,9 @@ This hook should return the CLI-SDK interface in [JSON](#interface-format) forma
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported   | ✅ Supported     | ✅ Supported         | ❌ Unsupported      |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
 ### `get-manifest` (required) {#get-manifest}
 
@@ -118,9 +118,9 @@ The [app manifest](https://docs.slack.dev/reference/app-manifest) in JSON format
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported  | ✅ Supported     | ✅ Supported         | ❌ Unsupported       |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
 ### `build` (optional) {#build}
 
@@ -149,9 +149,9 @@ No further output over STDOUT required from the SDK other than writing the appli
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported  | ❌ Unsupported     | ❌ Unsupported         | ❌ Unsupported        |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ❌ Unsupported      | ❌ Unsupported  | ❌ Unsupported |
 
 ### `start` (optional) {#start}
 
@@ -186,12 +186,12 @@ Several parameters are passed to the SDK over `STDIN` as JSON. The format of thi
 
 | Field                    | Description                                                                                                                                                                                                                             | Required |
 | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| body                     | Object whose keys represent the incoming Slack event payload as described in [Events API Event Types](https://docs.slack.dev/reference/events?APIs=Events). The particular content of this key is dependent on the incoming event type. | Required      |
-| context                  | Object representing variables relevant for the locally-running application.                                                                                                                                                             | Required      |
-| context.bot_access_token | String; a bot access token that the SDK can provide to developer functions for issuing calls to the Slack API.                                                                                                                          | Required      |
-| context.app_id           | String; the current application ID.                                                                                                                                                                                                     | Required      |
-| context.team_id          | String; the ID of the team or workspace the locally-running app is installed to.                                                                                                                                                        | Required      |
-| context.variables        | Object containing environment variables that may or may not be defined by the application via a `.env` file in the root of the application directory.                                                                                   | Required      |
+| body                     | Object whose keys represent the incoming Slack event payload as described in [Events API Event Types](https://docs.slack.dev/reference/events?APIs=Events). The particular content of this key is dependent on the incoming event type. | Required |
+| context                  | Object representing variables relevant for the locally-running application.                                                                                                                                                             | Required |
+| context.bot_access_token | String; a bot access token that the SDK can provide to developer functions for issuing calls to the Slack API.                                                                                                                          | Required |
+| context.app_id           | String; the current application ID.                                                                                                                                                                                                     | Required |
+| context.team_id          | String; the ID of the team or workspace the locally-running app is installed to.                                                                                                                                                        | Required |
+| context.variables        | Object containing environment variables that may or may not be defined by the application via a `.env` file in the root of the application directory.                                                                                   | Required |
 
 Note: The CLI always provides the `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN` environment variables.
 
@@ -201,9 +201,9 @@ Each incoming event from the socket connection will invoke this hook separately.
 
 ##### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported  | ❌ Unsupported      | ❌ Unsupported         | ❌ Unsupported        |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ❌ Unsupported      | ❌ Unsupported  | ❌ Unsupported |
 
 #### SDK-managed connection {#sdk-managed-connection}
 
@@ -225,9 +225,9 @@ Any `STDOUT` received from the this hook would be immediately streamed to the CL
 
 ##### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ❌ Unsupported  | ✅ Supported     | ✅ Supported         | ❌ Unsupported       |
+| Deno           | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| -------------- | ------------------- | --------------- | -------------- |
+| ❌ Unsupported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
 ### `check-update` (optional) {#check-update}
 
@@ -263,25 +263,25 @@ The format for the output JSON is as follows:
 
 | Field             | Description                                                                                                                                                                               | Required |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| name              | String containing the name corresponding to the overall package/library, in which individual component releases are bundled.                                                              | Required      |
-| releases          | Array of objects representing individual releases.                                                                                                                                        | Required      |
-| releases.name     | String containing the name of the dependency.                                                                                                                                             | Required      |
-| releases.current  | String containing the current version.                                                                                                                                                    | Optional       |
-| releases.latest   | String containing the latest version available.                                                                                                                                           | Optional       |
-| releases.update   | Boolean indicating whether there is an update available.                                                                                                                                  | Optional       |
-| releases.breaking | Boolean indicating whether the update is breaking.                                                                                                                                        | Optional       |
-| releases.message  | String containing a message about the dependency.                                                                                                                                         | Optional       |
-| releases.url      | String containing a URL with update information.                                                                                                                                          | Optional       |
-| releases.error    | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional       |
-| message           | String containing any additional details that should be surfaced to the user. For example, this could include how to manually update or a warning that certain files will be overwritten. | No       |
-| url               | String containing a URL where one can learn more about the release.                                                                                                                       | Optional       |
-| error             | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional       |
+| name              | String containing the name corresponding to the overall package/library, in which individual component releases are bundled.                                                              | Required |
+| releases          | Array of objects representing individual releases.                                                                                                                                        | Required |
+| releases.name     | String containing the name of the dependency.                                                                                                                                             | Required |
+| releases.current  | String containing the current version.                                                                                                                                                    | Optional |
+| releases.latest   | String containing the latest version available.                                                                                                                                           | Optional |
+| releases.update   | Boolean indicating whether there is an update available.                                                                                                                                  | Optional |
+| releases.breaking | Boolean indicating whether the update is breaking.                                                                                                                                        | Optional |
+| releases.message  | String containing a message about the dependency.                                                                                                                                         | Optional |
+| releases.url      | String containing a URL with update information.                                                                                                                                          | Optional |
+| releases.error    | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional |
+| message           | String containing any additional details that should be surfaced to the user. For example, this could include how to manually update or a warning that certain files will be overwritten. | Optional |
+| url               | String containing a URL where one can learn more about the release.                                                                                                                       | Optional |
+| error             | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional |
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported  | ✅ Supported     | ❌ Unsupported          | ❌ Unsupported       |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
 
 ### `install-update` (optional) {#install-update}
 
@@ -315,25 +315,25 @@ The format for the output JSON is as follows:
 
 | Field             | Description                                                                                                                                                                               | Required |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| name              | String containing the name corresponding to the overall package/library, in which individual component releases are bundled.                                                              | Required      |
-| releases          | Array of objects representing individual releases.                                                                                                                                        | Required      |
-| releases.name     | String containing the name of the dependency.                                                                                                                                             | Required      |
-| releases.current  | String containing the current version.                                                                                                                                                    | Optional       |
-| releases.latest   | String containing the latest version available.                                                                                                                                           | Optional       |
-| releases.update   | Boolean indicating whether there is an update available.                                                                                                                                  | Optional       |
-| releases.breaking | Boolean indicating whether the update is breaking.                                                                                                                                        | Optional       |
-| releases.message  | String containing a message about the dependency.                                                                                                                                         | Optional       |
-| releases.url      | String containing a URL with update information.                                                                                                                                          | Optional       |
-| releases.error    | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional       |
-| message           | String containing any additional details that should be surfaced to the user. For example, this could include how to manually update or a warning that certain files will be overwritten. | No       |
-| url               | String containing a URL where one can learn more about the release.                                                                                                                       | Optional       |
-| error             | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional       |
+| name              | String containing the name corresponding to the overall package/library, in which individual component releases are bundled.                                                              | Required |
+| releases          | Array of objects representing individual releases.                                                                                                                                        | Required |
+| releases.name     | String containing the name of the dependency.                                                                                                                                             | Required |
+| releases.current  | String containing the current version.                                                                                                                                                    | Optional |
+| releases.latest   | String containing the latest version available.                                                                                                                                           | Optional |
+| releases.update   | Boolean indicating whether there is an update available.                                                                                                                                  | Optional |
+| releases.breaking | Boolean indicating whether the update is breaking.                                                                                                                                        | Optional |
+| releases.message  | String containing a message about the dependency.                                                                                                                                         | Optional |
+| releases.url      | String containing a URL with update information.                                                                                                                                          | Optional |
+| releases.error    | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional |
+| message           | String containing any additional details that should be surfaced to the user. For example, this could include how to manually update or a warning that certain files will be overwritten. | Optional |
+| url               | String containing a URL where one can learn more about the release.                                                                                                                       | Optional |
+| error             | Object with a single key, "message", which has a string value containing error information.                                                                                               | Optional |
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅  Supported  | ✅ Supported     | ❌ Unsupported         | ❌ Unsupported       |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
 
 ### `get-trigger` (optional) {#get-trigger}
 
@@ -363,9 +363,9 @@ Below is a sample JSON blob representing the trigger:
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported  | ✅ Supported      | ❌ Unsupported          | ❌ Unsupported       |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
 
 ## `doctor` (optional) {#doctor}
 
@@ -393,17 +393,17 @@ The format for the output JSON is as follows:
 
 | Field            | Description                                               | Required |
 | ---------------- | --------------------------------------------------------- | -------- |
-| versions         | Array of objects containing runtime details.              | Required      |
-| versions.name    | String containing the name of the runtime dependency.     | Required      |
-| versions.current | String containing the current system version.             | Required      |
-| versions.message | String containing a message about the runtime dependency. | Optional       |
-| versions.error   | String containing error information for the runtime.      | Optional       |
+| versions         | Array of objects containing runtime details.              | Required |
+| versions.name    | String containing the name of the runtime dependency.     | Required |
+| versions.current | String containing the current system version.             | Required |
+| versions.message | String containing a message about the runtime dependency. | Optional |
+| versions.error   | String containing error information for the runtime.      | Optional |
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ✅ Supported  | ✅ Supported     | ✅ Supported         | ❌ Unsupported       |
+| Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| ------------ | ------------------- | --------------- | -------------- |
+| ✅ Supported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
 ## `deploy` (optional) {#deploy}
 
@@ -423,9 +423,9 @@ Any `STDOUT` or `STDERR` received from the this hook is immediately streamed to 
 
 #### Support
 
-| Deno | Bolt JS | Bolt Python | Bolt Java |
-| ---- | ------- | ----------- | --------- |
-| ❌ Unsupported  | ✅ Supported     | ✅ Supported         | ❌ Unsupported       |
+| Deno           | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
+| -------------- | ------------------- | --------------- | -------------- |
+| ❌ Unsupported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
 ## CLI-SDK JSON interface format {#interface-format}
 
@@ -454,12 +454,12 @@ The format for the JSON representing the CLI-SDK interface is as follows:
 
 | Field                                 | Description                                                                                                                                                                                                                                                                                                                                                                                                     | Required |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| runtime                               | String denoting the target runtime for app functions to execute in. For apps deployed to Slack's managed infrastructure, the only accepted value today is `deno`.                                                                                                                                                                                                                                               | Required      |
-| hooks                                 | Object whose keys must match the hook names outlined in the above [Hooks Specification](#specification). Arguments can be provided within this string by separating them with spaces.                                                                                                                                                                                                                           | Required      |
-| config                                | Object of key-value settings.                                                                                                                                                                                                                                                                                                                                                                                   | Optional       |
-| config.protocol-version               | Array of strings representing the named CLI-SDK protocols supported by the SDK, in descending order of support, as in the first element in the array defines the preferred protocol for use by the SDK, the second element defines the next-preferred protocol, and so on. The only supported named protocol currently is `message-boundaries`. The CLI will use the v1 protocol if this field is not provided. | No       |
-| config.watch                          | String with configuration settings for file-watching.                                                                                                                                                                                                                                                                                                                                                           | Optional       |
-| config.sdk-managed-connection-enabled | Boolean specifying whether the WebSocket connection between the CLI and Slack should be managed by the CLI or by the SDK during `slack run` executions. If `true`, the SDK will manage this connection. If `false` or not provided, the CLI will manage this connection.                                                                                                                                        | Optional       |
+| runtime                               | String denoting the target runtime for app functions to execute in. For apps deployed to Slack's managed infrastructure, the only accepted value today is `deno`.                                                                                                                                                                                                                                               | Required |
+| hooks                                 | Object whose keys must match the hook names outlined in the above [Hooks Specification](#specification). Arguments can be provided within this string by separating them with spaces.                                                                                                                                                                                                                           | Required |
+| config                                | Object of key-value settings.                                                                                                                                                                                                                                                                                                                                                                                   | Optional |
+| config.protocol-version               | Array of strings representing the named CLI-SDK protocols supported by the SDK, in descending order of support, as in the first element in the array defines the preferred protocol for use by the SDK, the second element defines the next-preferred protocol, and so on. The only supported named protocol currently is `message-boundaries`. The CLI will use the v1 protocol if this field is not provided. | Optional |
+| config.watch                          | String with configuration settings for file-watching.                                                                                                                                                                                                                                                                                                                                                           | Optional |
+| config.sdk-managed-connection-enabled | Boolean specifying whether the WebSocket connection between the CLI and Slack should be managed by the CLI or by the SDK during `slack run` executions. If `true`, the SDK will manage this connection. If `false` or not provided, the CLI will manage this connection.                                                                                                                                        | Optional |
 
 This format must be adhered to, in order of preference, either:
 
