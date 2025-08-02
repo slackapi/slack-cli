@@ -81,12 +81,12 @@ The following Slack CLI commands invoke hooks:
 
 | Command               | Hook(s)                           |
 | --------------------- | --------------------------------- |
-| `slack manifest info` | `get-manifest`                    |
-| `slack deploy`        | `get-manifest`, `build`, `deploy` |
-| `slack run`           | `get-manifest`, `start`           |
-| `slack update`        | `check-update`                    |
+| `slack manifest info` | [`get-manifest`](#get-manifest)                    |
+| `slack deploy`        | [`get-manifest`](#get-manifest), [`build`](#build), ['deploy'](#deploy) |
+| `slack run`              | ['get-manifest'](#get-manifest), [`start`](#start)           |
+| `slack update`        | [`check-update`](#check-update)             |
 
-More details on these hooks can be found below.
+More details on these hooks can be found in their dedication sections below.
 
 ### `get-hooks` (required) {#get-hooks}
 
