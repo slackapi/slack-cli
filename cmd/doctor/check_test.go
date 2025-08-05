@@ -295,6 +295,7 @@ func TestDoctorCheckCLIConfig(t *testing.T) {
 }
 
 func TestDoctorCheckCLICreds(t *testing.T) {
+	mockAPIHost := "https://example.com/api/"
 	tests := map[string]struct {
 		mockAuths            []types.SlackAuth
 		expectedSections     []Section
@@ -319,6 +320,7 @@ func TestDoctorCheckCLICreds(t *testing.T) {
 					UserID:              "U003",
 				},
 				{
+					APIHost:    &mockAPIHost,
 					TeamDomain: "teamA",
 					TeamID:     "T004",
 					UserID:     "U004",
@@ -346,6 +348,10 @@ func TestDoctorCheckCLICreds(t *testing.T) {
 						{
 							Label: "Authorization level",
 							Value: "Workspace",
+						},
+						{
+							Label: "API Host",
+							Value: "https://example.com/api/",
 						},
 						{
 							Label: "Token status",
