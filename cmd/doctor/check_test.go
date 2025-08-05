@@ -19,6 +19,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/deputil"
 	"github.com/slackapi/slack-cli/internal/hooks"
@@ -295,22 +296,141 @@ func TestDoctorCheckCLIConfig(t *testing.T) {
 
 func TestDoctorCheckCLICreds(t *testing.T) {
 	tests := map[string]struct {
-		auths types.SlackAuth
+		mockAuths            []types.SlackAuth
+		expectedSections     []Section
+		expectedErrorSection []slackerror.Error
 	}{
-		"errors without available authorizations": {},
+		"errors without available authorizations": {
+			expectedErrorSection: []slackerror.Error{*slackerror.New(slackerror.ErrNotAuthed)},
+			expectedSections:     []Section{},
+		},
+		"orders multiple different authentications": {
+			mockAuths: []types.SlackAuth{
+				{
+					TeamDomain: "teamB",
+					TeamID:     "T002",
+					UserID:     "U002",
+				},
+				{
+					TeamDomain:          "teamB",
+					TeamID:              "E003",
+					EnterpriseID:        "E003",
+					IsEnterpriseInstall: true,
+					UserID:              "U003",
+				},
+				{
+					TeamDomain: "teamA",
+					TeamID:     "T004",
+					UserID:     "U004",
+				},
+			},
+			expectedSections: []Section{
+				{
+					Subsections: []Section{
+						{
+							Label: "Team domain",
+							Value: "teamA",
+						},
+						{
+							Label: "Team ID",
+							Value: "T004",
+						},
+						{
+							Label: "User ID",
+							Value: "U004",
+						},
+						{
+							Label: "Last updated",
+							Value: "0001-01-01 00:00:00 Z",
+						},
+						{
+							Label: "Authorization level",
+							Value: "Workspace",
+						},
+						{
+							Label: "Token status",
+							Value: "Valid",
+						},
+					},
+					Errors: []slackerror.Error{},
+				},
+				{
+					Subsections: []Section{
+						{
+							Label: "Team domain",
+							Value: "teamB",
+						},
+						{
+							Label: "Team ID",
+							Value: "E003",
+						},
+						{
+							Label: "User ID",
+							Value: "U003",
+						},
+						{
+							Label: "Last updated",
+							Value: "0001-01-01 00:00:00 Z",
+						},
+						{
+							Label: "Authorization level",
+							Value: "Organization",
+						},
+						{
+							Label: "Token status",
+							Value: "Valid",
+						},
+					},
+					Errors: []slackerror.Error{},
+				},
+				{
+					Subsections: []Section{
+						{
+							Label: "Team domain",
+							Value: "teamB",
+						},
+						{
+							Label: "Team ID",
+							Value: "T002",
+						},
+						{
+							Label: "User ID",
+							Value: "U002",
+						},
+						{
+							Label: "Last updated",
+							Value: "0001-01-01 00:00:00 Z",
+						},
+						{
+							Label: "Authorization level",
+							Value: "Workspace",
+						},
+						{
+							Label: "Token status",
+							Value: "Valid",
+						},
+					},
+					Errors: []slackerror.Error{},
+				},
+			},
+			expectedErrorSection: []slackerror.Error{},
+		},
 	}
 
-	for name := range tests {
+	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
+			clientsMock.Auth.On("Auths", mock.Anything).Return(tt.mockAuths, nil)
+			clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slack.com/api/", nil)
+			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			expected := Section{
 				Label:       "Credentials",
 				Value:       "your Slack authentication",
-				Subsections: []Section{},
-				Errors:      []slackerror.Error{*slackerror.New(slackerror.ErrNotAuthed)},
+				Subsections: tt.expectedSections,
+				Errors:      tt.expectedErrorSection,
 			}
 
 			section, err := checkCLICreds(ctx, clients)
