@@ -27,7 +27,7 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 **Run the automated installer from Windows PowerShell:**
 
 ```zsh
-irm https://downloads.slack-edge.com/tools/slack-cli/install-windows.ps1 | iex
+irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 | iex
 ```
 
 :::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
@@ -57,7 +57,7 @@ You can also use the `-Alias` flag as described within **Optional: customize ins
 There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the installation script to a local file:
 
 ```zsh
-irm https://downloads.slack-edge.com/tools/slack-cli/install-windows.ps1 -outfile 'install-windows.ps1'
+irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -outfile 'install-windows.ps1'
 ```
 
 The available flags are:
@@ -116,7 +116,7 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/tools/slack-cli/slack_cli_3.5.2_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
+<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
 
 **5\. Add the** `slack` **CLI to your path.**
 
