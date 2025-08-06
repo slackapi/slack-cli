@@ -99,7 +99,7 @@ and some ways to remediate them.
 
 **Remediation**: Learn about building apps with the Deno Slack SDK:
 
-https://tools.slack.dev/deno-slack-sdk
+https://docs.slack.dev/tools/deno-slack-sdk
 
 If you are using a Bolt framework, add a deploy hook then run: `slack deploy`
 
@@ -328,7 +328,7 @@ Learn more: https://slack.com/help/articles/201980108-Add-people-to-a-channel
 **Message**: Couldn't auto-update this command-line tool
 
 **Remediation**: You can manually install the latest version from:
-https://tools.slack.dev/tools/slack-cli
+https://docs.slack.dev/tools/slack-cli
 
 ---
 
