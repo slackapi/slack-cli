@@ -1,10 +1,10 @@
 ---
-slug: /slack-cli/guides/authorizing-the-slack-cli
+slug: /tools/slack-cli/guides/authorizing-the-slack-cli
 ---
 
 # Authorizing the Slack CLI {#authorize-cli}
 
-Once you have the Slack CLI installed for either [Windows](/slack-cli/guides/installing-the-slack-cli-for-windows) or [Mac/Linux](/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux), authorize the Slack CLI in your workspace with the following command:
+Once you have the Slack CLI installed for either [Windows](/tools/slack-cli/guides/installing-the-slack-cli-for-windows) or [Mac/Linux](/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux), authorize the Slack CLI in your workspace with the following command:
 
 ```zsh
 slack login

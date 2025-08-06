@@ -1,6 +1,6 @@
 ---
 sidebar_label: Installing for Windows
-slug: /slack-cli/guides/installing-the-slack-cli-for-windows
+slug: /tools/slack-cli/guides/installing-the-slack-cli-for-windows
 ---
 
 # Installing the Slack CLI for Windows
@@ -9,7 +9,7 @@ The Slack CLI is a set of tools critical to building workflow apps. This is your
 
 ✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
 
-⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
+⤵️ **If you need to authorize the Slack CLI, [go here](/tools/slack-cli/guides/authorizing-the-slack-cli)**.
 
 :::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.]
 
@@ -27,7 +27,7 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 **Run the automated installer from Windows PowerShell:**
 
 ```zsh
-irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 | iex
+irm https://downloads.slack-edge.com/tools/slack-cli/install-windows.ps1 | iex
 ```
 
 :::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
@@ -57,7 +57,7 @@ You can also use the `-Alias` flag as described within **Optional: customize ins
 There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the installation script to a local file:
 
 ```zsh
-irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -outfile 'install-windows.ps1'
+irm https://downloads.slack-edge.com/tools/slack-cli/install-windows.ps1 -outfile 'install-windows.ps1'
 ```
 
 The available flags are:
@@ -116,7 +116,7 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
+<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/tools/slack-cli/slack_cli_3.5.2_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
 
 **5\. Add the** `slack` **CLI to your path.**
 

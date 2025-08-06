@@ -1,6 +1,6 @@
 ---
 sidebar_label: Setting up CI/CD
-slug: /slack-cli/guides/setting-up-ci-cd-with-the-slack-cli
+slug: /tools/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli
 
 ---
 
@@ -56,7 +56,7 @@ Before setting up a CI/CD pipeline, you should first familiarize yourself with t
 
 You'll also need to accommodate requests from your network to a variety of hosts. Refer to [Which hosts are involved in the creation and execution of apps created with the Slack CLI?](https://docs.slack.dev/faq#hosts) for more details.
 
-In addition, you'll need to obtain a service token to authorize your CI/CD setup. Refer to [CI/CD authorization](/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for more details about obtaining, using, and revoking service tokens.
+In addition, you'll need to obtain a service token to authorize your CI/CD setup. Refer to [CI/CD authorization](/tools/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for more details about obtaining, using, and revoking service tokens.
 
 Once you've done those things, you're ready to get started! Let's walk through an example.
 
@@ -199,7 +199,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install CLI
-        run: curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
+        run: curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash
 
       - name: Deploy
         run: slack deploy --app ${{ secrets.APP }} --workspace ${{ secrets.WORKSPACE }} --token ${{ secrets.SLACK_SERVICE_TOKEN }}
@@ -209,7 +209,7 @@ Central to this file is calling the `slack deploy` command to deploy your app to
 
 ## Onward {#onward}
 
-Want to learn more about how to use the Slack CLI? [Start here](/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux)!
+Want to learn more about how to use the Slack CLI? [Start here](/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux)!
 
 ✨  **For more information about deploying to Slack's managed infrastructure**, refer to [Deploy to Slack](/deno-slack-sdk/guides/deploying-to-slack).
 

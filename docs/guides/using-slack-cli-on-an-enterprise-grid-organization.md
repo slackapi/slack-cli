@@ -1,6 +1,6 @@
 ---
 sidebar_label: Using on Enterprise Grid
-slug: /slack-cli/guides/using-slack-cli-on-an-enterprise-grid-organization
+slug: /tools/slack-cli/guides/using-slack-cli-on-an-enterprise-grid-organization
 ---
 
 # Using Slack CLI on an Enterprise Grid organization

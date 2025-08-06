@@ -1,5 +1,5 @@
 ---
-slug: /slack-cli/guides/uninstalling-the-slack-cli
+slug: /tools/slack-cli/guides/uninstalling-the-slack-cli
 ---
 
 # Uninstalling the Slack CLI

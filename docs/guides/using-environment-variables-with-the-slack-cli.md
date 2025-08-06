@@ -1,6 +1,6 @@
 ---
 sidebar_label: Using environment variables
-slug: /slack-cli/guides/using-environment-variables-with-the-slack-cli
+slug: /tools/slack-cli/guides/using-environment-variables-with-the-slack-cli
 ---
 
 # Using environment variables with the Slack CLI
@@ -26,7 +26,7 @@ While the `.env` file should **never** be committed to source control for securi
 
 ### Storing deployed environment variables {#deployed-env-vars}
 
-When your app is [deployed](/deno-slack-sdk/guides/deploying-to-slack), it will no longer use the `.env` file. Instead, you will have to add the environment variables using the [`env add`](/slack-cli/reference/commands/slack_env_add) command. Environment variables added with `env add` will be made available to your deployed app's [custom functions](/deno-slack-sdk/guides/creating-custom-functions) just as they are locally; see examples in the next section.
+When your app is [deployed](/deno-slack-sdk/guides/deploying-to-slack), it will no longer use the `.env` file. Instead, you will have to add the environment variables using the [`env add`](/tools/slack-cli/reference/commands/slack_env_add) command. Environment variables added with `env add` will be made available to your deployed app's [custom functions](/deno-slack-sdk/guides/creating-custom-functions) just as they are locally; see examples in the next section.
 
 For the above example, we could run the following command before deploying our app:
 
@@ -152,7 +152,7 @@ slack env add SLACK_DEBUG true
 
 Slack provides two environment variables by default, `SLACK_WORKSPACE` and `SLACK_ENV`. The workspace name is specified by `SLACK_WORKSPACE` and `SLACK_ENV` provides a distinction between the `local` and `deployed` app. Use these values if you want to have different values based on the workspace or environment that the app is installed in.
 
-These variables are automatically included when generating the manifest or triggers only. For access from within a custom function, these variables can be set from the `.env` file or with the [`env add`](/slack-cli/reference/commands/slack_env_add) command.
+These variables are automatically included when generating the manifest or triggers only. For access from within a custom function, these variables can be set from the `.env` file or with the [`env add`](/tools/slack-cli/reference/commands/slack_env_add) command.
 
 A custom `WorkspaceMapSchema` can be created and used with these variables to decide which values to use for certain instances of an app. This can be used as an alternative to a local `.env` file or in conjunction with it. The following snippet works well for inclusion in your app manifest, or for triggers (for example, to change event trigger channel IDs):
 

@@ -1,6 +1,6 @@
 ---
 sidebar_label: Installing for MacOS & Linux
-slug: /slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
+slug: /tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
 ---
 
 # Installing the Slack CLI for Mac & Linux
@@ -9,7 +9,7 @@ The Slack CLI is a set of tools critical to building workflow apps. This is your
 
 ✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
 
-⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
+⤵️ **If you need to authorize the Slack CLI, [go here](/tools/slack-cli/guides/authorizing-the-slack-cli)**.
 
 :::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.]
 
@@ -23,7 +23,7 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 **Run the automated installer from your terminal window:**
 
 ```zsh
-curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
+curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash
 ```
 
 This will install the Slack CLI and all required dependencies, including [Deno](/deno-slack-sdk/guides/installing-deno),
@@ -40,13 +40,13 @@ If you have another CLI tool in your path called `slack`, you can rename the sla
 To do this, pass the `-s` argument to the installer script:
 
 ```zsh
-curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s <your-preferred-alias>
+curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash -s <your-preferred-alias>
 ```
 
 The alias you use should come after any flags used in the installation script. For example, if you use both flags noted below to pass a version and skip the Deno installation, your install script might look like this:
 
 ```
-curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v 2.1.0 -d <your-preferred-alias>
+curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash -s -- -v 2.1.0 -d <your-preferred-alias>
 ```
 
 You can also copy the Slack CLI into any folder that is already in your path (such as `/usr/local/bin`&mdash;you can use`echo $PATH` to find these), or add a new folder to your path by listing the folder you installed the Slack CLI to in `/etc/paths`.
@@ -63,13 +63,13 @@ There are two optional flags available to customize the installation.
 1. Specify a version you'd like to install using the version flag, `-v`. The absence of this flag will ensure the latest Slack CLI version is installed.
 
 ```
-curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v 2.1.0
+curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash -s -- -v 2.1.0
 ```
 
 2. Skip the Deno installation by using the `-d` flag, like this:
 
 ```
-curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -d
+curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash -s -- -d
 ```
 
 </details>
@@ -84,7 +84,7 @@ Error: _Failed to create a symbolic link! The installer doesn't have write acces
 Solution: Sudo actions within the scripts were removed so as not to create any security concerns. The `$HOME` env var is updated to `/root` &mdash; however, the installer is using `$HOME` for both Deno and the SDK install, which causes the whole install to be placed under `/root`, making both Deno and the SDK unusable for users without root permissions.
 
 * For users who do not have root permissions, run the sudo actions manually as follows: `sudo mkdir -p -m 775 /usr/local/bin`, then `sudo ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"` where `$slack_cli_bin_path` is typically `$HOME/.slack/bin/slack` and `$SLACK_CLI_NAME` is typically the alias (by default it’s `slack`).
-* For users who do have root permissions, you can run the installation script as `sudo curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash`. In this case, the script is executed as root.
+* For users who do have root permissions, you can run the installation script as `sudo curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash`. In this case, the script is executed as root.
 
 </details>
 </TabItem>
@@ -109,11 +109,11 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_macOS_arm64.tar.gz)
+🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/tools/slack-cli/slack_cli_3.5.2_macOS_arm64.tar.gz)
 
-🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_macOS_amd64.tar.gz)
+🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/tools/slack-cli/slack_cli_3.5.2_macOS_amd64.tar.gz)
 
-🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_linux_64-bit.tar.gz)
+🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/tools/slack-cli/slack_cli_3.5.2_linux_64-bit.tar.gz)
 
 **5\. Add the** `slack` **CLI to your path.**
 

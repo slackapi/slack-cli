@@ -8,7 +8,7 @@ You can use the Slack CLI to streamline development of apps using [Bolt for Java
 
 :::info[Feeling adventurous?]
 
-To create a Bolt app using features currently under development, refer to the [experiments](/slack-cli/reference/experiments) page.
+To create a Bolt app using features currently under development, refer to the [experiments](/tools/slack-cli/reference/experiments) page.
 
 :::
 
