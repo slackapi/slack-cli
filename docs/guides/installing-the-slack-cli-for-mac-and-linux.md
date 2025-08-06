@@ -23,7 +23,7 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 **Run the automated installer from your terminal window:**
 
 ```zsh
-curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash
+curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
 ```
 
 This will install the Slack CLI and all required dependencies, including [Deno](/tools/deno-slack-sdk/guides/installing-deno),
