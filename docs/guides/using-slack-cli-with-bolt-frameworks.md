@@ -4,7 +4,7 @@ sidebar_label: Using with Bolt frameworks
 
 # Using the Slack CLI with Bolt frameworks
 
-You can use the Slack CLI to streamline development of apps using [Bolt for JavaScript](/bolt-js) and [Bolt for Python](/bolt-python).
+You can use the Slack CLI to streamline development of apps using [Bolt for JavaScript](/tools/bolt-js) and [Bolt for Python](/tools/bolt-python).
 
 :::info[Feeling adventurous?]
 
