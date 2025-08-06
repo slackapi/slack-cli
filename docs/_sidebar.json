@@ -11,17 +11,17 @@
         "label": "Guides",
         "collapsed": false,
         "items": [
-            "tools/slack-cli/guides/installing-the-tools/slack-cli-for-mac-and-linux",
-            "tools/slack-cli/guides/installing-the-tools/slack-cli-for-windows",
-            "tools/slack-cli/guides/authorizing-the-tools/slack-cli",
-            "tools/slack-cli/guides/using-tools/slack-cli-with-bolt-frameworks",
-            "tools/slack-cli/guides/using-tools/slack-cli-on-an-enterprise-grid-organization",
-            "tools/slack-cli/guides/running-tools/slack-cli-commands",
-            "tools/slack-cli/guides/using-environment-variables-with-the-tools/slack-cli",
-            "tools/slack-cli/guides/troubleshooting-tools/slack-cli-errors",
-            "tools/slack-cli/guides/setting-up-ci-cd-with-the-tools/slack-cli",
-            "tools/slack-cli/guides/deploying-with-the-tools/slack-cli-and-github-actions",
-            "tools/slack-cli/guides/uninstalling-the-tools/slack-cli"
+            "tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux",
+            "tools/slack-cli/guides/installing-the-slack-cli-for-windows",
+            "tools/slack-cli/guides/authorizing-the-slack-cli",
+            "tools/slack-cli/guides/using-slack-cli-with-bolt-frameworks",
+            "tools/slack-cli/guides/using-slack-cli-on-an-enterprise-grid-organization",
+            "tools/slack-cli/guides/running-slack-cli-commands",
+            "tools/slack-cli/guides/using-environment-variables-with-the-slack-cli",
+            "tools/slack-cli/guides/troubleshooting-slack-cli-errors",
+            "tools/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli",
+            "tools/slack-cli/guides/deploying-with-the-slack-cli-and-github-actions",
+            "tools/slack-cli/guides/uninstalling-the-slack-cli"
         ]
     },
     { "type": "html", "value": "<hr>" },
