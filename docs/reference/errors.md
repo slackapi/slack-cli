@@ -1611,4 +1611,4 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 These error codes might reference an error you've encountered, but not provide
 enough details for a workaround.
 
-For more help, post to our issue tracker: https://github.com/slackapi/tools/slack-cli/issues
+For more help, post to our issue tracker: https://github.com/slackapi/slack-cli/issues
