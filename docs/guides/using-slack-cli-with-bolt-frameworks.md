@@ -36,7 +36,7 @@ Your app will be cloned from the respective [JavaScript](https://github.com/slac
 
 :::info[For Bolt for Python projects, automatic project dependency installation is currently unsupported, and will need to be done manually.] 
 
-For more information, refer to [Getting started with Bolt for Python](/bolt-python/getting-started).
+For more information, refer to [Getting started with Bolt for Python](/tools/bolt-python/getting-started).
 
 :::
 
