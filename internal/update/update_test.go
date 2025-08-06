@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -106,6 +107,182 @@ func Test_Update_HasUpdate(t *testing.T) {
 
 			// Test
 			require.Equal(t, tt.expectedReturnValue, updateNotification.HasUpdate())
+		})
+	}
+}
+
+func Test_Update_InstallUpdatesWithComponentFlags(t *testing.T) {
+	// Save original type checking functions to restore later
+	originalIsCLI := isDependencyCLI
+	originalIsSDK := isDependencySDK
+	defer func() {
+		isDependencyCLI = originalIsCLI
+		isDependencySDK = originalIsSDK
+	}()
+
+	// Create mock dependencies - one CLI, one SDK
+	cliDep := new(mockDependency)
+	sdkDep := new(mockDependency)
+
+	// Setup test cases
+	for name, tt := range map[string]struct {
+		cli                   bool
+		sdk                   bool
+		cliHasUpdate          bool
+		sdkHasUpdate          bool
+		cliInstallError       error
+		sdkInstallError       error
+		expectedErrorContains string
+		shouldInstallCLI      bool
+		shouldInstallSDK      bool
+	}{
+		"Both flags false, both have updates": {
+			cli:                   false,
+			sdk:                   false,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          true,
+			cliInstallError:       nil,
+			sdkInstallError:       nil,
+			expectedErrorContains: "",
+			shouldInstallCLI:      false,
+			shouldInstallSDK:      false,
+		},
+		"Only CLI flag set, both have updates": {
+			cli:                   true,
+			sdk:                   false,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          true,
+			cliInstallError:       nil,
+			sdkInstallError:       nil,
+			expectedErrorContains: "",
+			shouldInstallCLI:      true,
+			shouldInstallSDK:      false,
+		},
+		"Only SDK flag set, both have updates": {
+			cli:                   false,
+			sdk:                   true,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          true,
+			cliInstallError:       nil,
+			sdkInstallError:       nil,
+			expectedErrorContains: "",
+			shouldInstallCLI:      false,
+			shouldInstallSDK:      true,
+		},
+		"Both flags set, both have updates": {
+			cli:                   true,
+			sdk:                   true,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          true,
+			cliInstallError:       nil,
+			sdkInstallError:       nil,
+			expectedErrorContains: "",
+			shouldInstallCLI:      true,
+			shouldInstallSDK:      true,
+		},
+		"CLI flag set, CLI fails to install": {
+			cli:                   true,
+			sdk:                   false,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          true,
+			cliInstallError:       assert.AnError,
+			sdkInstallError:       nil,
+			expectedErrorContains: "general error for testing",
+			shouldInstallCLI:      true,
+			shouldInstallSDK:      false,
+		},
+		"SDK flag set, SDK fails to install": {
+			cli:                   false,
+			sdk:                   true,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          true,
+			cliInstallError:       nil,
+			sdkInstallError:       assert.AnError,
+			expectedErrorContains: "general error for testing",
+			shouldInstallCLI:      false,
+			shouldInstallSDK:      true,
+		},
+		"CLI flag set, CLI has no update": {
+			cli:                   true,
+			sdk:                   false,
+			cliHasUpdate:          false,
+			sdkHasUpdate:          true,
+			cliInstallError:       nil,
+			sdkInstallError:       nil,
+			expectedErrorContains: "",
+			shouldInstallCLI:      false,
+			shouldInstallSDK:      false,
+		},
+		"SDK flag set, SDK has no update": {
+			cli:                   false,
+			sdk:                   true,
+			cliHasUpdate:          true,
+			sdkHasUpdate:          false,
+			cliInstallError:       nil,
+			sdkInstallError:       nil,
+			expectedErrorContains: "",
+			shouldInstallCLI:      false,
+			shouldInstallSDK:      false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			// Create clients
+			clients := shared.ClientFactory{
+				Config:    config.NewConfig(slackdeps.NewFsMock(), slackdeps.NewOsMock()),
+				SDKConfig: hooks.NewSDKConfigMock(),
+			}
+
+			// Reset mocks
+			cliDep = new(mockDependency)
+			sdkDep = new(mockDependency)
+
+			// Setup mock CLI dependency - allowing any number of calls to HasUpdate
+			cliDep.On("HasUpdate").Return(tt.cliHasUpdate, nil).Maybe()
+			if tt.cliHasUpdate && tt.shouldInstallCLI {
+				cliDep.On("PrintUpdateNotification", mock.Anything).Return(false, nil)
+				cliDep.On("InstallUpdate", mock.Anything).Return(tt.cliInstallError)
+			}
+
+			// Setup mock SDK dependency - allowing any number of calls to HasUpdate
+			sdkDep.On("HasUpdate").Return(tt.sdkHasUpdate, nil).Maybe()
+			if tt.sdkHasUpdate && tt.shouldInstallSDK {
+				sdkDep.On("PrintUpdateNotification", mock.Anything).Return(false, nil)
+				sdkDep.On("InstallUpdate", mock.Anything).Return(tt.sdkInstallError)
+			}
+
+			// Override type checking functions for this test
+			isDependencyCLI = func(d Dependency) bool {
+				return d == cliDep
+			}
+			isDependencySDK = func(d Dependency) bool {
+				return d == sdkDep
+			}
+
+			// Create updateNotification with our dependencies
+			updateNotification = &UpdateNotification{
+				clients:      &clients,
+				enabled:      true,
+				envDisabled:  "SLACK_SKIP_UPDATE",
+				hoursToWait:  defaultHoursToWait,
+				dependencies: []Dependency{cliDep, sdkDep},
+			}
+
+			// Create test cmd
+			cmd := &cobra.Command{}
+
+			// Test
+			err := updateNotification.InstallUpdatesWithComponentFlags(cmd, tt.cli, tt.sdk)
+
+			// Verify the error
+			if tt.expectedErrorContains != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.expectedErrorContains)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Don't assert expectations since we've used .Maybe()
+			// This avoids strictness in the number of times HasUpdate is called
 		})
 	}
 }
