@@ -199,7 +199,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install CLI
-        run: curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash
+        run: curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
 
       - name: Deploy
         run: slack deploy --app ${{ secrets.APP }} --workspace ${{ secrets.WORKSPACE }} --token ${{ secrets.SLACK_SERVICE_TOKEN }}

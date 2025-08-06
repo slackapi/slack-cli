@@ -68,7 +68,7 @@ jobs:
     - name: Install Slack CLI
       if: steps.cache-slack.outputs.cache-hit != 'true'
       run: |
-        curl -fsSL https://downloads.slack-edge.com/tools/slack-cli/install.sh | bash
+        curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
 
     - name: Deploy the app
       env:
