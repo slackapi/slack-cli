@@ -7,7 +7,7 @@ slug: /tools/slack-cli/guides/installing-the-slack-cli-for-windows
 
 The Slack CLI is a set of tools critical to building workflow apps. This is your one-stop shop for those tools.
 
-✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
+✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/tools/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
 
 ⤵️ **If you need to authorize the Slack CLI, [go here](/tools/slack-cli/guides/authorizing-the-slack-cli)**.
 
@@ -34,7 +34,7 @@ irm https://downloads.slack-edge.com/tools/slack-cli/install-windows.ps1 | iex
 
 :::
 
-This will install the Slack CLI and all required dependencies, including [Deno](/deno-slack-sdk/guides/installing-deno), the runtime environment for workflow apps. If you have VSCode installed, the [VSCode Deno extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) will be installed.
+This will install the Slack CLI and all required dependencies, including [Deno](/tools/deno-slack-sdk/guides/installing-deno), the runtime environment for workflow apps. If you have VSCode installed, the [VSCode Deno extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) will be installed.
 
 <details>
 <summary>Optional: Use an alias for the Slack CLI binary</summary>
@@ -99,7 +99,7 @@ Solution: For the installer to work correctly, your PowerShell session's [langua
 
 Manual installation allows you to omit the Deno installation if you don't need it. Deno is needed if you are creating [workflow apps](https://docs.slack.dev/workflows). If you intend to solely use the CLI for Bolt apps, you do not need Deno. If you forgo the Deno installation, skip to step 3.
 
-**1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/deno-slack-sdk/guides/installing-deno) for more details.
+**1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/tools/deno-slack-sdk/guides/installing-deno) for more details.
 
 **2\. Verify that Deno is installed and in your path.**
 
@@ -173,7 +173,7 @@ In addition, if you attempt to run the `slack run` command without this dependen
 
 Ensure that `deno-slack-hooks` is installed at the project level and that the version is not less than `v1.3.0`.
 
-**8\. [Install the VSCode extension for Deno](/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
+**8\. [Install the VSCode extension for Deno](/tools/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
 
 </TabItem>
 </Tabs>

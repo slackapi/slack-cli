@@ -19,11 +19,11 @@ Once those steps have been completed, we're ready to move on to building our aut
 
 Run `slack create` to create a new Slack app project. Select a template to build from; in this case, hit **Enter** to choose the default `Issue submission` template.
 
-Refer to [Create or remove an app](/deno-slack-sdk/guides/creating-an-app) for more details.
+Refer to [Create or remove an app](/tools/deno-slack-sdk/guides/creating-an-app) for more details.
 
 ## Initial deploy {#initial-deploy}
 
-Run `slack deploy` to manually deploy the new app to your workspace for the first time. During the process, you'll be prompted to create a link trigger. Refer to [Link triggers](/deno-slack-sdk/guides/creating-link-triggers) for more details.
+Run `slack deploy` to manually deploy the new app to your workspace for the first time. During the process, you'll be prompted to create a link trigger. Refer to [Link triggers](/tools/deno-slack-sdk/guides/creating-link-triggers) for more details.
 
 Once created, copy the link and share it in a Slack channel. You'll see a button appear to start the workflow; click it to verify that the default workflow is functioning properly.
 

@@ -5,15 +5,15 @@ slug: /tools/slack-cli/guides/using-environment-variables-with-the-slack-cli
 
 # Using environment variables with the Slack CLI
 
-Storing and using environment variables in an application allows for certain variables to be maintained outside of the code of the application. You can use environment variables from within Slack [functions](/deno-slack-sdk/guides/creating-custom-functions), [triggers](/deno-slack-sdk/guides/using-triggers), and [manifests](/deno-slack-sdk/guides/using-the-app-manifest).
+Storing and using environment variables in an application allows for certain variables to be maintained outside of the code of the application. You can use environment variables from within Slack [functions](/tools/deno-slack-sdk/guides/creating-custom-functions), [triggers](/tools/deno-slack-sdk/guides/using-triggers), and [manifests](/tools/deno-slack-sdk/guides/using-the-app-manifest).
 
 ## Using environment variables with a custom function {#custom-function}
 
-When accessing environment variables from within a [custom function](/deno-slack-sdk/guides/creating-custom-functions), where you store them differs when the app is local versus deployed.
+When accessing environment variables from within a [custom function](/tools/deno-slack-sdk/guides/creating-custom-functions), where you store them differs when the app is local versus deployed.
 
 ### Storing local environment variables {#local-env-vars}
 
-Local environment variables are stored in a `.env` file at the root of the project and made available for use in [custom functions](/deno-slack-sdk/guides/creating-custom-functions) via the `env` [context property](/deno-slack-sdk/guides/creating-custom-functions#context).
+Local environment variables are stored in a `.env` file at the root of the project and made available for use in [custom functions](/tools/deno-slack-sdk/guides/creating-custom-functions) via the `env` [context property](/tools/deno-slack-sdk/guides/creating-custom-functions#context).
 
 A local `.env` file might look like this:
 ```env
@@ -26,7 +26,7 @@ While the `.env` file should **never** be committed to source control for securi
 
 ### Storing deployed environment variables {#deployed-env-vars}
 
-When your app is [deployed](/deno-slack-sdk/guides/deploying-to-slack), it will no longer use the `.env` file. Instead, you will have to add the environment variables using the [`env add`](/tools/slack-cli/reference/commands/slack_env_add) command. Environment variables added with `env add` will be made available to your deployed app's [custom functions](/deno-slack-sdk/guides/creating-custom-functions) just as they are locally; see examples in the next section.
+When your app is [deployed](/tools/deno-slack-sdk/guides/deploying-to-slack), it will no longer use the `.env` file. Instead, you will have to add the environment variables using the [`env add`](/tools/slack-cli/reference/commands/slack_env_add) command. Environment variables added with `env add` will be made available to your deployed app's [custom functions](/tools/deno-slack-sdk/guides/creating-custom-functions) just as they are locally; see examples in the next section.
 
 For the above example, we could run the following command before deploying our app:
 
@@ -44,7 +44,7 @@ Your environment variables are always encrypted before being stored on our serve
 
 ### Access variables from within function {#access-function}
 
-We can retrieve the `MY_ENV_VAR` environment variable from within a [custom Slack function](/deno-slack-sdk/guides/creating-custom-functions) via the `env` [context property](/deno-slack-sdk/guides/creating-custom-functions#context) like this:
+We can retrieve the `MY_ENV_VAR` environment variable from within a [custom Slack function](/tools/deno-slack-sdk/guides/creating-custom-functions) via the `env` [context property](/tools/deno-slack-sdk/guides/creating-custom-functions#context) like this:
 
 ```javascript
 // functions/my_function.ts
@@ -64,7 +64,7 @@ Environment variables also play an important part in making calls to a third-par
 
 ## Using environment variables with a trigger or manifest {#using-trigger-manifest}
 
-Accessing environment variables from within a [trigger](/deno-slack-sdk/guides/using-triggers) definition or when constructing the [manifest](/deno-slack-sdk/guides/using-the-app-manifest) differs slightly from custom functions.
+Accessing environment variables from within a [trigger](/tools/deno-slack-sdk/guides/using-triggers) definition or when constructing the [manifest](/tools/deno-slack-sdk/guides/using-the-app-manifest) differs slightly from custom functions.
 
 Whether your app is being run locally or already deployed, constructing these definitions happens entirely on your machine and so the environment variables stored on your machine are used.
 
@@ -114,7 +114,7 @@ export default Manifest({
 
 After including this new module, you may have to run [`deno cache manifest.ts`](https://docs.deno.com/runtime/manual/getting_started/command_line_interface#cache-and-compilation-flags) to refresh your local dependency cache.
 
-Variable values such as these are commonly used to specify [outgoing domains](/deno-slack-sdk/guides/using-the-app-manifest#manifest-properties) used by functions, channel IDs for [event triggers](/deno-slack-sdk/guides/creating-event-triggers#event-object), or client IDs of an [external authentication](/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication#define) provider. But, don't let that limit you — environment variables can be used in so many other places!
+Variable values such as these are commonly used to specify [outgoing domains](/tools/deno-slack-sdk/guides/using-the-app-manifest#manifest-properties) used by functions, channel IDs for [event triggers](/tools/deno-slack-sdk/guides/creating-event-triggers#event-object), or client IDs of an [external authentication](/tools/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication#define) provider. But, don't let that limit you — environment variables can be used in so many other places!
 
 #### Requiring environment variables values {#required-manifest-variable-values}
 

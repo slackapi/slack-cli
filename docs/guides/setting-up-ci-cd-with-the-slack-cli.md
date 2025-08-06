@@ -52,7 +52,7 @@ An underlying philosophy of Continuous Delivery is that once code is tested as p
 
 ## Continuous Integration setup {#ci-pipeline}
 
-Before setting up a CI/CD pipeline, you should first familiarize yourself with the [Deno](/deno-slack-sdk/guides/installing-deno) environment if you haven't already. On the CI side of things, we'll be using [Deno's built-in tools](https://deno.land/manual/tools), which allow developers to leverage tools such as GitHub Actions to add steps for testing, linting, and formatting our code.
+Before setting up a CI/CD pipeline, you should first familiarize yourself with the [Deno](/tools/deno-slack-sdk/guides/installing-deno) environment if you haven't already. On the CI side of things, we'll be using [Deno's built-in tools](https://deno.land/manual/tools), which allow developers to leverage tools such as GitHub Actions to add steps for testing, linting, and formatting our code.
 
 You'll also need to accommodate requests from your network to a variety of hosts. Refer to [Which hosts are involved in the creation and execution of apps created with the Slack CLI?](https://docs.slack.dev/faq#hosts) for more details.
 
@@ -166,9 +166,9 @@ This is the meat and potatoes of our CI setup. The pipeline is kicked off by a p
 
 This also includes calling Deno's [task runner](https://deno.land/manual/tools/task_runner) to run any unit tests we have created for our custom functions. This allows us to run all of our unit tests automatically, rather than running each one manually from the command line. In this sample, this means all of the files located in the sample app's `functions` folder ending in _test.ts_.
 
-✨  **For more information about creating unit tests**, refer to [Testing custom functions](/deno-slack-sdk/guides/creating-custom-functions#testing).
+✨  **For more information about creating unit tests**, refer to [Testing custom functions](/tools/deno-slack-sdk/guides/creating-custom-functions#testing).
 
-:::info[If you've created your project by [cloning one of our sample apps](/deno-slack-sdk/guides/creating-an-app), note that the `.github` folder will not be included. You'll need to create it yourself, but you can use the handy dandy **Copy** button next to the code samples on this page to get started!]
+:::info[If you've created your project by [cloning one of our sample apps](/tools/deno-slack-sdk/guides/creating-an-app), note that the `.github` folder will not be included. You'll need to create it yourself, but you can use the handy dandy **Copy** button next to the code samples on this page to get started!]
 
 :::
 
@@ -211,8 +211,8 @@ Central to this file is calling the `slack deploy` command to deploy your app to
 
 Want to learn more about how to use the Slack CLI? [Start here](/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux)!
 
-✨  **For more information about deploying to Slack's managed infrastructure**, refer to [Deploy to Slack](/deno-slack-sdk/guides/deploying-to-slack).
+✨  **For more information about deploying to Slack's managed infrastructure**, refer to [Deploy to Slack](/tools/deno-slack-sdk/guides/deploying-to-slack).
 
 ✨  **For more information specific to different platforms**, refer to [Deploying Deno](https://deno.land/manual/advanced/deploying_deno).
 
-✨  **Just want to write some unit tests?** Refer to [Testing custom functions](/deno-slack-sdk/guides/creating-custom-functions#testing).
+✨  **Just want to write some unit tests?** Refer to [Testing custom functions](/tools/deno-slack-sdk/guides/creating-custom-functions#testing).

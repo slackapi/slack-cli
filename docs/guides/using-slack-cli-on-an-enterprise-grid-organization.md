@@ -69,7 +69,7 @@ Apps created with a legacy workspace-level authorization can still be managed by
 
 ## Requesting Admin Approval {#requesting-approval}
 
-By default, [Admin Approval of Apps](/deno-slack-sdk/guides/controlling-permissions-for-admins) is turned on for all Slack Enterprise Grid organizations. 
+By default, [Admin Approval of Apps](/tools/deno-slack-sdk/guides/controlling-permissions-for-admins) is turned on for all Slack Enterprise Grid organizations. 
 
 Here's what the request flow looks like when trying to install an app to an organization:
 
@@ -86,7 +86,7 @@ If your organization turned Admin Approval of Apps off, then no approval is need
 
 While workflow apps are _installed_ on an entire organization, they do not necessarily have _access_ to every workspace in the organization.
 
-Granting access to workspaces is done when an app is [run on a local development server](/deno-slack-sdk/guides/developing-locally) or [deployed to production](/deno-slack-sdk/guides/deploying-to-slack). The Slack CLI will prompt you to select whether to install with access to a single workspace or all workspaces in an organization. 
+Granting access to workspaces is done when an app is [run on a local development server](/tools/deno-slack-sdk/guides/developing-locally) or [deployed to production](/tools/deno-slack-sdk/guides/deploying-to-slack). The Slack CLI will prompt you to select whether to install with access to a single workspace or all workspaces in an organization. 
 
 You can also skip the prompt and proactively grant the desired access by appending `-org-workspace-grant <team_id>` to the relevant command. 
 
