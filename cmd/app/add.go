@@ -95,6 +95,22 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 // RunAddCommand executes the workspace install command, prints output, and returns any errors.
 func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (context.Context, types.InstallState, types.App, error) {
 	if selection == nil {
+		// TODO: Move to the promptIsProduction when the prompt is refactored and tested.
+		// Validate that the --environment flag matches the --app flag, when the value is `--app local` or `--app deployed`.
+		if types.IsAppFlagEnvironment(clients.Config.AppFlag) {
+			if addFlags.environmentFlag != "" && addFlags.environmentFlag != clients.Config.AppFlag {
+				return ctx, "", types.App{}, slackerror.New(slackerror.ErrMismatchedFlags).WithRemediation("When '--app local' or '--app deployed' is set, please set the flag --environment to match the --app flag.")
+			}
+
+			if addFlags.environmentFlag == "" {
+				err := clients.Config.Flags.Lookup("environment").Value.Set(clients.Config.AppFlag)
+				if err != nil {
+					return ctx, "", types.App{}, err
+				}
+				clients.Config.Flags.Lookup("environment").Changed = true
+			}
+		}
+
 		// When team flag is provided, default app environment to deployed if not specified.
 		// TODO(semver:major): Remove defaulting to deployed and require the environment flag to be set.
 		if clients.Config.TeamFlag != "" && addFlags.environmentFlag == "" {

@@ -118,6 +118,20 @@ func TestAppAddCommandPreRun(t *testing.T) {
 
 func TestAppAddCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
+		"errors when --app local and --environment deployed": {
+			CmdArgs:       []string{"--app", "local", "--environment", "deployed"},
+			ExpectedError: slackerror.New(slackerror.ErrMismatchedFlags),
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
+			},
+		},
+		"errors when --app deployed and --environment local": {
+			CmdArgs:       []string{"--app", "deployed", "--environment", "local"},
+			ExpectedError: slackerror.New(slackerror.ErrMismatchedFlags),
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
+			},
+		},
 		"adds a new local app": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
@@ -416,6 +430,90 @@ func TestAppAddCommand(t *testing.T) {
 		},
 		"adds a new local app when --environment local": {
 			CmdArgs:         []string{"--team", "T123", "--environment", "local"},
+			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
+
+				// Mock SelectPrompt to receive "--environment local"
+				cm.IO.On("SelectPrompt",
+					mock.Anything,
+					"Choose the app environment",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(iostreams.SelectPromptResponse{
+					Flag:   true,
+					Option: "local",
+				}, nil)
+
+				// Mock TeamSelector prompt to return "team1"
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+
+				// Mock valid session for team1
+				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+					UserID:   &mockAuthTeam1.UserID,
+					TeamID:   &mockAuthTeam1.TeamID,
+					TeamName: &mockAuthTeam1.TeamDomain,
+				}, nil)
+
+				// Mock a clean ValidateAppManifest result
+				cm.API.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+					api.ValidateAppManifestResult{
+						Warnings: slackerror.Warnings{},
+					}, nil,
+				)
+
+				// Mock Host
+				cm.API.On("Host").Return("")
+
+				// Mock a successful CreateApp call and return our mocked AppID
+				cm.API.On("CreateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+					api.CreateAppResult{
+						AppID: mockAppTeam1.AppID,
+					},
+					nil,
+				)
+
+				// Mock a successful DeveloperAppInstall
+				cm.API.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+					api.DeveloperAppInstallResult{
+						AppID: mockAppTeam1.AppID,
+						APIAccessTokens: struct {
+							Bot      string "json:\"bot,omitempty\""
+							AppLevel string "json:\"app_level,omitempty\""
+							User     string "json:\"user,omitempty\""
+						}{},
+					},
+					types.InstallSuccess,
+					nil,
+				)
+
+				// Mock existing and updated cache
+				cm.API.On(
+					"ExportAppManifest",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(
+					api.ExportAppResult{},
+					nil,
+				)
+				mockProjectCache := cache.NewCacheMock()
+				mockProjectCache.On("GetManifestHash", mock.Anything, mock.Anything).
+					Return(cache.Hash(""), nil)
+				mockProjectCache.On("NewManifestHash", mock.Anything, mock.Anything).
+					Return(cache.Hash("xoxo"), nil)
+				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
+					Return(nil)
+				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("Cache").Return(mockProjectCache)
+				cm.Config.ProjectConfig = mockProjectConfig
+			},
+		},
+		"adds a new local app when --app local": {
+			CmdArgs:         []string{"--team", "T123", "--app", "local"},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
