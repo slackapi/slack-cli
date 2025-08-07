@@ -2,11 +2,11 @@
 
 The Slack command-line interface (CLI) allows you to create and manage Slack apps from the command line. Use it in combination with the Deno Slack SDK, or the Bolt frameworks for JavaScript and Python.
 
-Follow the installation guide for either [MacOS / Linux](/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux) or [Windows](/slack-cli/guides/installing-the-slack-cli-for-windows) to get set up. Then, follow the the [Authorization guide](/slack-cli/guides/authorizing-the-slack-cli) to connect your workspace. 
+Follow the installation guide for either [MacOS / Linux](/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux) or [Windows](/tools/slack-cli/guides/installing-the-slack-cli-for-windows) to get set up. Then, follow the the [Authorization guide](/tools/slack-cli/guides/authorizing-the-slack-cli) to connect your workspace. 
 
 ## Getting help
 
-This site has lots of guides on the Slack CLI. There's also an in-depth reference both for [commands](/slack-cli/reference/commands/slack) and [errors](/slack-cli/reference/errors).
+This site has lots of guides on the Slack CLI. There's also an in-depth reference both for [commands](/tools/slack-cli/reference/commands/slack) and [errors](/tools/slack-cli/reference/errors).
 
 If you otherwise get stuck, we're here to help. The following are the best ways to get assistance working through your issue:
 

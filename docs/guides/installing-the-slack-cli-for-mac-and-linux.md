@@ -1,15 +1,15 @@
 ---
 sidebar_label: Installing for MacOS & Linux
-slug: /slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
+slug: /tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
 ---
 
 # Installing the Slack CLI for Mac & Linux
 
 The Slack CLI is a set of tools critical to building workflow apps. This is your one-stop shop for those tools.
 
-✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
+✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/tools/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
 
-⤵️ **If you need to authorize the Slack CLI, [go here](/slack-cli/guides/authorizing-the-slack-cli)**.
+⤵️ **If you need to authorize the Slack CLI, [go here](/tools/slack-cli/guides/authorizing-the-slack-cli)**.
 
 :::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.]
 
@@ -26,7 +26,7 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
 ```
 
-This will install the Slack CLI and all required dependencies, including [Deno](/deno-slack-sdk/guides/installing-deno),
+This will install the Slack CLI and all required dependencies, including [Deno](/tools/deno-slack-sdk/guides/installing-deno),
 the runtime environment for workflow apps. If you have VSCode installed,
 the [VSCode Deno
 extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno)
@@ -92,7 +92,7 @@ Solution: Sudo actions within the scripts were removed so as not to create any s
 
 Manual installation allows you to omit the Deno installation if you don't need it. Deno is needed if you are creating [workflow apps](https://docs.slack.dev/workflows). If you intend to solely use the CLI for Bolt apps, you do not need Deno. If you forgo the Deno installation, skip to step 3.
 
-**1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/deno-slack-sdk/guides/installing-deno) for more details.
+**1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/tools/deno-slack-sdk/guides/installing-deno) for more details.
 
 **2\. Verify that Deno is installed and in your path.**
 
@@ -171,7 +171,7 @@ In addition, if you attempt to run the `slack run` command without this dependen
 
 Ensure that `deno-slack-hooks` is installed at the project level and that the version is not less than `v1.3.0`.
 
-**8\. [Install the VSCode extension for Deno](/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
+**8\. [Install the VSCode extension for Deno](/tools/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
 
 </TabItem>
 </Tabs>
