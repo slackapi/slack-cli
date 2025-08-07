@@ -1,6 +1,6 @@
 ---
 sidebar_label: Deploying with GitHub Actions
-slug: /slack-cli/guides/deploying-the-slack-cli-with-github-actions
+slug: /tools/slack-cli/guides/deploying-the-slack-cli-with-github-actions
 ---
 
 # Deploying with the Slack CLI & GitHub Actions
@@ -10,8 +10,8 @@ This tutorial demonstrates how to use CI/CD to facilitate automatic deployments 
 Before we begin, you'll need to do the following:
 
 * Create a new GitHub repository &mdash; any name will do.
-* [Install](/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux) the Slack CLI on your machine.
-* [Authorize](/slack-cli/guides/authorizing-the-slack-cli) the Slack CLI to your workspace.
+* [Install](/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux) the Slack CLI on your machine.
+* [Authorize](/tools/slack-cli/guides/authorizing-the-slack-cli) the Slack CLI to your workspace.
 
 Once those steps have been completed, we're ready to move on to building our automated deployment app.
 
@@ -19,17 +19,17 @@ Once those steps have been completed, we're ready to move on to building our aut
 
 Run `slack create` to create a new Slack app project. Select a template to build from; in this case, hit **Enter** to choose the default `Issue submission` template.
 
-Refer to [Create or remove an app](/deno-slack-sdk/guides/creating-an-app) for more details.
+Refer to [Create or remove an app](/tools/deno-slack-sdk/guides/creating-an-app) for more details.
 
 ## Initial deploy {#initial-deploy}
 
-Run `slack deploy` to manually deploy the new app to your workspace for the first time. During the process, you'll be prompted to create a link trigger. Refer to [Link triggers](/deno-slack-sdk/guides/creating-link-triggers) for more details.
+Run `slack deploy` to manually deploy the new app to your workspace for the first time. During the process, you'll be prompted to create a link trigger. Refer to [Link triggers](/tools/deno-slack-sdk/guides/creating-link-triggers) for more details.
 
 Once created, copy the link and share it in a Slack channel. You'll see a button appear to start the workflow; click it to verify that the default workflow is functioning properly.
 
 ## Obtain a service token {#obtain-service-token}
 
-To automate subsequent deployments, we'll need to obtain a [service token](/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for the app.
+To automate subsequent deployments, we'll need to obtain a [service token](/tools/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for the app.
 
 Navigate to the root directory of your project and run the `slack auth token` command. You'll be prompted to run a slash command called `slackauthticket`, similar to the way you authorized your app earlier. Copy that command and run it in Slack, then copy the challenge code you receive and enter it into your terminal. You'll see a service token that starts with `xoxp-` &mdash; make sure you save this token. Note that this token is connected to a specific workspace and organization.
 
@@ -92,6 +92,6 @@ Your GitHub repository is now set up for team collaboration! Your team members c
 
 Check out these articles to expand your knowledge and skills of automated deployments and the Slack CLI:
 
-➡️ [CI/CD overview and setup](/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli)
+➡️ [CI/CD overview and setup](/tools/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli)
 
-➡️ [CI/CD authorization](/slack-cli/guides/authorizing-the-slack-cli#ci-cd)
+➡️ [CI/CD authorization](/tools/slack-cli/guides/authorizing-the-slack-cli#ci-cd)
