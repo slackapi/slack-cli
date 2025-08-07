@@ -96,6 +96,12 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (context.Context, types.InstallState, types.App, error) {
 	if selection == nil {
 		// TODO: Move to the promptIsProduction when the prompt is refactored and tested.
+		// Validate that the --app flag is not an app ID when the --environment flag is set.
+		if types.IsAppID(clients.Config.AppFlag) && addFlags.environmentFlag != "" {
+			return ctx, "", types.App{}, slackerror.New(slackerror.ErrMismatchedFlags).WithRemediation("When '--app <app_id>' is set, please do not set the flag --environment.")
+		}
+
+		// TODO: Move to the promptIsProduction when the prompt is refactored and tested.
 		// Validate that the --environment flag matches the --app flag, when the value is `--app local` or `--app deployed`.
 		if types.IsAppFlagEnvironment(clients.Config.AppFlag) {
 			if addFlags.environmentFlag != "" && addFlags.environmentFlag != clients.Config.AppFlag {
@@ -132,28 +138,38 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 			}))
 		}
 
-		// Prompt for deployed or local app environment.
-		isProductionApp, err := promptIsProduction(ctx, clients)
-		if err != nil {
-			return ctx, "", types.App{}, err
-		}
-
-		// Set the app environment type based on the prompt.
-		var appEnvironmentType prompts.AppEnvironmentType
-		if isProductionApp {
-			appEnvironmentType = prompts.ShowHostedOnly
+		// When the app flag is an app ID, the app select prompt can resolve the app.
+		// Otherwise, prompt for the app environment and app.
+		if types.IsAppID(clients.Config.AppFlag) {
+			selected, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowAllApps)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
+			selection = &selected
 		} else {
-			appEnvironmentType = prompts.ShowLocalOnly
-		}
+			// Prompt for deployed or local app environment.
+			isProductionApp, err := promptIsProduction(ctx, clients)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
 
-		selected, err := appSelectPromptFunc(ctx, clients, appEnvironmentType, prompts.ShowAllApps)
-		if err != nil {
-			return ctx, "", types.App{}, err
-		}
-		selection = &selected
+			// Set the app environment type based on the prompt.
+			var appEnvironmentType prompts.AppEnvironmentType
+			if isProductionApp {
+				appEnvironmentType = prompts.ShowHostedOnly
+			} else {
+				appEnvironmentType = prompts.ShowLocalOnly
+			}
 
-		if !isProductionApp {
-			selection.App.IsDev = true
+			selected, err := appSelectPromptFunc(ctx, clients, appEnvironmentType, prompts.ShowAllApps)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
+			selection = &selected
+
+			if !isProductionApp {
+				selection.App.IsDev = true
+			}
 		}
 	}
 

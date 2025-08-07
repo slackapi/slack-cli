@@ -132,6 +132,13 @@ func TestAppAddCommand(t *testing.T) {
 				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
 			},
 		},
+		"errors when --app A0123 and --environment local": {
+			CmdArgs:       []string{"--app", "A0123", "--environment", "local"},
+			ExpectedError: slackerror.New(slackerror.ErrMismatchedFlags),
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
+			},
+		},
 		"adds a new local app": {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
@@ -615,6 +622,81 @@ func TestAppAddCommand(t *testing.T) {
 					Flag:   true,
 					Option: "deployed",
 				}, nil)
+
+				// Mock TeamSelector prompt to return "team1"
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(prompts.SelectedApp{Auth: mockAuthTeam1}, nil)
+
+				// Mock valid session for team1
+				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+					UserID:   &mockAuthTeam1.UserID,
+					TeamID:   &mockAuthTeam1.TeamID,
+					TeamName: &mockAuthTeam1.TeamDomain,
+				}, nil)
+
+				// Mock a clean ValidateAppManifest result
+				cm.API.On("ValidateAppManifest", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+					api.ValidateAppManifestResult{
+						Warnings: slackerror.Warnings{},
+					}, nil,
+				)
+
+				// Mock Host
+				cm.API.On("Host").Return("")
+
+				// Mock a successful CreateApp call and return our mocked AppID
+				cm.API.On("CreateApp", mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything).Return(
+					api.CreateAppResult{
+						AppID: mockAppTeam1.AppID,
+					},
+					nil,
+				)
+
+				// Mock a successful DeveloperAppInstall
+				cm.API.On("DeveloperAppInstall", mock.Anything, mock.Anything, mockAuthTeam1.Token, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(
+					api.DeveloperAppInstallResult{
+						AppID: mockAppTeam1.AppID,
+						APIAccessTokens: struct {
+							Bot      string "json:\"bot,omitempty\""
+							AppLevel string "json:\"app_level,omitempty\""
+							User     string "json:\"user,omitempty\""
+						}{},
+					},
+					types.InstallSuccess,
+					nil,
+				)
+
+				// Mock existing and updated cache
+				cm.API.On(
+					"ExportAppManifest",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(
+					api.ExportAppResult{},
+					nil,
+				)
+				mockProjectCache := cache.NewCacheMock()
+				mockProjectCache.On("GetManifestHash", mock.Anything, mock.Anything).
+					Return(cache.Hash(""), nil)
+				mockProjectCache.On("NewManifestHash", mock.Anything, mock.Anything).
+					Return(cache.Hash("xoxo"), nil)
+				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
+					Return(nil)
+				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("Cache").Return(mockProjectCache)
+				cm.Config.ProjectConfig = mockProjectConfig
+			},
+		},
+		"skips app environment prompt when --app A0123 is set": {
+			CmdArgs:         []string{"--app", "A123"},
+			ExpectedOutputs: []string{"Installing"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertNotCalled(t, "SelectPrompt")
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "") // Do not set the environment flag
 
 				// Mock TeamSelector prompt to return "team1"
 				appSelectMock := prompts.NewAppSelectMock()
