@@ -42,7 +42,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"This command is supported for apps deployed to Slack managed infrastructure but",
 			"other apps can attempt to run the command with the --force flag.",
 			"",
-			`Explore more: {{LinkText "https://tools.slack.dev/slack-cli/guides/using-environment-variables-with-the-slack-cli"}}`,
+			`Explore more: {{LinkText "https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli"}}`,
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{

@@ -10,7 +10,7 @@ Builder. Whatever that puzzle might be.
 Inspect and configure the custom functions included in an app with this command.
 Functions can be added as a step in Workflow Builder and shared among teammates.
 
-Learn more about functions: [https://tools.slack.dev/deno-slack-sdk/guides/creating-functions](https://tools.slack.dev/deno-slack-sdk/guides/creating-functions)
+Learn more about functions: [https://docs.slack.dev/tools/deno-slack-sdk/guides/creating-functions](https://docs.slack.dev/tools/deno-slack-sdk/guides/creating-functions/)
 
 ```
 slack function <subcommand> [flags]
