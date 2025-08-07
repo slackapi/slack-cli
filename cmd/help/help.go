@@ -107,6 +107,6 @@ const helpTemplate string = `{{.Long}}
   For more information about a specific command, run:
   $ {{.CommandPath}}{{if eq .Name (GetProcessName)}} <command>{{end}} <subcommand> --help
 
-  For guides and documentation, head over to {{LinkText "https://tools.slack.dev/slack-cli"}}{{end}}
+  For guides and documentation, head over to {{LinkText "https://docs.slack.dev/tools/slack-cli"}}{{end}}
 
 `

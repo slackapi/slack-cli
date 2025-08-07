@@ -10,7 +10,7 @@ infrastructure.
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Explore more: [https://tools.slack.dev/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://tools.slack.dev/slack-cli/guides/using-environment-variables-with-the-slack-cli)
+Explore more: [https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli/)
 
 ```
 slack env <subcommand> [flags]

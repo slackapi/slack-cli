@@ -9,7 +9,7 @@ Interact with the items stored in an app's datastore.
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Discover the datastores: [https://tools.slack.dev/deno-slack-sdk/guides/using-datastores](https://tools.slack.dev/deno-slack-sdk/guides/using-datastores)
+Discover the datastores: [https://docs.slack.dev/tools/deno-slack-sdk/guides/using-datastores](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-datastores/)
 
 ```
 slack datastore <subcommand> <expression> [flags]
