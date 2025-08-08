@@ -120,7 +120,7 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 		// Default to `--environment deployed` when there is no `--environment` flag and `--team <id>` is set.
 		// Skip when `--app <id>` flag is set, because the environment is looked up in the app selector prompt.
 		// TODO(semver:major): This is backwards compatibility for when `install` only supported deployed environments.
-		if !types.IsAppID(clients.Config.AppFlag) && (addFlags.environmentFlag == "" && types.IsTeamID(clients.Config.TeamFlag)) {
+		if !types.IsAppID(clients.Config.AppFlag) && (addFlags.environmentFlag == "" && clients.Config.TeamFlag != "") {
 			err := clients.Config.Flags.Lookup("environment").Value.Set("deployed")
 			if err != nil {
 				return ctx, "", types.App{}, err
