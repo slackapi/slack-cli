@@ -139,7 +139,7 @@ install_slack_cli() {
         else
                 echo "🛑 Error: This installer is only supported on Linux and macOS"
                 echo "🔖 Try using a different installation method:"
-                echo "🔗 https://tools.slack.dev/slack-cli"
+                echo "🔗 https://docs.slack.dev/tools/slack-cli"
                 return 1
         fi
 
