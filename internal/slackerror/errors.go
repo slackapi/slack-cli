@@ -210,11 +210,11 @@ const (
 	ErrRequestIDOrAppIDIsRequired                    = "request_id_or_app_id_is_required"
 	ErrRatelimited                                   = "ratelimited"
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
+	ErrRuntimeNotFound                               = "runtime_not_found"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
 	ErrSDKConfigLoad                                 = "sdk_config_load_error"
 	ErrSDKHookInvocationFailed                       = "sdk_hook_invocation_failed"
 	ErrSDKHookNotFound                               = "sdk_hook_not_found"
-	ErrSDKHookGetTriggerNotFound                     = "sdk_hook_get_trigger_not_found"
 	ErrSampleCreate                                  = "sample_create_error"
 	ErrServiceLimitsExceeded                         = "service_limits_exceeded"
 	ErrSharedChannelDenied                           = "shared_channel_denied"
@@ -1291,9 +1291,15 @@ Otherwise start your app for local development with: %s`,
 		Message: "Your Slack plan does not have access to the requested feature",
 	},
 
+	ErrRuntimeNotFound: {
+		Code:        ErrRuntimeNotFound,
+		Message:     "The hook runtime executable was not found",
+		Remediation: "Make sure the required runtime has been installed to run hook scripts.",
+	},
+
 	ErrRuntimeNotSupported: {
 		Code:    ErrRuntimeNotSupported,
-		Message: "The SDK language's executable (deno, node, python, etc) was not found to be installed on the system",
+		Message: "The SDK runtime is not supported by the CLI",
 	},
 
 	ErrSampleCreate: {
@@ -1338,12 +1344,6 @@ Otherwise start your app for local development with: %s`,
 			"",
 			"When manually creating the hooks file, you must install the hook dependencies.",
 		}, "\n"),
-	},
-
-	ErrSDKHookGetTriggerNotFound: {
-		Code:        ErrSDKHookGetTriggerNotFound,
-		Message:     fmt.Sprintf("The `get-trigger` hook script in `%s` was not found", filepath.Join(".slack", "hooks.json")),
-		Remediation: `Try defining your trigger by specifying a json file instead.`,
 	},
 
 	ErrSlackAuth: {

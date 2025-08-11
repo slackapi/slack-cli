@@ -64,6 +64,8 @@ main() {
 
     echo "Checking Windows archives"
     check_exe "$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"
+    check_exe "$DIST_DIR/slack_cli_dev_windows_64-bit.zip"
+    check_exe "$DIST_DIR/slack_cli_latest_windows_64-bit.zip"
 
     echo "Success! Archives exist!"
 }
