@@ -346,7 +346,7 @@ var ErrorCodeMap = map[string]Error{
 		},
 		Remediation: fmt.Sprintf(`Learn about building apps with the Deno Slack SDK:
 
-https://tools.slack.dev/deno-slack-sdk
+https://docs.slack.dev/tools/deno-slack-sdk
 
 If you are using a Bolt framework, add a deploy hook then run: %s
 
@@ -561,7 +561,7 @@ Otherwise start your app for local development with: %s`,
 	ErrCLIAutoUpdate: {
 		Code:        ErrCLIAutoUpdate,
 		Message:     "Couldn't auto-update this command-line tool",
-		Remediation: "You can manually install the latest version from:\nhttps://tools.slack.dev/slack-cli",
+		Remediation: "You can manually install the latest version from:\nhttps://docs.slack.dev/tools/slack-cli",
 	},
 
 	ErrCLIConfigLocationError: {

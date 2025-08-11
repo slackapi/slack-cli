@@ -52,7 +52,6 @@ type createCmdFlags struct {
 
 var createFlags createCmdFlags
 
-// TODO(mcodik) figure out a way to mock this more nicely
 var createAppSelectPromptFunc = prompts.AppSelectPrompt
 var workspaceInstallAppFunc = app.RunAddCommand
 var createPromptShouldRetryWithInteractivityFunc = promptShouldRetryCreateWithInteractivity
