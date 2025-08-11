@@ -198,7 +198,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 			Emoji: "compass",
 			Text:  "Explore the documentation to learn more",
 			Secondary: []string{
-				"Read the README.md or peruse the docs over at " + style.Highlight("https://tools.slack.dev/deno-slack-sdk"),
+				"Read the README.md or peruse the docs over at " + style.Highlight("https://docs.slack.dev/tools/deno-slack-sdk"),
 				"Find available commands and usage info with " + style.Commandf("help", false),
 			},
 		}))

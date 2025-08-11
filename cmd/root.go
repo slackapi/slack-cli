@@ -99,7 +99,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 		Long: strings.Join([]string{
 			`{{Emoji "sparkles"}}CLI to create, run, and deploy Slack apps`,
 			"",
-			`{{Emoji "books"}}Get started by reading the docs: {{LinkText "https://tools.slack.dev/slack-cli"}}`,
+			`{{Emoji "books"}}Get started by reading the docs: {{LinkText "https://docs.slack.dev/tools/slack-cli"}}`,
 		}, "\n"),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
@@ -376,20 +376,23 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 
 	// The cleanup() method in the root command will invoke via `defer` from within Execute.
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
-		errMsg := err.Error()
-		clients.EventTracker.SetErrorMessage(errMsg)
-		if slackErr, ok := err.(*slackerror.Error); ok {
-			clients.EventTracker.SetErrorCode(slackErr.Code)
-		}
 		if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
 			clients.IO.SetExitCode(iostreams.ExitCancel)
-			clients.IO.PrintDebug(ctx, errMsg)
+			clients.IO.PrintDebug(ctx, err.Error())
 		} else {
+			if slackerror.Is(err, slackerror.ErrSDKHookNotFound) && clients.SDKConfig.Runtime == "" {
+				err = slackerror.New(slackerror.ErrRuntimeNotFound).
+					WithRootCause(slackerror.ToSlackError(err).WithRemediation(""))
+			}
 			switch clients.IO.GetExitCode() {
 			case iostreams.ExitOK:
 				clients.IO.SetExitCode(iostreams.ExitError)
 			}
-			clients.IO.PrintError(ctx, errMsg)
+			clients.IO.PrintError(ctx, err.Error())
+		}
+		clients.EventTracker.SetErrorMessage(err.Error())
+		if slackErr, ok := err.(*slackerror.Error); ok {
+			clients.EventTracker.SetErrorCode(slackErr.Code)
 		}
 		defer clients.Os.Exit(int(clients.IO.GetExitCode()))
 		completedChan <- true

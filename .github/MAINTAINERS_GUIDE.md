@@ -123,7 +123,7 @@ You may need to update your `$PATH` environment variable with `$GOPATH/bin`:
     ```bash
     $ vim ~/.zshrc
     ```
-    
+
 2. Add the following:
 
     ```bash
@@ -875,7 +875,7 @@ Steps to merge a pull request:
 When in doubt, find the other maintainers and ask.
 
 [circleci]: ../.circleci/config.yml
-[commands]: https://tools.slack.dev/slack-cli/reference/commands/slack
+[commands]: https://docs.slack.dev/tools/slack-cli/reference/commands/slack/
 [commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build

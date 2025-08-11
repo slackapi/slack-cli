@@ -347,7 +347,7 @@ function next_step_message {
     }
     catch {
       Write-Error "Slack CLI was not installed."
-      Write-Host "`nFind help troubleshooting: https://tools.slack.dev/slack-cli"
+      Write-Host "`nFind help troubleshooting: https://docs.slack.dev/tools/slack-cli"
       throw
     }
   }
