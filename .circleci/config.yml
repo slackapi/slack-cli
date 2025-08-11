@@ -349,6 +349,15 @@ jobs:
       - notify-slack-on-fail
       - notify-slack-on-pass
 
+  e2e-test-error:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Oops
+          command: exit 7
+
   e2e-test:
     docker:
       - image: cimg/base:current
@@ -504,6 +513,18 @@ workflows:
           requires:
             - build
           context: slack-cli-e2e
+
+  build-lint-test-e2e-test-errors:
+    when:
+      and:
+        - not:
+            equal: [main, << pipeline.git.branch >>]
+        - not: << pipeline.git.tag >>
+        - equal:
+            [<< pipeline.parameters.run_local_build_test_workflow >>, false]
+    jobs:
+      - e2e-test-error:
+          context: slack-cli-e2e-error
 
   build-lint-test-e2e-test:
     when:
