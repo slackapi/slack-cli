@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
@@ -51,7 +52,6 @@ type createCmdFlags struct {
 
 var createFlags createCmdFlags
 
-// TODO(mcodik) figure out a way to mock this more nicely
 var createAppSelectPromptFunc = prompts.AppSelectPrompt
 var workspaceInstallAppFunc = app.RunAddCommand
 var createPromptShouldRetryWithInteractivityFunc = promptShouldRetryCreateWithInteractivity
@@ -307,7 +307,9 @@ func triggerRequestFromFlags(flags createCmdFlags, isDev bool) api.TriggerReques
 
 func triggerRequestViaHook(ctx context.Context, clients *shared.ClientFactory, path string, isDev bool) (api.TriggerRequest, error) {
 	if !clients.SDKConfig.Hooks.GetTrigger.IsAvailable() {
-		return api.TriggerRequest{}, slackerror.New(slackerror.ErrSDKHookGetTriggerNotFound)
+		return api.TriggerRequest{}, slackerror.New(slackerror.ErrSDKHookNotFound).
+			WithMessage("The `get-trigger` hook script in `%s` was not found", filepath.Join(".slack", "hooks.json")).
+			WithRemediation("Try defining your trigger by specifying a json file instead.")
 	}
 
 	hookExecOpts := hooks.HookExecOpts{
