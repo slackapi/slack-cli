@@ -53,6 +53,19 @@ func (m *HTTPClientMock) Get(url string) (*http.Response, error) {
 	return httpResp, args.Error(1)
 }
 
+// Head is a mock that tracks the calls to Head and returns the mocked http.Response and error.
+func (m *HTTPClientMock) Head(url string) (*http.Response, error) {
+	args := m.Called(url)
+
+	// http.Response can be nil when an error is provided.
+	var httpResp *http.Response
+	if _httpResp, ok := args.Get(0).(*http.Response); ok {
+		httpResp = _httpResp
+	}
+
+	return httpResp, args.Error(1)
+}
+
 // MockHTTPResponse is a helper that returns a mocked http.Response with the provided httpStatus and body.
 func MockHTTPResponse(httpStatus int, body string) *http.Response {
 	resWriter := httptest.NewRecorder()
