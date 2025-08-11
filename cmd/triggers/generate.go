@@ -195,7 +195,7 @@ func getFullyQualifiedTriggerFilePaths(ctx context.Context, clients *shared.Clie
 
 	if len(triggerFilePaths) <= 0 {
 		clients.IO.PrintInfo(ctx, false, style.SectionSecondaryf(
-			"No trigger definition files found\nLearn more about triggers:\nhttps://tools.slack.dev/deno-slack-sdk/guides/creating-link-triggers",
+			"No trigger definition files found\nLearn more about triggers:\nhttps://docs.slack.dev/tools/deno-slack-sdk/guides/creating-link-triggers",
 		))
 		return nil, nil
 	} else {

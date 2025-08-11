@@ -162,13 +162,21 @@ func hasValidDeploymentMethod(
 		return err
 	}
 	switch {
+	// When the manifest source is local, we can get the manifest from the local project.
 	case manifestSource.Equals(config.ManifestSourceLocal):
 		manifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}
-	case manifestSource.Equals(config.ManifestSourceRemote):
+	// When the manifest source is remote and the app exists, we can get the manifest from the the API.
+	case manifestSource.Equals(config.ManifestSourceRemote) && app.AppID != "":
 		manifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+		if err != nil {
+			return err
+		}
+	// When the app does not exist, we need to get the manifest from the local project.
+	default:
+		manifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}
