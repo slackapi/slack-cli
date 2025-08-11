@@ -29,6 +29,7 @@ const (
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 	Get(url string) (*http.Response, error)
+	Head(url string) (*http.Response, error)
 }
 
 // HTTPClientOptions allows for the customization of a http.Client.
