@@ -22,7 +22,7 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 
 **Run the automated installer from your terminal window:**
 
-```zsh
+```sh
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash
 ```
 
@@ -35,56 +35,75 @@ will be installed.
 <details>
 <summary>Optional: Use an alias for the Slack CLI binary</summary>
 
-If you have another CLI tool in your path called `slack`, you can rename the slack binary to a different name before you add it to your path.
+If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. We won't overwrite the existing one!
 
-To do this, pass the `-s` argument to the installer script:
+To do this, pass the `-s` argument and an alias to the installer script:
 
-```zsh
+```sh
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s <your-preferred-alias>
 ```
 
 The alias you use should come after any flags used in the installation script. For example, if you use both flags noted below to pass a version and skip the Deno installation, your install script might look like this:
 
-```
+```sh
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v 2.1.0 -d <your-preferred-alias>
 ```
-
-You can also copy the Slack CLI into any folder that is already in your path (such as `/usr/local/bin`&mdash;you can use`echo $PATH` to find these), or add a new folder to your path by listing the folder you installed the Slack CLI to in `/etc/paths`.
-
-If you don't rename the slack binary to a different name, the installation script will detect existing binaries named `slack` and bail if it finds one&mdash;it will not overwrite your existing `slack` binary.
 
 </details>
 
 <details>
-<summary>Optional: customize installation using flags</summary>
+<summary>Optional: Customize installation using flags</summary>
 
 There are two optional flags available to customize the installation.
 
 1. Specify a version you'd like to install using the version flag, `-v`. The absence of this flag will ensure the latest Slack CLI version is installed.
 
-```
+```sh
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v 2.1.0
 ```
 
 2. Skip the Deno installation by using the `-d` flag, like this:
 
-```
+```sh
 curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -d
 ```
 
 </details>
 
 <details>
-<summary>Troubleshooting</summary>
+<summary>Troubleshooting: Command not found</summary>
 
-#### Errors
+After running the Slack CLI installation script the `slack` command might not be available in the current shell. The download has often succeeded but a symbolic link to the command needs to be added to your path.
 
-Error: _Failed to create a symbolic link! The installer doesn't have write access to /usr/local/bin. Please check permission and try again..._
+Determine which shell you're using then update your shell profile with the following commands:
 
-Solution: Sudo actions within the scripts were removed so as not to create any security concerns. The `$HOME` env var is updated to `/root` &mdash; however, the installer is using `$HOME` for both Deno and the SDK install, which causes the whole install to be placed under `/root`, making both Deno and the SDK unusable for users without root permissions.
+```sh
+basename "$SHELL"
+```
 
-* For users who do not have root permissions, run the sudo actions manually as follows: `sudo mkdir -p -m 775 /usr/local/bin`, then `sudo ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"` where `$slack_cli_bin_path` is typically `$HOME/.slack/bin/slack` and `$SLACK_CLI_NAME` is typically the alias (by default it’s `slack`).
-* For users who do have root permissions, you can run the installation script as `sudo curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash`. In this case, the script is executed as root.
+- `bash`:
+
+  ```sh
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+  source ~/.bashrc
+  ```
+
+- `fish`:
+
+  ```sh
+  mkdir -p $HOME/.config/fish
+  echo 'fish_add_path $HOME/.local/bin' >> $HOME/.config/fish/config.fish
+  source $HOME/.config/fish/config.fish
+  ```
+
+- `zsh`:
+
+  ```sh
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+  source ~/.zshrc
+  ```
+
+Once the profile is sourced, or a new shell is opened, the `slack` command should be available.
 
 </details>
 </TabItem>
@@ -98,7 +117,7 @@ Manual installation allows you to omit the Deno installation if you don't need i
 
 The minimum version of Deno runtime required is currently version 1.37.0.
 
-```bash
+```sh
 $ deno --version
 deno 1.46.2* (release, x86_64-apple-darwin)
 v8 10.*
@@ -117,24 +136,30 @@ typescript 4.*
 
 **5\. Add the** `slack` **CLI to your path.**
 
-:::info[Existing `slack` binary in path?]
+Create a symbolic link to the Slack CLI download from (or move the downloaded binary to) any folder that is already in your path.
 
-If you have another CLI tool in your path called `slack`, we recommend renaming our slack binary to a different name before adding it to your path. See the **Automated installation** tab for more details.
+In the following example we download the Slack CLI to the `.slack` path and create a symbolic link to `.local` directory:
 
-:::
+```sh
+ln -sf "$HOME/.slack/bin/slack" "$HOME/.local/bin/slack"
+```
+
+We recommend using an alias if another `slack` binary exists. Either rename the moved download to something special or change the alias used at the end of the symbolic link to whatever makes sense.
 
 **6\. Verify that** `slack` **is installed and in your path.**
 
-```
+```sh
 $ slack version
 Using slack v3.5.2
 ```
+
+Steps on troubleshooting a missing command can be found on the **Automated Installation** tab.
 
 **7\. Verify that all dependencies have been installed.**
 
 Run the following command:
 
-```
+```sh
 $ slack doctor
 ```
 
