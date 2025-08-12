@@ -89,7 +89,7 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
-				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
 			},
 		},
 		"Returns the zip URL using the master branch when no branch is provided and main branch doesn't exist": {
@@ -98,8 +98,8 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/master.zip",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
-				httpClientMock.On("Get", "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip").Return(nil, fmt.Errorf("HttpClient error"))
-				httpClientMock.On("Get", "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/master.zip").Return(res, nil)
+				httpClientMock.On("Head", "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip").Return(nil, fmt.Errorf("HttpClient error"))
+				httpClientMock.On("Head", "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/master.zip").Return(res, nil)
 			},
 		},
 		"Returns the zip URL using the specified branch when a branch is provided": {
@@ -108,7 +108,7 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/pre-release-0316.zip",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
-				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
 			},
 		},
 		"Returns an empty string when the HTTP status code is not 200": {
@@ -117,7 +117,7 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			expectedURL: "",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				res := slackhttp.MockHTTPResponse(http.StatusNotFound, "Not Found")
-				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
 			},
 		},
 		"Returns an empty string when the HTTPClient has an error": {
@@ -125,7 +125,7 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			gitBranch:   "",
 			expectedURL: "",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
-				httpClientMock.On("Get", mock.Anything).Return(nil, fmt.Errorf("HTTPClient error"))
+				httpClientMock.On("Head", mock.Anything).Return(nil, fmt.Errorf("HTTPClient error"))
 			},
 		},
 		"Returns the zip URL with .git suffix removed": {
@@ -134,7 +134,7 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			expectedURL: "https://github.com/slack-samples/deno-starter-template/archive/refs/heads/main.zip",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
-				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
 			},
 		},
 		"Returns the zip URL with .git inside URL preserved": {
@@ -143,7 +143,7 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			expectedURL: "https://github.com/slack-samples/deno.git-starter-template/archive/refs/heads/main.zip",
 			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
 				res := slackhttp.MockHTTPResponse(http.StatusOK, "OK")
-				httpClientMock.On("Get", mock.Anything).Return(res, nil)
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
 			},
 		},
 	}

@@ -22,7 +22,7 @@ import (
 
 // URLChecker returns url if its status code is 200, otherwise returns empty string
 func URLChecker(httpClient slackhttp.HTTPClient, url string) string {
-	resp, err := httpClient.Get(url)
+	resp, err := httpClient.Head(url)
 	if err != nil {
 		return ""
 	}
