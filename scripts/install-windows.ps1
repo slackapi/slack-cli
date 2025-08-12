@@ -359,6 +359,6 @@ Write-Host "`nAdding developer tooling for an enhanced experience..."
 install_git $SkipGit
 install_deno_vscode_extension $SkipDeno
 Write-Host "Sweet! You're all set to start developing!"
-feedback_message $Alias
 terms_of_service $Alias
+feedback_message $Alias
 next_step_message $Alias
