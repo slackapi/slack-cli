@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-MIN_DENO_VERSION=$(curl --silent "https://api.slack.com/slackcli/metadata.json" | sed -n '/"deno-runtime"/,/}/s/.*"version": "\([^"]*\)".*/\1/p')
-SKIP_DENO_INSTALL=false
 SLACK_CLI_NAME="slack"
 FINGERPRINT="d41d8cd98f00b204e9800998ecf8427e"
 SLACK_CLI_VERSION=
@@ -30,8 +28,8 @@ while getopts "v:d" flag; do
                         return 1
                 fi
                 ;;
-        d)
-                SKIP_DENO_INSTALL=true
+        *)
+                >&2 echo -e "\x1b[1m⚠️  Warning: An unknown flag '$1' was passed to the Slack CLI installation script!\x1b[0m"
                 ;;
         esac
 done
@@ -59,6 +57,13 @@ delay() {
 home_path() {
         local input_string="$1"
         echo "${input_string//$HOME/~}"
+}
+
+# Originally from https://gist.github.com/jonlabelle/6691d740f404b9736116c22195a8d706
+# Echos the inputs, breaks them into separate lines, then sort by semver descending,
+# then takes the first line. If that is not the first param, that means $1 < $2
+version_lt() {
+        test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"
 }
 
 install_slack_cli() {
@@ -174,164 +179,6 @@ install_slack_cli() {
         ln -sf "$slack_cli_bin_path" "$local_bin_path/$SLACK_CLI_NAME"
 }
 
-# Originally from https://gist.github.com/jonlabelle/6691d740f404b9736116c22195a8d706
-# Echos the inputs, breaks them into separate lines, then sort by semver descending,
-# then takes the first line. If that is not the first param, that means $1 < $2
-version_lt() {
-        test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"
-}
-
-deno_real_binary_path() {
-        deno_bin=`which deno`
-        if [ $(command -v realpath) ]; then
-                realpath $deno_bin
-                return
-        fi
-        if [ -L $deno_bin ]; then
-                readlink $deno_bin
-                return
-        fi
-        echo $deno_bin
-}
-
-deno_install_source() {
-        if [ $(command -v brew) ]; then
-                brew ls deno --versions &>/dev/null
-                if [ $? -eq 0 ]; then
-                        echo "brew"
-                        return
-                fi
-        fi
-        if [ $(deno_real_binary_path) == "$HOME/.deno/bin/deno" ]; then
-                echo "deno-install-sh"
-                return
-        fi
-        echo "unknown"
-}
-
-maybe_update_deno_version() {
-        # $1 = latest version
-
-        current_deno_version=$(deno -V | cut -d " " -f2)
-
-        delay 0.2 "🔍 Comparing the currently installed Deno version..." -n
-        echo -e " Found: v$current_deno_version"
-
-        if [ "v$current_deno_version" == "$1" ] || version_lt "$1" "v$current_deno_version"; then
-                sleep 0.1
-                echo "🏆 You already have the latest Deno version!"
-                return
-        fi
-
-        delay 0.1 "🔍 Contrasting the minimum supported Deno version..." -n
-        echo -e " Found: v$MIN_DENO_VERSION"
-
-        if version_lt $current_deno_version $MIN_DENO_VERSION; then
-                if [ "$SKIP_DENO_INSTALL" = true ]; then
-                        echo -e "⚠️  Deno $current_deno_version was found, but at least $MIN_DENO_VERSION is required."
-                        echo -e "   To update a previously installed version of Deno, you can run:"
-                        echo -e "     deno upgrade\n"
-                else
-                        echo "Deno $current_deno_version was found, but at least $MIN_DENO_VERSION is required."
-                        install_source=$(deno_install_source)
-                        case $install_source in
-                                "brew")
-                                        echo "Upgrading Deno using Homebrew..."
-                                        brew upgrade deno
-                                        ;;
-                                "deno-install-sh")
-                                        if [ -w $HOME/.deno/bin/deno ]; then
-                                                echo "Upgrading Deno using 'deno upgrade'..."
-                                                deno upgrade --version $MIN_DENO_VERSION
-                                        else
-                                                echo -e "Installer doesn't have write access to $HOME/.deno/bin/deno to upgrade Deno.\nScript will try to reinstall Deno"
-                                                curl -fsSL https://deno.land/install.sh | sh -s v$MIN_DENO_VERSION
-                                        fi
-                                        ;;
-                                *)
-                                        echo "Can't detect how Deno was installed."
-                                        echo "We can attempt to run 'deno upgrade' anyway. This may not work if you installed deno via a package manager."
-                                        read -p "Run 'deno upgrade'? " yn
-                                        case $yn in
-                                                [Yy]*) deno upgrade --version $MIN_DENO_VERSION ;;
-                                                *)
-                                                        echo "Please upgrade deno manually to at least $MIN_DENO_VERSION and re-run this script."
-                                                        return
-                                                        ;;
-                                        esac
-                                        ;;
-                        esac
-                fi
-        else
-                echo -e "✨ Your Deno version is compatible with the Slack CLI!"
-        fi
-}
-
-install_deno() {
-        echo -e "🦕 Checking for a compatible Deno installation..."
-
-        echo -e -n "🔍 Searching for the latest released Deno version..."
-        latest_deno_version=$(curl -fs https://api.github.com/repos/denoland/deno/releases/latest | grep '"tag_name":' | cut -d '"' -f 4)
-        if [ $? -eq 0 ] && [ -n "$latest_deno_version" ]; then
-            delay 0.2 " Found: ${latest_deno_version}"
-        else
-            delay 0.2 " Found: Unknown"
-            latest_deno_version=$MIN_DENO_VERSION
-        fi
-
-        #
-        # Install dependency: deno
-        #
-        if [ $(command -v deno) ]; then
-                maybe_update_deno_version "$latest_deno_version"
-                return
-        else
-                if [ "$SKIP_DENO_INSTALL" = true ]; then
-                        echo -e "⚠️  Deno was not found on your system!"
-                        echo -e "   Visit https://deno.com/manual/getting_started/installation to install Deno\n"
-                else
-                        if [ $(command -v brew) ]; then
-                                echo "Installing Deno using Homebrew..."
-                                brew install deno
-                        else
-                                curl -fsSL https://deno.land/install.sh | sh -s v$MIN_DENO_VERSION
-                        fi
-                fi
-        fi
-
-        if [ ! $(command -v deno) ]; then
-                deno_path="${DENO_INSTALL:-$HOME/.deno/bin/deno}"
-                if [ -f "$deno_path" ]; then
-                        echo "Adding a symbolic link /usr/local/bin/deno to $deno_path"
-                        if [ -w /usr/local/bin ]; then
-                                ln -sf "$deno_path" /usr/local/bin/deno
-                        else
-                                echo -e "Installer doesn't have write access to /usr/local/bin to create a symbolic link. Please check permission and try again"
-                                return 1
-                        fi
-                fi
-        fi
-
-        if [ $(command -v deno) ]; then
-                echo -e "✨ Deno is installed and ready!\n"
-        fi
-}
-
-install_deno_vscode_extension() {
-        if [ "$SKIP_DENO_INSTALL" = true ]; then
-                echo -e "📝 Install the Deno extension to Visual Studio Code with the following command:\n"
-                echo -e "   code --install-extension denoland.vscode-deno"
-        else
-                echo -e -n "📝 Installing the Deno extension to Visual Studio Code..."
-                code --install-extension denoland.vscode-deno >/dev/null
-                if [ $? -ne 0 ]; then
-                        echo -e "\n⚠️ Failed to install the extension!"
-                        return 1
-                fi
-                echo -e " Done!"
-        fi
-}
-
 terms_of_service() {
         echo -e ""
         echo -e "📄 Use of the Slack CLI should comply with the Slack API Terms of Service:"
@@ -386,23 +233,6 @@ main() {
 
         set -eE
         install_slack_cli "$@"
-
-        sleep 0.1
-        >&2 echo -e "\n\x1b[1m⚠️  Warning: Starting on September 1, 2025, Deno will no longer be installed with this script!\x1b[0m"
-        >&2 echo -e "⚠️  Warning: Apps built with Deno should install Deno separately:"
-        >&2 echo -e "⚠️  Warning: https://docs.deno.com/runtime/getting_started/installation/"
-        echo -e ""
-        install_deno
-
-        echo
-        if [ -f "$(command -v code)" ]; then
-                delay 0.1 "📦 Adding editor support for an enhanced experience..."
-                install_deno_vscode_extension
-                if [ $? -eq 0 ]; then
-                        echo -e "✨ Nice! You're all set to start developing!"
-                fi
-        fi
-
         sleep 0.2
         terms_of_service
         sleep 0.1
