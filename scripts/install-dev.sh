@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 MIN_DENO_VERSION=$(curl --silent "https://api.slack.com/slackcli/metadata.json" | sed -n '/"deno-runtime"/,/}/s/.*"version": "\([^"]*\)".*/\1/p')
 SKIP_DENO_INSTALL=false
 SLACK_CLI_NAME="slack-dev"
@@ -26,21 +25,21 @@ export SLACK_DISABLE_TELEMETRY="true"
 
 while getopts "v:d" flag; do
         case "$flag" in
-                v)
-                        if [[ $OPTARG =~ $rx ]]; then
-                                SLACK_CLI_DEV_VERSION=$OPTARG
-                        else
-                                echo "Slack CLI requires a valid semver version number." >&2
-                                return 1
-                        fi
-                        ;;
-                d)
-                        SKIP_DENO_INSTALL=true
-                        ;;
+        v)
+                if [[ $OPTARG =~ $rx ]]; then
+                        SLACK_CLI_DEV_VERSION=$OPTARG
+                else
+                        echo "Slack CLI requires a valid semver version number." >&2
+                        return 1
+                fi
+                ;;
+        d)
+                SKIP_DENO_INSTALL=true
+                ;;
         esac
 done
 
-if [ $(( $# - $OPTIND )) -lt 1 ]; then
+if [ $(($# - $OPTIND)) -lt 1 ]; then
         if [ ! -z ${@:$OPTIND:1} ]; then
                 SLACK_CLI_NAME=${@:$OPTIND:1}
         fi
@@ -61,8 +60,8 @@ delay() {
 
 # Replace /home/username/folder/file with ~/folder/file
 home_path() {
-  local input_string="$1"
-  echo "${input_string//$HOME/~}"
+        local input_string="$1"
+        echo "${input_string//$HOME/~}"
 }
 
 install_slack_cli() {
@@ -78,8 +77,8 @@ install_slack_cli() {
         sleep 0.6
 
         string="   the development edition"
-        for (( i=0; i<${#string}; i++ )); do
-            delay 0.04 "${string:$i:1}" -n
+        for ((i = 0; i < ${#string}; i++)); do
+                delay 0.04 "${string:$i:1}" -n
         done
         delay 1.4 "\x1b[?25l" -n
         delay 1.2 "\x1b[?25h" -n
@@ -87,13 +86,13 @@ install_slack_cli() {
         delay 0.2 "\x1b[?25h"
 
         # Check if slack binary is already in user's system
-        if [ -x "$(command -v $SLACK_CLI_NAME)" ] ; then
+        if [ -x "$(command -v $SLACK_CLI_NAME)" ]; then
                 delay 0.3 "🔍 Checking if \`$SLACK_CLI_NAME\` already exists on this system..."
                 delay 0.2 "⚠️  Heads up! A binary called \`$SLACK_CLI_NAME\` was found!"
                 delay 0.3 "🔍 Now checking if it's the same Slack CLI..."
 
                 # Check if command is used for Slack CLI, for Slack CLI with version >= 1.18.0, the fingerprint needs to be matched to proceed installation
-                if [[ ! $($SLACK_CLI_NAME _fingerprint) == $FINGERPRINT ]] &>/dev/null ; then
+                if [[ ! $($SLACK_CLI_NAME _fingerprint) == $FINGERPRINT ]] &>/dev/null; then
 
                         # For Slack CLI with version < 1.18.0, we check with `slack --version` for backwards compatibility
                         if [[ ! $($SLACK_CLI_NAME --version) == *"Using $SLACK_CLI_NAME v"* ]]; then
@@ -119,21 +118,21 @@ install_slack_cli() {
         #
 
         if [ "$(uname)" == "Darwin" ]; then
-            if version_lt "$SLACK_CLI_DEV_VERSION" "3.3.0"; then
-                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_64-bit.tar.gz"
-            else
-                case "$(uname -m)" in
-                    x86_64)
-                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_amd64.tar.gz"
-                        ;;
-                    arm64 | aarch64)
-                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_arm64.tar.gz"
-                        ;;
-                    *)
+                if version_lt "$SLACK_CLI_DEV_VERSION" "3.3.0"; then
                         slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_64-bit.tar.gz"
-                        ;;
-                esac
-            fi
+                else
+                        case "$(uname -m)" in
+                        x86_64)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_amd64.tar.gz"
+                                ;;
+                        arm64 | aarch64)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_arm64.tar.gz"
+                                ;;
+                        *)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_macOS_64-bit.tar.gz"
+                                ;;
+                        esac
+                fi
         elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
                 slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_64-bit.tar.gz"
         else
@@ -154,48 +153,34 @@ install_slack_cli() {
         echo -e "\x1b[2m\n$slack_cli_url"
         curl -# -fLo "$slack_cli_install_dir/slack-cli.tar.gz" "$slack_cli_url"
         echo -e "\x1b[0m"
-        if [ "$SLACK_CLI_DEV_VERSION" == "dev"  ]; then
+        if [ "$SLACK_CLI_DEV_VERSION" == "dev" ]; then
                 delay 0.2 "💾 Successfully downloaded the latest build to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         else
                 delay 0.2 "💾 Successfully downloaded Slack CLI v$LATEST_SLACK_CLI_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         fi
 
-        delay 0.3 "📦 Extracting the Slack CLI command binary to $(home_path $slack_cli_bin_path)"
+        delay 0.3 "📦 Extracting the Slack CLI command binary to $(home_path "$slack_cli_bin_path")"
         tar -xf "$slack_cli_install_dir/slack-cli.tar.gz" -C "$slack_cli_install_dir"
         chmod +x "$slack_cli_bin_path"
+
+        delay 0.1 "📠 Removing packaged download files from $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         rm "$slack_cli_install_dir/slack-cli.tar.gz"
 
-        delay 0.1 "🔗 Adding a symbolic link from /usr/local/bin/$SLACK_CLI_NAME to $(home_path $slack_cli_bin_path)"
-        if [ ! -d /usr/local/bin ]; then
-            echo -e "⚠️  The /usr/local/bin directory does not exist!"
-            echo -e "🔐 Please create /usr/local/bin directory first and try again..."
-            return 1
-        fi
-        if [ -w /usr/local/bin ]; then
-                ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"
+        if [ -d "/usr/local/bin" ] && [ -w "/usr/local/bin" ]; then
+                local_bin_path="/usr/local/bin"
         else
-                echo -e "⚠️  Failed to create a symbolic link!"
-                delay 0.1 "🔖 The installer doesn't have write access to /usr/local/bin"
-                echo -e "🔐 Please check permission and try again..."
-                return 1
+                local_bin_path="$HOME/.local/bin"
+                mkdir -p "$local_bin_path"
         fi
-
-        if [ $(command -v $SLACK_CLI_NAME) ]; then
-                echo -e ""
-                echo -e "✨ Success! The Slack CLI (build: $SLACK_CLI_DEV_VERSION) is now installed!"
-                echo -e ""
-                sleep 0.4
-        else
-                echo "📁 Manually add the Slack CLI command directory to your shell profile"
-                echo "   export PATH=\"$slack_cli_install_bin_dir:\$PATH\""
-        fi
+        delay 0.1 "🔗 Adding a symbolic link from $(home_path "$local_bin_path/$SLACK_CLI_NAME") to $(home_path "$slack_cli_bin_path")"
+        ln -sf "$slack_cli_bin_path" "$local_bin_path/$SLACK_CLI_NAME"
 }
 
 # Originally from https://gist.github.com/jonlabelle/6691d740f404b9736116c22195a8d706
 # Echos the inputs, breaks them into separate lines, then sort by semver descending,
 # then takes the first line. If that is not the first param, that means $1 < $2
 version_lt() {
-  test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1";
+        test "$(echo "$@" | tr " " "\n" | sort -rV | head -n 1)" != "$1"
 }
 
 deno_real_binary_path() {
@@ -348,30 +333,53 @@ install_deno_vscode_extension() {
         fi
 }
 
+terms_of_service() {
+        echo -e ""
+        echo -e "📄 Use of the Slack CLI should comply with the Slack API Terms of Service:"
+        echo -e "🏛️  https://slack.com/terms-of-service/api"
+}
+
 feedback_message() {
         CODE=$?
-        if [ $CODE -eq 0 ] && [ $(command -v $SLACK_CLI_NAME) ]; then
-                echo -e "\n💌 We would love to know how things are going. Really. All of it."
-                echo -e "   Survey your development experience with \`$SLACK_CLI_NAME feedback\`"
+        echo -e "\x1b[0m"
+        echo -e "💌 We would love to know how things are going. Really. All of it."
+        if command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
+                echo -e "✨ Survey your development experience with \`$SLACK_CLI_NAME feedback\`"
         else
-                echo -e "\x1b[0m"
-                echo -e "💌 We would love to know how things are going. Really. All of it."
-                echo -e "   Submit installation issues: https://github.com/slackapi/slack-cli/issues"
+                echo -e "✨ Submit installation issues: https://github.com/slackapi/slack-cli/issues"
+        fi
+        if [ $CODE -ne 0 ]; then
                 exit $CODE
         fi
 }
 
-terms_of_service() {
-        if [ $(command -v $SLACK_CLI_NAME) ]; then
-                echo -e "\n📄 Use of the Slack CLI should comply with the Slack API Terms of Service:"
-                echo -e "   https://slack.com/terms-of-service/api"
-        fi
-}
-
 next_step_message() {
-        if [ $(command -v deno) ] && [ $(command -v $SLACK_CLI_NAME) ]; then
-                echo -e "\n✨ You're all set! Next, authorize your CLI in your workspace with \`$SLACK_CLI_NAME login\`\n"
+        echo -e ""
+        if command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
+                echo -e "📺 Success! The Slack CLI (build: $SLACK_CLI_DEV_VERSION) is now installed!"
+        else
+                echo -e "📝 To get started, manually add the Slack CLI to your shell path:"
+                case "$(basename "$SHELL")" in
+                bash)
+                        echo -e "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+                        echo -e "   source ~/.bashrc"
+                        ;;
+                fish)
+                        echo -e "   mkdir -p \$HOME/.config/fish"
+                        echo -e "   echo 'fish_add_path \$HOME/.local/bin' >> \$HOME/.config/fish/config.fish"
+                        echo -e "   source \$HOME/.config/fish/config.fish"
+                        ;;
+                zsh)
+                        echo -e "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
+                        echo -e "   source ~/.zshrc"
+                        ;;
+                *)
+                        echo "   export PATH=\"$local_bin_path:\$PATH\""
+                        ;;
+                esac
         fi
+        echo -e "🔐 Next, authorize your CLI in your workspace with \`$SLACK_CLI_NAME login\`"
+        sleep 0.2
 }
 
 main() {
@@ -397,9 +405,9 @@ main() {
         fi
 
         sleep 0.2
-        feedback_message
-        sleep 0.1
         terms_of_service
+        sleep 0.1
+        feedback_message
         sleep 0.2
         next_step_message
 }
