@@ -20,7 +20,7 @@ param(
   [string]$Version = "dev",
 
   [Parameter(HelpMessage = "Skip Git installation")]
-  [bool]$SkipGit = $false,
+  [bool]$SkipGit = $false
 )
 
 # As this script is for internal usage only, we should set SLACK_DISABLE_TELEMETRY environment variable

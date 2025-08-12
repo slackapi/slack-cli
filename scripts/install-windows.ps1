@@ -20,7 +20,7 @@ param(
   [string]$Version,
 
   [Parameter(HelpMessage = "Skip Git installation")]
-  [bool]$SkipGit = $false,
+  [bool]$SkipGit = $false
 )
 
 Function delay ([float]$seconds, [string]$message, [string]$newlineOption) {
