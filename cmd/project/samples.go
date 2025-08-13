@@ -40,6 +40,10 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:    "List and create an app from the available samples",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
+				Meaning: "List Bolt for JavaScript samples",
+				Command: "samples --list --language node",
+			},
+			{
 				Meaning: "Select a sample app to create",
 				Command: "samples my-project",
 			},
