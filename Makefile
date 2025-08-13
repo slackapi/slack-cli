@@ -35,6 +35,12 @@ init:
 test: build
 	go test -ldflags="$(LDFLAGS)" -v ./$(testdir) -run $(testname) -race -covermode=atomic -coverprofile=coverage.out
 
+# Run installation script tests
+.PHONY: test-install
+test-install: clean
+	bash scripts/install-test.sh
+	bash scripts/install-dev-test.sh
+
 # Report test coverage
 .PHONY: coverage
 coverage:
