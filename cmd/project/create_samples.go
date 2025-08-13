@@ -29,16 +29,11 @@ import (
 )
 
 //go:embed samples.tmpl
-var embedSamplesTmpl string
+var embedPromptSamplesTmpl string
 
-// PromptSampleSelection gathers upstream samples to select from
-func PromptSampleSelection(ctx context.Context, clients *shared.ClientFactory, samples create.Sampler) (string, error) {
-	sampleRepos, err := create.GetSampleRepos(samples)
-	if err != nil {
-		return "", err
-	}
-
-	projectTypes := []string{}
+// promptSampleSelection gathers upstream samples to select from
+func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, sampleRepos []create.GithubRepo) (string, error) {
+	filteredRepos := []create.GithubRepo{}
 	selection, err := clients.IO.SelectPrompt(ctx, "Select a language:",
 		[]string{
 			fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
@@ -58,32 +53,16 @@ func PromptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 	} else if selection.Prompt {
 		switch selection.Index {
 		case 0:
-			projectTypes = []string{"bolt-js", "bolt-ts"}
+			filteredRepos = filterRepos(sampleRepos, "node")
 		case 1:
-			projectTypes = []string{"bolt-python"}
+			filteredRepos = filterRepos(sampleRepos, "python")
 		case 2:
-			projectTypes = []string{"deno"}
+			filteredRepos = filterRepos(sampleRepos, "deno")
 		}
 	} else if selection.Flag {
-		switch strings.ToLower(strings.TrimSpace(selection.Option)) {
-		case "node":
-			projectTypes = []string{"bolt-js", "bolt-ts"}
-		case "python":
-			projectTypes = []string{"bolt-python"}
-		case "deno":
-			projectTypes = []string{"deno"}
-		default:
-			projectTypes = []string{selection.Option}
-		}
+		filteredRepos = filterRepos(sampleRepos, selection.Option)
 	}
 
-	filteredRepos := []create.GithubRepo{}
-	if len(projectTypes) <= 0 {
-		filteredRepos = sampleRepos
-	}
-	for _, language := range projectTypes {
-		filteredRepos = append(filteredRepos, filterRepos(sampleRepos, language)...)
-	}
 	sortedRepos := sortRepos(filteredRepos)
 	selectOptions := createSelectOptions(sortedRepos)
 
@@ -95,7 +74,7 @@ func PromptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 		Flag:     clients.Config.Flags.Lookup("template"),
 		PageSize: 4, // Supports standard terminal height (24 rows)
 		Required: true,
-		Template: embedSamplesTmpl,
+		Template: embedPromptSamplesTmpl,
 	})
 	if err != nil {
 		return "", err
@@ -107,14 +86,33 @@ func PromptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 	return selectedTemplate, nil
 }
 
-// filterRepos takes in a list of repositories and returns a filtered list
-// based on the prepended runtime/framework naming convention for
-// repositories in the Slack Samples Org (ie, deno-*, bolt-js-*, etc.)
+// filterRepos returns a list of samples matching the provided project type
+// according to the project naming conventions of @slack-samples.
+//
+// Ex: "node" matches both "bolt-js" and "bolt-ts" prefixed samples.
 func filterRepos(sampleRepos []create.GithubRepo, projectType string) []create.GithubRepo {
 	filteredRepos := make([]create.GithubRepo, 0)
 	for _, s := range sampleRepos {
-		if strings.HasPrefix(s.Name, projectType) {
-			filteredRepos = append(filteredRepos, s)
+		search := strings.TrimSpace(strings.ToLower(projectType))
+		switch search {
+		case "java":
+			if strings.HasPrefix(s.Name, "bolt-java") {
+				filteredRepos = append(filteredRepos, s)
+			}
+		case "node":
+			if strings.HasPrefix(s.Name, "bolt-js") || strings.HasPrefix(s.Name, "bolt-ts") {
+				filteredRepos = append(filteredRepos, s)
+			}
+		case "python":
+			if strings.HasPrefix(s.Name, "bolt-python") {
+				filteredRepos = append(filteredRepos, s)
+			}
+		case "deno":
+			fallthrough
+		default:
+			if strings.HasPrefix(s.Name, search) || search == "" {
+				filteredRepos = append(filteredRepos, s)
+			}
 		}
 	}
 	return filteredRepos

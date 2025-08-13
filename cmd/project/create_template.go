@@ -173,7 +173,11 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) 
 		sampler := api.NewHTTPClient(api.HTTPClientOptions{
 			TotalTimeOut: 60 * time.Second,
 		})
-		selectedSample, err := PromptSampleSelection(ctx, clients, sampler)
+		samples, err := create.GetSampleRepos(sampler)
+		if err != nil {
+			return create.Template{}, err
+		}
+		selectedSample, err := promptSampleSelection(ctx, clients, samples)
 		if err != nil {
 			return create.Template{}, err
 		}

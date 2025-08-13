@@ -15,9 +15,12 @@
 package project
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -26,6 +29,7 @@ import (
 // Flags
 var samplesTemplateURLFlag string
 var samplesGitBranchFlag string
+var samplesListFlag bool
 var samplesLanguageFlag string
 
 func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -50,6 +54,7 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVarP(&samplesTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&samplesGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
 	cmd.Flags().StringVar(&samplesLanguageFlag, "language", "", "runtime for the app framework\n  ex: \"deno\", \"node\", \"python\"")
+	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "print recommended samples")
 
 	return cmd
 }
@@ -60,7 +65,18 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 	sampler := api.NewHTTPClient(api.HTTPClientOptions{
 		TotalTimeOut: 60 * time.Second,
 	})
-	selectedSample, err := PromptSampleSelection(ctx, clients, sampler)
+	samples, err := create.GetSampleRepos(sampler)
+	if err != nil {
+		return err
+	}
+	if samplesListFlag || !clients.IO.IsTTY() {
+		err := listSampleSelection(ctx, clients, samples)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	selectedSample, err := promptSampleSelection(ctx, clients, samples)
 	if err != nil {
 		return err
 	}
@@ -84,4 +100,40 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 
 	// Execute the `create` command with the set flag
 	return createCmd.ExecuteContext(ctx)
+}
+
+// listSampleSelection outputs available samples matching a language flag filter
+func listSampleSelection(ctx context.Context, clients *shared.ClientFactory, sampleRepos []create.GithubRepo) error {
+	filteredRepos := filterRepos(sampleRepos, samplesLanguageFlag)
+	sortedRepos := sortRepos(filteredRepos)
+	message := ""
+	if samplesLanguageFlag != "" {
+		message = fmt.Sprintf("Listing %d \"%s\" project samples", len(sortedRepos), samplesLanguageFlag)
+	} else {
+		message = fmt.Sprintf("Listing %d project samples", len(sortedRepos))
+	}
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		Emoji: "house_buildings",
+		Text:  "Samples",
+		Secondary: []string{
+			message,
+		},
+	}))
+	emojis := []string{
+		"microscope",
+		"test_tube",
+		"petri_dish",
+		"dna",
+	}
+	for ii, sample := range sortedRepos {
+		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			Emoji: emojis[ii%len(emojis)],
+			Text:  sample.Name,
+			Secondary: []string{
+				sample.Description,
+				fmt.Sprintf("https://github.com/%s", sample.FullName),
+			},
+		}))
+	}
+	return nil
 }

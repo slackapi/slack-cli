@@ -34,6 +34,7 @@ func TestSamplesCommand(t *testing.T) {
 		"creates a template from a trusted sample": {
 			CmdArgs: []string{"my-sample-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
 				createPkg.GetSampleRepos = func(client createPkg.Sampler) ([]createPkg.GithubRepo, error) {
 					repos := []createPkg.GithubRepo{
 						{
@@ -95,6 +96,39 @@ func TestSamplesCommand(t *testing.T) {
 						}
 					}
 				}
+			},
+		},
+		"lists available samples matching a language": {
+			CmdArgs: []string{"--list", "--language", "node"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
+				createPkg.GetSampleRepos = func(client createPkg.Sampler) ([]createPkg.GithubRepo, error) {
+					repos := []createPkg.GithubRepo{
+						{
+							Name:            "deno-starter-template",
+							FullName:        "slack-samples/deno-starter-template",
+							CreatedAt:       "2025-02-11T12:34:56Z",
+							StargazersCount: 4,
+							Description:     "a mock starter template for deno",
+							Language:        "typescript",
+						},
+						{
+							Name:            "bolt-js-starter-template",
+							FullName:        "slack-samples/bolt-js-starter-template",
+							CreatedAt:       "2025-02-11T12:34:56Z",
+							StargazersCount: 12,
+							Description:     "a mock starter template for bolt js",
+							Language:        "javascript",
+						},
+					}
+					return repos, nil
+				}
+			},
+			ExpectedOutputs: []string{
+				"https://github.com/slack-samples/bolt-js-starter-template",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				assert.NotContains(t, cm.GetStdoutOutput(), "deno-starter-template")
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
