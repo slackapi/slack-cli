@@ -55,8 +55,13 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&samplesTemplateURLFlag, "template", "t", "", "template URL for your app")
+	// DEPRECATED(semver:major): Prefer the create command when repository details are known
 	cmd.Flags().StringVarP(&samplesGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
+	cmd.Flag("branch").Hidden = true
+	// DEPRECATED(semver:major): Prefer the create command when repository details are known
+	cmd.Flags().StringVarP(&samplesTemplateURLFlag, "template", "t", "", "template URL for your app")
+	cmd.Flag("template").Hidden = true
+
 	cmd.Flags().StringVar(&samplesLanguageFlag, "language", "", "runtime for the app framework\n  ex: \"deno\", \"node\", \"python\"")
 	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "print recommended samples")
 
@@ -66,6 +71,12 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 // runSamplesCommand prompts for a sample then clones with the create command
 func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
+
+	// DEPRECATED(semver:major): Prefer the create command when repository details are known
+	if cmd.Flag("branch").Changed || cmd.Flag("template").Changed {
+		clients.IO.PrintWarning(ctx, "DEPRECATED: The '--branch' and '--template' flags are deprecated for the 'samples' command; use the 'create' command instead")
+	}
+
 	sampler := api.NewHTTPClient(api.HTTPClientOptions{
 		TotalTimeOut: 60 * time.Second,
 	})
