@@ -95,6 +95,7 @@ const (
 	ErrDefaultAppSetting                             = "default_app_setting_error"
 	ErrDenoNotFound                                  = "deno_not_found"
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
+	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
 	ErrFailedCreatingApp                             = "failed_creating_app"
@@ -320,7 +321,7 @@ var ErrorCodeMap = map[string]Error{
 	ErrAppAuthTeamMismatch: {
 		Code:        ErrAppAuthTeamMismatch,
 		Message:     "Specified app and team are mismatched",
-		Remediation: "Try a different combination of --app, --team flags",
+		Remediation: "Try a different combination of `--app` and `--team` flags",
 	},
 
 	ErrAppCreate: {
@@ -374,7 +375,7 @@ Otherwise start your app for local development with: %s`,
 	ErrAppFlagRequired: {
 		Code:        ErrAppFlagRequired,
 		Message:     "The --app flag must be provided",
-		Remediation: fmt.Sprintf("Choose a specific app with %s", style.Highlight("--app <app_id>")),
+		Remediation: "Choose a specific app with `--app <app_id>`",
 	},
 
 	ErrAppFound: {
@@ -673,6 +674,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "A deployed app cannot be used by this command",
 	},
 
+	ErrDocumentationGenerationFailed: {
+		Code:    ErrDocumentationGenerationFailed,
+		Message: "Failed to generate documentation",
+	},
+
 	ErrEnterpriseNotFound: {
 		Code:    ErrEnterpriseNotFound,
 		Message: "The `enterprise` was not found",
@@ -849,7 +855,7 @@ Otherwise start your app for local development with: %s`,
 	ErrInvalidAppFlag: {
 		Code:        ErrInvalidAppFlag,
 		Message:     "The provided --app flag value is not valid",
-		Remediation: fmt.Sprintf("Specify the environment with %s or %s\nOr choose a specific app with %s", style.Highlight("--app local"), style.Highlight("--app deployed"), style.Highlight("--app <app_id>")),
+		Remediation: "Specify the environment with `--app local` or `--app deployed`\nOr choose a specific app with `--app <app_id>`",
 	},
 
 	ErrInvalidAppID: {
@@ -1408,7 +1414,7 @@ Otherwise start your app for local development with: %s`,
 	ErrTeamFlagRequired: {
 		Code:        ErrTeamFlagRequired,
 		Message:     "The --team flag must be provided",
-		Remediation: fmt.Sprintf("Choose a specific team with %s or %s", style.Highlight("--team <team_domain>"), style.Highlight("--team <team_id>")),
+		Remediation: "Choose a specific team with `--team <team_domain>` or `--team <team_id>`",
 	},
 
 	ErrTeamList: {
