@@ -109,11 +109,11 @@ typescript 4.*
 
 **4\. Download the** `slack` **CLI installer for your environment.**
 
-🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_macOS_arm64.tar.gz)
+🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.6.0_macOS_arm64.tar.gz)
 
-🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_macOS_amd64.tar.gz)
+🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.6.0_macOS_amd64.tar.gz)
 
-🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.5.2_linux_64-bit.tar.gz)
+🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.6.0_linux_64-bit.tar.gz)
 
 **5\. Add the** `slack` **CLI to your path.**
 
@@ -127,7 +127,7 @@ If you have another CLI tool in your path called `slack`, we recommend renaming 
 
 ```
 $ slack version
-Using slack v3.5.2
+Using slack v3.6.0
 ```
 
 **7\. Verify that all dependencies have been installed.**
