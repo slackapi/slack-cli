@@ -2,7 +2,7 @@
 
 List details of existing triggers
 
-## Description
+## Synopsis
 
 List details of existing triggers
 
@@ -10,7 +10,17 @@ List details of existing triggers
 slack trigger list [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# List details for all existing triggers
+$ slack trigger list
+
+# List triggers for a specific app
+$ slack trigger list --team T0123456 --app local
+```
+
+## Options
 
 ```
   -h, --help          help for list
@@ -18,7 +28,7 @@ slack trigger list [flags]
   -T, --type string   Only display triggers of the given type, can be one of 'all', 'shortcut', 'event', 'scheduled', 'webhook', and 'external' (default "all")
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -32,17 +42,7 @@ slack trigger list [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# List details for all existing triggers
-$ slack trigger list
-
-# List triggers for a specific app
-$ slack trigger list --team T0123456 --app local
-```
-
-## See also
+## SEE ALSO
 
 * [slack trigger](slack_trigger)	 - List details of existing triggers
 

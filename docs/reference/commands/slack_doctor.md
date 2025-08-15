@@ -2,7 +2,7 @@
 
 Check and report on system and app information
 
-## Description
+## Synopsis
 
 Check and report on relevant system (and sometimes app) dependencies
 
@@ -19,13 +19,19 @@ Unfortunately, the doctor command cannot heal all problems
 slack doctor [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack doctor  # Create a status report of system dependencies
+```
+
+## Options
 
 ```
   -h, --help   help for doctor
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -39,13 +45,7 @@ slack doctor [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack doctor  # Create a status report of system dependencies
-```
-
-## See also
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

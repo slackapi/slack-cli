@@ -2,7 +2,7 @@
 
 Print the version number
 
-## Description
+## Synopsis
 
 All software has versions. This is ours.
 
@@ -30,13 +30,21 @@ Given a version number `v3.0.1-7-g822d09a`:
 slack version [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack version                  # Print version number using the command
+$ slack --version                # Print version number using the flag
+$ slack --version --skip-update  # Print version and skip update check
+```
+
+## Options
 
 ```
   -h, --help   help for version
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -50,15 +58,7 @@ slack version [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack version                  # Print version number using the command
-$ slack --version                # Print version number using the flag
-$ slack --version --skip-update  # Print version and skip update check
-```
-
-## See also
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

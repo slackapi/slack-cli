@@ -2,17 +2,27 @@
 
 Slack command-line tool
 
-## Description
+## Synopsis
 
 CLI to create, run, and deploy Slack apps
 
-Get started by reading the docs: [https://docs.slack.dev/tools/slack-cli](https://docs.slack.dev/tools/slack-cli)
+Get started by reading the docs: [https://docs.slack.dev/tools/slack-cli](https://docs.slack.dev/tools/slack-cli/)
 
 ```
 slack <command> <subcommand> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack login   # Log in to your Slack account
+$ slack create  # Create a new Slack app
+$ slack init    # Initialize an existing Slack app
+$ slack run     # Start a local development server
+$ slack deploy  # Deploy to the Slack Platform
+```
+
+## Options
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -27,17 +37,7 @@ slack <command> <subcommand> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack login   # Log in to your Slack account
-$ slack create  # Create a new Slack app
-$ slack init    # Initialize an existing Slack app
-$ slack run     # Start a local development server
-$ slack deploy  # Deploy to the Slack Platform
-```
-
-## See also
+## SEE ALSO
 
 * [slack activity](slack_activity)	 - Display the app activity logs from the Slack Platform
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed

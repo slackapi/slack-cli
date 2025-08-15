@@ -2,7 +2,7 @@
 
 Create a trigger for a workflow
 
-## Description
+## Synopsis
 
 Create a trigger to start a workflow
 
@@ -10,7 +10,20 @@ Create a trigger to start a workflow
 slack trigger create [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Create a trigger by selecting an app and trigger definition
+$ slack trigger create
+
+# Create a trigger from a definition file
+$ slack trigger create --trigger-def "triggers/shortcut_trigger.ts"
+
+# Create a trigger for a workflow
+$ slack trigger create --workflow "#/workflows/my_workflow"
+```
+
+## Options
 
 ```
       --description string           the description of this trigger
@@ -34,7 +47,7 @@ slack trigger create [flags]
                                        "#/workflows/<workflow_callback_id>"
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -48,20 +61,7 @@ slack trigger create [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Create a trigger by selecting an app and trigger definition
-$ slack trigger create
-
-# Create a trigger from a definition file
-$ slack trigger create --trigger-def "triggers/shortcut_trigger.ts"
-
-# Create a trigger for a workflow
-$ slack trigger create --workflow "#/workflows/my_workflow"
-```
-
-## See also
+## SEE ALSO
 
 * [slack trigger](slack_trigger)	 - List details of existing triggers
 

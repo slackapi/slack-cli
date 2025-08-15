@@ -2,7 +2,7 @@
 
 Add a new collaborator to the app
 
-## Description
+## Synopsis
 
 Add a collaborator to your app by Slack email address or user ID
 
@@ -10,13 +10,21 @@ Add a collaborator to your app by Slack email address or user ID
 slack collaborator add [email|user_id] [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack collaborator add                # Add a collaborator via prompt
+$ slack collaborator add bot@slack.com  # Add a collaborator from email
+$ slack collaborator add USLACKBOT      # Add a collaborator by user ID
+```
+
+## Options
 
 ```
   -h, --help   help for add
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -30,15 +38,7 @@ slack collaborator add [email|user_id] [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack collaborator add                # Add a collaborator via prompt
-$ slack collaborator add bot@slack.com  # Add a collaborator from email
-$ slack collaborator add USLACKBOT      # Add a collaborator by user ID
-```
-
-## See also
+## SEE ALSO
 
 * [slack collaborator](slack_collaborator)	 - Manage app collaborators
 

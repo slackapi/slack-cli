@@ -2,7 +2,7 @@
 
 Get an item from a datastore
 
-## Description
+## Synopsis
 
 Get an item from a datastore.
 
@@ -13,7 +13,17 @@ other apps can attempt to run the command with the --force flag.
 slack datastore get <expression> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Get an item from the datastore
+$ slack datastore get --datastore tasks '{"id": "42"}'
+
+# Get an item from the datastore with an expression
+$ slack datastore get '{"datastore": "tasks", "id": "42"}'
+```
+
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -23,7 +33,7 @@ slack datastore get <expression> [flags]
       --unstable           kick the tires of experimental features
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -37,17 +47,7 @@ slack datastore get <expression> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Get an item from the datastore
-$ slack datastore get --datastore tasks '{"id": "42"}'
-
-# Get an item from the datastore with an expression
-$ slack datastore get '{"datastore": "tasks", "id": "42"}'
-```
-
-## See also
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 

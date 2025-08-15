@@ -2,7 +2,7 @@
 
 Deploy the app to the Slack Platform
 
-## Description
+## Synopsis
 
 Deploy the app to the Slack Platform
 
@@ -10,7 +10,15 @@ Deploy the app to the Slack Platform
 slack platform deploy [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Select the workspace to deploy to
+$ slack platform deploy
+$ slack platform deploy --team T0123456  # Deploy to a specific team
+```
+
+## Options
 
 ```
   -h, --help                         help for deploy
@@ -19,7 +27,7 @@ slack platform deploy [flags]
                                        (or 'all' for all workspaces in the org)
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -33,15 +41,7 @@ slack platform deploy [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Select the workspace to deploy to
-$ slack platform deploy
-$ slack platform deploy --team T0123456  # Deploy to a specific team
-```
-
-## See also
+## SEE ALSO
 
 * [slack platform](slack_platform)	 - Deploy and run apps on the Slack Platform
 

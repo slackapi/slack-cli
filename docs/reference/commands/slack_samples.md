@@ -2,25 +2,29 @@
 
 List available sample apps
 
-## Description
+## Synopsis
 
 List and create an app from the available samples
 
 ```
-slack samples [name] [flags]
+slack samples [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack samples  # Select a sample app to create
+```
+
+## Options
 
 ```
   -b, --branch string     name of git branch to checkout
   -h, --help              help for samples
-      --language string   runtime for the app framework
-                            ex: "deno", "node", "python"
   -t, --template string   template URL for your app
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -34,13 +38,7 @@ slack samples [name] [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack samples my-project  # Select a sample app to create
-```
-
-## See also
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

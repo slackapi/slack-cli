@@ -2,37 +2,17 @@
 
 Interact with an app's datastore
 
-## Description
+## Synopsis
 
 Interact with the items stored in an app's datastore.
 
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Discover the datastores: [https://docs.slack.dev/tools/deno-slack-sdk/guides/using-datastores](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-datastores)
+Discover the datastores: [https://docs.slack.dev/tools/deno-slack-sdk/guides/using-datastores](https://docs.slack.dev/tools/deno-slack-sdk/guides/using-datastores/)
 
 ```
 slack datastore <subcommand> <expression> [flags]
-```
-
-## Flags
-
-```
-  -h, --help   help for datastore
-```
-
-## Global flags
-
-```
-  -a, --app string           use a specific app ID or environment
-      --config-dir string    use a custom path for system config directory
-  -e, --experiment strings   use the experiment(s) in the command
-  -f, --force                ignore warnings and continue executing command
-      --no-color             remove styles and formatting from outputs
-  -s, --skip-update          skip checking for latest version of CLI
-  -w, --team string          select workspace or organization by team name or ID
-      --token string         set the access token associated with a team
-  -v, --verbose              print debug logging and additional info
 ```
 
 ## Examples
@@ -66,7 +46,27 @@ $ slack datastore query --datastore tasks '{"expression": "#status = :status", "
 $ slack datastore count --datastore tasks
 ```
 
-## See also
+## Options
+
+```
+  -h, --help   help for datastore
+```
+
+## Options inherited from parent commands
+
+```
+  -a, --app string           use a specific app ID or environment
+      --config-dir string    use a custom path for system config directory
+  -e, --experiment strings   use the experiment(s) in the command
+  -f, --force                ignore warnings and continue executing command
+      --no-color             remove styles and formatting from outputs
+  -s, --skip-update          skip checking for latest version of CLI
+  -w, --team string          select workspace or organization by team name or ID
+      --token string         set the access token associated with a team
+  -v, --verbose              print debug logging and additional info
+```
+
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack datastore bulk-delete](slack_datastore_bulk-delete)	 - Delete multiple items from a datastore

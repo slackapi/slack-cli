@@ -2,7 +2,7 @@
 
 Install the app to a team
 
-## Description
+## Synopsis
 
 Install the app to a team
 
@@ -10,16 +10,24 @@ Install the app to a team
 slack app install [flags]
 ```
 
-## Flags
+## Examples
 
 ```
-  -E, --environment string           environment of app (local, deployed)
+$ slack app install                  # Install a production app to a team
+
+# Install a production app to a specific team
+$ slack app install --team T0123456
+```
+
+## Options
+
+```
   -h, --help                         help for install
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -33,20 +41,7 @@ slack app install [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Install a production app to a team
-$ slack app install
-
-# Install a production app to a specific team
-$ slack app install --team T0123456 --environment deployed
-
-# Install a local dev app to a specific team
-$ slack app install --team T0123456 --environment local
-```
-
-## See also
+## SEE ALSO
 
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

@@ -2,7 +2,7 @@
 
 List all environment variables for the app
 
-## Description
+## Synopsis
 
 List all of the environment variables of an app deployed to Slack managed
 infrastructure.
@@ -14,13 +14,19 @@ other apps can attempt to run the command with the --force flag.
 slack env list [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack env list  # List all environment variables
+```
+
+## Options
 
 ```
   -h, --help   help for list
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -34,13 +40,7 @@ slack env list [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack env list  # List all environment variables
-```
-
-## See also
+## SEE ALSO
 
 * [slack env](slack_env)	 - Add, remove, or list environment variables
 

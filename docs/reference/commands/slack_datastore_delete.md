@@ -2,7 +2,7 @@
 
 Delete an item from a datastore
 
-## Description
+## Synopsis
 
 Delete an item from a datastore.
 
@@ -13,7 +13,17 @@ other apps can attempt to run the command with the --force flag.
 slack datastore delete <expression> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Remove an item from the datastore
+$ slack datastore delete --datastore tasks '{"id": "42"}'
+
+# Remove an item from the datastore with an expression
+$ slack datastore delete '{"datastore": "tasks", "id": "42"}'
+```
+
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -22,7 +32,7 @@ slack datastore delete <expression> [flags]
       --unstable           kick the tires of experimental features
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -36,17 +46,7 @@ slack datastore delete <expression> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Remove an item from the datastore
-$ slack datastore delete --datastore tasks '{"id": "42"}'
-
-# Remove an item from the datastore with an expression
-$ slack datastore delete '{"datastore": "tasks", "id": "42"}'
-```
-
-## See also
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 

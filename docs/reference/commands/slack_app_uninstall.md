@@ -2,7 +2,7 @@
 
 Uninstall the app from a team
 
-## Description
+## Synopsis
 
 Uninstall the app from a team without deleting the app or its data
 
@@ -10,13 +10,19 @@ Uninstall the app from a team without deleting the app or its data
 slack app uninstall [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack app uninstall  # Uninstall an app from a team
+```
+
+## Options
 
 ```
   -h, --help   help for uninstall
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -30,13 +36,7 @@ slack app uninstall [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack app uninstall  # Uninstall an app from a team
-```
-
-## See also
+## SEE ALSO
 
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

@@ -2,7 +2,7 @@
 
 Count the number of items in a datastore
 
-## Description
+## Synopsis
 
 Count the number of items in a datastore that match a query expression or just
 all of the items in the datastore.
@@ -14,7 +14,17 @@ other apps can attempt to run the command with the --force flag.
 slack datastore count [expression] [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Count all items in a datastore
+$ slack datastore count --datastore tasks
+
+# Count number of items in datastore that match a query
+$ slack datastore count '{"datastore": "tasks", "expression": "#status = :status", "expression_attributes": {"#status": "status"}, "expression_values": {":status": "In Progress"}}'
+```
+
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -23,7 +33,7 @@ slack datastore count [expression] [flags]
       --unstable           kick the tires of experimental features
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -37,17 +47,7 @@ slack datastore count [expression] [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Count all items in a datastore
-$ slack datastore count --datastore tasks
-
-# Count number of items in datastore that match a query
-$ slack datastore count '{"datastore": "tasks", "expression": "#status = :status", "expression_attributes": {"#status": "status"}, "expression_values": {":status": "In Progress"}}'
-```
-
-## See also
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 

@@ -2,7 +2,7 @@
 
 Remove an environment variable from the app
 
-## Description
+## Synopsis
 
 Remove an environment variable from an app deployed to Slack managed
 infrastructure.
@@ -16,14 +16,22 @@ other apps can attempt to run the command with the --force flag.
 slack env remove <name> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Select an environment variable to remove
+$ slack env remove
+$ slack env remove MAGIC_PASSWORD  # Remove an environment variable
+```
+
+## Options
 
 ```
   -h, --help          help for remove
       --name string   choose the environment variable name
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -37,15 +45,7 @@ slack env remove <name> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Select an environment variable to remove
-$ slack env remove
-$ slack env remove MAGIC_PASSWORD  # Remove an environment variable
-```
-
-## See also
+## SEE ALSO
 
 * [slack env](slack_env)	 - Add, remove, or list environment variables
 

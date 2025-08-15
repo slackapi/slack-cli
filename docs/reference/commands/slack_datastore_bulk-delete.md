@@ -2,7 +2,7 @@
 
 Delete multiple items from a datastore
 
-## Description
+## Synopsis
 
 Delete multiple items from a datastore.
 
@@ -13,7 +13,17 @@ other apps can attempt to run the command with the --force flag.
 slack datastore bulk-delete <expression> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Delete two items from the datastore
+$ slack datastore bulk-delete --datastore tasks '{"ids": ["12", "42"]}'
+
+# Delete two items from the datastore with an expression
+$ slack datastore bulk-delete '{"datastore": "tasks", "ids": ["12", "42"]}'
+```
+
+## Options
 
 ```
       --datastore string   the datastore used to store items
@@ -22,7 +32,7 @@ slack datastore bulk-delete <expression> [flags]
       --unstable           kick the tires of experimental features
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -36,17 +46,7 @@ slack datastore bulk-delete <expression> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Delete two items from the datastore
-$ slack datastore bulk-delete --datastore tasks '{"ids": ["12", "42"]}'
-
-# Delete two items from the datastore with an expression
-$ slack datastore bulk-delete '{"datastore": "tasks", "ids": ["12", "42"]}'
-```
-
-## See also
+## SEE ALSO
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 

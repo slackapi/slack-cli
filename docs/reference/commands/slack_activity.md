@@ -2,7 +2,7 @@
 
 Display the app activity logs from the Slack Platform
 
-## Description
+## Synopsis
 
 Display the app activity logs from the Slack Platform
 
@@ -10,7 +10,14 @@ Display the app activity logs from the Slack Platform
 slack activity [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack platform activity     # Display app activity logs for an app
+$ slack platform activity -t  # Continuously poll for new activity logs
+```
+
+## Options
 
 ```
       --component string       component type to filter
@@ -33,7 +40,7 @@ slack activity [flags]
       --trace-id string        trace id to filter
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -47,14 +54,7 @@ slack activity [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack platform activity     # Display app activity logs for an app
-$ slack platform activity -t  # Continuously poll for new activity logs
-```
-
-## See also
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 

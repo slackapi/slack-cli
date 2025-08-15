@@ -2,7 +2,7 @@
 
 Open app settings for configurations
 
-## Description
+## Synopsis
 
 Open app settings to configure an application in a web browser.
 
@@ -15,13 +15,23 @@ This command does not support apps deployed to Run on Slack infrastructure.
 slack app settings [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Open app settings for a prompted app
+$ slack app settings
+
+# Open app settings for a specific app
+$ slack app settings --app A0123456789
+```
+
+## Options
 
 ```
   -h, --help   help for settings
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -35,17 +45,7 @@ slack app settings [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Open app settings for a prompted app
-$ slack app settings
-
-# Open app settings for a specific app
-$ slack app settings --app A0123456789
-```
-
-## See also
+## SEE ALSO
 
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

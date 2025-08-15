@@ -2,7 +2,7 @@
 
 Deploy and run apps on the Slack Platform
 
-## Description
+## Synopsis
 
 Deploy and run apps on the Slack Platform
 
@@ -10,13 +10,21 @@ Deploy and run apps on the Slack Platform
 slack platform <subcommand> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+$ slack run                     # Run an app locally in a workspace
+$ slack deploy --team T0123456  # Deploy to a specific team
+$ slack activity -t             # Continuously poll for new activity logs
+```
+
+## Options
 
 ```
   -h, --help   help for platform
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -30,15 +38,7 @@ slack platform <subcommand> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-$ slack run                     # Run an app locally in a workspace
-$ slack deploy --team T0123456  # Deploy to a specific team
-$ slack activity -t             # Continuously poll for new activity logs
-```
-
-## See also
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 * [slack platform activity](slack_platform_activity)	 - Display the app activity logs from the Slack Platform

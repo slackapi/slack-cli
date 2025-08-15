@@ -2,7 +2,7 @@
 
 Delete an existing trigger
 
-## Description
+## Synopsis
 
 Delete an existing trigger
 
@@ -10,14 +10,24 @@ Delete an existing trigger
 slack trigger delete --trigger-id <id> [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Delete a specific trigger in a selected workspace
+$ slack trigger delete --trigger-id Ft01234ABCD
+
+# Delete a specific trigger for an app
+$ slack trigger delete --trigger-id Ft01234ABCD --app A0123456
+```
+
+## Options
 
 ```
   -h, --help                help for delete
       --trigger-id string   the ID of the trigger
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -31,17 +41,7 @@ slack trigger delete --trigger-id <id> [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Delete a specific trigger in a selected workspace
-$ slack trigger delete --trigger-id Ft01234ABCD
-
-# Delete a specific trigger for an app
-$ slack trigger delete --trigger-id Ft01234ABCD --app A0123456
-```
-
-## See also
+## SEE ALSO
 
 * [slack trigger](slack_trigger)	 - List details of existing triggers
 

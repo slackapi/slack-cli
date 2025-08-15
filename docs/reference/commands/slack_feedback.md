@@ -2,7 +2,7 @@
 
 Share feedback about your experience or project
 
-## Description
+## Synopsis
 
 Help us make the Slack Platform better with your feedback
 
@@ -10,7 +10,15 @@ Help us make the Slack Platform better with your feedback
 slack feedback [flags]
 ```
 
-## Flags
+## Examples
+
+```
+# Choose to give feedback on part of the Slack Platform
+$ slack feedback
+$ slack feedback --name slack-cli  # Give feedback on the Slack CLI
+```
+
+## Options
 
 ```
   -h, --help          help for feedback
@@ -21,7 +29,7 @@ slack feedback [flags]
       --no-prompt     run command without prompts
 ```
 
-## Global flags
+## Options inherited from parent commands
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -35,15 +43,7 @@ slack feedback [flags]
   -v, --verbose              print debug logging and additional info
 ```
 
-## Examples
-
-```
-# Choose to give feedback on part of the Slack Platform
-$ slack feedback
-$ slack feedback --name slack-cli  # Give feedback on the Slack CLI
-```
-
-## See also
+## SEE ALSO
 
 * [slack](slack)	 - Slack command-line tool
 
