@@ -33,6 +33,16 @@ set -e
 
 DIST_DIR=${1}
 
+get_version_major() {
+    local version="$1"
+    echo "${version}" | cut -d'.' -f1
+}
+
+get_version_major_minor() {
+    local version="$1"
+    echo "${version}" | cut -d'.' -f1-2
+}
+
 main() {
     if [ $# -lt 2 ]; then
         echo "Missing parameters: $0 <path> <version>"
@@ -40,11 +50,19 @@ main() {
     fi
 
     VERSION=${2}
+    VERSION_MAJOR=$(get_version_major "$VERSION")
+    VERSION_MAJOR_MINOR=$(get_version_major_minor "$VERSION")
 
     echo "Checking macOS archives"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_arm64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_arm64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_macOS_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_macOS_amd64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_macOS_arm64.tar.gz"
@@ -59,11 +77,15 @@ main() {
 
     echo "Checking Linux archives"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_linux_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
 
     echo "Checking Windows archives"
     check_exe "$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"
+    check_exe "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_windows_64-bit.zip"
+    check_exe "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_windows_64-bit.zip"
     check_exe "$DIST_DIR/slack_cli_dev_windows_64-bit.zip"
     check_exe "$DIST_DIR/slack_cli_latest_windows_64-bit.zip"
 
