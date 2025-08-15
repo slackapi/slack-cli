@@ -177,12 +177,12 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 	if cmd.Runnable() {
 		fmt.Fprintf(buf, "```\n%s\n```\n\n", cmd.UseLine())
 	}
+	if err := genMarkdownCommandFlags(buf, cmd); err != nil {
+		return err
+	}
 	if len(cmd.Example) > 0 {
 		fmt.Fprintf(buf, "## Examples\n\n")
 		fmt.Fprintf(buf, "```\n%s\n```\n\n", cmd.Example)
-	}
-	if err := genMarkdownCommandFlags(buf, cmd); err != nil {
-		return err
 	}
 	if hasSeeAlso(cmd) {
 		fmt.Fprintf(buf, "## See also\n\n")
