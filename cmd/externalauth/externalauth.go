@@ -39,7 +39,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"This command is supported for apps deployed to Slack managed infrastructure but",
 			"other apps can attempt to run the command with the --force flag.",
 			"",
-			`Explore providers: {{LinkText "https://tools.slack.dev/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication"}}`,
+			`Explore providers: {{LinkText "https://docs.slack.dev/tools/deno-slack-sdk/guides/integrating-with-services-requiring-external-authentication"}}`,
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{

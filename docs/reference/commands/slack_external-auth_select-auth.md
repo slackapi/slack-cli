@@ -2,7 +2,7 @@
 
 Select developer authentication of a workflow
 
-## Synopsis
+## Description
 
 Select the saved developer authentication to use when calling external APIs from
 functions in a workflow app.
@@ -14,14 +14,7 @@ other apps can attempt to run the command with the --force flag.
 slack external-auth select-auth [flags]
 ```
 
-## Examples
-
-```
-# Select the saved developer authentication in a workflow
-$ slack external-auth select-auth --workflow #/workflows/workflow_callback --provider google_provider --external-account user@salesforce.com
-```
-
-## Options
+## Flags
 
 ```
   -E, --external-account string   external account identifier for the provider
@@ -30,7 +23,7 @@ $ slack external-auth select-auth --workflow #/workflows/workflow_callback --pro
   -W, --workflow string           workflow to set developer authentication for
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -44,7 +37,14 @@ $ slack external-auth select-auth --workflow #/workflows/workflow_callback --pro
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+# Select the saved developer authentication in a workflow
+$ slack external-auth select-auth --workflow #/workflows/workflow_callback --provider google_provider --external-account user@salesforce.com
+```
+
+## See also
 
 * [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
 
