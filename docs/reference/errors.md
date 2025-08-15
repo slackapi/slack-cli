@@ -101,9 +101,9 @@ and some ways to remediate them.
 
 https://docs.slack.dev/tools/deno-slack-sdk
 
-If you are using a Bolt framework, add a deploy hook then run: `slack deploy`
+If you are using a Bolt framework, add a deploy hook then run: `slackk deploy`
 
-Otherwise start your app for local development with: `slack run`
+Otherwise start your app for local development with: `slackk run`
 
 ---
 
@@ -123,7 +123,7 @@ Otherwise start your app for local development with: `slack run`
 
 **Message**: The --app flag must be provided
 
-**Remediation**: Choose a specific app with `--app <app_id>`
+**Remediation**: Choose a specific app with --app <app_id>
 
 ---
 
@@ -226,7 +226,7 @@ Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure
 
 **Message**: Couldn't find a valid auth token for the Slack API
 
-**Remediation**: You need to be logged in to at least 1 production (slack.com) team to use this command. Log into one with the `slack login` command and try again.
+**Remediation**: You need to be logged in to at least 1 production (slack.com) team to use this command. Log into one with the `slackk login` command and try again.
 
 ---
 
@@ -361,7 +361,7 @@ Move the .slack/cli.json file to .slack/hooks.json and try again.
 
 **Message**: Slack API requires the latest version of the Slack CLI
 
-**Remediation**: You can upgrade to the latest version of the Slack CLI using the command: `slack upgrade`
+**Remediation**: You can upgrade to the latest version of the Slack CLI using the command: `slackk upgrade`
 
 ---
 
@@ -426,7 +426,7 @@ Approval is pending review
 
 **Message**: No authentication found for this team
 
-**Remediation**: Use the command `slack login` to login to this workspace
+**Remediation**: Use the command `slackk login` to login to this workspace
 
 ---
 
@@ -558,7 +558,7 @@ Approval is pending review
 
 **Message**: The name of the feedback is invalid
 
-**Remediation**: View the feedback options with `slack feedback --help`
+**Remediation**: View the feedback options with `slackk feedback --help`
 
 ---
 
@@ -566,8 +566,8 @@ Approval is pending review
 
 **Message**: The name of the feedback is required
 
-**Remediation**: Please provide a `--name <string>` flag or remove the --no-prompt flag
-View feedback options with `slack feedback --help`
+**Remediation**: Please provide a `--name <string>` flag or remove the `--no-prompt` flag
+View feedback options with `slackk feedback --help`
 
 ---
 
@@ -681,7 +681,7 @@ View feedback options with `slack feedback --help`
 
 **Message**: A valid installation of this app is required to take this action
 
-**Remediation**: Install the app with `slack install`
+**Remediation**: Install the app with `slackk install`
 
 ---
 
@@ -705,7 +705,7 @@ View feedback options with `slack feedback --help`
 
 **Remediation**: A valid Slack project includes the Slack hooks file: .slack/hooks.json
 
-If this is a Slack project, you can initialize it with `slack init`
+If this is a Slack project, you can initialize it with `slackk init`
 
 ---
 
@@ -714,7 +714,7 @@ If this is a Slack project, you can initialize it with `slack init`
 **Message**: The provided --app flag value is not valid
 
 **Remediation**: Specify the environment with --app local or --app deployed
-Or choose a specific app with `--app <app_id>`
+Or choose a specific app with --app <app_id>
 
 ---
 
@@ -748,7 +748,7 @@ Or choose a specific app with `--app <app_id>`
 
 **Message**: Your user account authorization isn't valid
 
-**Remediation**: Your user account authorization may be expired or does not have permission to access the resource. Try to login to the same user account again using `slack login`.
+**Remediation**: Your user account authorization may be expired or does not have permission to access the resource. Try to login to the same user account again using `slackk login`.
 
 ---
 
@@ -756,7 +756,7 @@ Or choose a specific app with `--app <app_id>`
 
 **Message**: The challenge code is invalid
 
-**Remediation**: The previous slash command and challenge code have now expired. To retry, use `slack login`, paste the slash command in any Slack channel, and enter the challenge code displayed by Slack. It is easiest to copy & paste the challenge code.
+**Remediation**: The previous slash command and challenge code have now expired. To retry, use `slackk login`, paste the slash command in any Slack channel, and enter the challenge code displayed by Slack. It is easiest to copy & paste the challenge code.
 
 ---
 
@@ -785,7 +785,7 @@ Or choose a specific app with `--app <app_id>`
 **Message**: The provided expression is not valid
 
 **Remediation**: Verify the expression you provided is valid JSON surrounded by quotations
-Use `slack datastore --help` for examples
+Use `slackk datastore --help` for examples
 
 ---
 
@@ -818,7 +818,7 @@ Use `slack datastore --help` for examples
 **Message**: A manifest does not exist at the provided source
 
 **Remediation**: Set 'manifest.source' to either "remote" or "local" in .slack/config.json
-Read about manifest sourcing with the `slack manifest info --help` command
+Read about manifest sourcing with the `slackk manifest info --help` command
 
 ---
 
@@ -1052,7 +1052,7 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 **Message**: Your login is out of date
 
-**Remediation**: Run `slack logout` and then `slack login` again.
+**Remediation**: Run `slackk logout` and then `slackk login` again.
 
 ---
 
@@ -1118,7 +1118,7 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 **Message**: You are either not logged in or your login session has expired
 
-**Remediation**: Authorize your CLI with `slack login`
+**Remediation**: Authorize your CLI with `slackk login`
 
 ---
 
@@ -1193,7 +1193,7 @@ Read about manifest sourcing with the `slack manifest info --help` command
 **Message**: Project manifest source is not valid
 
 **Remediation**: Set 'manifest.source' to either "remote" or "local" in .slack/config.json
-Read about manifest sourcing with the `slack manifest info --help` command
+Read about manifest sourcing with the `slackk manifest info --help` command
 
 ---
 
@@ -1239,9 +1239,17 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### runtime_not_found {#runtime_not_found}
+
+**Message**: The hook runtime executable was not found
+
+**Remediation**: Make sure the required runtime has been installed to run hook scripts.
+
+---
+
 ### runtime_not_supported {#runtime_not_supported}
 
-**Message**: The SDK language's executable (deno, node, python, etc) was not found to be installed on the system
+**Message**: The SDK runtime is not supported by the CLI
 
 ---
 
@@ -1261,15 +1269,7 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 **Message**: There was an error while reading the Slack hooks file (`.slack/hooks.json`) or running the `get-hooks` hook
 
-**Remediation**: Run `slack doctor` to check that your system dependencies are up-to-date.
-
----
-
-### sdk_hook_get_trigger_not_found {#sdk_hook_get_trigger_not_found}
-
-**Message**: The `get-trigger` hook script in `.slack/hooks.json` was not found
-
-**Remediation**: Try defining your trigger by specifying a json file instead.
+**Remediation**: Run `slackk doctor` to check that your system dependencies are up-to-date.
 
 ---
 
@@ -1277,7 +1277,7 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 **Message**: A script hook defined in the Slack Configuration file (`.slack/hooks.json`) returned an error
 
-**Remediation**: Run `slack doctor` to check that your system dependencies are up-to-date.
+**Remediation**: Run `slackk doctor` to check that your system dependencies are up-to-date.
 
 ---
 
@@ -1290,9 +1290,9 @@ Read about manifest sourcing with the `slack manifest info --help` command
 - .slack/hooks.json
 
 Every app requires a Slack hooks file and you can find an example at:
-https://github.com/slack-samples/deno-starter-template/blob/main/slack.json
+https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json
 
-You can create a hooks file manually or with the `slack init` command.
+You can create a hooks file manually or with the `slackk init` command.
 
 When manually creating the hooks file, you must install the hook dependencies.
 
@@ -1314,7 +1314,7 @@ When manually creating the hooks file, you must install the hook dependencies.
 
 **Message**: You are not logged into a team or have not installed an app
 
-**Remediation**: Use the command `slack login` to login and `slack install` to install your app
+**Remediation**: Use the command `slackk login` to login and `slackk install` to install your app
 
 ---
 
@@ -1376,7 +1376,7 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 
 **Message**: The --team flag must be provided
 
-**Remediation**: Choose a specific team with `--team <team_domain>` or `--team <team_id>`
+**Remediation**: Choose a specific team with --team <team_domain> or --team <team_id>
 
 ---
 
@@ -1420,7 +1420,7 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 
 **Message**: Your access token has expired
 
-**Remediation**: Use the command `slack login` to authenticate again
+**Remediation**: Use the command `slackk login` to authenticate again
 
 ---
 
@@ -1428,7 +1428,7 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 
 **Message**: Your token has already been revoked
 
-**Remediation**: Use the command `slack login` to authenticate again
+**Remediation**: Use the command `slackk login` to authenticate again
 
 ---
 
@@ -1436,7 +1436,7 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 
 **Message**: An error occurred while rotating your access token
 
-**Remediation**: Use the command `slack login` to authenticate again
+**Remediation**: Use the command `slackk login` to authenticate again
 
 ---
 

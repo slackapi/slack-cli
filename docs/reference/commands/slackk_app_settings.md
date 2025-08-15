@@ -1,0 +1,51 @@
+## slackk app settings
+
+Open app settings for configurations
+
+### Synopsis
+
+Open app settings to configure an application in a web browser.
+
+Discovering new features and customizing an app manifest can be done from this
+web interface for apps with a "remote" manifest source.
+
+This command does not support apps deployed to Run on Slack infrastructure.
+
+```
+slackk app settings [flags]
+```
+
+### Examples
+
+```
+# Open app settings for a prompted app
+$ slackk app settings
+
+# Open app settings for a specific app
+$ slackk app settings --app A0123456789
+```
+
+### Options
+
+```
+  -h, --help   help for settings
+```
+
+### Options inherited from parent commands
+
+```
+  -a, --app string           use a specific app ID or environment
+      --config-dir string    use a custom path for system config directory
+  -e, --experiment strings   use the experiment(s) in the command
+  -f, --force                ignore warnings and continue executing command
+      --no-color             remove styles and formatting from outputs
+  -s, --skip-update          skip checking for latest version of CLI
+  -w, --team string          select workspace or organization by team name or ID
+      --token string         set the access token associated with a team
+  -v, --verbose              print debug logging and additional info
+```
+
+### SEE ALSO
+
+* [slackk app](slackk_app.md)	 - Install, uninstall, and list teams with the app installed
+
