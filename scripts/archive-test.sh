@@ -49,6 +49,14 @@ main() {
         exit 1
     fi
 
+    echo "Checking version parsing"
+    check_version "3.4.0" "3" "3.4"
+    check_version "3.6.2" "3" "3.6"
+    check_version "10.15.7" "10" "10.15"
+    check_version "1.0.0" "1" "1.0"
+    check_version "3.1.4-example-feature" "3" "3.1"
+    check_version "3.6.0-6-g859d4f1" "3" "3.6"
+
     VERSION=${2}
     VERSION_MAJOR=$(get_version_major "$VERSION")
     VERSION_MAJOR_MINOR=$(get_version_major_minor "$VERSION")
@@ -112,6 +120,26 @@ check_tar() {
 
     if ! [[ -x "$tmpdir/bin/slack" ]]; then
         echo "-> Failed to find executable: $1"
+        return 1
+    fi
+}
+
+check_version() {
+    local version="$1"
+    local expected_major="$2"
+    local expected_major_minor="$3"
+    local actual_major
+    local actual_major_minor
+
+    echo "-> Testing version parsing: '$version'"
+    actual_major=$(get_version_major "$version")
+    actual_major_minor=$(get_version_major_minor "$version")
+    if [[ "$expected_major" != "$actual_major" ]]; then
+        echo "-> Failed to get major version('$version') = '$actual_major'"
+        return 1
+    fi
+    if [[ "$expected_major_minor" != "$actual_major_minor" ]]; then
+        echo "-> Failed to get major minor version('$version') = '$actual_major_minor'"
         return 1
     fi
 }
