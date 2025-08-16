@@ -32,6 +32,16 @@ set -e
 
 DIST_DIR=${1}
 
+get_version_major() {
+    local version="$1"
+    echo "${version}" | cut -d'.' -f1
+}
+
+get_version_major_minor() {
+    local version="$1"
+    echo "${version}" | cut -d'.' -f1-2
+}
+
 main() {
     if [ $# -lt 2 ]; then
         echo "Missing parameters: $0 <path> <version>"
@@ -39,12 +49,20 @@ main() {
     fi
 
     VERSION=${2}
+    VERSION_MAJOR=$(get_version_major "$VERSION")
+    VERSION_MAJOR_MINOR=$(get_version_major_minor "$VERSION")
 
     echo "Creating macOS archives"
 
     macos_targz_file_path_version_universal="$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.tar.gz"
     macos_targz_file_path_version_amd64="$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.tar.gz"
     macos_targz_file_path_version_arm64="$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.tar.gz"
+    macos_targz_file_path_version_major_universal="$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_64-bit.tar.gz"
+    macos_targz_file_path_version_major_amd64="$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_amd64.tar.gz"
+    macos_targz_file_path_version_major_arm64="$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_arm64.tar.gz"
+    macos_targz_file_path_version_major_minor_universal="$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_64-bit.tar.gz"
+    macos_targz_file_path_version_major_minor_amd64="$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_amd64.tar.gz"
+    macos_targz_file_path_version_major_minor_arm64="$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_arm64.tar.gz"
     macos_targz_file_path_dev_universal="$DIST_DIR/slack_cli_dev_macOS_64-bit.tar.gz"
     macos_targz_file_path_dev_amd64="$DIST_DIR/slack_cli_dev_macOS_amd64.tar.gz"
     macos_targz_file_path_dev_arm64="$DIST_DIR/slack_cli_dev_macOS_arm64.tar.gz"
@@ -59,9 +77,17 @@ main() {
 
     echo "-> Creating macOS versioned tar.gz files"
     unzip_tar "$macos_zip_file_path_universal" "$macos_targz_file_path_version_universal"
+    unzip_tar "$macos_zip_file_path_universal" "$macos_targz_file_path_version_major_universal"
+    unzip_tar "$macos_zip_file_path_universal" "$macos_targz_file_path_version_major_minor_universal"
     unzip_tar "$macos_zip_file_path_amd64" "$macos_targz_file_path_version_amd64"
+    unzip_tar "$macos_zip_file_path_amd64" "$macos_targz_file_path_version_major_amd64"
+    unzip_tar "$macos_zip_file_path_amd64" "$macos_targz_file_path_version_major_minor_amd64"
     unzip_tar "$macos_zip_file_path_arm64" "$macos_targz_file_path_version_arm64"
+    unzip_tar "$macos_zip_file_path_arm64" "$macos_targz_file_path_version_major_arm64"
+    unzip_tar "$macos_zip_file_path_arm64" "$macos_targz_file_path_version_major_minor_arm64"
     ls -l "$DIST_DIR"/*_"$VERSION"_macOS*
+    ls -l "$DIST_DIR"/*_"$VERSION_MAJOR".x.x_macOS*
+    ls -l "$DIST_DIR"/*_"$VERSION_MAJOR_MINOR".x_macOS*
 
     echo "-> Creating macOS development tar.gz files"
     cp "$macos_targz_file_path_version_universal" "$macos_targz_file_path_dev_universal"
@@ -82,8 +108,17 @@ main() {
     echo "Creating Linux archives"
 
     linux_targz_file_path_version="$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    linux_targz_file_path_version_major="$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_linux_64-bit.tar.gz"
+    linux_targz_file_path_version_major_minor="$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_linux_64-bit.tar.gz"
     linux_targz_file_path_dev="$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
     linux_targz_file_path_latest="$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
+
+    echo "-> Creating Linux versioned tar.gz file"
+    cp "$linux_targz_file_path_version" "$linux_targz_file_path_version_major"
+    cp "$linux_targz_file_path_version" "$linux_targz_file_path_version_major_minor"
+    ls -l "$DIST_DIR"/*_"$VERSION"_linux*
+    ls -l "$DIST_DIR"/*_"$VERSION_MAJOR".x.x_linux*
+    ls -l "$DIST_DIR"/*_"$VERSION_MAJOR_MINOR".x_linux*
 
     echo "-> Creating Linux development tar.gz file"
     cp "$linux_targz_file_path_version" "$linux_targz_file_path_dev"
@@ -96,8 +131,17 @@ main() {
     echo "Creating Windows archives"
 
     windows_zip_file_path_version="$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"
+    windows_zip_file_path_version_major="$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_windows_64-bit.zip"
+    windows_zip_file_path_version_major_minor="$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_windows_64-bit.zip"
     windows_zip_file_path_dev="$DIST_DIR/slack_cli_dev_windows_64-bit.zip"
     windows_zip_file_path_latest="$DIST_DIR/slack_cli_latest_windows_64-bit.zip"
+
+    echo "-> Creating Windows versioned zip file"
+    cp "$windows_zip_file_path_version" "$windows_zip_file_path_version_major"
+    cp "$windows_zip_file_path_version" "$windows_zip_file_path_version_major_minor"
+    ls -l "$DIST_DIR"/*_"$VERSION"_windows*
+    ls -l "$DIST_DIR"/*_"$VERSION_MAJOR".x.x_windows*
+    ls -l "$DIST_DIR"/*_"$VERSION_MAJOR_MINOR".x_windows*
 
     echo "-> Creating Windows development zip file"
     cp "$windows_zip_file_path_version" "$windows_zip_file_path_dev"
