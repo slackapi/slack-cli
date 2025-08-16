@@ -19,7 +19,7 @@ SKIP_DENO_INSTALL=false
 SLACK_CLI_NAME="slack"
 FINGERPRINT="d41d8cd98f00b204e9800998ecf8427e"
 SLACK_CLI_VERSION=
-rx='^([0-9]+\.){2}(\*|[0-9]+)(-.*)?$'
+rx='^[0-9]+\.[0-9x]+\.[0-9x]+(-[A-Za-z0-9._-]+)?$'
 
 while getopts "v:d" flag; do
         case "$flag" in
@@ -28,7 +28,7 @@ while getopts "v:d" flag; do
                                 SLACK_CLI_VERSION=$OPTARG
                         else
                                 echo "Slack CLI requires a valid semver version number." >&2
-                                return 1
+                                exit 1
                         fi
                         ;;
                 d)
