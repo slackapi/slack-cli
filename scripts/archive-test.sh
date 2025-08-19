@@ -33,18 +33,44 @@ set -e
 
 DIST_DIR=${1}
 
+get_version_major() {
+    local version="$1"
+    echo "${version}" | cut -d'.' -f1
+}
+
+get_version_major_minor() {
+    local version="$1"
+    echo "${version}" | cut -d'.' -f1-2
+}
+
 main() {
     if [ $# -lt 2 ]; then
         echo "Missing parameters: $0 <path> <version>"
         exit 1
     fi
 
+    echo "Checking version parsing"
+    check_version "3.4.0" "3" "3.4"
+    check_version "3.6.2" "3" "3.6"
+    check_version "10.15.7" "10" "10.15"
+    check_version "1.0.0" "1" "1.0"
+    check_version "3.1.4-example-feature" "3" "3.1"
+    check_version "3.6.0-6-g859d4f1" "3" "3.6"
+
     VERSION=${2}
+    VERSION_MAJOR=$(get_version_major "$VERSION")
+    VERSION_MAJOR_MINOR=$(get_version_major_minor "$VERSION")
 
     echo "Checking macOS archives"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_amd64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_macOS_arm64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_macOS_arm64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_macOS_arm64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_macOS_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_macOS_amd64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_macOS_arm64.tar.gz"
@@ -59,11 +85,15 @@ main() {
 
     echo "Checking Linux archives"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_linux_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
     check_tar "$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
 
     echo "Checking Windows archives"
     check_exe "$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"
+    check_exe "$DIST_DIR/slack_cli_${VERSION_MAJOR}.x.x_windows_64-bit.zip"
+    check_exe "$DIST_DIR/slack_cli_${VERSION_MAJOR_MINOR}.x_windows_64-bit.zip"
     check_exe "$DIST_DIR/slack_cli_dev_windows_64-bit.zip"
     check_exe "$DIST_DIR/slack_cli_latest_windows_64-bit.zip"
 
@@ -90,6 +120,26 @@ check_tar() {
 
     if ! [[ -x "$tmpdir/bin/slack" ]]; then
         echo "-> Failed to find executable: $1"
+        return 1
+    fi
+}
+
+check_version() {
+    local version="$1"
+    local expected_major="$2"
+    local expected_major_minor="$3"
+    local actual_major
+    local actual_major_minor
+
+    echo "-> Testing version parsing: '$version'"
+    actual_major=$(get_version_major "$version")
+    actual_major_minor=$(get_version_major_minor "$version")
+    if [[ "$expected_major" != "$actual_major" ]]; then
+        echo "-> Failed to get major version('$version') = '$actual_major'"
+        return 1
+    fi
+    if [[ "$expected_major_minor" != "$actual_major_minor" ]]; then
+        echo "-> Failed to get major minor version('$version') = '$actual_major_minor'"
         return 1
     fi
 }

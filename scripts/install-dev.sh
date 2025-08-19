@@ -19,7 +19,7 @@ SKIP_DENO_INSTALL=false
 SLACK_CLI_NAME="slack-dev"
 FINGERPRINT="d41d8cd98f00b204e9800998ecf8427e"
 SLACK_CLI_DEV_VERSION="dev"
-rx='^([0-9]+\.){2}(\*|[0-9]+)(-.*)?$'
+rx='^[0-9]+\.[0-9x]+\.[0-9x]+(-[A-Za-z0-9._-]+)?$'
 
 # As this script is for internal usage only, we should set SLACK_DISABLE_TELEMETRY environment variable
 export SLACK_DISABLE_TELEMETRY="true"
@@ -31,7 +31,7 @@ while getopts "v:d" flag; do
                                 SLACK_CLI_DEV_VERSION=$OPTARG
                         else
                                 echo "Slack CLI requires a valid semver version number." >&2
-                                return 1
+                                exit 1
                         fi
                         ;;
                 d)
