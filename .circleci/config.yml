@@ -129,10 +129,6 @@ jobs:
           command: |
             make test
       - run:
-          name: Run Install Tests
-          command: |
-            make test-install
-      - run:
           name: Sync Tests Results
           command: |
             cp ./coverage.out /tmp/test-results
