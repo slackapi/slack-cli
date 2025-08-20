@@ -2,7 +2,7 @@
 
 Add, remove, or list environment variables
 
-## Synopsis
+## Description
 
 Add, remove, or list environment variables for apps deployed to Slack managed
 infrastructure.
@@ -10,10 +10,30 @@ infrastructure.
 This command is supported for apps deployed to Slack managed infrastructure but
 other apps can attempt to run the command with the --force flag.
 
-Explore more: [https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli/)
+Explore more: [https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli)
 
 ```
 slack env <subcommand> [flags]
+```
+
+## Flags
+
+```
+  -h, --help   help for env
+```
+
+## Global flags
+
+```
+  -a, --app string           use a specific app ID or environment
+      --config-dir string    use a custom path for system config directory
+  -e, --experiment strings   use the experiment(s) in the command
+  -f, --force                ignore warnings and continue executing command
+      --no-color             remove styles and formatting from outputs
+  -s, --skip-update          skip checking for latest version of CLI
+  -w, --team string          select workspace or organization by team name or ID
+      --token string         set the access token associated with a team
+  -v, --verbose              print debug logging and additional info
 ```
 
 ## Examples
@@ -28,27 +48,7 @@ $ slack env list
 $ slack env remove MAGIC_PASSWORD
 ```
 
-## Options
-
-```
-  -h, --help   help for env
-```
-
-## Options inherited from parent commands
-
-```
-  -a, --app string           use a specific app ID or environment
-      --config-dir string    use a custom path for system config directory
-  -e, --experiment strings   use the experiment(s) in the command
-  -f, --force                ignore warnings and continue executing command
-      --no-color             remove styles and formatting from outputs
-  -s, --skip-update          skip checking for latest version of CLI
-  -w, --team string          select workspace or organization by team name or ID
-      --token string         set the access token associated with a team
-  -v, --verbose              print debug logging and additional info
-```
-
-## SEE ALSO
+## See also
 
 * [slack](slack)	 - Slack command-line tool
 * [slack env add](slack_env_add)	 - Add an environment variable to the app

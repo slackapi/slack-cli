@@ -2,7 +2,7 @@
 
 Revoke an authentication token
 
-## Synopsis
+## Description
 
 Revoke an authentication token
 
@@ -10,19 +10,13 @@ Revoke an authentication token
 slack auth revoke [flags]
 ```
 
-## Examples
-
-```
-$ slack auth revoke --token xoxp-1-4921830...  # Revoke a service token
-```
-
-## Options
+## Flags
 
 ```
   -h, --help   help for revoke
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -36,7 +30,13 @@ $ slack auth revoke --token xoxp-1-4921830...  # Revoke a service token
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+$ slack auth revoke --token xoxp-1-4921830...  # Revoke a service token
+```
+
+## See also
 
 * [slack auth](slack_auth)	 - Add and remove local team authorizations
 

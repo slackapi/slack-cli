@@ -2,7 +2,7 @@
 
 Manage who can use your triggers
 
-## Synopsis
+## Description
 
 Manage who can use your triggers
 
@@ -10,22 +10,7 @@ Manage who can use your triggers
 slack trigger access --trigger-id <id> [flags]
 ```
 
-## Examples
-
-```
-# Grant everyone access to run a trigger
-$ slack trigger access --trigger-id Ft01234ABCD --everyone
-
-# Grant certain channels access to run a trigger
-$ slack trigger access --trigger-id Ft01234ABCD --grant \
-    --channels C012345678
-
-# Revoke certain users access to run a trigger
-$ slack trigger access --trigger-id Ft01234ABCD --revoke \
-    --users USLACKBOT,U012345678
-```
-
-## Options
+## Flags
 
 ```
   -A, --app-collaborators           grant permission to only app collaborators
@@ -45,7 +30,7 @@ $ slack trigger access --trigger-id Ft01234ABCD --revoke \
   -W, --workspaces string           a comma-separated list of Slack workspace IDs
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -59,7 +44,22 @@ $ slack trigger access --trigger-id Ft01234ABCD --revoke \
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+# Grant everyone access to run a trigger
+$ slack trigger access --trigger-id Ft01234ABCD --everyone
+
+# Grant certain channels access to run a trigger
+$ slack trigger access --trigger-id Ft01234ABCD --grant \
+    --channels C012345678
+
+# Revoke certain users access to run a trigger
+$ slack trigger access --trigger-id Ft01234ABCD --revoke \
+    --users USLACKBOT,U012345678
+```
+
+## See also
 
 * [slack trigger](slack_trigger)	 - List details of existing triggers
 
