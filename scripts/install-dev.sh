@@ -91,13 +91,13 @@ install_slack_cli() {
         delay 0.2 "\x1b[?25h"
 
         # Check if slack binary is already in user's system
-        if [ -x "$(command -v $SLACK_CLI_NAME)" ]; then
+        if [ -x "$(command -v "$SLACK_CLI_NAME")" ]; then
                 delay 0.3 "🔍 Checking if \`$SLACK_CLI_NAME\` already exists on this system..."
                 delay 0.2 "⚠️  Heads up! A binary called \`$SLACK_CLI_NAME\` was found!"
                 delay 0.3 "🔍 Now checking if it's the same Slack CLI..."
 
                 # Check if command is used for Slack CLI, for Slack CLI with version >= 1.18.0, the fingerprint needs to be matched to proceed installation
-                if [[ ! $($SLACK_CLI_NAME _fingerprint) == $FINGERPRINT ]] &>/dev/null; then
+                if [[ ! $($SLACK_CLI_NAME _fingerprint) == "$FINGERPRINT" ]] &>/dev/null; then
 
                         # For Slack CLI with version < 1.18.0, we check with `slack --version` for backwards compatibility
                         if [[ ! $($SLACK_CLI_NAME --version) == *"Using $SLACK_CLI_NAME v"* ]]; then
@@ -138,7 +138,7 @@ install_slack_cli() {
                                 ;;
                         esac
                 fi
-        elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+        elif [ "$(expr substr "$(uname -s)" 1 5)" == "Linux" ]; then
                 slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_64-bit.tar.gz"
         else
                 echo "🛑 Error: This installer is only supported on Linux and macOS"
@@ -171,14 +171,24 @@ install_slack_cli() {
         delay 0.1 "📠 Removing packaged download files from $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         rm "$slack_cli_install_dir/slack-cli.tar.gz"
 
-        if [ -d "/usr/local/bin" ] && [ -w "/usr/local/bin" ]; then
-                local_bin_path="/usr/local/bin"
-        else
-                local_bin_path="$HOME/.local/bin"
-                mkdir -p "$local_bin_path"
+        delay 0.1 "🔗 Adding a symbolic link from /usr/local/bin/$SLACK_CLI_NAME to $(home_path "$slack_cli_bin_path")"
+        if [ ! -d /usr/local/bin ]; then
+                echo -e "⚠️  The /usr/local/bin directory does not exist!"
+                echo -e "🔐 Please create /usr/local/bin directory first and try again..."
+                return 1
         fi
-        delay 0.1 "🔗 Adding a symbolic link from $(home_path "$local_bin_path/$SLACK_CLI_NAME") to $(home_path "$slack_cli_bin_path")"
-        ln -sf "$slack_cli_bin_path" "$local_bin_path/$SLACK_CLI_NAME"
+        if [ -w /usr/local/bin ]; then
+                ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"
+        else
+                echo -e "⚠️  Failed to create a symbolic link!"
+                delay 0.1 "🔖 The installer doesn't have write access to /usr/local/bin"
+                echo -e "🔐 Please check permission and try again..."
+                return 1
+        fi
+        if ! command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
+                echo "📁 Manually add the Slack CLI command directory to your shell profile"
+                echo "   export PATH=\"$slack_cli_install_bin_dir:\$PATH\""
+        fi
 }
 
 terms_of_service() {
@@ -205,29 +215,8 @@ next_step_message() {
         echo -e ""
         if command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
                 echo -e "📺 Success! The Slack CLI (build: $SLACK_CLI_DEV_VERSION) is now installed!"
-        else
-                echo -e "📝 To get started, manually add the Slack CLI to your shell path:"
-                case "$(basename "$SHELL")" in
-                bash)
-                        echo -e "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
-                        echo -e "   source ~/.bashrc"
-                        ;;
-                fish)
-                        echo -e "   mkdir -p \$HOME/.config/fish"
-                        echo -e "   echo 'fish_add_path \$HOME/.local/bin' >> \$HOME/.config/fish/config.fish"
-                        echo -e "   source \$HOME/.config/fish/config.fish"
-                        ;;
-                zsh)
-                        echo -e "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
-                        echo -e "   source ~/.zshrc"
-                        ;;
-                *)
-                        echo "   export PATH=\"$local_bin_path:\$PATH\""
-                        ;;
-                esac
+                echo -e "🔐 Next, authorize your CLI in your workspace with \`$SLACK_CLI_NAME login\`"
         fi
-        echo -e "🔐 Next, authorize your CLI in your workspace with \`$SLACK_CLI_NAME login\`"
-        sleep 0.2
 }
 
 main() {
