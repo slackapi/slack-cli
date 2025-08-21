@@ -33,7 +33,7 @@ Runtime installations are left to the developer and depend on the app being buil
 
 If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. The Slack CLI won't overwrite the existing one!
 
-To do this, use the `-Alias` flag as described within the **Optional: customize installation using flags** section.
+To do this, use the `-Alias` flag as described within the **Optional: Customize installation using flags** section.
 
 </details>
 
