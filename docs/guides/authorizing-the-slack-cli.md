@@ -55,7 +55,7 @@ Authorization Level: Workspace
 
 You should see an entry for the workspace you just authorized. If you don't, get a new authorization ticket with `slack login` to try again.
 
-You're now ready to begin building [Bolt](/tools/slack-cli/guides/using-slack-cli-with-bolt-frameworks) and [workflow](/tools/deno-slack-sdk/guides/getting-started) apps!
+You're now ready to begin building [Bolt](/tools/slack-cli/guides/using-slack-cli-with-bolt-frameworks) and [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started) apps!
 
 ### Version update notifications {#version-updates}
 
