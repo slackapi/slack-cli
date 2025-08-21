@@ -48,7 +48,7 @@ irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -outfile 'ins
 
 The available flags are:
 
-| Flag       | What it does                                                     | Example                                                                             |
+| Flag       | Description                                                     | Example                                                                             |
 | :--------- | :--------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
 | `-Alias`   | Installs the Slack CLI as the provided alias                     | `-Alias slackcli` will create a binary named `slackcli.exe` and add it to your path |
 | `-Version` | Installs a specific version of the Slack CLI                     | `-Version 2.1.0` installs version `2.1.0` of the Slack CLI                          |
