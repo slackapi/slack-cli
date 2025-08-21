@@ -12,8 +12,7 @@ slack login
 
 ## Authorization ticket {#ticket}
 
-In your terminal window, you should see an authorization ticket in the form of a
-slash command, and a prompt to enter a challenge code:
+In your terminal window, you should see an authorization ticket in the form of a slash command, and a prompt to enter a challenge code:
 
 ```zsh
 $ slack login
@@ -43,8 +42,7 @@ A new modal with a challenge code will appear. Copy that challenge code, and pas
    Explore the details of available commands with slack help
 ```
 
-Verify that your Slack CLI is set up by running `slack auth list` in your terminal
-window:
+Verify that your Slack CLI is set up by running `slack auth list` in your terminal window:
 
 ```zsh
 $ slack auth list
@@ -55,8 +53,7 @@ Last updated: 2023-01-01 12:00:00 -07:00
 Authorization Level: Workspace
 ```
 
-You should see an entry for the workspace you just authorized. If you don't, get a new authorization ticket with `slack login` to try
-again.
+You should see an entry for the workspace you just authorized. If you don't, get a new authorization ticket with `slack login` to try again.
 
 You're now ready to begin building [Bolt](/tools/slack-cli/guides/using-slack-cli-with-bolt-frameworks) and [workflow](/tools/deno-slack-sdk/guides/getting-started) apps!
 
@@ -72,7 +69,7 @@ Setting up a CI/CD pipeline requires authorization using a service token. Servic
 
 To get a service token, you'll use the `slack auth token` command to get a `slackauthticket`, which you'll copy and paste into your workspace to exchange for the service token. The service token will not be saved to your `credentials.json` file; instead, it is presented in the terminal for you to copy and paste for use in your CI/CD pipeline. Once copied, you'll use the `slack login --auth <your-service-token>` command to authorize your Slack CLI. Detailed instructions are below.
 
-:::info[The service token will not conflict with your regular authentication token.] 
+:::info[The service token will not conflict with your regular authentication token.]
 
 You can continue using your regular authentication token within the Slack CLI while using the service token for your CI/CD pipeline.
 
