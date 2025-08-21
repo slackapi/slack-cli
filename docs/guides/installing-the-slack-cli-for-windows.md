@@ -5,7 +5,7 @@ slug: /tools/slack-cli/guides/installing-the-slack-cli-for-windows
 
 # Installing the Slack CLI for Windows
 
-The Slack CLI is a tool most useful when building Slack apps. This is your one-stop shop for installing this tool.
+The Slack CLI is a useful tool for building Slack apps. This is your one-stop shop for installing this tool.
 
 :::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
 
