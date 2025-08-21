@@ -25,7 +25,7 @@ while getopts "v:d" flag; do
                         SLACK_CLI_VERSION=$OPTARG
                 else
                         echo "Slack CLI requires a valid semver version number." >&2
-                        return 1
+                        exit 1
                 fi
                 ;;
         *)
