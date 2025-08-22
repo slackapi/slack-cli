@@ -30,7 +30,7 @@ Some hooks may return data as part of their functionality. The CLI will use the 
 
 ### Discover hook scripts and default configuration with `get-hooks` {#discover}
 
-In order for the CLI to reliably discover the hooks for the [Deno SDK](https://github.com/slackapi/deno-slack-sdk), [Bolt Frameworks](https://tools.slack.dev), and future community-driven SDKs, the CLI employs a service-discovery-like approach to querying the SDK for what functionality it supports.
+In order for the CLI to reliably discover the hooks for the [Deno SDK](https://github.com/slackapi/deno-slack-sdk), [Bolt Frameworks](https://docs.slack.dev/tools/), and future community-driven SDKs, the CLI employs a service-discovery-like approach to querying the SDK for what functionality it supports.
 
 A project includes a `hooks.json` file in its `.slack` directory which by default contains a single hook (`get-hooks`). The SDK is responsible for implementing this hook and returning to the CLI a JSON object with all hook definitions and their relevant default configuration (one hook to rule them all 💍).
 
@@ -124,7 +124,7 @@ The [app manifest](https://docs.slack.dev/reference/app-manifest) in JSON format
 
 ### `build` (optional) {#build}
 
-Implementing this hook allows for the CLI to [deploy function code to Slack's managed infrastructure](https://tools.slack.dev/deno-slack-sdk/guides/deploying-to-slack). The work of assembling the application bundle according to Slack's application bundle format is delegated to the SDK via this hook.
+Implementing this hook allows for the CLI to [deploy function code to Slack's managed infrastructure](https://docs.slack.dev/tools/deno-slack-sdk/guides/deploying-to-slack/). The work of assembling the application bundle according to Slack's application bundle format is delegated to the SDK via this hook.
 
 The application bundle format has few restrictions, but the critical ones are:
 
@@ -134,7 +134,7 @@ The application bundle format has few restrictions, but the critical ones are:
 
 The above requirements come from the [deno-slack-runtime](https://github.com/slackapi/deno-slack-runtime) project, which implements the expected Slack deployment bundle format. It contains a hard-coded [reference](https://github.com/slackapi/deno-slack-runtime/blob/main/src/mod.ts#L73) to the above-mentioned `functions/` sub-directory, and combines it with the [specific custom function `callback_id`](https://github.com/slackapi/deno-slack-runtime/blob/main/src/mod.ts#L17-L19) to resolve an import path for userland function source code.
 
-_Note: This hook should only be implemented by official Slack SDKs and is only relevant to apps [deployed to Slack's managed infrastructure](https://tools.slack.dev/deno-slack-sdk/guides/deploying-to-slack)._
+_Note: This hook should only be implemented by official Slack SDKs and is only relevant to apps [deployed to Slack's managed infrastructure](https://docs.slack.dev/tools/deno-slack-sdk/guides/deploying-to-slack/)._
 
 #### Input
 

@@ -1,13 +1,13 @@
 ---
 sidebar_label: Troubleshooting errors
-slug: /slack-cli/guides/troubleshooting-slack-cli-errors
+slug: /tools/slack-cli/guides/troubleshooting-slack-cli-errors
 ---
 
 # Troubleshooting Slack CLI errors
 
 Troubleshooting errors can be tricky. There's a lot going on between your development environment, the Slack CLI, and your code!
 
-View the [full list of of errors in the reference](/slack-cli/reference/errors).
+View the [full list of of errors in the reference](/tools/slack-cli/reference/errors).
 
 ## VSCode and the Deno plugin {#vscode-deno}
 

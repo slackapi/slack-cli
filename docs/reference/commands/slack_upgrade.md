@@ -2,7 +2,7 @@
 
 Checks for available updates to the CLI or SDK
 
-## Synopsis
+## Description
 
 Checks for available updates to the CLI or the SDKs of a project
 
@@ -14,19 +14,13 @@ The changelog can be found at [https://docs.slack.dev/changelog](https://docs.sl
 slack upgrade [flags]
 ```
 
-## Examples
-
-```
-$ slack upgrade  # Check for any available updates
-```
-
-## Options
+## Flags
 
 ```
   -h, --help   help for upgrade
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -40,7 +34,13 @@ $ slack upgrade  # Check for any available updates
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+$ slack upgrade  # Check for any available updates
+```
+
+## See also
 
 * [slack](slack)	 - Slack command-line tool
 

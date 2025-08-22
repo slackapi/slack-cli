@@ -40,7 +40,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Inspect and configure the custom functions included in an app with this command.",
 			"Functions can be added as a step in Workflow Builder and shared among teammates.",
 			"",
-			`Learn more about functions: {{LinkText "https://tools.slack.dev/deno-slack-sdk/guides/creating-functions"}}`,
+			`Learn more about functions: {{LinkText "https://docs.slack.dev/tools/deno-slack-sdk/guides/creating-functions"}}`,
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "function distribute", Meaning: "Select a function and choose distribution options"},

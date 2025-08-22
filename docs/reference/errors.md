@@ -71,7 +71,7 @@ and some ways to remediate them.
 
 **Message**: Specified app and team are mismatched
 
-**Remediation**: Try a different combination of --app, --team flags
+**Remediation**: Try a different combination of `--app` and `--team` flags
 
 ---
 
@@ -99,7 +99,7 @@ and some ways to remediate them.
 
 **Remediation**: Learn about building apps with the Deno Slack SDK:
 
-https://tools.slack.dev/deno-slack-sdk
+https://docs.slack.dev/tools/deno-slack-sdk
 
 If you are using a Bolt framework, add a deploy hook then run: `slack deploy`
 
@@ -328,7 +328,7 @@ Learn more: https://slack.com/help/articles/201980108-Add-people-to-a-channel
 **Message**: Couldn't auto-update this command-line tool
 
 **Remediation**: You can manually install the latest version from:
-https://tools.slack.dev/slack-cli
+https://docs.slack.dev/tools/slack-cli
 
 ---
 
@@ -498,6 +498,12 @@ Approval is pending review
 
 ---
 
+### documentation_generation_failed {#documentation_generation_failed}
+
+**Message**: Failed to generate documentation
+
+---
+
 ### enterprise_not_found {#enterprise_not_found}
 
 **Message**: The `enterprise` was not found
@@ -566,7 +572,7 @@ Approval is pending review
 
 **Message**: The name of the feedback is required
 
-**Remediation**: Please provide a `--name <string>` flag or remove the --no-prompt flag
+**Remediation**: Please provide a `--name <string>` flag or remove the `--no-prompt` flag
 View feedback options with `slack feedback --help`
 
 ---
@@ -713,7 +719,7 @@ If this is a Slack project, you can initialize it with `slack init`
 
 **Message**: The provided --app flag value is not valid
 
-**Remediation**: Specify the environment with --app local or --app deployed
+**Remediation**: Specify the environment with `--app local` or `--app deployed`
 Or choose a specific app with `--app <app_id>`
 
 ---
@@ -1239,9 +1245,17 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### runtime_not_found {#runtime_not_found}
+
+**Message**: The hook runtime executable was not found
+
+**Remediation**: Make sure the required runtime has been installed to run hook scripts.
+
+---
+
 ### runtime_not_supported {#runtime_not_supported}
 
-**Message**: The SDK language's executable (deno, node, python, etc) was not found to be installed on the system
+**Message**: The SDK runtime is not supported by the CLI
 
 ---
 
@@ -1265,14 +1279,6 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
-### sdk_hook_get_trigger_not_found {#sdk_hook_get_trigger_not_found}
-
-**Message**: The `get-trigger` hook script in `.slack/hooks.json` was not found
-
-**Remediation**: Try defining your trigger by specifying a json file instead.
-
----
-
 ### sdk_hook_invocation_failed {#sdk_hook_invocation_failed}
 
 **Message**: A script hook defined in the Slack Configuration file (`.slack/hooks.json`) returned an error
@@ -1290,7 +1296,7 @@ Read about manifest sourcing with the `slack manifest info --help` command
 - .slack/hooks.json
 
 Every app requires a Slack hooks file and you can find an example at:
-https://github.com/slack-samples/deno-starter-template/blob/main/slack.json
+https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json
 
 You can create a hooks file manually or with the `slack init` command.
 

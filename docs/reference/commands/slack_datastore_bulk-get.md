@@ -2,7 +2,7 @@
 
 Get multiple items from a datastore
 
-## Synopsis
+## Description
 
 Get multiple items from a datastore.
 
@@ -13,17 +13,7 @@ other apps can attempt to run the command with the --force flag.
 slack datastore bulk-get <expression> [flags]
 ```
 
-## Examples
-
-```
-# Get two items from datastore
-$ slack datastore bulk-get --datastore tasks '{"ids": ["12", "42"]}'
-
-# Get two items from datastore with an expression
-$ slack datastore bulk-get '{"datastore": "tasks", "ids": ["12", "42"]}'
-```
-
-## Options
+## Flags
 
 ```
       --datastore string   the datastore used to store items
@@ -33,7 +23,7 @@ $ slack datastore bulk-get '{"datastore": "tasks", "ids": ["12", "42"]}'
       --unstable           kick the tires of experimental features
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -47,7 +37,17 @@ $ slack datastore bulk-get '{"datastore": "tasks", "ids": ["12", "42"]}'
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+# Get two items from datastore
+$ slack datastore bulk-get --datastore tasks '{"ids": ["12", "42"]}'
+
+# Get two items from datastore with an expression
+$ slack datastore bulk-get '{"datastore": "tasks", "ids": ["12", "42"]}'
+```
+
+## See also
 
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 
