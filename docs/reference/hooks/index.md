@@ -1,6 +1,5 @@
 # Hooks
 
-Updated: May 2024
 
 ## Background {#background}
 
