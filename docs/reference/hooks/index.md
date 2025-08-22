@@ -1,8 +1,5 @@
 # Hooks
 
-
-## Background {#background}
-
 Communication between the CLI and the application SDK is managed by a project-level configuration file called `hooks.json`. This file is included in our app templates and defines script _hooks_.
 
 Hooks are small scripts that are _executed_ by the CLI and _implemented_ by the SDK. These commands perform actions on the project.
