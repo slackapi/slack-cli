@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 var mockGitHubRepos = []create.GithubRepo{
@@ -131,7 +132,9 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Execute test
-			repoName, err := PromptSampleSelection(ctx, clients, sampler)
+			samples, err := create.GetSampleRepos(sampler)
+			require.NoError(t, err)
+			repoName, err := promptSampleSelection(ctx, clients, samples)
 			assert.Equal(t, tt.expectedError, err)
 			assert.Equal(t, tt.expectedRepository, repoName)
 		})
@@ -139,8 +142,29 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 }
 
 func TestSamples_FilterRepos(t *testing.T) {
-	filteredRepos := filterRepos(mockGitHubRepos, "deno")
-	assert.Equal(t, len(filteredRepos), 2, "Expected filteredRepos length to be 2")
+	tests := map[string]struct {
+		language      string
+		expectedRepos int
+	}{
+		"deno matches deno": {
+			language:      "deno",
+			expectedRepos: 2,
+		},
+		"node matches bolt-js and bolt-ts": {
+			language:      "node",
+			expectedRepos: 1,
+		},
+		"no filter returns all options": {
+			language:      "",
+			expectedRepos: 4,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			filteredRepos := filterRepos(mockGitHubRepos, tt.language)
+			assert.Equal(t, tt.expectedRepos, len(filteredRepos))
+		})
+	}
 }
 
 func TestSamples_SortRepos(t *testing.T) {
