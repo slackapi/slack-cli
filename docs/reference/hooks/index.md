@@ -75,7 +75,7 @@ Hooks are entry points for the CLI to initiate inter-process communication with 
 
 A hook encapsulates an isolated piece of functionality that the SDK provides to app developers; the CLI delegates execution of the functionality to the SDK via hook invocation in a separate process. SDKs are responsible for ensuring that hook processes exit with a status code of 0; otherwise the CLI will surface the `sdk_hook_invocation_failed` error to the end-user and report the hook process’ `STDOUT` and `STDERR` to the CLI process’ `STDOUT`.
 
-## List of hooks {#list-of-hooks}
+## Hooks list {#hooks-list}
 
 The following Slack CLI commands invoke hooks:
 
