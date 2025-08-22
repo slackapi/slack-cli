@@ -559,6 +559,6 @@ The CLI will employ the following algorithm in order to resolve the command to b
 
 ### Other definitions
 
-- hooks.json - The CLI-SDK Interface implemented as a JSON object ({...}) or JSON file (hooks.json).
+- hooks.json - The CLI-SDK Interface implemented as a JSON object (`{...}`) or JSON file (hooks.json).
 - command - This refers to a CLI command, eg. `slack doctor`
 - hook - This refers to some CLI functionality delegated to the SDK and is defined at the level of the hooks.json file
