@@ -52,7 +52,7 @@
             },
             {
                 "type": "doc",
-                "id": "slack-cli/reference/hooks",
+                "id": "tools/slack-cli/reference/hooks",
                 "label": "Hooks"
             }
         ]
