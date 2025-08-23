@@ -62,7 +62,7 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 			// Get the app selection and accompanying auth of an installed app or gather
 			// some other authentication token
 			var token string
-			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 			if err != nil {
 				if slackerror.ToSlackError(err).Code != slackerror.ErrInstallationRequired {
 					return err

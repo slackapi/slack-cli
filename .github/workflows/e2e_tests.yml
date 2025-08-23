@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Trigger CircleCI 'local' workflow
         if: ${{ github.event.inputs.status == 'false' }}
-        uses: promiseofcake/circleci-trigger-action@a2a2e3a5ce87a3ff44b93f08953021a2bbf207cd # v1.7.9
+        uses: promiseofcake/circleci-trigger-action@31aa76d990fbc19500120b5c97c6968e490708b8 # v2.0.1
         with:
           user-token: ${{ secrets.CIRCLECI_TOKEN }}
           project-slug: slackapi/slack-cli
@@ -30,7 +30,7 @@ jobs:
           payload: '{"run_local_build_test_workflow": true}'
       - name: Trigger CircleCI 'e2e' workflow
         if: ${{ github.event.inputs.status == 'true' }}
-        uses: promiseofcake/circleci-trigger-action@a2a2e3a5ce87a3ff44b93f08953021a2bbf207cd # v1.7.9
+        uses: promiseofcake/circleci-trigger-action@31aa76d990fbc19500120b5c97c6968e490708b8 # v2.0.1
         with:
           user-token: ${{ secrets.CIRCLECI_TOKEN }}
           project-slug: slackapi/slack-cli

@@ -105,6 +105,38 @@ Confirm the installation worked right with:
 golangci-lint --version
 ```
 
+<details>
+<summary>Troubleshooting</summary>
+
+#### Error: command not found: golangci-lint
+
+If you receive the following error:
+
+```bash
+$ golangci-lint --version
+command not found: golangci-lint
+```
+
+You may need to update your `$PATH` environment variable with `$GOPATH/bin`:
+1. Open your terminal's configuration file (e.g. `~/.zshrc`):
+
+    ```bash
+    $ vim ~/.zshrc
+    ```
+
+2. Add the following:
+
+    ```bash
+    export PATH=$PATH:$(go env GOPATH)/bin
+    ```
+3. Open a new terminal session (tab) or source your configuration file (`source ~/.zshrc`).
+4. Run the following command:
+
+    ```bash
+    $ golangci-lint --version
+    ```
+</details>
+
 #### VSCode
 
 Settings are already defined in this project for using the VSCode editor with
@@ -843,7 +875,7 @@ Steps to merge a pull request:
 When in doubt, find the other maintainers and ask.
 
 [circleci]: ../.circleci/config.yml
-[commands]: https://tools.slack.dev/slack-cli/reference/commands/slack
+[commands]: https://docs.slack.dev/tools/slack-cli/reference/commands/slack/
 [commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build

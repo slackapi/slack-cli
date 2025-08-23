@@ -601,7 +601,7 @@ func setupMockAccessAppSelection(selectedApp prompts.SelectedApp) func() {
 	appSelectMock := prompts.NewAppSelectMock()
 	var originalPromptFunc = accessAppSelectPromptFunc
 	accessAppSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(selectedApp, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(selectedApp, nil)
 	return func() {
 		accessAppSelectPromptFunc = originalPromptFunc
 	}

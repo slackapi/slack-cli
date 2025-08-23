@@ -2,7 +2,7 @@
 
 List all authorized accounts
 
-## Synopsis
+## Description
 
 List all authorized accounts
 
@@ -10,19 +10,13 @@ List all authorized accounts
 slack list [flags]
 ```
 
-## Examples
-
-```
-$ slack auth list  # List all authorized accounts
-```
-
-## Options
+## Flags
 
 ```
   -h, --help   help for list
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -36,7 +30,13 @@ $ slack auth list  # List all authorized accounts
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+$ slack auth list  # List all authorized accounts
+```
+
+## See also
 
 * [slack](slack)	 - Slack command-line tool
 

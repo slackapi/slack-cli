@@ -283,8 +283,8 @@ func setupEnvAddCommandMocks(ctx context.Context, cm *shared.ClientsMock, cf *sh
 	_ = cf.AppClient().SaveDeployed(ctx, mockApp)
 
 	appSelectMock := prompts.NewAppSelectMock()
-	teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-	appSelectMock.On("TeamAppSelectPrompt").Return(prompts.SelectedApp{Auth: mockAuth, App: mockApp}, nil)
+	appSelectPromptFunc = appSelectMock.AppSelectPrompt
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{Auth: mockAuth, App: mockApp}, nil)
 
 	cm.Config.Flags.String("value", "", "mock value flag")
 

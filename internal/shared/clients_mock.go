@@ -37,7 +37,6 @@ type ClientsMock struct {
 	AppClient    *app.Client
 	Browser      *slackdeps.BrowserMock
 	Config       *config.Config
-	Cobra        *slackdeps.CobraMock
 	EventTracker *tracking.EventTrackerMock
 	Fs           *slackdeps.FsMock
 	IO           *iostreams.IOStreamsMock
@@ -55,7 +54,6 @@ func NewClientsMock() *ClientsMock {
 	clientsMock.API = &api.APIMock{}
 	clientsMock.Auth = &auth.AuthMock{}
 	clientsMock.Browser = slackdeps.NewBrowserMock()
-	clientsMock.Cobra = slackdeps.NewCobraMock()
 	clientsMock.EventTracker = &tracking.EventTrackerMock{}
 	clientsMock.Fs = slackdeps.NewFsMock()
 	clientsMock.Os = slackdeps.NewOsMock()
@@ -74,7 +72,6 @@ func (m *ClientsMock) AddDefaultMocks() {
 	m.API.AddDefaultMocks()
 	m.Auth.AddDefaultMocks()
 	m.Browser.AddDefaultMocks()
-	m.Cobra.AddDefaultMocks()
 	m.EventTracker.AddDefaultMocks()
 	m.IO.AddDefaultMocks()
 	m.Os.AddDefaultMocks()
@@ -85,7 +82,6 @@ func (m *ClientsMock) AddDefaultMocks() {
 func (m *ClientsMock) MockClientFactory() func(c *ClientFactory) {
 	return func(clients *ClientFactory) {
 		clients.Browser = func() slackdeps.Browser { return m.Browser }
-		clients.Cobra.GenMarkdownTree = m.Cobra.GenMarkdownTree
 		clients.Config = m.Config
 		clients.EventTracker = m.EventTracker
 		clients.Os = m.Os

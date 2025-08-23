@@ -53,8 +53,8 @@ func TestRemoveCommand(t *testing.T) {
 			CmdArgs: []string{"USLACKBOT"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).
 					Return(mockSelection, nil)
 				cm.API.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
@@ -72,8 +72,8 @@ func TestRemoveCommand(t *testing.T) {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).
 					Return(mockSelection, nil)
 				cm.API.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
@@ -93,8 +93,8 @@ func TestRemoveCommand(t *testing.T) {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
-				teamAppSelectPromptFunc = appSelectMock.TeamAppSelectPrompt
-				appSelectMock.On("TeamAppSelectPrompt").
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).
 					Return(mockSelection, nil)
 				cm.API.On("RemoveCollaborator", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)

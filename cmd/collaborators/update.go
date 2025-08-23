@@ -97,7 +97,7 @@ func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []
 	}
 
 	// Get the app auth selection from the flag or prompt
-	selection, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		return err
 	}

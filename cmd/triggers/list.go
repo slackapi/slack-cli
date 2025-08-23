@@ -76,7 +76,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	defer span.Finish()
 
 	// Get the app selection and accompanying auth from the flag or prompt
-	selection, err := listAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := listAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

@@ -85,7 +85,7 @@ func runEnvRemoveCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, 
 	var ctx = cmd.Context()
 
 	// Get the workspace from the flag or prompt
-	selection, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

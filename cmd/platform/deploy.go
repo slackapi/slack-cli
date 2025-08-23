@@ -41,7 +41,6 @@ import (
 // Create handle to Deploy function for testing
 // TODO - Stopgap until we learn the correct way to structure our code for testing.
 var deployFunc = platform.Deploy
-var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
 
 // TODO - Same as above, but probably even worse
 var runAddCommandFunc = app.RunAddCommand
@@ -79,7 +78,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 				deploySpinner.Stop()
 			}()
 
-			selection, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
+			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
 			if err != nil {
 				return err
 			}
@@ -163,13 +162,21 @@ func hasValidDeploymentMethod(
 		return err
 	}
 	switch {
+	// When the manifest source is local, we can get the manifest from the local project.
 	case manifestSource.Equals(config.ManifestSourceLocal):
 		manifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}
-	case manifestSource.Equals(config.ManifestSourceRemote):
+	// When the manifest source is remote and the app exists, we can get the manifest from the the API.
+	case manifestSource.Equals(config.ManifestSourceRemote) && app.AppID != "":
 		manifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+		if err != nil {
+			return err
+		}
+	// When the app does not exist, we need to get the manifest from the local project.
+	default:
+		manifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return err
 		}

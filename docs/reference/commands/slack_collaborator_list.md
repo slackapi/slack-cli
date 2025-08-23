@@ -2,7 +2,7 @@
 
 List all collaborators of an app
 
-## Synopsis
+## Description
 
 List all collaborators of an app
 
@@ -10,19 +10,13 @@ List all collaborators of an app
 slack collaborator list [flags]
 ```
 
-## Examples
-
-```
-$ slack collaborator list  # List all of the collaborators
-```
-
-## Options
+## Flags
 
 ```
   -h, --help   help for list
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -36,7 +30,13 @@ $ slack collaborator list  # List all of the collaborators
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+$ slack collaborator list  # List all of the collaborators
+```
+
+## See also
 
 * [slack collaborator](slack_collaborator)	 - Manage app collaborators
 

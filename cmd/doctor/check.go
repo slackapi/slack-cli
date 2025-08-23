@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/internal/update"
@@ -271,6 +273,15 @@ func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section,
 		section.Errors = []slackerror.Error{*slackerror.New(slackerror.ErrNotAuthed)}
 	}
 
+	slices.SortStableFunc(authList, func(a types.SlackAuth, b types.SlackAuth) int {
+		domain := strings.Compare(a.TeamDomain, b.TeamDomain)
+		if domain != 0 {
+			return domain
+		}
+		id := strings.Compare(a.TeamID, b.TeamID)
+		return id
+	})
+
 	// Teams
 	if len(authList) > 0 {
 		authSections := []Section{}
@@ -278,25 +289,41 @@ func checkCLICreds(ctx context.Context, clients *shared.ClientFactory) (Section,
 		caser := cases.Title(language.English)
 		for _, authInfo := range authList {
 			checkDetails := []Section{
-				{"Team domain", authInfo.TeamDomain, []Section{}, []slackerror.Error{}},
-				{"Team ID", authInfo.TeamID, []Section{}, []slackerror.Error{}},
-				{"User ID", authInfo.UserID, []Section{}, []slackerror.Error{}},
 				{
-					"Last updated",
-					authInfo.LastUpdated.Format("2006-01-02 15:04:05 Z07:00"),
-					[]Section{},
-					[]slackerror.Error{},
+					Label: "Team domain",
+					Value: authInfo.TeamDomain,
 				},
-				{"Authorization level", caser.String(authInfo.AuthLevel()), []Section{}, []slackerror.Error{}},
+				{
+					Label: "Team ID",
+					Value: authInfo.TeamID,
+				},
+				{
+					Label: "User ID",
+					Value: authInfo.UserID,
+				},
+				{
+					Label: "Last updated",
+					Value: authInfo.LastUpdated.Format("2006-01-02 15:04:05 Z07:00"),
+				},
+				{
+					Label: "Authorization level",
+					Value: caser.String(authInfo.AuthLevel()),
+				},
 			}
 
 			if authInfo.APIHost != nil {
-				hostSection := Section{"API Host", *authInfo.APIHost, []Section{}, []slackerror.Error{}}
+				hostSection := Section{
+					Label: "API Host",
+					Value: *authInfo.APIHost,
+				}
 				checkDetails = append(checkDetails, hostSection)
 			}
 
 			// Validate session token
-			validitySection := Section{"Token status", "Valid", []Section{}, []slackerror.Error{}}
+			validitySection := Section{
+				Label: "Token status",
+				Value: "Valid",
+			}
 
 			// TODO :: .ValidateSession() utilizes the host (APIHost) assigned to the client making
 			// the call. This results in incorrectly deeming tokens invalid if using multiple workspaces

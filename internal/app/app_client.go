@@ -458,7 +458,7 @@ func (ac *AppClient) migrateToAppByTeamIDLocal() error {
 // as team domain is not guaranteed to be unique
 func (ac *AppClient) getDeployedAppTeamDomain(ctx context.Context) string {
 	// Find the app team using the priority:
-	// 1. Team Flag (set by the user or prompts.TeamAppSelectPrompt)
+	// 1. Team Flag (set by the user)
 	if ac.config.TeamFlag != "" {
 		return ac.config.TeamFlag
 	}

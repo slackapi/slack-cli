@@ -1,6 +1,6 @@
 module github.com/slackapi/slack-cli
 
-go 1.24.5
+go 1.25.0
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -24,8 +24,12 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/mod v0.27.0
+ "main"
 	golang.org/x/sys v0.34.0
 	golang.org/x/text v0.27.0
+	golang.org/x/sys v0.35.0
+	golang.org/x/text v0.28.0
+  "main"
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -56,7 +60,6 @@ require (
 )
 
 require (
-	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-git/go-git/v5 v5.16.2
@@ -67,8 +70,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/pflag v1.0.7
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	go.uber.org/atomic v1.11.0 // indirect

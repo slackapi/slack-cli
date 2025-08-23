@@ -96,6 +96,10 @@ func Test_App_SettingsCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectMock.On(
 					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
 				).Return(
 					prompts.SelectedApp{App: types.App{AppID: "A0101010101"}},
 					nil,
@@ -124,6 +128,10 @@ func Test_App_SettingsCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectMock.On(
 					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
 				).Return(
 					prompts.SelectedApp{},
 					slackerror.New(slackerror.ErrInstallationRequired),
@@ -147,6 +155,10 @@ func Test_App_SettingsCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectMock.On(
 					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
 				).Return(
 					prompts.SelectedApp{App: types.App{AppID: "A0123456789"}},
 					nil,
@@ -176,6 +188,10 @@ func Test_App_SettingsCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectMock.On(
 					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
 				).Return(
 					prompts.SelectedApp{
 						App:  types.App{AppID: "A0123456789"},

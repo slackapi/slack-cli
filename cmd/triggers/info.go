@@ -65,7 +65,7 @@ func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	defer span.Finish()
 
 	// Get the app from the flag or prompt
-	selection, err := infoAppSelectPromptFunc(ctx, clients, prompts.ShowInstalledAppsOnly)
+	selection, err := infoAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}

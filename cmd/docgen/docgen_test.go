@@ -40,12 +40,6 @@ func TestNewDocsCommand(t *testing.T) {
 				filepath.Join(slackdeps.MockWorkingDirectory, "docs"),
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Cobra.AssertCalled(
-					t,
-					"GenMarkdownTree",
-					mock.Anything,
-					filepath.Join(slackdeps.MockWorkingDirectory, "docs", "commands"),
-				)
 				cm.Fs.AssertCalled(
 					t,
 					"MkdirAll",
@@ -84,12 +78,6 @@ func TestNewDocsCommand(t *testing.T) {
 				filepath.Join(slackdeps.MockWorkingDirectory, "markdown-docs"),
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Cobra.AssertCalled(
-					t,
-					"GenMarkdownTree",
-					mock.Anything,
-					filepath.Join(slackdeps.MockWorkingDirectory, "markdown-docs", "commands"),
-				)
 				cm.Fs.AssertCalled(
 					t,
 					"MkdirAll",
@@ -126,12 +114,6 @@ func TestNewDocsCommand(t *testing.T) {
 			CmdArgs:         []string{},
 			ExpectedOutputs: []string{"References saved to: docs"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Cobra.AssertCalled(
-					t,
-					"GenMarkdownTree",
-					mock.Anything,
-					filepath.Join("docs", "commands"),
-				)
 				cm.Fs.AssertCalled(
 					t,
 					"MkdirAll",
@@ -184,19 +166,6 @@ func TestNewDocsCommand(t *testing.T) {
 			},
 			CmdArgs:              []string{},
 			ExpectedErrorStrings: []string{"no write permission"},
-		},
-		"when generating docs fails": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.Cobra.On(
-					"GenMarkdownTree",
-					mock.Anything,
-					mock.Anything,
-				).Return(
-					errors.New("failed to generate docs"),
-				)
-			},
-			CmdArgs:              []string{},
-			ExpectedErrorStrings: []string{"failed to generate docs"},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
 		return NewCommand(clients)

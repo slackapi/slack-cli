@@ -17,6 +17,7 @@ package externalauth
 import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/stretchr/testify/mock"
 )
 
 var fakeAppID = "A1234"
@@ -38,7 +39,7 @@ func setupMockAppSelection(selectedApp prompts.SelectedApp) func() {
 	appSelectMock := prompts.NewAppSelectMock()
 	var originalPromptFunc = appSelectPromptFunc
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt").Return(selectedApp, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(selectedApp, nil)
 	return func() {
 		appSelectPromptFunc = originalPromptFunc
 	}

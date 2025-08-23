@@ -55,7 +55,8 @@ func TestInstall(t *testing.T) {
 		mockBoltExperiment      bool
 		mockConfirmPrompt       bool
 		mockIsTTY               bool
-		mockManifest            types.SlackYaml
+		mockManifestAppLocal    types.SlackYaml
+		mockManifestAppRemote   types.SlackYaml
 		mockManifestHashInitial cache.Hash
 		mockManifestHashUpdated cache.Hash
 		mockManifestSource      config.ManifestSource
@@ -88,7 +89,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockBoltExperiment: true,
 			mockManifestSource: config.ManifestSourceLocal,
-			mockManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
@@ -147,7 +148,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockBoltExperiment: true,
 			mockManifestSource: config.ManifestSourceLocal,
-			mockManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 2,
@@ -208,7 +209,8 @@ func TestInstall(t *testing.T) {
 			mockBoltExperiment: true,
 			mockConfirmPrompt:  true,
 			mockIsTTY:          true,
-			mockManifest: types.SlackYaml{
+			mockManifestSource: config.ManifestSourceLocal,
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
@@ -270,7 +272,7 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "example-3",
@@ -297,7 +299,61 @@ func TestInstall(t *testing.T) {
 			},
 			expectedUpdate: true,
 		},
-		"avoids updating or installing an app with a remote manifest": {
+		"create and install an app with a remote manifest": {
+			mockApp: types.App{},
+			mockAPICreate: api.CreateAppResult{
+				AppID: "A001",
+			},
+			mockAPIUpdateError: slackerror.New(slackerror.ErrAppAdd),
+			mockAuth: types.SlackAuth{
+				EnterpriseID: mockEnterpriseID,
+				TeamID:       mockTeamID,
+				TeamDomain:   mockTeamDomain,
+				Token:        mockToken,
+				UserID:       mockUserID,
+			},
+			mockAuthSession: api.AuthSession{
+				EnterpriseID: &mockEnterpriseID,
+				TeamID:       &mockTeamID,
+				TeamName:     &mockTeamDomain,
+				UserID:       &mockUserID,
+			},
+			mockBoltExperiment: true,
+			mockManifestSource: config.ManifestSourceRemote,
+			mockManifestAppLocal: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					Metadata: &types.ManifestMetadata{
+						MajorVersion: 2,
+					},
+					Settings: &types.AppSettings{
+						EventSubscriptions: &types.ManifestEventSubscriptions{
+							BotEvents:  []string{"chat:write"},
+							UserEvents: []string{"channels:read"},
+						},
+					},
+				},
+			},
+			expectedApp: types.App{
+				AppID:        "A001",
+				EnterpriseID: mockEnterpriseID,
+				TeamID:       mockTeamID,
+				TeamDomain:   mockTeamDomain,
+			},
+			expectedManifest: types.AppManifest{
+				Metadata: &types.ManifestMetadata{
+					MajorVersion: 2,
+				},
+				Settings: &types.AppSettings{
+					EventSubscriptions: &types.ManifestEventSubscriptions{
+						BotEvents:  []string{"chat:write"},
+						UserEvents: []string{"channels:read"},
+					},
+				},
+			},
+			expectedCreate: true,
+			expectedUpdate: false,
+		},
+		"avoids updating an app with a remote manifest": {
 			mockApp: types.App{
 				AppID:  "A004",
 				TeamID: mockTeamID,
@@ -313,11 +369,10 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockAPICreateError:  slackerror.New(slackerror.ErrAppCreate),
-			mockAPIUpdateError:  slackerror.New(slackerror.ErrAppAdd),
-			mockAPIInstallError: slackerror.New(slackerror.ErrAppInstall),
-			mockBoltExperiment:  true,
-			mockManifestSource:  config.ManifestSourceRemote,
+			mockAPICreateError: slackerror.New(slackerror.ErrAppCreate),
+			mockAPIUpdateError: slackerror.New(slackerror.ErrAppAdd),
+			mockBoltExperiment: true,
+			mockManifestSource: config.ManifestSourceRemote,
 			expectedApp: types.App{
 				AppID:  "A004",
 				TeamID: mockTeamID,
@@ -384,7 +439,7 @@ func TestInstall(t *testing.T) {
 			mockBoltExperiment: true,
 			mockConfirmPrompt:  false,
 			mockIsTTY:          true,
-			mockManifest: types.SlackYaml{
+			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
@@ -424,7 +479,7 @@ func TestInstall(t *testing.T) {
 				UserID:   &mockUserID,
 			},
 			mockBoltExperiment: true,
-			mockManifest: types.SlackYaml{
+			mockManifestAppRemote: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
 						MajorVersion: 1,
@@ -535,7 +590,8 @@ func TestInstall(t *testing.T) {
 				)
 			}
 			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifestAppLocal, nil)
+			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifestAppRemote, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			if tt.mockBoltExperiment {
@@ -1536,7 +1592,7 @@ func TestValidateManifestForInstall(t *testing.T) {
 				Return(tt.result, tt.err)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			err := validateManifestForInstall(ctx, clients, tt.app, tt.manifest)
+			err := validateManifestForInstall(ctx, clients, "xoxe.xoxp-1-token", tt.app, tt.manifest)
 			assert.NoError(t, err)
 
 			tt.check(clientsMock)

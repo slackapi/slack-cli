@@ -36,12 +36,13 @@ import (
 var runAddCommandFunc = RunAddCommand
 var appInstallProdAppFunc = apps.Add
 var appInstallDevAppFunc = apps.InstallLocalApp
-var teamAppSelectPromptFunc = prompts.TeamAppSelectPrompt
+var appSelectPromptFunc = prompts.AppSelectPrompt
 
 // Flags
 
 type addCmdFlags struct {
 	orgGrantWorkspaceID string
+	environmentFlag     string
 }
 
 var addFlags addCmdFlags
@@ -55,11 +56,12 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:    "Install the app to a team",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "app install", Meaning: "Install a production app to a team"},
-			{Command: "app install --team T0123456", Meaning: "Install a production app to a specific team"},
+			{Command: "app install --team T0123456 --environment deployed", Meaning: "Install a production app to a specific team"},
+			{Command: "app install --team T0123456 --environment local", Meaning: "Install a local dev app to a specific team"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			return preRunAddCommand(ctx, clients)
+			return preRunAddCommand(ctx, clients, cmd)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
@@ -72,12 +74,13 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&addFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
+	cmd.Flags().StringVarP(&addFlags.environmentFlag, "environment", "E", "", "environment of app (local, deployed)")
 
 	return cmd
 }
 
 // preRunAddCommand confirms an app is available for installation
-func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error {
+func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
 		return err
@@ -85,38 +88,92 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory) error 
 	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
 		return nil
 	}
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if err != nil {
-		return err
-	}
-	if manifestSource.Equals(config.ManifestSourceRemote) {
-		return slackerror.New(slackerror.ErrAppInstall).
-			WithMessage("Apps cannot be installed due to project configurations").
-			WithRemediation(
-				"Install an app on app settings: %s\nLink an app to this project with %s\nList apps saved with this project using %s",
-				style.LinkText("https://api.slack.com/apps"),
-				style.Commandf("app link", false),
-				style.Commandf("app list", false),
-			).
-			WithDetails(slackerror.ErrorDetails{
-				slackerror.ErrorDetail{
-					Code:    slackerror.ErrProjectConfigManifestSource,
-					Message: "Cannot install apps with manifests sourced from app settings",
-				},
-			})
-	}
+	clients.Config.SetFlags(cmd)
 	return nil
 }
 
 // RunAddCommand executes the workspace install command, prints output, and returns any errors.
 func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (context.Context, types.InstallState, types.App, error) {
 	if selection == nil {
-		selected, err := teamAppSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
-		if err != nil {
-			return ctx, "", types.App{}, err
+		// TODO: Move to the promptIsProduction when the prompt is refactored and tested.
+		// Validate that the --app flag is not an app ID when the --environment flag is set.
+		if types.IsAppID(clients.Config.AppFlag) && addFlags.environmentFlag != "" {
+			return ctx, "", types.App{}, slackerror.New(slackerror.ErrMismatchedFlags).WithRemediation("When '--app <app_id>' is set, please do not set the flag --environment.")
 		}
-		selection = &selected
+
+		// TODO: Move to the promptIsProduction when the prompt is refactored and tested.
+		// Validate that the --environment flag matches the --app flag, when the value is `--app local` or `--app deployed`.
+		if types.IsAppFlagEnvironment(clients.Config.AppFlag) {
+			if addFlags.environmentFlag != "" && addFlags.environmentFlag != clients.Config.AppFlag {
+				return ctx, "", types.App{}, slackerror.New(slackerror.ErrMismatchedFlags).WithRemediation("When '--app local' or '--app deployed' is set, please set the flag --environment to match the --app flag.")
+			}
+
+			if addFlags.environmentFlag == "" {
+				err := clients.Config.Flags.Lookup("environment").Value.Set(clients.Config.AppFlag)
+				if err != nil {
+					return ctx, "", types.App{}, err
+				}
+				clients.Config.Flags.Lookup("environment").Changed = true
+			}
+		}
+
+		// Default to `--environment deployed` when there is no `--environment` flag and `--team <id>` is set.
+		// Skip when `--app <id>` flag is set, because the environment is looked up in the app selector prompt.
+		// TODO(semver:major): This is backwards compatibility for when `install` only supported deployed environments.
+		if !types.IsAppID(clients.Config.AppFlag) && (addFlags.environmentFlag == "" && clients.Config.TeamFlag != "") {
+			err := clients.Config.Flags.Lookup("environment").Value.Set("deployed")
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
+			clients.Config.Flags.Lookup("environment").Changed = true
+
+			clients.IO.PrintInfo(ctx, false, "\n"+style.Sectionf(style.TextSection{
+				Emoji: "warning",
+				Text:  "Warning: Default App Environment",
+				Secondary: []string{
+					"App environment is set to deployed when only the --team flag is provided.",
+					"The next major version will change this behavior.",
+					"When the --team flag is provided, the --environment flag will be required.",
+					"Add the '--environment deployed' to avoid breaking changes.",
+				},
+			}))
+		}
+
+		// When the app flag is an app ID, the app select prompt can resolve the app.
+		// Otherwise, prompt for the app environment and app.
+		if types.IsAppID(clients.Config.AppFlag) {
+			selected, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowAllApps)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
+			selection = &selected
+		} else {
+			// Prompt for deployed or local app environment.
+			isProductionApp, err := promptIsProduction(ctx, clients)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
+
+			// Set the app environment type based on the prompt.
+			var appEnvironmentType prompts.AppEnvironmentType
+			if isProductionApp {
+				appEnvironmentType = prompts.ShowHostedOnly
+			} else {
+				appEnvironmentType = prompts.ShowLocalOnly
+			}
+
+			selected, err := appSelectPromptFunc(ctx, clients, appEnvironmentType, prompts.ShowAllApps)
+			if err != nil {
+				return ctx, "", types.App{}, err
+			}
+			selection = &selected
+
+			if !isProductionApp {
+				selection.App.IsDev = true
+			}
+		}
 	}
+
 	if selection.Auth.TeamDomain == "" {
 		return ctx, "", types.App{}, slackerror.New(slackerror.ErrCredentialsNotFound)
 	}
