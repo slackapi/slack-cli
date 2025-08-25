@@ -38,6 +38,9 @@ const (
 	//  manage their app manifest on app settings (remote manifest).
 	BoltInstall Experiment = "bolt-install"
 
+	// Extension experiment unlocks the extension commands.
+	Extension Experiment = "extension"
+
 	// The ReadOnlyAppCollaborators experiment enables creating and modifying collaborator
 	// permissions via the `collaborator` commands.
 	ReadOnlyAppCollaborators Experiment = "read-only-collaborators"
@@ -51,6 +54,7 @@ const (
 var AllExperiments = []Experiment{
 	BoltFrameworks,
 	BoltInstall,
+	Extension,
 	ReadOnlyAppCollaborators,
 	Placeholder,
 }
