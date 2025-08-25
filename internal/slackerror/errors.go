@@ -177,6 +177,7 @@ const (
 	ErrMissingAppTeamID                              = "missing_app_team_id"
 	ErrMissingChallenge                              = "missing_challenge"
 	ErrMissingExperiment                             = "missing_experiment"
+	ErrMissingExtension                              = "missing_extension"
 	ErrMissingFunctionIdentifier                     = "missing_function_identifier"
 	ErrMissingFlag                                   = "missing_flag"
 	ErrMissingInput                                  = "missing_input"
@@ -1113,6 +1114,11 @@ Otherwise start your app for local development with: %s`,
 	ErrMissingExperiment: {
 		Code:    ErrMissingExperiment,
 		Message: "The feature is behind an experiment not toggled on",
+	},
+
+	ErrMissingExtension: {
+		Code:    ErrMissingExtension,
+		Message: "An extension is missing",
 	},
 
 	ErrMissingFunctionIdentifier: {
