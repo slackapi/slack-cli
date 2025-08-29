@@ -247,7 +247,7 @@ function next_step_message {
 trap {
   Write-Host "`nWe would love to know how things are going. Really. All of it."
   Write-Host "Submit installation issues: https://github.com/slackapi/slack-cli/issues"
-  exit 1
+  exit 7
 }
 
 install_slack_cli $Alias $Version
