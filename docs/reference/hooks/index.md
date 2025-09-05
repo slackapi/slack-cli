@@ -48,10 +48,10 @@ If at any point protocol negotiation fails or does not adhere to the rules of co
 #### Working implementations of protocol negotiation
 
 - In the CLI:
-  - [List of protocols supported by the CLI](https://github.com/slackapi/slack-cli/blob/f9aaee4a4605a03d96b05ad2c47d5f2a4c519aa1/internal/shared/types/hooks.go#L14)
-  - [CLI protocol negotiation](https://github.com/slackapi/slack-cli/blob/f9aaee4a4605a03d96b05ad2c47d5f2a4c519aa1/internal/shared/types/sdk_config.go#L40-L53)
-  - [CLI implementation of v2 protocol 'message-boundaries'](https://github.com/slackapi/slack-cli/blob/f9aaee4a4605a03d96b05ad2c47d5f2a4c519aa1/internal/shared/types/hook_executor_v2.go#L22)
-  - [CLI implementation of the default/v1 protocol](https://github.com/slackapi/slack-cli/blob/f9aaee4a4605a03d96b05ad2c47d5f2a4c519aa1/internal/shared/types/hook_executor_default.go#L13)
+  - [List of protocols supported by the CLI](https://github.com/slackapi/slack-cli/blob/d2349b6328820d2dcb01312abd4d8b3694f5137e/internal/hooks/protocol.go#L21-L22)
+  - [CLI protocol negotiation](https://github.com/slackapi/slack-cli/blob/d2349b6328820d2dcb01312abd4d8b3694f5137e/internal/hooks/sdk_config.go#L56-L68)
+  - [CLI implementation of v2 protocol 'message-boundaries'](https://github.com/slackapi/slack-cli/blob/d2349b6328820d2dcb01312abd4d8b3694f5137e/internal/hooks/hook_executor_v2.go#L41)
+  - [CLI implementation of the default/v1 protocol](https://github.com/slackapi/slack-cli/blob/d2349b6328820d2dcb01312abd4d8b3694f5137e/internal/hooks/hook_executor_default.go#L34)
 - SDK hooks:
   - [deno-slack-sdk’s implementation](https://github.com/slackapi/deno-slack-protocols/blob/main/src/mod.ts)
   - [node-slack-sdk’s implementation](https://github.com/slackapi/node-slack-sdk/blob/main/packages/cli-hooks/src/protocols.js)
