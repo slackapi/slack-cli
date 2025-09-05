@@ -190,7 +190,7 @@ Several parameters are passed to the SDK over `STDIN` as JSON. The format of thi
 | context.team_id          | String; the ID of the team or workspace the locally-running app is installed to.                                                                                                                                                        | Required |
 | context.variables        | Object containing environment variables that may or may not be defined by the application via a `.env` file in the root of the application directory.                                                                                   | Required |
 
-Note: The CLI always provides the `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN` environment variables.
+Note: The CLI provides the `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN` environment variables if the respective scopes are requested.
 
 ##### Output
 
