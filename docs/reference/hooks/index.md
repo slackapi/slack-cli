@@ -364,7 +364,7 @@ Below is a sample JSON blob representing the trigger:
 | ------------ | ------------------- | --------------- | -------------- |
 | ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
 
-## `doctor` (optional) {#doctor}
+### `doctor` (optional) {#doctor}
 
 Used as part of the `doctor` CLI command to check against lower-level App / SDK requirements and ensure that the app developer has everything in place on their system to use the SDK.
 
@@ -402,7 +402,7 @@ The format for the output JSON is as follows:
 | ------------ | ------------------- | --------------- | -------------- |
 | ✅ Supported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
-## `deploy` (optional) {#deploy}
+### `deploy` (optional) {#deploy}
 
 This script is invoked by the `slack deploy` CLI command. It takes as input the app and bot token as environment variables to manage connections and authentication.
 
