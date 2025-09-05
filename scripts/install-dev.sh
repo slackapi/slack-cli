@@ -43,6 +43,11 @@ if [ $(($# - $OPTIND)) -lt 1 ]; then
         fi
 fi
 
+# Emphasize text in a string
+bold() {
+        echo -en "\x1b[1m$1\x1b[0m"
+}
+
 # Print a message then pause for an amount of time
 delay() {
         local options="-e"
@@ -53,7 +58,7 @@ delay() {
         fi
 
         echo $options "$2"
-        sleep $1
+        sleep "$1"
 }
 
 # Replace /home/username/folder/file with ~/folder/file
@@ -72,12 +77,11 @@ version_lt() {
 install_slack_cli() {
         delay 0.6 "🥁 Hello and welcome! Now beginning to install the..."
 
-        delay 0.1 "\x1b[1m      ________ _     _    _____ _    __    _____ _    ________\x1b[0m"
-        delay 0.1 "\x1b[1m     /  ______/ |   / \ /  ____/ | /  /  /  ____/ | /___   __/\x1b[0m"
-        delay 0.1 "\x1b[1m    /______  |  |  / _ \  |   |      /   | |   |  |    |  |   \x1b[0m"
-        delay 0.1 "\x1b[1m     ____ /  |  |___ __ \ |____  |\  \   | |____  |__ _|  |___\x1b[0m"
-        delay 0.1 "\x1b[1m   /_______ /|______/  \_\ ____/_| \__\    _____/______/_____/\x1b[0m"
-        delay 0.2 "\x1b[0m"
+        delay 0.1 "$(bold "      ________ _     _    _____ _    __    _____ _    ________")"
+        delay 0.1 "$(bold "     /  ______/ |   / \ /  ____/ | /  /  /  ____/ | /___   __/")"
+        delay 0.1 "$(bold "    /______  |  |  / _ \  |   |      /   | |   |  |    |  |   ")"
+        delay 0.1 "$(bold "     ____ /  |  |___ __ \ |____  |\  \   | |____  |__ _|  |___")"
+        delay 0.1 "$(bold "   /_______ /|______/  \_\ ____/_| \__\    _____/______/_____/")"
 
         sleep 0.6
 
@@ -206,27 +210,28 @@ next_step_message() {
         if command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
                 echo -e "📺 Success! The Slack CLI (build: $SLACK_CLI_DEV_VERSION) is now installed!"
         else
-                echo -e "📝 To get started, manually add the Slack CLI to your shell path:"
+                echo -e "📚 Required manual setup"
+                echo -e "📝 Run the following commands to add the Slack CLI to your shell path:"
                 case "$(basename "$SHELL")" in
                 bash)
-                        echo -e "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
-                        echo -e "   source ~/.bashrc"
+                        echo -e "$(bold "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc")"
+                        echo -e "$(bold "   source ~/.bashrc")"
                         ;;
                 fish)
-                        echo -e "   mkdir -p \$HOME/.config/fish"
-                        echo -e "   echo 'fish_add_path \$HOME/.local/bin' >> \$HOME/.config/fish/config.fish"
-                        echo -e "   source \$HOME/.config/fish/config.fish"
+                        echo -e "$(bold "   mkdir -p \$HOME/.config/fish")"
+                        echo -e "$(bold "   echo 'fish_add_path \$HOME/.local/bin' >> \$HOME/.config/fish/config.fish")"
+                        echo -e "$(bold "   source \$HOME/.config/fish/config.fish")"
                         ;;
                 zsh)
-                        echo -e "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
-                        echo -e "   source ~/.zshrc"
+                        echo -e "$(bold "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc")"
+                        echo -e "$(bold "   source ~/.zshrc")"
                         ;;
                 *)
-                        echo "   export PATH=\"$local_bin_path:\$PATH\""
+                        echo -e "$(bold "   export PATH=\"$local_bin_path:\$PATH\"")"
                         ;;
                 esac
         fi
-        echo -e "🔐 Next, authorize your CLI in your workspace with \`$SLACK_CLI_NAME login\`"
+        echo -e "🔐 Next, authorize your CLI in your workspace with \`$(bold "$SLACK_CLI_NAME login")\`"
         sleep 0.2
 }
 
