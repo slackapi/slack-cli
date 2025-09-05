@@ -75,12 +75,14 @@ A hook encapsulates an isolated piece of functionality that the SDK provides to 
 
 The following Slack CLI commands invoke hooks:
 
-| Command               | Hook(s)                                                                 |
-| --------------------- | ----------------------------------------------------------------------- |
-| `slack manifest info` | [`get-manifest`](#get-manifest)                                         |
-| `slack deploy`        | [`get-manifest`](#get-manifest), [`build`](#build), [`deploy`](#deploy) |
-| `slack run`           | [`get-manifest`](#get-manifest), [`start`](#start)                      |
-| `slack update`        | [`check-update`](#check-update)                                         |
+| Command                | Hook(s)                                                                 |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `slack deploy`         | [`get-manifest`](#get-manifest), [`build`](#build), [`deploy`](#deploy) |
+| `slack doctor`         | [`check-update`](#check-update), [`doctor`](#doctor)                    |
+| `slack manifest info`  | [`get-manifest`](#get-manifest)                                         |
+| `slack run`            | [`get-manifest`](#get-manifest), [`start`](#start)                      |
+| `slack trigger create` | [`get-trigger`](#get-trigger)                                           |
+| `slack upgrade`        | [`check-update`](#check-update), [`install-update`](#install-update)    |
 
 More details on these hooks can be found in their dedication sections below.
 
