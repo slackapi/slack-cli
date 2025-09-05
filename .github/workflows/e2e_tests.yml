@@ -27,6 +27,7 @@ jobs:
           user-token: ${{ secrets.CIRCLECI_TOKEN }}
           project-slug: slackapi/slack-cli
           branch: ${{ github.event.inputs.branch }}
+          definition-id: ${{ secrets.CIRCLECI_DEFINITION_ID }}
           payload: '{"run_local_build_test_workflow": true}'
       - name: Trigger CircleCI 'e2e' workflow
         if: ${{ github.event.inputs.status == 'true' }}
@@ -35,4 +36,5 @@ jobs:
           user-token: ${{ secrets.CIRCLECI_TOKEN }}
           project-slug: slackapi/slack-cli
           branch: ${{ github.event.inputs.branch }}
+          definition-id: ${{ secrets.CIRCLECI_DEFINITION_ID }}
           payload: '{"run_local_build_test_workflow": false}'
