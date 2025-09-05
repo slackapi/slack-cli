@@ -25,7 +25,7 @@ Runtime installations are left to the developer and depend on the app being buil
 - [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
-<summary>Optional: Use an alias for the Slack CLI binary</summary>
+<summary>Optional: use an alias for the Slack CLI binary</summary>
 
 If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. The Slack CLI won't overwrite the existing one!
 
@@ -44,7 +44,7 @@ curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v
 </details>
 
 <details>
-<summary>Optional: Download a specific version</summary>
+<summary>Optional: download a specific version</summary>
 
 The latest Slack CLI version is installed by default, but a particular version can be pinned using the `-v` flag:
 
@@ -55,7 +55,7 @@ curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v
 </details>
 
 <details>
-<summary>Troubleshooting: Command not found</summary>
+<summary>Troubleshooting: command not found</summary>
 
 After running the Slack CLI installation script the `slack` command might not be available in the current shell. The download has often succeeded but a symbolic link to the command needs to be added to your path.
 

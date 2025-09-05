@@ -29,7 +29,7 @@ Runtime installations are left to the developer and depend on the app being buil
 - [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
-<summary>Optional: Use an alias for the Slack CLI binary</summary>
+<summary>Optional: use an alias for the Slack CLI binary</summary>
 
 If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. The Slack CLI won't overwrite the existing one!
 
@@ -38,7 +38,7 @@ To do this, use the `-Alias` flag as described within the **Optional: Customize 
 </details>
 
 <details>
-<summary>Optional: Customize installation using flags</summary>
+<summary>Optional: customize installation using flags</summary>
 
 There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the automated installer to a local file:
 
