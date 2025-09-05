@@ -102,11 +102,11 @@ This hook should return the CLI-SDK interface in [JSON](#interface-format) forma
 | ------------ | ------------------- | --------------- | -------------- |
 | ✅ Supported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
-### `get-manifest` (required) {#get-manifest}
+### `get-manifest` (optional) {#get-manifest}
 
 This hook allows for the application under development to be created on `api.slack.com/apps` as well as installed to workspaces that the CLI has been authorized to.
 
-Implementing this hook signals to the CLI that the SDK manages the [application manifest](https://docs.slack.dev/app-manifests/). Even if this hook is not present, the CLI should fall back to checking if a `manifest.json` or `manifest.yaml` exists in the project directory and read that file directly.
+Implementing this hook signals to the CLI that the SDK manages the [application manifest](https://docs.slack.dev/app-manifests/).
 
 #### Output
 
