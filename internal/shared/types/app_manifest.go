@@ -75,6 +75,7 @@ type AppFeatures struct {
 	UnfurlDomains              []string                    `json:"unfurl_domains,omitempty" yaml:"unfurl_domains,flow,omitempty"`
 	ManifestShortcutsItems     []ManifestShortcutsItem     `json:"shortcuts,omitempty" yaml:"shortcuts,flow,omitempty"`
 	ManifestSlashCommandsItems []ManifestSlashCommandsItem `json:"slash_commands,omitempty" yaml:"slash_commands,flow,omitempty"`
+	Search                     *Search                     `json:"search,omitempty" yaml:"search,flow,omitempty"`
 }
 
 type AssistantView struct {
@@ -250,6 +251,13 @@ type ManifestSlashCommandsItem struct {
 	Description  string `json:"description" yaml:"description"`
 	ShouldEscape *bool  `json:"should_escape,omitempty" yaml:"should_escape,omitempty"`
 	UsageHint    string `json:"usage_hint,omitempty" yaml:"usage_hint,omitempty"`
+}
+
+// Search contains the search function of an app.
+type Search struct {
+	SearchFunctionCallbackID        string `json:"search_function_callback_id,omitempty" yaml:"search_function_callback_id,omitempty"`
+	SearchFiltersFunctionCallbackID string `json:"search_filters_function_callback_id,omitempty" yaml:"search_filters_function_callback_id,omitempty"`
+	EnableAIAnswers                 *bool  `json:"enable_ai_answers,omitempty" yaml:"enable_ai_answers,omitempty"`
 }
 
 // Workflow defines the structure of a workflow in the app manifest.
