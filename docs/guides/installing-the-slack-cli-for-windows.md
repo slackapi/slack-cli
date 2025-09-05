@@ -5,17 +5,7 @@ slug: /tools/slack-cli/guides/installing-the-slack-cli-for-windows
 
 # Installing the Slack CLI for Windows
 
-The Slack CLI is a set of tools critical to building workflow apps. This is your one-stop shop for those tools.
-
-✨ **If you've not used the Slack CLI before, we recommend following our [Deno Slack SDK getting started guide](/tools/deno-slack-sdk/guides/getting-started) instead**. We'll still get your wagon loaded up before you depart for the trail, but we'll also give you some additional guidance.
-
-⤵️ **If you need to authorize the Slack CLI, [go here](/tools/slack-cli/guides/authorizing-the-slack-cli)**.
-
-:::info[The minimum required Slack CLI version for Enterprise Grid as of September 19th, 2023 is `v2.9.0`.]
-
-If you attempt to log in with an older version, you'll receive a `cli_update_required` error from the Slack API. Run `slack upgrade` to get the latest version.
-
-:::
+The Slack CLI is a useful tool for building Slack apps. This is your one-stop shop for installing this tool.
 
 :::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
 
@@ -26,59 +16,54 @@ If you attempt to log in with an older version, you'll receive a `cli_update_req
 
 **Run the automated installer from Windows PowerShell:**
 
-```zsh
+```pwsh
 irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 | iex
 ```
 
-:::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
+This will install the Slack CLI and configure the command.
 
-:::
+Runtime installations are left to the developer and depend on the app being built. For more information and next steps, review the quickstart guides:
 
-This will install the Slack CLI and all required dependencies, including [Deno](/tools/deno-slack-sdk/guides/installing-deno), the runtime environment for workflow apps. If you have VSCode installed, the [VSCode Deno extension](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno) will be installed.
+- [Bolt for JavaScript](/tools/bolt-js/getting-started)
+- [Bolt for Python](/tools/bolt-python/getting-started)
+- [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
 <summary>Optional: Use an alias for the Slack CLI binary</summary>
 
-If you have another CLI tool in your path called `slack`, you can rename the slack binary to a different name before you add it to your path.
+If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. The Slack CLI won't overwrite the existing one!
 
-To do this, copy the Slack CLI into any folder that is already in your path, or add a new folder to your path by listing the folder you installed the Slack CLI to in your Environment Variables. You may not have access to edit System variables, so you might need to add it to your account's User variables. You can open the Environment Variables dialog by pressing the `Win`+`R` keys to open the Run window, and then entering the following command:
-
-```pwsh
-rundll32.exe sysdm.cpl,EditEnvironmentVariables
-```
-
-You can also use the `-Alias` flag as described within **Optional: customize installation using flags**.
+To do this, use the `-Alias` flag as described within the **Optional: Customize installation using flags** section.
 
 </details>
 
 <details>
-<summary>Optional: customize installation using flags</summary>
+<summary>Optional: Customize installation using flags</summary>
 
-There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the installation script to a local file:
+There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the automated installer to a local file:
 
-```zsh
+```pwsh
 irm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -outfile 'install-windows.ps1'
 ```
 
 The available flags are:
 
-| Flag | What it does | Example |
-| :--  | :--          | :--     |
-| `-Alias` | Installs the Slack CLI as the provided alias | `-Alias slackcli` will create a binary named `slackcli.exe` and add it to your path |
-| `-Version` | Installs a specific version of the Slack CLI | `-Version 2.1.0` installs version `2.1.0` of the Slack CLI |
-| `-SkipGit` | If true, will not attempt to install Git when Git is not present | `-SkipGit $true` |
-| `-SkipDeno` | If true, will not attempt to install Deno when Deno is not present | `-SkipDeno $true` |
+| Flag       | Description                                                      | Example                                                                             |
+| :--------- | :--------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
+| `-Alias`   | Installs the Slack CLI as the provided alias                     | `-Alias slackcli` will create a binary named `slackcli.exe` and add it to your path |
+| `-Version` | Installs a specific version of the Slack CLI                     | `-Version 2.1.0` installs version `2.1.0` of the Slack CLI                          |
+| `-SkipGit` | If true, will not attempt to install Git when Git is not present | `-SkipGit $true` skips installing `git` if Git is not found                         |
 
-You can also see all available flags by passing `-?` to the installation script:
+You can also see all available flags by passing `-?` to the automated installer:
 
-```zsh
+```pwsh
 .\install-windows.ps1 -?
 ```
 
 Here's an example invocation using every flag:
 
-```zsh
-.\install-windows.ps1 -Version 2.1.0 -Alias slackcli -SkipGit $true -SkipDeno $true
+```pwsh
+.\install-windows.ps1 -Version 2.1.0 -Alias slackcli -SkipGit $true
 ```
 
 </details>
@@ -97,83 +82,30 @@ Solution: For the installer to work correctly, your PowerShell session's [langua
 </TabItem>
 <TabItem value="Manual" label="Manual Installation">
 
-Manual installation allows you to omit the Deno installation if you don't need it. Deno is needed if you are creating [workflow apps](https://docs.slack.dev/workflows). If you intend to solely use the CLI for Bolt apps, you do not need Deno. If you forgo the Deno installation, skip to step 3.
+Manual installation allows you to customize certain paths used when installing the Slack CLI. Runtime installations are omitted from these steps but are still required to run an app.
 
-**1\. Download and install [Deno](https://deno.land).** Refer to [Install Deno](/tools/deno-slack-sdk/guides/installing-deno) for more details.
+**1\. Download and install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), a dependency of the** `slack` **CLI.**
 
-**2\. Verify that Deno is installed and in your path.**
+**2\. Download the** `slack` **CLI installer for your environment.**
 
-The minimum version of Deno runtime required is currently version 1.37.0.
+<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.6.1_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
 
-```bash
-$ deno --version
-deno 1.46.2* (release, x86_64-apple-darwin)
-v8 10.*
-typescript 4.*
+**3\. Add the** `slack` **CLI to your path.**
+
+Copy the Slack CLI into any folder that is already in your path, or add a new folder to your path by adding the folder you installed the Slack CLI to in your Environment Variables. You may not have access to edit System variables, so you might need to add it to your account's User variables. You can open the Environment Variables dialog by pressing the `Win`+`R` keys to open the Run window, and then entering the following command:
+
+```pwsh
+rundll32.exe sysdm.cpl,EditEnvironmentVariables
 ```
 
-**3\. Download and install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git), a dependency of the** `slack` **CLI.**
+We recommend using an alias if another `slack` binary exists. To do this, change the alias used at the end of the symbolic link to something else that makes sense.
 
-**4\. Download the** `slack` **CLI installer for your environment.**
+**4\. Verify that** `slack` **is installed and in your path:**
 
-<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.6.0_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
-
-**5\. Add the** `slack` **CLI to your path.**
-
-:::info[Existing `slack` binary in path?]
-
-If you have another CLI tool in your path called `slack`, we recommend renaming our slack binary to a different name before adding it to your path. See the **Automated installation** tab for more details.
-
-:::
-
-**6\. Verify that** `slack` **is installed and in your path:**
-
-```
+```pwsh
 $ slack version
-Using slack v3.6.0
+Using slack v3.6.1
 ```
-
-**7\. Verify that all dependencies have been installed.**
-
-Run the following command:
-
-```
-$ slack doctor
-```
-
-**A few notes about hooks**
-
-If you have upgraded your CLI version but your `deno-slack-hooks` version is less than `v1.3.0`, when running `slack doctor`, you will see the following near the end of the output:
-
-```
-    ✔ Configurations (your project's CLI settings)
-        Project ID: 1a2b3c4d-ef5g-67hi-8j9k1l2m3n4o
-
-    ✘ Runtime (foundations for the application)
-        Error: The `doctor` hook was not found (sdk_hook_not_found)
-        Suggestion: Debug responses from the Slack hooks file (.slack/hooks.json)
-
-    ✔ Dependencies (requisites for development)
-        deno_slack_hooks: 1.2.3 → 1.3.0 (supported version)
-```
-
-In addition, if you attempt to run the `slack run` command without this dependency installed, you will see a similar error in your console:
-
-```
-🚫 The `start` script was not found (sdk_hook_not_found)
-
-💡 Suggestion
-    Hook scripts are defined in one of these Slack hooks files:
-    - slack.json
-    - .slack/hooks.json
-
-    Every app requires a Slack hooks file and you can find a working example at:
-    https://github.com/slack-samples/deno-starter-template/blob/main/.slack/hooks.json
-```
-
-Ensure that `deno-slack-hooks` is installed at the project level and that the version is not less than `v1.3.0`.
-
-**8\. [Install the VSCode extension for Deno](/tools/deno-slack-sdk/guides/installing-deno#vscode) (recommended).**
 
 </TabItem>
 </Tabs>
@@ -188,5 +120,5 @@ iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
 
 The following articles may also be helpful should you run into any issues:
 
-* [Installing PowerShell on Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
-* [How to install and update PowerShell 6](https://www.thomasmaurer.ch/2019/03/how-to-install-and-update-powershell-6/)
+- [Installing PowerShell on Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+- [How to install and update PowerShell 6](https://www.thomasmaurer.ch/2019/03/how-to-install-and-update-powershell-6/)

@@ -166,6 +166,19 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"assistant_view":{"assistant_description":"magic","suggested_prompts":[{"title":"visit the beach","message":"what is glass"}]},"bot_user":{"display_name":"einstein"}}`,
 		},
+		"includes search when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "kubrick",
+				},
+				Search: &Search{
+					SearchFunctionCallbackID:        "movie_search",
+					SearchFiltersFunctionCallbackID: "movie_filters",
+					EnableAIAnswers:                 &truth,
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"kubrick"},"search":{"search_function_callback_id":"movie_search","search_filters_function_callback_id":"movie_filters","enable_ai_answers":true}}`,
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
