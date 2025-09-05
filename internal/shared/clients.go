@@ -38,8 +38,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/tracking"
 	"github.com/spf13/afero"
-	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
 )
 
 // ClientFactory are shared clients and configurations for use across the CLI commands (cmd) and handlers (pkg).
@@ -66,14 +64,6 @@ type ClientFactory struct {
 
 	// CleanupWaitGroup is a group of wait groups shared by all packages and allow functions to cleanup before the process terminates
 	CleanupWaitGroup sync.WaitGroup
-
-	// Cobra are a group of Cobra functions shared by all packages and enables tests & mocking
-	Cobra struct {
-		// GenMarkdownTree defaults to `doc.GenMarkdownTree(...)` and can be mocked to test specific use-cases
-		// TODO - This can be moved to cmd/docs/docs.go when `NewCommand` returns an instance of that can store `GenMarkdownTree` as
-		//        a private member. The current thinking is that `NewCommand` would return a `SlackCommand` instead of `CobraCommand`
-		GenMarkdownTree func(cmd *cobra.Command, dir string) error
-	}
 }
 
 const sdkSlackDevDomainFlag = "sdk-slack-dev-domain"
@@ -101,11 +91,6 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	clients.AppClient = clients.defaultAppClientFunc
 	clients.Auth = clients.defaultAuthFunc
 	clients.Browser = clients.defaultBrowserFunc
-
-	// Command-specific dependencies
-	// TODO - These are methods that belong to specific commands and should be moved under each command
-	//        when we replace NewCommand with NewSlackCommand that can store member variables.
-	clients.Cobra.GenMarkdownTree = doc.GenMarkdownTree
 
 	// TODO: Temporary hack to get around circular dependency in internal/api/client.go since that imports version
 	// Follows pattern demonstrated by the GitHub CLI here https://github.com/cli/cli/blob/5a46c1cab601a3394caa8de85adb14f909b811e9/pkg/cmd/factory/default.go#L29

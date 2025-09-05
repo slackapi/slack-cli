@@ -20,10 +20,7 @@ param(
   [string]$Version = "dev",
 
   [Parameter(HelpMessage = "Skip Git installation")]
-  [bool]$SkipGit = $false,
-
-  [Parameter(HelpMessage = "Skip Deno installation")]
-  [bool]$SkipDeno = $false
+  [bool]$SkipGit = $false
 )
 
 # As this script is for internal usage only, we should set SLACK_DISABLE_TELEMETRY environment variable
@@ -216,99 +213,6 @@ function install_git {
   }
 }
 
-function install_deno {
-  param(
-    [Parameter(HelpMessage = "Skip Deno installation")]
-    [bool]$SkipDeno = $false
-  )
-  if ($SkipDeno) {
-    Write-Host "`nSkipping the Deno installation!"
-  }
-  else {
-    Write-Host "`nChecking for a compatible Deno installation..."
-    $cli_info = Invoke-RestMethod -Uri "https://api.slack.com/slackcli/metadata.json"
-    $MIN_DENO_VERSION = $cli_info.'deno-runtime'.releases.version
-    try {
-      $deno_version_latest = ""
-      $deno_version_local = ""
-      try {
-        $githubApiUrl = "https://api.github.com/repos/denoland/deno/releases/latest"
-        $response = Invoke-RestMethod -Uri $githubApiUrl -Headers @{Accept = "application/vnd.github.v3+json" }
-        $deno_version_latest = $response.tag_name
-        Write-Host "Searching for the latest released Deno version... Found: $deno_version_latest"
-      }
-      catch {
-        Write-Host "Failed to gather the latest released Deno version!"
-      }
-
-      $deno_version_output = deno --version 2>&1
-      if ($LASTEXITCODE -eq 0) {
-        $deno_version_local = ($deno_version_output -split ' ')[1]
-        Write-Host "Comparing the currently installed Deno version... Found: v$deno_version_local"
-      }
-      else {
-        Write-Error "Deno is not installed! Please install Deno to at least v$MIN_DENO_VERSION and try again."
-        throw
-      }
-
-      if ($deno_version_latest -eq "v$deno_version_local") {
-        Write-Host "You already have the latest Deno version!"
-        return
-      }
-
-      Write-Host "Contrasting the minimum supported Deno version... Found: v$MIN_DENO_VERSION"
-      if ([System.Version]$deno_version_local -lt [System.Version]$MIN_DENO_VERSION) {
-        Write-Host "Upgrading Deno to the latest version..."
-
-        iex ((New-Object System.Net.WebClient).DownloadString('https://deno.land/install.ps1'))
-
-        try {
-          deno --version | Out-Null
-          Write-Host "Nice! Your Deno version has been updated and is ready!"
-        }
-        catch {
-          Write-Error "Deno is not installed, please install deno manually to at least $MIN_DENO_VERSION and re-run this script."
-          throw
-        }
-      }
-      else {
-        Write-Host "Your Deno version is compatible with the Slack CLI!"
-      }
-    }
-    catch [System.Management.Automation.CommandNotFoundException] {
-      Write-Host "Comparing the currently installed Deno version... Found: None!"
-      Write-Host "Installing Deno now..."
-
-      iex ((New-Object System.Net.WebClient).DownloadString('https://deno.land/install.ps1'))
-
-      try {
-        deno | Out-Null
-        Write-Host "Your Deno version is compatible with the Slack CLI!"
-      }
-      catch {
-        Write-Error "Deno is not installed, please install Deno manually to at least $MIN_DENO_VERSION and re-run this script."
-        throw
-      }
-    }
-  }
-}
-
-function install_deno_vscode_extension {
-  param(
-    [Parameter(HelpMessage = "Skip Deno installation")]
-    [bool]$SkipDeno = $false
-  )
-  if ($SkipDeno) {
-    Write-Host "Skipping the Deno Visual Studio Code extension installation!"
-  }
-  else {
-    if ($env:TERM_PROGRAM -eq 'vscode') {
-      Write-Host "Installing the Deno extension to Visual Studio Code..."
-      code --install-extension denoland.vscode-deno
-    }
-  }
-}
-
 function terms_of_service {
   param(
     [Parameter(HelpMessage = "Alias of Slack CLI")]
@@ -339,7 +243,7 @@ function next_step_message {
     [string]$Alias
   )
   $confirmed_alias = check_slack_binary_exist $Alias $Version $false
-  if ( (Get-Command "deno" -ErrorAction SilentlyContinue) -and (Get-Command $confirmed_alias -ErrorAction SilentlyContinue) ) {
+  if (Get-Command $confirmed_alias -ErrorAction SilentlyContinue) {
     try {
       $confirmed_alias | Out-Null
       Write-Host "`nYou're all set! Relaunch your terminal to ensure changes take effect."
@@ -360,13 +264,8 @@ trap {
 }
 
 install_slack_cli $Alias $Version
-[Console]::Error.WriteLine("`n`e[1mWarning: Starting on September 1, 2025, Deno will no longer be installed with this script!`e[0m")
-[Console]::Error.WriteLine("Warning: Apps built with Deno should install Deno separately:")
-[Console]::Error.WriteLine("Warning: https://docs.deno.com/runtime/getting_started/installation/")
-install_deno $SkipDeno
 Write-Host "`nAdding developer tooling for an enhanced experience..."
 install_git $SkipGit
-install_deno_vscode_extension $SkipDeno
 Write-Host "Sweet! You're all set to start developing!"
 terms_of_service $Alias
 feedback_message $Alias
