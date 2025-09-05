@@ -278,7 +278,7 @@ The format for the output JSON is as follows:
 
 | Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
 | ------------ | ------------------- | --------------- | -------------- |
-| ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
+| ✅ Supported | ✅ Supported        | ✅ Supported    | ❌ Unsupported |
 
 ### `install-update` (optional) {#install-update}
 
@@ -330,7 +330,7 @@ The format for the output JSON is as follows:
 
 | Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
 | ------------ | ------------------- | --------------- | -------------- |
-| ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
+| ✅ Supported | ❌ Unsupported      | ❌ Unsupported  | ❌ Unsupported |
 
 ### `get-trigger` (optional) {#get-trigger}
 
@@ -362,7 +362,7 @@ Below is a sample JSON blob representing the trigger:
 
 | Deno         | Bolt for JavaScript | Bolt for Python | Bolt for Java  |
 | ------------ | ------------------- | --------------- | -------------- |
-| ✅ Supported | ✅ Supported        | ❌ Unsupported  | ❌ Unsupported |
+| ✅ Supported | ❌ Unsupported      | ❌ Unsupported  | ❌ Unsupported |
 
 ### `doctor` (optional) {#doctor}
 
