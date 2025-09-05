@@ -25,7 +25,7 @@ Runtime installations are left to the developer and depend on the app being buil
 - [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
-<summary>Optional: Use an alias for the Slack CLI binary</summary>
+<summary>Optional: use an alias for the Slack CLI binary</summary>
 
 If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. The Slack CLI won't overwrite the existing one!
 
@@ -44,7 +44,7 @@ curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v
 </details>
 
 <details>
-<summary>Optional: Download a specific version</summary>
+<summary>Optional: download a specific version</summary>
 
 The latest Slack CLI version is installed by default, but a particular version can be pinned using the `-v` flag:
 
@@ -55,21 +55,39 @@ curl -fsSL https://downloads.slack-edge.com/slack-cli/install.sh | bash -s -- -v
 </details>
 
 <details>
-<summary>Troubleshooting: Failed to create a symbolic link</summary>
+<summary>Troubleshooting: command not found</summary>
 
-The automated installer attempts to add the Slack CLI to a known directory in the path: `/usr/local/bin`.
+After running the Slack CLI installation script the `slack` command might not be available in the current shell. The download has often succeeded but a symbolic link to the command needs to be added to your path.
 
-Some machines protect this directory and elevated access might be needed for updated permissions. We do not recommend using `sudo` with the automated installer since unexpected side effects might place downloads in the wrong spot.
-
-If root access is available, create a symbolic link to the downloaded Slack CLI with the following command:
+Determine which shell you're using then update your shell profile with the following commands:
 
 ```sh
-sudo ln -s "$HOME/.slack/bin/slack" "/usr/local/bin/slack"
+basename "$SHELL"
 ```
 
-We recommend using an alias if another `slack` binary exists. To do this, change the alias used at the end of the symbolic link to something else that makes sense.
+- `bash`:
 
-For users without root permissions, please follow the **Manual Installation** steps.
+  ```sh
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+  source ~/.bashrc
+  ```
+
+- `fish`:
+
+  ```sh
+  mkdir -p $HOME/.config/fish
+  echo 'fish_add_path $HOME/.local/bin' >> $HOME/.config/fish/config.fish
+  source $HOME/.config/fish/config.fish
+  ```
+
+- `zsh`:
+
+  ```sh
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+  source ~/.zshrc
+  ```
+
+Once the profile is sourced, or a new shell is opened, the `slack` command should be available.
 
 </details>
 </TabItem>
@@ -97,7 +115,7 @@ In the following example we download the Slack CLI to the `.slack` directory and
 ln -s "$HOME/.slack/bin/slack" "$HOME/.local/bin/slack"
 ```
 
-We recommend using an alias if another `slack` binary exists. To do this, change the alias used at the end of the symbolic link to something else that makes sense.
+We recommend using an alias if another `slack` binary exists. To do this, change the alias used at the end of the symbolic link to something else that makes sense, or rename the moved download to something special.
 
 **4\. Verify that** `slack` **is installed and in your path.**
 
