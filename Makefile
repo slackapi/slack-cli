@@ -80,12 +80,14 @@ tag:
 		echo "Error: Release version should not begin with a version prefix."; \
 		exit 1; \
 	fi
-	sed -i -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_arm64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_arm64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
-	sed -i -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
-	sed -i -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_linux_64-bit\.tar\.gz#slack_cli_$(RELEASE_VERSION)_linux_64-bit.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
-	sed -i -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_windows_64-bit\.zip#slack_cli_$(RELEASE_VERSION)_windows_64-bit.zip#" docs/guides/installing-the-slack-cli-for-windows.md
-	sed -i -E "s/Using slack v[0-9]+\.[0-9]+\.[0-9]+/Using slack v$(RELEASE_VERSION)/" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
-	sed -i -E "s/Using slack v[0-9]+\.[0-9]+\.[0-9]+/Using slack v$(RELEASE_VERSION)/" docs/guides/installing-the-slack-cli-for-windows.md
+	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_arm64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_arm64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
+	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
+	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_linux_64-bit\.tar\.gz#slack_cli_$(RELEASE_VERSION)_linux_64-bit.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
+	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_windows_64-bit\.zip#slack_cli_$(RELEASE_VERSION)_windows_64-bit.zip#" docs/guides/installing-the-slack-cli-for-windows.md
+	sed -i.bak -E "s/Using slack v[0-9]+\.[0-9]+\.[0-9]+/Using slack v$(RELEASE_VERSION)/" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
+	sed -i.bak -E "s/Using slack v[0-9]+\.[0-9]+\.[0-9]+/Using slack v$(RELEASE_VERSION)/" docs/guides/installing-the-slack-cli-for-windows.md
+	rm docs/guides/installing-the-slack-cli-for-mac-and-linux.md.bak
+	rm docs/guides/installing-the-slack-cli-for-windows.md.bak
 	git add docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	git add docs/guides/installing-the-slack-cli-for-windows.md
 	git commit -m "chore: release slack-cli v$(RELEASE_VERSION)"
