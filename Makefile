@@ -93,6 +93,7 @@ tag:
 	@printf "$(FONT_BOLD)Removing Backups$(FONT_RESET)\n"
 	rm docs/guides/installing-the-slack-cli-for-mac-and-linux.md.bak
 	rm docs/guides/installing-the-slack-cli-for-windows.md.bak
+	@printf "$(FONT_BOLD)Git Add$(FONT_RESET)\n"
 	git add docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	git add docs/guides/installing-the-slack-cli-for-windows.md
 	@printf "$(FONT_BOLD)Git Commit$(FONT_RESET)\n"
