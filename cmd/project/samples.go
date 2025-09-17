@@ -58,7 +58,7 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVarP(&samplesTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&samplesGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
 	cmd.Flags().StringVar(&samplesLanguageFlag, "language", "", "runtime for the app framework\n  ex: \"deno\", \"node\", \"python\"")
-	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "print recommended samples")
+	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "prints samples without interactivity")
 
 	return cmd
 }
