@@ -29,7 +29,7 @@ Runtime installations are left to the developer and depend on the app being buil
 - [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
-<summary>Optional: Use an alias for the Slack CLI binary</summary>
+<summary>Optional: use an alias for the Slack CLI binary</summary>
 
 If you have another CLI tool in your path called `slack`, you can rename this `slack` binary to a different name to avoid errors during installation. The Slack CLI won't overwrite the existing one!
 
@@ -38,7 +38,7 @@ To do this, use the `-Alias` flag as described within the **Optional: Customize 
 </details>
 
 <details>
-<summary>Optional: Customize installation using flags</summary>
+<summary>Optional: customize installation using flags</summary>
 
 There are several flags available to customize the installation. Since flags cannot be passed to remote scripts, you must first download the automated installer to a local file:
 
@@ -88,7 +88,7 @@ Manual installation allows you to customize certain paths used when installing t
 
 **2\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.6.1_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
+<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.7.0_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
 
 **3\. Add the** `slack` **CLI to your path.**
 
@@ -104,7 +104,7 @@ We recommend using an alias if another `slack` binary exists. To do this, change
 
 ```pwsh
 $ slack version
-Using slack v3.6.1
+Using slack v3.7.0
 ```
 
 </TabItem>
