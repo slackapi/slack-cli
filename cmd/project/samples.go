@@ -137,26 +137,15 @@ func listSampleSelection(ctx context.Context, clients *shared.ClientFactory, sam
 			message,
 		},
 	}))
-	for _, sample := range templateRepos {
+	samples := append(
+		templateRepos,
+		exampleRepos...,
+	)
+	for _, sample := range samples {
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
 			Emoji: "hammer_and_wrench",
 			Text: fmt.Sprintf(
-				"%s | %s | %d %s",
-				style.Bold(sample.Name),
-				sample.Description,
-				sample.StargazersCount,
-				style.Pluralize("star", "stars", sample.StargazersCount),
-			),
-			Secondary: []string{
-				fmt.Sprintf("https://github.com/%s", sample.FullName),
-			},
-		}))
-	}
-	for _, sample := range exampleRepos {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
-			Emoji: "robot_face",
-			Text: fmt.Sprintf(
-				"%s | %s | %d %s",
+				" %s | %s | %d %s",
 				style.Bold(sample.Name),
 				sample.Description,
 				sample.StargazersCount,
