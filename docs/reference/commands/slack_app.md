@@ -2,7 +2,7 @@
 
 Install, uninstall, and list teams with the app installed
 
-## Synopsis
+## Description
 
 Install, uninstall, and list teams with the app installed
 
@@ -10,24 +10,13 @@ Install, uninstall, and list teams with the app installed
 slack app [flags]
 ```
 
-## Examples
-
-```
-$ slack app install    # Install a production app to a team
-$ slack app link       # Link an existing app to the project
-$ slack app list       # List all teams with the app installed
-$ slack app settings   # Open app settings in a web browser
-$ slack app uninstall  # Uninstall an app from a team
-$ slack app delete     # Delete an app and app info from a team
-```
-
-## Options
+## Flags
 
 ```
   -h, --help   help for app
 ```
 
-## Options inherited from parent commands
+## Global flags
 
 ```
   -a, --app string           use a specific app ID or environment
@@ -41,7 +30,18 @@ $ slack app delete     # Delete an app and app info from a team
   -v, --verbose              print debug logging and additional info
 ```
 
-## SEE ALSO
+## Examples
+
+```
+$ slack app install    # Install a production app to a team
+$ slack app link       # Link an existing app to the project
+$ slack app list       # List all teams with the app installed
+$ slack app settings   # Open app settings in a web browser
+$ slack app uninstall  # Uninstall an app from a team
+$ slack app delete     # Delete an app and app info from a team
+```
+
+## See also
 
 * [slack](slack)	 - Slack command-line tool
 * [slack app delete](slack_app_delete)	 - Delete the app

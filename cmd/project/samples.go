@@ -17,6 +17,7 @@ package project
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -63,7 +64,7 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flag("template").Hidden = true
 
 	cmd.Flags().StringVar(&samplesLanguageFlag, "language", "", "runtime for the app framework\n  ex: \"deno\", \"node\", \"python\"")
-	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "print recommended samples")
+	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "prints samples without interactivity")
 
 	return cmd
 }
@@ -121,31 +122,47 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 func listSampleSelection(ctx context.Context, clients *shared.ClientFactory, sampleRepos []create.GithubRepo) error {
 	filteredRepos := filterRepos(sampleRepos, samplesLanguageFlag)
 	sortedRepos := sortRepos(filteredRepos)
+	templateRepos := []create.GithubRepo{}
+	exampleRepos := []create.GithubRepo{}
+	for _, repo := range sortedRepos {
+		if strings.Contains(repo.FullName, "template") {
+			templateRepos = append(templateRepos, repo)
+		} else {
+			exampleRepos = append(exampleRepos, repo)
+		}
+	}
 	message := ""
 	if samplesLanguageFlag != "" {
-		message = fmt.Sprintf("Listing %d \"%s\" project samples", len(sortedRepos), samplesLanguageFlag)
+		message = fmt.Sprintf(
+			"Listing %d \"%s\" templates and project samples",
+			len(filteredRepos),
+			samplesLanguageFlag,
+		)
 	} else {
-		message = fmt.Sprintf("Listing %d project samples", len(sortedRepos))
+		message = fmt.Sprintf("Listing %d template and project samples", len(filteredRepos))
 	}
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "house_buildings",
+		Emoji: "toolbox",
 		Text:  "Samples",
 		Secondary: []string{
 			message,
 		},
 	}))
-	emojis := []string{
-		"microscope",
-		"test_tube",
-		"petri_dish",
-		"dna",
-	}
-	for ii, sample := range sortedRepos {
+	samples := append(
+		templateRepos,
+		exampleRepos...,
+	)
+	for _, sample := range samples {
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
-			Emoji: emojis[ii%len(emojis)],
-			Text:  sample.Name,
-			Secondary: []string{
+			Emoji: "hammer_and_wrench",
+			Text: fmt.Sprintf(
+				" %s | %s | %d %s",
+				style.Bold(sample.Name),
 				sample.Description,
+				sample.StargazersCount,
+				style.Pluralize("star", "stars", sample.StargazersCount),
+			),
+			Secondary: []string{
 				fmt.Sprintf("https://github.com/%s", sample.FullName),
 			},
 		}))
