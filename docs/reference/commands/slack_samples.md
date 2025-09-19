@@ -13,11 +13,10 @@ slack samples [name] [flags]
 ## Flags
 
 ```
-  -b, --branch string     name of git branch to checkout
   -h, --help              help for samples
       --language string   runtime for the app framework
                             ex: "deno", "node", "python"
-  -t, --template string   template URL for your app
+      --list              prints samples without interactivity
 ```
 
 ## Global flags
@@ -37,7 +36,8 @@ slack samples [name] [flags]
 ## Examples
 
 ```
-$ slack samples my-project  # Select a sample app to create
+$ slack samples --list --language node  # List Bolt for JavaScript samples
+$ slack samples my-project              # Select a sample app to create
 ```
 
 ## See also
