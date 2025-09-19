@@ -74,7 +74,7 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 
 	// DEPRECATED(semver:major): Prefer the create command when repository details are known
 	if cmd.Flag("branch").Changed || cmd.Flag("template").Changed {
-		clients.IO.PrintWarning(ctx, "DEPRECATED: The '--branch' and '--template' flags are deprecated for the 'samples' command; use the 'create' command instead")
+		clients.IO.PrintWarning(ctx, "DEPRECATED: The `--branch` and `--template` flags are deprecated for the `samples` command; use the `create` command instead")
 	}
 
 	sampler := api.NewHTTPClient(api.HTTPClientOptions{
