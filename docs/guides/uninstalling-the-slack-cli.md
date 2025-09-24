@@ -6,7 +6,7 @@ slug: /tools/slack-cli/guides/uninstalling-the-slack-cli
 
 All good things come to an end! If you need to uninstall the Slack CLI, run the commands below. Note that these instructions will uninstall the Slack CLI, but not its dependencies. Follow [these instructions](https://docs.deno.com/runtime/manual/tools/script_installer#uninstall) to uninstall Deno.
 
-✨  **Just need to uninstall an app?** Refer to [uninstall an app from your workspace](/tools/deno-slack-sdk/guides/creating-an-app#uninstall-app).
+✨  **Just need to uninstall an app?** Refer to [Removing an app](/tools/deno-slack-sdk/guides/removing-an-app).
 
 
 <Tabs groupId="operating-systems">
