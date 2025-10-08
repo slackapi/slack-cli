@@ -1,5 +1,6 @@
 name: Update dependencies
 on:
+  pull_request:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
@@ -38,6 +39,7 @@ jobs:
   golang:
     name: Bump the Golang version
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     permissions:
       contents: none # Permissions are set with an application token
     steps:
