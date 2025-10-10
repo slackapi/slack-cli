@@ -1,6 +1,6 @@
 module github.com/slackapi/slack-cli
 
-go 1.25.1
+go 1.25.2
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/mod v0.28.0
-	golang.org/x/sys v0.36.0
+	golang.org/x/sys v0.37.0
 	golang.org/x/text v0.29.0
 	gopkg.in/yaml.v2 v2.4.0
 )
