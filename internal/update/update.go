@@ -223,7 +223,7 @@ func (u *UpdateNotification) isCI() bool {
 
 // isIgnoredCommand returns true when the process is in the list of commands.
 func (u *UpdateNotification) isIgnoredCommand() bool {
-	ignoredCommands := []string{"version"}
+	ignoredCommands := []string{"_fingerprint", "version"}
 	osStr := os.Args[0:]
 	if len(osStr) < 2 {
 		return false
