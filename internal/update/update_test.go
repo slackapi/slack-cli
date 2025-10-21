@@ -122,15 +122,15 @@ func Test_Update_isIgnoredCommand(t *testing.T) {
 		},
 		"fingerprint command": {
 			command:  "_fingerprint",
-			expected: false,
+			expected: true,
 		},
 		"version command": {
 			command:  "version",
-			expected: false,
+			expected: true,
 		},
 		"auth command": {
 			command:  "auth",
-			expected: true,
+			expected: false,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
