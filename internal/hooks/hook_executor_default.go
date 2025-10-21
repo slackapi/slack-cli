@@ -17,7 +17,9 @@ package hooks
 import (
 	"bytes"
 	"context"
+	"os/exec"
 	"strings"
+	"syscall"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -72,6 +74,19 @@ func (e *HookExecutorDefaultProtocol) Execute(ctx context.Context, opts HookExec
 
 	response := strings.TrimSpace(buffout.String())
 	if err != nil {
+		// Signal interrupts with an error code when input might be expected
+		if opts.Stdin != nil {
+			if ee, ok := err.(*exec.ExitError); ok {
+				if ws, ok := ee.Sys().(syscall.WaitStatus); ok {
+					if ws.Signaled() {
+						switch ws.Signal() {
+						case syscall.SIGINT, syscall.SIGTERM:
+							return "", slackerror.New(slackerror.ErrProcessInterrupted)
+						}
+					}
+				}
+			}
+		}
 		// Include stderr outputs in error details if these aren't streamed
 		details := slackerror.ErrorDetails{}
 		if opts.Stderr == nil {

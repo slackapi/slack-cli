@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/docgen"
 	"github.com/slackapi/slack-cli/cmd/doctor"
 	"github.com/slackapi/slack-cli/cmd/env"
+	"github.com/slackapi/slack-cli/cmd/extension"
 	"github.com/slackapi/slack-cli/cmd/externalauth"
 	"github.com/slackapi/slack-cli/cmd/feedback"
 	"github.com/slackapi/slack-cli/cmd/fingerprint"
@@ -162,6 +163,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		datastore.NewCommand(clients),
 		docgen.NewCommand(clients),
 		env.NewCommand(clients),
+		extension.NewCommand(clients),
 		externalauth.NewCommand(clients),
 		fingerprint.NewCommand(clients),
 		function.NewCommand(clients),
