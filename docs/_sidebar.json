@@ -21,6 +21,7 @@
             "tools/slack-cli/guides/troubleshooting-slack-cli-errors",
             "tools/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli",
             "tools/slack-cli/guides/deploying-with-the-slack-cli-and-github-actions",
+            "tools/slack-cli/guides/removing-an-app",
             "tools/slack-cli/guides/uninstalling-the-slack-cli"
         ]
     },
