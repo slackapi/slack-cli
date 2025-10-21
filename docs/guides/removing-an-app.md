@@ -39,7 +39,7 @@ Your app's related workflows, functions, and datastores will also be deleted. Th
 
 :::
 
-To delete an app using the CLI, use the `slack delete` command:
+To delete an app using the CLI, use the [`delete`](/tools/slack-cli/reference/commands/slack_app_delete/) command:
 
 ```bash
 slack delete -a A123ABC456 -t T123ABC456
