@@ -179,6 +179,17 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"bot_user":{"display_name":"kubrick"},"search":{"search_function_callback_id":"movie_search","search_filters_function_callback_id":"movie_filters","enable_ai_answers":true}}`,
 		},
+		"includes Work Objects settings when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "business_bot",
+				},
+				RichPreviews: &RichPreviews{
+					EntityTypes: []string{"slack#/entities/file"},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/file"]}}`,
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
