@@ -16,6 +16,7 @@ package update
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -106,6 +107,42 @@ func Test_Update_HasUpdate(t *testing.T) {
 
 			// Test
 			require.Equal(t, tt.expectedReturnValue, updateNotification.HasUpdate())
+		})
+	}
+}
+
+func Test_Update_isIgnoredCommand(t *testing.T) {
+	for name, tt := range map[string]struct {
+		command  string
+		expected bool
+	}{
+		"No command": {
+			command:  "",
+			expected: false,
+		},
+		"fingerprint command": {
+			command:  "_fingerprint",
+			expected: true,
+		},
+		"version command": {
+			command:  "version",
+			expected: true,
+		},
+		"auth command": {
+			command:  "auth",
+			expected: false,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if tt.command != "" {
+				os.Args = []string{"placeholder", tt.command}
+			} else {
+				os.Args = []string{"placeholder"}
+			}
+			// Test
+			updateNotification := &UpdateNotification{}
+			actual := updateNotification.isIgnoredCommand()
+			require.Equal(t, tt.expected, actual)
 		})
 	}
 }
