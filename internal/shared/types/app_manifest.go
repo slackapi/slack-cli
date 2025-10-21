@@ -81,7 +81,6 @@ type AppFeatures struct {
 
 type RichPreviews struct {
 	EntityTypes []string `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
-	IsActive    bool     `json:"is_active,omitempty" yaml:"is_active,flow,omitempty"`
 }
 
 type AssistantView struct {
