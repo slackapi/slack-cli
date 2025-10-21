@@ -76,6 +76,12 @@ type AppFeatures struct {
 	ManifestShortcutsItems     []ManifestShortcutsItem     `json:"shortcuts,omitempty" yaml:"shortcuts,flow,omitempty"`
 	ManifestSlashCommandsItems []ManifestSlashCommandsItem `json:"slash_commands,omitempty" yaml:"slash_commands,flow,omitempty"`
 	Search                     *Search                     `json:"search,omitempty" yaml:"search,flow,omitempty"`
+	RichPreviews               *RichPreviews               `json:"rich_previews,omitempty" yaml:"rich_previews,flow,omitempty"`
+}
+
+type RichPreviews struct {
+	EntityTypes []string `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
+	IsActive    bool     `json:"is_active,omitempty" yaml:"is_active,flow,omitempty"`
 }
 
 type AssistantView struct {
