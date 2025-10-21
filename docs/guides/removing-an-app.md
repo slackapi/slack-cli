@@ -13,7 +13,7 @@ All good things must come to an end. You can `uninstall` your app if you need to
 
 Removing an app from a workspace doesn't have to be a permanent decision. Sometimes uninstalling the app to remove it's active presence in channels is sufficient! This option has the added benefit of reinstallation at a later time without recreating the entire app.
 
-To uninstall an app using the CLI, use the `slack uninstall` command. Then, choose the workspace you want to remove the app from:
+To uninstall an app using the CLI, use the [`uninstall`](/tools/slack-cli/reference/commands/slack_app_uninstall/) command. Then, choose the workspace you want to remove the app from:
 
 ```bash
 slack uninstall -a A123ABC456 -t T123ABC456
