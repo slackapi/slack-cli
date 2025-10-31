@@ -300,7 +300,7 @@ func Test_Config_GetExperiments(t *testing.T) {
 func setupMockPrintDebug() (*bytes.Buffer, func(context.Context, string, ...interface{})) {
 	mockOutput := &bytes.Buffer{}
 	mockPrintDebug := func(ctx context.Context, format string, a ...interface{}) {
-		mockOutput.WriteString(fmt.Sprintf(format, a))
+		fmt.Fprintf(mockOutput, format, a...)
 	}
 	return mockOutput, mockPrintDebug
 }
