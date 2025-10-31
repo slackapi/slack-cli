@@ -15,9 +15,7 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -25,92 +23,121 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestClient_AddRemoveSetAccess(t *testing.T) {
-	tests := []struct {
-		name         string
-		expectedPath string
-		resultJSON   string
-		testFunc     func(t *testing.T, c *Client) error
-		want         string
-		wantErr      bool
-		errMessage   string
+func TestClient_FunctionDistributionAddUsers(t *testing.T) {
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name:       "Add user success",
-			resultJSON: `{"ok": true, "distribution_type": "named_entities", "user_ids": ["user1", "user2"]}`,
-			testFunc: func(t *testing.T, c *Client) error {
-				ctx := slackcontext.MockContext(t.Context())
-				return c.FunctionDistributionAddUsers(ctx, "valid_function", "app", "user1,user2")
-			},
+		"Add user success": {
+			httpResponseJSON: `{"ok": true, "distribution_type": "named_entities", "user_ids": ["user1", "user2"]}`,
 		},
-		{
-			name:       "Add user: validation error",
-			resultJSON: `{"ok": false, "error":"user_not_found"}`,
-			testFunc: func(t *testing.T, c *Client) error {
-				ctx := slackcontext.MockContext(t.Context())
-				return c.FunctionDistributionAddUsers(ctx, "valid_function", "app", "user1,user2")
-			},
-			wantErr:    true,
-			errMessage: "user_not_found",
-		},
-		{
-			name:       "Remove user success",
-			resultJSON: `{"ok": true, "distribution_type": "named_entities", "user_ids": []}`,
-			testFunc: func(t *testing.T, c *Client) error {
-				ctx := slackcontext.MockContext(t.Context())
-				return c.FunctionDistributionRemoveUsers(ctx, "valid_function", "app", "user1,user2")
-			},
-		},
-		{
-			name:       "Remove user: distribution type not named_entitied",
-			resultJSON: `{"ok":false,"error":"invalid_distribution_type"}`,
-			testFunc: func(t *testing.T, c *Client) error {
-				ctx := slackcontext.MockContext(t.Context())
-				return c.FunctionDistributionRemoveUsers(ctx, "valid_function", "app", "user1,user2")
-			},
-			wantErr:    true,
-			errMessage: "invalid_distribution_type",
-		},
-		{
-			name:       "Set access type success",
-			resultJSON: `{"ok": true, "distribution_type": "everyone", "user_ids": []}`,
-			testFunc: func(t *testing.T, c *Client) error {
-				ctx := slackcontext.MockContext(t.Context())
-				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.PermissionEveryone, "")
-				return err
-			},
-		},
-		{
-			name:       "Set access type: access type not recognized by backend",
-			resultJSON: `{"ok":false,"error":"invalid_arguments"}`,
-			testFunc: func(t *testing.T, c *Client) error {
-				ctx := slackcontext.MockContext(t.Context())
-				_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.PermissionEveryone, "")
-				return err
-			},
-			wantErr:    true,
-			errMessage: "invalid_arguments",
+		"Add user: validation error": {
+			httpResponseJSON: `{"ok": false, "error":"user_not_found"}`,
+			wantErr:          true,
+			errMessage:       "user_not_found",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// prepare
-			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				result := tt.resultJSON
-				_, err := fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(handlerFunc))
-			defer ts.Close()
-			c := NewClient(&http.Client{}, ts.URL, nil)
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: functionDistributionsPermissionsAddMethod,
+				Response:       tt.httpResponseJSON,
+			})
+			defer teardown()
 
-			// execute
-			err := tt.testFunc(t, c)
+			err := c.FunctionDistributionAddUsers(ctx, "valid_function", "app", "user1,user2")
 
-			// check
 			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				require.Contains(
+					t,
+					err.Error(),
+					tt.errMessage,
+					"test error contains invalid message",
+				)
+			}
+		})
+	}
+}
+
+func TestClient_FunctionDistributionRemoveUsers(t *testing.T) {
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
+	}{
+		"Remove user success": {
+			httpResponseJSON: `{"ok": true, "distribution_type": "named_entities", "user_ids": []}`,
+		},
+		"Remove user: distribution type not named_entities": {
+			httpResponseJSON: `{"ok":false,"error":"invalid_distribution_type"}`,
+			wantErr:          true,
+			errMessage:       "invalid_distribution_type",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: functionDistributionsPermissionsRemoveMethod,
+				Response:       tt.httpResponseJSON,
+			})
+			defer teardown()
+
+			err := c.FunctionDistributionRemoveUsers(ctx, "valid_function", "app", "user1,user2")
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				require.Contains(
+					t,
+					err.Error(),
+					tt.errMessage,
+					"test error contains invalid message",
+				)
+			}
+		})
+	}
+}
+
+func TestClient_FunctionDistributionSet(t *testing.T) {
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
+	}{
+		"Set access type success": {
+			httpResponseJSON: `{"ok": true, "distribution_type": "everyone", "user_ids": []}`,
+		},
+		"Set access type: access type not recognized by backend": {
+			httpResponseJSON: `{"ok":false,"error":"invalid_arguments"}`,
+			wantErr:          true,
+			errMessage:       "invalid_arguments",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: functionDistributionsPermissionsSetMethod,
+				Response:       tt.httpResponseJSON,
+			})
+			defer teardown()
+
+			_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.PermissionEveryone, "")
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {
