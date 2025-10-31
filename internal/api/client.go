@@ -366,7 +366,7 @@ func (c *Client) SetHost(host string) {
 func shouldSkipDebugLog(endpoint string) bool {
 	// A list of API endpoints of which the requests/response won't be written into slack-debug-[date].log
 	var skipDebuglogEndpoints = []string{
-		"apps.activities.list",
+		// "apps.activities.list",
 		"apps.hosted.exchangeAuthTicket",
 		"apps.connections.open",
 	}
