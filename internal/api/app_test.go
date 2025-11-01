@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -163,103 +164,78 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 		appID    string
 		manifest types.AppManifest
 	}
-	tests := []struct {
-		name        string
-		handlerFunc func(w http.ResponseWriter, r *http.Request)
-		args        args
-		want        ValidateAppManifestResult
-		wantErr     bool
-		wantErrVal  error
+	tests := map[string]struct {
+		httpResponseJSON string
+		args             args
+		want             ValidateAppManifestResult
+		wantErr          bool
+		wantErrVal       error
 	}{
-		{
-			name: "handles an ok error ",
-			handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-				result := `{"ok": true, "errors":[]}`
-				_, err := fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			},
-			want: ValidateAppManifestResult{nil},
+		"handles an ok error ": {
+			httpResponseJSON: `{"ok": true, "errors":[]}`,
+			want:             ValidateAppManifestResult{nil},
 		},
-		{
-			name: "returns an error and error details on invalid_manifest",
-			handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-				result := fmt.Sprintf(
-					`{"ok":false,"error":"%s","slack_cli_error_description":"%s","errors":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
-					errInvalidManifestCode,
-					errInvalidManifestDesc,
-					errInvalidManifestDetailIllegalBotScopes.Code,
-					errInvalidManifestDetailIllegalBotScopes.Message,
-					errInvalidManifestDetailIllegalBotScopes.Pointer,
-				)
-				_, err := fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			},
+		"returns an error and error details on invalid_manifest": {
+			httpResponseJSON: fmt.Sprintf(
+				`{"ok":false,"error":"%s","slack_cli_error_description":"%s","errors":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
+				errInvalidManifestCode,
+				errInvalidManifestDesc,
+				errInvalidManifestDetailIllegalBotScopes.Code,
+				errInvalidManifestDetailIllegalBotScopes.Message,
+				errInvalidManifestDetailIllegalBotScopes.Pointer,
+			),
 			want:       ValidateAppManifestResult{nil},
 			wantErr:    true,
 			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, errInvalidManifestDesc, errorDetails, appManifestValidateMethod),
 		},
-		{
-			name: "returns warning with breaking_change",
-			handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-				result := fmt.Sprintf(
-					`{"ok":true,"errors":[],"warnings":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
-					breakingChangeWarning.Code,
-					breakingChangeWarning.Message,
-					breakingChangeWarning.Pointer,
-				)
-				_, err := fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			},
+		"returns warning with breaking_change": {
+			httpResponseJSON: fmt.Sprintf(
+				`{"ok":true,"errors":[],"warnings":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
+				breakingChangeWarning.Code,
+				breakingChangeWarning.Message,
+				breakingChangeWarning.Pointer,
+			),
 			want: ValidateAppManifestResult{warnings},
 		},
 		// This shouldn't happen right now, but adding a test to make sure that if we start sending back warnings AND
 		// errors nothing breaks and nothing unexpected happens - we should still return JUST the error and no warning
-		{
-			name: "returns error on invalid_manifest and warnings with breaking_change",
-			handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-				result := fmt.Sprintf(
-					`{"ok":true,"error":"%s","slack_cli_error_description":"%s","errors":[{"code":"%s","message":"%s","pointer":"%s"}],"warnings":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
-					errInvalidManifestCode,
-					errInvalidManifestDesc,
-					errInvalidManifestDetailIllegalBotScopes.Code,
-					errInvalidManifestDetailIllegalBotScopes.Message,
-					errInvalidManifestDetailIllegalBotScopes.Pointer,
-					breakingChangeWarning.Code,
-					breakingChangeWarning.Message,
-					breakingChangeWarning.Pointer,
-				)
-				_, err := fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			},
+		"returns error on invalid_manifest and warnings with breaking_change": {
+			httpResponseJSON: fmt.Sprintf(
+				`{"ok":true,"error":"%s","slack_cli_error_description":"%s","errors":[{"code":"%s","message":"%s","pointer":"%s"}],"warnings":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
+				errInvalidManifestCode,
+				errInvalidManifestDesc,
+				errInvalidManifestDetailIllegalBotScopes.Code,
+				errInvalidManifestDetailIllegalBotScopes.Message,
+				errInvalidManifestDetailIllegalBotScopes.Pointer,
+				breakingChangeWarning.Code,
+				breakingChangeWarning.Message,
+				breakingChangeWarning.Pointer,
+			),
 			want:       ValidateAppManifestResult{nil},
 			wantErr:    true,
 			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, errInvalidManifestDesc, errorDetails, appManifestValidateMethod),
 		},
-		{
-			name: "returns an error invalid_manifest when error detail is due to connector not being installed",
-			handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-				result := fmt.Sprintf(
-					`{"ok":false,"error":"%s","errors":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
-					errInvalidManifestCode,
-					errInvalidManifestDetailConnectorNotInstalled.Code,
-					errInvalidManifestDetailConnectorNotInstalled.Message,
-					errInvalidManifestDetailConnectorNotInstalled.Pointer,
-				)
-				_, err := fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			},
+		"returns an error invalid_manifest when error detail is due to connector not being installed": {
+			httpResponseJSON: fmt.Sprintf(
+				`{"ok":false,"error":"%s","errors":[{"code":"%s","message":"%s","pointer":"%s"}]}`,
+				errInvalidManifestCode,
+				errInvalidManifestDetailConnectorNotInstalled.Code,
+				errInvalidManifestDetailConnectorNotInstalled.Message,
+				errInvalidManifestDetailConnectorNotInstalled.Pointer,
+			),
 			want:       ValidateAppManifestResult{nil},
 			wantErr:    true,
 			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, "", errorDetails2, appManifestValidateMethod),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-
-			var ts = httptest.NewServer(http.HandlerFunc(tt.handlerFunc))
-			defer ts.Close()
-			c := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appManifestValidateMethod,
+				Response:       tt.httpResponseJSON,
+			})
+			defer teardown()
 
 			got, err := c.ValidateAppManifest(ctx, tt.args.token, tt.args.manifest, tt.args.appID)
 			if tt.wantErr {
@@ -297,53 +273,30 @@ func TestClient_GetPresignedS3PostParams_CommonErrors(t *testing.T) {
 }
 
 func TestClient_CertifiedAppInstall(t *testing.T) {
-	tests := []struct {
-		name       string
-		resultJSON string
-		wantErr    bool
-		err        string
+	tests := map[string]struct {
+		mockAppID        string
+		httpResponseJSON string
 	}{
-		{
-			name:       "OK result",
-			resultJSON: `{"ok":true}`,
+		"OK result": {
+			mockAppID:        "A123",
+			httpResponseJSON: `{"ok":true}`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod:  appCertifiedInstallMethod,
+				ExpectedRequest: fmt.Sprintf(`{"app_id":"%s"}`, tt.mockAppID),
+				Response:        tt.httpResponseJSON,
+			})
+			defer teardown()
 
-			// prepare
-			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				require.Contains(t, r.URL.Path, appCertifiedInstallMethod)
-				expectedJSON := `{"app_id":"A123"}`
-				payload, err := io.ReadAll(r.Body)
-				require.NoError(t, err)
-				require.Equal(t, expectedJSON, string(payload))
-				result := tt.resultJSON
-				_, err = fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(handlerFunc))
-			defer ts.Close()
-			c := NewClient(&http.Client{}, ts.URL, nil)
-
-			mockAppID := "A123"
 			// execute
-			_, err := c.CertifiedAppInstall(ctx, "token", mockAppID)
+			_, err := c.CertifiedAppInstall(ctx, "token", tt.mockAppID)
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				require.Contains(
-					t,
-					err.Error(),
-					tt.err,
-					"test error contains invalid message",
-				)
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -361,45 +314,34 @@ func TestClient_InstallApp(t *testing.T) {
 		return ctx, ioMock
 	}
 
-	tests := []struct {
-		name       string
-		resultJSON string
-		wantErr    bool
-		err        string
+	tests := map[string]struct {
+		mockAppID        string
+		httpResponseJSON string
+		expectedErr      *slackerror.Error
 	}{
-		{
-			name:       "OK result",
-			resultJSON: `{"ok":true}`,
-		}, {
-			name:       "Error result",
-			resultJSON: `{"ok":false,"error":"invalid_app_id"}`,
-			wantErr:    true,
-			err:        "invalid_app_id",
+		"OK result": {
+			mockAppID:        "A123",
+			httpResponseJSON: `{"ok":true}`,
+		},
+		"Error result": {
+			mockAppID:        "A123",
+			httpResponseJSON: `{"ok":false,"error":"invalid_app_id"}`,
+			expectedErr:      slackerror.New(slackerror.ErrInvalidAppID),
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx, ioMock := setup(t)
-
-			// prepare
-			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				require.Contains(t, r.URL.Path, appDeveloperInstallMethod)
-				expectedJSON := `{"app_id":"A123"}`
-				payload, err := io.ReadAll(r.Body)
-				require.NoError(t, err)
-				require.Equal(t, expectedJSON, string(payload))
-				result := tt.resultJSON
-				_, err = fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(handlerFunc))
-			defer ts.Close()
-			c := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod:  appDeveloperInstallMethod,
+				ExpectedRequest: fmt.Sprintf(`{"app_id":"%s"}`, tt.mockAppID),
+				Response:        tt.httpResponseJSON,
+			})
+			defer teardown()
 
 			mockApp := types.App{
-				AppID:      "A123",
+				AppID:      tt.mockAppID,
 				TeamID:     "T123",
 				TeamDomain: "mock",
 			}
@@ -407,65 +349,46 @@ func TestClient_InstallApp(t *testing.T) {
 			_, _, err := c.DeveloperAppInstall(ctx, ioMock, "token", mockApp, []string{}, []string{}, "", false)
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
-				return
-			}
-			if tt.wantErr {
-				require.Contains(
-					t,
-					err.Error(),
-					tt.err,
-					"test error contains invalid message",
-				)
+			if tt.expectedErr != nil {
+				assert.Equal(t, slackerror.ToSlackError(err).Code, tt.expectedErr.Code)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
 }
 
 func TestClient_UninstallApp(t *testing.T) {
-	tests := []struct {
-		name       string
-		resultJSON string
-		wantErr    bool
-		errMessage string
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name:       "OK result",
-			resultJSON: `{"ok":true}`,
+		"OK result": {
+			httpResponseJSON: `{"ok":true}`,
 		},
-		{
-			name:       "Error result",
-			resultJSON: `{"ok":false,"error":"invalid_app_id"}`,
-			wantErr:    true,
-			errMessage: "invalid_app_id",
+		"Error result": {
+			httpResponseJSON: `{"ok":false,"error":"invalid_app_id"}`,
+			wantErr:          true,
+			errMessage:       "invalid_app_id",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-
-			// prepare
-			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				require.Contains(t, r.URL.Path, appDeveloperUninstallMethod)
-				expectedJSON := `{"app_id":"A123","team_id":"T123"}`
-				payload, err := io.ReadAll(r.Body)
-				require.NoError(t, err)
-				require.Equal(t, expectedJSON, string(payload))
-				result := tt.resultJSON
-				_, err = fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(handlerFunc))
-			defer ts.Close()
-			c := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod:  appDeveloperUninstallMethod,
+				ExpectedRequest: `{"app_id":"A123","team_id":"T123"}`,
+				Response:        tt.httpResponseJSON,
+			})
+			defer teardown()
 
 			// execute
 			err := c.UninstallApp(ctx, "token", "A123", "T123")
 
 			// check
 			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {
@@ -481,48 +404,37 @@ func TestClient_UninstallApp(t *testing.T) {
 }
 
 func TestClient_DeleteApp(t *testing.T) {
-	tests := []struct {
-		name       string
-		resultJSON string
-		wantErr    bool
-		errMessage string
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name:       "OK result",
-			resultJSON: `{"ok":true}`,
+		"OK result": {
+			httpResponseJSON: `{"ok":true}`,
 		},
-		{
-			name:       "Error result",
-			resultJSON: `{"ok":false,"error":"invalid_app_id"}`,
-			wantErr:    true,
-			errMessage: "invalid_app_id",
+		"Error result": {
+			httpResponseJSON: `{"ok":false,"error":"invalid_app_id"}`,
+			wantErr:          true,
+			errMessage:       "invalid_app_id",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// prepare
-			handlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				require.Contains(t, r.URL.Path, appDeleteMethod)
-				expectedJSON := `{"app_id":"A123"}`
-				payload, err := io.ReadAll(r.Body)
-				require.NoError(t, err)
-				require.Equal(t, expectedJSON, string(payload))
-				result := tt.resultJSON
-				_, err = fmt.Fprintln(w, result)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(handlerFunc))
-			defer ts.Close()
-			c := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod:  appDeleteMethod,
+				ExpectedRequest: `{"app_id":"A123"}`,
+				Response:        tt.httpResponseJSON,
+			})
+			defer teardown()
 
 			// execute
 			err := c.DeleteApp(ctx, "token", "A123")
 
 			// check
 			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {

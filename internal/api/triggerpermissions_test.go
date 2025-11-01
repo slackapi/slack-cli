@@ -26,77 +26,69 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 	var fakeTriggerID = "Ft123"
 	var fakeToken = "xoxp-123"
 
-	tests := []struct {
-		name            string
-		resultJSON      string
-		expectedRequest string
-		permissionType  types.Permission
-		users           string
-		channels        string
-		workspaces      string
-		organizations   string
-		wantErr         bool
-		errMessage      string
+	tests := map[string]struct {
+		httpResponseJSON string
+		expectedRequest  string
+		permissionType   types.Permission
+		users            string
+		channels         string
+		workspaces       string
+		organizations    string
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name:            "Set to everyone",
-			permissionType:  types.PermissionEveryone,
-			users:           "",
-			expectedRequest: `permission_type=everyone&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true, "permission_type": "everyone"}`,
+		"Set to everyone": {
+			permissionType:   types.PermissionEveryone,
+			users:            "",
+			expectedRequest:  `permission_type=everyone&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true, "permission_type": "everyone"}`,
 		},
-		{
-			name:            "Set to collaborators",
-			permissionType:  types.PermissionAppCollaborators,
-			users:           "U0001",
-			expectedRequest: `permission_type=app_collaborators&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
+		"Set to collaborators": {
+			permissionType:   types.PermissionAppCollaborators,
+			users:            "U0001",
+			expectedRequest:  `permission_type=app_collaborators&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
 		},
-		{
-			name:            "Set to named_entities (users)",
-			permissionType:  types.PermissionNamedEntities,
-			users:           "U0001,U0002",
-			expectedRequest: `permission_type=named_entities&token=xoxp-123&trigger_id=Ft123&user_ids=U0001%2CU0002`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
+		"Set to named_entities (users)": {
+			permissionType:   types.PermissionNamedEntities,
+			users:            "U0001,U0002",
+			expectedRequest:  `permission_type=named_entities&token=xoxp-123&trigger_id=Ft123&user_ids=U0001%2CU0002`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
-		{
-			name:            "Set to named_entities (channels)",
-			permissionType:  types.PermissionNamedEntities,
-			channels:        "C0001,C0002",
-			expectedRequest: `channel_ids=C0001%2CC0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
+		"Set to named_entities (channels)": {
+			permissionType:   types.PermissionNamedEntities,
+			channels:         "C0001,C0002",
+			expectedRequest:  `channel_ids=C0001%2CC0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
-		{
-			name:            "Set to named_entities (workspaces)",
-			permissionType:  types.PermissionNamedEntities,
-			workspaces:      "T0001,T0002",
-			expectedRequest: `permission_type=named_entities&team_ids=T0001%2CT0002&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "teams_ids": [ "T0001", "T0002" ]}`,
+		"Set to named_entities (workspaces)": {
+			permissionType:   types.PermissionNamedEntities,
+			workspaces:       "T0001,T0002",
+			expectedRequest:  `permission_type=named_entities&team_ids=T0001%2CT0002&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "teams_ids": [ "T0001", "T0002" ]}`,
 		},
-		{
-			name:            "Set to named_entities (organizations)",
-			permissionType:  types.PermissionNamedEntities,
-			organizations:   "E0001,E0002",
-			expectedRequest: `org_ids=E0001%2CE0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
+		"Set to named_entities (organizations)": {
+			permissionType:   types.PermissionNamedEntities,
+			organizations:    "E0001,E0002",
+			expectedRequest:  `org_ids=E0001%2CE0002&permission_type=named_entities&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
 		},
-		{
-			name:       "Propagates errors",
-			resultJSON: `{"ok": false, "error":"invalid_scopes"}`,
-			wantErr:    true,
-			errMessage: "invalid_scopes",
+		"Propagates errors": {
+			httpResponseJSON: `{"ok": false, "error":"invalid_scopes"}`,
+			wantErr:          true,
+			errMessage:       "invalid_scopes",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsSetMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJSON,
+				Response:        tt.httpResponseJSON,
 			})
 			defer teardown()
 
@@ -106,7 +98,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -122,7 +114,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -138,7 +130,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -154,7 +146,7 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -180,58 +172,52 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 	var fakeTriggerID = "Ft123"
 	var fakeToken = "xoxp-123"
 
-	tests := []struct {
-		name            string
-		resultJSON      string
-		expectedRequest string
-		users           string
-		channels        string
-		workspaces      string
-		organizations   string
-		wantErr         bool
-		errMessage      string
+	tests := map[string]struct {
+		httpResponseJSON string
+		expectedRequest  string
+		users            string
+		channels         string
+		workspaces       string
+		organizations    string
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name:            "Add user successfully",
-			users:           "U0001",
-			expectedRequest: `token=xoxp-123&trigger_id=Ft123&user_ids=U0001`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
+		"Add user successfully": {
+			users:            "U0001",
+			expectedRequest:  `token=xoxp-123&trigger_id=Ft123&user_ids=U0001`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
-		{
-			name:            "Add channel successfully",
-			channels:        "C0001",
-			expectedRequest: `channel_ids=C0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
+		"Add channel successfully": {
+			channels:         "C0001",
+			expectedRequest:  `channel_ids=C0001&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
-		{
-			name:            "Add workspace successfully",
-			workspaces:      "T0001",
-			expectedRequest: `team_ids=T0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
+		"Add workspace successfully": {
+			workspaces:       "T0001",
+			expectedRequest:  `team_ids=T0001&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
 		},
-		{
-			name:            "Add organization successfully",
-			organizations:   "E0001",
-			expectedRequest: `org_ids=E0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
+		"Add organization successfully": {
+			organizations:    "E0001",
+			expectedRequest:  `org_ids=E0001&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
 		},
-		{
-			name:       "Propagates errors",
-			resultJSON: `{"ok": false, "error":"user_not_found"}`,
-			wantErr:    true,
-			errMessage: "user_not_found",
+		"Propagates errors": {
+			httpResponseJSON: `{"ok": false, "error":"user_not_found"}`,
+			wantErr:          true,
+			errMessage:       "user_not_found",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsAddMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJSON,
+				Response:        tt.httpResponseJSON,
 			})
 			defer teardown()
 
@@ -240,7 +226,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.users, "users")
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -255,7 +241,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.channels, "channels")
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -270,7 +256,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -285,7 +271,7 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.organizations, "organizations")
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -311,58 +297,52 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 	var fakeTriggerID = "Ft123"
 	var fakeToken = "xoxp-123"
 
-	tests := []struct {
-		name            string
-		resultJSON      string
-		expectedRequest string
-		users           string
-		channels        string
-		workspaces      string
-		organizations   string
-		wantErr         bool
-		errMessage      string
+	tests := map[string]struct {
+		httpResponseJSON string
+		expectedRequest  string
+		users            string
+		channels         string
+		workspaces       string
+		organizations    string
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name:            "Remove user successfully",
-			users:           "U0001",
-			expectedRequest: `token=xoxp-123&trigger_id=Ft123&user_ids=U0001`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0002" ]}`,
+		"Remove user successfully": {
+			users:            "U0001",
+			expectedRequest:  `token=xoxp-123&trigger_id=Ft123&user_ids=U0001`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0002" ]}`,
 		},
-		{
-			name:            "Remove channel successfully",
-			channels:        "C0001",
-			expectedRequest: `channel_ids=C0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0002" ]}`,
+		"Remove channel successfully": {
+			channels:         "C0001",
+			expectedRequest:  `channel_ids=C0001&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0002" ]}`,
 		},
-		{
-			name:            "Remove workspace successfully",
-			workspaces:      "T0001",
-			expectedRequest: `team_ids=T0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0002" ]}`,
+		"Remove workspace successfully": {
+			workspaces:       "T0001",
+			expectedRequest:  `team_ids=T0001&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0002" ]}`,
 		},
-		{
-			name:            "Remove organization successfully",
-			organizations:   "E0001",
-			expectedRequest: `org_ids=E0001&token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:      `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0002" ]}`,
+		"Remove organization successfully": {
+			organizations:    "E0001",
+			expectedRequest:  `org_ids=E0001&token=xoxp-123&trigger_id=Ft123`,
+			httpResponseJSON: `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0002" ]}`,
 		},
-		{
-			name:       "Propagates errors",
-			resultJSON: `{"ok": false, "error":"user_not_found"}`,
-			wantErr:    true,
-			errMessage: "user_not_found",
+		"Propagates errors": {
+			httpResponseJSON: `{"ok": false, "error":"user_not_found"}`,
+			wantErr:          true,
+			errMessage:       "user_not_found",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsRemoveMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJSON,
+				Response:        tt.httpResponseJSON,
 			})
 			defer teardown()
 
@@ -372,7 +352,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -388,7 +368,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -404,7 +384,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -420,7 +400,7 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -445,9 +425,8 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 	var fakeTriggerID = "Ft123"
 	var fakeToken = "xoxp-123"
 
-	tests := []struct {
-		name                   string
-		resultJSON             string
+	tests := map[string]struct {
+		httpResponseJSON       string
 		expectedRequest        string
 		expectedPermissionType types.Permission
 		expectedUsers          []string
@@ -457,66 +436,59 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 		wantErr                bool
 		errMessage             string
 	}{
-		{
-			name:                   "Access is everyone",
+		"Access is everyone": {
 			expectedPermissionType: types.PermissionEveryone,
 			expectedUsers:          []string(nil),
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:             `{"ok": true, "permission_type": "everyone"}`,
+			httpResponseJSON:       `{"ok": true, "permission_type": "everyone"}`,
 		},
-		{
-			name:                   "Access is collaborators",
+		"Access is collaborators": {
 			expectedPermissionType: types.PermissionAppCollaborators,
 			expectedUsers:          []string{"U0001"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:             `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
+			httpResponseJSON:       `{"ok": true, "permission_type": "app_collaborators", "user_ids": [ "U0001" ]}`,
 		},
-		{
-			name:                   "Set to named_entities (users)",
+		"Set to named_entities (users)": {
 			expectedPermissionType: types.PermissionNamedEntities,
 			expectedUsers:          []string{"U0001", "U0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:             `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
+			httpResponseJSON:       `{"ok": true,"permission_type": "named_entities", "user_ids": [ "U0001", "U0002" ]}`,
 		},
-		{
-			name:                   "Set to named_entities (channels)",
+		"Set to named_entities (channels)": {
 			expectedPermissionType: types.PermissionNamedEntities,
 			expectedChannels:       []string{"C0001", "C0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:             `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
+			httpResponseJSON:       `{"ok": true,"permission_type": "named_entities", "channel_ids": [ "C0001", "C0002" ]}`,
 		},
-		{
-			name:                   "Set to named_entities (workspaces)",
+		"Set to named_entities (workspaces)": {
 			expectedPermissionType: types.PermissionNamedEntities,
 			expectedWorkspaces:     []string{"T0001", "T0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:             `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
+			httpResponseJSON:       `{"ok": true,"permission_type": "named_entities", "team_ids": [ "T0001", "T0002" ]}`,
 		},
-		{
-			name:                   "Set to named_entities (organizations)",
+		"Set to named_entities (organizations)": {
 			expectedPermissionType: types.PermissionNamedEntities,
 			expectedOrganizations:  []string{"E0001", "E0002"},
 			expectedRequest:        `token=xoxp-123&trigger_id=Ft123`,
-			resultJSON:             `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
+			httpResponseJSON:       `{"ok": true,"permission_type": "named_entities", "org_ids": [ "E0001", "E0002" ]}`,
 		},
-		{
-			name:          "Propagates errors",
-			resultJSON:    `{"ok": false, "error":"invalid_scopes"}`,
-			wantErr:       true,
-			errMessage:    "invalid_scopes",
-			expectedUsers: []string{},
+		"Propagates errors": {
+			httpResponseJSON: `{"ok": false, "error":"invalid_scopes"}`,
+			wantErr:          true,
+			errMessage:       "invalid_scopes",
+			expectedUsers:    []string{},
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsListMethod,
 				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.resultJSON,
+				Response:        tt.httpResponseJSON,
 			})
 			defer teardown()
 
@@ -528,7 +500,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -546,7 +518,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -564,7 +536,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {
@@ -582,7 +554,7 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 
 				// check
 				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", tt.name, err, tt.wantErr)
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
 					return
 				}
 				if tt.wantErr {

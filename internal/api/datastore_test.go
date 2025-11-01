@@ -15,9 +15,6 @@
 package api
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -30,19 +27,15 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 	type args struct {
 		request types.AppDatastorePut
 	}
-	type testHandler struct {
-		handlerFunc func(w http.ResponseWriter, r *http.Request)
-	}
-	tests := []struct {
-		name        string
-		args        args
-		testHandler testHandler
-		want        types.AppDatastorePutResult
-		wantErr     bool
-		errMessage  string
+	tests := map[string]struct {
+		args             args
+		httpResponseJSON string
+		statusCode       int
+		want             types.AppDatastorePutResult
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name: "success",
+		"success": {
 			args: args{
 				request: types.AppDatastorePut{
 					Datastore: "my_datastore",
@@ -52,12 +45,7 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true, "datastore": "my_datastore", "item": {"my_item": "my_value"}}`)
-					require.NoError(t, err)
-				},
-			},
+			httpResponseJSON: `{"ok": true, "datastore": "my_datastore", "item": {"my_item": "my_value"}}`,
 			want: types.AppDatastorePutResult{
 				Datastore: "my_datastore",
 				Item: map[string]interface{}{
@@ -65,8 +53,7 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "http_error",
+		"http_error": {
 			args: args{
 				request: types.AppDatastorePut{
 					Datastore: "my_datastore",
@@ -76,16 +63,11 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(500)
-				},
-			},
+			statusCode: 500,
 			wantErr:    true,
 			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
-		{
-			name: "response_unmarshal_error",
+		"response_unmarshal_error": {
 			args: args{
 				request: types.AppDatastorePut{
 					Datastore: "my_datastore",
@@ -95,17 +77,11 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: slackerror.ErrHTTPResponseInvalid,
+			httpResponseJSON: `{"ok": true`,
+			wantErr:          true,
+			errMessage:       slackerror.ErrHTTPResponseInvalid,
 		},
-		{
-			name: "api_error",
+		"api_error": {
 			args: args{
 				request: types.AppDatastorePut{
 					Datastore: "my_datastore",
@@ -115,23 +91,21 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok":false,"error":"datastore_error","errors":[{"code":"server_error","message":"Datastore error","pointer":"/datastores"}]}`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: "datastore_error",
+			httpResponseJSON: `{"ok":false,"error":"datastore_error","errors":[{"code":"server_error","message":"Datastore error","pointer":"/datastores"}]}`,
+			wantErr:          true,
+			errMessage:       "datastore_error",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastorePut(ctx, "shhh", tt.args.request)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastorePutMethod,
+				Response:       tt.httpResponseJSON,
+				StatusCode:     tt.statusCode,
+			})
+			defer teardown()
+			got, err := c.AppsDatastorePut(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastorePut() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -153,19 +127,15 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 	type args struct {
 		request types.AppDatastoreUpdate
 	}
-	type testHandler struct {
-		handlerFunc func(w http.ResponseWriter, r *http.Request)
-	}
-	tests := []struct {
-		name        string
-		args        args
-		testHandler testHandler
-		want        types.AppDatastoreUpdateResult
-		wantErr     bool
-		errMessage  string
+	tests := map[string]struct {
+		args             args
+		httpResponseJSON string
+		statusCode       int
+		want             types.AppDatastoreUpdateResult
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name: "success",
+		"success": {
 			args: args{
 				request: types.AppDatastoreUpdate{
 					Datastore: "my_datastore",
@@ -175,12 +145,7 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true, "datastore": "my_datastore", "item": {"my_item": "my_value"}}`)
-					require.NoError(t, err)
-				},
-			},
+			httpResponseJSON: `{"ok": true, "datastore": "my_datastore", "item": {"my_item": "my_value"}}`,
 			want: types.AppDatastoreUpdateResult{
 				Datastore: "my_datastore",
 				Item: map[string]interface{}{
@@ -188,8 +153,7 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "http_error",
+		"http_error": {
 			args: args{
 				request: types.AppDatastoreUpdate{
 					Datastore: "my_datastore",
@@ -199,16 +163,11 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(500)
-				},
-			},
+			statusCode: 500,
 			wantErr:    true,
 			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
-		{
-			name: "response_unmarshal_error",
+		"response_unmarshal_error": {
 			args: args{
 				request: types.AppDatastoreUpdate{
 					Datastore: "my_datastore",
@@ -218,17 +177,11 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: slackerror.ErrHTTPResponseInvalid,
+			httpResponseJSON: `{"ok": true`,
+			wantErr:          true,
+			errMessage:       slackerror.ErrHTTPResponseInvalid,
 		},
-		{
-			name: "api_error",
+		"api_error": {
 			args: args{
 				request: types.AppDatastoreUpdate{
 					Datastore: "my_datastore",
@@ -238,23 +191,21 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 					},
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok":false,"error":"datastore_error","errors":[{"code":"server_error","message":"Datastore error","pointer":"/datastores"}]}`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: "datastore_error",
+			httpResponseJSON: `{"ok":false,"error":"datastore_error","errors":[{"code":"server_error","message":"Datastore error","pointer":"/datastores"}]}`,
+			wantErr:          true,
+			errMessage:       "datastore_error",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreUpdate(ctx, "shhh", tt.args.request)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreUpdateMethod,
+				Response:       tt.httpResponseJSON,
+				StatusCode:     tt.statusCode,
+			})
+			defer teardown()
+			got, err := c.AppsDatastoreUpdate(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreUpdate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -276,31 +227,22 @@ func TestClient_AppsDatastoreQuery(t *testing.T) {
 	type args struct {
 		query types.AppDatastoreQuery
 	}
-	type testHandler struct {
-		handlerFunc func(w http.ResponseWriter, r *http.Request)
-	}
-	tests := []struct {
-		name        string
-		args        args
-		testHandler testHandler
-		want        types.AppDatastoreQueryResult
-		wantErr     bool
-		errMessage  string
+	tests := map[string]struct {
+		args             args
+		httpResponseJSON string
+		statusCode       int
+		want             types.AppDatastoreQueryResult
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name: "success",
+		"success": {
 			args: args{
 				query: types.AppDatastoreQuery{
 					Datastore: "my_datastore",
 					App:       "A1",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true, "datastore": "my_datastore", "items": [{"my_item": "my_value"},{"my_item2": "my_value2"}]}`)
-					require.NoError(t, err)
-				},
-			},
+			httpResponseJSON: `{"ok": true, "datastore": "my_datastore", "items": [{"my_item": "my_value"},{"my_item2": "my_value2"}]}`,
 			want: types.AppDatastoreQueryResult{
 				Datastore: "my_datastore",
 				Items: []map[string]interface{}{
@@ -309,63 +251,49 @@ func TestClient_AppsDatastoreQuery(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "http_error",
+		"http_error": {
 			args: args{
 				query: types.AppDatastoreQuery{
 					Datastore: "my_datastore",
 					App:       "A1",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(500)
-				},
-			},
+			statusCode: 500,
 			wantErr:    true,
 			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
-		{
-			name: "response_unmarshal_error",
+		"response_unmarshal_error": {
 			args: args{
 				query: types.AppDatastoreQuery{
 					Datastore: "my_datastore",
 					App:       "A1",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: slackerror.ErrHTTPResponseInvalid,
+			httpResponseJSON: `{"ok": true`,
+			wantErr:          true,
+			errMessage:       slackerror.ErrHTTPResponseInvalid,
 		},
-		{
-			name: "api_error",
+		"api_error": {
 			args: args{
 				query: types.AppDatastoreQuery{
 					Datastore: "my_datastore",
 					App:       "A1",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": false}`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr: true,
+			httpResponseJSON: `{"ok": false}`,
+			wantErr:          true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreQuery(ctx, "shhh", tt.args.query)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreQueryMethod,
+				Response:       tt.httpResponseJSON,
+				StatusCode:     tt.statusCode,
+			})
+			defer teardown()
+			got, err := c.AppsDatastoreQuery(ctx, "shhh", tt.args.query)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreQuery() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -387,19 +315,15 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 	type args struct {
 		request types.AppDatastoreDelete
 	}
-	type testHandler struct {
-		handlerFunc func(w http.ResponseWriter, r *http.Request)
-	}
-	tests := []struct {
-		name        string
-		args        args
-		testHandler testHandler
-		want        types.AppDatastoreDeleteResult
-		wantErr     bool
-		errMessage  string
+	tests := map[string]struct {
+		args             args
+		httpResponseJSON string
+		statusCode       int
+		want             types.AppDatastoreDeleteResult
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name: "success",
+		"success": {
 			args: args{
 				request: types.AppDatastoreDelete{
 					Datastore: "my_datastore",
@@ -407,19 +331,13 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true, "datastore": "my_datastore"}`)
-					require.NoError(t, err)
-				},
-			},
+			httpResponseJSON: `{"ok": true, "datastore": "my_datastore"}`,
 			want: types.AppDatastoreDeleteResult{
 				Datastore: "my_datastore",
 				ID:        "my_id",
 			},
 		},
-		{
-			name: "http_error",
+		"http_error": {
 			args: args{
 				request: types.AppDatastoreDelete{
 					Datastore: "my_datastore",
@@ -427,16 +345,11 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(500)
-				},
-			},
+			statusCode: 500,
 			wantErr:    true,
 			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
-		{
-			name: "response_unmarshal_error",
+		"response_unmarshal_error": {
 			args: args{
 				request: types.AppDatastoreDelete{
 					Datastore: "my_datastore",
@@ -444,17 +357,11 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: slackerror.ErrHTTPResponseInvalid,
+			httpResponseJSON: `{"ok": true`,
+			wantErr:          true,
+			errMessage:       slackerror.ErrHTTPResponseInvalid,
 		},
-		{
-			name: "api_error",
+		"api_error": {
 			args: args{
 				request: types.AppDatastoreDelete{
 					Datastore: "my_datastore",
@@ -462,22 +369,20 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": false}`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr: true,
+			httpResponseJSON: `{"ok": false}`,
+			wantErr:          true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreDelete(ctx, "shhh", tt.args.request)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreDeleteMethod,
+				Response:       tt.httpResponseJSON,
+				StatusCode:     tt.statusCode,
+			})
+			defer teardown()
+			got, err := c.AppsDatastoreDelete(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreDelete() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -499,19 +404,15 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 	type args struct {
 		request types.AppDatastoreGet
 	}
-	type testHandler struct {
-		handlerFunc func(w http.ResponseWriter, r *http.Request)
-	}
-	tests := []struct {
-		name        string
-		args        args
-		testHandler testHandler
-		want        types.AppDatastoreGetResult
-		wantErr     bool
-		errMessage  string
+	tests := map[string]struct {
+		args             args
+		httpResponseJSON string
+		statusCode       int
+		want             types.AppDatastoreGetResult
+		wantErr          bool
+		errMessage       string
 	}{
-		{
-			name: "success",
+		"success": {
 			args: args{
 				request: types.AppDatastoreGet{
 					Datastore: "my_datastore",
@@ -519,12 +420,7 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true, "datastore": "my_datastore", "item": {"my_item": "my_value"}}`)
-					require.NoError(t, err)
-				},
-			},
+			httpResponseJSON: `{"ok": true, "datastore": "my_datastore", "item": {"my_item": "my_value"}}`,
 			want: types.AppDatastoreGetResult{
 				Datastore: "my_datastore",
 				Item: map[string]interface{}{
@@ -532,8 +428,7 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 				},
 			},
 		},
-		{
-			name: "http_error",
+		"http_error": {
 			args: args{
 				request: types.AppDatastoreGet{
 					Datastore: "my_datastore",
@@ -541,16 +436,11 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(500)
-				},
-			},
+			statusCode: 500,
 			wantErr:    true,
 			errMessage: slackerror.ErrHTTPRequestFailed,
 		},
-		{
-			name: "response_unmarshal_error",
+		"response_unmarshal_error": {
 			args: args{
 				request: types.AppDatastoreGet{
 					Datastore: "my_datastore",
@@ -558,17 +448,11 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": true`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr:    true,
-			errMessage: slackerror.ErrHTTPResponseInvalid,
+			httpResponseJSON: `{"ok": true`,
+			wantErr:          true,
+			errMessage:       slackerror.ErrHTTPResponseInvalid,
 		},
-		{
-			name: "api_error",
+		"api_error": {
 			args: args{
 				request: types.AppDatastoreGet{
 					Datastore: "my_datastore",
@@ -576,22 +460,20 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 					ID:        "my_id",
 				},
 			},
-			testHandler: testHandler{
-				handlerFunc: func(w http.ResponseWriter, r *http.Request) {
-					_, err := fmt.Fprintln(w, `{"ok": false}`)
-					require.NoError(t, err)
-				},
-			},
-			wantErr: true,
+			httpResponseJSON: `{"ok": false}`,
+			wantErr:          true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			ts := httptest.NewServer(http.HandlerFunc(tt.testHandler.handlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
-			got, err := apiClient.AppsDatastoreGet(ctx, "shhh", tt.args.request)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreGetMethod,
+				Response:       tt.httpResponseJSON,
+				StatusCode:     tt.statusCode,
+			})
+			defer teardown()
+			got, err := c.AppsDatastoreGet(ctx, "shhh", tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.AppsDatastoreGet() error = %v, wantErr %v", err, tt.wantErr)
 				return
