@@ -83,7 +83,7 @@ jobs:
           fi
           git commit --all -m "build(deps): bump golang to ${VERSION#go}"
           git push -u origin chore-bump-golang
-          gh pr create --title "build(deps): bump golang to ${VERSION#go}" --body "Automatic update to the latest release of Go" --milestone "Next Release" --label "code health"
+          gh pr create --title "build(deps): bump golang to ${VERSION#go}" --body "Automatic update to the latest release of Go" --milestone "Next Release" --label "code health" --label "semver:patch"
         env:
           GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
           VERSION: ${{ steps.version.outputs.latest }}
