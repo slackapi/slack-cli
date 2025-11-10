@@ -554,6 +554,15 @@ workflows:
           context: slack-cli-release
           release_ref: dev-build
       - e2e-test:
+          name: e2e-test-unix
+          manual_trigger_windows: false
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
+          release_ref: dev-build
+      - e2e-test:
+          name: e2e-test-windows
+          manual_trigger_windows: true
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-e2e
@@ -580,6 +589,15 @@ workflows:
           context: slack-cli-release
           release_ref: dev-build
       - e2e-test:
+          name: e2e-test-unix
+          manual_trigger_windows: false
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-e2e
+          release_ref: dev-build
+      - e2e-test:
+          name: e2e-test-windows
+          manual_trigger_windows: true
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-e2e
@@ -695,34 +713,3 @@ workflows:
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
-
-  # production tests are run separate from deployment to avoid errors with tags.
-  prod-build-test-e2e-test:
-    when:
-      matches:
-        pattern: "^v(\\d+\\.)?(\\d+\\.)?(\\d+)$"
-        value: << pipeline.git.tag >>
-    jobs:
-      - build:
-          <<: *filters-tag-triggered-workflow-job
-          context: slack-cli-release
-          release_ref: << pipeline.git.tag >>
-      - create-github-release-and-artifacts:
-          requires:
-            - build
-          context: slack-cli-release
-          release_ref: << pipeline.git.branch >>
-      - e2e-test:
-          name: e2e-test-unix
-          e2e_target_branch: "main"
-          manual_trigger_windows: false
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
-      - e2e-test:
-          name: e2e-test-windows
-          e2e_target_branch: "main"
-          manual_trigger_windows: true
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
