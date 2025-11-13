@@ -34,21 +34,20 @@ var unlinkAppSelectPromptFunc = prompts.AppSelectPrompt
 // NewUnlinkCommand returns a new Cobra command for unlinking apps
 func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "unlink",
-		Short:   "Remove linked app from the project",
-		Long:    "Unlink a previously linked app from the project",
+		Use:   "unlink",
+		Short: "Remove linked app from the project",
+		Long:  "Unlink a previously linked app from the project",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Remove an existing app from the project",
-				Command: "app unlink", 
+				Command: "app unlink",
 			},
 			{
 				Meaning: "Remove a specific app without using prompts",
 				Command: "app unlink --team T0123456789 --app A0123456789 --environment deployed",
-
 			},
 		}),
-		
+
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
 			return cmdutil.IsValidProjectDirectory(clients)
