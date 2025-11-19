@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const metadataURL = "https://api.slack.com/slackcli/metadata.json"
+const metadataURL = "https://docs.slack.dev/tools/metadata.json"
 
 // CLIDependency contains information about the
 // current version and the latest CLI release version
