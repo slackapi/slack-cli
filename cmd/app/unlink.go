@@ -126,8 +126,8 @@ func confirmUnlink(ctx context.Context, IO iostreams.IOStreamer, selection promp
 // printUnlinkSuccess displays success message after unlinking
 func printUnlinkSuccess(ctx context.Context, clients *shared.ClientFactory, app types.App) error {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "white_check_mark",
-		Text:  "App Unlinked",
+		Emoji: "unlock",
+		Text:  "App Unlink",
 		Secondary: []string{
 			fmt.Sprintf("Removed app %s from project", app.AppID),
 			fmt.Sprintf("Team: %s", app.TeamDomain),
