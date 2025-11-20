@@ -44,7 +44,7 @@ func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
 			},
 			{
 				Meaning: "Remove a specific app without using prompts",
-				Command: "app unlink --team T0123456789 --app A0123456789 --environment deployed",
+				Command: "app unlink --app A0123456789",
 			},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
