@@ -109,7 +109,6 @@ func confirmUnlink(ctx context.Context, IO iostreams.IOStreamer, selection promp
 		Text:  "App Unlink",
 		Secondary: []string{
 			fmt.Sprintf("App (%s) will be removed from this project", selection.App.AppID),
-			fmt.Sprintf("Team: %s", selection.Auth.TeamDomain),
 			"The app will not be deleted from Slack",
 			fmt.Sprintf("You can re-link it later with %s", style.Commandf("app link", false)),
 		},
