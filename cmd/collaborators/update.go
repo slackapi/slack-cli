@@ -15,12 +15,12 @@
 package collaborators
 
 import (
-	"fmt"
+	"context"
 	"net/mail"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -51,18 +51,6 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !clients.Config.WithExperimentOn(experiment.ReadOnlyAppCollaborators) {
-				cmd.Println()
-				cmd.Println(style.Sectionf(style.TextSection{
-					Emoji: "construction",
-					Text:  fmt.Sprintf("This command is under construction. Use at your own risk %s", style.Emoji("skull")),
-					Secondary: []string{
-						fmt.Sprintf("Bypass this message with the %s flag", style.Highlight("--experiment read-only-collaborators")),
-					},
-				}))
-				return nil
-			}
-
 			return runUpdateCommand(cmd, clients, args)
 		},
 	}
@@ -92,8 +80,10 @@ func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []
 			return err
 		}
 	} else {
-		cmd.Println(fmt.Sprintf("\n%s Specify a permission type for your collaborator with the %s flag\n", style.Emoji("warning"), style.Highlight("--permission-type")))
-		return nil
+		slackUser.PermissionType, err = promptCollaboratorPermissionSelection(ctx, clients)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Get the app auth selection from the flag or prompt
@@ -116,4 +106,30 @@ func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []
 	printSuccess(ctx, clients.IO, slackUser, "updated")
 
 	return nil
+}
+
+// promptCollaboratorPermissionSelection fetches collaborator permission from the prompt
+func promptCollaboratorPermissionSelection(
+	ctx context.Context,
+	clients *shared.ClientFactory,
+) (
+	permission types.AppCollaboratorPermission,
+	err error,
+) {
+	permissionLabels := []string{
+		"owner",
+		"reader",
+	}
+	response, err := clients.IO.SelectPrompt(
+		ctx,
+		"Select a permission type for this collaborator",
+		permissionLabels,
+		iostreams.SelectPromptConfig{
+			Required: true,
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+	return types.StringToAppCollaboratorPermission(response.Option)
 }

@@ -38,10 +38,6 @@ const (
 	//  manage their app manifest on app settings (remote manifest).
 	BoltInstall Experiment = "bolt-install"
 
-	// The ReadOnlyAppCollaborators experiment enables creating and modifying collaborator
-	// permissions via the `collaborator` commands.
-	ReadOnlyAppCollaborators Experiment = "read-only-collaborators"
-
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
 )
@@ -51,7 +47,6 @@ const (
 var AllExperiments = []Experiment{
 	BoltFrameworks,
 	BoltInstall,
-	ReadOnlyAppCollaborators,
 	Placeholder,
 }
 

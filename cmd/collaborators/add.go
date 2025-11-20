@@ -22,7 +22,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -62,8 +61,7 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 			return runAddCommandFunc(ctx, clients, cmd, args)
 		},
 	}
-	cmd.Flags().StringVarP(&addFlags.permissionType, "permission-type", "P", "", "collaborator permission type: reader, owner")
-	cmd.Flag("permission-type").Hidden = true
+	cmd.Flags().StringVarP(&addFlags.permissionType, "permission-type", "P", "", "collaborator permission type: [reader|owner]")
 	return cmd
 }
 
@@ -87,7 +85,7 @@ func runAddCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *
 	}
 	err = clients.API().AddCollaborator(ctx, selection.Auth.Token, selection.App.AppID, slackUser)
 	if err != nil {
-		if clients.Config.WithExperimentOn(experiment.ReadOnlyAppCollaborators) && strings.Contains(err.Error(), "user_already_owner") {
+		if strings.Contains(err.Error(), "user_already_owner") {
 			cmd.Println()
 			cmd.Println(style.Sectionf(style.TextSection{
 				Emoji: "bulb",
@@ -123,14 +121,15 @@ func promptCollaboratorsAdd(
 	if err != nil {
 		return types.SlackUser{}, err
 	}
+
 	switch clients.Config.Flags.Lookup("permission-type").Changed {
 	case true:
 		slackUser.PermissionType, err = promptCollaboratorsAddPermissionFlags(ctx, clients, addFlags.permissionType)
+		if err != nil {
+			return types.SlackUser{}, err
+		}
 	default:
-		slackUser.PermissionType, err = promptCollaboratorsAddPermissionPrompts(ctx, clients)
-	}
-	if err != nil {
-		return types.SlackUser{}, err
+		slackUser.PermissionType = types.OWNER
 	}
 	return slackUser, nil
 }
@@ -181,40 +180,7 @@ func promptCollaboratorsAddSlackUserPrompts(
 	return slackUser, nil
 }
 
-// promptCollaboratorsAddPermissionPrompts gathers the collaborator permission
-// from selection if the experiment allows
-func promptCollaboratorsAddPermissionPrompts(
-	ctx context.Context,
-	clients *shared.ClientFactory,
-) (
-	permission types.AppCollaboratorPermission,
-	err error,
-) {
-	switch clients.Config.WithExperimentOn(experiment.ReadOnlyAppCollaborators) {
-	case false:
-		return types.OWNER, nil
-	default:
-		permissionLabels := []string{
-			"owner",
-			"reader",
-		}
-		response, err := clients.IO.SelectPrompt(
-			ctx,
-			"Decide the collaborator permission",
-			permissionLabels,
-			iostreams.SelectPromptConfig{
-				Required: true,
-			},
-		)
-		if err != nil {
-			return "", err
-		}
-		return types.StringToAppCollaboratorPermission(response.Option)
-	}
-}
-
-// promptCollaboratorsAddPermissionFlags gathers the collaborator permission
-// from flags if the experiment allows
+// promptCollaboratorsAddPermissionFlags fetches collaborator permission from the flag
 func promptCollaboratorsAddPermissionFlags(
 	ctx context.Context,
 	clients *shared.ClientFactory,
@@ -223,19 +189,7 @@ func promptCollaboratorsAddPermissionFlags(
 	permission types.AppCollaboratorPermission,
 	err error,
 ) {
-	switch clients.Config.WithExperimentOn(experiment.ReadOnlyAppCollaborators) {
-	case true:
-		return types.StringToAppCollaboratorPermission(addFlags.permissionType)
-	default:
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-			Emoji: "construction",
-			Text:  fmt.Sprintf("This command is under construction. Use at your own risk %s", style.Emoji("skull")),
-			Secondary: []string{
-				fmt.Sprintf("Bypass this message with the %s flag", style.Highlight("--experiment read-only-collaborators")),
-			},
-		}))
-		return "", slackerror.New(slackerror.ErrMissingExperiment)
-	}
+	return types.StringToAppCollaboratorPermission(addFlags.permissionType)
 }
 
 // printCollaboratorsAddSuccess outputs a message when addition is done
