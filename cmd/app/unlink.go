@@ -109,8 +109,8 @@ func UnlinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, cmd *
 // confirmUnlink prompts the user to confirm unlinking the app
 func confirmUnlink(ctx context.Context, IO iostreams.IOStreamer, selection prompts.SelectedApp) (bool, error) {
 	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "warning",
-		Text:  "Confirm Unlink",
+		Emoji: "unlock",
+		Text:  "App Unlink",
 		Secondary: []string{
 			fmt.Sprintf("App (%s) will be removed from this project", selection.App.AppID),
 			fmt.Sprintf("Team: %s", selection.Auth.TeamDomain),
