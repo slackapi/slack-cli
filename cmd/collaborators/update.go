@@ -55,7 +55,7 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&updateFlags.permissionType, "permission-type", "P", "", "collaborator permission type: reader, owner")
+	cmd.Flags().StringVarP(&updateFlags.permissionType, "permission-type", "P", "", "collaborator permission type: [reader|owner]")
 
 	return cmd
 }
