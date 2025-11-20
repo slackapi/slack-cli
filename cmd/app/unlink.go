@@ -47,9 +47,7 @@ func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
 				Command: "app unlink --team T0123456789 --app A0123456789 --environment deployed",
 			},
 		}),
-
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			clients.Config.SetFlags(cmd)
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
