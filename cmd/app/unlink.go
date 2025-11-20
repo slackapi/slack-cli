@@ -99,10 +99,6 @@ func UnlinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, cmd *
 	if err != nil {
 		return types.App{}, err
 	}
-
-	// Clean up empty files
-	clients.AppClient().CleanUp()
-
 	return app, nil
 }
 
