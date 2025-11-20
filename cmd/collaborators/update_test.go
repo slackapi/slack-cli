@@ -69,7 +69,7 @@ func TestUpdateCommand(t *testing.T) {
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
 				// Mock permission selection prompt
-				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a permission type for this collaborator", mock.Anything, mock.Anything).Return(
+				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a permission type", mock.Anything, mock.Anything).Return(
 					iostreams.SelectPromptResponse{
 						Prompt: true,
 						Option: "reader",

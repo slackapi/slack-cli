@@ -122,7 +122,7 @@ func promptCollaboratorPermissionSelection(
 	}
 	response, err := clients.IO.SelectPrompt(
 		ctx,
-		"Select a permission type for this collaborator",
+		"Select a permission type",
 		permissionLabels,
 		iostreams.SelectPromptConfig{
 			Required: true,
