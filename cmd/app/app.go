@@ -36,6 +36,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "app list", Meaning: "List all teams with the app installed"},
 			{Command: "app settings", Meaning: "Open app settings in a web browser"},
 			{Command: "app uninstall", Meaning: "Uninstall an app from a team"},
+			{Command: "app unlink", Meaning: "Remove a linked app from the project"},
 			{Command: "app delete", Meaning: "Delete an app and app info from a team"},
 		}),
 		Args: cobra.NoArgs,
@@ -69,6 +70,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.AddCommand(NewListCommand(clients))
 	cmd.AddCommand(NewSettingsCommand(clients))
 	cmd.AddCommand(NewUninstallCommand(clients))
+	cmd.AddCommand(NewUnlinkCommand(clients))
 
 	return cmd
 }

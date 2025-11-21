@@ -46,6 +46,8 @@ const (
 	AppLinkSuccess                         = "SLACK_TRACE_APP_LINK_SUCCESS"
 	AppSettingsStart                       = "SLACK_TRACE_APP_SETTINGS_START"
 	AppSettingsSuccess                     = "SLACK_TRACE_APP_SETTINGS_SUCCESS"
+	AppUnlinkStart                         = "SLACK_TRACE_APP_UNLINK_START"
+	AppUnlinkSuccess                       = "SLACK_TRACE_APP_UNLINK_SUCCESS"
 	AuthListCount                          = "SLACK_TRACE_AUTH_LIST_COUNT"
 	AuthListInfo                           = "SLACK_TRACE_AUTH_LIST_INFO"
 	AuthListSuccess                        = "SLACK_TRACE_AUTH_LIST_SUCCESS"
