@@ -326,8 +326,8 @@ func Test_RedactPII(t *testing.T) {
 		},
 		{
 			name:     "Escape sensitive data from mock HTTP response",
-			text:     `{"ok":true,"app_id":"A123","credentials":{"client_id":"123","client_secret":"123","verification_token":"123","signing_secret":"123"},"oauth_authorize_url":"123":\/\/slack.com\/oauth\/v2\/authorize?client_id=123&scope=commands,chat:write,chat:write.public"}`,
-			expected: `{"ok":true,"app_id":"A123","credentials":{"client_id":"...","client_secret":"...","verification_token":"...","signing_secret":"..."},"oauth_authorize_url":"...":\/\/slack.com\/oauth\/v2\/authorize?client_id=...&scope=commands,chat:write,chat:write.public"}`,
+			text:     `{"ok":true,"app_id":"A123","credentials":{"client_id":"123","client_secret":"123","verification_token":"123","signing_secret":"123"},"oauth_authorize_url":"123":\/\/slack.com\/oauth\/v2\/authorize?client_id=123&scope=commands,chat:write"}`,
+			expected: `{"ok":true,"app_id":"A123","credentials":{"client_id":"...","client_secret":"...","verification_token":"...","signing_secret":"..."},"oauth_authorize_url":"...":\/\/slack.com\/oauth\/v2\/authorize?client_id=...&scope=commands,chat:write"}`,
 		},
 		{
 			name:     "Escape from `Command` for external-auth add-secret",
