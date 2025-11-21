@@ -37,9 +37,6 @@ func TestAddCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
-				// Set experiment flag
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				// Mock API call
 				cm.API.On("AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
@@ -61,9 +58,6 @@ func TestAddCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
-				// Set experiment flag
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "read-only-collaborators")
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				// Mock API call
 				cm.API.On("AddCollaborator", mock.Anything, mock.Anything,
 					"A123",
