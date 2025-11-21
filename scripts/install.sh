@@ -115,7 +115,7 @@ install_slack_cli() {
                 # Using grep and sed to parse the semver (excluding "v" to ensure consistence of binaries' filenames ) instead of jq to avoid extra dependencies requirement
                 #
                 echo -e "🔍 Searching for the latest version of the Slack CLI..."
-                LATEST_SLACK_CLI_VERSION=$(curl --silent "https://api.slack.com/slackcli/metadata.json" | grep -o '"version": "[^"]*' | grep -o '[^"]*$' | head -1)
+                LATEST_SLACK_CLI_VERSION=$(curl --silent "https://docs.slack.dev/tools/metadata.json" | grep -o '"version": "[^"]*' | grep -o '[^"]*$' | head -1)
                 if [ -z "$LATEST_SLACK_CLI_VERSION" ]; then
                         echo "🛑 Error: Installer cannot find the latest Slack CLI version!"
                         echo "🔖 Check the status of https://slack-status.com/ and try again"
