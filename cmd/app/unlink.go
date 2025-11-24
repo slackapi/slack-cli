@@ -17,9 +17,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -33,6 +33,8 @@ var unlinkAppSelectPromptFunc = prompts.AppSelectPrompt
 
 // NewUnlinkCommand returns a new Cobra command for unlinking apps
 func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
+	var unlinkedApp types.App // capture app for PostRunE
+
 	cmd := &cobra.Command{
 		Use:   "unlink",
 		Short: "Remove a linked app from the project",
@@ -57,17 +59,20 @@ func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			clients.IO.PrintTrace(ctx, slacktrace.AppUnlinkStart)
 
 			app, err := UnlinkCommandRunE(ctx, clients, cmd, args)
 			if err != nil {
 				return err
 			}
+			if app.AppID == "" { // user canceled
+				return nil
+			}
+			unlinkedApp = app // stored for PostRunE
 			return printUnlinkSuccess(ctx, clients, app)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			clients.IO.PrintTrace(ctx, slacktrace.AppUnlinkSuccess)
+			clients.IO.PrintTrace(ctx, slacktrace.AppUnlinkSuccess, unlinkedApp.AppID)
 			return nil
 		},
 	}
@@ -76,15 +81,27 @@ func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // UnlinkCommandRunE executes the unlink command, prints output, and returns any errors.
 func UnlinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, args []string) (types.App, error) {
+	clients.IO.PrintTrace(ctx, slacktrace.AppUnlinkStart)
+
 	// Get the app selection from the flag or prompt
 	selection, err := unlinkAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		return types.App{}, err
 	}
 
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		Emoji: "unlock",
+		Text:  "App Unlink",
+		Secondary: []string{
+			fmt.Sprintf("App (%s) will be removed from this project", selection.App.AppID),
+			"The app will not be deleted from Slack",
+			fmt.Sprintf("You can re-link it later with %s", style.Commandf("app link", false)),
+		},
+	}))
+
 	// Confirm with user unless --force flag is used
 	if !clients.Config.ForceFlag {
-		proceed, err := confirmUnlink(ctx, clients.IO, selection)
+		proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to unlink this app?", false)
 		if err != nil {
 			return types.App{}, err
 		}
@@ -102,23 +119,8 @@ func UnlinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, cmd *
 	if err != nil {
 		return types.App{}, err
 	}
+
 	return app, nil
-}
-
-// confirmUnlink prompts the user to confirm unlinking the app
-func confirmUnlink(ctx context.Context, IO iostreams.IOStreamer, selection prompts.SelectedApp) (bool, error) {
-	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "unlock",
-		Text:  "App Unlink",
-		Secondary: []string{
-			fmt.Sprintf("App (%s) will be removed from this project", selection.App.AppID),
-			"The app will not be deleted from Slack",
-			fmt.Sprintf("You can re-link it later with %s", style.Commandf("app link", false)),
-		},
-	}))
-
-	proceed, err := IO.ConfirmPrompt(ctx, "Are you sure you want to unlink this app?", false)
-	return proceed, err
 }
 
 // printUnlinkSuccess displays success message after unlinking
