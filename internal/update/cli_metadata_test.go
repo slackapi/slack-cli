@@ -39,7 +39,7 @@ func (m *HTTPClientMock) Do(req *http.Request) (*http.Response, error) {
 
 // Test_CLI_Metadata_CheckForUpdate tests different responses from Slack CLI metadata.
 func Test_CLI_Metadata_CheckForUpdate(t *testing.T) {
-	const metadataURL = "https://api.slack.com/slackcli/metadata.json"
+	const metadataURL = "https://docs.slack.dev/tools/metadata.json"
 
 	scenarios := map[string]struct {
 		CurrentVersion string
