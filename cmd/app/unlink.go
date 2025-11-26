@@ -130,7 +130,7 @@ func printUnlinkSuccess(ctx context.Context, clients *shared.ClientFactory, app 
 		Text:  "App Unlink",
 		Secondary: []string{
 			fmt.Sprintf("Removed app %s from project", app.AppID),
-			fmt.Sprintf("Team: %s", app.TeamDomain),
+			fmt.Sprintf("Team: %s (%s)", app.TeamDomain, app.TeamID),
 		},
 	}))
 	return nil
