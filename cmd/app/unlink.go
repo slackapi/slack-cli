@@ -39,7 +39,7 @@ func NewUnlinkCommand(clients *shared.ClientFactory) *cobra.Command {
 		Use:   "unlink",
 		Short: "Remove a linked app from the project",
 		Long: strings.Join([]string{
-			"Unlink a previously linked app from the project.",
+			"Unlink removes an existing app from the project.",
 			"",
 			"This command removes a saved app ID from the files of a project without deleting",
 			"the app from Slack.",
