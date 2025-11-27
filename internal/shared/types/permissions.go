@@ -37,7 +37,7 @@ func StringToAppCollaboratorPermission(input string) (AppCollaboratorPermission,
 	case "reader":
 		return READER, nil
 	default:
-		return "", fmt.Errorf("invalid")
+		return "", fmt.Errorf("invalid permission; accepted values are \"owner\" or \"reader\"")
 	}
 }
 
