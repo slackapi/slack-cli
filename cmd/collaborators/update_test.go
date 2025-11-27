@@ -37,9 +37,6 @@ func TestUpdateCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
-				// Set experiment flag
-				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 				// Mock APi call
 				clientsMock.API.On("UpdateCollaborator", mock.Anything, mock.Anything,
 					"A123",
@@ -55,10 +52,7 @@ func TestUpdateCommand(t *testing.T) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
 				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
-				// Set experiment flag
-				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
-				// Mock APi call
+				// Mock API call
 				clientsMock.API.On("UpdateCollaborator", mock.Anything, mock.Anything,
 					"A123",
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER}).Return(nil)
@@ -79,9 +73,6 @@ func TestUpdateCommand(t *testing.T) {
 			ExpectedErrorStrings: []string{"accepts 1 arg(s), received 0"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
-				// Set experiment flag
-				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
-				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

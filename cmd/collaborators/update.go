@@ -20,7 +20,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -51,23 +50,15 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !clients.Config.WithExperimentOn(experiment.ReadOnlyAppCollaborators) {
-				cmd.Println()
-				cmd.Println(style.Sectionf(style.TextSection{
-					Emoji: "construction",
-					Text:  fmt.Sprintf("This command is under construction. Use at your own risk %s", style.Emoji("skull")),
-					Secondary: []string{
-						fmt.Sprintf("Bypass this message with the %s flag", style.Highlight("--experiment read-only-collaborators")),
-					},
-				}))
-				return nil
-			}
-
 			return runUpdateCommand(cmd, clients, args)
 		},
 	}
 
-	cmd.Flags().StringVarP(&updateFlags.permissionType, "permission-type", "P", "", "collaborator permission type: reader, owner")
+	cmd.Flags().StringVarP(&updateFlags.permissionType, "permission-type", "P", "", fmt.Sprintf(
+		"collaborator permission type\n(\"%s\" or \"%s\")",
+		string(types.OWNER),
+		string(types.READER),
+	))
 
 	return cmd
 }
