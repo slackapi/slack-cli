@@ -15,12 +15,11 @@
 package collaborators
 
 import (
-	"context"
+	"fmt"
 	"net/mail"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -59,7 +58,7 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 		"collaborator permission type\n(\"%s\" or \"%s\")",
 		string(types.OWNER),
 		string(types.READER),
-	))```
+	))
 
 	return cmd
 }
@@ -84,10 +83,8 @@ func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []
 			return err
 		}
 	} else {
-		slackUser.PermissionType, err = promptCollaboratorPermissionSelection(ctx, clients)
-		if err != nil {
-			return err
-		}
+		cmd.Println(fmt.Sprintf("\n%s Specify a permission type for your collaborator with the %s flag\n", style.Emoji("warning"), style.Highlight("--permission-type")))
+		return nil
 	}
 
 	// Get the app auth selection from the flag or prompt
@@ -110,30 +107,4 @@ func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []
 	printSuccess(ctx, clients.IO, slackUser, "updated")
 
 	return nil
-}
-
-// promptCollaboratorPermissionSelection fetches collaborator permission from the prompt
-func promptCollaboratorPermissionSelection(
-	ctx context.Context,
-	clients *shared.ClientFactory,
-) (
-	permission types.AppCollaboratorPermission,
-	err error,
-) {
-	permissionLabels := []string{
-		"owner",
-		"reader",
-	}
-	response, err := clients.IO.SelectPrompt(
-		ctx,
-		"Select a permission type",
-		permissionLabels,
-		iostreams.SelectPromptConfig{
-			Required: true,
-		},
-	)
-	if err != nil {
-		return "", err
-	}
-	return types.StringToAppCollaboratorPermission(response.Option)
 }

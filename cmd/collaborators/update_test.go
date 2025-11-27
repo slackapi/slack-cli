@@ -18,7 +18,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -59,26 +58,14 @@ func TestUpdateCommand(t *testing.T) {
 					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.OWNER}).Return(nil)
 			},
 		},
-		"prompts when permission type not specified": {
+		"permission type must be specified": {
 			CmdArgs:         []string{"joe.smith@company.com"},
-			ExpectedOutputs: []string{"joe.smith@company.com successfully updated as a reader collaborator on this app"},
+			ExpectedOutputs: []string{"Specify a permission type for your collaborator"},
 			Setup: func(t *testing.T, ctx context.Context, clientsMock *shared.ClientsMock, clients *shared.ClientFactory) {
 				clientsMock.AddDefaultMocks()
-				// Mock app selection
-				appSelectMock := prompts.NewAppSelectMock()
-				appSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: types.App{AppID: "A123"}, Auth: types.SlackAuth{}}, nil)
-				// Mock permission selection prompt
-				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a permission type", mock.Anything, mock.Anything).Return(
-					iostreams.SelectPromptResponse{
-						Prompt: true,
-						Option: "reader",
-						Index:  1,
-					}, nil)
-				// Mock API call
-				clientsMock.API.On("UpdateCollaborator", mock.Anything, mock.Anything,
-					"A123",
-					types.SlackUser{Email: "joe.smith@company.com", PermissionType: types.READER}).Return(nil)
+				// Set experiment flag
+				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, "read-only-collaborators")
+				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 			},
 		},
 		"user ID must be provided": {
