@@ -1,21 +1,22 @@
-# `slack collaborator add`
+# `slack app unlink`
 
-Add a new collaborator to the app
+Remove a linked app from the project
 
 ## Description
 
-Add a collaborator to your app by Slack email address or user ID
+Unlink removes an existing app from the project.
+
+This command removes a saved app ID from the files of a project without deleting
+the app from Slack.
 
 ```
-slack collaborator add [email|user_id] [flags]
+slack app unlink [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help                     help for add
-  -P, --permission-type string   collaborator permission type
-                                 ("owner" or "reader") (default "owner")
+  -h, --help   help for unlink
 ```
 
 ## Global flags
@@ -35,12 +36,14 @@ slack collaborator add [email|user_id] [flags]
 ## Examples
 
 ```
-$ slack collaborator add                # Add a collaborator via prompt
-$ slack collaborator add bot@slack.com  # Add a collaborator from email
-$ slack collaborator add USLACKBOT      # Add a collaborator by user ID
+# Remove an existing app from the project
+$ slack app unlink
+
+# Remove a specific app without using prompts
+$ slack app unlink --app A0123456789
 ```
 
 ## See also
 
-* [slack collaborator](slack_collaborator)	 - Manage app collaborators
+* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 

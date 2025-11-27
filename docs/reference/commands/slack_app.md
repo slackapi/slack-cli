@@ -38,6 +38,7 @@ $ slack app link       # Link an existing app to the project
 $ slack app list       # List all teams with the app installed
 $ slack app settings   # Open app settings in a web browser
 $ slack app uninstall  # Uninstall an app from a team
+$ slack app unlink     # Remove a linked app from the project
 $ slack app delete     # Delete an app and app info from a team
 ```
 
@@ -50,4 +51,5 @@ $ slack app delete     # Delete an app and app info from a team
 * [slack app list](slack_app_list)	 - List teams with the app installed
 * [slack app settings](slack_app_settings)	 - Open app settings for configurations
 * [slack app uninstall](slack_app_uninstall)	 - Uninstall the app from a team
+* [slack app unlink](slack_app_unlink)	 - Remove a linked app from the project
 
