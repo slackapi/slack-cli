@@ -61,7 +61,11 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 			return runAddCommandFunc(ctx, clients, cmd, args)
 		},
 	}
-	cmd.Flags().StringVarP(&addFlags.permissionType, "permission-type", "P", "", "collaborator permission type: [reader|owner]")
+	cmd.Flags().StringVarP(&addFlags.permissionType, "permission-type", "P", string(types.OWNER), fmt.Sprintf(
+		"collaborator permission type\n(\"%s\" or \"%s\")",
+		string(types.OWNER),
+		string(types.READER),
+	))
 	return cmd
 }
 
