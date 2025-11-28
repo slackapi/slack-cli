@@ -18,5 +18,5 @@ export default Manifest({
   "icon": "assets/icon.png",
   "functions": [ReverseFunction],
   "outgoingDomains": [],
-  "botScopes": ["commands", "chat:write", "chat:write.public"],
+  "botScopes": ["commands", "chat:write"],
 });
