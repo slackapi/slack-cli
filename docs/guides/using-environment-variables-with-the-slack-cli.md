@@ -108,7 +108,7 @@ export default Manifest({
   outgoingDomains: [
     Deno.env.get("CHATBOT_API_URL")!,
   ],
-  botScopes: ["commands", "chat:write", "chat:write.public"],
+  botScopes: ["commands", "chat:write"],
 });
 ```
 
