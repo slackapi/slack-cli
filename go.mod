@@ -62,7 +62,7 @@ require (
 	github.com/go-git/go-git/v5 v5.16.4
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kubescape/go-git-url v0.0.30
+	github.com/kubescape/go-git-url v0.0.31
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
