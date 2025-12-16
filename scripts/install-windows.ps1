@@ -172,6 +172,7 @@ function install_slack_cli {
   $ErrorActionPreference = 'Continue'
   try {
       $fp = (& $SLACK_CLI_NAME _fingerprint 2>&1 | Out-String).Trim()
+      Write-Host "nooo $fp"
   } finally {
       $ErrorActionPreference = $old
   }
@@ -264,6 +265,9 @@ function next_step_message {
 trap {
   Write-Host "`nWe would love to know how things are going. Really. All of it."
   Write-Host "Submit installation issues: https://github.com/slackapi/slack-cli/issues"
+
+
+  $_ | Format-List * | Out-String | Write-Host
   exit 1
 }
 
