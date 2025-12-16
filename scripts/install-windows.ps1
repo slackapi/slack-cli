@@ -52,7 +52,7 @@ function check_slack_binary_exist() {
     $SLACK_CLI_NAME = $alias
   }
   Write-Host "xd3: $SLACK_CLI_NAME"
-  & $SLACK_CLI_NAME _fingerprint
+  # & $SLACK_CLI_NAME _fingerprint
   if (Get-Command $SLACK_CLI_NAME -ErrorAction SilentlyContinue) {
     if ($Diagnostics) {
       delay 0.3 "Checking if ``$SLACK_CLI_NAME`` already exists on this system..."
@@ -167,6 +167,15 @@ function install_slack_cli {
     [System.Environment]::SetEnvironmentVariable('Path', $Path.TrimEnd(';') + ";${slack_cli_bin_dir}", $User)
     $Env:Path = $Env:Path.TrimEnd(';') + ";$slack_cli_bin_dir"
   }
+
+  $old = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+      $fp = (& $SLACK_CLI_NAME _fingerprint 2>&1 | Out-String).Trim()
+  } finally {
+      $ErrorActionPreference = $old
+  }
+
   Remove-Item "$($slack_cli_dir)\slack_cli.zip"
 }
 
