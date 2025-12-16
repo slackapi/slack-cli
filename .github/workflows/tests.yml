@@ -62,12 +62,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          bash ./scripts/install.sh
+          ./scripts/install.sh
       - name: Attempt the installation (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          pwsh -NoProfile -NonInteractive -File ./scripts/install-windows.ps1
+          & ./scripts/install-windows.ps1
+      - name: Confirm the version exists
+        run: slack --version
 
   # Monitor code coverage and TODO/FIXME-type comments
   health-score:

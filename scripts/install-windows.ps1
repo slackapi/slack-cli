@@ -46,13 +46,9 @@ function check_slack_binary_exist() {
   )
   $FINGERPRINT = "d41d8cd98f00b204e9800998ecf8427e"
   $SLACK_CLI_NAME = "slack"
-  Write-Host "xd1: $alias"
-  Write-Host "xd2: $Alias"
   if ($alias) {
     $SLACK_CLI_NAME = $alias
   }
-  Write-Host "xd3: $SLACK_CLI_NAME"
-  # & $SLACK_CLI_NAME _fingerprint
   if (Get-Command $SLACK_CLI_NAME -ErrorAction SilentlyContinue) {
     if ($Diagnostics) {
       delay 0.3 "Checking if ``$SLACK_CLI_NAME`` already exists on this system..."
@@ -164,17 +160,15 @@ function install_slack_cli {
   $Path = [System.Environment]::GetEnvironmentVariable('Path', $User)
   if (!(";${Path};".ToLower() -like "*;${slack_cli_bin_dir};*".ToLower())) {
     Write-Host "Adding ``$confirmed_alias.exe`` to your Path environment variable"
-    [System.Environment]::SetEnvironmentVariable('Path', $Path.TrimEnd(';') + ";${slack_cli_bin_dir}", $User)
+    if ([Environment]::UserInteractive) {
+      try {
+        [System.Environment]::SetEnvironmentVariable('Path', $Path.TrimEnd(';') + ";${slack_cli_bin_dir}", $User)
+      }
+      catch {
+        # Silently continue if SetEnvironmentVariable fails
+      }
+    }
     $Env:Path = $Env:Path.TrimEnd(';') + ";$slack_cli_bin_dir"
-  }
-
-  $old = $ErrorActionPreference
-  $ErrorActionPreference = 'Continue'
-  try {
-      $fp = (& $confirmed_alias _fingerprint 2>&1 | Out-String).Trim()
-      Write-Host "nooo $fp"
-  } finally {
-      $ErrorActionPreference = $old
   }
 
   Remove-Item "$($slack_cli_dir)\slack_cli.zip"
