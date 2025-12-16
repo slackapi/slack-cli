@@ -59,9 +59,9 @@ function check_slack_binary_exist() {
       delay 0.2 "Heads up! A binary called ``$SLACK_CLI_NAME`` was found!"
       delay 0.3 "Now checking if it's the same Slack CLI..."
     }
-    & $SLACK_CLI_NAME _fingerprint | Tee-Object -Variable get_finger_print | Out-Null
+    $get_finger_print = (& $SLACK_CLI_NAME _fingerprint 2>&1 | Out-String).Trim()
     if ($get_finger_print -ne $FINGERPRINT) {
-      & $SLACK_CLI_NAME --version | Tee-Object -Variable slack_cli_version | Out-Null
+      $slack_cli_version = (& $SLACK_CLI_NAME --version 2>&1 | Out-String)
       if (!($slack_cli_version -contains "Using ${SLACK_CLI_NAME}.exe v")) {
         Write-Host "Error: Your existing ``$SLACK_CLI_NAME`` command is different from this Slack CLI!"
         Write-Host "Halting the install to avoid accidentally overwriting it."
@@ -223,7 +223,7 @@ function terms_of_service {
     [Parameter(HelpMessage = "Alias of Slack CLI")]
     [string]$Alias
   )
-  $confirmed_alias = check_slack_binary_exist $Alias $Version $false
+  $confirmed_alias = check_slack_binary_exist $Alias $Version $true
   if (Get-Command $confirmed_alias) {
     Write-Host "`nUse of the Slack CLI should comply with the Slack API Terms of Service:"
     Write-Host "   https://slack.com/terms-of-service/api"
