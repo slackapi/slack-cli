@@ -49,10 +49,10 @@ jobs:
         include:
           - os: ubuntu-latest
             path: echo "$HOME/.slack/bin" >> "$GITHUB_PATH"
-            script: pwsh ./scripts/install.sh
+            script: bash ./scripts/install.sh
           - os: windows-latest
             path: Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.slack\bin"
-            script: bash ./scripts/install-windows.ps1
+            script: pwsh ./scripts/install-windows.ps1
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
