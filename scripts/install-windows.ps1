@@ -171,7 +171,7 @@ function install_slack_cli {
   $old = $ErrorActionPreference
   $ErrorActionPreference = 'Continue'
   try {
-      $fp = (& $SLACK_CLI_NAME _fingerprint 2>&1 | Out-String).Trim()
+      $fp = (& $confirmed_alias _fingerprint 2>&1 | Out-String).Trim()
       Write-Host "nooo $fp"
   } finally {
       $ErrorActionPreference = $old
