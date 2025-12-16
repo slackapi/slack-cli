@@ -49,10 +49,8 @@ jobs:
         include:
           - os: ubuntu-latest
             script: ./scripts/install.sh
-            shell: bash
           - os: windows-latest
             script: ./scripts/install-windows.ps1
-            shell: pwsh
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -62,7 +60,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Attempt the installation
-        shell: ${{ matrix.shell }}
         run: ${{ matrix.script }}
 
   # Monitor code coverage and TODO/FIXME-type comments
