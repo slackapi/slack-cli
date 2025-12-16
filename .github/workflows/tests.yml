@@ -48,9 +48,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            script: bash ./scripts/install.sh
+            script: ./scripts/install.sh
           - os: windows-latest
-            script: pwsh -NoProfile -NonInteractive -File ./scripts/install-windows.ps1
+            script: |
+              & ./scripts/install-windows.ps1
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
