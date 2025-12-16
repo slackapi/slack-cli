@@ -51,6 +51,8 @@ function check_slack_binary_exist() {
   if ($alias) {
     $SLACK_CLI_NAME = $alias
   }
+  Write-Host "xd3: $SLACK_CLI_NAME"
+  & $SLACK_CLI_NAME _fingerprint
   if (Get-Command $SLACK_CLI_NAME -ErrorAction SilentlyContinue) {
     if ($Diagnostics) {
       delay 0.3 "Checking if ``$SLACK_CLI_NAME`` already exists on this system..."
@@ -260,8 +262,6 @@ install_slack_cli $Alias $Version
 Write-Host "`nAdding developer tooling for an enhanced experience..."
 install_git $SkipGit
 Write-Host "Sweet! You're all set to start developing!"
-# Write-Host "test: $Alias xox"
-# & $Alias _fingerprint
 terms_of_service $Alias
 feedback_message $Alias
 next_step_message $Alias
