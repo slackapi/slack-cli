@@ -48,10 +48,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            # path: echo "$HOME/.slack/bin" >> "$GITHUB_PATH"
             script: ./scripts/install.sh
           - os: windows-latest
-            # path: Add-Content -Path $env:GITHUB_PATH -Value "$env:USERPROFILE\.slack\bin"
             script: ./scripts/install-windows.ps1
     runs-on: ${{ matrix.os }}
     permissions:
@@ -61,10 +59,17 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
-      # - name: Configure the path
-      # run: ${{ matrix.path }}
-      - name: Attempt the installation
-        run: ${{ matrix.script }}
+      - name: Attempt the installation (Unix)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          ${{ matrix.script }}
+      - name: Attempt the installation (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh -NoProfile -NonInteractive
+        run: |
+          & ${{ matrix.script }}
 
   # Monitor code coverage and TODO/FIXME-type comments
   health-score:
