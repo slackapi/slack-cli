@@ -48,9 +48,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            script: ./scripts/install.sh
           - os: windows-latest
-            script: ./scripts/install-windows.ps1
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -64,12 +62,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ${{ matrix.script }}
+          bash ./scripts/install.sh
       - name: Attempt the installation (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh -NoProfile -NonInteractive
+        shell: pwsh
         run: |
-          & ${{ matrix.script }}
+          pwsh -NoProfile -NonInteractive -File ./scripts/install-windows.ps1
 
   # Monitor code coverage and TODO/FIXME-type comments
   health-score:
