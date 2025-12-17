@@ -55,6 +55,8 @@ function check_slack_binary_exist() {
       delay 0.2 "Heads up! A binary called ``$SLACK_CLI_NAME`` was found!"
       delay 0.3 "Now checking if it's the same Slack CLI..."
     }
+    Write-Host "starting $SLACK_CLI_NAME _fingerprint"
+    & $SLACK_CLI_NAME _fingerprint
     $get_finger_print = (& $SLACK_CLI_NAME _fingerprint 2>&1 | Out-String).Trim()
     if ($get_finger_print -ne $FINGERPRINT) {
       $slack_cli_version = (& $SLACK_CLI_NAME --version 2>&1 | Out-String)
