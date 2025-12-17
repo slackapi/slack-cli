@@ -184,7 +184,7 @@ function install_git {
   }
   else {
     try {
-      git | Out-Null
+      git --version | Out-Null
       Write-Host "Git is already installed. Nice!"
     }
     catch [System.Management.Automation.CommandNotFoundException] {
@@ -244,7 +244,7 @@ function next_step_message {
   $confirmed_alias = check_slack_binary_exist $Alias $Version $false
   if (Get-Command $confirmed_alias -ErrorAction SilentlyContinue) {
     try {
-      $confirmed_alias | Out-Null
+      & $confirmed_alias --version | Out-Null
       Write-Host "`nYou're all set! Relaunch your terminal to ensure changes take effect."
       Write-Host "   Then, authorize your CLI in your workspace with ``$confirmed_alias login``.`n"
     }
