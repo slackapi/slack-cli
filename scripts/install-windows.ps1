@@ -55,11 +55,9 @@ function check_slack_binary_exist() {
       delay 0.2 "Heads up! A binary called ``$SLACK_CLI_NAME`` was found!"
       delay 0.3 "Now checking if it's the same Slack CLI..."
     }
-    Write-Host "starting $SLACK_CLI_NAME _fingerprint"
-    & $SLACK_CLI_NAME _fingerprint
-    $get_finger_print = (& $SLACK_CLI_NAME _fingerprint 2>&1 | Out-String).Trim()
+    & $SLACK_CLI_NAME _fingerprint | Tee-Object -Variable get_finger_print | Out-Null
     if ($get_finger_print -ne $FINGERPRINT) {
-      $slack_cli_version = (& $SLACK_CLI_NAME --version 2>&1 | Out-String)
+      & $SLACK_CLI_NAME --version | Tee-Object -Variable slack_cli_version | Out-Null
       if (!($slack_cli_version -contains "Using ${SLACK_CLI_NAME}.exe v")) {
         Write-Host "Error: Your existing ``$SLACK_CLI_NAME`` command is different from this Slack CLI!"
         Write-Host "Halting the install to avoid accidentally overwriting it."
@@ -162,17 +160,9 @@ function install_slack_cli {
   $Path = [System.Environment]::GetEnvironmentVariable('Path', $User)
   if (!(";${Path};".ToLower() -like "*;${slack_cli_bin_dir};*".ToLower())) {
     Write-Host "Adding ``$confirmed_alias.exe`` to your Path environment variable"
-    if ([Environment]::UserInteractive) {
-      try {
-        [System.Environment]::SetEnvironmentVariable('Path', $Path.TrimEnd(';') + ";${slack_cli_bin_dir}", $User)
-      }
-      catch {
-        # Silently continue if SetEnvironmentVariable fails
-      }
-    }
+    [System.Environment]::SetEnvironmentVariable('Path', $Path.TrimEnd(';') + ";${slack_cli_bin_dir}", $User)
     $Env:Path = $Env:Path.TrimEnd(';') + ";$slack_cli_bin_dir"
   }
-
   Remove-Item "$($slack_cli_dir)\slack_cli.zip"
 }
 
@@ -186,7 +176,7 @@ function install_git {
   }
   else {
     try {
-      git --version | Out-Null
+      git | Out-Null
       Write-Host "Git is already installed. Nice!"
     }
     catch [System.Management.Automation.CommandNotFoundException] {
@@ -219,8 +209,8 @@ function terms_of_service {
     [Parameter(HelpMessage = "Alias of Slack CLI")]
     [string]$Alias
   )
-  $confirmed_alias = check_slack_binary_exist $Alias $Version $true
-  if (Get-Command $confirmed_alias -ErrorAction SilentlyContinue) {
+  $confirmed_alias = check_slack_binary_exist $Alias $Version $false
+  if (Get-Command $confirmed_alias) {
     Write-Host "`nUse of the Slack CLI should comply with the Slack API Terms of Service:"
     Write-Host "   https://slack.com/terms-of-service/api"
   }
@@ -232,7 +222,7 @@ function feedback_message {
     [string]$Alias
   )
   $confirmed_alias = check_slack_binary_exist $Alias $Version $false
-  if (Get-Command $confirmed_alias -ErrorAction SilentlyContinue) {
+  if (Get-Command $confirmed_alias) {
     Write-Host "`nWe would love to know how things are going. Really. All of it."
     Write-Host "   Survey your development experience with ``$confirmed_alias feedback``"
   }
@@ -246,7 +236,7 @@ function next_step_message {
   $confirmed_alias = check_slack_binary_exist $Alias $Version $false
   if (Get-Command $confirmed_alias -ErrorAction SilentlyContinue) {
     try {
-      & $confirmed_alias --version | Out-Null
+      $confirmed_alias | Out-Null
       Write-Host "`nYou're all set! Relaunch your terminal to ensure changes take effect."
       Write-Host "   Then, authorize your CLI in your workspace with ``$confirmed_alias login``.`n"
     }
@@ -261,9 +251,6 @@ function next_step_message {
 trap {
   Write-Host "`nWe would love to know how things are going. Really. All of it."
   Write-Host "Submit installation issues: https://github.com/slackapi/slack-cli/issues"
-
-
-  $_ | Format-List * | Out-String | Write-Host
   exit 1
 }
 

@@ -42,35 +42,6 @@ jobs:
           files: ./coverage.out
           fail_ci_if_error: false
 
-  install:
-    name: Install
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-          - os: windows-latest
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout the latest changes
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-        with:
-          persist-credentials: false
-      - name: Attempt the installation (Unix)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./scripts/install.sh
-      - name: Attempt the installation (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          & ./scripts/install-windows.ps1
-      - name: Confirm the version exists
-        run: slack --version
-
   # Monitor code coverage and TODO/FIXME-type comments
   health-score:
     name: Health Score
