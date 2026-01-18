@@ -22,7 +22,7 @@ MY_ENV_VAR=asdf1234
 
 Note that changes to your `.env` file will be reflected when you restart your local development server.
 
-While the `.env` file should **never** be committed to source control for security reasons, you can see a sample `.env` file we've included in the [Timesheet approval sample app](https://github.com/slack-samples/deno-timesheet-approval) and the [Incident management sample app](https://github.com/slack-samples/deno-incident-management). 
+While the `.env` file should **never** be committed to source control for security reasons, you can see a sample `.env` file we've included in the [Timesheet approval sample app](https://github.com/slack-samples/deno-timesheet-approval) and the [Incident management sample app](https://github.com/slack-samples/deno-incident-management).
 
 ### Storing deployed environment variables {#deployed-env-vars}
 
@@ -40,7 +40,7 @@ If your token contains non-alphanumeric characters, wrap it in quotes like this:
 slack env add SLACK_API_URL "https://dev<yournumber>.slack.com/api/"
 ```
 
-Your environment variables are always encrypted before being stored on our servers and will be automatically decrypted when you use them&mdash;including when listing environment variables with `slack env list`. 
+Your environment variables are always encrypted before being stored on our servers and will be automatically decrypted when you use them&mdash;including when listing environment variables with `slack env list`.
 
 ### Access variables from within function {#access-function}
 
@@ -108,7 +108,7 @@ export default Manifest({
   outgoingDomains: [
     Deno.env.get("CHATBOT_API_URL")!,
   ],
-  botScopes: ["commands", "chat:write", "chat:write.public"],
+  botScopes: ["commands", "chat:write"],
 });
 ```
 
@@ -134,7 +134,7 @@ With this addition, running `slack deploy` without defining a value for `CHATBOT
 
 ## Enabling debug mode {#debug}
 
-The included environment variable `SLACK_DEBUG` can enable a basic debug mode. Set `SLACK_DEBUG` to `true` to have all function-related payloads logged. 
+The included environment variable `SLACK_DEBUG` can enable a basic debug mode. Set `SLACK_DEBUG` to `true` to have all function-related payloads logged.
 
 For local apps, add the following to your `.env` file:
 
