@@ -176,21 +176,6 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	go func() {
 		errChan <- server.Watch(ctx, runArgs.Auth, installedApp)
 	}()
-
-	// Check to see whether the SDK managed connection flag is enabled
-	// If so Delegate the connection to the SDK otherwise Start connection
-	if cliConfig.Config.SDKManagedConnection {
-		clients.IO.PrintDebug(ctx, "Delegating connection to SDK managed script hook")
-		// Delegate connection to hook; this should be a blocking call, as the delegate should be a server, too.
-		go func() {
-			errChan <- server.StartDelegate(ctx)
-		}()
-	} else {
-		// Listen for messages in a goroutine, and provide an error channel for raising errors and a done channel for signifying clean exit
-		go func() {
-			errChan <- server.Start(ctx)
-		}()
-	}
 	if err := <-errChan; err != nil {
 		switch slackerror.ToSlackError(err).Code {
 		case slackerror.ErrLocalAppRunCleanExit:

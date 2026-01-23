@@ -341,6 +341,26 @@ func (r *LocalServer) Watch(ctx context.Context, auth types.SlackAuth, app types
 				r.log.Data["cloud_run_watch_file_change"] = event.Path
 				r.log.Info("on_cloud_run_watch_file_change")
 
+				// Check to see whether the SDK managed connection flag is enabled
+				// If so Delegate the connection to the SDK otherwise Start connection
+				if r.cliConfig.Config.SDKManagedConnection {
+					r.clients.IO.PrintDebug(ctx, "Delegating connection to SDK managed script hook")
+					// Delegate connection to hook; this should be a blocking call, as the delegate should be a server, too.
+					go func() {
+						//errChan <-
+						err := r.StartDelegate(ctx)
+						if err != nil {
+							return // or error event?
+						}
+					}()
+				} else {
+					r.log.Info("on_cloud_run_watch_file_change") // TODO: DELETE THIS LINE BEFORE COMMIT - its for branching
+					// Listen for messages in a goroutine, and provide an error channel for raising errors and a done channel for signifying clean exit
+					// go func() {
+					// 	errChan <- r.Start(ctx)
+					// }()
+				}
+
 				if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", r.log, auth, app); err != nil {
 					// The install command will have handled printing the error
 					r.log.Data["cloud_run_watch_error"] = err.Error()
