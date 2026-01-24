@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -82,6 +83,8 @@ type LocalServer struct {
 	localHostedContext LocalHostedContext
 	cliConfig          hooks.SDKCLIConfig
 	Connection         WebSocketConnection
+	delegateCmd        hooks.ShellCommand // track running delegated process
+	delegateCmdMutex   sync.Mutex         // protect concurrent access
 }
 
 // Start establishes a socket connection to Slack, which will receive app-relevant events. It does so in a loop to support for re-establishing the socket connection.
@@ -243,6 +246,38 @@ func (r *LocalServer) Listen(ctx context.Context, errChan chan<- error, done cha
 	}
 }
 
+// stopDelegateProcess terminates the currently running delegated process if one exists
+func (r *LocalServer) stopDelegateProcess(ctx context.Context) {
+	r.delegateCmdMutex.Lock()
+	defer r.delegateCmdMutex.Unlock()
+
+	if r.delegateCmd != nil {
+		process := r.delegateCmd.GetProcess()
+		if process != nil {
+			r.clients.IO.PrintDebug(ctx, "Stopping previous delegated process (PID: %d)", process.Pid)
+			// Kill the process gracefully
+			if err := process.Signal(os.Interrupt); err != nil {
+				// If interrupt fails, force kill
+				r.clients.IO.PrintDebug(ctx, "Failed to interrupt process, sending SIGKILL: %v", err)
+				_ = process.Kill()
+			}
+			// Wait for process to exit (with timeout)
+			done := make(chan error)
+			go func() {
+				done <- r.delegateCmd.Wait()
+			}()
+			select {
+			case <-done:
+				r.clients.IO.PrintDebug(ctx, "Previous process stopped successfully")
+			case <-time.After(5 * time.Second):
+				r.clients.IO.PrintDebug(ctx, "Process did not exit in time, force killing")
+				_ = process.Kill()
+			}
+		}
+		r.delegateCmd = nil
+	}
+}
+
 // StartDelegate passes along required opts to SDK, delegating
 // connection for running app locally to script hook start
 func (r *LocalServer) StartDelegate(ctx context.Context) error {
@@ -276,8 +311,20 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	var cmdEnvVars = os.Environ()
 	cmdEnvVars = append(cmdEnvVars, goutils.MapToStringSlice(sdkManagedConnectionStartHookOpts.Env, "")...)
 	cmd := sdkManagedConnectionStartHookOpts.Exec.Command(cmdEnvVars, os.Stdout, os.Stderr, nil, cmdArgs[0], cmdArgVars...)
+
+	// Store command reference for lifecycle management
+	r.delegateCmdMutex.Lock()
+	r.delegateCmd = cmd
+	r.delegateCmdMutex.Unlock()
+
+	// Start the process (non-blocking)
+	if err := cmd.Start(); err != nil {
+		return slackerror.Wrap(err, slackerror.ErrSDKHookInvocationFailed).
+			WithMessage("Failed to start 'start' hook")
+	}
+
 	// The following command will block, as the expectation is that SDK-delegated local-run invokes a long-running (blocking) child process
-	err = cmd.Run()
+	err = cmd.Wait()
 	if err != nil {
 		if status, ok := err.(*exec.ExitError); ok {
 			switch status.ExitCode() {
@@ -345,12 +392,15 @@ func (r *LocalServer) Watch(ctx context.Context, auth types.SlackAuth, app types
 				// If so Delegate the connection to the SDK otherwise Start connection
 				if r.cliConfig.Config.SDKManagedConnection {
 					r.clients.IO.PrintDebug(ctx, "Delegating connection to SDK managed script hook")
+					// Stop the previous process before starting a new one
+					r.stopDelegateProcess(ctx)
+
 					// Delegate connection to hook; this should be a blocking call, as the delegate should be a server, too.
 					go func() {
-						//errChan <-
 						err := r.StartDelegate(ctx)
 						if err != nil {
-							return // or error event?
+							r.clients.IO.PrintDebug(ctx, "Delegated start hook failed on restart: %v", err)
+							return
 						}
 					}()
 				} else {

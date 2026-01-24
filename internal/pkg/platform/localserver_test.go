@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/gorilla/websocket"
@@ -40,7 +41,7 @@ var WebsocketDialerDial = &websocketDialerDial
 func Test_LocalServer_Start(t *testing.T) {
 	for name, tt := range map[string]struct {
 		Setup      func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock)
-		Test       func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock)
+		Test       func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock)
 		wsHandler  func(w http.ResponseWriter, r *http.Request)
 		fakeDialer func(conn *WebSocketConnMock) func(d *websocket.Dialer, urlStr string,
 			requestHeader http.Header) (WebSocketConnection, *http.Response, error)
@@ -49,7 +50,7 @@ func Test_LocalServer_Start(t *testing.T) {
 			Setup: func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock) {
 				cm.API.On("ConnectionsOpen", mock.Anything, mock.Anything).Return(api.AppsConnectionsOpenResult{}, slackerror.New("no can do, pipes are clogged"))
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				require.ErrorContains(t, server.Start(ctx), "pipes are clogged")
 			},
 		},
@@ -57,7 +58,7 @@ func Test_LocalServer_Start(t *testing.T) {
 			wsHandler: func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(500)
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				require.ErrorContains(t, server.Start(ctx), "bad handshake")
 			},
 		},
@@ -70,7 +71,7 @@ func Test_LocalServer_Start(t *testing.T) {
 					return conn, nil, nil
 				}
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				require.ErrorContains(t, server.Start(ctx), "oh no")
 			},
 		},
@@ -84,7 +85,7 @@ func Test_LocalServer_Start(t *testing.T) {
 					return conn, nil, nil
 				}
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				require.ErrorContains(t, server.Start(ctx), slackerror.ErrLocalAppRunCleanExit)
 				// Once to re-establish post-disconnect message and once when close message received
 				conn.AssertNumberOfCalls(t, "Close", 2)
@@ -103,7 +104,7 @@ func Test_LocalServer_Start(t *testing.T) {
 					return conn, nil, nil
 				}
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				require.ErrorContains(t, server.Start(ctx), slackerror.ErrLocalAppRunCleanExit)
 				// Expectation is each WS message we configured in Setup
 				// would cause the TCP connection to be closed (3 times)
@@ -149,6 +150,8 @@ func Test_LocalServer_Start(t *testing.T) {
 				localContext,
 				clients.SDKConfig,
 				conn,
+				nil,
+				sync.Mutex{},
 			}
 			if tt.fakeDialer != nil {
 				orig := *WebsocketDialerDial
@@ -158,7 +161,7 @@ func Test_LocalServer_Start(t *testing.T) {
 				}()
 			}
 
-			tt.Test(t, ctx, clientsMock, server, conn)
+			tt.Test(t, ctx, clientsMock, &server, conn)
 		})
 	}
 }
@@ -166,10 +169,10 @@ func Test_LocalServer_Start(t *testing.T) {
 func Test_LocalServer_Listen(t *testing.T) {
 	for name, tt := range map[string]struct {
 		Setup func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock)
-		Test  func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock)
+		Test  func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock)
 	}{
 		"should return and send special clean exit error if context is canceled": {
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				ctx2, cancel := context.WithCancel(ctx)
 				cancel()
 				errChan := make(chan error)
@@ -187,7 +190,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 			Setup: func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock) {
 				conn.On("ReadMessage").Return(0, []byte{}, slackerror.New("oh no"))
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -203,7 +206,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 			Setup: func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock) {
 				conn.On("ReadMessage").Return(websocket.CloseMessage, []byte{}, &websocket.CloseError{Code: websocket.CloseNormalClosure, Text: "byebye"})
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -219,7 +222,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 			Setup: func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock) {
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("cache_error"), nil)
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -235,7 +238,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 			Setup: func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock) {
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"disconnect\"}"), nil)
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -254,7 +257,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				// TODO: should probably create a hookscript mock instead of doing this.
 				clients.SDKConfig.Hooks.Start = hooks.HookScript{Command: "", Name: "start"}
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -275,7 +278,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"disconnect\"}"), nil).Once()
 				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("{}", nil)
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -296,7 +299,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				conn.On("ReadMessage").Return(websocket.TextMessage, []byte("{\"type\":\"disconnect\"}"), nil).Once()
 				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("{}", slackerror.New("typescript error, probably"))
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -317,7 +320,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				cm.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("{}", nil)
 				conn.On("WriteMessage", mock.Anything, mock.Anything).Return(slackerror.New("socket pipe severed"))
 			},
-			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server LocalServer, conn *WebSocketConnMock) {
+			Test: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock) {
 				errChan := make(chan error)
 				done := make(chan bool)
 				go server.Listen(ctx, errChan, done)
@@ -360,8 +363,10 @@ func Test_LocalServer_Listen(t *testing.T) {
 				localContext,
 				clients.SDKConfig,
 				conn,
+				nil,
+				sync.Mutex{},
 			}
-			tt.Test(t, ctx, clientsMock, server, conn)
+			tt.Test(t, ctx, clientsMock, &server, conn)
 		})
 	}
 }

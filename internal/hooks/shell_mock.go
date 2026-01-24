@@ -17,6 +17,7 @@ package hooks
 import (
 	"context"
 	"io"
+	"os"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -78,6 +79,10 @@ func (c *MockCommand) StderrPipe() (io.ReadCloser, error) {
 
 func (c *MockCommand) CombinedOutput() ([]byte, error) {
 	return c.MockStdout, c.Err
+}
+
+func (c *MockCommand) GetProcess() *os.Process {
+	return nil
 }
 
 type MockHookExecutor struct {

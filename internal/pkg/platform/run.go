@@ -149,6 +149,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 		// In turn, should trigger the final cleanup routine below (see deferred function below), which closes the socket connection.
 		// In case this is an SDK-managed run, the next line is a no-op.
 		sendWebSocketCloseControlMessage(ctx, clients, server.Connection)
+		server.stopDelegateProcess(ctx)
 		clients.IO.PrintTrace(ctx, slacktrace.PlatformRunStop)
 		clients.CleanupWaitGroup.Done()
 	}(runArgs.Cleanup)
