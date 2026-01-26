@@ -18,6 +18,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -60,6 +61,56 @@ func New() *Python {
 // IgnoreDirectories is a list of directories to ignore when packaging the runtime for deployment.
 func (p *Python) IgnoreDirectories() []string {
 	return []string{}
+}
+
+// getVenvPath returns the path to the virtual environment directory
+func getVenvPath(projectDirPath string) string {
+	return filepath.Join(projectDirPath, ".venv")
+}
+
+// getPipExecutable returns the path to the pip executable in the virtual environment
+func getPipExecutable(venvPath string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(venvPath, "Scripts", "pip.exe")
+	}
+	return filepath.Join(venvPath, "bin", "pip")
+}
+
+// venvExists checks if a virtual environment exists at the given path
+func venvExists(fs afero.Fs, venvPath string) bool {
+	pipPath := getPipExecutable(venvPath)
+	if _, err := fs.Stat(pipPath); err == nil {
+		return true
+	}
+	return false
+}
+
+// createVirtualEnvironment creates a Python virtual environment
+func createVirtualEnvironment(ctx context.Context, projectDirPath string) error {
+	cmd := exec.CommandContext(ctx, "python3", "-m", "venv", ".venv")
+	cmd.Dir = projectDirPath
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("failed to create virtual environment: %w\nOutput: %s", err, string(output))
+	}
+	return nil
+}
+
+// runPipInstall runs pip install with the given arguments
+func runPipInstall(ctx context.Context, venvPath string, projectDirPath string, args ...string) (string, error) {
+	pipPath := getPipExecutable(venvPath)
+
+	// Build command: pip install [args]
+	cmdArgs := append([]string{"install"}, args...)
+	cmd := exec.CommandContext(ctx, pipPath, cmdArgs...)
+	cmd.Dir = projectDirPath
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(output), fmt.Errorf("pip install failed: %w", err)
+	}
+
+	return string(output), nil
 }
 
 // installRequirementsTxt handles adding slack-cli-hooks to requirements.txt
@@ -189,8 +240,7 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	return fmt.Sprintf("Updated pyproject.toml with %s", style.Highlight(slackCLIHooksPackageSpecifier)), nil
 }
 
-// InstallProjectDependencies is unsupported by Python because a virtual environment is required before installing the project dependencies.
-// TODO(@mbrooks) - should we confirm that the project is using Bolt Python?
+// InstallProjectDependencies creates a virtual environment and installs project dependencies.
 func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath string, hookExecutor hooks.HookExecutor, ios iostreams.IOStreamer, fs afero.Fs, os types.Os) (output string, err error) {
 	var outputs []string
 	var errs []error
@@ -210,44 +260,26 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 		hasPyProjectToml = true
 	}
 
-	// Defer a function to transform the return values
-	defer func() {
-		// Manual steps to setup virtual environment and install dependencies
-		var activateVirtualEnv = "source .venv/bin/activate"
-		if runtime.GOOS == "windows" {
-			activateVirtualEnv = `.venv\Scripts\activate`
+	// Ensure at least one dependency file exists
+	if !hasRequirementsTxt && !hasPyProjectToml {
+		err := fmt.Errorf("no Python dependency file found (requirements.txt or pyproject.toml)")
+		return fmt.Sprintf("Error: %s", err), err
+	}
+
+	// Get virtual environment path
+	venvPath := getVenvPath(projectDirPath)
+
+	// Create virtual environment if it doesn't exist
+	if !venvExists(fs, venvPath) {
+		outputs = append(outputs, "Creating Python virtual environment")
+		if err := createVirtualEnvironment(ctx, projectDirPath); err != nil {
+			outputs = append(outputs, fmt.Sprintf("Error creating virtual environment: %s", err))
+			return strings.Join(outputs, "\n"), err
 		}
-
-		// Get the relative path to the project directory
-		var projectDirPathRel, _ = getProjectDirRelPath(os, os.GetExecutionDir(), projectDirPath)
-
-		outputs = append(outputs, fmt.Sprintf("Manually setup a %s", style.Highlight("Python virtual environment")))
-		if projectDirPathRel != "." {
-			outputs = append(outputs, fmt.Sprintf("  Change into the project: %s", style.CommandText(fmt.Sprintf("cd %s%s", filepath.Base(projectDirPathRel), string(filepath.Separator)))))
-		}
-		outputs = append(outputs, fmt.Sprintf("  Create virtual environment: %s", style.CommandText("python3 -m venv .venv")))
-		outputs = append(outputs, fmt.Sprintf("  Activate virtual environment: %s", style.CommandText(activateVirtualEnv)))
-
-		// Provide appropriate install command based on which file exists
-		if hasRequirementsTxt {
-			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -r requirements.txt")))
-		}
-		if hasPyProjectToml {
-			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -e .")))
-		}
-
-		outputs = append(outputs, fmt.Sprintf("  Learn more: %s", style.Underline("https://docs.python.org/3/tutorial/venv.html")))
-
-		// Get first error or nil
-		var firstErr error
-		if len(errs) > 0 {
-			firstErr = errs[0]
-		}
-
-		// Update return value
-		output = strings.Join(outputs, "\n")
-		err = firstErr
-	}()
+		outputs = append(outputs, fmt.Sprintf("Created virtual environment at %s", style.Highlight(".venv")))
+	} else {
+		outputs = append(outputs, fmt.Sprintf("Found existing virtual environment at %s", style.Highlight(".venv")))
+	}
 
 	// Handle requirements.txt if it exists
 	if hasRequirementsTxt {
@@ -267,14 +299,40 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 		}
 	}
 
-	// If neither file exists, return an error
-	if !hasRequirementsTxt && !hasPyProjectToml {
-		err := fmt.Errorf("no Python dependency file found (requirements.txt or pyproject.toml)")
-		errs = append(errs, err)
-		outputs = append(outputs, fmt.Sprintf("Error: %s", err))
+	// Return early if we had errors updating dependency files
+	if len(errs) > 0 {
+		return strings.Join(outputs, "\n"), errs[0]
 	}
 
-	return
+	// Install dependencies using pip
+	if hasRequirementsTxt {
+		outputs = append(outputs, "Installing dependencies from requirements.txt")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-r", "requirements.txt")
+		if err != nil {
+			errs = append(errs, err)
+			outputs = append(outputs, fmt.Sprintf("Error installing from requirements.txt: %s\n%s", err, pipOutput))
+		} else {
+			outputs = append(outputs, "Successfully installed dependencies from requirements.txt")
+		}
+	}
+
+	if hasPyProjectToml {
+		outputs = append(outputs, "Installing dependencies from pyproject.toml")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-e", ".")
+		if err != nil {
+			errs = append(errs, err)
+			outputs = append(outputs, fmt.Sprintf("Error installing from pyproject.toml: %s\n%s", err, pipOutput))
+		} else {
+			outputs = append(outputs, "Successfully installed dependencies from pyproject.toml")
+		}
+	}
+
+	// Return result
+	output = strings.Join(outputs, "\n")
+	if len(errs) > 0 {
+		return output, errs[0]
+	}
+	return output, nil
 }
 
 // Name prints the name of the runtime

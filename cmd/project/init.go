@@ -52,7 +52,7 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Installs your project dependencies when supported:",
 			"- Deno:    Supported",
 			"- Node.js: Supported",
-			"- Python:  Unsupported",
+			"- Python:  Supported (creates .venv if needed)",
 			"",
 			"Adds an existing app to your project (optional):",
 			"- Prompts to add an existing app from app settings",
