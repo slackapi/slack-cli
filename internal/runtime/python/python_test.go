@@ -166,6 +166,110 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedError:   false,
 			expectedOutputs: "Manually setup a Python virtual environment",
 		},
+		{
+			name: "Error when neither requirements.txt nor pyproject.toml exists",
+			existingFiles: map[string]string{
+				"main.py": "# some python code",
+			},
+			expectedOutputs: "Error: no Python dependency file found",
+			expectedError:   true,
+		},
+		{
+			name: "Skip when pyproject.toml contains slack-cli-hooks",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = [
+    "slack-cli-hooks<1.0.0",
+    "pytest==8.3.2",
+]`,
+			},
+			expectedFiles: map[string]string{
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = [
+    "slack-cli-hooks<1.0.0",
+    "pytest==8.3.2",
+]`,
+			},
+			expectedOutputs: "Found pyproject.toml",
+			expectedError:   false,
+		},
+		{
+			name: "Update when pyproject.toml contains slack-bolt",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = [
+    "slack-bolt>=1.0.0",
+    "pytest==8.3.2",
+]`,
+			},
+			expectedFiles: map[string]string{
+				"pyproject.toml": `[project]
+dependencies = ['slack-bolt>=1.0.0', 'slack-cli-hooks<1.0.0', 'pytest==8.3.2']
+name = 'my-app'
+`,
+			},
+			expectedOutputs: "Updated pyproject.toml",
+			expectedError:   false,
+		},
+		{
+			name: "Update when pyproject.toml does not contain slack-bolt",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = [
+    "pytest==8.3.2",
+]`,
+			},
+			expectedFiles: map[string]string{
+				"pyproject.toml": `[project]
+dependencies = ['pytest==8.3.2', 'slack-cli-hooks<1.0.0']
+name = 'my-app'
+`,
+			},
+			expectedOutputs: "Updated pyproject.toml",
+			expectedError:   false,
+		},
+		{
+			name: "Update both requirements.txt and pyproject.toml when both exist",
+			existingFiles: map[string]string{
+				"requirements.txt": "slack-bolt==2.31.2\npytest==8.3.2",
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = [
+    "slack-bolt>=1.0.0",
+]`,
+			},
+			expectedFiles: map[string]string{
+				"requirements.txt": "slack-bolt==2.31.2\nslack-cli-hooks<1.0.0\npytest==8.3.2",
+				"pyproject.toml": `[project]
+dependencies = ['slack-bolt>=1.0.0', 'slack-cli-hooks<1.0.0']
+name = 'my-app'
+`,
+			},
+			expectedOutputs: "Updated requirements.txt",
+			expectedError:   false,
+		},
+		{
+			name: "Create [project] section when pyproject.toml has no dependencies",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[tool.poetry]
+name = "my-app"`,
+			},
+			expectedFiles: map[string]string{
+				"pyproject.toml": `[project]
+dependencies = ['slack-cli-hooks<1.0.0']
+
+[tool]
+[tool.poetry]
+name = 'my-app'
+`,
+			},
+			expectedOutputs: "Updated pyproject.toml",
+			expectedError:   false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -345,6 +449,18 @@ func Test_Python_IsRuntimeForProject(t *testing.T) {
 			name:              "requirements.txt file exists",
 			sdkConfigRuntime:  "", // Unset to check for file
 			existingFilePaths: []string{"requirements.txt"},
+			expectedBool:      true,
+		},
+		{
+			name:              "pyproject.toml file exists",
+			sdkConfigRuntime:  "", // Unset to check for file
+			existingFilePaths: []string{"pyproject.toml"},
+			expectedBool:      true,
+		},
+		{
+			name:              "both requirements.txt and pyproject.toml exist",
+			sdkConfigRuntime:  "", // Unset to check for file
+			existingFilePaths: []string{"requirements.txt", "pyproject.toml"},
 			expectedBool:      true,
 		},
 	}

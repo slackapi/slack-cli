@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/pelletier/go-toml/v2"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -61,59 +62,20 @@ func (p *Python) IgnoreDirectories() []string {
 	return []string{}
 }
 
-// InstallProjectDependencies is unsupported by Python because a virtual environment is required before installing the project dependencies.
-// TODO(@mbrooks) - should we confirm that the project is using Bolt Python?
-func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath string, hookExecutor hooks.HookExecutor, ios iostreams.IOStreamer, fs afero.Fs, os types.Os) (output string, err error) {
-	var outputs []string
-	var errs []error
-
-	// Defer a function to transform the return values
-	defer func() {
-		// Manual steps to setup virtual environment and install dependencies
-		var activateVirtualEnv = "source .venv/bin/activate"
-		if runtime.GOOS == "windows" {
-			activateVirtualEnv = `.venv\Scripts\activate`
-		}
-
-		// Get the relative path to the project directory
-		var projectDirPathRel, _ = getProjectDirRelPath(os, os.GetExecutionDir(), projectDirPath)
-
-		outputs = append(outputs, fmt.Sprintf("Manually setup a %s", style.Highlight("Python virtual environment")))
-		if projectDirPathRel != "." {
-			outputs = append(outputs, fmt.Sprintf("  Change into the project: %s", style.CommandText(fmt.Sprintf("cd %s%s", filepath.Base(projectDirPathRel), string(filepath.Separator)))))
-		}
-		outputs = append(outputs, fmt.Sprintf("  Create virtual environment: %s", style.CommandText("python3 -m venv .venv")))
-		outputs = append(outputs, fmt.Sprintf("  Activate virtual environment: %s", style.CommandText(activateVirtualEnv)))
-		outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -r requirements.txt")))
-		outputs = append(outputs, fmt.Sprintf("  Learn more: %s", style.Underline("https://docs.python.org/3/tutorial/venv.html")))
-
-		// Get first error or nil
-		var firstErr error
-		if len(errs) > 0 {
-			firstErr = errs[0]
-		}
-
-		// Update return value
-		output = strings.Join(outputs, "\n")
-		err = firstErr
-	}()
-
-	// Read requirements.txt
-	var requirementsFilePath = filepath.Join(projectDirPath, "requirements.txt")
+// installRequirementsTxt handles adding slack-cli-hooks to requirements.txt
+func installRequirementsTxt(fs afero.Fs, projectDirPath string) (output string, err error) {
+	requirementsFilePath := filepath.Join(projectDirPath, "requirements.txt")
 
 	file, err := afero.ReadFile(fs, requirementsFilePath)
 	if err != nil {
-		errs = append(errs, err)
-		outputs = append(outputs, fmt.Sprintf("Error reading requirements.txt: %s", err))
-		return
+		return fmt.Sprintf("Error reading requirements.txt: %s", err), err
 	}
 
 	fileData := string(file)
 
 	// Skip when slack-cli-hooks is already declared in requirements.txt
 	if strings.Contains(fileData, slackCLIHooksPackageName) {
-		outputs = append(outputs, fmt.Sprintf("Found requirements.txt with %s", style.Highlight(slackCLIHooksPackageName)))
-		return
+		return fmt.Sprintf("Found requirements.txt with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
 	// Add slack-cli-hooks to requirements.txt
@@ -133,10 +95,180 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	// Save requirements.txt
 	err = afero.WriteFile(fs, requirementsFilePath, []byte(fileData), 0644)
 	if err != nil {
+		return fmt.Sprintf("Error updating requirements.txt: %s", err), err
+	}
+
+	return fmt.Sprintf("Updated requirements.txt with %s", style.Highlight(slackCLIHooksPackageSpecifier)), nil
+}
+
+// installPyprojectToml handles adding slack-cli-hooks to pyproject.toml
+func installPyprojectToml(fs afero.Fs, projectDirPath string) (output string, err error) {
+	pyprojectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
+
+	file, err := afero.ReadFile(fs, pyprojectFilePath)
+	if err != nil {
+		return fmt.Sprintf("Error reading pyproject.toml: %s", err), err
+	}
+
+	// Parse the entire TOML file as a map to preserve all fields
+	var config map[string]interface{}
+	err = toml.Unmarshal(file, &config)
+	if err != nil {
+		return fmt.Sprintf("Error parsing pyproject.toml: %s", err), err
+	}
+
+	// Get or create [project] section
+	projectSection, exists := config["project"]
+	if !exists {
+		projectSection = make(map[string]interface{})
+		config["project"] = projectSection
+	}
+
+	projectMap, ok := projectSection.(map[string]interface{})
+	if !ok {
+		return "Error: [project] section is not a valid map", fmt.Errorf("[project] section is not a valid map")
+	}
+
+	// Get dependencies array
+	var dependencies []string
+	if depsInterface, exists := projectMap["dependencies"]; exists {
+		if depsSlice, ok := depsInterface.([]interface{}); ok {
+			for _, dep := range depsSlice {
+				if depStr, ok := dep.(string); ok {
+					dependencies = append(dependencies, depStr)
+				}
+			}
+		}
+	}
+
+	// Check if slack-cli-hooks is already declared
+	for _, dep := range dependencies {
+		if strings.Contains(dep, slackCLIHooksPackageName) {
+			return fmt.Sprintf("Found pyproject.toml with %s", style.Highlight(slackCLIHooksPackageName)), nil
+		}
+	}
+
+	// Add slack-cli-hooks to dependencies
+	// Try to insert after slack-bolt if it exists, otherwise append to end
+	inserted := false
+	for i, dep := range dependencies {
+		if strings.Contains(dep, slackBoltPackageName) {
+			// Insert after slack-bolt
+			newDeps := make([]string, 0, len(dependencies)+1)
+			newDeps = append(newDeps, dependencies[:i+1]...)
+			newDeps = append(newDeps, slackCLIHooksPackageSpecifier)
+			newDeps = append(newDeps, dependencies[i+1:]...)
+			dependencies = newDeps
+			inserted = true
+			break
+		}
+	}
+
+	if !inserted {
+		// Append to end of dependencies
+		dependencies = append(dependencies, slackCLIHooksPackageSpecifier)
+	}
+
+	// Update the dependencies in the config map
+	projectMap["dependencies"] = dependencies
+
+	// Marshal back to TOML
+	updatedFile, err := toml.Marshal(&config)
+	if err != nil {
+		return fmt.Sprintf("Error marshaling pyproject.toml: %s", err), err
+	}
+
+	// Save pyproject.toml
+	err = afero.WriteFile(fs, pyprojectFilePath, updatedFile, 0644)
+	if err != nil {
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
+	}
+
+	return fmt.Sprintf("Updated pyproject.toml with %s", style.Highlight(slackCLIHooksPackageSpecifier)), nil
+}
+
+// InstallProjectDependencies is unsupported by Python because a virtual environment is required before installing the project dependencies.
+// TODO(@mbrooks) - should we confirm that the project is using Bolt Python?
+func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath string, hookExecutor hooks.HookExecutor, ios iostreams.IOStreamer, fs afero.Fs, os types.Os) (output string, err error) {
+	var outputs []string
+	var errs []error
+
+	// Detect which dependency file(s) exist
+	requirementsFilePath := filepath.Join(projectDirPath, "requirements.txt")
+	pyprojectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
+
+	hasRequirementsTxt := false
+	hasPyprojectToml := false
+
+	if _, err := fs.Stat(requirementsFilePath); err == nil {
+		hasRequirementsTxt = true
+	}
+
+	if _, err := fs.Stat(pyprojectFilePath); err == nil {
+		hasPyprojectToml = true
+	}
+
+	// Defer a function to transform the return values
+	defer func() {
+		// Manual steps to setup virtual environment and install dependencies
+		var activateVirtualEnv = "source .venv/bin/activate"
+		if runtime.GOOS == "windows" {
+			activateVirtualEnv = `.venv\Scripts\activate`
+		}
+
+		// Get the relative path to the project directory
+		var projectDirPathRel, _ = getProjectDirRelPath(os, os.GetExecutionDir(), projectDirPath)
+
+		outputs = append(outputs, fmt.Sprintf("Manually setup a %s", style.Highlight("Python virtual environment")))
+		if projectDirPathRel != "." {
+			outputs = append(outputs, fmt.Sprintf("  Change into the project: %s", style.CommandText(fmt.Sprintf("cd %s%s", filepath.Base(projectDirPathRel), string(filepath.Separator)))))
+		}
+		outputs = append(outputs, fmt.Sprintf("  Create virtual environment: %s", style.CommandText("python3 -m venv .venv")))
+		outputs = append(outputs, fmt.Sprintf("  Activate virtual environment: %s", style.CommandText(activateVirtualEnv)))
+
+		// Provide appropriate install command based on which file exists
+		if hasRequirementsTxt {
+			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -r requirements.txt")))
+		} else if hasPyprojectToml {
+			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -e .")))
+		}
+
+		outputs = append(outputs, fmt.Sprintf("  Learn more: %s", style.Underline("https://docs.python.org/3/tutorial/venv.html")))
+
+		// Get first error or nil
+		var firstErr error
+		if len(errs) > 0 {
+			firstErr = errs[0]
+		}
+
+		// Update return value
+		output = strings.Join(outputs, "\n")
+		err = firstErr
+	}()
+
+	// Handle requirements.txt if it exists
+	if hasRequirementsTxt {
+		output, err := installRequirementsTxt(fs, projectDirPath)
+		outputs = append(outputs, output)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	// Handle pyproject.toml if it exists
+	if hasPyprojectToml {
+		output, err := installPyprojectToml(fs, projectDirPath)
+		outputs = append(outputs, output)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	// If neither file exists, return an error
+	if !hasRequirementsTxt && !hasPyprojectToml {
+		err := fmt.Errorf("no Python dependency file found (requirements.txt or pyproject.toml)")
 		errs = append(errs, err)
-		outputs = append(outputs, fmt.Sprintf("Error updating requirements.txt: %s", err))
-	} else {
-		outputs = append(outputs, fmt.Sprintf("Updated requirements.txt with %s", style.Highlight(slackCLIHooksPackageSpecifier)))
+		outputs = append(outputs, fmt.Sprintf("Error: %s", err))
 	}
 
 	return
@@ -174,9 +306,14 @@ func IsRuntimeForProject(ctx context.Context, fs afero.Fs, dirPath string, sdkCo
 		return true
 	}
 
-	// Python projects must have a requirements.txt in the root dirPath
+	// Python projects must have a requirements.txt or pyproject.toml in the root dirPath
 	var requirementsTxtPath = filepath.Join(dirPath, "requirements.txt")
 	if _, err := fs.Stat(requirementsTxtPath); err == nil {
+		return true
+	}
+
+	var pyprojectTomlPath = filepath.Join(dirPath, "pyproject.toml")
+	if _, err := fs.Stat(pyprojectTomlPath); err == nil {
 		return true
 	}
 
