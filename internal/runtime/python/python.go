@@ -229,7 +229,8 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 		// Provide appropriate install command based on which file exists
 		if hasRequirementsTxt {
 			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -r requirements.txt")))
-		} else if hasPyprojectToml {
+		}
+		if hasPyprojectToml {
 			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -e .")))
 		}
 

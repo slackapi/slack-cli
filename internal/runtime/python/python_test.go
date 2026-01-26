@@ -167,6 +167,35 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedOutputs: "Manually setup a Python virtual environment",
 		},
 		{
+			name: "Should output pip install -r requirements.txt when only requirements.txt exists",
+			existingFiles: map[string]string{
+				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
+			},
+			expectedError:   false,
+			expectedOutputs: "pip install -r requirements.txt",
+		},
+		{
+			name: "Should output pip install -e . when only pyproject.toml exists",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = ["slack-cli-hooks<1.0.0"]`,
+			},
+			expectedError:   false,
+			expectedOutputs: "pip install -e .",
+		},
+		{
+			name: "Should output both install commands when both files exist",
+			existingFiles: map[string]string{
+				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
+				"pyproject.toml": `[project]
+name = "my-app"
+dependencies = ["slack-cli-hooks<1.0.0"]`,
+			},
+			expectedError:   false,
+			expectedOutputs: "pip install -r requirements.txt",
+		},
+		{
 			name: "Error when neither requirements.txt nor pyproject.toml exists",
 			existingFiles: map[string]string{
 				"main.py": "# some python code",
@@ -312,6 +341,24 @@ name = 'my-app'
 			}
 
 			require.Contains(t, outputs, tt.expectedOutputs)
+
+			// Special check for when both files exist - should show both install commands
+			if tt.name == "Should output both install commands when both files exist" {
+				require.Contains(t, outputs, "pip install -r requirements.txt", "Should contain requirements.txt install command")
+				require.Contains(t, outputs, "pip install -e .", "Should contain pyproject.toml install command")
+			}
+
+			// Special check to ensure only requirements.txt command appears
+			if tt.name == "Should output pip install -r requirements.txt when only requirements.txt exists" {
+				require.Contains(t, outputs, "pip install -r requirements.txt")
+				require.NotContains(t, outputs, "pip install -e .", "Should NOT contain pyproject.toml install command when only requirements.txt exists")
+			}
+
+			// Special check to ensure only pyproject.toml command appears
+			if tt.name == "Should output pip install -e . when only pyproject.toml exists" {
+				require.Contains(t, outputs, "pip install -e .")
+				require.NotContains(t, outputs, "pip install -r requirements.txt", "Should NOT contain requirements.txt install command when only pyproject.toml exists")
+			}
 
 			if tt.expectedError {
 				require.Error(t, err)
