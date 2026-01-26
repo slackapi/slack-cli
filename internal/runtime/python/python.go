@@ -101,11 +101,11 @@ func installRequirementsTxt(fs afero.Fs, projectDirPath string) (output string, 
 	return fmt.Sprintf("Updated requirements.txt with %s", style.Highlight(slackCLIHooksPackageSpecifier)), nil
 }
 
-// installPyprojectToml handles adding slack-cli-hooks to pyproject.toml
-func installPyprojectToml(fs afero.Fs, projectDirPath string) (output string, err error) {
-	pyprojectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
+// installPyProjectToml handles adding slack-cli-hooks to pyproject.toml
+func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, err error) {
+	pyProjectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
 
-	file, err := afero.ReadFile(fs, pyprojectFilePath)
+	file, err := afero.ReadFile(fs, pyProjectFilePath)
 	if err != nil {
 		return fmt.Sprintf("Error reading pyproject.toml: %s", err), err
 	}
@@ -179,7 +179,7 @@ func installPyprojectToml(fs afero.Fs, projectDirPath string) (output string, er
 	}
 
 	// Save pyproject.toml
-	err = afero.WriteFile(fs, pyprojectFilePath, updatedFile, 0644)
+	err = afero.WriteFile(fs, pyProjectFilePath, updatedFile, 0644)
 	if err != nil {
 		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
@@ -195,17 +195,17 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 
 	// Detect which dependency file(s) exist
 	requirementsFilePath := filepath.Join(projectDirPath, "requirements.txt")
-	pyprojectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
+	pyProjectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
 
 	hasRequirementsTxt := false
-	hasPyprojectToml := false
+	hasPyProjectToml := false
 
 	if _, err := fs.Stat(requirementsFilePath); err == nil {
 		hasRequirementsTxt = true
 	}
 
-	if _, err := fs.Stat(pyprojectFilePath); err == nil {
-		hasPyprojectToml = true
+	if _, err := fs.Stat(pyProjectFilePath); err == nil {
+		hasPyProjectToml = true
 	}
 
 	// Defer a function to transform the return values
@@ -230,7 +230,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 		if hasRequirementsTxt {
 			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -r requirements.txt")))
 		}
-		if hasPyprojectToml {
+		if hasPyProjectToml {
 			outputs = append(outputs, fmt.Sprintf("  Install project dependencies: %s", style.CommandText("pip install -e .")))
 		}
 
@@ -257,8 +257,8 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	}
 
 	// Handle pyproject.toml if it exists
-	if hasPyprojectToml {
-		output, err := installPyprojectToml(fs, projectDirPath)
+	if hasPyProjectToml {
+		output, err := installPyProjectToml(fs, projectDirPath)
 		outputs = append(outputs, output)
 		if err != nil {
 			errs = append(errs, err)
@@ -266,7 +266,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	}
 
 	// If neither file exists, return an error
-	if !hasRequirementsTxt && !hasPyprojectToml {
+	if !hasRequirementsTxt && !hasPyProjectToml {
 		err := fmt.Errorf("no Python dependency file found (requirements.txt or pyproject.toml)")
 		errs = append(errs, err)
 		outputs = append(outputs, fmt.Sprintf("Error: %s", err))
@@ -313,8 +313,8 @@ func IsRuntimeForProject(ctx context.Context, fs afero.Fs, dirPath string, sdkCo
 		return true
 	}
 
-	var pyprojectTomlPath = filepath.Join(dirPath, "pyproject.toml")
-	if _, err := fs.Stat(pyprojectTomlPath); err == nil {
+	var pyProjectTomlPath = filepath.Join(dirPath, "pyproject.toml")
+	if _, err := fs.Stat(pyProjectTomlPath); err == nil {
 		return true
 	}
 
