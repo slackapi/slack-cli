@@ -200,7 +200,7 @@ dependencies = ["slack-cli-hooks<1.0.0"]`,
 			existingFiles: map[string]string{
 				"main.py": "# some python code",
 			},
-			expectedOutputs: "Error: no Python dependency file found",
+			expectedOutputs: "Error: No Python dependency file found",
 			expectedError:   true,
 		},
 		{
