@@ -267,7 +267,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 
 	// If neither file exists, return an error
 	if !hasRequirementsTxt && !hasPyProjectToml {
-		err := fmt.Errorf("No Python dependency file found (requirements.txt or pyproject.toml)")
+		err := fmt.Errorf("no Python dependency file found (requirements.txt or pyproject.toml)")
 		errs = append(errs, err)
 		outputs = append(outputs, fmt.Sprintf("Error: %s", err))
 	}
