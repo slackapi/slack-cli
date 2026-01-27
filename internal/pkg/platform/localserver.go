@@ -351,9 +351,25 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 
 // WatchManifest watches for manifest file changes and triggers app reinstallation
 func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, app types.App) error {
-	// Check for watch SDKCLI configuration
+	// Check for watch SDK CLI configuration
 	if !r.cliConfig.Config.Watch.IsAvailable() {
 		r.clients.IO.PrintDebug(ctx, "To watch file changes, provide watch configuration in %s", config.GetProjectHooksJSONFilePath())
+		// Block until context is cancelled to keep the goroutine alive
+		<-ctx.Done()
+		return nil
+	}
+
+	// Get manifest source to determine if we should watch for local manifest changes
+	manifestSource, err := r.clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Skip manifest watching if manifest source is remote
+	if manifestSource.Equals(config.ManifestSourceRemote) {
+		r.clients.IO.PrintDebug(ctx, "Manifest watching disabled: manifest.source is set to remote")
+		// Block until context is cancelled to keep the goroutine alive
+		<-ctx.Done()
 		return nil
 	}
 
@@ -361,6 +377,8 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 	paths, filterRegex, enabled := r.cliConfig.Config.Watch.GetManifestWatchConfig()
 	if !enabled {
 		r.clients.IO.PrintDebug(ctx, "Manifest watching is not enabled")
+		// Block until context is cancelled to keep the goroutine alive
+		<-ctx.Done()
 		return nil
 	}
 
