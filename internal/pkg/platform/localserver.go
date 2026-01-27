@@ -349,75 +349,57 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	return nil
 }
 
-// Watch for file changes. If configuration for watch is provided
-// The CLI will watch for a file changes. To watch specific changes
-// provide additional filter regex.
-func (r *LocalServer) Watch(ctx context.Context, auth types.SlackAuth, app types.App) error {
+// WatchManifest watches for manifest file changes and triggers app reinstallation
+func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, app types.App) error {
 	// Check for watch SDKCLI configuration
 	if !r.cliConfig.Config.Watch.IsAvailable() {
 		r.clients.IO.PrintDebug(ctx, "To watch file changes, provide watch configuration in %s", config.GetProjectHooksJSONFilePath())
 		return nil
 	}
+
+	// Get manifest watch configuration
+	paths, filterRegex, enabled := r.cliConfig.Config.Watch.GetManifestWatchConfig()
+	if !enabled {
+		r.clients.IO.PrintDebug(ctx, "Manifest watching is not enabled")
+		return nil
+	}
+
 	// Init watcher
 	w := watcher.New()
 	w.SetMaxEvents(1)
 	w.FilterOps(watcher.Write)
 
 	// Use SDK-provided filter regex
-	if r.cliConfig.Config.Watch.FilterRegex != "" {
-		r.clients.IO.PrintDebug(ctx, fmt.Sprintf("Watching changes to file paths matching: %s", r.cliConfig.Config.Watch.FilterRegex))
-		w.AddFilterHook(watcher.RegexFilterHook(regexp.MustCompile(r.cliConfig.Config.Watch.FilterRegex), false))
+	if filterRegex != "" {
+		r.clients.IO.PrintDebug(ctx, "Watching manifest changes to file paths matching: %s", filterRegex)
+		w.AddFilterHook(watcher.RegexFilterHook(regexp.MustCompile(filterRegex), false))
 	}
 
 	// Add provided paths to watcher
-	for _, path := range r.cliConfig.Config.Watch.Paths {
+	for _, path := range paths {
 		if err := w.AddRecursive(path); err != nil {
 			r.log.Data["cloud_run_watch_error"] = fmt.Sprintf("manifest_watcher.paths: %s", err)
 			r.log.Warn("on_cloud_run_watch_error")
-			// TODO: should this prevent further execution? If so, return the err
 		}
 	}
 
-	// Begin watching for file changes
+	// Begin watching for manifest file changes
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				r.clients.IO.PrintDebug(ctx, "File watcher context canceled, returning.")
+				r.clients.IO.PrintDebug(ctx, "Manifest file watcher context canceled, returning.")
 				return
 			case event := <-w.Event:
-				r.log.Data["cloud_run_watch_file_change"] = event.Path
-				r.log.Info("on_cloud_run_watch_file_change")
+				r.log.Data["cloud_run_watch_manifest_change"] = event.Path
+				r.log.Info("on_cloud_run_watch_manifest_change")
 
-				// Check to see whether the SDK managed connection flag is enabled
-				// If so Delegate the connection to the SDK otherwise Start connection
-				if r.cliConfig.Config.SDKManagedConnection {
-					r.clients.IO.PrintDebug(ctx, "Delegating connection to SDK managed script hook")
-					// Stop the previous process before starting a new one
-					r.stopDelegateProcess(ctx)
-
-					// Delegate connection to hook; this should be a blocking call, as the delegate should be a server, too.
-					go func() {
-						err := r.StartDelegate(ctx)
-						if err != nil {
-							r.clients.IO.PrintDebug(ctx, "Delegated start hook failed on restart: %v", err)
-							return
-						}
-					}()
-				} else {
-					r.log.Info("on_cloud_run_watch_file_change") // TODO: DELETE THIS LINE BEFORE COMMIT - its for branching
-					// Listen for messages in a goroutine, and provide an error channel for raising errors and a done channel for signifying clean exit
-					// go func() {
-					// 	errChan <- r.Start(ctx)
-					// }()
-				}
-
+				// Reinstall the app when manifest changes
 				if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", r.log, auth, app); err != nil {
-					// The install command will have handled printing the error
 					r.log.Data["cloud_run_watch_error"] = err.Error()
 					r.log.Warn("on_cloud_run_watch_error")
 				} else {
-					r.log.Info("on_cloud_run_watch_file_change_reinstalled")
+					r.log.Info("on_cloud_run_watch_manifest_change_reinstalled")
 				}
 			case err := <-w.Error:
 				r.log.Data["cloud_run_watch_error"] = err.Error()
@@ -429,6 +411,94 @@ func (r *LocalServer) Watch(ctx context.Context, auth types.SlackAuth, app types
 	}()
 
 	return w.Start(time.Millisecond * 100)
+}
+
+// WatchApp starts the delegated server and watches for app/code file changes to trigger restarts (SDK-managed connections only)
+func (r *LocalServer) WatchApp(ctx context.Context) error {
+	// Only run for SDK-managed connections
+	if !r.cliConfig.Config.SDKManagedConnection {
+		r.clients.IO.PrintDebug(ctx, "App watching is only enabled for SDK-managed connections")
+		return nil
+	}
+
+	// Check for watch SDKCLI configuration
+	watchAvailable := r.cliConfig.Config.Watch.IsAvailable()
+	paths, filterRegex, watchEnabled := []string{}, "", false
+	if watchAvailable {
+		paths, filterRegex, watchEnabled = r.cliConfig.Config.Watch.GetAppWatchConfig()
+	}
+
+	// Start the initial delegated server process
+	r.clients.IO.PrintDebug(ctx, "Starting initial delegated server process")
+	serverErrChan := make(chan error, 1)
+	go func() {
+		err := r.StartDelegate(ctx)
+		serverErrChan <- err
+	}()
+
+	// If watch is not configured or not enabled, just wait for the server to exit
+	if !watchAvailable || !watchEnabled {
+		r.clients.IO.PrintDebug(ctx, "App file watching is not enabled, running server without restart capability")
+		return <-serverErrChan
+	}
+
+	// Init watcher for restarts
+	w := watcher.New()
+	w.SetMaxEvents(1)
+	w.FilterOps(watcher.Write)
+
+	// Use SDK-provided filter regex
+	if filterRegex != "" {
+		r.clients.IO.PrintDebug(ctx, "Watching app changes to file paths matching: %s", filterRegex)
+		w.AddFilterHook(watcher.RegexFilterHook(regexp.MustCompile(filterRegex), false))
+	}
+
+	// Add provided paths to watcher
+	for _, path := range paths {
+		if err := w.AddRecursive(path); err != nil {
+			r.log.Data["cloud_run_watch_error"] = fmt.Sprintf("app_watcher.paths: %s", err)
+			r.log.Warn("on_cloud_run_watch_error")
+		}
+	}
+
+	// Begin watching for app file changes
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				r.clients.IO.PrintDebug(ctx, "App file watcher context canceled, returning.")
+				return
+			case event := <-w.Event:
+				r.log.Data["cloud_run_watch_app_change"] = event.Path
+				r.log.Info("on_cloud_run_watch_app_change")
+
+				// Stop the previous process before starting a new one
+				r.stopDelegateProcess(ctx)
+
+				// Start new delegated server process
+				go func() {
+					err := r.StartDelegate(ctx)
+					if err != nil {
+						r.clients.IO.PrintDebug(ctx, "Delegated start hook failed on restart: %v", err)
+						return
+					}
+				}()
+			case err := <-w.Error:
+				r.log.Data["cloud_run_watch_error"] = err.Error()
+				r.log.Warn("on_cloud_run_watch_error")
+			case <-w.Closed:
+				return
+			}
+		}
+	}()
+
+	// Start the watcher and wait for either the watcher or server to error
+	if err := w.Start(time.Millisecond * 100); err != nil {
+		return err
+	}
+
+	// Wait for the initial server to exit (if it does)
+	return <-serverErrChan
 }
 
 func (r *LocalServer) WatchActivityLogs(ctx context.Context, minLevel string) error {
