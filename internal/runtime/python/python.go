@@ -110,18 +110,24 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 		return fmt.Sprintf("Error reading pyproject.toml: %s", err), err
 	}
 
-	// Parse the entire TOML file as a map to preserve all fields
+	fileData := string(file)
+
+	// Check if slack-cli-hooks is already declared
+	if strings.Contains(fileData, slackCLIHooksPackageName) {
+		return fmt.Sprintf("Found pyproject.toml with %s", style.Highlight(slackCLIHooksPackageName)), nil
+	}
+
+	// Parse only to validate the file structure
 	var config map[string]interface{}
 	err = toml.Unmarshal(file, &config)
 	if err != nil {
 		return fmt.Sprintf("Error parsing pyproject.toml: %s", err), err
 	}
 
-	// Get or create [project] section
+	// Verify [project] section and dependencies exist
 	projectSection, exists := config["project"]
 	if !exists {
-		projectSection = make(map[string]interface{})
-		config["project"] = projectSection
+		return "Error: pyproject.toml missing [project] section", fmt.Errorf("pyproject.toml missing [project] section")
 	}
 
 	projectMap, ok := projectSection.(map[string]interface{})
@@ -129,57 +135,42 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 		return "Error: [project] section is not a valid map", fmt.Errorf("[project] section is not a valid map")
 	}
 
-	// Get dependencies array
-	var dependencies []string
-	if depsInterface, exists := projectMap["dependencies"]; exists {
-		if depsSlice, ok := depsInterface.([]interface{}); ok {
-			for _, dep := range depsSlice {
-				if depStr, ok := dep.(string); ok {
-					dependencies = append(dependencies, depStr)
-				}
-			}
-		}
+	if _, exists := projectMap["dependencies"]; !exists {
+		return "Error: pyproject.toml missing dependencies array", fmt.Errorf("pyproject.toml missing dependencies array")
 	}
 
-	// Check if slack-cli-hooks is already declared
-	for _, dep := range dependencies {
-		if strings.Contains(dep, slackCLIHooksPackageName) {
-			return fmt.Sprintf("Found pyproject.toml with %s", style.Highlight(slackCLIHooksPackageName)), nil
-		}
+	// Use string manipulation to add the dependency while preserving formatting
+	// This regex matches the dependencies array and its contents, handling both single-line and multi-line formats
+	dependenciesRegex := regexp.MustCompile(`(?s)(dependencies\s*=\s*\[)([^\]]*?)(\])`)
+	matches := dependenciesRegex.FindStringSubmatch(fileData)
+
+	if len(matches) == 0 {
+		return "Error: could not find dependencies array in pyproject.toml", fmt.Errorf("could not find dependencies array")
 	}
 
-	// Add slack-cli-hooks to dependencies
-	// Try to insert after slack-bolt if it exists, otherwise append to end
-	inserted := false
-	for i, dep := range dependencies {
-		if strings.Contains(dep, slackBoltPackageName) {
-			// Insert after slack-bolt
-			newDeps := make([]string, 0, len(dependencies)+1)
-			newDeps = append(newDeps, dependencies[:i+1]...)
-			newDeps = append(newDeps, slackCLIHooksPackageSpecifier)
-			newDeps = append(newDeps, dependencies[i+1:]...)
-			dependencies = newDeps
-			inserted = true
-			break
-		}
+	prefix := matches[1]  // "dependencies = ["
+	content := matches[2] // array contents
+	suffix := matches[3]  // "]"
+
+	// Always append slack-cli-hooks at the end of the dependencies array
+	var newContent string
+	content = strings.TrimRight(content, " \t\n")
+	if !strings.HasSuffix(content, ",") {
+		content += ","
+	}
+	if strings.Contains(content, "\n") {
+		// Multi-line format: append with proper indentation and trailing comma
+		newContent = content + "\n" + `    "` + slackCLIHooksPackageSpecifier + `",` + "\n"
+	} else {
+		// Single-line format: append inline without trailing comma (cleaner UX)
+		newContent = content + ` "` + slackCLIHooksPackageSpecifier + `"`
 	}
 
-	if !inserted {
-		// Append to end of dependencies
-		dependencies = append(dependencies, slackCLIHooksPackageSpecifier)
-	}
-
-	// Update the dependencies in the config map
-	projectMap["dependencies"] = dependencies
-
-	// Marshal back to TOML
-	updatedFile, err := toml.Marshal(&config)
-	if err != nil {
-		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
-	}
+	// Replace the dependencies array content
+	fileData = dependenciesRegex.ReplaceAllString(fileData, prefix+newContent+suffix)
 
 	// Save pyproject.toml
-	err = afero.WriteFile(fs, pyProjectFilePath, updatedFile, 0644)
+	err = afero.WriteFile(fs, pyProjectFilePath, []byte(fileData), 0644)
 	if err != nil {
 		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}

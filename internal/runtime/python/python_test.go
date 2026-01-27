@@ -236,9 +236,12 @@ dependencies = [
 			},
 			expectedFiles: map[string]string{
 				"pyproject.toml": `[project]
-dependencies = ['slack-bolt>=1.0.0', 'slack-cli-hooks<1.0.0', 'pytest==8.3.2']
-name = 'my-app'
-`,
+name = "my-app"
+dependencies = [
+    "slack-bolt>=1.0.0",
+    "pytest==8.3.2",
+    "slack-cli-hooks<1.0.0",
+]`,
 			},
 			expectedOutputs: "Updated pyproject.toml",
 			expectedError:   false,
@@ -254,9 +257,11 @@ dependencies = [
 			},
 			expectedFiles: map[string]string{
 				"pyproject.toml": `[project]
-dependencies = ['pytest==8.3.2', 'slack-cli-hooks<1.0.0']
-name = 'my-app'
-`,
+name = "my-app"
+dependencies = [
+    "pytest==8.3.2",
+    "slack-cli-hooks<1.0.0",
+]`,
 			},
 			expectedOutputs: "Updated pyproject.toml",
 			expectedError:   false,
@@ -274,30 +279,23 @@ dependencies = [
 			expectedFiles: map[string]string{
 				"requirements.txt": "slack-bolt==2.31.2\nslack-cli-hooks<1.0.0\npytest==8.3.2",
 				"pyproject.toml": `[project]
-dependencies = ['slack-bolt>=1.0.0', 'slack-cli-hooks<1.0.0']
-name = 'my-app'
-`,
+name = "my-app"
+dependencies = [
+    "slack-bolt>=1.0.0",
+    "slack-cli-hooks<1.0.0",
+]`,
 			},
 			expectedOutputs: "Updated requirements.txt",
 			expectedError:   false,
 		},
 		{
-			name: "Create [project] section when pyproject.toml has no dependencies",
+			name: "Error when pyproject.toml has no dependencies array",
 			existingFiles: map[string]string{
-				"pyproject.toml": `[tool.poetry]
+				"pyproject.toml": `[project]
 name = "my-app"`,
 			},
-			expectedFiles: map[string]string{
-				"pyproject.toml": `[project]
-dependencies = ['slack-cli-hooks<1.0.0']
-
-[tool]
-[tool.poetry]
-name = 'my-app'
-`,
-			},
-			expectedOutputs: "Updated pyproject.toml",
-			expectedError:   false,
+			expectedOutputs: "Error: pyproject.toml missing dependencies array",
+			expectedError:   true,
 		},
 	}
 	for _, tt := range tests {
