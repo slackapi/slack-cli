@@ -256,7 +256,8 @@ func (r *LocalServer) stopDelegateProcess(ctx context.Context) {
 		if process != nil {
 			r.clients.IO.PrintDebug(ctx, "Stopping previous delegated process (PID: %d)", process.Pid)
 			// Kill the process gracefully
-			if err := process.Signal(os.Interrupt); err != nil {
+			err := process.Signal(os.Interrupt)
+			if err != nil {
 				// If interrupt fails, force kill
 				r.clients.IO.PrintDebug(ctx, "Failed to interrupt process, sending SIGKILL: %v", err)
 				_ = process.Kill()
