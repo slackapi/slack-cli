@@ -127,7 +127,7 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	// Verify [project] section and dependencies exist
 	projectSection, exists := config["project"]
 	if !exists {
-		err := fmt.Errorf("pyproject.toml missing [project] section")
+		err := fmt.Errorf("pyproject.toml missing project section")
 		return fmt.Sprintf("Error: %s", err), err
 	}
 
