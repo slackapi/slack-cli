@@ -132,15 +132,17 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 
 	projectMap, ok := projectSection.(map[string]interface{})
 	if !ok {
-		return "Error: [project] section is not a valid map", fmt.Errorf("[project] section is not a valid map")
+		return "Error: pyproject.toml project section is not a valid format", fmt.Errorf("pyproject.toml project section is not a valid format")
 	}
 
 	if _, exists := projectMap["dependencies"]; !exists {
 		return "Error: pyproject.toml missing dependencies array", fmt.Errorf("pyproject.toml missing dependencies array")
 	}
 
-	// Use string manipulation to add the dependency while preserving formatting
-	// This regex matches the dependencies array and its contents, handling both single-line and multi-line formats
+	// Use string manipulation to add the dependency while preserving formatting.
+	// This regex matches the dependencies array and its contents, handling both single-line and multi-line formats.
+	// Note: This regex may not correctly handle commented-out dependencies arrays or nested brackets in string values.
+	// These edge cases are uncommon in practice and the TOML validation above will catch malformed files.
 	dependenciesRegex := regexp.MustCompile(`(?s)(dependencies\s*=\s*\[)([^\]]*?)(\])`)
 	matches := dependenciesRegex.FindStringSubmatch(fileData)
 
@@ -152,7 +154,10 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	content := matches[2] // array contents
 	suffix := matches[3]  // "]"
 
-	// Always append slack-cli-hooks at the end of the dependencies array
+	// Always append slack-cli-hooks at the end of the dependencies array.
+	// Formatting choice: Multi-line arrays get a trailing comma to match Python/TOML conventions
+	// and make future additions cleaner. Single-line arrays omit the trailing comma for a more
+	// compact appearance, which is the typical style for short dependency lists.
 	var newContent string
 	content = strings.TrimRight(content, " \t\n")
 	if !strings.HasSuffix(content, ",") {
@@ -162,7 +167,7 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 		// Multi-line format: append with proper indentation and trailing comma
 		newContent = content + "\n" + `    "` + slackCLIHooksPackageSpecifier + `",` + "\n"
 	} else {
-		// Single-line format: append inline without trailing comma (cleaner UX)
+		// Single-line format: append inline without trailing comma
 		newContent = content + ` "` + slackCLIHooksPackageSpecifier + `"`
 	}
 

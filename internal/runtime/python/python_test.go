@@ -297,6 +297,24 @@ name = "my-app"`,
 			expectedOutputs: "Error: pyproject.toml missing dependencies array",
 			expectedError:   true,
 		},
+		{
+			name: "Error when pyproject.toml has no [project] section",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[tool.black]
+line-length = 88`,
+			},
+			expectedOutputs: "Error: pyproject.toml missing [project] section",
+			expectedError:   true,
+		},
+		{
+			name: "Error when pyproject.toml is invalid TOML",
+			existingFiles: map[string]string{
+				"pyproject.toml": `[project
+name = "broken`,
+			},
+			expectedOutputs: "Error parsing pyproject.toml",
+			expectedError:   true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
