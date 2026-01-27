@@ -15,6 +15,7 @@
 package hooks
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -67,7 +68,22 @@ func (pv ProtocolVersions) Preferred() Protocol {
 	return HookProtocolDefault
 }
 
+// WatchOpts contains details of file watcher configurations
 type WatchOpts struct {
+	Manifest    *ManifestWatchOpts `json:"manifest,omitempty"`
+	App         *AppWatchOpts      `json:"app,omitempty"`
+	FilterRegex string             `json:"filter-regex,omitempty"` // Legacy for manifest watching
+	Paths       []string           `json:"paths,omitempty"`        // Legacy for manifest watching
+}
+
+// ManifestWatchOpts configures watching for manifest changes for reinstall
+type ManifestWatchOpts struct {
+	FilterRegex string   `json:"filter-regex,omitempty"`
+	Paths       []string `json:"paths,omitempty"`
+}
+
+// AppWatchOpts configures watching for app/code changes for server restart
+type AppWatchOpts struct {
 	FilterRegex string   `json:"filter-regex,omitempty"`
 	Paths       []string `json:"paths,omitempty"`
 }
@@ -75,4 +91,49 @@ type WatchOpts struct {
 // IsAvailable returns if watch options exist
 func (w *WatchOpts) IsAvailable() bool {
 	return w != nil
+}
+
+// GetManifestWatchConfig returns manifest watch config
+func (w *WatchOpts) GetManifestWatchConfig() (paths []string, filterRegex string, enabled bool) {
+	if w.Manifest != nil {
+		return w.Manifest.Paths, w.Manifest.FilterRegex, len(w.Manifest.Paths) > 0
+	}
+	// Backward compatibility: top-level paths/filter-regex for manifest watching
+	return w.Paths, w.FilterRegex, len(w.Paths) > 0
+}
+
+// GetAppWatchConfig returns app watch config
+func (w *WatchOpts) GetAppWatchConfig() (paths []string, filterRegex string, enabled bool) {
+	if w.App != nil {
+		return w.App.Paths, w.App.FilterRegex, len(w.App.Paths) > 0
+	}
+	return nil, "", false
+}
+
+// String formats WatchOpts for debug outputs
+func (w WatchOpts) String() string {
+	var parts []string
+	if w.Manifest != nil {
+		parts = append(parts, fmt.Sprintf("Manifest:%s", w.Manifest.String()))
+	} else if len(w.Paths) > 0 || w.FilterRegex != "" {
+		parts = append(parts, fmt.Sprintf("Paths:%v", w.Paths))
+		parts = append(parts, fmt.Sprintf("FilterRegex:%s", w.FilterRegex))
+	}
+	if w.App != nil {
+		parts = append(parts, fmt.Sprintf("App:%s", w.App.String()))
+	}
+	if len(parts) == 0 {
+		return "{}"
+	}
+	return fmt.Sprintf("{%s}", strings.Join(parts, " "))
+}
+
+// String formats ManifestWatchOpts for debug outputs
+func (m ManifestWatchOpts) String() string {
+	return fmt.Sprintf("{Paths:%v FilterRegex:%s}", m.Paths, m.FilterRegex)
+}
+
+// String formats AppWatchOpts for debug outputs
+func (a AppWatchOpts) String() string {
+	return fmt.Sprintf("{Paths:%v FilterRegex:%s}", a.Paths, a.FilterRegex)
 }
