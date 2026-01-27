@@ -127,16 +127,19 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	// Verify [project] section and dependencies exist
 	projectSection, exists := config["project"]
 	if !exists {
-		return "Error: pyproject.toml missing [project] section", fmt.Errorf("pyproject.toml missing [project] section")
+		err := fmt.Errorf("pyproject.toml missing [project] section")
+		return fmt.Sprintf("Error: %s", err), err
 	}
 
 	projectMap, ok := projectSection.(map[string]interface{})
 	if !ok {
-		return "Error: pyproject.toml project section is not a valid format", fmt.Errorf("pyproject.toml project section is not a valid format")
+		err := fmt.Errorf("pyproject.toml project section is not a valid format")
+		return fmt.Sprintf("Error: %s", err), err
 	}
 
 	if _, exists := projectMap["dependencies"]; !exists {
-		return "Error: pyproject.toml missing dependencies array", fmt.Errorf("pyproject.toml missing dependencies array")
+		err := fmt.Errorf("pyproject.toml missing dependencies array")
+		return fmt.Sprintf("Error: %s", err), err
 	}
 
 	// Use string manipulation to add the dependency while preserving formatting.
@@ -147,7 +150,8 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	matches := dependenciesRegex.FindStringSubmatch(fileData)
 
 	if len(matches) == 0 {
-		return "Error: could not find dependencies array in pyproject.toml", fmt.Errorf("could not find dependencies array")
+		err := fmt.Errorf("could not find dependencies array in pyproject.toml")
+		return fmt.Sprintf("Error: %s", err), err
 	}
 
 	prefix := matches[1]  // "dependencies = ["
