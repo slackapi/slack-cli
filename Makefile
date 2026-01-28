@@ -100,5 +100,5 @@ tag:
 	git add docs/guides/installing-the-slack-cli-for-windows.md
 	@printf "$(FONT_BOLD)Git Commit$(FONT_RESET)\n"
 	git commit -m "chore: release slack-cli v$(RELEASE_VERSION)"
-	@printf "$(FONT_BOLD)Git Tag$(FONT_RESET)\n"
-	git tag v$(RELEASE_VERSION)
+#	@printf "$(FONT_BOLD)Git Tag$(FONT_RESET)\n"
+#	git tag v$(RELEASE_VERSION)

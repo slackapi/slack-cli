@@ -14,6 +14,7 @@ The following is a list of currently available experiments. We'll remove experim
 
 Below is a list of updates related to experiments.
 
+* **December 2025**: Concluded the `read-only-collaborators` experiment with full support introduced to the Slack CLI. See the changelog announcement [here](https://docs.slack.dev/changelog/2025/12/04/slack-cli).
 * **June 2025**:
     * Updated the `slack run` command to create and install new and existing Bolt framework projects configured with app settings as the source of truth (remote manifest).
     * Added support for creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest). New Bolt projects are now configured to have apps managed by app settings rather than by project. When running a project for local development, the app and bot tokens are automatically set, and no longer require developers to export them as environment variables. Existing Bolt projects will continue to work with a project (local) manifest, and linking an app from app settings will configure the project to be managed by app settings (remote manifest). In an upcoming release, support for installing and deploying apps managed by app settings will be implemented.

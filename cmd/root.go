@@ -42,7 +42,6 @@ import (
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -315,9 +314,6 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		clients.Config.RuntimeName = clients.Runtime.Name()
 		clients.Config.RuntimeVersion = clients.Runtime.Version()
 	}
-
-	// Initialize .slackignore contents
-	config.InitSlackIgnore()
 
 	// Init debug log file with CLI Version, OS, SessionID, TraceID, SystemID, ProjectID, etc
 	return clients.IO.InitLogFile(ctx)
