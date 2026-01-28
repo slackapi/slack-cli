@@ -39,3 +39,7 @@ package-lock.json
 
 # End to End Test files
 test-e2e
+
+# Claude Code local files
+.claude/settings.local.json
+CLAUDE.local.md
