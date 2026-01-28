@@ -46,6 +46,7 @@ func Test_App_SettingsCommand(t *testing.T) {
 					slackerror.New(slackerror.ErrInstallationRequired),
 				)
 				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+				cm.API.On("Host").Return("https://slack.com")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://api.slack.com/apps"
@@ -156,9 +157,43 @@ func Test_App_SettingsCommand(t *testing.T) {
 					slackerror.New(slackerror.ErrInstallationRequired),
 				)
 				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+				cm.API.On("Host").Return("https://slack.com")
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://api.slack.com/apps"
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
+			},
+		},
+		"opens app listing page for development environment when no apps exist": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cf.SDKConfig.WorkingDirectory = "."
+				projectConfigMock := config.NewProjectConfigMock()
+				projectConfigMock.On(
+					"GetManifestSource",
+					mock.Anything,
+				).Return(
+					config.ManifestSourceRemote,
+					nil,
+				)
+				cm.Config.ProjectConfig = projectConfigMock
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectMock.On(
+					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
+				).Return(
+					prompts.SelectedApp{},
+					slackerror.New(slackerror.ErrInstallationRequired),
+				)
+				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+				cm.API.On("Host").Return("https://dev1234.slack.com")
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := "https://api.dev1234.slack.com/apps"
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})

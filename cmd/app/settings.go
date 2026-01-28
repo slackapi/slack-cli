@@ -45,7 +45,7 @@ func NewSettingsCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Open app settings for a prompted app",
+				Meaning: "Open app settings dashboard",
 				Command: "app settings",
 			},
 			{
@@ -101,7 +101,13 @@ func appSettingsCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	if err != nil {
 		// If no apps exist, open the list of all apps known to the developer
 		if slackerror.Is(err, slackerror.ErrInstallationRequired) {
-			settingsURL := "https://api.slack.com/apps"
+			host := clients.API().Host()
+			parsed, err := url.Parse(host)
+			if err != nil {
+				return err
+			}
+			parsed.Host = "api." + parsed.Host
+			settingsURL := fmt.Sprintf("%s/apps", parsed.String())
 
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "house",
