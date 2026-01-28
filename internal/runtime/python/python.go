@@ -124,7 +124,7 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 		return fmt.Sprintf("Error parsing pyproject.toml: %s", err), err
 	}
 
-	// Verify [project] section and dependencies exist
+	// Verify `project` section and `project.dependencies` array exist
 	projectSection, exists := config["project"]
 	if !exists {
 		err := fmt.Errorf("pyproject.toml missing project section")
@@ -150,18 +150,20 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	matches := dependenciesRegex.FindStringSubmatch(fileData)
 
 	if len(matches) == 0 {
-		err := fmt.Errorf("could not find dependencies array in pyproject.toml")
+		err := fmt.Errorf("pyproject.toml missing dependencies array")
 		return fmt.Sprintf("Error: %s", err), err
 	}
 
-	prefix := matches[1]  // "dependencies = ["
+	prefix := matches[1]  // "...dependencies = ["
 	content := matches[2] // array contents
-	suffix := matches[3]  // "]"
+	suffix := matches[3]  // "]..."
 
 	// Always append slack-cli-hooks at the end of the dependencies array.
-	// Formatting choice: Multi-line arrays get a trailing comma to match Python/TOML conventions
-	// and make future additions cleaner. Single-line arrays omit the trailing comma for a more
-	// compact appearance, which is the typical style for short dependency lists.
+	// Formatting:
+	// - Multi-line arrays get a trailing comma to match Python/TOML conventions
+	//   and make future additions cleaner.
+	// - Single-line arrays omit the trailing comma for a compact appearance,
+	//   which is the typical style for short dependency lists.
 	var newContent string
 	content = strings.TrimRight(content, " \t\n")
 	if !strings.HasSuffix(content, ",") {
