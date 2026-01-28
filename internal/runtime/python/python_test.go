@@ -69,16 +69,17 @@ func Test_Python_IgnoreDirectories(t *testing.T) {
 
 func Test_Python_InstallProjectDependencies(t *testing.T) {
 	tests := []struct {
-		name            string
-		existingFiles   map[string]string
-		expectedFiles   map[string]string
-		expectedOutputs string
-		expectedError   bool
+		name               string
+		existingFiles      map[string]string
+		expectedFiles      map[string]string
+		expectedOutputs    []string
+		notExpectedOutputs []string
+		expectedError      bool
 	}{
 		{
 			name:            "Error when requirements.txt is missing",
 			existingFiles:   map[string]string{}, // No files
-			expectedOutputs: "Error",
+			expectedOutputs: []string{"Error"},
 			expectedError:   true,
 		},
 		{
@@ -89,7 +90,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "slack-cli-hooks\npytest==8.3.2\nruff==0.7.2",
 			},
-			expectedOutputs: "Found",
+			expectedOutputs: []string{"Found"},
 			expectedError:   false,
 		},
 		{
@@ -100,7 +101,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "slack-cli-hooks<1.0.0\npytest==8.3.2\nruff==0.7.2",
 			},
-			expectedOutputs: "Found",
+			expectedOutputs: []string{"Found"},
 			expectedError:   false,
 		},
 		{
@@ -111,7 +112,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "slack-bolt==2.31.2\nslack-cli-hooks<1.0.0\npytest==8.3.2\nruff==0.7.2",
 			},
-			expectedOutputs: "Updated",
+			expectedOutputs: []string{"Updated"},
 			expectedError:   false,
 		},
 		{
@@ -122,7 +123,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "pytest==8.3.2\nslack-bolt==2.31.2\nslack-cli-hooks<1.0.0\nruff==0.7.2",
 			},
-			expectedOutputs: "Updated",
+			expectedOutputs: []string{"Updated"},
 			expectedError:   false,
 		},
 		{
@@ -133,7 +134,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "pytest==8.3.2\nruff==0.7.2\nslack-bolt==2.31.2\nslack-cli-hooks<1.0.0",
 			},
-			expectedOutputs: "Updated",
+			expectedOutputs: []string{"Updated"},
 			expectedError:   false,
 		},
 		{
@@ -144,7 +145,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "pytest==8.3.2\nruff==0.7.2\nslack-cli-hooks<1.0.0",
 			},
-			expectedOutputs: "Updated",
+			expectedOutputs: []string{"Updated"},
 			expectedError:   false,
 		},
 		{
@@ -155,7 +156,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedFiles: map[string]string{
 				"requirements.txt": "pytest==8.3.2\nruff==0.7.2\nslack-cli-hooks<1.0.0",
 			},
-			expectedOutputs: "Updated",
+			expectedOutputs: []string{"Updated"},
 			expectedError:   false,
 		},
 		{
@@ -163,16 +164,17 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			existingFiles: map[string]string{
 				"requirements.txt": "slack-cli-hooks\npytest==8.3.2\nruff==0.7.2",
 			},
+			expectedOutputs: []string{"Manually setup a Python virtual environment"},
 			expectedError:   false,
-			expectedOutputs: "Manually setup a Python virtual environment",
 		},
 		{
 			name: "Should output pip install -r requirements.txt when only requirements.txt exists",
 			existingFiles: map[string]string{
 				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
 			},
-			expectedError:   false,
-			expectedOutputs: "pip install -r requirements.txt",
+			expectedOutputs:    []string{"pip install -r requirements.txt"},
+			notExpectedOutputs: []string{"pip install -e ."},
+			expectedError:      false,
 		},
 		{
 			name: "Should output pip install -e . when only pyproject.toml exists",
@@ -181,8 +183,9 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 name = "my-app"
 dependencies = ["slack-cli-hooks<1.0.0"]`,
 			},
-			expectedError:   false,
-			expectedOutputs: "pip install -e .",
+			expectedOutputs:    []string{"pip install -e ."},
+			notExpectedOutputs: []string{"pip install -r requirements.txt"},
+			expectedError:      false,
 		},
 		{
 			name: "Should output both install commands when both files exist",
@@ -192,15 +195,15 @@ dependencies = ["slack-cli-hooks<1.0.0"]`,
 name = "my-app"
 dependencies = ["slack-cli-hooks<1.0.0"]`,
 			},
+			expectedOutputs: []string{"pip install -r requirements.txt", "pip install -e ."},
 			expectedError:   false,
-			expectedOutputs: "pip install -r requirements.txt",
 		},
 		{
 			name: "Error when neither requirements.txt nor pyproject.toml exists",
 			existingFiles: map[string]string{
 				"main.py": "# some python code",
 			},
-			expectedOutputs: "Error: no Python dependency file found",
+			expectedOutputs: []string{"Error: no Python dependency file found"},
 			expectedError:   true,
 		},
 		{
@@ -221,7 +224,7 @@ dependencies = [
     "pytest==8.3.2",
 ]`,
 			},
-			expectedOutputs: "Found pyproject.toml",
+			expectedOutputs: []string{"Found pyproject.toml"},
 			expectedError:   false,
 		},
 		{
@@ -243,7 +246,7 @@ dependencies = [
     "slack-cli-hooks<1.0.0",
 ]`,
 			},
-			expectedOutputs: "Updated pyproject.toml",
+			expectedOutputs: []string{"Updated pyproject.toml"},
 			expectedError:   false,
 		},
 		{
@@ -263,7 +266,7 @@ dependencies = [
     "slack-cli-hooks<1.0.0",
 ]`,
 			},
-			expectedOutputs: "Updated pyproject.toml",
+			expectedOutputs: []string{"Updated pyproject.toml"},
 			expectedError:   false,
 		},
 		{
@@ -285,7 +288,7 @@ dependencies = [
     "slack-cli-hooks<1.0.0",
 ]`,
 			},
-			expectedOutputs: "Updated requirements.txt",
+			expectedOutputs: []string{"Updated requirements.txt"},
 			expectedError:   false,
 		},
 		{
@@ -294,7 +297,7 @@ dependencies = [
 				"pyproject.toml": `[project]
 name = "my-app"`,
 			},
-			expectedOutputs: "Error: pyproject.toml missing dependencies array",
+			expectedOutputs: []string{"Error: pyproject.toml missing dependencies array"},
 			expectedError:   true,
 		},
 		{
@@ -303,7 +306,7 @@ name = "my-app"`,
 				"pyproject.toml": `[tool.black]
 line-length = 88`,
 			},
-			expectedOutputs: "Error: pyproject.toml missing [project] section",
+			expectedOutputs: []string{"Error: pyproject.toml missing project section"},
 			expectedError:   true,
 		},
 		{
@@ -312,7 +315,7 @@ line-length = 88`,
 				"pyproject.toml": `[project
 name = "broken`,
 			},
-			expectedOutputs: "Error parsing pyproject.toml",
+			expectedOutputs: []string{"Error parsing pyproject.toml"},
 			expectedError:   true,
 		},
 	}
@@ -356,24 +359,12 @@ name = "broken`,
 				require.Equal(t, fileData, string(d))
 			}
 
-			require.Contains(t, outputs, tt.expectedOutputs)
-
-			// Special check for when both files exist - should show both install commands
-			if tt.name == "Should output both install commands when both files exist" {
-				require.Contains(t, outputs, "pip install -r requirements.txt", "Should contain requirements.txt install command")
-				require.Contains(t, outputs, "pip install -e .", "Should contain pyproject.toml install command")
+			for _, expected := range tt.expectedOutputs {
+				require.Contains(t, outputs, expected)
 			}
 
-			// Special check to ensure only requirements.txt command appears
-			if tt.name == "Should output pip install -r requirements.txt when only requirements.txt exists" {
-				require.Contains(t, outputs, "pip install -r requirements.txt")
-				require.NotContains(t, outputs, "pip install -e .", "Should NOT contain pyproject.toml install command when only requirements.txt exists")
-			}
-
-			// Special check to ensure only pyproject.toml command appears
-			if tt.name == "Should output pip install -e . when only pyproject.toml exists" {
-				require.Contains(t, outputs, "pip install -e .")
-				require.NotContains(t, outputs, "pip install -r requirements.txt", "Should NOT contain requirements.txt install command when only pyproject.toml exists")
+			for _, notExpected := range tt.notExpectedOutputs {
+				require.NotContains(t, outputs, notExpected)
 			}
 
 			if tt.expectedError {
