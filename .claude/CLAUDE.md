@@ -35,15 +35,6 @@ make clean              # Remove build artifacts (bin/, dist/)
 slack docgen ./docs/reference  # Generate command documentation
 ```
 
-### Running Tests in Development
-For targeted test runs during development:
-```bash
-go test -v ./cmd/version -run TestVersionCommand  # Run specific test directly
-go test -ldflags="$(LDFLAGS)" -v ./cmd/auth -race -covermode=atomic -coverprofile=coverage.out
-```
-
-Note: When running tests directly with `go test`, use the LDFLAGS from the Makefile to inject version information.
-
 ## Architecture
 
 ### Project Structure
