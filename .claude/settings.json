@@ -1,13 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go test:*)",
       "Bash(go mod tidy:*)",
       "Bash(gofmt:*)",
       "Bash(make build:*)",
       "Bash(make build-ci:*)",
       "Bash(make lint:*)",
-      "Bash(golangci-lint run:*)"
     ]
   }
 }
