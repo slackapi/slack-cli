@@ -1,6 +1,6 @@
 module github.com/slackapi/slack-cli
 
-go 1.25.5
+go 1.25.6
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -19,7 +19,6 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/pkg/errors v0.9.1
 	github.com/radovskyb/watcher v1.0.7
-	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
