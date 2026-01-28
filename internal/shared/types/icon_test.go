@@ -52,12 +52,12 @@ func Test_Icons_MarshalJSON(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedBlob, err := json.Marshal(tt.icons)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedBlob, err := json.Marshal(tc.icons)
 
-			require.IsType(t, err, tt.expectedErrorType)
-			for _, expectedBlob := range tt.expectedBlobs {
+			require.IsType(t, err, tc.expectedErrorType)
+			for _, expectedBlob := range tc.expectedBlobs {
 				require.Contains(t, string(returnedBlob), expectedBlob)
 			}
 		})
@@ -122,12 +122,12 @@ func Test_Icons_UnmarshalJSON(t *testing.T) {
 			expectedIcons:     &Icons{"image_96": "path/to/image_96.png", "image_192": "path/to/image_192.png"},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := json.Unmarshal([]byte(tt.blob), &tt.icons)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := json.Unmarshal([]byte(tc.blob), &tc.icons)
 
-			require.IsType(t, err, tt.expectedErrorType)
-			require.Equal(t, tt.expectedIcons, tt.icons)
+			require.IsType(t, err, tc.expectedErrorType)
+			require.Equal(t, tc.expectedIcons, tc.icons)
 		})
 	}
 }

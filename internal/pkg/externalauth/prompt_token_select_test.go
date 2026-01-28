@@ -82,17 +82,17 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 	}
 
 	var externalAccountFlag string
-	for _, tt := range tests {
+	for _, tc := range tests {
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&externalAccountFlag, "external-account", "", "mock external-account flag")
-		if tt.ExternalAccountFlag != "" {
-			_ = clientsMock.Config.Flags.Set("external-account", tt.ExternalAccountFlag)
+		if tc.ExternalAccountFlag != "" {
+			_ = clientsMock.Config.Flags.Set("external-account", tc.ExternalAccountFlag)
 		}
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an external account", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("external-account"),
-		})).Return(tt.Selection, nil)
+		})).Return(tc.Selection, nil)
 		clientsMock.AddDefaultMocks()
 
 		selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)

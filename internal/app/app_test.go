@@ -159,10 +159,10 @@ func Test_RegexReplaceAppNameInManifest(t *testing.T) {
 			expectedSrc: testdata.ManifestSDKTSAppName,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actualSrc := regexReplaceAppNameInManifest(tt.src, tt.appName)
-			require.Equal(t, tt.expectedSrc, actualSrc)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actualSrc := regexReplaceAppNameInManifest(tc.src, tc.appName)
+			require.Equal(t, tc.expectedSrc, actualSrc)
 		})
 	}
 }

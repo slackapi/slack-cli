@@ -41,10 +41,10 @@ func Test_Python_New(t *testing.T) {
 			expectedPython: &Python{},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			p := New()
-			require.Equal(t, tt.expectedPython, p)
+			require.Equal(t, tc.expectedPython, p)
 		})
 	}
 }
@@ -59,10 +59,10 @@ func Test_Python_IgnoreDirectories(t *testing.T) {
 			expectedIgnoreDirectories: []string{},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			p := New()
-			require.Equal(t, tt.expectedIgnoreDirectories, p.IgnoreDirectories())
+			require.Equal(t, tc.expectedIgnoreDirectories, p.IgnoreDirectories())
 		})
 	}
 }
@@ -167,8 +167,8 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedOutputs: "Manually setup a Python virtual environment",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
@@ -183,7 +183,7 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			projectDirPath := "/path/to/project-name"
 
 			// Create files
-			for filePath, fileData := range tt.existingFiles {
+			for filePath, fileData := range tc.existingFiles {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				// Create the directory
 				if err := fs.MkdirAll(filepath.Dir(filePathAbs), 0755); err != nil {
@@ -200,16 +200,16 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			outputs, err := p.InstallProjectDependencies(ctx, projectDirPath, mockHookExecutor, ios, fs, os)
 
 			// Assertions
-			for filePath, fileData := range tt.expectedFiles {
+			for filePath, fileData := range tc.expectedFiles {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				d, err := afero.ReadFile(fs, filePathAbs)
 				require.NoError(t, err)
 				require.Equal(t, fileData, string(d))
 			}
 
-			require.Contains(t, outputs, tt.expectedOutputs)
+			require.Contains(t, outputs, tc.expectedOutputs)
 
-			if tt.expectedError {
+			if tc.expectedError {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
@@ -233,10 +233,10 @@ func Test_Python_Version(t *testing.T) {
 			expectedVersion: "python",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			p := New()
-			require.Equal(t, tt.expectedVersion, p.Version())
+			require.Equal(t, tc.expectedVersion, p.Version())
 		})
 	}
 }
@@ -265,16 +265,16 @@ func Test_Python_HooksJSONTemplate(t *testing.T) {
 			expectedErrorType: &json.SyntaxError{},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			var anyJSON map[string]interface{}
 
 			// Test
-			err := json.Unmarshal(tt.hooksJSONTemplate, &anyJSON)
+			err := json.Unmarshal(tc.hooksJSONTemplate, &anyJSON)
 
 			// Assertions
-			require.IsType(t, tt.expectedErrorType, err)
+			require.IsType(t, tc.expectedErrorType, err)
 		})
 	}
 }
@@ -291,8 +291,8 @@ func Test_Python_PreparePackage(t *testing.T) {
 			expectedPreparePackageError: nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// Setup SDKConfig
@@ -304,7 +304,7 @@ func Test_Python_PreparePackage(t *testing.T) {
 
 			// Setup HookExecutor
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tc.hookExecutorError)
 
 			// Setup
 			mockOpts := types.PreparePackageOpts{}
@@ -317,7 +317,7 @@ func Test_Python_PreparePackage(t *testing.T) {
 			err := p.PreparePackage(ctx, mockSDKConfig, mockHookExecutor, mockOpts)
 
 			// Assertions
-			require.Equal(t, tt.expectedPreparePackageError, err)
+			require.Equal(t, tc.expectedPreparePackageError, err)
 		})
 	}
 }
@@ -348,15 +348,15 @@ func Test_Python_IsRuntimeForProject(t *testing.T) {
 			expectedBool:      true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			projectDirPath := "/path/to/project-name"
 
 			// Create files
-			for _, filePath := range tt.existingFilePaths {
+			for _, filePath := range tc.existingFilePaths {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				// Create the directory
 				if err := fs.MkdirAll(filepath.Dir(filePathAbs), 0755); err != nil {
@@ -369,10 +369,10 @@ func Test_Python_IsRuntimeForProject(t *testing.T) {
 			}
 
 			// Test
-			b := IsRuntimeForProject(ctx, fs, projectDirPath, hooks.SDKCLIConfig{Runtime: tt.sdkConfigRuntime})
+			b := IsRuntimeForProject(ctx, fs, projectDirPath, hooks.SDKCLIConfig{Runtime: tc.sdkConfigRuntime})
 
 			// Assertions
-			require.Equal(t, tt.expectedBool, b)
+			require.Equal(t, tc.expectedBool, b)
 		})
 	}
 }

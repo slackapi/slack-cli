@@ -142,18 +142,18 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tc := range tests {
 		var mockWorkflowFlag string
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockWorkflowFlag, "workflow", "", "mock workflow flag")
-		if tt.WorkflowFlag != "" {
-			_ = clientsMock.Config.Flags.Set("workflow", tt.WorkflowFlag)
+		if tc.WorkflowFlag != "" {
+			_ = clientsMock.Config.Flags.Set("workflow", tc.WorkflowFlag)
 		}
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("workflow"),
-		})).Return(tt.Selection, nil)
+		})).Return(tc.Selection, nil)
 		clientsMock.AddDefaultMocks()
 
 		selectedWorkflow, err := WorkflowSelectPrompt(ctx, clients, authorizationInfoLists)
