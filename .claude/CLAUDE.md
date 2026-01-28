@@ -81,7 +81,7 @@ Commands receive the `ClientFactory` and use it to access functionality.
 
 **Tracing**: OpenTracing (Jaeger) is initialized in `main.go` for observability.
 
-**Hook System**: `internal/hooks/` implements a lifecycle hook system that allows SDK projects to inject custom behavior at key points.
+**Hook System**: `internal/hooks/` implements a lifecycle hook system that allows SDK projects to inject custom behavior at key points. The specification exists in `docs/reference/hooks` files.
 
 **Experiment System**: Features can be gated behind experiments defined in `internal/experiment/experiment.go`:
 - Add new experiments as constants
