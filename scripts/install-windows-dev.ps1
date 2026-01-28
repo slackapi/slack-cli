@@ -109,7 +109,7 @@ function install_slack_cli {
     else {
       Write-Host "Finding the latest Slack CLI release version"
       $cli_info = Invoke-RestMethod -Uri "https://docs.slack.dev/tools/metadata.json"
-      $SLACK_CLI_VERSION = $cli_info.'slack-cli'.releases.version[0]
+      $SLACK_CLI_VERSION = $cli_info.'slack-cli'.releases[0].version
     }
   }
   catch {
