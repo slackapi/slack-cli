@@ -133,7 +133,20 @@ func NewExampleCommand(clients *shared.ClientFactory) *cobra.Command {
 
 ### Table-Driven Test Conventions
 
-**Preferred: Slice pattern** - uses `tc` for test case variable:
+**Preferred: Map pattern** - uses `tc` for test case variable:
+```go
+tests := map[string]struct {
+    input    string
+    expected string
+}{...}
+for name, tc := range tests {
+    t.Run(name, func(t *testing.T) {
+        // use tc.field
+    })
+}
+```
+
+**Legacy: Slice pattern** - uses `tc` for test case variable (do not use for new tests):
 ```go
 tests := []struct {
     name     string
@@ -143,19 +156,6 @@ tests := []struct {
 for _, tc := range tests {
     t.Run(tc.name, func(t *testing.T) {
         // use tc.field
-    })
-}
-```
-
-**Legacy: Map pattern** - uses `tt` for test case variable (do not use for new tests):
-```go
-tests := map[string]struct {
-    input    string
-    expected string
-}{...}
-for name, tt := range tests {
-    t.Run(name, func(t *testing.T) {
-        // use tt.field
     })
 }
 ```
