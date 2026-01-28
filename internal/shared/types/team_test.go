@@ -21,34 +21,29 @@ import (
 )
 
 func Test_SlackTeam_String(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		slackTeam      *SlackTeam
 		expectedString string
 	}{
-		{
-			name:           "ID and TeamName exists",
+		"ID and TeamName exists": {
 			slackTeam:      &SlackTeam{ID: "T1234", TeamName: "Team Cats"},
 			expectedString: "Team Cats (T1234)",
 		},
-		{
-			name:           "Only TeamName exists",
+		"Only TeamName exists": {
 			slackTeam:      &SlackTeam{ID: "", TeamName: "Team Cats"},
 			expectedString: "(Team Cats)", // TODO - confirm that this is the actual format that's desired
 		},
-		{
-			name:           "Only ID exists",
+		"Only ID exists": {
 			slackTeam:      &SlackTeam{ID: "T1234", TeamName: ""},
 			expectedString: "", // TODO - confirm that this is the actual format that's desired
 		},
-		{
-			name:           "None exists",
+		"None exists": {
 			slackTeam:      &SlackTeam{ID: "", TeamName: ""},
 			expectedString: "",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedString := tc.slackTeam.String()
 			require.Equal(t, tc.expectedString, returnedString)
 		})
