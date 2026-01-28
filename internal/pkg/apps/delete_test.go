@@ -77,29 +77,29 @@ func TestAppsDelete(t *testing.T) {
 			unsaved: true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api host")
 			clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash host")
 			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
-				TeamName: &tt.auth.TeamDomain,
-				TeamID:   &tt.auth.TeamID,
+				TeamName: &tc.auth.TeamDomain,
+				TeamID:   &tc.auth.TeamID,
 			}, nil)
-			clientsMock.API.On("DeleteApp", mock.Anything, mock.Anything, tt.app.AppID).Return(nil)
+			clientsMock.API.On("DeleteApp", mock.Anything, mock.Anything, tc.app.AppID).Return(nil)
 			clientsMock.AddDefaultMocks()
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			if !tt.unsaved {
-				if !tt.app.IsDev {
-					err := clients.AppClient().SaveDeployed(ctx, tt.app)
+			if !tc.unsaved {
+				if !tc.app.IsDev {
+					err := clients.AppClient().SaveDeployed(ctx, tc.app)
 					require.NoError(t, err)
 					apps, _, err := clients.AppClient().GetDeployedAll(ctx)
 					require.NoError(t, err)
 					assert.Equal(t, 1, len(apps))
 				} else {
-					err := clients.AppClient().SaveLocal(ctx, tt.app)
+					err := clients.AppClient().SaveLocal(ctx, tc.app)
 					require.NoError(t, err)
 					apps, err := clients.AppClient().GetLocalAll(ctx)
 					require.NoError(t, err)
@@ -107,17 +107,17 @@ func TestAppsDelete(t *testing.T) {
 				}
 			}
 
-			app, err := Delete(ctx, clients, logger.New(nil), tt.app.TeamDomain, tt.app, tt.auth)
+			app, err := Delete(ctx, clients, logger.New(nil), tc.app.TeamDomain, tc.app, tc.auth)
 			require.NoError(t, err)
-			assert.Equal(t, tt.app, app)
+			assert.Equal(t, tc.app, app)
 			clientsMock.API.AssertCalled(
 				t,
 				"DeleteApp",
 				mock.Anything,
-				tt.auth.Token,
-				tt.app.AppID,
+				tc.auth.Token,
+				tc.app.AppID,
 			)
-			if !tt.app.IsDev {
+			if !tc.app.IsDev {
 				apps, _, err := clients.AppClient().GetDeployedAll(ctx)
 				require.NoError(t, err)
 				assert.Equal(t, 0, len(apps))

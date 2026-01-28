@@ -57,25 +57,25 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appsAuthExternalStartMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
-			authorizationURL, err := c.AppsAuthExternalStart(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey)
+			authorizationURL, err := c.AppsAuthExternalStart(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey)
 
 			// Assertions
-			require.Equal(t, tt.expectedAuthorizationURL, authorizationURL)
-			if tt.expectedErrorContains == "" {
+			require.Equal(t, tc.expectedAuthorizationURL, authorizationURL)
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
@@ -112,24 +112,24 @@ func Test_API_AppsAuthExternalRemove(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appsAuthExternalDeleteMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
-			err := c.AppsAuthExternalDelete(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, "")
+			err := c.AppsAuthExternalDelete(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey, "")
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
@@ -169,24 +169,24 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appsAuthExternalClientSecretAddMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
-			err := c.AppsAuthExternalClientSecretAdd(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsClientSecret)
+			err := c.AppsAuthExternalClientSecretAdd(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey, tc.argsClientSecret)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
@@ -338,25 +338,25 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appsAuthExternalListMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
-			actual, err := c.AppsAuthExternalList(ctx, tt.argsToken, tt.argsAppID, false /*include_workflows flag to return workflow auth info*/)
+			actual, err := c.AppsAuthExternalList(ctx, tc.argsToken, tc.argsAppID, false /*include_workflows flag to return workflow auth info*/)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedAuthorizationInfoLists, actual)
+				require.Equal(t, tc.expectedAuthorizationInfoLists, actual)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
@@ -403,24 +403,24 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appsAuthExternalSelectAuthMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
-			err := c.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowID, tt.argsExternalTokenID)
+			err := c.AppsAuthExternalSelectAuth(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey, tc.argsWorkflowID, tc.argsExternalTokenID)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}

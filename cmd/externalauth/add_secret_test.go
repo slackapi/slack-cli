@@ -91,7 +91,7 @@ func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			manifestMock := &app.ManifestMockObject{}
@@ -101,8 +101,8 @@ func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestResponse,
-				tt.mockManifestError,
+				tc.mockManifestResponse,
+				tc.mockManifestError,
 			)
 			clientsMock.AppClient.Manifest = manifestMock
 			projectConfigMock := config.NewProjectConfigMock()
@@ -110,18 +110,18 @@ func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 				"GetManifestSource",
 				mock.Anything,
 			).Return(
-				tt.mockManifestSource,
+				tc.mockManifestSource,
 				nil,
 			)
 			clientsMock.Config.ProjectConfig = projectConfigMock
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
-				cf.Config.ForceFlag = tt.mockFlagForce
-				cf.SDKConfig.WorkingDirectory = tt.mockWorkingDirectory
+				cf.Config.ForceFlag = tc.mockFlagForce
+				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
 			cmd := NewAddClientSecretCommand(clients)
 			err := cmd.PreRunE(cmd, nil)
-			if tt.expectedError != nil {
-				assert.Equal(t, slackerror.ToSlackError(tt.expectedError).Code, slackerror.ToSlackError(err).Code)
+			if tc.expectedError != nil {
+				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackerror.ToSlackError(err).Code)
 			} else {
 				assert.NoError(t, err)
 			}

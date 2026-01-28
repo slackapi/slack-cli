@@ -35,10 +35,10 @@ func Test_Update_ContainsSemVer(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := ContainsSemVer(tt.version)
-			assert.Equal(t, tt.expected, actual)
+			actual := ContainsSemVer(tc.version)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

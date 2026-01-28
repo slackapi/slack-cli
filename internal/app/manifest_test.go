@@ -56,11 +56,11 @@ func Test_AppManifest_SetManifestEnvTeamVars(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			teamManifest := SetManifestEnvTeamVars(tt.manifest, tt.teamDomain, tt.isDev)
-			require.Equal(t, len(tt.expected), len(teamManifest))
-			for key, val := range tt.expected {
+			teamManifest := SetManifestEnvTeamVars(tc.manifest, tc.teamDomain, tc.isDev)
+			require.Equal(t, len(tc.expected), len(teamManifest))
+			for key, val := range tc.expected {
 				require.Equal(t, val, teamManifest[key])
 			}
 		})
@@ -107,19 +107,19 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			expectedErr:      slackerror.New(slackerror.ErrInvalidManifest),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			mockManifestEnv := map[string]string{"EXAMPLE": "12"}
 			mockSDKConfig := hooks.NewSDKConfigMock()
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			if tt.mockManifestInfo != "" {
+			if tc.mockManifestInfo != "" {
 				mockSDKConfig.Hooks.GetManifest = hooks.HookScript{
 					Name:    "GetManifest",
 					Command: "cat manifest.json",
 				}
 				mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
-					Return(tt.mockManifestInfo, tt.mockManifestErr)
+					Return(tc.mockManifestInfo, tc.mockManifestErr)
 			} else {
 				mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}
 			}
@@ -132,13 +132,13 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			manifestClient := NewManifestClient(&api.APIMock{}, configMock)
 
 			actualManifest, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
-			if tt.expectedErr != nil {
+			if tc.expectedErr != nil {
 				require.Error(t, err)
 				assert.Equal(t,
-					tt.expectedErr.(*slackerror.Error).Code, err.(*slackerror.Error).Code)
+					tc.expectedErr.(*slackerror.Error).Code, err.(*slackerror.Error).Code)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedManifest, actualManifest)
+				assert.Equal(t, tc.expectedManifest, actualManifest)
 			}
 		})
 	}
@@ -176,7 +176,7 @@ func Test_AppManifest_GetManifestRemote(t *testing.T) {
 			expectedError:     slackerror.New(slackerror.ErrAppManifestAccess),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
@@ -185,16 +185,16 @@ func Test_AppManifest_GetManifestRemote(t *testing.T) {
 			configMock := config.NewConfig(fsMock, osMock)
 			apic := &api.APIMock{}
 			apic.On("ExportAppManifest", mock.Anything, mock.Anything, mock.Anything).
-				Return(api.ExportAppResult{Manifest: tt.mockManifestResponse}, tt.mockManifestError)
+				Return(api.ExportAppResult{Manifest: tc.mockManifestResponse}, tc.mockManifestError)
 			manifestClient := NewManifestClient(apic, configMock)
 
-			manifest, err := manifestClient.GetManifestRemote(ctx, tt.mockToken, tt.mockAppID)
-			if tt.expectedError != nil {
-				assert.Equal(t, tt.expectedError, err)
+			manifest, err := manifestClient.GetManifestRemote(ctx, tc.mockToken, tc.mockAppID)
+			if tc.expectedError != nil {
+				assert.Equal(t, tc.expectedError, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedManifest, manifest)
-				apic.AssertCalled(t, "ExportAppManifest", mock.Anything, tt.mockToken, tt.mockAppID)
+				assert.Equal(t, tc.expectedManifest, manifest)
+				apic.AssertCalled(t, "ExportAppManifest", mock.Anything, tc.mockToken, tc.mockAppID)
 			}
 		})
 	}

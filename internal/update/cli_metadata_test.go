@@ -68,7 +68,7 @@ func Test_CLI_Metadata_CheckForUpdate(t *testing.T) {
 		},
 	}
 
-	for name, s := range scenarios {
+	for name, tc := range scenarios {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
@@ -76,7 +76,7 @@ func Test_CLI_Metadata_CheckForUpdate(t *testing.T) {
 			w := httptest.NewRecorder()
 			_, _ = io.WriteString(w, fmt.Sprintf(
 				`{ "slack-cli": { "releases": [ { "version": "%s" } ] } }`,
-				s.LatestVersion,
+				tc.LatestVersion,
 			))
 			res := w.Result()
 
@@ -86,11 +86,11 @@ func Test_CLI_Metadata_CheckForUpdate(t *testing.T) {
 
 			// Check for an update
 			md := Metadata{httpClient: httpClientMock}
-			releaseInfo, err := md.CheckForUpdate(ctx, metadataURL, s.CurrentVersion)
+			releaseInfo, err := md.CheckForUpdate(ctx, metadataURL, tc.CurrentVersion)
 
 			// Assert expected results
-			if s.ExpectsResult {
-				require.Equal(t, s.LatestVersion, releaseInfo.Version)
+			if tc.ExpectsResult {
+				require.Equal(t, tc.LatestVersion, releaseInfo.Version)
 				require.Nil(t, err)
 			} else {
 				require.Nil(t, releaseInfo)

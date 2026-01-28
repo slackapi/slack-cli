@@ -215,14 +215,14 @@ func TestAppsListFormat(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			listFlags = tt.Flags
-			formattedList := formatListSuccess(tt.Apps)
+			listFlags = tc.Flags
+			formattedList := formatListSuccess(tc.Apps)
 			for ii, value := range formattedList {
 				formattedList[ii] = strings.TrimRight(value, ":")
 			}
-			for _, value := range tt.Expected {
+			for _, value := range tc.Expected {
 				assert.Contains(t, strings.Join(formattedList, "\n"), value)
 			}
 		})

@@ -59,18 +59,18 @@ func TestFunction_ChooseFunctionPrompt(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a function", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 				Flag: clientsMock.Config.Flags.Lookup("name"),
 			})).Return(iostreams.SelectPromptResponse{
-				Flag:   tt.withFlag,
-				Prompt: tt.withPrompt,
-				Option: tt.flag,
-				Index:  tt.selectIndex,
-			}, tt.withError)
+				Flag:   tc.withFlag,
+				Prompt: tc.withPrompt,
+				Option: tc.flag,
+				Index:  tc.selectIndex,
+			}, tc.withError)
 			sdkConfigMock := hooks.NewSDKConfigMock()
 			sdkConfigMock.Hooks.GetManifest.Command = "example"
 			clientsMock.AddDefaultMocks()
@@ -85,10 +85,10 @@ func TestFunction_ChooseFunctionPrompt(t *testing.T) {
 				{CallbackID: "goodbye_function"},
 			}
 			value, err := chooseFunctionPrompt(ctx, clients, functions)
-			if err != nil || tt.expectedError != nil {
-				assert.Equal(t, tt.expectedError, err)
+			if err != nil || tc.expectedError != nil {
+				assert.Equal(t, tc.expectedError, err)
 			} else {
-				assert.Equal(t, tt.expectedValue, value)
+				assert.Equal(t, tc.expectedValue, value)
 			}
 		})
 	}

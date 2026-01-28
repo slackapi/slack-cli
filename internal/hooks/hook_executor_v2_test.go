@@ -165,7 +165,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			generateBoundary = mockBoundaryStringGenerator
@@ -177,8 +177,8 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			hookExecutor := &HookExecutorMessageBoundaryProtocol{
 				IO: ios,
 			}
-			response, err := hookExecutor.Execute(ctx, tt.opts)
-			tt.check(t, response, err, tt.opts.Exec)
+			response, err := hookExecutor.Execute(ctx, tc.opts)
+			tc.check(t, response, err, tc.opts.Exec)
 		})
 	}
 }

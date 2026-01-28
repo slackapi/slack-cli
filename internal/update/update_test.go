@@ -53,7 +53,7 @@ func (m *mockDependency) InstallUpdate(ctx context.Context) error {
 }
 
 func Test_Update_HasUpdate(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		dependencyHasUpdate []bool
 		expectedReturnValue bool
 	}{
@@ -81,7 +81,7 @@ func Test_Update_HasUpdate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup mock dependencies
 			var dependencies []Dependency
-			for _, hasUpdate := range tt.dependencyHasUpdate {
+			for _, hasUpdate := range tc.dependencyHasUpdate {
 				dependency := mockDependency{}
 				dependency.On("HasUpdate").Return(hasUpdate, nil)
 				dependencies = append(dependencies, &dependency)
@@ -106,13 +106,13 @@ func Test_Update_HasUpdate(t *testing.T) {
 			}
 
 			// Test
-			require.Equal(t, tt.expectedReturnValue, updateNotification.HasUpdate())
+			require.Equal(t, tc.expectedReturnValue, updateNotification.HasUpdate())
 		})
 	}
 }
 
 func Test_Update_isIgnoredCommand(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		command  string
 		expected bool
 	}{
@@ -134,15 +134,15 @@ func Test_Update_isIgnoredCommand(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			if tt.command != "" {
-				os.Args = []string{"placeholder", tt.command}
+			if tc.command != "" {
+				os.Args = []string{"placeholder", tc.command}
 			} else {
 				os.Args = []string{"placeholder"}
 			}
 			// Test
 			updateNotification := &UpdateNotification{}
 			actual := updateNotification.isIgnoredCommand()
-			require.Equal(t, tt.expected, actual)
+			require.Equal(t, tc.expected, actual)
 		})
 	}
 }

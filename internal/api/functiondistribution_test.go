@@ -39,26 +39,26 @@ func TestClient_FunctionDistributionAddUsers(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: functionDistributionsPermissionsAddMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			err := c.FunctionDistributionAddUsers(ctx, "valid_function", "app", "user1,user2")
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}
@@ -82,26 +82,26 @@ func TestClient_FunctionDistributionRemoveUsers(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: functionDistributionsPermissionsRemoveMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			err := c.FunctionDistributionRemoveUsers(ctx, "valid_function", "app", "user1,user2")
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}
@@ -125,26 +125,26 @@ func TestClient_FunctionDistributionSet(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: functionDistributionsPermissionsSetMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			_, err := c.FunctionDistributionSet(ctx, "valid_function", "app", types.PermissionEveryone, "")
 
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}

@@ -41,10 +41,10 @@ func Test_Config_ManifestSource_Equals(t *testing.T) {
 			expected: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := tt.a.Equals(tt.b)
-			assert.Equal(t, tt.expected, actual)
+			actual := tc.a.Equals(tc.b)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -71,10 +71,10 @@ func Test_Config_ManifestSource_Exists(t *testing.T) {
 			expected: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := tt.a.Exists()
-			assert.Equal(t, tt.expected, actual)
+			actual := tc.a.Exists()
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -93,10 +93,10 @@ func Test_Config_ManifestSource_String(t *testing.T) {
 			expected: "remote",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := tt.a.String()
-			assert.Equal(t, tt.expected, actual)
+			actual := tc.a.String()
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -119,10 +119,10 @@ func Test_Config_ManifestSource_Human(t *testing.T) {
 			expected: "unknown",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := tt.a.Human()
-			assert.Equal(t, tt.expected, actual)
+			actual := tc.a.Human()
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

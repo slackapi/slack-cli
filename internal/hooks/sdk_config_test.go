@@ -38,11 +38,11 @@ func Test_SDKCLIConfig_Exists(t *testing.T) {
 			exists:        false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			exists, err := tt.sdkCLIConfig.Exists()
-			require.Equal(t, tt.expectedError, err)
-			require.Equal(t, tt.exists, exists)
+			exists, err := tc.sdkCLIConfig.Exists()
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, tc.exists, exists)
 		})
 	}
 }
@@ -92,10 +92,10 @@ func Test_ProtocolResolution(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			protocol := tt.config.Config.SupportedProtocols.Preferred()
-			tt.check(t, protocol)
+			protocol := tc.config.Config.SupportedProtocols.Preferred()
+			tc.check(t, protocol)
 		})
 	}
 }
@@ -114,10 +114,10 @@ func Test_WatchOpts_IsAvailable(t *testing.T) {
 			expectedIsAvailable: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			returnedIsAvailable := tt.watchOpts.IsAvailable()
-			require.Equal(t, tt.expectedIsAvailable, returnedIsAvailable)
+			returnedIsAvailable := tc.watchOpts.IsAvailable()
+			require.Equal(t, tc.expectedIsAvailable, returnedIsAvailable)
 		})
 	}
 }

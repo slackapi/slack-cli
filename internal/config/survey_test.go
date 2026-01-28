@@ -32,14 +32,14 @@ func Test_Config_GetSurveyConfig(t *testing.T) {
 			expectedError: slackerror.New(slackerror.ErrSurveyConfigNotFound),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, _, _, c, _, _ := setup(t)
-			surveyConfig, err := c.GetSurveyConfig(ctx, tt.surveyName)
-			if tt.expectedError != nil {
-				assert.Equal(t, tt.expectedError.Code, slackerror.ToSlackError(err).Code)
+			surveyConfig, err := c.GetSurveyConfig(ctx, tc.surveyName)
+			if tc.expectedError != nil {
+				assert.Equal(t, tc.expectedError.Code, slackerror.ToSlackError(err).Code)
 			} else {
-				assert.Equal(t, tt.expectedSurvey, surveyConfig)
+				assert.Equal(t, tc.expectedSurvey, surveyConfig)
 			}
 		})
 	}

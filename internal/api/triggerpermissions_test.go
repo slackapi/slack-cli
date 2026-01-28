@@ -80,80 +80,80 @@ func TestClient_TriggerPermissionsSet(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsSetMethod,
-				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: tc.expectedRequest,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			if tt.users != "" {
-				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.users, tt.permissionType, "users")
+			if tc.users != "" {
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tc.users, tc.permissionType, "users")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.channels != "" {
-				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.channels, tt.permissionType, "channels")
+			} else if tc.channels != "" {
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tc.channels, tc.permissionType, "channels")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.workspaces != "" {
-				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.workspaces, tt.permissionType, "workspaces")
+			} else if tc.workspaces != "" {
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tc.workspaces, tc.permissionType, "workspaces")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.organizations != "" {
-				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tt.organizations, tt.permissionType, "organizations")
+			} else if tc.organizations != "" {
+				_, err := c.TriggerPermissionsSet(ctx, fakeToken, fakeTriggerID, tc.organizations, tc.permissionType, "organizations")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
@@ -209,76 +209,76 @@ func TestClient_TriggerPermissionsAddEntities(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsAddMethod,
-				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: tc.expectedRequest,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			if tt.users != "" {
-				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.users, "users")
+			if tc.users != "" {
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tc.users, "users")
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.channels != "" {
-				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.channels, "channels")
+			} else if tc.channels != "" {
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tc.channels, "channels")
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.workspaces != "" {
-				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
+			} else if tc.workspaces != "" {
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tc.workspaces, "workspaces")
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.organizations != "" {
-				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tt.organizations, "organizations")
+			} else if tc.organizations != "" {
+				err := c.TriggerPermissionsAddEntities(ctx, fakeToken, fakeTriggerID, tc.organizations, "organizations")
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
@@ -334,80 +334,80 @@ func TestClient_TriggerPermissionsRemoveEntities(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsRemoveMethod,
-				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: tc.expectedRequest,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			if tt.users != "" {
-				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.users, "users")
+			if tc.users != "" {
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tc.users, "users")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.channels != "" {
-				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.channels, "channels")
+			} else if tc.channels != "" {
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tc.channels, "channels")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.workspaces != "" {
-				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.workspaces, "workspaces")
+			} else if tc.workspaces != "" {
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tc.workspaces, "workspaces")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if tt.organizations != "" {
-				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tt.organizations, "organizations")
+			} else if tc.organizations != "" {
+				err := c.TriggerPermissionsRemoveEntities(ctx, fakeToken, fakeTriggerID, tc.organizations, "organizations")
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
@@ -480,88 +480,88 @@ func TestClient_TriggerPermissionsList(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersPermissionsListMethod,
-				ExpectedRequest: tt.expectedRequest,
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: tc.expectedRequest,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			if len(tt.expectedUsers) != 0 {
+			if len(tc.expectedUsers) != 0 {
 				actualType, actualUsers, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
-				require.Equal(t, tt.expectedPermissionType, actualType)
-				require.Equal(t, tt.expectedUsers, actualUsers)
+				require.Equal(t, tc.expectedPermissionType, actualType)
+				require.Equal(t, tc.expectedUsers, actualUsers)
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if len(tt.expectedChannels) != 0 {
+			} else if len(tc.expectedChannels) != 0 {
 				actualType, actualChannels, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
-				require.Equal(t, tt.expectedPermissionType, actualType)
-				require.Equal(t, tt.expectedChannels, actualChannels)
+				require.Equal(t, tc.expectedPermissionType, actualType)
+				require.Equal(t, tc.expectedChannels, actualChannels)
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if len(tt.expectedWorkspaces) != 0 {
+			} else if len(tc.expectedWorkspaces) != 0 {
 				actualType, actualWorkspaces, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
-				require.Equal(t, tt.expectedPermissionType, actualType)
-				require.Equal(t, tt.expectedWorkspaces, actualWorkspaces)
+				require.Equal(t, tc.expectedPermissionType, actualType)
+				require.Equal(t, tc.expectedWorkspaces, actualWorkspaces)
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}
-			} else if len(tt.expectedOrganizations) != 0 {
+			} else if len(tc.expectedOrganizations) != 0 {
 				actualType, actualOrganizations, err := c.TriggerPermissionsList(ctx, fakeToken, fakeTriggerID)
-				require.Equal(t, tt.expectedPermissionType, actualType)
-				require.Equal(t, tt.expectedOrganizations, actualOrganizations)
+				require.Equal(t, tc.expectedPermissionType, actualType)
+				require.Equal(t, tc.expectedOrganizations, actualOrganizations)
 
 				// check
-				if (err != nil) != tt.wantErr {
-					t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+				if (err != nil) != tc.wantErr {
+					t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 					return
 				}
-				if tt.wantErr {
+				if tc.wantErr {
 					require.Contains(
 						t,
 						err.Error(),
-						tt.errMessage,
+						tc.errMessage,
 						"test error contains invalid message",
 					)
 				}

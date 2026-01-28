@@ -419,19 +419,19 @@ func Test_Python_getProjectDirRelPath(t *testing.T) {
 			expectedError:   nil,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
 			osMock := slackdeps.NewOsMock()
-			osMock.On("Getwd").Return(tt.getwdPath, tt.getwdError)
+			osMock.On("Getwd").Return(tc.getwdPath, tc.getwdError)
 			osMock.AddDefaultMocks()
 
 			// Run the test
-			actualRelPath, actualErr := getProjectDirRelPath(osMock, tt.currentDirPath, tt.projectDirPath)
+			actualRelPath, actualErr := getProjectDirRelPath(osMock, tc.currentDirPath, tc.projectDirPath)
 
 			// Assertions
-			require.Equal(t, tt.expectedRelPath, actualRelPath)
-			require.Equal(t, tt.expectedError, actualErr)
+			require.Equal(t, tc.expectedRelPath, actualRelPath)
+			require.Equal(t, tc.expectedError, actualErr)
 		})
 	}
 }

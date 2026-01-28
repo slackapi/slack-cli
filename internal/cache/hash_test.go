@@ -42,10 +42,10 @@ func TestCache_Hash_NewHash(t *testing.T) {
 			expected: Hash("c8fe2e89bbafe8ca60e751ec27cd5ebf57562d452ebb9470fa6ccddd3c9de904"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			hash := NewHash([]byte(tt.input))
-			assert.Equal(t, tt.expected, hash)
+			hash := NewHash([]byte(tc.input))
+			assert.Equal(t, tc.expected, hash)
 		})
 	}
 }
@@ -70,12 +70,12 @@ func TestCache_Hash_Equals(t *testing.T) {
 			equals: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			left := tt.a.Equals(tt.b)
-			right := tt.b.Equals(tt.a)
-			assert.Equal(t, tt.equals, left)
-			assert.Equal(t, tt.equals, right)
+			left := tc.a.Equals(tc.b)
+			right := tc.b.Equals(tc.a)
+			assert.Equal(t, tc.equals, left)
+			assert.Equal(t, tc.equals, right)
 		})
 	}
 }
