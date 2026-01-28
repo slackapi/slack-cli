@@ -82,7 +82,7 @@ func getSelectionOptionsForCategory(clients *shared.ClientFactory) []promptObjec
 			Repository: "slack-cli#getting-started",
 		},
 		{
-			Title:      fmt.Sprintf("AI Agent apps %s", style.Secondary("Slack agents and assistants")),
+			Title:      fmt.Sprintf("AI Agent app %s", style.Secondary("Slack agents and assistants")),
 			Repository: "slack-cli#ai-apps",
 		},
 		{
