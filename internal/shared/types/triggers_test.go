@@ -62,10 +62,10 @@ func Test_Triggers_IsKnownType(t *testing.T) {
 			expectedBool: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedBool := tt.trigger.IsKnownType()
-			require.Equal(t, tt.expectedBool, returnedBool)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedBool := tc.trigger.IsKnownType()
+			require.Equal(t, tc.expectedBool, returnedBool)
 		})
 	}
 }

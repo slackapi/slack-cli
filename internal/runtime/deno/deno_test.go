@@ -43,10 +43,10 @@ func Test_Deno_New(t *testing.T) {
 			expectedDeno: &Deno{version: defaultVersion},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			d := New()
-			require.Equal(t, tt.expectedDeno, d)
+			require.Equal(t, tc.expectedDeno, d)
 		})
 	}
 }
@@ -61,10 +61,10 @@ func Test_Deno_IgnoreDirectories(t *testing.T) {
 			expectedIgnoreDirectories: []string{},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			d := New()
-			require.Equal(t, tt.expectedIgnoreDirectories, d.IgnoreDirectories())
+			require.Equal(t, tc.expectedIgnoreDirectories, d.IgnoreDirectories())
 		})
 	}
 }
@@ -131,15 +131,15 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			expectedHookExecutorCalls: 1, // Cache dependencies script executed
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
 
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
-			os.On("LookPath", mock.Anything).Return("", tt.lookPathError)
+			os.On("LookPath", mock.Anything).Return("", tc.lookPathError)
 			os.AddDefaultMocks()
 
 			cfg := config.NewConfig(fs, os)
@@ -148,10 +148,10 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			ios.AddDefaultMocks()
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tc.hookExecutorError)
 
 			// Create files
-			for _, filePath := range tt.existingFilePaths {
+			for _, filePath := range tc.existingFilePaths {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				// Create the directory
 				if err := fs.MkdirAll(filepath.Dir(filePathAbs), 0755); err != nil {
@@ -168,9 +168,9 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			response, err := d.InstallProjectDependencies(ctx, projectDirPath, mockHookExecutor, ios, fs, os)
 
 			// Assertions
-			require.Contains(t, response, tt.expectedResponse)
-			require.Equal(t, tt.expectedError, err)
-			mockHookExecutor.AssertNumberOfCalls(t, "Execute", tt.expectedHookExecutorCalls)
+			require.Contains(t, response, tc.expectedResponse)
+			require.Equal(t, tc.expectedError, err)
+			mockHookExecutor.AssertNumberOfCalls(t, "Execute", tc.expectedHookExecutorCalls)
 		})
 	}
 }
@@ -202,9 +202,9 @@ func Test_Deno_Version(t *testing.T) {
 			expectedVersion: defaultVersion,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expectedVersion, tt.deno.Version())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expectedVersion, tc.deno.Version())
 		})
 	}
 }
@@ -226,11 +226,11 @@ func Test_Deno_SetVersion(t *testing.T) {
 			expectedVersion: "deno@2",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			d := New()
-			d.SetVersion(tt.version)
-			require.Equal(t, tt.expectedVersion, d.Version())
+			d.SetVersion(tc.version)
+			require.Equal(t, tc.expectedVersion, d.Version())
 		})
 	}
 }
@@ -252,16 +252,16 @@ func Test_Deno_HooksJSONTemplate(t *testing.T) {
 			expectedErrorType: &json.SyntaxError{},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			var anyJSON map[string]interface{}
 
 			// Test
-			err := json.Unmarshal(tt.hooksJSONTemplate, &anyJSON)
+			err := json.Unmarshal(tc.hooksJSONTemplate, &anyJSON)
 
 			// Assertions
-			require.IsType(t, tt.expectedErrorType, err)
+			require.IsType(t, tc.expectedErrorType, err)
 		})
 	}
 }
@@ -283,8 +283,8 @@ func Test_Deno_PreparePackage(t *testing.T) {
 			expectedPreparePackageError: slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// Setup SDKConfig
@@ -296,7 +296,7 @@ func Test_Deno_PreparePackage(t *testing.T) {
 
 			// Setup HookExecutor
 			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tt.hookExecutorError)
+			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", tc.hookExecutorError)
 
 			// Setup
 			mockOpts := types.PreparePackageOpts{}
@@ -309,7 +309,7 @@ func Test_Deno_PreparePackage(t *testing.T) {
 			err := d.PreparePackage(ctx, mockSDKConfig, mockHookExecutor, mockOpts)
 
 			// Assertions
-			require.Equal(t, tt.expectedPreparePackageError, err)
+			require.Equal(t, tc.expectedPreparePackageError, err)
 		})
 	}
 }
@@ -346,15 +346,15 @@ func Test_Deno_IsRuntimeForProject(t *testing.T) {
 			expectedBool:      true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
 			projectDirPath := "/path/to/project-name"
 
 			// Create files
-			for _, filePath := range tt.existingFilePaths {
+			for _, filePath := range tc.existingFilePaths {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				// Create the directory
 				if err := fs.MkdirAll(filepath.Dir(filePathAbs), 0755); err != nil {
@@ -367,10 +367,10 @@ func Test_Deno_IsRuntimeForProject(t *testing.T) {
 			}
 
 			// Test
-			b := IsRuntimeForProject(ctx, fs, projectDirPath, hooks.SDKCLIConfig{Runtime: tt.sdkConfigRuntime})
+			b := IsRuntimeForProject(ctx, fs, projectDirPath, hooks.SDKCLIConfig{Runtime: tc.sdkConfigRuntime})
 
 			// Assertions
-			require.Equal(t, tt.expectedBool, b)
+			require.Equal(t, tc.expectedBool, b)
 		})
 	}
 }

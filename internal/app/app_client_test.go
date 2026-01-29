@@ -692,14 +692,14 @@ func TestAppClient_CleanupAppsJSONFiles(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tc := range tests {
 		ac, _, _, pathToAppsJSON, pathToDevAppsJSON, teardown := setup(t)
 		defer teardown(t)
 		ctx := slackcontext.MockContext(t.Context())
 
-		err := afero.WriteFile(ac.fs, pathToAppsJSON, tt.appsJSON, 0600)
+		err := afero.WriteFile(ac.fs, pathToAppsJSON, tc.appsJSON, 0600)
 		require.NoError(t, err)
-		err = afero.WriteFile(ac.fs, pathToDevAppsJSON, tt.devAppsJSON, 0600)
+		err = afero.WriteFile(ac.fs, pathToDevAppsJSON, tc.devAppsJSON, 0600)
 		require.NoError(t, err)
 
 		_, err = ac.fs.Stat(pathToAppsJSON)

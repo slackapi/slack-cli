@@ -53,11 +53,11 @@ func Test_HashString(t *testing.T) {
 			expected: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			hash1, err1 := HashString(tt.text1)
-			hash2, err2 := HashString(tt.text2)
-			require.Equal(t, hash1 == hash2, tt.expected)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			hash1, err1 := HashString(tc.text1)
+			hash2, err2 := HashString(tc.text2)
+			require.Equal(t, hash1 == hash2, tc.expected)
 			require.NoError(t, err1)
 			require.NoError(t, err2)
 		})
@@ -121,10 +121,10 @@ func Test_ExtractFirstJSONFromString(t *testing.T) {
 			expected: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actualRes := ExtractFirstJSONFromString(tt.text)
-			require.Equal(t, tt.expected, actualRes)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actualRes := ExtractFirstJSONFromString(tc.text)
+			require.Equal(t, tc.expected, actualRes)
 		})
 	}
 }
@@ -155,10 +155,10 @@ func Test_addLogWhenValExist(t *testing.T) {
 			expected: "hello world: [slack]\n",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			output := AddLogWhenValExist(tt.title, tt.val)
-			require.Equal(t, output, tt.expected)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			output := AddLogWhenValExist(tc.title, tc.val)
+			require.Equal(t, output, tc.expected)
 		})
 	}
 }
@@ -380,10 +380,10 @@ func Test_RedactPII(t *testing.T) {
 			expected: `slack variables remove ...`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			redacted := RedactPII(tt.text)
-			require.Equal(t, tt.expected, redacted)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			redacted := RedactPII(tc.text)
+			require.Equal(t, tc.expected, redacted)
 		})
 	}
 }
@@ -414,10 +414,10 @@ func Test_UpperCaseTrimAll(t *testing.T) {
 			expected:      "HELLO,WORLD",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			output := UpperCaseTrimAll(tt.namedEntities)
-			require.Equal(t, output, tt.expected)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			output := UpperCaseTrimAll(tc.namedEntities)
+			require.Equal(t, output, tc.expected)
 		})
 	}
 }
@@ -444,10 +444,10 @@ func Test_ToHTTPS(t *testing.T) {
 			expected: "https://www.xyz.com",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			output := ToHTTPS(tt.urlAddr)
-			require.Equal(t, output, tt.expected)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			output := ToHTTPS(tc.urlAddr)
+			require.Equal(t, output, tc.expected)
 		})
 	}
 }

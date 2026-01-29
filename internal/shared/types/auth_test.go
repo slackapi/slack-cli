@@ -38,9 +38,9 @@ func Test_SlackAuth_AuthLevel(t *testing.T) {
 			expectedAuthLevel: AuthLevelEnterprise,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.auth.AuthLevel(), tt.expectedAuthLevel)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.auth.AuthLevel(), tc.expectedAuthLevel)
 		})
 	}
 }
@@ -86,9 +86,9 @@ func Test_SlackAuth_ShouldRotateToken(t *testing.T) {
 			expected: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expected, tt.input.ShouldRotateToken())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, tc.input.ShouldRotateToken())
 		})
 	}
 }
@@ -123,9 +123,9 @@ func Test_SlackAuth_TokenIsExpired(t *testing.T) {
 			expected: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.expected, tt.input.TokenIsExpired())
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, tc.input.TokenIsExpired())
 		})
 	}
 }

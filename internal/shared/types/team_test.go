@@ -47,10 +47,10 @@ func Test_SlackTeam_String(t *testing.T) {
 			expectedString: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedString := tt.slackTeam.String()
-			require.Equal(t, tt.expectedString, returnedString)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedString := tc.slackTeam.String()
+			require.Equal(t, tc.expectedString, returnedString)
 		})
 	}
 }

@@ -53,11 +53,11 @@ func Test_Runtime_New(t *testing.T) {
 			expectedRuntimeType: nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Run the test
-			rt, _ := New(tt.runtime)
-			require.IsType(t, tt.expectedRuntimeType, rt)
+			rt, _ := New(tc.runtime)
+			require.IsType(t, tc.expectedRuntimeType, rt)
 		})
 	}
 }
@@ -89,16 +89,16 @@ func Test_Runtime_NewDetectProject(t *testing.T) {
 			expectedRuntimeType: nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
 			projectDirPath := "/path/to/project-name"
 
 			// Run the test
-			rt, _ := NewDetectProject(ctx, fs, projectDirPath, tt.sdkConfig)
-			require.IsType(t, tt.expectedRuntimeType, rt)
+			rt, _ := NewDetectProject(ctx, fs, projectDirPath, tc.sdkConfig)
+			require.IsType(t, tc.expectedRuntimeType, rt)
 		})
 	}
 }

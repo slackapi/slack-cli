@@ -57,10 +57,10 @@ func Test_SlackUser_String(t *testing.T) {
 			expectedString: " (U1234, owner)", // TODO - confirm that this is the result we want
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedString := tt.slackUser.String()
-			require.Equal(t, tt.expectedString, returnedString)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedString := tc.slackUser.String()
+			require.Equal(t, tc.expectedString, returnedString)
 		})
 	}
 }
@@ -92,10 +92,10 @@ func Test_SlackUser_ShorthandF(t *testing.T) {
 			expectedString: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedString := tt.slackUser.ShorthandF()
-			require.Equal(t, tt.expectedString, returnedString)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedString := tc.slackUser.ShorthandF()
+			require.Equal(t, tc.expectedString, returnedString)
 		})
 	}
 }

@@ -39,13 +39,13 @@ func Test_RawJSON_UnmarshalJSON(t *testing.T) {
 			expectedJSONData:  `{ "name": "foo" }`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			rawJSON := &RawJSON{}
-			err := rawJSON.UnmarshalJSON([]byte(tt.blob))
+			err := rawJSON.UnmarshalJSON([]byte(tc.blob))
 
-			require.IsType(t, err, tt.expectedErrorType)
-			require.Equal(t, tt.expectedJSONData, string(*rawJSON.JSONData))
+			require.IsType(t, err, tc.expectedErrorType)
+			require.Equal(t, tc.expectedJSONData, string(*rawJSON.JSONData))
 		})
 	}
 }

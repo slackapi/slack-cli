@@ -80,10 +80,10 @@ func Test_prettifyActivity(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actualResult := prettifyActivity(tt.activity)
-			for _, expectedResult := range tt.expectedResults {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actualResult := prettifyActivity(tc.activity)
+			for _, expectedResult := range tc.expectedResults {
 				require.Contains(t, actualResult, expectedResult)
 			}
 			// Confirm no nil pointers leak to output

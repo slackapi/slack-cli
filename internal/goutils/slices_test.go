@@ -46,10 +46,10 @@ func Test_AppendStringIfNotMember(t *testing.T) {
 			expectedSlice: []string{"one"},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actualSlice := AppendStringIfNotMember(tt.originalSlice, tt.newElement)
-			require.ElementsMatch(t, tt.expectedSlice, actualSlice)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actualSlice := AppendStringIfNotMember(tc.originalSlice, tc.newElement)
+			require.ElementsMatch(t, tc.expectedSlice, actualSlice)
 		})
 	}
 }
@@ -68,10 +68,10 @@ func Test_Contains(t *testing.T) {
 		{name: "not_case_sensitive_fail", listToCheck: []string{"hi", "hey", "hello", "apple", "pear"}, toFind: "Peach", isCaseSensitive: false, want: false},
 		{name: "not_case_sensitive_substring", listToCheck: []string{"hi", "hey hello"}, toFind: "hey", isCaseSensitive: false, want: false},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.listToCheck, tt.toFind, tt.isCaseSensitive); got != tt.want {
-				t.Errorf("method() = %v, want %v", got, tt.want)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := Contains(tc.listToCheck, tc.toFind, tc.isCaseSensitive); got != tc.want {
+				t.Errorf("method() = %v, want %v", got, tc.want)
 			}
 		})
 	}
