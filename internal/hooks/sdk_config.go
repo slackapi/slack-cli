@@ -95,6 +95,9 @@ func (w *WatchOpts) IsAvailable() bool {
 
 // GetManifestWatchConfig returns manifest watch config
 func (w *WatchOpts) GetManifestWatchConfig() (paths []string, filterRegex string, enabled bool) {
+	if w == nil {
+		return nil, "", false
+	}
 	if w.Manifest != nil {
 		return w.Manifest.Paths, w.Manifest.FilterRegex, len(w.Manifest.Paths) > 0
 	}
@@ -104,6 +107,9 @@ func (w *WatchOpts) GetManifestWatchConfig() (paths []string, filterRegex string
 
 // GetAppWatchConfig returns app watch config
 func (w *WatchOpts) GetAppWatchConfig() (paths []string, filterRegex string, enabled bool) {
+	if w == nil {
+		return nil, "", false
+	}
 	if w.App != nil {
 		return w.App.Paths, w.App.FilterRegex, len(w.App.Paths) > 0
 	}

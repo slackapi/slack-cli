@@ -124,13 +124,19 @@ func Test_WatchOpts_IsAvailable(t *testing.T) {
 
 func Test_WatchOpts_GetManifestWatchConfig(t *testing.T) {
 	tests := map[string]struct {
-		watchOpts       WatchOpts
+		watchOpts       *WatchOpts
 		expectedPaths   []string
 		expectedRegex   string
 		expectedEnabled bool
 	}{
+		"Nil WatchOpts pointer": {
+			watchOpts:       nil,
+			expectedPaths:   nil,
+			expectedRegex:   "",
+			expectedEnabled: false,
+		},
 		"Nested manifest config": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				Manifest: &ManifestWatchOpts{
 					Paths:       []string{"manifest.json", "workflows/"},
 					FilterRegex: "\\.json$",
@@ -141,7 +147,7 @@ func Test_WatchOpts_GetManifestWatchConfig(t *testing.T) {
 			expectedEnabled: true,
 		},
 		"Legacy flat config": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				Paths:       []string{"manifest.json", "src/"},
 				FilterRegex: "\\.(json|ts)$",
 			},
@@ -150,7 +156,7 @@ func Test_WatchOpts_GetManifestWatchConfig(t *testing.T) {
 			expectedEnabled: true,
 		},
 		"Nested config takes precedence over legacy": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				Paths:       []string{"old-path/"},
 				FilterRegex: "old-regex",
 				Manifest: &ManifestWatchOpts{
@@ -163,7 +169,7 @@ func Test_WatchOpts_GetManifestWatchConfig(t *testing.T) {
 			expectedEnabled: true,
 		},
 		"Empty nested manifest config": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				Manifest: &ManifestWatchOpts{
 					Paths: []string{},
 				},
@@ -173,7 +179,7 @@ func Test_WatchOpts_GetManifestWatchConfig(t *testing.T) {
 			expectedEnabled: false,
 		},
 		"Empty legacy config": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				Paths: []string{},
 			},
 			expectedPaths:   []string{},
@@ -193,13 +199,19 @@ func Test_WatchOpts_GetManifestWatchConfig(t *testing.T) {
 
 func Test_WatchOpts_GetAppWatchConfig(t *testing.T) {
 	tests := map[string]struct {
-		watchOpts       WatchOpts
+		watchOpts       *WatchOpts
 		expectedPaths   []string
 		expectedRegex   string
 		expectedEnabled bool
 	}{
+		"Nil WatchOpts pointer": {
+			watchOpts:       nil,
+			expectedPaths:   nil,
+			expectedRegex:   "",
+			expectedEnabled: false,
+		},
 		"Nested app config": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				App: &AppWatchOpts{
 					Paths:       []string{"src/", "functions/"},
 					FilterRegex: "\\.(ts|js)$",
@@ -210,7 +222,7 @@ func Test_WatchOpts_GetAppWatchConfig(t *testing.T) {
 			expectedEnabled: true,
 		},
 		"Legacy config does not enable app watching": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				Paths:       []string{"manifest.json", "src/"},
 				FilterRegex: "\\.(json|ts)$",
 			},
@@ -219,7 +231,7 @@ func Test_WatchOpts_GetAppWatchConfig(t *testing.T) {
 			expectedEnabled: false,
 		},
 		"Empty nested app config": {
-			watchOpts: WatchOpts{
+			watchOpts: &WatchOpts{
 				App: &AppWatchOpts{
 					Paths: []string{},
 				},
@@ -229,7 +241,7 @@ func Test_WatchOpts_GetAppWatchConfig(t *testing.T) {
 			expectedEnabled: false,
 		},
 		"Nil app config": {
-			watchOpts:       WatchOpts{},
+			watchOpts:       &WatchOpts{},
 			expectedPaths:   nil,
 			expectedRegex:   "",
 			expectedEnabled: false,
