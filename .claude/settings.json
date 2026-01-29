@@ -5,7 +5,7 @@
       "Bash(gofmt:*)",
       "Bash(make build:*)",
       "Bash(make build-ci:*)",
-      "Bash(make lint:*)",
+      "Bash(make lint:*)"
     ]
   }
 }
