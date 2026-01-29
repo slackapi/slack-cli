@@ -367,7 +367,6 @@ name = "broken`,
 				require.NotContains(t, outputs, notExpected)
 			}
 
-
 			if tc.expectedError {
 				require.Error(t, err)
 			} else {
