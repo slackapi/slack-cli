@@ -105,10 +105,10 @@ func Test_RedactPII(t *testing.T) {
 			expected: `Operating System (OS): darwin`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			redacted := goutils.RedactPII(tt.text)
-			require.Equal(t, redacted, tt.expected)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			redacted := goutils.RedactPII(tc.text)
+			require.Equal(t, redacted, tc.expected)
 		})
 	}
 }

@@ -82,18 +82,18 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tc := range tests {
 		var mockProviderFlag string
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
-		if tt.ProviderFlag != "" {
-			_ = clientsMock.Config.Flags.Set("provider", tt.ProviderFlag)
+		if tc.ProviderFlag != "" {
+			_ = clientsMock.Config.Flags.Set("provider", tc.ProviderFlag)
 		}
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clients.Config.Flags.Lookup("provider"),
-		})).Return(tt.Selection, nil)
+		})).Return(tc.Selection, nil)
 
 		clientsMock.AddDefaultMocks()
 
@@ -149,7 +149,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tc := range tests {
 		var mockProviderFlag string
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
@@ -157,7 +157,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("provider"),
-		})).Return(tt.Selection, nil)
+		})).Return(tc.Selection, nil)
 		clientsMock.AddDefaultMocks()
 
 		selectedProvider, err := ProviderAuthSelectPrompt(ctx, clients, workflowsInfo)

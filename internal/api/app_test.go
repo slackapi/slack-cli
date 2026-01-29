@@ -484,8 +484,8 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 			requestJSON:         `{"app":"A1234","reason":"This request has been automatically generated according to project environment settings."}`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
@@ -495,14 +495,14 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 					result := fmt.Sprintf(
 						`{"ok":false,"error":"%s","team_id":"%s"}`,
 						slackerror.ErrAppApprovalRequestEligible,
-						tt.teamID,
+						tc.teamID,
 					)
 					_, err := fmt.Fprintln(w, result)
 					require.NoError(t, err)
 				}
 
 				if strings.Contains(r.URL.Path, appApprovalRequestCreateMethod) {
-					expectedJSON := tt.requestJSON
+					expectedJSON := tc.requestJSON
 					payload, err := io.ReadAll(r.Body)
 					require.NoError(t, err)
 					require.Equal(t, expectedJSON, string(payload))
@@ -518,7 +518,7 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 			iostreamMock.On("PrintTrace", mock.Anything, mock.Anything, mock.Anything).Return()
 
 			// execute
-			_, _, err := c.DeveloperAppInstall(ctx, iostreamMock, "token", tt.app, []string{}, []string{}, tt.orgGrantWorkspaceID, true)
+			_, _, err := c.DeveloperAppInstall(ctx, iostreamMock, "token", tc.app, []string{}, []string{}, tc.orgGrantWorkspaceID, true)
 			require.NoError(t, err)
 		})
 	}

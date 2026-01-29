@@ -48,12 +48,12 @@ func Test_Permissions_StringToAppCollaboratorPermission(t *testing.T) {
 			expectedAppCollaboratorPermission: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			appCollaboratorPermission, err := StringToAppCollaboratorPermission(tt.input)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			appCollaboratorPermission, err := StringToAppCollaboratorPermission(tc.input)
 
-			require.IsType(t, err, tt.expectedErrorType)
-			require.Equal(t, tt.expectedAppCollaboratorPermission, appCollaboratorPermission)
+			require.IsType(t, err, tc.expectedErrorType)
+			require.Equal(t, tc.expectedAppCollaboratorPermission, appCollaboratorPermission)
 		})
 	}
 }
@@ -80,11 +80,11 @@ func Test_Permissions_AppCollaboratorPermissionF(t *testing.T) {
 			expectedString: "a collaborator",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedString := tt.acp.AppCollaboratorPermissionF()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedString := tc.acp.AppCollaboratorPermissionF()
 
-			require.Equal(t, tt.expectedString, returnedString)
+			require.Equal(t, tc.expectedString, returnedString)
 		})
 	}
 }
@@ -126,11 +126,11 @@ func Test_Permission_IsValid(t *testing.T) {
 			expectedIsValid: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedIsValid := tt.permission.IsValid()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedIsValid := tc.permission.IsValid()
 
-			require.Equal(t, tt.expectedIsValid, returnedIsValid)
+			require.Equal(t, tc.expectedIsValid, returnedIsValid)
 		})
 	}
 }
@@ -162,11 +162,11 @@ func Test_Permission_ToString(t *testing.T) {
 			expectedString: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedString := tt.permission.ToString()
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedString := tc.permission.ToString()
 
-			require.Equal(t, tt.expectedString, returnedString)
+			require.Equal(t, tc.expectedString, returnedString)
 		})
 	}
 }
@@ -237,7 +237,7 @@ func Test_Permissions_IsNamedEntityFlag(t *testing.T) {
 			expectedIsNamedEntityFlag: false,
 		},
 	}
-	for _, tt := range tests {
+	for _, tc := range tests {
 		flags := pflag.NewFlagSet("entities", pflag.ContinueOnError)
 
 		// Define the flags
@@ -249,16 +249,16 @@ func Test_Permissions_IsNamedEntityFlag(t *testing.T) {
 
 		// Set the flags based on the test values
 		everyoneFlag := ""
-		if tt.flags.everyoneValue {
+		if tc.flags.everyoneValue {
 			everyoneFlag = "--everyone"
 		}
 
 		args := []string{
 			everyoneFlag,
-			fmt.Sprintf("--channels=%s", tt.flags.channelsValue),
-			fmt.Sprintf("--organizations=%s", tt.flags.organizationsValue),
-			fmt.Sprintf("--users=%s", tt.flags.usersValue),
-			fmt.Sprintf("--workspaces=%s", tt.flags.workspacesValue),
+			fmt.Sprintf("--channels=%s", tc.flags.channelsValue),
+			fmt.Sprintf("--organizations=%s", tc.flags.organizationsValue),
+			fmt.Sprintf("--users=%s", tc.flags.usersValue),
+			fmt.Sprintf("--workspaces=%s", tc.flags.workspacesValue),
 		}
 
 		// Parse the flagset
@@ -266,9 +266,9 @@ func Test_Permissions_IsNamedEntityFlag(t *testing.T) {
 			require.Fail(t, err.Error(), "Flags parse error")
 		}
 
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			returnedIsNamedEntityFlag := IsNamedEntityFlag(flags)
-			require.Equal(t, tt.expectedIsNamedEntityFlag, returnedIsNamedEntityFlag)
+			require.Equal(t, tc.expectedIsNamedEntityFlag, returnedIsNamedEntityFlag)
 		})
 	}
 }
@@ -297,10 +297,10 @@ func Test_Permissions_GetAccessTypeDescriptionForEveryone(t *testing.T) {
 			expectedString: "everyone in the workspace",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedString := GetAccessTypeDescriptionForEveryone(tt.app)
-			require.Equal(t, tt.expectedString, returnedString)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			returnedString := GetAccessTypeDescriptionForEveryone(tc.app)
+			require.Equal(t, tc.expectedString, returnedString)
 		})
 	}
 }

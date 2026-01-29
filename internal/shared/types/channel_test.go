@@ -49,9 +49,9 @@ func Test_SlackChannel_String(t *testing.T) {
 			expectedString: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.channel.String(), tt.expectedString)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.channel.String(), tc.expectedString)
 		})
 	}
 }

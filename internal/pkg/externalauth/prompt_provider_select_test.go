@@ -72,7 +72,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tc := range tests {
 		var mockProviderFlag string
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
@@ -80,7 +80,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("provider"),
-		})).Return(tt.Selection, nil)
+		})).Return(tc.Selection, nil)
 		clientsMock.AddDefaultMocks()
 
 		selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
@@ -134,18 +134,18 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tc := range tests {
 		var mockProviderFlag string
 		ctx := slackcontext.MockContext(t.Context())
 		clientsMock := shared.NewClientsMock()
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
-		if tt.ProviderFlag != "" {
-			_ = clientsMock.Config.Flags.Set("provider", tt.ProviderFlag)
+		if tc.ProviderFlag != "" {
+			_ = clientsMock.Config.Flags.Set("provider", tc.ProviderFlag)
 		}
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("provider"),
-		})).Return(tt.Selection, nil)
+		})).Return(tc.Selection, nil)
 		clientsMock.AddDefaultMocks()
 
 		selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
