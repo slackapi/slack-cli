@@ -35,6 +35,7 @@ type ShellCommand interface {
 	StderrPipe() (io.ReadCloser, error)
 	Start() error
 	Wait() error
+	GetProcess() *os.Process
 }
 
 type ShellExec struct{}
@@ -71,6 +72,14 @@ func (sh ShellExec) Command(env []string, stdout io.Writer, stderr io.Writer, st
 // execCommander wraps the command value from the exec package
 type execCommander struct {
 	*exec.Cmd
+}
+
+// GetProcess returns the underlying process
+func (e execCommander) GetProcess() *os.Process {
+	if e.Cmd != nil {
+		return e.Process
+	}
+	return nil
 }
 
 type HookExecOpts struct {

@@ -446,7 +446,17 @@ The format for the JSON representing the CLI-SDK interface is as follows:
   },
   "config": {
     "protocol-version": ["message-boundaries"],
-    "sdk-managed-connection-enabled": false
+    "sdk-managed-connection-enabled": false,
+    "watch": {
+      "manifest": {
+        "paths": ["manifest.json"]
+      },
+      "app": {
+        "paths": ["app.js", "listeners/"],
+        "filter-regex": "\\.(ts|js)$"
+      }
+    },
+    "trigger-paths": ["triggers/"]
   }
 }
 ```
@@ -457,7 +467,7 @@ The format for the JSON representing the CLI-SDK interface is as follows:
 | hooks                                 | Object whose keys must match the hook names outlined in the above [Hooks Specification](#specification). Arguments can be provided within this string by separating them with spaces.                                                                                                                                                                                                                           | Required |
 | config                                | Object of key-value settings.                                                                                                                                                                                                                                                                                                                                                                                   | Optional |
 | config.protocol-version               | Array of strings representing the named CLI-SDK protocols supported by the SDK, in descending order of support, as in the first element in the array defines the preferred protocol for use by the SDK, the second element defines the next-preferred protocol, and so on. The only supported named protocol currently is `message-boundaries`. The CLI will use the v1 protocol if this field is not provided. | Optional |
-| config.watch                          | Object with configuration settings for file-watching.                                                                                                                                                                                                                                                                                                                                                           | Optional |
+| config.watch                          | Object with configuration settings for file-watching during `slack run`. Supports updating the `manifest` on change and reloading the `app` server. Read [Watch configurations](#watch-configurations) for details.                                                                                                                                                                                             | Optional |
 | config.sdk-managed-connection-enabled | Boolean specifying whether the WebSocket connection between the CLI and Slack should be managed by the CLI or by the SDK during `slack run` executions. If `true`, the SDK will manage this connection. If `false` or not provided, the CLI will manage this connection.                                                                                                                                        | Optional |
 | config.trigger-paths                  | Array of strings that are paths to files of trigger definitions.                                                                                                                                                                                                                                                                                                                                                | Optional |
 
@@ -465,6 +475,37 @@ This format must be adhered to, in order of preference, either:
 
 1. As the response to `get-hooks`, or
 2. Comprising the contents of the `hooks.json` file
+
+### Watch configurations {#watch-configurations}
+
+The `config.watch` setting looks for file changes during local development with the `slack run` command. The CLI supports separate file watchers for **manifest** changes and changes to **application code** as options for reinstalling the app or reloading the server.
+
+```json
+{
+  "config": {
+    "watch": {
+      "manifest": {
+        "paths": ["manifest.json"]
+      },
+      "app": {
+        "paths": ["app.js", "listeners/"],
+        "filter-regex": "\\.(ts|js)$"
+      }
+    }
+  }
+}
+```
+
+| Field                       | Description                                                                        | Required |
+| --------------------------- | ---------------------------------------------------------------------------------- | -------- |
+| watch.manifest              | Object configuring the manifest watcher for reinstalling the app.                  | Optional |
+| watch.manifest.paths        | Array of file paths or directories to watch for manifest changes.                  | Required |
+| watch.manifest.filter-regex | Regex pattern to filter which files trigger manifest reinstall (e.g., `\\.json$`). | Optional |
+| watch.app                   | Object configuring the app watcher for restarting the app server.                  | Optional |
+| watch.app.paths             | Array of file paths or directories to watch for app/code changes.                  | Required |
+| watch.app.filter-regex      | Regex pattern to filter which files trigger server reload (e.g., `\\.(ts\|js)$`).  | Optional |
+
+**Note:** For backward compatibility, top-level `paths` and `filter-regex` fields are treated as manifest watching configuration only. No server reloading will occur with the legacy structure.
 
 ## Hook resolution {#hook-resolution}
 
@@ -516,8 +557,13 @@ The CLI will employ the following algorithm in order to resolve the command to b
   },
   "config": {
     "watch": {
-      "filter-regex": "^manifest\\.(ts|js|json)$",
-      "paths": ["."]
+      "manifest": {
+        "paths": ["manifest.json"]
+      },
+      "app": {
+        "paths": ["app.js", "listeners/"],
+        "filter-regex": "\\.(ts|js)$"
+      }
     },
     "sdk-managed-connection-enabled": "true"
   }
@@ -542,6 +588,8 @@ The CLI will employ the following algorithm in order to resolve the command to b
   }
 }
 ```
+
+**Note:** The legacy format (top-level `paths` and `filter-regex`) is treated as manifest watching only. No server reloading will occur with this configuration.
 
 ## Terms {#terms}
 
