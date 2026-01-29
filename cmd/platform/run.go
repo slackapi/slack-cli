@@ -178,11 +178,14 @@ func newRunLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Log
 			case "on_cloud_run_watch_error":
 				message := event.DataToString("cloud_run_watch_error")
 				clients.IO.PrintError(ctx, "Error: %s", message)
-			case "on_cloud_run_watch_file_change":
-				path := event.DataToString("cloud_run_watch_file_change")
-				cmd.Println(style.Secondary(fmt.Sprintf("File change detected: %s, reinstalling app...", path)))
-			case "on_cloud_run_watch_file_change_reinstalled":
+			case "on_cloud_run_watch_manifest_change":
+				path := event.DataToString("cloud_run_watch_manifest_change")
+				cmd.Println(style.Secondary(fmt.Sprintf("Manifest change detected: %s, reinstalling app...", path)))
+			case "on_cloud_run_watch_manifest_change_reinstalled":
 				cmd.Println(style.Secondary("App successfully reinstalled"))
+			case "on_cloud_run_watch_app_change":
+				path := event.DataToString("cloud_run_watch_app_change")
+				cmd.Println(style.Secondary(fmt.Sprintf("App change detected: %s, restarting server...", path)))
 			case "on_cleanup_app_install_done":
 				cmd.Println(style.Secondary(fmt.Sprintf(
 					`Cleaned up local app install for "%s".`,
