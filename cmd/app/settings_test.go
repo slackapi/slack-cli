@@ -16,6 +16,7 @@ package app
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
@@ -23,16 +24,18 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func Test_App_SettingsCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"opens app listing page when not in a project directory": {
+		"opens app listing page when run from a random directory": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectMock.On(
@@ -53,6 +56,10 @@ func Test_App_SettingsCommand(t *testing.T) {
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
+				// Verify no .slack directory was left behind
+				slackDir := filepath.Join(slackdeps.MockWorkingDirectory, ".slack")
+				_, err := cm.Fs.Stat(slackDir)
+				assert.True(t, cm.Os.IsNotExist(err), ".slack directory should not exist")
 			},
 		},
 		"errors for rosi applications": {
