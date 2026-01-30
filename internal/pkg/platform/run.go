@@ -149,6 +149,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 		// In turn, should trigger the final cleanup routine below (see deferred function below), which closes the socket connection.
 		// In case this is an SDK-managed run, the next line is a no-op.
 		sendWebSocketCloseControlMessage(ctx, clients, server.Connection)
+		server.stopDelegateProcess(ctx)
 		clients.IO.PrintTrace(ctx, slacktrace.PlatformRunStop)
 		clients.CleanupWaitGroup.Done()
 	}(runArgs.Cleanup)
@@ -174,23 +175,24 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	// Start watching for manifest changes
 	// TODO - reinstalled apps via FS watcher do nothing with new tokens returned - may lead to permission issues / missing events?
 	go func() {
-		errChan <- server.Watch(ctx, runArgs.Auth, installedApp)
+		errChan <- server.WatchManifest(ctx, runArgs.Auth, installedApp)
 	}()
 
 	// Check to see whether the SDK managed connection flag is enabled
-	// If so Delegate the connection to the SDK otherwise Start connection
+	// If so start app watcher (which handles initial start + restarts), otherwise start connection
 	if cliConfig.Config.SDKManagedConnection {
 		clients.IO.PrintDebug(ctx, "Delegating connection to SDK managed script hook")
-		// Delegate connection to hook; this should be a blocking call, as the delegate should be a server, too.
+		// Start app watcher which handles initial server start and restarts on file changes
 		go func() {
-			errChan <- server.StartDelegate(ctx)
+			errChan <- server.WatchApp(ctx)
 		}()
 	} else {
-		// Listen for messages in a goroutine, and provide an error channel for raising errors and a done channel for signifying clean exit
+		// Listen for messages in a goroutine, and provide an error channel for raising errors
 		go func() {
 			errChan <- server.Start(ctx)
 		}()
 	}
+
 	if err := <-errChan; err != nil {
 		switch slackerror.ToSlackError(err).Code {
 		case slackerror.ErrLocalAppRunCleanExit:
