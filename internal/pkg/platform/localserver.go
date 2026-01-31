@@ -365,12 +365,10 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 		return err
 	}
 
-	// Skip manifest watching if manifest source is remote
-	if manifestSource.Equals(config.ManifestSourceRemote) {
-		r.clients.IO.PrintDebug(ctx, "Manifest watching disabled: manifest.source is set to remote")
-		// Block until context is cancelled to keep the goroutine alive
-		<-ctx.Done()
-		return nil
+	// Check if manifest source is remote - we'll still watch but only log changes
+	isRemoteManifest := manifestSource.Equals(config.ManifestSourceRemote)
+	if isRemoteManifest {
+		r.clients.IO.PrintDebug(ctx, "Manifest source is remote - file changes will be logged only")
 	}
 
 	// Get manifest watch configuration
@@ -396,8 +394,7 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 	// Add provided paths to watcher
 	for _, path := range paths {
 		if err := w.AddRecursive(path); err != nil {
-			r.log.Data["cloud_run_watch_error"] = fmt.Sprintf("manifest_watcher.paths: %s", err)
-			r.log.Warn("on_cloud_run_watch_error")
+			r.clients.IO.PrintDebug(ctx, "Skipping watch path %s: %s", path, err)
 		}
 	}
 
@@ -409,15 +406,20 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 				r.clients.IO.PrintDebug(ctx, "Manifest file watcher context canceled, returning.")
 				return
 			case event := <-w.Event:
-				r.log.Data["cloud_run_watch_manifest_change"] = event.Path
-				r.log.Info("on_cloud_run_watch_manifest_change")
-
-				// Reinstall the app when manifest changes
-				if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", r.log, auth, app); err != nil {
-					r.log.Data["cloud_run_watch_error"] = err.Error()
-					r.log.Warn("on_cloud_run_watch_error")
+				if isRemoteManifest {
+					r.log.Data["cloud_run_watch_manifest_change_skipped"] = event.Path
+					r.log.Info("on_cloud_run_watch_manifest_change_skipped_remote")
 				} else {
-					r.log.Info("on_cloud_run_watch_manifest_change_reinstalled")
+					r.log.Data["cloud_run_watch_manifest_change"] = event.Path
+					r.log.Info("on_cloud_run_watch_manifest_change")
+
+					// Reinstall the app when manifest changes
+					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", r.log, auth, app); err != nil {
+						r.log.Data["cloud_run_watch_error"] = err.Error()
+						r.log.Warn("on_cloud_run_watch_error")
+					} else {
+						r.log.Info("on_cloud_run_watch_manifest_change_reinstalled")
+					}
 				}
 			case err := <-w.Error:
 				r.log.Data["cloud_run_watch_error"] = err.Error()
@@ -474,8 +476,7 @@ func (r *LocalServer) WatchApp(ctx context.Context) error {
 	// Add provided paths to watcher
 	for _, path := range paths {
 		if err := w.AddRecursive(path); err != nil {
-			r.log.Data["cloud_run_watch_error"] = fmt.Sprintf("app_watcher.paths: %s", err)
-			r.log.Warn("on_cloud_run_watch_error")
+			r.clients.IO.PrintDebug(ctx, "Skipping watch path %s: %s", path, err)
 		}
 	}
 

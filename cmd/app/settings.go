@@ -101,6 +101,9 @@ func appSettingsCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	if err != nil {
 		// If no apps exist, open the list of all apps known to the developer
 		if slackerror.Is(err, slackerror.ErrInstallationRequired) {
+			// Clean up any empty .slack directory and files created during app selection
+			clients.AppClient().CleanUp()
+
 			host := clients.API().Host()
 			parsed, err := url.Parse(host)
 			if err != nil {
