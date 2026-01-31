@@ -99,11 +99,11 @@ Manual installation allows you to customize certain paths used when installing t
 
 **2\. Download the** `slack` **CLI installer for your environment.**
 
-🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.11.0_macOS_arm64.tar.gz)
+🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.12.0_macOS_arm64.tar.gz)
 
-🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.11.0_macOS_amd64.tar.gz)
+🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.12.0_macOS_amd64.tar.gz)
 
-🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.11.0_linux_64-bit.tar.gz)
+🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_3.12.0_linux_64-bit.tar.gz)
 
 **3\. Add the** `slack` **CLI to your path.**
 
@@ -121,7 +121,7 @@ We recommend using an alias if another `slack` binary exists. To do this, change
 
 ```sh
 $ slack version
-Using slack v3.11.0
+Using slack v3.12.0
 ```
 
 </TabItem>
