@@ -50,10 +50,10 @@ func TestRemoveANSI(t *testing.T) {
 			expected: "script was not found (sdk_hook_not_found)",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := RemoveANSI(tt.input)
-			assert.Equal(t, tt.expected, actual)
+			actual := RemoveANSI(tc.input)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -109,10 +109,10 @@ func TestPluralize(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if s := Pluralize(tt.singular, tt.plural, tt.count); s != tt.expectedResult {
-				t.Errorf("expected: %s, actual: %s", tt.expectedResult, s)
+			if s := Pluralize(tc.singular, tc.plural, tc.count); s != tc.expectedResult {
+				t.Errorf("expected: %s, actual: %s", tc.expectedResult, s)
 			}
 		})
 	}

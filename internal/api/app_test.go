@@ -228,23 +228,23 @@ func TestClient_ValidateAppManifest(t *testing.T) {
 			wantErrVal: slackerror.NewAPIError(errInvalidManifestCode, "", errorDetails2, appManifestValidateMethod),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appManifestValidateMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
-			got, err := c.ValidateAppManifest(ctx, tt.args.token, tt.args.manifest, tt.args.appID)
-			if tt.wantErr {
+			got, err := c.ValidateAppManifest(ctx, tc.args.token, tc.args.manifest, tc.args.appID)
+			if tc.wantErr {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.wantErrVal.Error())
+				require.Contains(t, err.Error(), tc.wantErrVal.Error())
 				return
 			}
 
-			require.Equal(t, tt.want, got)
+			require.Equal(t, tc.want, got)
 		})
 	}
 }
@@ -282,18 +282,18 @@ func TestClient_CertifiedAppInstall(t *testing.T) {
 			httpResponseJSON: `{"ok":true}`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  appCertifiedInstallMethod,
-				ExpectedRequest: fmt.Sprintf(`{"app_id":"%s"}`, tt.mockAppID),
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: fmt.Sprintf(`{"app_id":"%s"}`, tc.mockAppID),
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			_, err := c.CertifiedAppInstall(ctx, "token", tt.mockAppID)
+			_, err := c.CertifiedAppInstall(ctx, "token", tc.mockAppID)
 
 			// check
 			require.NoError(t, err)
@@ -330,18 +330,18 @@ func TestClient_InstallApp(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, ioMock := setup(t)
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  appDeveloperInstallMethod,
-				ExpectedRequest: fmt.Sprintf(`{"app_id":"%s"}`, tt.mockAppID),
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: fmt.Sprintf(`{"app_id":"%s"}`, tc.mockAppID),
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			mockApp := types.App{
-				AppID:      tt.mockAppID,
+				AppID:      tc.mockAppID,
 				TeamID:     "T123",
 				TeamDomain: "mock",
 			}
@@ -349,8 +349,8 @@ func TestClient_InstallApp(t *testing.T) {
 			_, _, err := c.DeveloperAppInstall(ctx, ioMock, "token", mockApp, []string{}, []string{}, "", false)
 
 			// check
-			if tt.expectedErr != nil {
-				assert.Equal(t, slackerror.ToSlackError(err).Code, tt.expectedErr.Code)
+			if tc.expectedErr != nil {
+				assert.Equal(t, slackerror.ToSlackError(err).Code, tc.expectedErr.Code)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -373,13 +373,13 @@ func TestClient_UninstallApp(t *testing.T) {
 			errMessage:       "invalid_app_id",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  appDeveloperUninstallMethod,
 				ExpectedRequest: `{"app_id":"A123","team_id":"T123"}`,
-				Response:        tt.httpResponseJSON,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
@@ -387,15 +387,15 @@ func TestClient_UninstallApp(t *testing.T) {
 			err := c.UninstallApp(ctx, "token", "A123", "T123")
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}
@@ -418,14 +418,14 @@ func TestClient_DeleteApp(t *testing.T) {
 			errMessage:       "invalid_app_id",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  appDeleteMethod,
 				ExpectedRequest: `{"app_id":"A123"}`,
-				Response:        tt.httpResponseJSON,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
@@ -433,15 +433,15 @@ func TestClient_DeleteApp(t *testing.T) {
 			err := c.DeleteApp(ctx, "token", "A123")
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}

@@ -28,7 +28,7 @@ import (
 func TestDatastoreQueryArguments(t *testing.T) {
 	mockAppID := "A0123456"
 
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Expression string
 		Query      types.AppDatastoreQuery
 		Results    types.AppDatastoreQueryResult
@@ -109,13 +109,13 @@ func TestDatastoreQueryArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.API.On("AppsDatastoreQuery", mock.Anything, mock.Anything, tt.Query).
-				Return(tt.Results, nil)
+			clientsMock.API.On("AppsDatastoreQuery", mock.Anything, mock.Anything, tc.Query).
+				Return(tc.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			event, err := Query(ctx, client, &log, tt.Query)
+			event, err := Query(ctx, client, &log, tc.Query)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tt.Results, event.Data["queryResult"])
+				assert.Equal(t, tc.Results, event.Data["queryResult"])
 			}
 		})
 	}

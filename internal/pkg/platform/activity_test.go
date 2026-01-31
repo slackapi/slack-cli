@@ -95,7 +95,7 @@ func Test_prettifyActivity(t *testing.T) {
 }
 
 func TestPlatformActivity_StreamingLogs(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Setup           func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context
 		Args            types.ActivityArgs
 		ExpectedAsserts func(*testing.T, context.Context, *shared.ClientsMock) // Optional
@@ -236,31 +236,31 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 			// Create clients that is mocked for testing
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			// Setup custom per-test mocks (higher priority than default mocks)
-			if tt.Setup != nil {
-				ctxMock = tt.Setup(t, ctxMock, clientsMock)
+			if tc.Setup != nil {
+				ctxMock = tc.Setup(t, ctxMock, clientsMock)
 			}
 			// Setup generic test suite mocks
 			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 			// Setup default mock actions
 			clientsMock.AddDefaultMocks()
 
-			err := Activity(ctxMock, clients, &logger.Logger{}, tt.Args)
-			if tt.ExpectedError != nil {
+			err := Activity(ctxMock, clients, &logger.Logger{}, tc.Args)
+			if tc.ExpectedError != nil {
 				require.Error(t, err)
-				assert.Contains(t, err.Error(), tt.ExpectedError.Error(), err)
+				assert.Contains(t, err.Error(), tc.ExpectedError.Error(), err)
 			} else {
 				require.NoError(t, err)
 			}
 			// Assert mocks or other custom assertions
-			if tt.ExpectedAsserts != nil {
-				tt.ExpectedAsserts(t, ctxMock, clientsMock)
+			if tc.ExpectedAsserts != nil {
+				tc.ExpectedAsserts(t, ctxMock, clientsMock)
 			}
 		})
 	}
 }
 
 func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Activity        api.Activity
 		ExpectedResults []string
 	}{
@@ -333,8 +333,8 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualResult := triggerExecutedToString(tt.Activity)
-			for _, expectedResult := range tt.ExpectedResults {
+			actualResult := triggerExecutedToString(tc.Activity)
+			for _, expectedResult := range tc.ExpectedResults {
 				require.Contains(t, actualResult, expectedResult)
 			}
 			// Confirm no nil pointers leak to output
@@ -345,7 +345,7 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 }
 
 func Test_datastoreRequestResultToString(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		activity        api.Activity
 		expectedResults []string
 	}{
@@ -388,8 +388,8 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			actualResult := datastoreRequestResultToString(tt.activity)
-			for _, expectedResult := range tt.expectedResults {
+			actualResult := datastoreRequestResultToString(tc.activity)
+			for _, expectedResult := range tc.expectedResults {
 				require.Contains(t, actualResult, expectedResult)
 			}
 			// Confirm no nil pointers leak to output

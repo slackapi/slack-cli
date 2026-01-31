@@ -104,7 +104,7 @@ func TestPutCommandPreRun(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			manifestMock := &app.ManifestMockObject{}
@@ -114,8 +114,8 @@ func TestPutCommandPreRun(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestResponse,
-				tt.mockManifestError,
+				tc.mockManifestResponse,
+				tc.mockManifestError,
 			)
 			clientsMock.AppClient.Manifest = manifestMock
 			projectConfigMock := config.NewProjectConfigMock()
@@ -123,18 +123,18 @@ func TestPutCommandPreRun(t *testing.T) {
 				"GetManifestSource",
 				mock.Anything,
 			).Return(
-				tt.mockManifestSource,
+				tc.mockManifestSource,
 				nil,
 			)
 			clientsMock.Config.ProjectConfig = projectConfigMock
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
-				cf.Config.ForceFlag = tt.mockFlagForce
-				cf.SDKConfig.WorkingDirectory = tt.mockWorkingDirectory
+				cf.Config.ForceFlag = tc.mockFlagForce
+				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
 			cmd := NewPutCommand(clients)
 			err := cmd.PreRunE(cmd, nil)
-			if tt.expectedError != nil {
-				assert.Equal(t, slackerror.ToSlackError(tt.expectedError).Code, slackerror.ToSlackError(err).Code)
+			if tc.expectedError != nil {
+				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackerror.ToSlackError(err).Code)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -219,12 +219,12 @@ func TestPutCommand(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := setupDatastoreMocks()
-			if tt.Setup != nil {
-				tt.Setup(clientsMock)
+			if tc.Setup != nil {
+				tc.Setup(clientsMock)
 			}
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
@@ -237,8 +237,8 @@ func TestPutCommand(t *testing.T) {
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
 			cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 				clientsMock.Config.SetFlags(cmd)
-				if tt.Prompts != nil {
-					tt.Prompts(clientsMock)
+				if tc.Prompts != nil {
+					tc.Prompts(clientsMock)
 				}
 				return nil
 			}
@@ -247,12 +247,12 @@ func TestPutCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				putMock.AssertCalled(t, "Put", mock.Anything, mock.Anything, mock.Anything, tt.Query)
+				putMock.AssertCalled(t, "Put", mock.Anything, mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done
-			if tt.Teardown != nil {
-				tt.Teardown()
+			if tc.Teardown != nil {
+				tc.Teardown()
 			}
 		})
 	}

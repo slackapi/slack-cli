@@ -173,18 +173,18 @@ func TestTemplate_ResolveTemplateURL(t *testing.T) {
 			expectedError:    slackerror.New(slackerror.ErrTemplatePathNotFound),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			template, err := ResolveTemplateURL(tt.url)
-			if tt.expectedError != nil {
+			template, err := ResolveTemplateURL(tc.url)
+			if tc.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(
 					t,
-					slackerror.ToSlackError(tt.expectedError).Code,
+					slackerror.ToSlackError(tc.expectedError).Code,
 					slackerror.ToSlackError(err).Code,
 				)
 			}
-			assert.Equal(t, tt.expectedTemplate, template)
+			assert.Equal(t, tc.expectedTemplate, template)
 		})
 	}
 }
@@ -230,10 +230,10 @@ func TestTemplate_GetTemplatePath(t *testing.T) {
 			expectedPath: "ssh://user@example:path/to/sample",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			path := tt.template.GetTemplatePath()
-			assert.Equal(t, tt.expectedPath, path)
+			path := tc.template.GetTemplatePath()
+			assert.Equal(t, tc.expectedPath, path)
 		})
 	}
 }
@@ -293,10 +293,10 @@ func TestTemplate_IsSample(t *testing.T) {
 			expectedSample: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			isSample := tt.template.IsSample()
-			assert.Equal(t, tt.expectedSample, isSample)
+			isSample := tc.template.IsSample()
+			assert.Equal(t, tc.expectedSample, isSample)
 		})
 	}
 }
@@ -370,10 +370,10 @@ func TestTemplate_IsTrusted(t *testing.T) {
 			expectedTrusted: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			isTrusted := tt.template.IsTrusted()
-			assert.Equal(t, tt.expectedTrusted, isTrusted)
+			isTrusted := tc.template.IsTrusted()
+			assert.Equal(t, tc.expectedTrusted, isTrusted)
 		})
 	}
 }

@@ -43,13 +43,13 @@ func TestCache_createCacheDir(t *testing.T) {
 			expectedError: nil,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fsMock := slackdeps.NewFsMock()
 			projectDirPath := "/path/to/project-name"
 			err := fsMock.MkdirAll(filepath.Dir(projectDirPath), 0o755)
 			require.NoError(t, err)
-			for filePath, fileData := range tt.existingFiles {
+			for filePath, fileData := range tc.existingFiles {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				err := fsMock.MkdirAll(filepath.Dir(filePathAbs), 0o755)
 				require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestCache_createCacheDir(t *testing.T) {
 			osMock := slackdeps.NewOsMock()
 			cache := NewCache(fsMock, osMock, projectDirPath)
 			cacheErr := cache.createCacheDir()
-			assert.Equal(t, tt.expectedError, cacheErr)
+			assert.Equal(t, tc.expectedError, cacheErr)
 			dir, err := fsMock.Stat(filepath.Join(projectDirPath, ".slack", "cache"))
 			require.NoError(t, err)
 			assert.True(t, dir.IsDir())

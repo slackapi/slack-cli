@@ -66,7 +66,7 @@ func Test_AuthRevokeToken(t *testing.T) {
 			expected: slackerror.New(slackerror.ErrNotFound).AddAPIMethod("auth.revoke"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			os := slackdeps.NewOsMock()
@@ -77,16 +77,16 @@ func Test_AuthRevokeToken(t *testing.T) {
 			io.AddDefaultMocks()
 			apic, teardown := api.NewFakeClient(t, api.FakeClientParams{
 				ExpectedMethod:  "auth.revoke",
-				ExpectedRequest: fmt.Sprintf("token=%s", tt.token),
-				Response:        tt.response,
+				ExpectedRequest: fmt.Sprintf("token=%s", tc.token),
+				Response:        tc.response,
 			})
 			defer teardown()
 			appc := app.NewClient(apic, config, fs, os)
 			auth := NewClient(apic, appc, config, io, fs)
-			err := auth.RevokeToken(ctx, tt.token)
-			assert.Equal(t, tt.expected, err)
-			if tt.warning != "" {
-				io.AssertCalled(t, "PrintDebug", mock.Anything, "%s.", []any{tt.warning})
+			err := auth.RevokeToken(ctx, tc.token)
+			assert.Equal(t, tc.expected, err)
+			if tc.warning != "" {
+				io.AssertCalled(t, "PrintDebug", mock.Anything, "%s.", []any{tc.warning})
 			} else {
 				io.AssertNotCalled(t, "PrintDebug")
 			}

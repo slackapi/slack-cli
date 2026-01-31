@@ -77,7 +77,7 @@ func TestIsSlackHostedProject(t *testing.T) {
 				}),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -88,16 +88,16 @@ func TestIsSlackHostedProject(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestResponse,
-				tt.mockManifestError,
+				tc.mockManifestResponse,
+				tc.mockManifestError,
 			)
 			clientsMock.AppClient.Manifest = manifestMock
 			projectConfigMock := config.NewProjectConfigMock()
-			projectConfigMock.On("GetManifestSource", mock.Anything).Return(tt.mockManifestSource, nil)
+			projectConfigMock.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
 			clientsMock.Config.ProjectConfig = projectConfigMock
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			err := IsSlackHostedProject(ctx, clients)
-			assert.Equal(t, tt.expectedError, err)
+			assert.Equal(t, tc.expectedError, err)
 		})
 	}
 }
@@ -116,14 +116,14 @@ func TestIsValidProjectDirectory(t *testing.T) {
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
-				cf.SDKConfig.WorkingDirectory = tt.mockWorkingDirectory
+				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
 			err := IsValidProjectDirectory(clients)
-			assert.Equal(t, tt.expectedError, err)
+			assert.Equal(t, tc.expectedError, err)
 		})
 	}
 }

@@ -57,7 +57,7 @@ func Test_PrintDebug(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
@@ -70,7 +70,7 @@ func Test_PrintDebug(t *testing.T) {
 			stdoutLogger := log.Logger{}
 			stdoutLogger.SetOutput(&stdoutBuffer)
 			io.Stdout = &stdoutLogger
-			io.PrintDebug(ctx, tt.format, tt.arguments...)
+			io.PrintDebug(ctx, tc.format, tc.arguments...)
 
 			// Assert output lines match the pattern: [YYYY-MM-DD HH:MM:SS] line
 			// With a trailing blank newline at the end.
@@ -78,12 +78,12 @@ func Test_PrintDebug(t *testing.T) {
 			require.Len(
 				t,
 				actual,
-				len(tt.expected)+1,
+				len(tc.expected)+1,
 				"an unexpected amount of lines were output!\nactual:\n%s\nexpected:\n%s\n",
 				strings.Join(actual, "\n"),
-				strings.Join(tt.expected, "\n"),
+				strings.Join(tc.expected, "\n"),
 			)
-			for ii, line := range tt.expected {
+			for ii, line := range tc.expected {
 				pattern := regexp.MustCompile(
 					fmt.Sprintf(`^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] %s`, line),
 				)
@@ -92,7 +92,7 @@ func Test_PrintDebug(t *testing.T) {
 					pattern.MatchString(actual[ii]),
 					"outputs do not match!\nactual:\n%s\nexpected:\n%s\n",
 					actual[ii],
-					tt.expected[ii],
+					tc.expected[ii],
 				)
 			}
 		})
@@ -125,7 +125,7 @@ func Test_PrintWarning(t *testing.T) {
 			}, "\n"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
@@ -137,8 +137,8 @@ func Test_PrintWarning(t *testing.T) {
 			stderrLogger := log.Logger{}
 			stderrLogger.SetOutput(&stderrBuffer)
 			io.Stderr = &stderrLogger
-			io.PrintWarning(ctx, tt.format, tt.arguments...)
-			assert.Equal(t, tt.expected, stderrBuffer.String())
+			io.PrintWarning(ctx, tc.format, tc.arguments...)
+			assert.Equal(t, tc.expected, stderrBuffer.String())
 		})
 	}
 }
@@ -182,7 +182,7 @@ func Test_IOStreams_PrintTrace(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
@@ -190,7 +190,7 @@ func Test_IOStreams_PrintTrace(t *testing.T) {
 			var osMock = slackdeps.NewOsMock()
 
 			var config = config.NewConfig(fsMock, osMock)
-			config.SlackTestTraceFlag = tt.traceEnabled
+			config.SlackTestTraceFlag = tc.traceEnabled
 			var io = NewIOStreams(config, fsMock, osMock)
 
 			var stdoutBuffer = bytes.Buffer{}
@@ -199,7 +199,7 @@ func Test_IOStreams_PrintTrace(t *testing.T) {
 			io.Stdout = &stdoutLogger
 
 			// Execute
-			io.PrintTrace(ctx, tt.traceID, tt.traceValues...)
+			io.PrintTrace(ctx, tc.traceID, tc.traceValues...)
 
 			// Read output
 			var actualOutput string
@@ -208,7 +208,7 @@ func Test_IOStreams_PrintTrace(t *testing.T) {
 			}
 
 			// Assert
-			assert.Equal(t, tt.expectedOutput, actualOutput)
+			assert.Equal(t, tc.expectedOutput, actualOutput)
 		})
 	}
 }
@@ -238,10 +238,10 @@ func Test_IOStreams_SprintF(t *testing.T) {
 			expected: "number: %!d(MISSING)",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := sprintF(tt.format, tt.args...)
-			assert.Equal(t, tt.expected, actual)
+			actual := sprintF(tc.format, tc.args...)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

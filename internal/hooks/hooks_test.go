@@ -45,7 +45,7 @@ func Test_Hooks_GetHookExecutor(t *testing.T) {
 			expectedType:     &HookExecutorDefaultProtocol{},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
@@ -53,9 +53,9 @@ func Test_Hooks_GetHookExecutor(t *testing.T) {
 			config := config.NewConfig(fs, os)
 			io := iostreams.NewIOStreamsMock(config, fs, os)
 			sdkConfig := NewSDKConfigMock()
-			sdkConfig.Config.SupportedProtocols = tt.protocolVersions
+			sdkConfig.Config.SupportedProtocols = tc.protocolVersions
 			hookExecutor := GetHookExecutor(io, sdkConfig)
-			require.IsType(t, tt.expectedType, hookExecutor)
+			require.IsType(t, tc.expectedType, hookExecutor)
 		})
 	}
 }

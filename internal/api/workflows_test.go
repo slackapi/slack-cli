@@ -101,31 +101,31 @@ func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersCreateMethod,
-				ExpectedRequest: tt.expectedJSON,
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: tc.expectedJSON,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			_, err := c.WorkflowsTriggersCreate(ctx, "token", tt.inputTrigger)
+			_, err := c.WorkflowsTriggersCreate(ctx, "token", tc.inputTrigger)
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}
@@ -227,31 +227,31 @@ func TestClient_WorkflowsTriggerUpdate(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersUpdateMethod,
-				ExpectedRequest: tt.expectedJSON,
-				Response:        tt.httpResponseJSON,
+				ExpectedRequest: tc.expectedJSON,
+				Response:        tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// execute
-			_, err := c.WorkflowsTriggersUpdate(ctx, "token", tt.input)
+			_, err := c.WorkflowsTriggersUpdate(ctx, "token", tc.input)
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}
@@ -274,7 +274,7 @@ func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 			errMessage: "invalid_scopes",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
@@ -282,7 +282,7 @@ func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod:  workflowsTriggersDeleteMethod,
 				ExpectedRequest: `{"trigger_id":"FtABC"}`,
-				Response:        tt.response,
+				Response:        tc.response,
 			})
 			defer teardown()
 
@@ -290,15 +290,15 @@ func TestClient_WorkflowsTriggerDelete(t *testing.T) {
 			err := c.WorkflowsTriggersDelete(ctx, "token", "FtABC")
 
 			// check
-			if (err != nil) != tt.wantErr {
-				t.Errorf("%s test error = %v, wantErr %v", name, err, tt.wantErr)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("%s test error = %v, wantErr %v", name, err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"test error contains invalid message",
 				)
 			}
@@ -374,30 +374,30 @@ func Test_API_WorkflowTriggersList(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: workflowsTriggersListMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
 			args := TriggerListRequest{
-				AppID:  tt.argsAppID,
-				Limit:  tt.argsLimit,
-				Cursor: tt.argsCursor,
+				AppID:  tc.argsAppID,
+				Limit:  tc.argsLimit,
+				Cursor: tc.argsCursor,
 			}
-			actual, _, err := c.WorkflowsTriggersList(ctx, tt.argsToken, args)
+			actual, _, err := c.WorkflowsTriggersList(ctx, tc.argsToken, args)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
-				require.Equal(t, tt.expected, actual)
+				require.Equal(t, tc.expected, actual)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}

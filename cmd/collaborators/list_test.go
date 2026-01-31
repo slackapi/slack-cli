@@ -98,28 +98,28 @@ func TestListCommand(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			appSelectMock := prompts.NewAppSelectMock()
 			appSelectPromptFunc = appSelectMock.AppSelectPrompt
-			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: tt.app, Auth: types.SlackAuth{}}, nil)
+			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps).Return(prompts.SelectedApp{App: tc.app, Auth: types.SlackAuth{}}, nil)
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).
-				Return(tt.collaborators, nil)
+				Return(tc.collaborators, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 			})
 
 			err := NewListCommand(clients).ExecuteContext(ctx)
 			require.NoError(t, err)
-			clientsMock.API.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tt.app.AppID)
+			clientsMock.API.AssertCalled(t, "ListCollaborators", mock.Anything, mock.Anything, tc.app.AppID)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListSuccess, mock.Anything)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCount, []string{
-				fmt.Sprintf("%d", len(tt.collaborators)),
+				fmt.Sprintf("%d", len(tc.collaborators)),
 			})
-			for _, collaborator := range tt.collaborators {
+			for _, collaborator := range tc.collaborators {
 				clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.CollaboratorListCollaborator, []string{
 					collaborator.ID,
 					collaborator.UserName,
@@ -128,7 +128,7 @@ func TestListCommand(t *testing.T) {
 				})
 			}
 			output := clientsMock.GetCombinedOutput()
-			for _, expectedOutput := range tt.expectedOutputs {
+			for _, expectedOutput := range tc.expectedOutputs {
 				require.Contains(t, output, expectedOutput)
 			}
 		})

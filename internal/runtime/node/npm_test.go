@@ -59,7 +59,7 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
@@ -76,20 +76,20 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 				Run(func(args mock.Arguments) {
 					opts := args.Get(1).(hooks.HookExecOpts)
-					_, err := opts.Stdout.Write([]byte(tt.hookExecuteStdout))
+					_, err := opts.Stdout.Write([]byte(tc.hookExecuteStdout))
 					require.NoError(t, err)
 				}).
-				Return(tt.hookExecuteResponse, tt.hookExecuteError)
+				Return(tc.hookExecuteResponse, tc.hookExecuteError)
 
 			// Test
 			npm := NPMClient{}
 			value, err := npm.InstallAllPackages(ctx, projectDirPath, mockHookExecutor, ios)
 
 			// Assertions
-			require.Contains(t, value, tt.expectedValue)
-			require.Equal(t, tt.expectedError, err)
-			if tt.expectedVerboseOutput != "" {
-				ios.AssertCalled(t, "PrintDebug", mock.Anything, tt.expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
+			require.Contains(t, value, tc.expectedValue)
+			require.Equal(t, tc.expectedError, err)
+			if tc.expectedVerboseOutput != "" {
+				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
 			}
 		})
 	}
@@ -126,7 +126,7 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
@@ -143,20 +143,20 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 				Run(func(args mock.Arguments) {
 					opts := args.Get(1).(hooks.HookExecOpts)
-					_, err := opts.Stdout.Write([]byte(tt.hookExecuteStdout))
+					_, err := opts.Stdout.Write([]byte(tc.hookExecuteStdout))
 					require.NoError(t, err)
 				}).
-				Return(tt.hookExecuteResponse, tt.hookExecuteError)
+				Return(tc.hookExecuteResponse, tc.hookExecuteError)
 
 			// Test
 			npm := NPMClient{}
 			value, err := npm.InstallDevPackage(ctx, slackCLIHooksPkgName, projectDirPath, mockHookExecutor, ios)
 
 			// Assertions
-			require.Contains(t, value, tt.expectedValue)
-			require.Equal(t, tt.expectedError, err)
-			if tt.expectedVerboseOutput != "" {
-				ios.AssertCalled(t, "PrintDebug", mock.Anything, tt.expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
+			require.Contains(t, value, tc.expectedValue)
+			require.Equal(t, tc.expectedError, err)
+			if tc.expectedVerboseOutput != "" {
+				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
 			}
 		})
 	}
@@ -200,7 +200,7 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
@@ -217,18 +217,18 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
 				Run(func(args mock.Arguments) {
 					opts := args.Get(1).(hooks.HookExecOpts)
-					_, err := opts.Stdout.Write([]byte(tt.hookExecuteStdout))
+					_, err := opts.Stdout.Write([]byte(tc.hookExecuteStdout))
 					require.NoError(t, err)
 				}).
-				Return(tt.hookExecuteResponse, tt.hookExecuteError)
+				Return(tc.hookExecuteResponse, tc.hookExecuteError)
 
 			// Test
 			npm := NPMClient{}
 			pkgVersion, pkgExists := npm.ListPackage(ctx, slackCLIHooksPkgName, projectDirPath, mockHookExecutor, ios)
 
 			// Assertions
-			require.Equal(t, tt.expectedPkgVersion, pkgVersion)
-			require.Equal(t, tt.expectedPkgExists, pkgExists)
+			require.Equal(t, tc.expectedPkgVersion, pkgVersion)
+			require.Equal(t, tc.expectedPkgExists, pkgExists)
 		})
 	}
 }

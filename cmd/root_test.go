@@ -120,7 +120,7 @@ func TestExecuteContext(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
@@ -129,14 +129,14 @@ func TestExecuteContext(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 			clientsMock.EventTracker.On("FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
-				clients.SDKConfig.Runtime = tt.mockRuntime
+				clients.SDKConfig.Runtime = tc.mockRuntime
 			})
 
 			// Mock command
 			cmd := &cobra.Command{
 				Use: "mock [flags]",
 				RunE: func(cmd *cobra.Command, args []string) error {
-					return tt.mockErr
+					return tc.mockErr
 				},
 			}
 			testutil.MockCmdIO(clientsMock.IO, cmd)
@@ -146,13 +146,13 @@ func TestExecuteContext(t *testing.T) {
 			output := clientsMock.GetCombinedOutput()
 
 			// Assertions
-			require.Equal(t, tt.expectedExitCode, clients.IO.GetExitCode())
-			clientsMock.EventTracker.AssertCalled(t, "FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, tt.expectedExitCode)
+			require.Equal(t, tc.expectedExitCode, clients.IO.GetExitCode())
+			clientsMock.EventTracker.AssertCalled(t, "FlushToLogstash", mock.Anything, mock.Anything, mock.Anything, tc.expectedExitCode)
 
-			for _, expectedOutput := range tt.expectedOutputs {
+			for _, expectedOutput := range tc.expectedOutputs {
 				require.Contains(t, output, expectedOutput)
 			}
-			for _, unexpectedOutputs := range tt.unexpectedOutputs {
+			for _, unexpectedOutputs := range tc.unexpectedOutputs {
 				require.NotContains(t, output, unexpectedOutputs)
 			}
 		})
@@ -263,11 +263,11 @@ func Test_Aliases(t *testing.T) {
 			expected: "app uninstall",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			output, err := testExecCmd(ctx, strings.Fields(tt.args))
+			output, err := testExecCmd(ctx, strings.Fields(tc.args))
 			require.NoError(t, err)
-			require.Contains(t, output, tt.expected)
+			require.Contains(t, output, tc.expected)
 		})
 	}
 }

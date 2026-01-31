@@ -50,10 +50,10 @@ func Test_MapToStringSlice(t *testing.T) {
 			expectedSlice: []string{`--quotes="some \"values\" are important"`},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualSlice := MapToStringSlice(tt.inputMap, tt.prefix)
-			assert.ElementsMatch(t, tt.expectedSlice, actualSlice)
+			actualSlice := MapToStringSlice(tc.inputMap, tc.prefix)
+			assert.ElementsMatch(t, tc.expectedSlice, actualSlice)
 		})
 	}
 }

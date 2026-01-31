@@ -65,11 +65,11 @@ func Test_Tracking_cleanSessionData(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		et := NewEventTracker()
 		t.Run(name, func(t *testing.T) {
-			actual := et.cleanSessionData(tt.input)
-			require.Equal(t, tt.expectedOutput, actual)
+			actual := et.cleanSessionData(tc.input)
+			require.Equal(t, tc.expectedOutput, actual)
 		})
 	}
 }
@@ -147,7 +147,7 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			et := NewEventTracker()
@@ -156,8 +156,8 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 				requestSent = true
 				res.WriteHeader(200)
 				_, _ = res.Write([]byte("{\"ok\":true}"))
-				if tt.assertOnRequest != nil {
-					tt.assertOnRequest(t, req)
+				if tc.assertOnRequest != nil {
+					tc.assertOnRequest(t, req)
 				}
 			}))
 			defer testServer.Close()
@@ -166,14 +166,14 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 			fs := slackdeps.NewFsMock()
 			cfg := config.NewConfig(fs, os)
 			cfg.LogstashHostResolved = testServer.URL
-			if tt.setup != nil {
-				tt.setup(cfg)
+			if tc.setup != nil {
+				tc.setup(cfg)
 			}
 			ioMock := iostreams.NewIOStreamsMock(cfg, fs, os)
 			ioMock.AddDefaultMocks()
-			err := et.FlushToLogstash(ctx, cfg, ioMock, tt.exitCode)
+			err := et.FlushToLogstash(ctx, cfg, ioMock, tc.exitCode)
 			require.NoError(t, err)
-			if tt.shouldNotSendRequest && requestSent {
+			if tc.shouldNotSendRequest && requestSent {
 				require.Fail(t, "Expected no event tracking request to be sent, but request was sent")
 			}
 		})
@@ -269,12 +269,12 @@ func Test_Tracking_SetSessionData(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			et := NewEventTracker()
-			tt.setterFunc(et, tt.value)
-			actual := tt.getterFunc(et)
-			assert.Equal(t, tt.value, actual)
+			tc.setterFunc(et, tc.value)
+			actual := tc.getterFunc(et)
+			assert.Equal(t, tc.value, actual)
 		})
 	}
 }

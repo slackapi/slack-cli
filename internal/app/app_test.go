@@ -92,14 +92,14 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup parameters for test
 			fs := slackdeps.NewFsMock()
 			projectDirPath := "/path/to/project-name"
 
 			// Create files
-			for filePath, fileData := range tt.existingFiles {
+			for filePath, fileData := range tc.existingFiles {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				// Create the directory
 				if err := fs.MkdirAll(filepath.Dir(filePathAbs), 0755); err != nil {
@@ -112,12 +112,12 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			}
 
 			// Run the tests
-			err := UpdateDefaultProjectFiles(fs, projectDirPath, tt.appDirName)
+			err := UpdateDefaultProjectFiles(fs, projectDirPath, tc.appDirName)
 
 			// Assertions
-			require.IsType(t, err, tt.expectedErrorType)
+			require.IsType(t, err, tc.expectedErrorType)
 
-			for filePath, fileData := range tt.expectedFiles {
+			for filePath, fileData := range tc.expectedFiles {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				d, err := afero.ReadFile(fs, filePathAbs)
 				require.NoError(t, err)

@@ -246,23 +246,23 @@ func TestCreateCommand_confirmExternalTemplateSelection(t *testing.T) {
 	}
 
 	// test!
-	for ttName, tt := range tests {
-		t.Run(ttName, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// setup
 			cm := shared.NewClientsMock()
 			cm.AddDefaultMocks()
 			scm := &config.SystemConfigMock{}
-			tt.setup(cm, scm)
+			tc.setup(cm, scm)
 			cm.Config.SystemConfig = scm
 			clients := shared.NewClientFactory(cm.MockClientFactory())
 			cmd := NewCreateCommand(clients)
 			testutil.MockCmdIO(clients.IO, cmd)
 
 			// test
-			template, err := create.ResolveTemplateURL(tt.templateSource)
+			template, err := create.ResolveTemplateURL(tc.templateSource)
 			require.NoError(t, err)
 			confirmed, err := confirmExternalTemplateSelection(cmd, clients, template)
-			tt.expect(confirmed, err, cm, scm)
+			tc.expect(confirmed, err, cm, scm)
 		})
 	}
 }

@@ -142,7 +142,7 @@ func TestPrintTemplate(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -150,12 +150,12 @@ func TestPrintTemplate(t *testing.T) {
 				}
 			}()
 			buff := &bytes.Buffer{}
-			err := PrintTemplate(buff, tt.tmpl, tt.data)
-			if err != nil || tt.err != "" {
+			err := PrintTemplate(buff, tc.tmpl, tc.data)
+			if err != nil || tc.err != "" {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.err)
+				assert.Contains(t, err.Error(), tc.err)
 			} else {
-				assert.Equal(t, tt.expected, buff.String())
+				assert.Equal(t, tc.expected, buff.String())
 			}
 		})
 	}
