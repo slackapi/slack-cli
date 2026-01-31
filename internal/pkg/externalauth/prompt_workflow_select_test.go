@@ -126,14 +126,14 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		WorkflowFlag string
 		Selection    iostreams.SelectPromptResponse
 	}{
-		"prompt selection": {
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "my_callback_id2",
 				Index:  1,
 			},
 		},
-		"flag selection": {
+		"Flag selection": {
 			WorkflowFlag: "my_callback_id2",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,

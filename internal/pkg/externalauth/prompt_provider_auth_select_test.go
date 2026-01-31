@@ -64,7 +64,7 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 		Selection        iostreams.SelectPromptResponse
 		ExpectedProvider types.ProvidersInfo
 	}{
-		"prompt selection": {
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "provider_a",
@@ -72,7 +72,7 @@ func TestPrompt_ProviderAuthSelectPrompt_no_selected_auth(t *testing.T) {
 			},
 			ExpectedProvider: workflowsInfo.Providers[0],
 		},
-		"flag selection": {
+		"Flag selection": {
 			ProviderFlag: "provider_a",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -133,7 +133,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 		Selection        iostreams.SelectPromptResponse
 		ExpectedProvider types.ProvidersInfo
 	}{
-		"prompt selection": {
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "provider_b",
@@ -141,7 +141,7 @@ func TestPrompt_ProviderAuthSelectPrompt_with_selected_auth(t *testing.T) {
 			},
 			ExpectedProvider: workflowsInfo.Providers[1],
 		},
-		"flag selection": {
+		"Flag selection": {
 			ProviderFlag: "provider_b",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,

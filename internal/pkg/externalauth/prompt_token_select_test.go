@@ -65,14 +65,14 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 		ExternalAccountFlag string
 		Selection           iostreams.SelectPromptResponse
 	}{
-		"prompt selection": {
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "xyz2@salesforce.com",
 				Index:  1,
 			},
 		},
-		"flag selection": {
+		"Flag selection": {
 			ExternalAccountFlag: "xyz2@salesforce.com",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,

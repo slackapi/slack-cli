@@ -54,7 +54,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 		Selection             iostreams.SelectPromptResponse
 		ExpectedAuthorization types.ExternalAuthorizationInfo
 	}{
-		"flag selection": {
+		"Flag selection": {
 			ProviderFlag: "provider_a",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -62,7 +62,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 			},
 			ExpectedAuthorization: authorizationInfoLists.Authorizations[0],
 		},
-		"prompt selection": {
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "provider_a",
@@ -118,7 +118,7 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 		Selection             iostreams.SelectPromptResponse
 		ExpectedAuthorization types.ExternalAuthorizationInfo
 	}{
-		"flag selection": {
+		"Flag selection": {
 			ProviderFlag: "provider_a",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -126,7 +126,7 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 			},
 			ExpectedAuthorization: authorizationInfoLists.Authorizations[0],
 		},
-		"prompt selection": {
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "provider_a",
