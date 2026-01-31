@@ -16,6 +16,7 @@ package app
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
@@ -23,17 +24,43 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 func Test_App_SettingsCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"requires a valid project directory": {
-			ExpectedError: slackerror.New(slackerror.ErrInvalidAppDirectory),
+		"opens app listing page when run from a random directory": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectMock.On(
+					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
+				).Return(
+					prompts.SelectedApp{},
+					slackerror.New(slackerror.ErrInstallationRequired),
+				)
+				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+				cm.API.On("Host").Return("https://slack.com")
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := "https://api.slack.com/apps"
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
+				// Verify no .slack directory was left behind
+				slackDir := filepath.Join(slackdeps.MockWorkingDirectory, ".slack")
+				_, err := cm.Fs.Stat(slackDir)
+				assert.True(t, cm.Os.IsNotExist(err), ".slack directory should not exist")
+			},
 		},
 		"errors for rosi applications": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -113,7 +140,7 @@ func Test_App_SettingsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
 			},
 		},
-		"requires an existing application": {
+		"opens app listing page when no apps exist": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				projectConfigMock := config.NewProjectConfigMock()
@@ -137,8 +164,47 @@ func Test_App_SettingsCommand(t *testing.T) {
 					slackerror.New(slackerror.ErrInstallationRequired),
 				)
 				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+				cm.API.On("Host").Return("https://slack.com")
 			},
-			ExpectedError: slackerror.New(slackerror.ErrInstallationRequired),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := "https://api.slack.com/apps"
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
+			},
+		},
+		"opens app listing page for development environment when no apps exist": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cf.SDKConfig.WorkingDirectory = "."
+				projectConfigMock := config.NewProjectConfigMock()
+				projectConfigMock.On(
+					"GetManifestSource",
+					mock.Anything,
+				).Return(
+					config.ManifestSourceRemote,
+					nil,
+				)
+				cm.Config.ProjectConfig = projectConfigMock
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectMock.On(
+					"AppSelectPrompt",
+					mock.Anything,
+					mock.Anything,
+					prompts.ShowAllEnvironments,
+					prompts.ShowInstalledAndUninstalledApps,
+				).Return(
+					prompts.SelectedApp{},
+					slackerror.New(slackerror.ErrInstallationRequired),
+				)
+				settingsAppSelectPromptFunc = appSelectMock.AppSelectPrompt
+				cm.API.On("Host").Return("https://dev1234.slack.com")
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := "https://api.dev1234.slack.com/apps"
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsStart, mock.Anything)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AppSettingsSuccess, []string{expectedURL})
+			},
 		},
 		"opens the url to app settings of an app in production": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

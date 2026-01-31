@@ -45,7 +45,7 @@ func NewSettingsCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Open app settings for a prompted app",
+				Meaning: "Open app settings dashboard",
 				Command: "app settings",
 			},
 			{
@@ -65,11 +65,12 @@ func NewSettingsCommand(clients *shared.ClientFactory) *cobra.Command {
 }
 
 // appSettingsCommandPreRunE determines if the command can be run in a project
+// or if the command is run outside of a project
 func appSettingsCommandPreRunE(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
-		return err
+		return nil
 	}
 	// Allow the force flag to ignore hosted apps and try to open app settings
 	if clients.Config.ForceFlag {
@@ -98,6 +99,31 @@ func appSettingsCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 
 	app, err := settingsAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
+		// If no apps exist, open the list of all apps known to the developer
+		if slackerror.Is(err, slackerror.ErrInstallationRequired) {
+			// Clean up any empty .slack directory and files created during app selection
+			clients.AppClient().CleanUp()
+
+			host := clients.API().Host()
+			parsed, err := url.Parse(host)
+			if err != nil {
+				return err
+			}
+			parsed.Host = "api." + parsed.Host
+			settingsURL := fmt.Sprintf("%s/apps", parsed.String())
+
+			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+				Emoji: "house",
+				Text:  "App Settings",
+				Secondary: []string{
+					settingsURL,
+				},
+			}))
+			clients.Browser().OpenURL(settingsURL)
+
+			clients.IO.PrintTrace(ctx, slacktrace.AppSettingsSuccess, settingsURL)
+			return nil
+		}
 		return err
 	}
 	host := clients.API().Host()
