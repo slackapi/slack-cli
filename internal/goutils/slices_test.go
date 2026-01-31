@@ -57,11 +57,36 @@ func Test_Contains(t *testing.T) {
 		isCaseSensitive bool
 		want            bool
 	}{
-		"not_case_sensitive_success":   {listToCheck: []string{"hi", "hey"}, toFind: "Hey", isCaseSensitive: false, want: true},
-		"case_sensitive_success":       {listToCheck: []string{"hi", "Hey"}, toFind: "Hey", isCaseSensitive: true, want: true},
-		"case_sensitive_fail":          {listToCheck: []string{"hi", "hey", "hello", "apple", "pear"}, toFind: "Hey", isCaseSensitive: true, want: false},
-		"not_case_sensitive_fail":      {listToCheck: []string{"hi", "hey", "hello", "apple", "pear"}, toFind: "Peach", isCaseSensitive: false, want: false},
-		"not_case_sensitive_substring": {listToCheck: []string{"hi", "hey hello"}, toFind: "hey", isCaseSensitive: false, want: false},
+		"not_case_sensitive_success": {
+			listToCheck:     []string{"hi", "hey"},
+			toFind:          "Hey",
+			isCaseSensitive: false,
+			want:            true,
+		},
+		"case_sensitive_success": {
+			listToCheck:     []string{"hi", "Hey"},
+			toFind:          "Hey",
+			isCaseSensitive: true,
+			want:            true,
+		},
+		"case_sensitive_fail": {
+			listToCheck:     []string{"hi", "hey", "hello", "apple", "pear"},
+			toFind:          "Hey",
+			isCaseSensitive: true,
+			want:            false,
+		},
+		"not_case_sensitive_fail": {
+			listToCheck:     []string{"hi", "hey", "hello", "apple", "pear"},
+			toFind:          "Peach",
+			isCaseSensitive: false,
+			want:            false,
+		},
+		"not_case_sensitive_substring": {
+			listToCheck:     []string{"hi", "hey hello"},
+			toFind:          "hey",
+			isCaseSensitive: false,
+			want:            false,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
