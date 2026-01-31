@@ -185,7 +185,7 @@ func newRunLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Log
 				cmd.Println(style.Secondary("App successfully reinstalled"))
 			case "on_cloud_run_watch_manifest_change_skipped_remote":
 				path := event.DataToString("cloud_run_watch_manifest_change_skipped")
-				cmd.Println(style.Secondary(fmt.Sprintf("Manifest change detected: %s, but not updating app because manifest.source=remote", path)))
+				cmd.Println(style.Secondary(fmt.Sprintf("Manifest change detected: %s, skipped reinstalling app because manifest.source=remote", path)))
 			case "on_cloud_run_watch_app_change":
 				path := event.DataToString("cloud_run_watch_app_change")
 				cmd.Println(style.Secondary(fmt.Sprintf("App change detected: %s, restarting server...", path)))
