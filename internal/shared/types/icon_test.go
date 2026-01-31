@@ -22,28 +22,24 @@ import (
 )
 
 func Test_Icons_MarshalJSON(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		icons             *Icons
 		expectedErrorType error
 		expectedBlobs     []string
 	}{
-		{
-			name:              "Marshal no icons",
+		"Marshal no icons": {
 			icons:             &Icons{},
 			expectedErrorType: nil,
 			expectedBlobs:     []string{},
 		},
-		{
-			name:              "Marshal 1 icon",
+		"Marshal 1 icon": {
 			icons:             &Icons{"image_96": "path/to/image_96.png"},
 			expectedErrorType: nil,
 			expectedBlobs: []string{
 				`"image_96":"path/to/image_96.png"`,
 			},
 		},
-		{
-			name:              "Marshal 2 icons",
+		"Marshal 2 icons": {
 			icons:             &Icons{"image_96": "path/to/image_96.png", "image_192": "path/to/image_192.png"},
 			expectedErrorType: nil,
 			expectedBlobs: []string{
@@ -52,8 +48,8 @@ func Test_Icons_MarshalJSON(t *testing.T) {
 			},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedBlob, err := json.Marshal(tc.icons)
 
 			require.IsType(t, err, tc.expectedErrorType)
@@ -65,65 +61,57 @@ func Test_Icons_MarshalJSON(t *testing.T) {
 }
 
 func Test_Icons_UnmarshalJSON(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		blob              string
 		icons             *Icons
 		expectedErrorType error
 		expectedIcons     *Icons
 	}{
-		{
-			name:              "JSON unmarshal error",
+		"JSON unmarshal error": {
 			blob:              `{ "image_96": 100 }`, // expects type to be string not int
 			icons:             &Icons{},
 			expectedErrorType: &json.UnmarshalTypeError{},
 			expectedIcons:     &Icons{},
 		},
-		{
-			name:              "image_96 and image_192 do not exist",
+		"image_96 and image_192 do not exist": {
 			blob:              `{ "cat": "meow", "dog": "bark" }`,
 			icons:             &Icons{},
 			expectedErrorType: nil,
 			expectedIcons:     &Icons{},
 		},
-		{
-			name:              "image_96 exists",
+		"image_96 exists": {
 			blob:              `{ "image_96": "path/to/image_96.png" }`,
 			icons:             &Icons{},
 			expectedErrorType: nil,
 			expectedIcons:     &Icons{"image_96": "path/to/image_96.png"},
 		},
-		{
-			name:              "image_192 exists",
+		"image_192 exists": {
 			blob:              `{ "image_192": "path/to/image_192.png" }`,
 			icons:             &Icons{},
 			expectedErrorType: nil,
 			expectedIcons:     &Icons{"image_192": "path/to/image_192.png"},
 		},
-		{
-			name:              "image_96 and image_192 exist",
+		"image_96 and image_192 exist": {
 			blob:              `{ "image_96": "path/to/image_96.png", "image_192": "path/to/image_192.png" }`,
 			icons:             &Icons{},
 			expectedErrorType: nil,
 			expectedIcons:     &Icons{"image_96": "path/to/image_96.png", "image_192": "path/to/image_192.png"},
 		},
-		{
-			name:              "image_96 exists and unsupported properties exists",
+		"image_96 exists and unsupported properties exists": {
 			blob:              `{ "image_96": "path/to/image_96.png", "foo": "bar" }`,
 			icons:             &Icons{},
 			expectedErrorType: nil,
 			expectedIcons:     &Icons{"image_96": "path/to/image_96.png", "foo": "bar"},
 		},
-		{
-			name:              "Icons is nil, image_96 and image_192 exist",
+		"Icons is nil, image_96 and image_192 exist": {
 			blob:              `{ "image_96": "path/to/image_96.png", "image_192": "path/to/image_192.png" }`,
 			icons:             nil,
 			expectedErrorType: nil,
 			expectedIcons:     &Icons{"image_96": "path/to/image_96.png", "image_192": "path/to/image_192.png"},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			err := json.Unmarshal([]byte(tc.blob), &tc.icons)
 
 			require.IsType(t, err, tc.expectedErrorType)

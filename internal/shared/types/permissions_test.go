@@ -23,33 +23,29 @@ import (
 )
 
 func Test_Permissions_StringToAppCollaboratorPermission(t *testing.T) {
-	tests := []struct {
-		name                              string
+	tests := map[string]struct {
 		input                             string
 		expectedErrorType                 error
 		expectedAppCollaboratorPermission AppCollaboratorPermission
 	}{
-		{
-			name:                              "owner",
+		"owner": {
 			input:                             "owner",
 			expectedErrorType:                 nil,
 			expectedAppCollaboratorPermission: OWNER,
 		},
-		{
-			name:                              "reader",
+		"reader": {
 			input:                             "reader",
 			expectedErrorType:                 nil,
 			expectedAppCollaboratorPermission: READER,
 		},
-		{
-			name:                              "default",
+		"default": {
 			input:                             "",
 			expectedErrorType:                 fmt.Errorf("invalid"),
 			expectedAppCollaboratorPermission: "",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			appCollaboratorPermission, err := StringToAppCollaboratorPermission(tc.input)
 
 			require.IsType(t, err, tc.expectedErrorType)
@@ -59,29 +55,25 @@ func Test_Permissions_StringToAppCollaboratorPermission(t *testing.T) {
 }
 
 func Test_Permissions_AppCollaboratorPermissionF(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		acp            AppCollaboratorPermission
 		expectedString string
 	}{
-		{
-			name:           "owner",
+		"owner": {
 			acp:            OWNER,
 			expectedString: "an owner collaborator",
 		},
-		{
-			name:           "reader",
+		"reader": {
 			acp:            READER,
 			expectedString: "a reader collaborator",
 		},
-		{
-			name:           "default",
+		"default": {
 			acp:            "",
 			expectedString: "a collaborator",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedString := tc.acp.AppCollaboratorPermissionF()
 
 			require.Equal(t, tc.expectedString, returnedString)
@@ -90,44 +82,37 @@ func Test_Permissions_AppCollaboratorPermissionF(t *testing.T) {
 }
 
 func Test_Permission_IsValid(t *testing.T) {
-	tests := []struct {
-		name            string
+	tests := map[string]struct {
 		permission      Permission
 		expectedIsValid bool
 	}{
-		{
-			name:            "Permission App Collaborators",
+		"Permission App Collaborators": {
 			permission:      PermissionAppCollaborators,
 			expectedIsValid: true,
 		},
-		{
-			name:            "Permission Everyone",
+		"Permission Everyone": {
 			permission:      PermissionEveryone,
 			expectedIsValid: true,
 		},
-		{
-			name:            "Permission Named Entities",
+		"Permission Named Entities": {
 			permission:      PermissionNamedEntities,
 			expectedIsValid: true,
 		},
-		{
-			name:            "Invalid empty",
+		"Invalid empty": {
 			permission:      "",
 			expectedIsValid: false,
 		},
-		{
-			name:            "Invalid whitespace",
+		"Invalid whitespace": {
 			permission:      "  \n  ",
 			expectedIsValid: false,
 		},
-		{
-			name:            "Invalid string",
+		"Invalid string": {
 			permission:      "cats_and_dogs",
 			expectedIsValid: false,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedIsValid := tc.permission.IsValid()
 
 			require.Equal(t, tc.expectedIsValid, returnedIsValid)
@@ -136,34 +121,29 @@ func Test_Permission_IsValid(t *testing.T) {
 }
 
 func Test_Permission_ToString(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		permission     Permission
 		expectedString string
 	}{
-		{
-			name:           "Permission App Collaborators",
+		"Permission App Collaborators": {
 			permission:     PermissionAppCollaborators,
 			expectedString: "app collaborators",
 		},
-		{
-			name:           "Permission Everyone",
+		"Permission Everyone": {
 			permission:     PermissionEveryone,
 			expectedString: "everyone",
 		},
-		{
-			name:           "Permission Named Entities",
+		"Permission Named Entities": {
 			permission:     PermissionNamedEntities,
 			expectedString: "specific entities",
 		},
-		{
-			name:           "Invalid string",
+		"Invalid string": {
 			permission:     "cats_and_dogs",
 			expectedString: "",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedString := tc.permission.ToString()
 
 			require.Equal(t, tc.expectedString, returnedString)

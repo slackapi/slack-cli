@@ -26,21 +26,19 @@ import (
 )
 
 func Test_RawJSON_UnmarshalJSON(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		blob              string
 		expectedErrorType error
 		expectedJSONData  string
 	}{
-		{
-			name:              "Unmarshal data",
+		"Unmarshal data": {
 			blob:              `{ "name": "foo" }`,
 			expectedErrorType: nil,
 			expectedJSONData:  `{ "name": "foo" }`,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			rawJSON := &RawJSON{}
 			err := rawJSON.UnmarshalJSON([]byte(tc.blob))
 
