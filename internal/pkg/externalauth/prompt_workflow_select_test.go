@@ -122,18 +122,18 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		},
 	}
 
-	tests := []struct {
+	tests := map[string]struct {
 		WorkflowFlag string
 		Selection    iostreams.SelectPromptResponse
 	}{
-		{
+		"prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "my_callback_id2",
 				Index:  1,
 			},
 		},
-		{
+		"flag selection": {
 			WorkflowFlag: "my_callback_id2",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -142,41 +142,43 @@ func TestPrompt_WorkflowSelectPrompt_with_workflows(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		var mockWorkflowFlag string
-		ctx := slackcontext.MockContext(t.Context())
-		clientsMock := shared.NewClientsMock()
-		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		clientsMock.Config.Flags.StringVar(&mockWorkflowFlag, "workflow", "", "mock workflow flag")
-		if tc.WorkflowFlag != "" {
-			_ = clientsMock.Config.Flags.Set("workflow", tc.WorkflowFlag)
-		}
-		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
-			Flag: clientsMock.Config.Flags.Lookup("workflow"),
-		})).Return(tc.Selection, nil)
-		clientsMock.AddDefaultMocks()
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var mockWorkflowFlag string
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clientsMock.Config.Flags.StringVar(&mockWorkflowFlag, "workflow", "", "mock workflow flag")
+			if tc.WorkflowFlag != "" {
+				_ = clientsMock.Config.Flags.Set("workflow", tc.WorkflowFlag)
+			}
+			clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+				Flag: clientsMock.Config.Flags.Lookup("workflow"),
+			})).Return(tc.Selection, nil)
+			clientsMock.AddDefaultMocks()
 
-		selectedWorkflow, err := WorkflowSelectPrompt(ctx, clients, authorizationInfoLists)
-		require.NoError(t, err)
-		require.Equal(t, selectedWorkflow, types.WorkflowsInfo{
-			WorkflowID: "Wf0548LABCD2",
-			CallbackID: "my_callback_id2",
-			Providers: []types.ProvidersInfo{
-				{
-					ProviderKey:  "provider_a",
-					ProviderName: "Provider_A",
-				},
-				{
-					ProviderKey:  "provider_b",
-					ProviderName: "Provider_B",
-					SelectedAuth: types.ExternalTokenInfo{
-						ExternalTokenID: "Et0548LABCDE",
-						ExternalUserID:  "user_a@gmail.com",
-						DateUpdated:     1682021142,
+			selectedWorkflow, err := WorkflowSelectPrompt(ctx, clients, authorizationInfoLists)
+			require.NoError(t, err)
+			require.Equal(t, selectedWorkflow, types.WorkflowsInfo{
+				WorkflowID: "Wf0548LABCD2",
+				CallbackID: "my_callback_id2",
+				Providers: []types.ProvidersInfo{
+					{
+						ProviderKey:  "provider_a",
+						ProviderName: "Provider_A",
+					},
+					{
+						ProviderKey:  "provider_b",
+						ProviderName: "Provider_B",
+						SelectedAuth: types.ExternalTokenInfo{
+							ExternalTokenID: "Et0548LABCDE",
+							ExternalUserID:  "user_a@gmail.com",
+							DateUpdated:     1682021142,
+						},
 					},
 				},
-			},
+			})
+			clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, mock.Anything)
 		})
-		clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a workflow", mock.Anything, mock.Anything)
 	}
 }

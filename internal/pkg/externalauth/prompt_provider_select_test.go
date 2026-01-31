@@ -49,12 +49,12 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 			},
 		}}
 
-	tests := []struct {
+	tests := map[string]struct {
 		ProviderFlag          string
 		Selection             iostreams.SelectPromptResponse
 		ExpectedAuthorization types.ExternalAuthorizationInfo
 	}{
-		{
+		"flag selection": {
 			ProviderFlag: "provider_a",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -62,7 +62,7 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 			},
 			ExpectedAuthorization: authorizationInfoLists.Authorizations[0],
 		},
-		{
+		"prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "provider_a",
@@ -72,22 +72,24 @@ func TestPrompt_ProviderSelectPrompt_no_token(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		var mockProviderFlag string
-		ctx := slackcontext.MockContext(t.Context())
-		clientsMock := shared.NewClientsMock()
-		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
-		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
-			Flag: clientsMock.Config.Flags.Lookup("provider"),
-		})).Return(tc.Selection, nil)
-		clientsMock.AddDefaultMocks()
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var mockProviderFlag string
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
+			clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+				Flag: clientsMock.Config.Flags.Lookup("provider"),
+			})).Return(tc.Selection, nil)
+			clientsMock.AddDefaultMocks()
 
-		selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
-		require.Equal(t, selectedProvider.ProviderKey, "provider_a")
-		require.Equal(t, selectedProvider, authorizationInfoLists.Authorizations[0])
-		require.NoError(t, err)
-		clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a provider", mock.Anything, mock.Anything)
+			selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
+			require.Equal(t, selectedProvider.ProviderKey, "provider_a")
+			require.Equal(t, selectedProvider, authorizationInfoLists.Authorizations[0])
+			require.NoError(t, err)
+			clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a provider", mock.Anything, mock.Anything)
+		})
 	}
 }
 
@@ -111,12 +113,12 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 			},
 		}}
 
-	tests := []struct {
+	tests := map[string]struct {
 		ProviderFlag          string
 		Selection             iostreams.SelectPromptResponse
 		ExpectedAuthorization types.ExternalAuthorizationInfo
 	}{
-		{
+		"flag selection": {
 			ProviderFlag: "provider_a",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -124,7 +126,7 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 			},
 			ExpectedAuthorization: authorizationInfoLists.Authorizations[0],
 		},
-		{
+		"prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "provider_a",
@@ -134,24 +136,26 @@ func TestPrompt_ProviderSelectPrompt_with_token(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		var mockProviderFlag string
-		ctx := slackcontext.MockContext(t.Context())
-		clientsMock := shared.NewClientsMock()
-		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
-		if tc.ProviderFlag != "" {
-			_ = clientsMock.Config.Flags.Set("provider", tc.ProviderFlag)
-		}
-		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
-			Flag: clientsMock.Config.Flags.Lookup("provider"),
-		})).Return(tc.Selection, nil)
-		clientsMock.AddDefaultMocks()
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var mockProviderFlag string
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clientsMock.Config.Flags.StringVar(&mockProviderFlag, "provider", "", "mock provider flag")
+			if tc.ProviderFlag != "" {
+				_ = clientsMock.Config.Flags.Set("provider", tc.ProviderFlag)
+			}
+			clientsMock.IO.On("SelectPrompt", mock.Anything, "Select a provider", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+				Flag: clientsMock.Config.Flags.Lookup("provider"),
+			})).Return(tc.Selection, nil)
+			clientsMock.AddDefaultMocks()
 
-		selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
-		require.Equal(t, selectedProvider.ProviderKey, "provider_a")
-		require.Equal(t, selectedProvider, authorizationInfoLists.Authorizations[0])
-		require.NoError(t, err)
-		clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a provider", mock.Anything, mock.Anything)
+			selectedProvider, err := ProviderSelectPrompt(ctx, clients, authorizationInfoLists)
+			require.Equal(t, selectedProvider.ProviderKey, "provider_a")
+			require.Equal(t, selectedProvider, authorizationInfoLists.Authorizations[0])
+			require.NoError(t, err)
+			clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a provider", mock.Anything, mock.Anything)
+		})
 	}
 }
