@@ -407,7 +407,8 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 				return
 			case event := <-w.Event:
 				if isRemoteManifest {
-					r.clients.IO.PrintDebug(ctx, "Manifest file changed but not updating app because manifest.source=remote: %s", event.Path)
+					r.log.Data["cloud_run_watch_manifest_change_skipped"] = event.Path
+					r.log.Info("on_cloud_run_watch_manifest_change_skipped_remote")
 				} else {
 					r.log.Data["cloud_run_watch_manifest_change"] = event.Path
 					r.log.Info("on_cloud_run_watch_manifest_change")
