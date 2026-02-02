@@ -29,12 +29,12 @@ func Test_SlackChannel_String(t *testing.T) {
 			channel:        &SlackChannel{ChannelName: "#general", ID: "C01234"},
 			expectedString: "#general (C01234)",
 		},
-		// TODO(@mbrooks) This test represents the current behaviour, but should the expectedString be "#general" instead?
+		// This test represents the current behaviour, but should the expectedString be "#general" instead?
 		"Only ChannelName exists": {
 			channel:        &SlackChannel{ChannelName: "#general"},
 			expectedString: "(#general)",
 		},
-		// TODO(@mbrooks) This test represents the current behaviour, but should the expectedString be "C01234" instead?
+		// This test represents the current behaviour, but should the expectedString be "C01234" instead?
 		"Only ID exists": {
 			channel:        &SlackChannel{ID: "C01234"},
 			expectedString: "",
