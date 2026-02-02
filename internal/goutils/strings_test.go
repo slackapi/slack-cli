@@ -22,39 +22,34 @@ import (
 )
 
 func Test_HashString(t *testing.T) {
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		text1    string
 		text2    string
 		expected bool
 	}{
-		{
-			name:     "happy path - same string",
+		"happy path - same string": {
 			text1:    "one",
 			text2:    "one",
 			expected: true,
 		},
-		{
-			name:     "different strings",
+		"different strings": {
 			text1:    "one",
 			text2:    "two",
 			expected: false,
 		},
-		{
-			name:     "almost identical",
+		"almost identical": {
 			text1:    "one ", // add a space
 			text2:    "one",
 			expected: false,
 		},
-		{
-			name:     "empty strings should be same",
+		"empty strings should be same": {
 			text1:    "",
 			text2:    "",
 			expected: true,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			hash1, err1 := HashString(tc.text1)
 			hash2, err2 := HashString(tc.text2)
 			require.Equal(t, hash1 == hash2, tc.expected)
@@ -65,64 +60,53 @@ func Test_HashString(t *testing.T) {
 }
 
 func Test_ExtractFirstJSONFromString(t *testing.T) {
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		text     string
 		expected string
 	}{
-		{
-			name:     "one json - 1",
+		"one json - 1": {
 			text:     "{}",
 			expected: "{}",
 		},
-		{
-			name:     "one json - 2",
+		"one json - 2": {
 			text:     "blah blah blah {a: 1}",
 			expected: "{a: 1}",
 		},
-		{
-			name:     "one json - 3",
+		"one json - 3": {
 			text:     "blah {a: 1} blah blah",
 			expected: "{a: 1}",
 		},
-		{
-			name:     "multiple json",
+		"multiple json": {
 			text:     "{a: 1} {b: 2}",
 			expected: "{a: 1}",
 		},
-		{
-			name:     "no json present",
+		"no json present": {
 			text:     "foo bar",
 			expected: "",
 		},
-		{
-			name:     "nested json",
+		"nested json": {
 			text:     "{a: b: {c: {d: 1}}} {1}",
 			expected: "{a: b: {c: {d: 1}}}",
 		},
-		{
-			name:     "nested json - 2",
+		"nested json - 2": {
 			text:     "{{{}}}",
 			expected: "{{{}}}",
 		},
-		{
-			name:     "malformed json",
+		"malformed json": {
 			text:     "{{",
 			expected: "",
 		},
-		{
-			name:     "malformed json - 2",
+		"malformed json - 2": {
 			text:     "{{}",
 			expected: "",
 		},
-		{
-			name:     "malformed json - 3",
+		"malformed json - 3": {
 			text:     "}}",
 			expected: "",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			actualRes := ExtractFirstJSONFromString(tc.text)
 			require.Equal(t, tc.expected, actualRes)
 		})
@@ -130,33 +114,29 @@ func Test_ExtractFirstJSONFromString(t *testing.T) {
 }
 
 func Test_addLogWhenValExist(t *testing.T) {
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		title    string
 		val      string
 		expected string
 	}{
-		{
-			name:     "Empty string when val is empty",
+		"Empty string when val is empty": {
 			title:    "hello world",
 			val:      "",
 			expected: "",
 		},
-		{
-			name:     "Empty string when val only has space",
+		"Empty string when val only has space": {
 			title:    "hello world",
 			val:      " ",
 			expected: "",
 		},
-		{
-			name:     "Return string when val is not empty",
+		"Return string when val is not empty": {
 			title:    "hello world",
 			val:      "slack",
 			expected: "hello world: [slack]\n",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			output := AddLogWhenValExist(tc.title, tc.val)
 			require.Equal(t, output, tc.expected)
 		})
@@ -388,34 +368,29 @@ func Test_RedactPII(t *testing.T) {
 	}
 }
 func Test_UpperCaseTrimAll(t *testing.T) {
-	tests := []struct {
-		name          string
+	tests := map[string]struct {
 		namedEntities string
 		expected      string
 	}{
-		{
-			name:          "Empty string when val is empty",
+		"Empty string when val is empty": {
 			namedEntities: "",
 			expected:      "",
 		},
-		{
-			name:          "Empty string when val only has space",
+		"Empty string when val only has space": {
 			namedEntities: " ",
 			expected:      "",
 		},
-		{
-			name:          "Return string when val is all lower-case",
+		"Return string when val is all lower-case": {
 			namedEntities: "slack",
 			expected:      "SLACK",
 		},
-		{
-			name:          "Return string when val contains spaces",
+		"Return string when val contains spaces": {
 			namedEntities: "hello,   world",
 			expected:      "HELLO,WORLD",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			output := UpperCaseTrimAll(tc.namedEntities)
 			require.Equal(t, output, tc.expected)
 		})
@@ -423,29 +398,25 @@ func Test_UpperCaseTrimAll(t *testing.T) {
 }
 
 func Test_ToHTTPS(t *testing.T) {
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		urlAddr  string
 		expected string
 	}{
-		{
-			name:     "url with https protocol",
+		"url with https protocol": {
 			urlAddr:  "https://www.xyz.com",
 			expected: "https://www.xyz.com",
 		},
-		{
-			name:     "url with http protocol",
+		"url with http protocol": {
 			urlAddr:  "http://www.xyz.com",
 			expected: "https://www.xyz.com",
 		},
-		{
-			name:     "url with no protocol",
+		"url with no protocol": {
 			urlAddr:  "www.xyz.com",
 			expected: "https://www.xyz.com",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			output := ToHTTPS(tc.urlAddr)
 			require.Equal(t, output, tc.expected)
 		})
