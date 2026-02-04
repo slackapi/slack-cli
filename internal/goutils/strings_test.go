@@ -144,224 +144,181 @@ func Test_addLogWhenValExist(t *testing.T) {
 }
 func Test_RedactPII(t *testing.T) {
 	home, _ := os.UserHomeDir()
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		text     string
 		expected string
 	}{
-		{
-			name:     "Simple case",
+		"Simple case": {
 			text:     "hello world",
 			expected: "hello world",
 		},
-		{
-			name:     "Preserve the word XOXP",
+		"Preserve the word XOXP": {
 			text:     "This is an XOXP token",
 			expected: "This is an XOXP token",
 		},
-		{
-			name:     "Redact actual XOXP token",
+		"Redact actual XOXP token": {
 			text:     `{"ok":true,"token":"xoxe.xoxp-123","refresh_token":"xoxe-1-123","team_id":"T0123","user_id":"U0123", "xxtoken":"123"}`,
 			expected: `{"ok":true,"token":"...","refresh_token":"...","team_id":"T0123","user_id":"U0123", "xxtoken":"..."}`,
 		},
-		{
-			name:     "Redact home directory",
+		"Redact home directory": {
 			text:     "found authorizations at " + home + "/.slack/credentials.json reading",
 			expected: `found authorizations at .../.slack/credentials.json reading`,
 		},
-		{
-			name:     "Redact username with single quotes",
+		"Redact username with single quotes": {
 			text:     `'user':'username'`,
 			expected: `'user':"..."`,
 		},
-		{
-			name:     "Redact username with double quotes",
+		"Redact username with double quotes": {
 			text:     `"user":"username"`,
 			expected: `"user":"..."`,
 		},
-		{
-			name:     "Don't redact username with no quotes",
+		"Don't redact username with no quotes": {
 			text:     `user:username`,
 			expected: `user:username`,
 		},
-		{
-			name:     "Redact username in http response",
+		"Redact username in http response": {
 			text:     `{"ok":true,"token":"xoxe.xoxp-123","refresh_token":"xoxe-1-123","team_id":"T0123","user_id":"U0123", "xxtoken":"123", "user":"username"}`,
 			expected: `{"ok":true,"token":"...","refresh_token":"...","team_id":"T0123","user_id":"U0123", "xxtoken":"...", "user":"..."}`,
 		},
-		{
-			name:     "Preserve the word XOXE",
+		"Preserve the word XOXE": {
 			text:     "This is an XOXE token",
 			expected: "This is an XOXE token",
 		},
-		{
-			name:     "Redact actual token in HTTP request",
+		"Redact actual token in HTTP request": {
 			text:     "HTTP Request Body:refresh_token=xoxe-1",
 			expected: `HTTP Request Body:refresh_token=...`,
 		},
-		{
-			name:     "App Token (xapp) as JSON value",
+		"App Token (xapp) as JSON value": {
 			text:     `{"ok":true,"api_access_tokens":{"app_level":"xapp-1-A000-1111-ABCD"}}`,
 			expected: `{"ok":true,"api_access_tokens":{"app_level":"..."}}`,
 		},
-		{
-			name:     "App Token (xapp) as open text",
+		"App Token (xapp) as open text": {
 			text:     `Logging app token xapp-1-A000-1111-ABCD in the output`,
 			expected: `Logging app token ... in the output`,
 		},
-		{
-			name:     "Bot Token (xoxb) as JSON value",
+		"Bot Token (xoxb) as JSON value": {
 			text:     `{"ok":true,"api_access_tokens":{"bot":"xoxb-1111-2222-ABCD"}}`,
 			expected: `{"ok":true,"api_access_tokens":{"bot":"..."}}`,
 		},
-		{
-			name:     "Bot Token (xoxb) as text",
+		"Bot Token (xoxb) as text": {
 			text:     `Logging bot token xoxb-1111-2222-ABCD in the output`,
 			expected: `Logging bot token ... in the output`,
 		},
-		{
-			name:     "User Token (xoxp) as JSON value",
+		"User Token (xoxp) as JSON value": {
 			text:     `{"ok":true,"api_access_tokens":{"user":"xoxp-1111-2222-ABCD"}}`,
 			expected: `{"ok":true,"api_access_tokens":{"user":"..."}}`,
 		},
-		{
-			name:     "User Token (xoxp) as text",
+		"User Token (xoxp) as text": {
 			text:     `Logging user token xoxp-1111-2222-ABCD in the output`,
 			expected: `Logging user token ... in the output`,
 		},
-		{
-			name:     "Refresh Token (xoxe) as JSON value",
+		"Refresh Token (xoxe) as JSON value": {
 			text:     `{"ok":true,"refresh_token":"xoxe-1-A000-1111-ABCD}`,
 			expected: `{"ok":true,"refresh_token":"..."}`,
 		},
-		{
-			name:     "Refresh Token (xoxe) as text",
+		"Refresh Token (xoxe) as text": {
 			text:     `Logging user token xoxe-1-A000-1111-ABCD in the output`,
 			expected: `Logging user token ... in the output`,
 		},
-		{
-			name:     "Display Trace ID in log",
+		"Display Trace ID in log": {
 			text:     "TraceID: 123",
 			expected: `TraceID: 123`,
 		},
-		{
-			name:     "Display Team ID in log",
+		"Display Team ID in log": {
 			text:     "TeamID: T123",
 			expected: `TeamID: T123`,
 		},
-		{
-			name:     "Display User ID in log",
+		"Display User ID in log": {
 			text:     "UserID: U123",
 			expected: `UserID: U123`,
 		},
-		{
-			name:     "Display Slack-CLI version in log",
+		"Display Slack-CLI version in log": {
 			text:     "Slack-CLI Version: v1.10.0",
 			expected: `Slack-CLI Version: v1.10.0`,
 		},
-		{
-			name:     "Display user's OS in log",
+		"Display user's OS in log": {
 			text:     "Operating System (OS): darwin",
 			expected: `Operating System (OS): darwin`,
 		},
-		{
-			name:     "Escape oauth_authorize_url",
+		"Escape oauth_authorize_url": {
 			text:     `"oauth_authorize_url":"www.fake.com"`,
 			expected: `"oauth_authorize_url":"..."`,
 		},
-		{
-			name:     "Escape provider_key",
+		"Escape provider_key": {
 			text:     `"provider_key":"provider_key"`,
 			expected: `"provider_key":"..."`,
 		},
-		{
-			name:     "Escape authorizations",
+		"Escape authorizations": {
 			text:     `"authorizations":"authorizations"`,
 			expected: `"authorizations":"..."`,
 		},
-		{
-			name:     "Escape authorization_url",
+		"Escape authorization_url": {
 			text:     `"authorization_url":"authorization_url"`,
 			expected: `"authorization_url":"..."`,
 		},
-		{
-			name:     "Escape secret",
+		"Escape secret": {
 			text:     `"secret":"secret"`,
 			expected: `"secret":"..."`,
 		},
-		{
-			name:     "Escape secret with prefix",
+		"Escape secret with prefix": {
 			text:     `"client_secret":"secret"`,
 			expected: `"client_secret":"..."`,
 		},
-		{
-			name:     "Escape client_id",
+		"Escape client_id": {
 			text:     `"client_id":"client_id"`,
 			expected: `"client_id":"..."`,
 		},
-		{
-			name:     "Escape variables",
+		"Escape variables": {
 			text:     `"variables":[{"foo":"bar", "hello":"world"}]`,
 			expected: `"variables":"..."`,
 		},
-		{
-			name:     "Escape sensitive data from mock HTTP response",
+		"Escape sensitive data from mock HTTP response": {
 			text:     `{"ok":true,"app_id":"A123","credentials":{"client_id":"123","client_secret":"123","verification_token":"123","signing_secret":"123"},"oauth_authorize_url":"123":\/\/slack.com\/oauth\/v2\/authorize?client_id=123&scope=commands,chat:write"}`,
 			expected: `{"ok":true,"app_id":"A123","credentials":{"client_id":"...","client_secret":"...","verification_token":"...","signing_secret":"..."},"oauth_authorize_url":"...":\/\/slack.com\/oauth\/v2\/authorize?client_id=...&scope=commands,chat:write"}`,
 		},
-		{
-			name:     "Escape from `Command` for external-auth add-secret",
+		"Escape from `Command` for external-auth add-secret": {
 			text:     `slack external-auth add-secret --provider google --secret 123abcd`,
 			expected: "slack external-auth add-secret ...",
 		},
-		{
-			name:     "Escape from `Command` for var add",
+		"Escape from `Command` for var add": {
 			text:     `slack var add topsecret 123`,
 			expected: `slack var add ...`,
 		},
-		{
-			name:     "Escape from `Command` for external-auth add",
+		"Escape from `Command` for external-auth add": {
 			text:     `slack external-auth add topsecret 123`,
 			expected: `slack external-auth add ...`,
 		},
-		{
-			name:     "Escape from `Command` for var remove",
+		"Escape from `Command` for var remove": {
 			text:     `slack var remove topsecret 123`,
 			expected: `slack var remove ...`,
 		},
-		{
-			name:     "Escape from `Command` for env add",
+		"Escape from `Command` for env add": {
 			text:     `slack env add topsecret 123`,
 			expected: `slack env add ...`,
 		},
-		{
-			name:     "Escape from `Command` for env remove",
+		"Escape from `Command` for env remove": {
 			text:     `slack env remove topsecret 123`,
 			expected: `slack env remove ...`,
 		},
-		{
-			name:     "Escape from `Command` for vars add",
+		"Escape from `Command` for vars add": {
 			text:     `slack vars add topsecret 123`,
 			expected: `slack vars add ...`,
 		},
-		{
-			name:     "Escape from `Command` for vars remove",
+		"Escape from `Command` for vars remove": {
 			text:     `slack vars remove topsecret 123`,
 			expected: `slack vars remove ...`,
 		},
-		{
-			name:     "Escape from `Command` for variables add",
+		"Escape from `Command` for variables add": {
 			text:     `slack variables add topsecret 123`,
 			expected: `slack variables add ...`,
 		},
-		{
-			name:     "Escape from `Command` for variables remove",
+		"Escape from `Command` for variables remove": {
 			text:     `slack variables remove topsecret 123`,
 			expected: `slack variables remove ...`,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			redacted := RedactPII(tc.text)
 			require.Equal(t, tc.expected, redacted)
 		})

@@ -692,46 +692,48 @@ func TestAppClient_CleanupAppsJSONFiles(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
-		ac, _, _, pathToAppsJSON, pathToDevAppsJSON, teardown := setup(t)
-		defer teardown(t)
-		ctx := slackcontext.MockContext(t.Context())
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ac, _, _, pathToAppsJSON, pathToDevAppsJSON, teardown := setup(t)
+			defer teardown(t)
+			ctx := slackcontext.MockContext(t.Context())
 
-		err := afero.WriteFile(ac.fs, pathToAppsJSON, tc.appsJSON, 0600)
-		require.NoError(t, err)
-		err = afero.WriteFile(ac.fs, pathToDevAppsJSON, tc.devAppsJSON, 0600)
-		require.NoError(t, err)
+			err := afero.WriteFile(ac.fs, pathToAppsJSON, tc.appsJSON, 0600)
+			require.NoError(t, err)
+			err = afero.WriteFile(ac.fs, pathToDevAppsJSON, tc.devAppsJSON, 0600)
+			require.NoError(t, err)
 
-		_, err = ac.fs.Stat(pathToAppsJSON)
-		require.NoError(t, err, "failed to access the apps.json file")
-		deployedApps, _, err := ac.GetDeployedAll(ctx)
-		require.NoError(t, err)
-
-		_, err = ac.fs.Stat(pathToDevAppsJSON)
-		require.NoError(t, err, "failed to access the apps.dev.json file")
-		localApps, err := ac.GetLocalAll(ctx)
-		require.NoError(t, err)
-
-		ac.CleanUp()
-
-		dotSlackFolder := filepath.Dir(pathToAppsJSON)
-		_, err = ac.fs.Stat(dotSlackFolder)
-		require.NoError(t, err, "failed to access the .slack directory")
-
-		appsJSON, err := afero.ReadFile(ac.fs, pathToAppsJSON)
-		if len(deployedApps) == 0 {
-			require.ErrorIs(t, err, os.ErrNotExist, "apps.json was not deleted")
-		} else {
+			_, err = ac.fs.Stat(pathToAppsJSON)
 			require.NoError(t, err, "failed to access the apps.json file")
-			assert.Equal(t, appsJSONExample, appsJSON)
-		}
+			deployedApps, _, err := ac.GetDeployedAll(ctx)
+			require.NoError(t, err)
 
-		devAppsJSON, err := afero.ReadFile(ac.fs, pathToDevAppsJSON)
-		if len(localApps) == 0 {
-			require.ErrorIs(t, err, os.ErrNotExist, "apps.dev.json was not deleted")
-		} else {
+			_, err = ac.fs.Stat(pathToDevAppsJSON)
 			require.NoError(t, err, "failed to access the apps.dev.json file")
-			assert.Equal(t, devAppsJSONExample, devAppsJSON)
-		}
+			localApps, err := ac.GetLocalAll(ctx)
+			require.NoError(t, err)
+
+			ac.CleanUp()
+
+			dotSlackFolder := filepath.Dir(pathToAppsJSON)
+			_, err = ac.fs.Stat(dotSlackFolder)
+			require.NoError(t, err, "failed to access the .slack directory")
+
+			appsJSON, err := afero.ReadFile(ac.fs, pathToAppsJSON)
+			if len(deployedApps) == 0 {
+				require.ErrorIs(t, err, os.ErrNotExist, "apps.json was not deleted")
+			} else {
+				require.NoError(t, err, "failed to access the apps.json file")
+				assert.Equal(t, appsJSONExample, appsJSON)
+			}
+
+			devAppsJSON, err := afero.ReadFile(ac.fs, pathToDevAppsJSON)
+			if len(localApps) == 0 {
+				require.ErrorIs(t, err, os.ErrNotExist, "apps.dev.json was not deleted")
+			} else {
+				require.NoError(t, err, "failed to access the apps.dev.json file")
+				assert.Equal(t, devAppsJSONExample, devAppsJSON)
+			}
+		})
 	}
 }
