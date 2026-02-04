@@ -195,6 +195,70 @@ func TestCreateCommand(t *testing.T) {
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
 			},
 		},
+		"creates an app named agent using name flag without triggering shortcut": {
+			CmdArgs: []string{"--name", "agent"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				// Should prompt for category since agent shortcut is NOT triggered
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select starter app
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Node.js
+						},
+						nil,
+					)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
+				require.NoError(t, err)
+				expected := create.CreateArgs{
+					AppName:  "agent",
+					Template: template,
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				// Verify that category prompt WAS called (shortcut was not triggered)
+				cm.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+			},
+		},
+		"creates an agent app with name flag overriding positional arg": {
+			CmdArgs: []string{"agent", "--name", "my-custom-name"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				// Should skip category prompt due to agent shortcut
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Node.js
+						},
+						nil,
+					)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				require.NoError(t, err)
+				expected := create.CreateArgs{
+					AppName:  "my-custom-name", // --name flag overrides
+					Template: template,
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				// Verify that category prompt was NOT called (shortcut was triggered)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCreateCommand(cf)
 	})
