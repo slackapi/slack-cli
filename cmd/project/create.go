@@ -58,7 +58,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:       `Create a new Slack project on your local machine from an optional template`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "create my-project", Meaning: "Create a new project from a template"},
-			{Command: "create agent my-agent-app", Meaning: "Create a new AI agent app"},
+			{Command: "create agent my-agent-app", Meaning: "Create a new AI Agent app"},
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
 		}),
 		Args: cobra.MaximumNArgs(2),
