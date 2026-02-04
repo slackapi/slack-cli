@@ -97,43 +97,48 @@ func getSelectionOptionsForCategory(clients *shared.ClientFactory) []promptObjec
 }
 
 // promptTemplateSelection prompts the user to select a project template
-func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory) (create.Template, error) {
+func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, categoryShortcut string) (create.Template, error) {
 	ctx := cmd.Context()
 	var categoryID string
 	var selectedTemplate string
 
-	// Prompt for the category
-	promptForCategory := "Select an app:"
-	optionsForCategory := getSelectionOptionsForCategory(clients)
-	titlesForCategory := make([]string, len(optionsForCategory))
-	for i, m := range optionsForCategory {
-		titlesForCategory[i] = m.Title
-	}
-	templateForCategory := getSelectionTemplate(clients)
+	// Check if a category shortcut was provided
+	if categoryShortcut == "agent" {
+		categoryID = "slack-cli#ai-apps"
+	} else {
+		// Prompt for the category
+		promptForCategory := "Select an app:"
+		optionsForCategory := getSelectionOptionsForCategory(clients)
+		titlesForCategory := make([]string, len(optionsForCategory))
+		for i, m := range optionsForCategory {
+			titlesForCategory[i] = m.Title
+		}
+		templateForCategory := getSelectionTemplate(clients)
 
-	// Print a trace with info about the category title options provided by CLI
-	clients.IO.PrintTrace(ctx, slacktrace.CreateCategoryOptions, strings.Join(titlesForCategory, ", "))
+		// Print a trace with info about the category title options provided by CLI
+		clients.IO.PrintTrace(ctx, slacktrace.CreateCategoryOptions, strings.Join(titlesForCategory, ", "))
 
-	// Prompt to choose a category
-	selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
-		Description: func(value string, index int) string {
-			return optionsForCategory[index].Description
-		},
-		Flag:     clients.Config.Flags.Lookup("template"),
-		Required: true,
-		Template: templateForCategory,
-	})
-	if err != nil {
-		return create.Template{}, slackerror.ToSlackError(err)
-	} else if selection.Flag {
-		selectedTemplate = selection.Option
-	} else if selection.Prompt {
-		categoryID = optionsForCategory[selection.Index].Repository
-	}
+		// Prompt to choose a category
+		selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
+			Description: func(value string, index int) string {
+				return optionsForCategory[index].Description
+			},
+			Flag:     clients.Config.Flags.Lookup("template"),
+			Required: true,
+			Template: templateForCategory,
+		})
+		if err != nil {
+			return create.Template{}, slackerror.ToSlackError(err)
+		} else if selection.Flag {
+			selectedTemplate = selection.Option
+		} else if selection.Prompt {
+			categoryID = optionsForCategory[selection.Index].Repository
+		}
 
-	// Set template to view more samples, so the sample prompt is triggered
-	if categoryID == viewMoreSamples {
-		selectedTemplate = viewMoreSamples
+		// Set template to view more samples, so the sample prompt is triggered
+		if categoryID == viewMoreSamples {
+			selectedTemplate = viewMoreSamples
+		}
 	}
 
 	// Prompt for the template
