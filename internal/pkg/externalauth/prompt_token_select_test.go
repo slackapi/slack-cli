@@ -61,18 +61,18 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 		},
 	}
 
-	tests := []struct {
+	tests := map[string]struct {
 		ExternalAccountFlag string
 		Selection           iostreams.SelectPromptResponse
 	}{
-		{
+		"Prompt selection": {
 			Selection: iostreams.SelectPromptResponse{
 				Prompt: true,
 				Option: "xyz2@salesforce.com",
 				Index:  1,
 			},
 		},
-		{
+		"Flag selection": {
 			ExternalAccountFlag: "xyz2@salesforce.com",
 			Selection: iostreams.SelectPromptResponse{
 				Flag:   true,
@@ -81,27 +81,29 @@ func TestPrompt_TokenSelectPrompt_with_token(t *testing.T) {
 		},
 	}
 
-	var externalAccountFlag string
-	for _, tc := range tests {
-		ctx := slackcontext.MockContext(t.Context())
-		clientsMock := shared.NewClientsMock()
-		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-		clientsMock.Config.Flags.StringVar(&externalAccountFlag, "external-account", "", "mock external-account flag")
-		if tc.ExternalAccountFlag != "" {
-			_ = clientsMock.Config.Flags.Set("external-account", tc.ExternalAccountFlag)
-		}
-		clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an external account", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
-			Flag: clientsMock.Config.Flags.Lookup("external-account"),
-		})).Return(tc.Selection, nil)
-		clientsMock.AddDefaultMocks()
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var externalAccountFlag string
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clientsMock.Config.Flags.StringVar(&externalAccountFlag, "external-account", "", "mock external-account flag")
+			if tc.ExternalAccountFlag != "" {
+				_ = clientsMock.Config.Flags.Set("external-account", tc.ExternalAccountFlag)
+			}
+			clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an external account", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+				Flag: clientsMock.Config.Flags.Lookup("external-account"),
+			})).Return(tc.Selection, nil)
+			clientsMock.AddDefaultMocks()
 
-		selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)
-		require.NoError(t, err)
-		require.Equal(t, selectedToken, types.ExternalTokenInfo{
-			ExternalTokenID: "Et0548LABCDE2",
-			ExternalUserID:  "xyz2@salesforce.com",
-			DateUpdated:     1682021192,
+			selectedToken, err := TokenSelectPrompt(ctx, clients, authorizationInfo)
+			require.NoError(t, err)
+			require.Equal(t, selectedToken, types.ExternalTokenInfo{
+				ExternalTokenID: "Et0548LABCDE2",
+				ExternalUserID:  "xyz2@salesforce.com",
+				DateUpdated:     1682021192,
+			})
+			clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an external account", mock.Anything, mock.Anything)
 		})
-		clientsMock.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an external account", mock.Anything, mock.Anything)
 	}
 }
