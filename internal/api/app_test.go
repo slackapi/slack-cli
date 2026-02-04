@@ -450,8 +450,7 @@ func TestClient_DeleteApp(t *testing.T) {
 }
 
 func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
-	tests := []struct {
-		name                string
+	tests := map[string]struct {
 		app                 types.App
 		orgGrantWorkspaceID string
 		teamID              string
@@ -459,33 +458,30 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 		wantErr             bool
 		errMessage          string
 	}{
-		{
-			name: `Standalone workspace, AAA is requested \
-			(workspace ID passed into apps.approvals.requests.create)`,
+		`Standalone workspace, AAA is requested \
+			(workspace ID passed into apps.approvals.requests.create)`: {
 			app:                 types.App{AppID: "A1234", TeamID: "T1234"},
 			orgGrantWorkspaceID: "",
 			teamID:              "T1234",
 			requestJSON:         `{"app":"A1234","reason":"This request has been automatically generated according to project environment settings.","team_id":"T1234"}`,
 		},
-		{
-			name: `User tried to install to a single workspace in an org, AAA is requested \
-			(workspace ID passed into apps.approvals.requests.create)`,
+		`User tried to install to a single workspace in an org, AAA is requested \
+			(workspace ID passed into apps.approvals.requests.create)`: {
 			app:                 types.App{AppID: "A1234", EnterpriseID: "E1234", TeamID: "E1234"},
 			orgGrantWorkspaceID: "T1234",
 			teamID:              "T1234",
 			requestJSON:         `{"app":"A1234","reason":"This request has been automatically generated according to project environment settings.","team_id":"T1234"}`,
 		},
-		{
-			name: `User tried to install to all workspaces in an org, AAA is requested \
-				(no team_id passed into apps.approvals.requests.create so it will default to creating a request for the auth team ie. the org)`,
+		`User tried to install to all workspaces in an org, AAA is requested \
+				(no team_id passed into apps.approvals.requests.create so it will default to creating a request for the auth team ie. the org)`: {
 			app:                 types.App{AppID: "A1234", EnterpriseID: "E1234", TeamID: "E1234"},
 			orgGrantWorkspaceID: "all",
 			teamID:              "E1234",
 			requestJSON:         `{"app":"A1234","reason":"This request has been automatically generated according to project environment settings."}`,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// prepare

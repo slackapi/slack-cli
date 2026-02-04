@@ -128,39 +128,34 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 }
 
 func Test_RegexReplaceAppNameInManifest(t *testing.T) {
-	tests := []struct {
-		name        string
+	tests := map[string]struct {
 		src         []byte
 		appName     string
 		expectedSrc []byte
 	}{
-		{
-			name:        "manifest.json is validate",
+		"manifest.json is validate": {
 			src:         testdata.ManifestJSON,
 			appName:     "vibrant-butterfly-1234",
 			expectedSrc: testdata.ManifestJSONAppName,
 		},
-		{
-			name:        "manifest.js is validate",
+		"manifest.js is validate": {
 			src:         testdata.ManifestJS,
 			appName:     "vibrant-butterfly-1234",
 			expectedSrc: testdata.ManifestJSAppName,
 		},
-		{
-			name:        "manifest.ts is validate",
+		"manifest.ts is validate": {
 			src:         testdata.ManifestTS,
 			appName:     "vibrant-butterfly-1234",
 			expectedSrc: testdata.ManifestTSAppName,
 		},
-		{
-			name:        "manifest.ts with sdk is validate",
+		"manifest.ts with sdk is validate": {
 			src:         testdata.ManifestSDKTS,
 			appName:     "vibrant-butterfly-1234",
 			expectedSrc: testdata.ManifestSDKTSAppName,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			actualSrc := regexReplaceAppNameInManifest(tc.src, tc.appName)
 			require.Equal(t, tc.expectedSrc, actualSrc)
 		})

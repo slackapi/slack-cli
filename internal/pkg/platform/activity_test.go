@@ -32,13 +32,11 @@ import (
 )
 
 func Test_prettifyActivity(t *testing.T) {
-	tests := []struct {
-		name            string
+	tests := map[string]struct {
 		activity        api.Activity
 		expectedResults []string
 	}{
-		{
-			name: "nil payload should result in valid log without nulls",
+		"nil payload should result in valid log without nulls": {
 			activity: api.Activity{
 				TraceID:       "a123",
 				Level:         "info",
@@ -54,12 +52,10 @@ func Test_prettifyActivity(t *testing.T) {
 				"Trace=a123",
 			},
 		},
-		{
-			name:     "empty activity should not contain nulls",
+		"empty activity should not contain nulls": {
 			activity: api.Activity{},
 		},
-		{
-			name: "unknown EventType should result in valid log without nulls",
+		"unknown EventType should result in valid log without nulls": {
 			activity: api.Activity{
 				TraceID:       "a123",
 				Level:         "info",
@@ -80,8 +76,8 @@ func Test_prettifyActivity(t *testing.T) {
 			},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			actualResult := prettifyActivity(tc.activity)
 			for _, expectedResult := range tc.expectedResults {
 				require.Contains(t, actualResult, expectedResult)

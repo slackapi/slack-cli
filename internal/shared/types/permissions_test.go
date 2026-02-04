@@ -160,56 +160,48 @@ func Test_Permissions_IsNamedEntityFlag(t *testing.T) {
 		workspacesValue    string
 	}
 
-	tests := []struct {
-		name                      string
+	tests := map[string]struct {
 		flags                     TestFlags
 		expectedIsNamedEntityFlag bool
 	}{
-		{
-			name: "--channels flag is set",
+		"--channels flag is set": {
 			flags: TestFlags{
 				channelsValue: "C1234",
 			},
 			expectedIsNamedEntityFlag: true,
 		},
-		{
-			name: "--organizations flag is set",
+		"--organizations flag is set": {
 			flags: TestFlags{
 				organizationsValue: "E1234",
 			},
 			expectedIsNamedEntityFlag: true,
 		},
-		{
-			name: "--users flag is set",
+		"--users flag is set": {
 			flags: TestFlags{
 				usersValue: "U1234",
 			},
 			expectedIsNamedEntityFlag: true,
 		},
-		{
-			name: "--workspaces flag is set",
+		"--workspaces flag is set": {
 			flags: TestFlags{
 				workspacesValue: "T1234",
 			},
 			expectedIsNamedEntityFlag: true,
 		},
-		{
-			name: "Multiple valid entities are set",
+		"Multiple valid entities are set": {
 			flags: TestFlags{
 				channelsValue:   "C1234",
 				workspacesValue: "T1234",
 			},
 			expectedIsNamedEntityFlag: true,
 		},
-		{
-			name: "--everyone is set",
+		"--everyone is set": {
 			flags: TestFlags{
 				everyoneValue: true,
 			},
 			expectedIsNamedEntityFlag: false,
 		},
-		{
-			name: "--everyone and a valid entitle are set",
+		"--everyone and a valid entitle are set": {
 			flags: TestFlags{
 				everyoneValue: true,
 				channelsValue: "C1234",
@@ -217,36 +209,36 @@ func Test_Permissions_IsNamedEntityFlag(t *testing.T) {
 			expectedIsNamedEntityFlag: false,
 		},
 	}
-	for _, tc := range tests {
-		flags := pflag.NewFlagSet("entities", pflag.ContinueOnError)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			flags := pflag.NewFlagSet("entities", pflag.ContinueOnError)
 
-		// Define the flags
-		flags.StringP("channels", "", "", "channels usage")
-		flags.BoolP("everyone", "", false, "everyone usage")
-		flags.StringP("organizations", "", "", "organizations usage")
-		flags.StringP("users", "", "", "users usage")
-		flags.StringP("workspaces", "", "", "workspaces usage")
+			// Define the flags
+			flags.StringP("channels", "", "", "channels usage")
+			flags.BoolP("everyone", "", false, "everyone usage")
+			flags.StringP("organizations", "", "", "organizations usage")
+			flags.StringP("users", "", "", "users usage")
+			flags.StringP("workspaces", "", "", "workspaces usage")
 
-		// Set the flags based on the test values
-		everyoneFlag := ""
-		if tc.flags.everyoneValue {
-			everyoneFlag = "--everyone"
-		}
+			// Set the flags based on the test values
+			everyoneFlag := ""
+			if tc.flags.everyoneValue {
+				everyoneFlag = "--everyone"
+			}
 
-		args := []string{
-			everyoneFlag,
-			fmt.Sprintf("--channels=%s", tc.flags.channelsValue),
-			fmt.Sprintf("--organizations=%s", tc.flags.organizationsValue),
-			fmt.Sprintf("--users=%s", tc.flags.usersValue),
-			fmt.Sprintf("--workspaces=%s", tc.flags.workspacesValue),
-		}
+			args := []string{
+				everyoneFlag,
+				fmt.Sprintf("--channels=%s", tc.flags.channelsValue),
+				fmt.Sprintf("--organizations=%s", tc.flags.organizationsValue),
+				fmt.Sprintf("--users=%s", tc.flags.usersValue),
+				fmt.Sprintf("--workspaces=%s", tc.flags.workspacesValue),
+			}
 
-		// Parse the flagset
-		if err := flags.Parse(args); err != nil {
-			require.Fail(t, err.Error(), "Flags parse error")
-		}
+			// Parse the flagset
+			if err := flags.Parse(args); err != nil {
+				require.Fail(t, err.Error(), "Flags parse error")
+			}
 
-		t.Run(tc.name, func(t *testing.T) {
 			returnedIsNamedEntityFlag := IsNamedEntityFlag(flags)
 			require.Equal(t, tc.expectedIsNamedEntityFlag, returnedIsNamedEntityFlag)
 		})
@@ -254,13 +246,11 @@ func Test_Permissions_IsNamedEntityFlag(t *testing.T) {
 }
 
 func Test_Permissions_GetAccessTypeDescriptionForEveryone(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		app            App
 		expectedString string
 	}{
-		{
-			name: "Enterprise App",
+		"Enterprise App": {
 			app: App{ // app.IsEnterpriseApp() == true
 				AppID:        "A1234",
 				TeamID:       "E1234",
@@ -268,8 +258,7 @@ func Test_Permissions_GetAccessTypeDescriptionForEveryone(t *testing.T) {
 			},
 			expectedString: "everyone in all workspaces in this org granted to this app",
 		},
-		{
-			name: "Workspace App",
+		"Workspace App": {
 			app: App{ // app.IsEnterpriseApp() == false
 				AppID:  "A1234",
 				TeamID: "T1234",
@@ -277,8 +266,8 @@ func Test_Permissions_GetAccessTypeDescriptionForEveryone(t *testing.T) {
 			expectedString: "everyone in the workspace",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedString := GetAccessTypeDescriptionForEveryone(tc.app)
 			require.Equal(t, tc.expectedString, returnedString)
 		})
