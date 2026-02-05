@@ -41,7 +41,7 @@ func TestCache_Manifest(t *testing.T) {
 			expectedHash: Hash("xoxo"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
@@ -50,14 +50,14 @@ func TestCache_Manifest(t *testing.T) {
 			err := fsMock.MkdirAll(filepath.Dir(projectDirPath), 0o755)
 			require.NoError(t, err)
 			cache := NewCache(fsMock, osMock, projectDirPath)
-			err = cache.SetManifestHash(ctx, tt.mockAppID, tt.mockCache.Hash)
+			err = cache.SetManifestHash(ctx, tc.mockAppID, tc.mockCache.Hash)
 			require.NoError(t, err)
 			cache.Apps = map[string]ManifestCacheApp{
-				tt.mockAppID: tt.mockCache,
+				tc.mockAppID: tc.mockCache,
 			}
-			hash, err := cache.GetManifestHash(ctx, tt.mockAppID)
+			hash, err := cache.GetManifestHash(ctx, tc.mockAppID)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedHash, hash)
+			assert.Equal(t, tc.expectedHash, hash)
 		})
 	}
 }
@@ -102,7 +102,7 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 			expectedHash: "49691953b3bb36cad1333949846ad9f9c1fde9f12a395674dd2bbdafabccdd0c",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
@@ -111,9 +111,9 @@ func TestCache_Manifest_NewManifestHash(t *testing.T) {
 			err := fsMock.MkdirAll(filepath.Dir(projectDirPath), 0o755)
 			require.NoError(t, err)
 			cache := NewCache(fsMock, osMock, projectDirPath)
-			hash, err := cache.NewManifestHash(ctx, tt.mockManifest)
+			hash, err := cache.NewManifestHash(ctx, tc.mockManifest)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedHash, hash)
+			assert.Equal(t, tc.expectedHash, hash)
 		})
 	}
 }

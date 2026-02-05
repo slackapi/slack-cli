@@ -253,10 +253,10 @@ func Test_Warning(t *testing.T) {
 				}),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := tt.warnings.Warning(tt.verbose, tt.message)
-			assert.Equal(t, tt.expected, actual)
+			actual := tc.warnings.Warning(tc.verbose, tc.message)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

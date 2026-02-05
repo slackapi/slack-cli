@@ -33,17 +33,15 @@ import (
 )
 
 func Test_Node_New(t *testing.T) {
-	tests := []struct {
-		name         string
+	tests := map[string]struct {
 		expectedNode *Node
 	}{
-		{
-			name:         "New Node instance",
+		"New Node instance": {
 			expectedNode: &Node{},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name := range tests {
+		t.Run(name, func(t *testing.T) {
 			n := New()
 			require.IsType(t, Node{}, *n)
 		})
@@ -51,17 +49,15 @@ func Test_Node_New(t *testing.T) {
 }
 
 func Test_Node_IgnoreDirectories(t *testing.T) {
-	tests := []struct {
-		name                      string
+	tests := map[string]struct {
 		expectedIgnoreDirectories []string
 	}{
-		{
-			name:                      "Ignore node modules",
+		"Ignore node modules": {
 			expectedIgnoreDirectories: []string{"node_modules"},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			n := New()
 			require.Equal(t, tc.expectedIgnoreDirectories, n.IgnoreDirectories())
 		})
@@ -69,8 +65,7 @@ func Test_Node_IgnoreDirectories(t *testing.T) {
 }
 
 func Test_Node_InstallProjectDependencies(t *testing.T) {
-	tests := []struct {
-		name                   string
+	tests := map[string]struct {
 		hookExecutorError      []error
 		hookInstallationStdout string
 		hookInstallationStderr string
@@ -79,8 +74,7 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 		expectedOutputs        []string
 		npmMock                func() NPM
 	}{
-		{
-			name: "When @slack/cli-hooks found then skip installing it and continue",
+		"When @slack/cli-hooks found then skip installing it and continue": {
 			expectedOutputs: []string{
 				"Found package @slack/cli-hooks@1.1.2",
 				"Installed dependencies",
@@ -95,8 +89,7 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 				return npmMock
 			},
 		},
-		{
-			name: "When @slack/cli-hooks not found then install it and continue",
+		"When @slack/cli-hooks not found then install it and continue": {
 			expectedOutputs: []string{
 				"Added package @slack/cli-hooks@1.1.2",
 				"Installed dependencies",
@@ -115,8 +108,7 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 				return npmMock
 			},
 		},
-		{
-			name: "When @slack/cli-hooks install fails then error and continue",
+		"When @slack/cli-hooks install fails then error and continue": {
 			expectedOutputs: []string{
 				"Error adding package @slack/cli-hooks",
 				"Installed dependencies",
@@ -135,8 +127,7 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 				return npmMock
 			},
 		},
-		{
-			name: "When npm install successful",
+		"When npm install successful": {
 			expectedOutputs: []string{
 				"Found package @slack/cli-hooks@1.1.2",
 				"Installed dependencies",
@@ -151,8 +142,7 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 				return npmMock
 			},
 		},
-		{
-			name: "When npm install fails return error",
+		"When npm install fails return error": {
 			expectedOutputs: []string{
 				"Found package @slack/cli-hooks@1.1.2",
 				"Error installing dependencies",
@@ -167,8 +157,7 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 				return npmMock
 			},
 		},
-		{
-			name: "When @slack/cli-hooks and npm install both fail return first error",
+		"When @slack/cli-hooks and npm install both fail return first error": {
 			expectedOutputs: []string{
 				"Error adding package @slack/cli-hooks",
 				"Error installing dependencies",
@@ -188,8 +177,8 @@ func Test_Node_InstallProjectDependencies(t *testing.T) {
 			},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
@@ -222,17 +211,15 @@ func Test_Node_Name(t *testing.T) {
 }
 
 func Test_Node_Version(t *testing.T) {
-	tests := []struct {
-		name            string
+	tests := map[string]struct {
 		expectedVersion string
 	}{
-		{
-			name:            "Default version",
+		"Default version": {
 			expectedVersion: "node",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			n := New()
 			require.Equal(t, tc.expectedVersion, n.Version())
 		})
@@ -247,24 +234,21 @@ func Test_Node_SetVersion(t *testing.T) {
 }
 
 func Test_Node_HooksJSONTemplate(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		hooksJSONTemplate []byte
 		expectedErrorType error
 	}{
-		{
-			name:              "HooksJSONTemplate() should be valid JSON",
+		"HooksJSONTemplate() should be valid JSON": {
 			hooksJSONTemplate: New().HooksJSONTemplate(),
 			expectedErrorType: nil,
 		},
-		{
-			name:              "Should fail on invalid JSON",
+		"Should fail on invalid JSON": {
 			hooksJSONTemplate: []byte(`}{`),
 			expectedErrorType: &json.SyntaxError{},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			var anyJSON map[string]interface{}
 
@@ -278,19 +262,17 @@ func Test_Node_HooksJSONTemplate(t *testing.T) {
 }
 
 func Test_Node_PreparePackage(t *testing.T) {
-	tests := []struct {
-		name                        string
+	tests := map[string]struct {
 		hookExecutorError           error
 		expectedPreparePackageError error
 	}{
-		{
-			name:                        "Should return no error because unsupported",
+		"Should return no error because unsupported": {
 			hookExecutorError:           nil,
 			expectedPreparePackageError: nil,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// Setup SDKConfig
@@ -321,33 +303,29 @@ func Test_Node_PreparePackage(t *testing.T) {
 }
 
 func Test_Node_IsRuntimeForProject(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		sdkConfigRuntime  string
 		existingFilePaths []string
 		expectedBool      bool
 	}{
-		{
-			name:              "Not a Node.js project",
+		"Not a Node.js project": {
 			sdkConfigRuntime:  "", // Unset to check for file
 			existingFilePaths: []string{},
 			expectedBool:      false,
 		},
-		{
-			name:              "SDKConfig Runtime is Node.js",
+		"SDKConfig Runtime is Node.js": {
 			sdkConfigRuntime:  "node",
 			existingFilePaths: []string{}, // Unset to check SDKConfig
 			expectedBool:      true,
 		},
-		{
-			name:              "package.json file exists",
+		"package.json file exists": {
 			sdkConfigRuntime:  "", // Unset to check for file
 			existingFilePaths: []string{"package.json"},
 			expectedBool:      true,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()

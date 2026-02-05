@@ -34,17 +34,17 @@ func Test_Os_GetExecutionDir(t *testing.T) {
 			expectedExecutionDirPathAbs: "/path/to/execution/dir",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			os := NewOs()
-			os.executionDirPathAbs = tt.executionDirPathAbs
+			os.executionDirPathAbs = tc.executionDirPathAbs
 
 			// Run the test
 			actualExecutionDirPathAbs := os.GetExecutionDir()
 
 			// Assertions
-			require.Equal(t, tt.expectedExecutionDirPathAbs, actualExecutionDirPathAbs)
+			require.Equal(t, tc.expectedExecutionDirPathAbs, actualExecutionDirPathAbs)
 		})
 	}
 }
@@ -66,18 +66,18 @@ func Test_Os_SetExecutionDir(t *testing.T) {
 			expectedExecutionDirPathAbs: "/path/to/execution/dir",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			os := NewOs()
-			os.executionDirPathAbs = tt.executionDirPathAbs
+			os.executionDirPathAbs = tc.executionDirPathAbs
 
 			// Run the test
-			os.SetExecutionDir(tt.setExecutionDirPathAbs)
+			os.SetExecutionDir(tc.setExecutionDirPathAbs)
 			actualExecutionDirPathAbs := os.executionDirPathAbs
 
 			// Assertions
-			require.Equal(t, tt.expectedExecutionDirPathAbs, actualExecutionDirPathAbs)
+			require.Equal(t, tc.expectedExecutionDirPathAbs, actualExecutionDirPathAbs)
 		})
 	}
 }

@@ -24,89 +24,73 @@ import (
 
 func Test_RedactPII(t *testing.T) {
 	home, _ := os.UserHomeDir()
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		text     string
 		expected string
 	}{
-		{
-			name:     "Simple case",
+		"Simple case": {
 			text:     "hello world",
 			expected: "hello world",
 		},
-		{
-			name:     "Preserve the word XOXP",
+		"Preserve the word XOXP": {
 			text:     "This is an XOXP token",
 			expected: "This is an XOXP token",
 		},
-		{
-			name:     "Redact actual XOXP token",
+		"Redact actual XOXP token": {
 			text:     `{"ok":true,"token":"xoxe.xoxp-123","refresh_token":"xoxe-1-123","team_id":"T0123","user_id":"U0123", "xxtoken":"123"}`,
 			expected: `{"ok":true,"token":"...","refresh_token":"...","team_id":"T0123","user_id":"U0123", "xxtoken":"..."}`,
 		},
-		{
-			name:     "Redact home directory",
+		"Redact home directory": {
 			text:     "found authorizations at " + home + "/.slack/credentials.json reading",
 			expected: `found authorizations at .../.slack/credentials.json reading`,
 		},
-		{
-			name:     "Redact username with single quotes",
+		"Redact username with single quotes": {
 			text:     `'user':'username'`,
 			expected: `'user':"..."`,
 		},
-		{
-			name:     "Redact username with double quotes",
+		"Redact username with double quotes": {
 			text:     `"user":"username"`,
 			expected: `"user":"..."`,
 		},
-		{
-			name:     "Redact username with no quotes",
+		"Redact username with no quotes": {
 			text:     `user:username`,
 			expected: `user:username`,
 		},
-		{
-			name:     "Redact username in http response",
+		"Redact username in http response": {
 			text:     `{"ok":true,"token":"xoxe.xoxp-123","refresh_token":"xoxe-1-123","team_id":"T0123","user_id":"U0123", "xxtoken":"123", "user":"username"}`,
 			expected: `{"ok":true,"token":"...","refresh_token":"...","team_id":"T0123","user_id":"U0123", "xxtoken":"...", "user":"..."}`,
 		},
-		{
-			name:     "Preserve the word XOXE",
+		"Preserve the word XOXE": {
 			text:     "This is an XOXE token",
 			expected: "This is an XOXE token",
 		},
-		{
-			name:     "Redact actual token in HTTP request",
+		"Redact actual token in HTTP request": {
 			text:     "HTTP Request Body:refresh_token=xoxe-1",
 			expected: `HTTP Request Body:refresh_token=...`,
 		},
-		{
-			name:     "Display Trace ID in log",
+		"Display Trace ID in log": {
 			text:     "TraceID: 123",
 			expected: `TraceID: 123`,
 		},
-		{
-			name:     "Display Team ID in log",
+		"Display Team ID in log": {
 			text:     "TeamID: T123",
 			expected: `TeamID: T123`,
 		},
-		{
-			name:     "Display User ID in log",
+		"Display User ID in log": {
 			text:     "UserID: U123",
 			expected: `UserID: U123`,
 		},
-		{
-			name:     "Display Slack-CLI version in log",
+		"Display Slack-CLI version in log": {
 			text:     "Slack-CLI Version: v1.10.0",
 			expected: `Slack-CLI Version: v1.10.0`,
 		},
-		{
-			name:     "Display user's OS in log",
+		"Display user's OS in log": {
 			text:     "Operating System (OS): darwin",
 			expected: `Operating System (OS): darwin`,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			redacted := goutils.RedactPII(tc.text)
 			require.Equal(t, redacted, tc.expected)
 		})

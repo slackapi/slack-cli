@@ -252,7 +252,7 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 			expectedManifestSource:        ManifestSourceLocal,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
@@ -262,12 +262,12 @@ func Test_ProjectConfig_ManifestSource(t *testing.T) {
 			config := NewProjectConfig(fs, os)
 			initial, err := config.GetManifestSource(ctx)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expectedManifestSourceDefault, initial)
-			err = SetManifestSource(ctx, fs, os, tt.mockManifestSource)
+			assert.Equal(t, tc.expectedManifestSourceDefault, initial)
+			err = SetManifestSource(ctx, fs, os, tc.mockManifestSource)
 			require.NoError(t, err)
 			actual, err := config.GetManifestSource(ctx)
-			assert.Equal(t, tt.expectedError, err)
-			assert.Equal(t, tt.expectedManifestSource, actual)
+			assert.Equal(t, tc.expectedError, err)
+			assert.Equal(t, tc.expectedManifestSource, actual)
 		})
 	}
 }
@@ -490,7 +490,7 @@ func Test_ProjectConfig_Cache(t *testing.T) {
 			expectedHash: "xoxo",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
@@ -499,13 +499,13 @@ func Test_ProjectConfig_Cache(t *testing.T) {
 			addProjectMocks(t, fs)
 			projectConfig := NewProjectConfig(fs, os)
 			cache := projectConfig.Cache()
-			if !tt.mockHash.Equals("") {
-				err := cache.SetManifestHash(ctx, tt.mockAppID, tt.mockHash)
+			if !tc.mockHash.Equals("") {
+				err := cache.SetManifestHash(ctx, tc.mockAppID, tc.mockHash)
 				require.NoError(t, err)
 			}
-			hash, err := cache.GetManifestHash(ctx, tt.mockAppID)
+			hash, err := cache.GetManifestHash(ctx, tc.mockAppID)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedHash, hash)
+			assert.Equal(t, tc.expectedHash, hash)
 		})
 	}
 }
@@ -524,10 +524,10 @@ func Test_Config_GetProjectConfigDirPath(t *testing.T) {
 			expectedConfigDirPath: ".slack",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			configDirPath := GetProjectConfigDirPath(tt.projectDirPath)
-			require.Equal(t, configDirPath, tt.expectedConfigDirPath)
+			configDirPath := GetProjectConfigDirPath(tc.projectDirPath)
+			require.Equal(t, configDirPath, tc.expectedConfigDirPath)
 		})
 	}
 }
@@ -551,17 +551,17 @@ func Test_Config_CreateProjectConfigDir(t *testing.T) {
 			expectedError:         os.ErrExist,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
-			if tt.existingDir {
-				err := fs.MkdirAll(tt.projectDirPath+"/.slack", 0755)
+			if tc.existingDir {
+				err := fs.MkdirAll(tc.projectDirPath+"/.slack", 0755)
 				require.NoError(t, err)
 			}
-			projectConfigDirPath, err := CreateProjectConfigDir(ctx, fs, tt.projectDirPath)
-			require.Equal(t, err, tt.expectedError)
-			require.Equal(t, projectConfigDirPath, tt.expectedConfigDirPath)
+			projectConfigDirPath, err := CreateProjectConfigDir(ctx, fs, tc.projectDirPath)
+			require.Equal(t, err, tc.expectedError)
+			require.Equal(t, projectConfigDirPath, tc.expectedConfigDirPath)
 		})
 	}
 }
@@ -576,10 +576,10 @@ func Test_Config_GetProjectConfigJSONFilePath(t *testing.T) {
 			expectedConfigJSONFilePath: "/path/to/project-name/.slack/config.json",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			configJSONFilePath := GetProjectConfigJSONFilePath(tt.projectDirPath)
-			require.Equal(t, configJSONFilePath, tt.expectedConfigJSONFilePath)
+			configJSONFilePath := GetProjectConfigJSONFilePath(tc.projectDirPath)
+			require.Equal(t, configJSONFilePath, tc.expectedConfigJSONFilePath)
 		})
 	}
 }
@@ -607,33 +607,33 @@ func Test_Config_CreateProjectConfigJSONFile(t *testing.T) {
 			expectedConfigJSONFileData: `{ "project_id": "abc123" }`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
 
 			// Create the project directory and .slack directory
-			if _, err := CreateProjectConfigDir(ctx, fs, tt.projectDirPath); err != nil {
+			if _, err := CreateProjectConfigDir(ctx, fs, tc.projectDirPath); err != nil {
 				require.Fail(t, "Failed to create the project's .slack/ directory: %s", err)
 			}
 
 			// Create existing .slack/config.json (optional)
-			if tt.existingConfigJSONData != "" {
-				configJSONFilePath := GetProjectConfigJSONFilePath(tt.projectDirPath)
-				if err := afero.WriteFile(fs, configJSONFilePath, []byte(tt.existingConfigJSONData), 0o0644); err != nil {
+			if tc.existingConfigJSONData != "" {
+				configJSONFilePath := GetProjectConfigJSONFilePath(tc.projectDirPath)
+				if err := afero.WriteFile(fs, configJSONFilePath, []byte(tc.existingConfigJSONData), 0o0644); err != nil {
 					require.Fail(t, "Failed to setup the test by creating an existing .slack/config.json: %s", err)
 				}
 			}
 
 			// Run the test
-			configJSONFilePath, err := CreateProjectConfigJSONFile(fs, tt.projectDirPath)
-			require.Equal(t, tt.expectedError, err)
-			require.Equal(t, configJSONFilePath, tt.expectedConfigJSONFilePath)
+			configJSONFilePath, err := CreateProjectConfigJSONFile(fs, tc.projectDirPath)
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, configJSONFilePath, tc.expectedConfigJSONFilePath)
 
 			// Assert .slack/config.json data is correct
 			configJSONData, err := afero.ReadFile(fs, configJSONFilePath)
 			require.Equal(t, err, nil)
-			require.Equal(t, string(configJSONData), tt.expectedConfigJSONFileData)
+			require.Equal(t, string(configJSONData), tc.expectedConfigJSONFileData)
 		})
 	}
 }
@@ -648,10 +648,10 @@ func Test_Config_GetProjectHooksJSONFilePath(t *testing.T) {
 			expectedHooksJSONFilePath: "/path/to/project-name/.slack/hooks.json",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			hooksJSONFilePath := GetProjectHooksJSONFilePath(tt.projectDirPath)
-			require.Equal(t, hooksJSONFilePath, tt.expectedHooksJSONFilePath)
+			hooksJSONFilePath := GetProjectHooksJSONFilePath(tc.projectDirPath)
+			require.Equal(t, hooksJSONFilePath, tc.expectedHooksJSONFilePath)
 		})
 	}
 }
@@ -682,27 +682,27 @@ func Test_Config_CreateProjectHooksJSONFile(t *testing.T) {
 			expectedHooksJSONFileData: `{ "existing": "file" }`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fs := afero.NewMemMapFs()
 
 			// Create existing .slack/hooks.json (optional)
-			if tt.existingHooksJSONData != "" {
-				hooksJSONFilePath := GetProjectHooksJSONFilePath(tt.projectDirPath)
-				if err := afero.WriteFile(fs, hooksJSONFilePath, []byte(tt.existingHooksJSONData), 0644); err != nil {
+			if tc.existingHooksJSONData != "" {
+				hooksJSONFilePath := GetProjectHooksJSONFilePath(tc.projectDirPath)
+				if err := afero.WriteFile(fs, hooksJSONFilePath, []byte(tc.existingHooksJSONData), 0644); err != nil {
 					require.Fail(t, "Failed to setup the test by creating an existing .slack/hooks.json: "+err.Error())
 				}
 			}
 
 			// Run the test
-			hooksJSONFilePath, err := CreateProjectHooksJSONFile(fs, tt.projectDirPath, []byte(tt.hooksJSONData))
-			require.Equal(t, tt.expectedError, err)
-			require.Equal(t, hooksJSONFilePath, tt.expectedHooksJSONFilePath)
+			hooksJSONFilePath, err := CreateProjectHooksJSONFile(fs, tc.projectDirPath, []byte(tc.hooksJSONData))
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, hooksJSONFilePath, tc.expectedHooksJSONFilePath)
 
 			// Assert .slack/hooks.json data is correct
 			hooksJSONData, err := afero.ReadFile(fs, hooksJSONFilePath)
 			require.Equal(t, err, nil)
-			require.Equal(t, string(hooksJSONData), tt.expectedHooksJSONFileData)
+			require.Equal(t, string(hooksJSONData), tc.expectedHooksJSONFileData)
 		})
 	}
 }
@@ -717,10 +717,10 @@ func Test_Config_GetProjectConfigDirDotGitIgnoreFilePath(t *testing.T) {
 			expectedDotGitignoreFilePath: "/path/to/project-name/.slack/.gitignore",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			dotGitignoreFilePath := GetProjectConfigDirDotGitIgnoreFilePath(tt.projectDirPath)
-			require.Equal(t, dotGitignoreFilePath, tt.expectedDotGitignoreFilePath)
+			dotGitignoreFilePath := GetProjectConfigDirDotGitIgnoreFilePath(tc.projectDirPath)
+			require.Equal(t, dotGitignoreFilePath, tc.expectedDotGitignoreFilePath)
 		})
 	}
 }
@@ -748,27 +748,27 @@ func Test_Config_CreateProjectConfigDirDotGitIgnoreFile(t *testing.T) {
 			expectedDotGitIgnoreFileData: `# existing .gitignore file data`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fs := afero.NewMemMapFs()
 
 			// Create existing .slack/.gitignore (optional)
-			if tt.existingDotGitIgnoreFileData != "" {
-				dotGitIgnoreFilePath := GetProjectConfigDirDotGitIgnoreFilePath(tt.projectDirPath)
-				if err := afero.WriteFile(fs, dotGitIgnoreFilePath, []byte(tt.existingDotGitIgnoreFileData), 0644); err != nil {
+			if tc.existingDotGitIgnoreFileData != "" {
+				dotGitIgnoreFilePath := GetProjectConfigDirDotGitIgnoreFilePath(tc.projectDirPath)
+				if err := afero.WriteFile(fs, dotGitIgnoreFilePath, []byte(tc.existingDotGitIgnoreFileData), 0644); err != nil {
 					require.Fail(t, "Failed to setup the test by creating an existing .slack/.gitignore: "+err.Error())
 				}
 			}
 
 			// Run the test
-			dotGitIgnoreFilePath, err := CreateProjectConfigDirDotGitIgnoreFile(fs, tt.projectDirPath)
-			require.Equal(t, tt.expectedError, err)
-			require.Equal(t, dotGitIgnoreFilePath, tt.expectedDotGitIgnoreFilePath)
+			dotGitIgnoreFilePath, err := CreateProjectConfigDirDotGitIgnoreFile(fs, tc.projectDirPath)
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, dotGitIgnoreFilePath, tc.expectedDotGitIgnoreFilePath)
 
 			// Assert .slack/.gitignore data is correct
 			fileData, err := afero.ReadFile(fs, dotGitIgnoreFilePath)
 			require.Equal(t, err, nil)
-			require.Equal(t, string(fileData), tt.expectedDotGitIgnoreFileData)
+			require.Equal(t, string(fileData), tc.expectedDotGitIgnoreFileData)
 		})
 	}
 }

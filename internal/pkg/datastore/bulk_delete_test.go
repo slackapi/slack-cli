@@ -28,7 +28,7 @@ import (
 func TestDatastoreBulkDeleteArguments(t *testing.T) {
 	mockAppID := "A0123456"
 
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Expression string
 		Query      types.AppDatastoreBulkDelete
 		Results    types.AppDatastoreBulkDeleteResult
@@ -62,13 +62,13 @@ func TestDatastoreBulkDeleteArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.API.On("AppsDatastoreBulkDelete", mock.Anything, mock.Anything, tt.Query).
-				Return(tt.Results, nil)
+			clientsMock.API.On("AppsDatastoreBulkDelete", mock.Anything, mock.Anything, tc.Query).
+				Return(tc.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			event, err := BulkDelete(ctx, client, &log, tt.Query)
+			event, err := BulkDelete(ctx, client, &log, tc.Query)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tt.Results, event.Data["bulkDeleteResult"])
+				assert.Equal(t, tc.Results, event.Data["bulkDeleteResult"])
 			}
 		})
 	}

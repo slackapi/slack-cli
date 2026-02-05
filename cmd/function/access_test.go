@@ -325,14 +325,14 @@ func TestFunctionDistributionCommand_PermissionsFile(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.AddDefaultMocks()
-			err := afero.WriteFile(clientsMock.Fs, tt.filename, []byte(tt.data), 0644)
+			err := afero.WriteFile(clientsMock.Fs, tc.filename, []byte(tc.data), 0644)
 			require.NoError(t, err)
-			for function, permissions := range tt.functions {
+			for function, permissions := range tc.functions {
 				clientsMock.API.On("FunctionDistributionList", mock.Anything, function, mock.Anything).
 					Return(permissions.currentType, permissions.currentEntities, nil)
 			}
@@ -344,16 +344,16 @@ func TestFunctionDistributionCommand_PermissionsFile(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			app := types.App{AppID: "A123"}
 
-			err = distributePermissionFile(ctx, clients, app, tt.filename)
-			if err != nil || tt.expectedError != nil {
+			err = distributePermissionFile(ctx, clients, app, tc.filename)
+			if err != nil || tc.expectedError != nil {
 				assert.Equal(t,
-					slackerror.ToSlackError(tt.expectedError).Code,
+					slackerror.ToSlackError(tc.expectedError).Code,
 					slackerror.ToSlackError(err).Code)
 			}
-			if clientsMock.GetCombinedOutput() != "" || tt.expectedWarn != "" {
-				assert.Contains(t, clientsMock.GetCombinedOutput(), tt.expectedWarn)
+			if clientsMock.GetCombinedOutput() != "" || tc.expectedWarn != "" {
+				assert.Contains(t, clientsMock.GetCombinedOutput(), tc.expectedWarn)
 			}
-			for function, permissions := range tt.functions {
+			for function, permissions := range tc.functions {
 				entityIDs := []string{}
 				for _, entity := range permissions.expectedEntities {
 					entityIDs = append(entityIDs, entity.ID)
@@ -399,7 +399,7 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -407,7 +407,7 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 				Return([]types.FunctionDistributionUser{}, nil).
 				Run(func(args mock.Arguments) {
 					clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, mock.Anything).
-						Return(types.PermissionNamedEntities, tt.currentEntities, nil).
+						Return(types.PermissionNamedEntities, tc.currentEntities, nil).
 						Run(func(args mock.Arguments) {
 							clientsMock.API.On("FunctionDistributionRemoveUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 								Return(nil)
@@ -418,12 +418,12 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 			function := "Ft123"
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			err := updateNamedEntitiesDistribution(ctx, clients, app, function, tt.updatedEntities)
+			err := updateNamedEntitiesDistribution(ctx, clients, app, function, tc.updatedEntities)
 			assert.NoError(t, err)
 			clientsMock.API.AssertCalled(t, "FunctionDistributionList", mock.Anything, function, app.AppID)
-			entities := strings.Join(tt.updatedEntities, ",")
+			entities := strings.Join(tc.updatedEntities, ",")
 			clientsMock.API.AssertCalled(t, "FunctionDistributionSet", mock.Anything, function, app.AppID, types.PermissionNamedEntities, entities)
-			clientsMock.API.AssertCalled(t, "FunctionDistributionRemoveUsers", mock.Anything, function, app.AppID, tt.removedEntities)
+			clientsMock.API.AssertCalled(t, "FunctionDistributionRemoveUsers", mock.Anything, function, app.AppID, tc.removedEntities)
 		})
 	}
 }

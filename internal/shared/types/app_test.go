@@ -96,9 +96,9 @@ func Test_Apps_IsEmpty(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.expectedIsEmpty, tt.expectedApps.IsEmpty())
+			require.Equal(t, tc.expectedIsEmpty, tc.expectedApps.IsEmpty())
 		})
 	}
 }
@@ -313,28 +313,28 @@ func Test_Apps_Set(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			apps := Apps{
 				DefaultAppTeamDomain: "",
 				DeployedApps:         map[string]App{},
 				LocalApps:            map[string]App{},
 			}
-			err := apps.Set(tt.expectedApp)
-			require.Equal(t, tt.isError, err != nil)
+			err := apps.Set(tc.expectedApp)
+			require.Equal(t, tc.isError, err != nil)
 
-			if tt.isLocalApp {
+			if tc.isLocalApp {
 				actualLocalApps := apps.GetAllLocalApps()
-				require.Contains(t, actualLocalApps, tt.expectedApp)
+				require.Contains(t, actualLocalApps, tc.expectedApp)
 			}
 
-			if tt.isDeployedApp {
+			if tc.isDeployedApp {
 				actualDeployedApps, _ := apps.GetAllDeployedApps()
-				require.Contains(t, actualDeployedApps, tt.expectedApp)
+				require.Contains(t, actualDeployedApps, tc.expectedApp)
 			}
 
-			if tt.expectedDefaultAppTeamDomain != "" {
-				require.Equal(t, tt.expectedDefaultAppTeamDomain, apps.DefaultAppTeamDomain)
+			if tc.expectedDefaultAppTeamDomain != "" {
+				require.Equal(t, tc.expectedDefaultAppTeamDomain, apps.DefaultAppTeamDomain)
 			}
 		})
 	}
@@ -467,19 +467,19 @@ func Test_Apps_RemoveDeployedByTeamID(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Assert app belonging to removedTeamID exists in apps
-			require.NotEmpty(t, tt.apps.DeployedApps[tt.removedTeamID])
+			require.NotEmpty(t, tc.apps.DeployedApps[tc.removedTeamID])
 
 			// Remove the app
-			tt.apps.RemoveDeployedByTeamID(tt.removedTeamID)
+			tc.apps.RemoveDeployedByTeamID(tc.removedTeamID)
 
 			// Assert app removed
-			require.Empty(t, tt.apps.DeployedApps[tt.removedTeamID])
+			require.Empty(t, tc.apps.DeployedApps[tc.removedTeamID])
 
 			// Assert DefaultAppTeamDomain change
-			require.Equal(t, tt.expectedDefaultAppTeamDomain, tt.apps.DefaultAppTeamDomain)
+			require.Equal(t, tc.expectedDefaultAppTeamDomain, tc.apps.DefaultAppTeamDomain)
 		})
 	}
 }
@@ -765,9 +765,9 @@ func Test_App_Equals(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.matches, expectedApp.Equals(tt.app))
+			require.Equal(t, tc.matches, expectedApp.Equals(tc.app))
 		})
 	}
 }
@@ -797,9 +797,9 @@ func Test_App_IsEmpty(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.isEmpty, tt.app.IsEmpty())
+			require.Equal(t, tc.isEmpty, tc.app.IsEmpty())
 		})
 	}
 }
@@ -823,9 +823,9 @@ func Test_App_IsNew(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.isNew, tt.app.IsNew())
+			require.Equal(t, tc.isNew, tc.app.IsNew())
 		})
 	}
 }

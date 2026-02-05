@@ -39,7 +39,7 @@ import (
 var WebsocketDialerDial = &websocketDialerDial
 
 func Test_LocalServer_Start(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Setup      func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock)
 		Test       func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock)
 		wsHandler  func(w http.ResponseWriter, r *http.Request)
@@ -115,8 +115,8 @@ func Test_LocalServer_Start(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			wsFakeURL := "http://slack.com/websocketzzzz"
-			if tt.wsHandler != nil {
-				ts := httptest.NewServer(http.HandlerFunc(tt.wsHandler))
+			if tc.wsHandler != nil {
+				ts := httptest.NewServer(http.HandlerFunc(tc.wsHandler))
 				defer ts.Close()
 				wsFakeURL = "ws" + strings.TrimPrefix(ts.URL, "http")
 			}
@@ -128,8 +128,8 @@ func Test_LocalServer_Start(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			})
-			if tt.Setup != nil {
-				tt.Setup(t, clientsMock, clients, conn)
+			if tc.Setup != nil {
+				tc.Setup(t, clientsMock, clients, conn)
 			}
 			clientsMock.API.On("ConnectionsOpen", mock.Anything, mock.Anything).Return(api.AppsConnectionsOpenResult{URL: wsFakeURL}, nil)
 			// Setup default mock actions
@@ -153,21 +153,21 @@ func Test_LocalServer_Start(t *testing.T) {
 				nil,
 				sync.Mutex{},
 			}
-			if tt.fakeDialer != nil {
+			if tc.fakeDialer != nil {
 				orig := *WebsocketDialerDial
-				websocketDialerDial = tt.fakeDialer(conn)
+				websocketDialerDial = tc.fakeDialer(conn)
 				defer func() {
 					websocketDialerDial = orig
 				}()
 			}
 
-			tt.Test(t, ctx, clientsMock, &server, conn)
+			tc.Test(t, ctx, clientsMock, &server, conn)
 		})
 	}
 }
 
 func Test_LocalServer_Listen(t *testing.T) {
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Setup func(t *testing.T, cm *shared.ClientsMock, clients *shared.ClientFactory, conn *WebSocketConnMock)
 		Test  func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, server *LocalServer, conn *WebSocketConnMock)
 	}{
@@ -342,8 +342,8 @@ func Test_LocalServer_Listen(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			})
-			if tt.Setup != nil {
-				tt.Setup(t, clientsMock, clients, conn)
+			if tc.Setup != nil {
+				tc.Setup(t, clientsMock, clients, conn)
 			}
 			// Setup default mock actions
 			conn.AddDefaultMocks()
@@ -366,7 +366,7 @@ func Test_LocalServer_Listen(t *testing.T) {
 				nil,
 				sync.Mutex{},
 			}
-			tt.Test(t, ctx, clientsMock, &server, conn)
+			tc.Test(t, ctx, clientsMock, &server, conn)
 		})
 	}
 }

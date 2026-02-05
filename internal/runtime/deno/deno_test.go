@@ -34,17 +34,15 @@ import (
 )
 
 func Test_Deno_New(t *testing.T) {
-	tests := []struct {
-		name         string
+	tests := map[string]struct {
 		expectedDeno *Deno
 	}{
-		{
-			name:         "New Deno instance",
+		"New Deno instance": {
 			expectedDeno: &Deno{version: defaultVersion},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			d := New()
 			require.Equal(t, tc.expectedDeno, d)
 		})
@@ -52,17 +50,15 @@ func Test_Deno_New(t *testing.T) {
 }
 
 func Test_Deno_IgnoreDirectories(t *testing.T) {
-	tests := []struct {
-		name                      string
+	tests := map[string]struct {
 		expectedIgnoreDirectories []string
 	}{
-		{
-			name:                      "No directories",
+		"No directories": {
 			expectedIgnoreDirectories: []string{},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			d := New()
 			require.Equal(t, tc.expectedIgnoreDirectories, d.IgnoreDirectories())
 		})
@@ -70,8 +66,7 @@ func Test_Deno_IgnoreDirectories(t *testing.T) {
 }
 
 func Test_Deno_InstallProjectDependencies(t *testing.T) {
-	tests := []struct {
-		name                      string
+	tests := map[string]struct {
 		projectDirPath            string
 		lookPathError             error
 		hookExecutorError         error
@@ -80,8 +75,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 		expectedResponse          string
 		expectedHookExecutorCalls int
 	}{
-		{
-			name:                      "Deno executable not found",
+		"Deno executable not found": {
 			projectDirPath:            "/path/to/project-name",
 			lookPathError:             exec.ErrNotFound,
 			hookExecutorError:         nil,
@@ -90,8 +84,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			expectedResponse:          "",
 			expectedHookExecutorCalls: 0,
 		},
-		{
-			name:                      "No manifest files",
+		"No manifest files": {
 			projectDirPath:            "/path/to/project-name",
 			lookPathError:             nil,
 			hookExecutorError:         nil,
@@ -100,8 +93,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			expectedResponse:          "",
 			expectedHookExecutorCalls: 0,
 		},
-		{
-			name:                      "InstallProjectDependencies cache dependencies when manifest file exists",
+		"InstallProjectDependencies cache dependencies when manifest file exists": {
 			projectDirPath:            "/path/to/project-name",
 			lookPathError:             nil,
 			hookExecutorError:         nil,
@@ -110,8 +102,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			expectedResponse:          "",
 			expectedHookExecutorCalls: 1, // Cache dependencies script executed
 		},
-		{
-			name:                      "InstallProjectDependencies cache dependencies when multiple manifest files exist",
+		"InstallProjectDependencies cache dependencies when multiple manifest files exist": {
 			projectDirPath:            "/path/to/project-name",
 			lookPathError:             nil,
 			hookExecutorError:         nil,
@@ -120,8 +111,7 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			expectedResponse:          "",
 			expectedHookExecutorCalls: 2, // Cache dependencies script executed multiple times (manifest.ts, manifest.json)
 		},
-		{
-			name:                      "InstallProjectDependencies should not error when cache dependencies fails",
+		"InstallProjectDependencies should not error when cache dependencies fails": {
 			projectDirPath:            "/path/to/project-name",
 			lookPathError:             nil,
 			hookExecutorError:         slackerror.New(slackerror.ErrSDKHookNotFound), // Cache dependencies script error
@@ -131,8 +121,8 @@ func Test_Deno_InstallProjectDependencies(t *testing.T) {
 			expectedHookExecutorCalls: 1, // Cache dependencies script executed
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
@@ -181,53 +171,46 @@ func Test_Deno_Name(t *testing.T) {
 }
 
 func Test_Deno_Version(t *testing.T) {
-	tests := []struct {
-		name            string
+	tests := map[string]struct {
 		deno            *Deno
 		expectedVersion string
 	}{
-		{
-			name:            "Default version",
+		"Default version": {
 			deno:            New(),
 			expectedVersion: defaultVersion,
 		},
-		{
-			name:            "Custom version",
+		"Custom version": {
 			deno:            &Deno{version: "deno@2"},
 			expectedVersion: "deno@2",
 		},
-		{
-			name:            "Undefined version",
+		"Undefined version": {
 			deno:            &Deno{version: ""},
 			expectedVersion: defaultVersion,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			require.Equal(t, tc.expectedVersion, tc.deno.Version())
 		})
 	}
 }
 
 func Test_Deno_SetVersion(t *testing.T) {
-	tests := []struct {
-		name            string
+	tests := map[string]struct {
 		version         string
 		expectedVersion string
 	}{
-		{
-			name:            "Default version",
+		"Default version": {
 			version:         "",
 			expectedVersion: defaultVersion,
 		},
-		{
-			name:            "Custom version",
+		"Custom version": {
 			version:         "deno@2",
 			expectedVersion: "deno@2",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			d := New()
 			d.SetVersion(tc.version)
 			require.Equal(t, tc.expectedVersion, d.Version())
@@ -236,24 +219,21 @@ func Test_Deno_SetVersion(t *testing.T) {
 }
 
 func Test_Deno_HooksJSONTemplate(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		hooksJSONTemplate []byte
 		expectedErrorType error
 	}{
-		{
-			name:              "HooksJSONTemplate() should be valid JSON",
+		"HooksJSONTemplate() should be valid JSON": {
 			hooksJSONTemplate: New().HooksJSONTemplate(),
 			expectedErrorType: nil,
 		},
-		{
-			name:              "Should fail on invalid JSON",
+		"Should fail on invalid JSON": {
 			hooksJSONTemplate: []byte(`}{`),
 			expectedErrorType: &json.SyntaxError{},
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			var anyJSON map[string]interface{}
 
@@ -267,24 +247,21 @@ func Test_Deno_HooksJSONTemplate(t *testing.T) {
 }
 
 func Test_Deno_PreparePackage(t *testing.T) {
-	tests := []struct {
-		name                        string
+	tests := map[string]struct {
 		hookExecutorError           error
 		expectedPreparePackageError error
 	}{
-		{
-			name:                        "Hook successful",
+		"Hook successful": {
 			hookExecutorError:           nil,
 			expectedPreparePackageError: nil,
 		},
-		{
-			name:                        "Hook error",
+		"Hook error": {
 			hookExecutorError:           slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 			expectedPreparePackageError: slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			// Setup SDKConfig
@@ -315,39 +292,34 @@ func Test_Deno_PreparePackage(t *testing.T) {
 }
 
 func Test_Deno_IsRuntimeForProject(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		sdkConfigRuntime  string
 		existingFilePaths []string
 		expectedBool      bool
 	}{
-		{
-			name:              "SDKConfig Runtime is Deno",
+		"SDKConfig Runtime is Deno": {
 			sdkConfigRuntime:  "deno",
 			existingFilePaths: []string{}, // Unset to check SDKConfig
 			expectedBool:      true,
 		},
-		{
-			name:              "deno.json file exists",
+		"deno.json file exists": {
 			sdkConfigRuntime:  "", // Unset to check for file
 			existingFilePaths: []string{"deno.json"},
 			expectedBool:      true,
 		},
-		{
-			name:              "deno.jsonc file exists",
+		"deno.jsonc file exists": {
 			sdkConfigRuntime:  "", // Unset to check for file
 			existingFilePaths: []string{"deno.jsonc"},
 			expectedBool:      true,
 		},
-		{
-			name:              "import_map.json file exists",
+		"import_map.json file exists": {
 			sdkConfigRuntime:  "", // Unset to check for file
 			existingFilePaths: []string{"import_map.json"},
 			expectedBool:      true,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()

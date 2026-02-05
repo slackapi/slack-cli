@@ -100,10 +100,10 @@ func Test_RedactPII(t *testing.T) {
 			expected: `Operating System (OS): darwin`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			redacted := goutils.RedactPII(tt.text)
-			require.Equal(t, redacted, tt.expected)
+			redacted := goutils.RedactPII(tc.text)
+			require.Equal(t, redacted, tc.expected)
 		})
 	}
 }
@@ -122,10 +122,10 @@ func Test_isOlderThanOneWeek(t *testing.T) {
 			expected: true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			output := isOlderThanOneWeek(tt.date)
-			require.Equal(t, output, tt.expected)
+			output := isOlderThanOneWeek(tc.date)
+			require.Equal(t, output, tc.expected)
 		})
 	}
 }
@@ -156,7 +156,7 @@ func Test_FlushToLogFile(t *testing.T) {
 			suggestsFile: true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			var io *IOStreams
 			stderrBuff := bytes.Buffer{}
@@ -174,17 +174,17 @@ func Test_FlushToLogFile(t *testing.T) {
 			io = NewIOStreams(config, fsMock, osMock)
 			io.Stderr = &stderrLogger
 
-			err := io.FlushToLogFile(ctx, tt.prefix, tt.errStr)
+			err := io.FlushToLogFile(ctx, tc.prefix, tc.errStr)
 			require.NoError(t, err)
 
 			errorLogFilePath := filepath.Join(mockLogsDir, filename)
 			errorLogFile, err := afero.ReadFile(io.fs, errorLogFilePath)
 			require.NoError(t, err)
-			for _, expected := range tt.expectedFile {
+			for _, expected := range tc.expectedFile {
 				assert.Contains(t, string(errorLogFile), expected)
 			}
 			var expectedStderr string
-			if tt.suggestsFile {
+			if tc.suggestsFile {
 				expectedStderr = fmt.Sprintf("Check %s for error logs\n", errorLogFilePath)
 			}
 			assert.Equal(t, expectedStderr, stderrBuff.String())

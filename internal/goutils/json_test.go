@@ -30,7 +30,7 @@ func Test_mergeJSON(t *testing.T) {
 		Three string `json:"three,omitempty"`
 	}
 
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		defaultJSON   string
 		customJSON    string
 		expectedError error
@@ -81,14 +81,14 @@ func Test_mergeJSON(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			var actualConfig testConfig
-			actualError := MergeJSON(tt.defaultJSON, tt.customJSON, &actualConfig)
-			require.Equal(t, tt.expectedError, actualError)
+			actualError := MergeJSON(tc.defaultJSON, tc.customJSON, &actualConfig)
+			require.Equal(t, tc.expectedError, actualError)
 
 			b, err := json.Marshal(actualConfig)
 			require.Nil(t, err)
 
 			var actualConfigJSON = string(b)
-			require.Equal(t, tt.expectedJSON, actualConfigJSON)
+			require.Equal(t, tc.expectedJSON, actualConfigJSON)
 		})
 	}
 }
@@ -103,7 +103,7 @@ func Test_JSONMarshalUnescaped(t *testing.T) {
 		Expected string
 	}
 
-	for name, tt := range map[string]TestStruct{
+	for name, tc := range map[string]TestStruct{
 		"encode a struct with a slice and escapable data string": {
 			Input: TestInput{
 				Data:    ":num < 3",
@@ -113,9 +113,9 @@ func Test_JSONMarshalUnescaped(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			buff, err := JSONMarshalUnescaped(tt.Input)
+			buff, err := JSONMarshalUnescaped(tc.Input)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tt.Expected, buff)
+				assert.Equal(t, tc.Expected, buff)
 			}
 		})
 	}
@@ -131,7 +131,7 @@ func Test_JSONMarshalUnescapedIndent(t *testing.T) {
 		Expected string
 	}
 
-	for name, tt := range map[string]TestStruct{
+	for name, tc := range map[string]TestStruct{
 		"format a struct with a slice and escapable data string": {
 			Input: TestInput{
 				Data:    ":num < 3",
@@ -151,9 +151,9 @@ func Test_JSONMarshalUnescapedIndent(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			buff, err := JSONMarshalUnescapedIndent(tt.Input)
+			buff, err := JSONMarshalUnescapedIndent(tc.Input)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tt.Expected, buff)
+				assert.Equal(t, tc.Expected, buff)
 			}
 		})
 	}
@@ -164,7 +164,7 @@ func Test_UnmarshalJSON(t *testing.T) {
 		One string `json:"one,omitempty"`
 	}
 
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		data          string
 		expectedError error
 		expectAll     []string
@@ -180,12 +180,12 @@ func Test_UnmarshalJSON(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			var v testConfig
-			err := JSONUnmarshal([]byte(tt.data), &v)
-			if tt.expectedError == nil && len(tt.expectAll) == 0 {
+			err := JSONUnmarshal([]byte(tc.data), &v)
+			if tc.expectedError == nil && len(tc.expectAll) == 0 {
 				require.Nil(t, err)
 			} else {
 				require.Contains(t, err.Error(), slackerror.ErrUnableToParseJSON)
-				for _, s := range tt.expectAll {
+				for _, s := range tc.expectAll {
 					require.Contains(t, err.Error(), s)
 				}
 			}

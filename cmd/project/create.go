@@ -58,9 +58,10 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:       `Create a new Slack project on your local machine from an optional template`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "create my-project", Meaning: "Create a new project from a template"},
+			{Command: "create agent my-agent-app", Meaning: "Create a new AI Agent app"},
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
 		}),
-		Args: cobra.MaximumNArgs(1),
+		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
 			return runCreateCommand(clients, cmd, args)
@@ -80,14 +81,35 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	// Set up event logger
 	log := newCreateLogger(clients, cmd)
 
-	// Get optional app name passed as an arg
+	// Get optional app name passed as an arg and check for category shortcuts
 	appNameArg := ""
-	if len(args) > 0 && args[0] != "samples" && args[0] != "create" {
-		appNameArg = args[0]
+	categoryShortcut := ""
+	templateFlagProvided := cmd.Flags().Changed("template")
+
+	if len(args) > 0 {
+		switch args[0] {
+		case "samples", "create":
+			// These are special commands, not app names
+		case "agent":
+			// Only treat as shortcut if --template flag is not provided
+			if !templateFlagProvided {
+				// Shortcut to AI apps category
+				categoryShortcut = "agent"
+				// Check if a second argument was provided as the app name
+				if len(args) > 1 {
+					appNameArg = args[1]
+				}
+			} else {
+				// When --template is provided, "agent" is the app name
+				appNameArg = args[0]
+			}
+		default:
+			appNameArg = args[0]
+		}
 	}
 
 	// Collect the template URL or select a starting template
-	template, err := promptTemplateSelection(cmd, clients)
+	template, err := promptTemplateSelection(cmd, clients, categoryShortcut)
 	if err != nil {
 		return err
 	}

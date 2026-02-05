@@ -118,13 +118,13 @@ func Test_Datastore(t *testing.T) {
 			setName: "D8",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if tt.setName != "" {
-				tt.query.SetName(tt.setName)
+			if tc.setName != "" {
+				tc.query.SetName(tc.setName)
 			}
-			assert.Equal(t, tt.name, tt.query.Name())
-			assert.Equal(t, tt.appID, tt.query.AppID())
+			assert.Equal(t, tc.name, tc.query.Name())
+			assert.Equal(t, tc.appID, tc.query.AppID())
 		})
 	}
 }

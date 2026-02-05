@@ -72,12 +72,12 @@ func TestPasswordPrompt(t *testing.T) {
 		FileInfo: &slackdeps.FileInfoNamedPipe{},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
-			if tt.IsInteractive {
+			if tc.IsInteractive {
 				osMock.On("Stdout").Return(interactiveStdout)
 			} else {
 				osMock.On("Stdout").Return(nonInteractiveStdout)
@@ -85,9 +85,9 @@ func TestPasswordPrompt(t *testing.T) {
 			config := config.NewConfig(fsMock, osMock)
 			ioStreams := NewIOStreams(config, fsMock, osMock)
 
-			if tt.FlagChanged {
+			if tc.FlagChanged {
 				mockFlag.Changed = true
-				_ = mockFlag.Value.Set(tt.FlagValue)
+				_ = mockFlag.Value.Set(tc.FlagValue)
 			} else {
 				mockFlag.Changed = false
 				_ = mockFlag.Value.Set("")
@@ -95,18 +95,18 @@ func TestPasswordPrompt(t *testing.T) {
 
 			selection, err := ioStreams.PasswordPrompt(ctx, "Enter a password", PasswordPromptConfig{
 				Flag:     mockFlag,
-				Required: tt.Required,
+				Required: tc.Required,
 			})
 
-			if tt.ExpectedError != nil {
-				assert.Equal(t, tt.ExpectedError.Code, slackerror.ToSlackError(err).Code)
-				if tt.ExpectedError.Code == slackerror.ErrPrompt {
+			if tc.ExpectedError != nil {
+				assert.Equal(t, tc.ExpectedError.Code, slackerror.ToSlackError(err).Code)
+				if tc.ExpectedError.Code == slackerror.ErrPrompt {
 					assert.Contains(t, err.Error(), fmt.Sprintf("--%s", mockFlag.Name))
 				}
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, selection.Value, tt.ExpectedValue)
-				if tt.FlagChanged {
+				assert.Equal(t, selection.Value, tc.ExpectedValue)
+				if tc.FlagChanged {
 					assert.Equal(t, selection.Flag, true)
 				} else {
 					assert.Equal(t, selection.Prompt, true)

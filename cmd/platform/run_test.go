@@ -204,7 +204,7 @@ func TestRunCommand_Flags(t *testing.T) {
 				}),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -212,12 +212,12 @@ func TestRunCommand_Flags(t *testing.T) {
 			clientsMock.IO.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
-				clients.Config.AppFlag = tt.appFlag
-				clients.Config.TokenFlag = tt.tokenFlag
+				clients.Config.AppFlag = tc.appFlag
+				clients.Config.TokenFlag = tc.tokenFlag
 			})
 
 			appSelectMock := prompts.NewAppSelectMock()
-			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowLocalOnly, prompts.ShowAllApps).Return(tt.selectedAppAuth, tt.selectedAppErr)
+			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowLocalOnly, prompts.ShowAllApps).Return(tc.selectedAppAuth, tc.selectedAppErr)
 			runAppSelectPromptFunc = appSelectMock.AppSelectPrompt
 
 			runPkgMock := new(RunPkgMock)
@@ -226,19 +226,19 @@ func TestRunCommand_Flags(t *testing.T) {
 
 			cmd := NewRunCommand(clients)
 			testutil.MockCmdIO(clients.IO, cmd)
-			cmd.SetArgs(tt.cmdArgs)
+			cmd.SetArgs(tc.cmdArgs)
 
 			// Execute
 			err := cmd.ExecuteContext(ctx)
 
 			// Check args passed into the run function
-			if tt.expectedErr == nil {
+			if tc.expectedErr == nil {
 				assert.NoError(t, err)
 				runPkgMock.AssertCalled(t, "Run", mock.Anything, mock.Anything, mock.Anything,
-					tt.expectedRunArgs,
+					tc.expectedRunArgs,
 				)
 			} else {
-				assert.Equal(t, tt.expectedErr, slackerror.ToSlackError(err))
+				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err))
 			}
 		})
 	}

@@ -229,10 +229,10 @@ func TestTracef(t *testing.T) {
 			expected:    "TRACE_ID_4=VALUE_A,VALUE_B",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			trace := Tracef(tt.traceID, tt.traceValues...)
-			assert.Equal(t, tt.expected, trace)
+			trace := Tracef(tc.traceID, tc.traceValues...)
+			assert.Equal(t, tc.expected, trace)
 		})
 	}
 }
@@ -249,13 +249,13 @@ func TestSurveyIcons(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			core.DisableColor = false
-			isStyleEnabled = tt.styleEnabled
+			isStyleEnabled = tc.styleEnabled
 
 			_ = SurveyIcons()
-			assert.NotEqual(t, tt.styleEnabled, core.DisableColor)
+			assert.NotEqual(t, tc.styleEnabled, core.DisableColor)
 		})
 	}
 }
@@ -296,15 +296,15 @@ func Test_ExampleCommandsf(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		commandName := os.Args[0]
 		os.Args[0] = "slack"
 		defer func() {
 			os.Args[0] = commandName
 		}()
 		t.Run(name, func(t *testing.T) {
-			actual := ExampleCommandsf(tt.commands)
-			assert.Equal(t, tt.expected, strings.Split(actual, "\n"))
+			actual := ExampleCommandsf(tc.commands)
+			assert.Equal(t, tc.expected, strings.Split(actual, "\n"))
 		})
 	}
 }
@@ -352,15 +352,15 @@ func Test_ExampleTemplatef(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			localColorStatus := isColorShown
-			isColorShown = tt.withColorShown
+			isColorShown = tc.withColorShown
 			defer func() {
 				isColorShown = localColorStatus
 			}()
-			actual := ExampleTemplatef(strings.Join(tt.template, "\n"))
-			assert.Equal(t, strings.Join(tt.expected, "\n"), actual)
+			actual := ExampleTemplatef(strings.Join(tc.template, "\n"))
+			assert.Equal(t, strings.Join(tc.expected, "\n"), actual)
 		})
 	}
 }
@@ -387,10 +387,10 @@ func TestLocalRunDisplayNamePlain(t *testing.T) {
 			expectedAppName: "bizz (local)",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actualAppName := LocalRunDisplayName(tt.mockAppName)
-			assert.Equal(t, tt.expectedAppName, actualAppName)
+			actualAppName := LocalRunDisplayName(tc.mockAppName)
+			assert.Equal(t, tc.expectedAppName, actualAppName)
 		})
 	}
 }

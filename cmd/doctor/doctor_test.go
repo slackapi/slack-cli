@@ -393,19 +393,19 @@ func TestDoctorHook(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			clients := tt.mockHookSetup(clientsMock)
+			clients := tc.mockHookSetup(clientsMock)
 			response, err := doctorHook(ctx, clients)
-			if tt.expectedError != nil {
+			if tc.expectedError != nil {
 				assert.Error(t, err)
-				assert.Equal(t, tt.expectedError, err)
+				assert.Equal(t, tc.expectedError, err)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedHook, response)
+				assert.Equal(t, tc.expectedHook, response)
 			}
 		})
 	}

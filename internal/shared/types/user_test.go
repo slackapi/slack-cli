@@ -21,44 +21,37 @@ import (
 )
 
 func Test_SlackUser_String(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		slackUser      *SlackUser
 		expectedString string
 	}{
-		{
-			name:           "UserName exists only",
+		"UserName exists only": {
 			slackUser:      &SlackUser{UserName: "charlie"},
 			expectedString: "charlie",
 		},
-		{
-			name:           "UserName and ID exists",
+		"UserName and ID exists": {
 			slackUser:      &SlackUser{UserName: "charlie", ID: "U1234"},
 			expectedString: "charlie (U1234)",
 		},
-		{
-			name:           "UserName,ID, and Email exists",
+		"UserName,ID, and Email exists": {
 			slackUser:      &SlackUser{UserName: "charlie", ID: "U1234", Email: "user@domain.com"},
 			expectedString: "charlie (U1234, user@domain.com)",
 		},
-		{
-			name:           "UserName, ID, Email, and PermissionType exists",
+		"UserName, ID, Email, and PermissionType exists": {
 			slackUser:      &SlackUser{UserName: "charlie", ID: "U1234", Email: "user@domain.com", PermissionType: "owner"},
 			expectedString: "charlie (U1234, user@domain.com, owner)",
 		},
-		{
-			name:           "UserName does not exist",
+		"UserName does not exist": {
 			slackUser:      &SlackUser{},
 			expectedString: "",
 		},
-		{
-			name:           "UserName does not exist but other properties exist",
+		"UserName does not exist but other properties exist": {
 			slackUser:      &SlackUser{ID: "U1234", PermissionType: "owner"},
 			expectedString: " (U1234, owner)", // TODO - confirm that this is the result we want
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedString := tc.slackUser.String()
 			require.Equal(t, tc.expectedString, returnedString)
 		})
@@ -66,34 +59,29 @@ func Test_SlackUser_String(t *testing.T) {
 }
 
 func Test_SlackUser_ShorthandF(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		slackUser      *SlackUser
 		expectedString string
 	}{
-		{
-			name:           "ID exists",
+		"ID exists": {
 			slackUser:      &SlackUser{ID: "U1234"},
 			expectedString: "U1234",
 		},
-		{
-			name:           "Email exists",
+		"Email exists": {
 			slackUser:      &SlackUser{Email: "user@domain.com"},
 			expectedString: "user@domain.com",
 		},
-		{
-			name:           "ID and Email exist",
+		"ID and Email exist": {
 			slackUser:      &SlackUser{ID: "U1234", Email: "user@domain.com"},
 			expectedString: "user@domain.com",
 		},
-		{
-			name:           "ID and Email do not exist",
+		"ID and Email do not exist": {
 			slackUser:      &SlackUser{},
 			expectedString: "",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			returnedString := tc.slackUser.ShorthandF()
 			require.Equal(t, tc.expectedString, returnedString)
 		})

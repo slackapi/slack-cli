@@ -43,18 +43,18 @@ func Test_DotEnv_GetDotEnvFileVariables(t *testing.T) {
 			expectedValues:      map[string]string{},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
-			os.Setenv(tt.globalVariableName, tt.globalVariableValue)
-			err := afero.WriteFile(fs, ".env", []byte(tt.localEnvFile), 0600)
+			os.Setenv(tc.globalVariableName, tc.globalVariableValue)
+			err := afero.WriteFile(fs, ".env", []byte(tc.localEnvFile), 0600)
 			assert.NoError(t, err)
 			config := NewConfig(fs, os)
 			variables, err := config.GetDotEnvFileVariables()
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedValues, variables)
+			assert.Equal(t, tc.expectedValues, variables)
 		})
 	}
 }
@@ -207,14 +207,14 @@ func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tableTests {
+	for name, tc := range tableTests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 
 			// Mocks
-			os.On("Getenv", tt.envName).Return(tt.envValue)
+			os.On("Getenv", tc.envName).Return(tc.envValue)
 			os.AddDefaultMocks()
 
 			// Load environment variables
@@ -223,7 +223,7 @@ func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 
 			// Assert
 			assert.NoError(t, err)
-			tt.assertOnConfig(t, config)
+			tc.assertOnConfig(t, config)
 		})
 	}
 }

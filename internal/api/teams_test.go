@@ -54,25 +54,25 @@ func Test_API_TeamInfoResponse(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: teamsInfoMethod,
-				Response:       tt.httpResponseJSON,
+				Response:       tc.httpResponseJSON,
 			})
 			defer teardown()
 
 			// Execute test
-			actual, err := c.TeamsInfo(ctx, tt.argsToken, tt.argsTeamID)
+			actual, err := c.TeamsInfo(ctx, tc.argsToken, tc.argsTeamID)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedTeamsInfo, actual)
+				require.Equal(t, tc.expectedTeamsInfo, actual)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}

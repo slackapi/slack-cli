@@ -27,34 +27,29 @@ import (
 )
 
 func Test_Runtime_New(t *testing.T) {
-	tests := []struct {
-		name                string
+	tests := map[string]struct {
 		runtime             string
 		expectedRuntimeType Runtime
 	}{
-		{
-			name:                "Deno SDK",
+		"Deno SDK": {
 			runtime:             "deno",
 			expectedRuntimeType: deno.New(),
 		},
-		{
-			name:                "Bolt for JavaScript",
+		"Bolt for JavaScript": {
 			runtime:             "node",
 			expectedRuntimeType: node.New(),
 		},
-		{
-			name:                "Bolt for Python",
+		"Bolt for Python": {
 			runtime:             "python",
 			expectedRuntimeType: python.New(),
 		},
-		{
-			name:                "Unsupported Runtime",
+		"Unsupported Runtime": {
 			runtime:             "biggly-boo",
 			expectedRuntimeType: nil,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Run the test
 			rt, _ := New(tc.runtime)
 			require.IsType(t, tc.expectedRuntimeType, rt)
@@ -63,34 +58,29 @@ func Test_Runtime_New(t *testing.T) {
 }
 
 func Test_Runtime_NewDetectProject(t *testing.T) {
-	tests := []struct {
-		name                string
+	tests := map[string]struct {
 		sdkConfig           hooks.SDKCLIConfig
 		expectedRuntimeType Runtime
 	}{
-		{
-			name:                "Deno SDK",
+		"Deno SDK": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: "deno"},
 			expectedRuntimeType: deno.New(),
 		},
-		{
-			name:                "Bolt for JavaScript",
+		"Bolt for JavaScript": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: "node"},
 			expectedRuntimeType: node.New(),
 		},
-		{
-			name:                "Bolt for Python",
+		"Bolt for Python": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: "python"},
 			expectedRuntimeType: python.New(),
 		},
-		{
-			name:                "Unsupported Runtime",
+		"Unsupported Runtime": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: ""},
 			expectedRuntimeType: nil,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()

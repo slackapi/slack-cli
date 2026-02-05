@@ -75,17 +75,17 @@ func Test_Update_SemVerGreaterThan(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual, err := SemVerGreaterThan(tt.v1, tt.v2)
-			if tt.err != nil {
-				expectedErr := slackerror.ToSlackError(tt.err)
+			actual, err := SemVerGreaterThan(tc.v1, tc.v2)
+			if tc.err != nil {
+				expectedErr := slackerror.ToSlackError(tc.err)
 				actualErr := slackerror.ToSlackError(err)
 				assert.Equal(t, expectedErr.Code, actualErr.Code)
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, tt.expected, actual)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -144,17 +144,17 @@ func Test_Update_SemVerLessThan(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual, err := SemVerLessThan(tt.v1, tt.v2)
-			if tt.err != nil {
-				expectedErr := slackerror.ToSlackError(tt.err)
+			actual, err := SemVerLessThan(tc.v1, tc.v2)
+			if tc.err != nil {
+				expectedErr := slackerror.ToSlackError(tc.err)
 				actualErr := slackerror.ToSlackError(err)
 				assert.Equal(t, expectedErr.Code, actualErr.Code)
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, tt.expected, actual)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

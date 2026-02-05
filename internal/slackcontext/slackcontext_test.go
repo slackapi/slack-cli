@@ -39,13 +39,13 @@ func Test_SlackContext_OpenTracingSpan(t *testing.T) {
 			expectedError: slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Span could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = opentracing.ContextWithSpan(ctx, tt.expectedSpan)
+			ctx = opentracing.ContextWithSpan(ctx, tc.expectedSpan)
 			actualSpan, actualError := OpenTracingSpan(ctx)
-			require.Equal(t, tt.expectedSpan, actualSpan)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedSpan, actualSpan)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -58,12 +58,12 @@ func Test_SlackContext_SetOpenTracingSpan(t *testing.T) {
 			expectedSpan: opentracing.StartSpan("test.span"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetOpenTracingSpan(ctx, tt.expectedSpan)
+			ctx = SetOpenTracingSpan(ctx, tc.expectedSpan)
 			actualSpan := opentracing.SpanFromContext(ctx)
-			require.Equal(t, tt.expectedSpan, actualSpan)
+			require.Equal(t, tc.expectedSpan, actualSpan)
 		})
 	}
 }
@@ -82,13 +82,13 @@ func Test_SlackContext_OpenTracingTraceID(t *testing.T) {
 			expectedError:   slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Trace ID could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyOpenTracingTraceID, tt.expectedTraceID)
+			ctx = context.WithValue(ctx, contextKeyOpenTracingTraceID, tc.expectedTraceID)
 			actualTraceID, actualError := OpenTracingTraceID(ctx)
-			require.Equal(t, tt.expectedTraceID, actualTraceID)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedTraceID, actualTraceID)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -101,12 +101,12 @@ func Test_SlackContext_SetOpenTracingTraceID(t *testing.T) {
 			expectedTraceID: uuid.New().String(),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetOpenTracingTraceID(ctx, tt.expectedTraceID)
+			ctx = SetOpenTracingTraceID(ctx, tc.expectedTraceID)
 			actualTraceID := ctx.Value(contextKeyOpenTracingTraceID).(string)
-			require.Equal(t, tt.expectedTraceID, actualTraceID)
+			require.Equal(t, tc.expectedTraceID, actualTraceID)
 		})
 	}
 }
@@ -127,13 +127,13 @@ func Test_SlackContext_OpenTracingTracer(t *testing.T) {
 			expectedError:  slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Tracer could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tt.expectedTracer)
+			ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tc.expectedTracer)
 			actualTracer, actualError := OpenTracingTracer(ctx)
-			require.Equal(t, tt.expectedTracer, actualTracer)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedTracer, actualTracer)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -148,12 +148,12 @@ func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 			expectedTracer: _tracer,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetOpenTracingTracer(ctx, tt.expectedTracer)
+			ctx = SetOpenTracingTracer(ctx, tc.expectedTracer)
 			actualTracer := ctx.Value(contextKeyOpenTracingTracer).(opentracing.Tracer)
-			require.Equal(t, tt.expectedTracer, actualTracer)
+			require.Equal(t, tc.expectedTracer, actualTracer)
 		})
 	}
 }
@@ -172,13 +172,13 @@ func Test_SlackContext_ProjectID(t *testing.T) {
 			expectedError:     slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Project ID could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyProjectID, tt.expectedProjectID)
+			ctx = context.WithValue(ctx, contextKeyProjectID, tc.expectedProjectID)
 			actualProjectID, actualError := ProjectID(ctx)
-			require.Equal(t, tt.expectedProjectID, actualProjectID)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedProjectID, actualProjectID)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -191,12 +191,12 @@ func Test_SlackContext_SetProjectID(t *testing.T) {
 			expectedProjectID: uuid.New().String(),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetProjectID(ctx, tt.expectedProjectID)
+			ctx = SetProjectID(ctx, tc.expectedProjectID)
 			actualProjectID := ctx.Value(contextKeyProjectID).(string)
-			require.Equal(t, tt.expectedProjectID, actualProjectID)
+			require.Equal(t, tc.expectedProjectID, actualProjectID)
 		})
 	}
 }
@@ -215,13 +215,13 @@ func Test_SlackContext_SessionID(t *testing.T) {
 			expectedError:     slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Session ID could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeySessionID, tt.expectedSessionID)
+			ctx = context.WithValue(ctx, contextKeySessionID, tc.expectedSessionID)
 			actualSessionID, actualError := SessionID(ctx)
-			require.Equal(t, tt.expectedSessionID, actualSessionID)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedSessionID, actualSessionID)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -234,12 +234,12 @@ func Test_SlackContext_SetSessionID(t *testing.T) {
 			expectedSessionID: uuid.New().String(),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetSessionID(ctx, tt.expectedSessionID)
+			ctx = SetSessionID(ctx, tc.expectedSessionID)
 			actualSessionID := ctx.Value(contextKeySessionID).(string)
-			require.Equal(t, tt.expectedSessionID, actualSessionID)
+			require.Equal(t, tc.expectedSessionID, actualSessionID)
 		})
 	}
 }
@@ -258,13 +258,13 @@ func Test_SlackContext_SystemID(t *testing.T) {
 			expectedError:    slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for System ID could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeySystemID, tt.expectedSystemID)
+			ctx = context.WithValue(ctx, contextKeySystemID, tc.expectedSystemID)
 			actualSystemID, actualError := SystemID(ctx)
-			require.Equal(t, tt.expectedSystemID, actualSystemID)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedSystemID, actualSystemID)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -277,12 +277,12 @@ func Test_SlackContext_SetSystemID(t *testing.T) {
 			expectedSystemID: uuid.New().String(),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetSystemID(ctx, tt.expectedSystemID)
+			ctx = SetSystemID(ctx, tc.expectedSystemID)
 			actualSystemID := ctx.Value(contextKeySystemID).(string)
-			require.Equal(t, tt.expectedSystemID, actualSystemID)
+			require.Equal(t, tc.expectedSystemID, actualSystemID)
 		})
 	}
 }
@@ -301,13 +301,13 @@ func Test_SlackContext_Version(t *testing.T) {
 			expectedError:   slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Version could not be found"),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyVersion, tt.expectedVersion)
+			ctx = context.WithValue(ctx, contextKeyVersion, tc.expectedVersion)
 			actualVersion, actualError := Version(ctx)
-			require.Equal(t, tt.expectedVersion, actualVersion)
-			require.Equal(t, tt.expectedError, actualError)
+			require.Equal(t, tc.expectedVersion, actualVersion)
+			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -320,12 +320,12 @@ func Test_SlackContext_SetVersion(t *testing.T) {
 			expectedVersion: "v1.2.3",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := t.Context()
-			ctx = SetVersion(ctx, tt.expectedVersion)
+			ctx = SetVersion(ctx, tc.expectedVersion)
 			actualVersion := ctx.Value(contextKeyVersion).(string)
-			require.Equal(t, tt.expectedVersion, actualVersion)
+			require.Equal(t, tc.expectedVersion, actualVersion)
 		})
 	}
 }

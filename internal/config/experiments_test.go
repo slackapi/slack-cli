@@ -112,7 +112,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		}
 
 		// set via config.json
-		for name, tt := range tableTests {
+		for name, tc := range tableTests {
 			t.Run(name, func(t *testing.T) {
 				// Setup
 				ctx, fs, _, config, pathToConfigJSON, teardown := setup(t)
@@ -120,24 +120,24 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 				mockOutput, mockPrintDebug := setupMockPrintDebug()
 
 				// Write contents via config.json
-				jsonContents := []byte(fmt.Sprintf("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[\"%s\"]}", tt.experiment))
+				jsonContents := []byte(fmt.Sprintf("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[\"%s\"]}", tc.experiment))
 				_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 
 				config.LoadExperiments(ctx, mockPrintDebug)
-				if !tt.expectedRes {
+				if !tc.expectedRes {
 					assert.Contains(t, mockOutput.String(),
-						fmt.Sprintf("invalid experiment found: %s", tt.experiment))
+						fmt.Sprintf("invalid experiment found: %s", tc.experiment))
 				} else {
-					isActive := config.WithExperimentOn(experiment.Experiment(tt.experiment))
-					assert.Equal(t, tt.expectedRes, isActive)
+					isActive := config.WithExperimentOn(experiment.Experiment(tc.experiment))
+					assert.Equal(t, tc.expectedRes, isActive)
 					assert.Contains(t, mockOutput.String(),
-						fmt.Sprintf("active system experiments: [%s]", tt.experiment))
+						fmt.Sprintf("active system experiments: [%s]", tc.experiment))
 				}
 			})
 		}
 
 		// set via flag
-		for name, tt := range tableTests {
+		for name, tc := range tableTests {
 			t.Run(name, func(t *testing.T) {
 				// Setup
 				ctx, _, _, config, _, teardown := setup(t)
@@ -145,18 +145,18 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 				mockOutput, mockPrintDebug := setupMockPrintDebug()
 
 				// Add environment variables via experiment flag
-				config.ExperimentsFlag = []string{tt.experiment}
+				config.ExperimentsFlag = []string{tc.experiment}
 
 				// look for a match which is invalid format
 				config.LoadExperiments(ctx, mockPrintDebug)
-				if !tt.expectedRes {
+				if !tc.expectedRes {
 					assert.Contains(t, mockOutput.String(),
-						fmt.Sprintf("invalid experiment found: %s", tt.experiment))
+						fmt.Sprintf("invalid experiment found: %s", tc.experiment))
 				} else {
-					isActive := config.WithExperimentOn(experiment.Experiment(tt.experiment))
-					assert.Equal(t, tt.expectedRes, isActive)
+					isActive := config.WithExperimentOn(experiment.Experiment(tc.experiment))
+					assert.Equal(t, tc.expectedRes, isActive)
 					assert.Contains(t, mockOutput.String(),
-						fmt.Sprintf("active flag experiments: [%s]", tt.experiment))
+						fmt.Sprintf("active flag experiments: [%s]", tc.experiment))
 				}
 			})
 		}

@@ -96,29 +96,29 @@ func TestClient_AppsDatastorePut(t *testing.T) {
 			errMessage:       "datastore_error",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appDatastorePutMethod,
-				Response:       tt.httpResponseJSON,
-				StatusCode:     tt.statusCode,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
 			})
 			defer teardown()
-			got, err := c.AppsDatastorePut(ctx, "shhh", tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.AppsDatastorePut() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := c.AppsDatastorePut(ctx, "shhh", tc.args.request)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Client.AppsDatastorePut() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"Client.AppsDatastorePut() error contains invalid message",
 				)
 			}
-			require.Equal(t, tt.want, got, "Client.AppsDatastorePut() result was unexpected")
+			require.Equal(t, tc.want, got, "Client.AppsDatastorePut() result was unexpected")
 		})
 	}
 }
@@ -196,29 +196,29 @@ func TestClient_AppsDatastoreUpdate(t *testing.T) {
 			errMessage:       "datastore_error",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appDatastoreUpdateMethod,
-				Response:       tt.httpResponseJSON,
-				StatusCode:     tt.statusCode,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
 			})
 			defer teardown()
-			got, err := c.AppsDatastoreUpdate(ctx, "shhh", tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.AppsDatastoreUpdate() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := c.AppsDatastoreUpdate(ctx, "shhh", tc.args.request)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Client.AppsDatastoreUpdate() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"Client.AppsDatastoreUpdate() error contains invalid message",
 				)
 			}
-			require.Equal(t, tt.want, got, "Client.AppsDatastoreUpdate() result was unexpected")
+			require.Equal(t, tc.want, got, "Client.AppsDatastoreUpdate() result was unexpected")
 		})
 	}
 }
@@ -284,29 +284,29 @@ func TestClient_AppsDatastoreQuery(t *testing.T) {
 			wantErr:          true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appDatastoreQueryMethod,
-				Response:       tt.httpResponseJSON,
-				StatusCode:     tt.statusCode,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
 			})
 			defer teardown()
-			got, err := c.AppsDatastoreQuery(ctx, "shhh", tt.args.query)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.AppsDatastoreQuery() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := c.AppsDatastoreQuery(ctx, "shhh", tc.args.query)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Client.AppsDatastoreQuery() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"Client.AppsDatastoreQuery() error contains invalid message",
 				)
 			}
-			require.Equal(t, tt.want, got, "Client.AppsDatastoreQuery() result was unexpected")
+			require.Equal(t, tc.want, got, "Client.AppsDatastoreQuery() result was unexpected")
 		})
 	}
 }
@@ -373,29 +373,29 @@ func TestClient_AppsDatastoreDelete(t *testing.T) {
 			wantErr:          true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appDatastoreDeleteMethod,
-				Response:       tt.httpResponseJSON,
-				StatusCode:     tt.statusCode,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
 			})
 			defer teardown()
-			got, err := c.AppsDatastoreDelete(ctx, "shhh", tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.AppsDatastoreDelete() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := c.AppsDatastoreDelete(ctx, "shhh", tc.args.request)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Client.AppsDatastoreDelete() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"Client.AppsDatastorePut() error contains invalid message",
 				)
 			}
-			require.Equal(t, tt.want, got, "Client.AppsDatastoreDelete() result was unexpected")
+			require.Equal(t, tc.want, got, "Client.AppsDatastoreDelete() result was unexpected")
 		})
 	}
 }
@@ -464,29 +464,29 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 			wantErr:          true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			c, teardown := NewFakeClient(t, FakeClientParams{
 				ExpectedMethod: appDatastoreGetMethod,
-				Response:       tt.httpResponseJSON,
-				StatusCode:     tt.statusCode,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
 			})
 			defer teardown()
-			got, err := c.AppsDatastoreGet(ctx, "shhh", tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.AppsDatastoreGet() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := c.AppsDatastoreGet(ctx, "shhh", tc.args.request)
+			if (err != nil) != tc.wantErr {
+				t.Errorf("Client.AppsDatastoreGet() error = %v, wantErr %v", err, tc.wantErr)
 				return
 			}
-			if tt.wantErr {
+			if tc.wantErr {
 				require.Contains(
 					t,
 					err.Error(),
-					tt.errMessage,
+					tc.errMessage,
 					"Client.AppsDatastorePut() error contains invalid message",
 				)
 			}
-			require.Equal(t, tt.want, got, "Client.AppsDatastoreGet() result was unexpected")
+			require.Equal(t, tc.want, got, "Client.AppsDatastoreGet() result was unexpected")
 		})
 	}
 }

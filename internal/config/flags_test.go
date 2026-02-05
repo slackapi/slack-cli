@@ -104,7 +104,7 @@ func TestDeprecatedFlagSubstitutions(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
@@ -114,18 +114,18 @@ func TestDeprecatedFlagSubstitutions(t *testing.T) {
 			stderr := bytes.Buffer{}
 			cmd.SetOut(&stdout)
 			cmd.SetErr(&stderr)
-			tt.prepareFlags(config)
+			tc.prepareFlags(config)
 			err := config.DeprecatedFlagSubstitutions(cmd)
-			if tt.expectedError == nil {
+			if tc.expectedError == nil {
 				assert.NoError(t, err)
 			} else {
-				assert.Equal(t, tt.expectedError.Code, slackerror.ToSlackError(err).Code)
+				assert.Equal(t, tc.expectedError.Code, slackerror.ToSlackError(err).Code)
 			}
 			assert.Equal(t, stdout.String(), "")
-			for _, line := range tt.expectedWarnings {
+			for _, line := range tc.expectedWarnings {
 				assert.Contains(t, stderr.String(), line)
 			}
-			tt.assertSubstitutions(config)
+			tc.assertSubstitutions(config)
 		})
 	}
 }

@@ -28,7 +28,7 @@ import (
 func TestDatastoreBulkPutArguments(t *testing.T) {
 	mockAppID := "A0123456"
 
-	for name, tt := range map[string]struct {
+	for name, tc := range map[string]struct {
 		Expression string
 		Query      types.AppDatastoreBulkPut
 		Results    types.AppDatastoreBulkPutResult
@@ -70,13 +70,13 @@ func TestDatastoreBulkPutArguments(t *testing.T) {
 			log := logger.Logger{
 				Data: map[string]interface{}{},
 			}
-			clientsMock.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, tt.Query).
-				Return(tt.Results, nil)
+			clientsMock.API.On("AppsDatastoreBulkPut", mock.Anything, mock.Anything, tc.Query).
+				Return(tc.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			event, err := BulkPut(ctx, client, &log, tt.Query)
+			event, err := BulkPut(ctx, client, &log, tc.Query)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tt.Results, event.Data["bulkPutResult"])
+				assert.Equal(t, tc.Results, event.Data["bulkPutResult"])
 			}
 		})
 	}

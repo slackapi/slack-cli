@@ -101,12 +101,12 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 			expectedRepository: "slack-samples/deno-blank-template",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			sampler := create.NewMockSampler()
 			w := httptest.NewRecorder()
-			_, _ = io.WriteString(w, tt.mockSlackHTTPResponse)
+			_, _ = io.WriteString(w, tc.mockSlackHTTPResponse)
 			res := w.Result()
 			sampler.On("Do", mock.Anything).Return(res, nil)
 			clientsMock := shared.NewClientsMock()
@@ -128,15 +128,15 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 				iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("template"),
 				}),
-			).Return(tt.mockSelection, nil)
+			).Return(tc.mockSelection, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Execute test
 			samples, err := create.GetSampleRepos(sampler)
 			require.NoError(t, err)
 			repoName, err := promptSampleSelection(ctx, clients, samples)
-			assert.Equal(t, tt.expectedError, err)
-			assert.Equal(t, tt.expectedRepository, repoName)
+			assert.Equal(t, tc.expectedError, err)
+			assert.Equal(t, tc.expectedRepository, repoName)
 		})
 	}
 }
@@ -159,10 +159,10 @@ func TestSamples_FilterRepos(t *testing.T) {
 			expectedRepos: 4,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			filteredRepos := filterRepos(mockGitHubRepos, tt.language)
-			assert.Equal(t, tt.expectedRepos, len(filteredRepos))
+			filteredRepos := filterRepos(mockGitHubRepos, tc.language)
+			assert.Equal(t, tc.expectedRepos, len(filteredRepos))
 		})
 	}
 }

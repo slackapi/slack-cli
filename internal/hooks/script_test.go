@@ -44,9 +44,9 @@ func Test_HookScript_IsAvailable(t *testing.T) {
 			expectedIsAvailable: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.hookScript.IsAvailable(), tt.expectedIsAvailable)
+			require.Equal(t, tc.hookScript.IsAvailable(), tc.expectedIsAvailable)
 		})
 	}
 }
@@ -68,12 +68,12 @@ func Test_HookScript_UnmarshalJSON(t *testing.T) {
 			expectedHookScripts: []HookScript{{Command: ""}},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			var hookScripts []HookScript
-			err := json.Unmarshal([]byte(tt.blob), &hookScripts)
-			require.IsType(t, err, tt.expectedErrorType)
-			require.Equal(t, tt.expectedHookScripts, hookScripts)
+			err := json.Unmarshal([]byte(tc.blob), &hookScripts)
+			require.IsType(t, err, tc.expectedErrorType)
+			require.Equal(t, tc.expectedHookScripts, hookScripts)
 		})
 	}
 }
@@ -95,11 +95,11 @@ func Test_HookScript_Get(t *testing.T) {
 			expectedCommand: "",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			cmd, err := tt.hookScript.Get()
-			require.Equal(t, err, tt.expectedError)
-			require.Equal(t, cmd, tt.expectedCommand)
+			cmd, err := tc.hookScript.Get()
+			require.Equal(t, err, tc.expectedError)
+			require.Equal(t, cmd, tc.expectedCommand)
 		})
 	}
 }

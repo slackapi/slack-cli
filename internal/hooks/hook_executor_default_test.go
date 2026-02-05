@@ -144,7 +144,7 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 			expectedResponse: "start output line 2",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
@@ -155,12 +155,12 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 			hookExecutor := &HookExecutorDefaultProtocol{
 				IO: ios,
 			}
-			if tt.handler != nil {
-				tt.handler(t, ctx, hookExecutor, tt.opts)
+			if tc.handler != nil {
+				tc.handler(t, ctx, hookExecutor, tc.opts)
 			} else {
-				str, err := hookExecutor.Execute(ctx, tt.opts)
-				assert.Contains(t, str, tt.expectedResponse)
-				assert.Equal(t, tt.expectedError, err)
+				str, err := hookExecutor.Execute(ctx, tc.opts)
+				assert.Contains(t, str, tc.expectedResponse)
+				assert.Equal(t, tc.expectedError, err)
 			}
 		})
 	}

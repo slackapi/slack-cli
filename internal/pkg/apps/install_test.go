@@ -508,11 +508,11 @@ func TestInstall(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.IO.On("IsTTY").Return(tt.mockIsTTY)
+			clientsMock.IO.On("IsTTY").Return(tc.mockIsTTY)
 			clientsMock.AddDefaultMocks()
 			clientsMock.API.On(
 				"CreateApp",
@@ -521,8 +521,8 @@ func TestInstall(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAPICreate,
-				tt.mockAPICreateError,
+				tc.mockAPICreate,
+				tc.mockAPICreateError,
 			)
 			clientsMock.API.On(
 				"DeveloperAppInstall",
@@ -535,9 +535,9 @@ func TestInstall(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAPIInstall,
-				tt.mockAPIInstallState,
-				tt.mockAPIInstallError,
+				tc.mockAPIInstall,
+				tc.mockAPIInstallState,
+				tc.mockAPIInstallError,
 			)
 			clientsMock.API.On(
 				"ExportAppManifest",
@@ -553,7 +553,7 @@ func TestInstall(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
-				tt.mockApp.AppID,
+				tc.mockApp.AppID,
 			).Return(
 				api.ValidateAppManifestResult{},
 				nil,
@@ -567,37 +567,37 @@ func TestInstall(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAPIUpdate,
-				tt.mockAPIUpdateError,
+				tc.mockAPIUpdate,
+				tc.mockAPIUpdateError,
 			)
 			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAuthSession,
+				tc.mockAuthSession,
 				nil,
 			)
-			if tt.mockIsTTY {
+			if tc.mockIsTTY {
 				clientsMock.IO.On(
 					"ConfirmPrompt",
 					mock.Anything,
 					"Update app settings with changes to the local manifest?",
 					false,
 				).Return(
-					tt.mockConfirmPrompt,
+					tc.mockConfirmPrompt,
 					nil,
 				)
 			}
 			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifestAppLocal, nil)
-			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifestAppRemote, nil)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifestAppLocal, nil)
+			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifestAppRemote, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
-			if tt.mockBoltExperiment {
+			if tc.mockBoltExperiment {
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
-				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tt.mockManifestSource, nil)
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
 			}
 			mockProjectCache := cache.NewCacheMock()
 			mockProjectCache.On(
@@ -605,7 +605,7 @@ func TestInstall(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestHashInitial,
+				tc.mockManifestHashInitial,
 				nil,
 			)
 			mockProjectCache.On(
@@ -613,7 +613,7 @@ func TestInstall(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestHashUpdated,
+				tc.mockManifestHashUpdated,
 				nil,
 			)
 			mockProjectCache.On(
@@ -631,24 +631,24 @@ func TestInstall(t *testing.T) {
 				ctx,
 				clients,
 				log,
-				tt.mockAuth,
+				tc.mockAuth,
 				false,
-				tt.mockApp,
-				tt.mockOrgGrantWorkspaceID,
+				tc.mockApp,
+				tc.mockOrgGrantWorkspaceID,
 			)
 
-			if tt.expectedError != nil {
+			if tc.expectedError != nil {
 				assert.Equal(
 					t,
-					slackerror.ToSlackError(tt.expectedError).Code,
+					slackerror.ToSlackError(tc.expectedError).Code,
 					slackerror.ToSlackError(err).Code,
 				)
 			} else {
 				require.NoError(t, err)
 			}
-			assert.Equal(t, tt.expectedInstallState, state)
-			assert.Equal(t, tt.expectedApp, app)
-			if tt.expectedUpdate {
+			assert.Equal(t, tc.expectedInstallState, state)
+			assert.Equal(t, tc.expectedApp, app)
+			if tc.expectedUpdate {
 				clientsMock.API.AssertCalled(
 					t,
 					"UpdateApp",
@@ -660,7 +660,7 @@ func TestInstall(t *testing.T) {
 					mock.Anything,
 				)
 				clientsMock.API.AssertNotCalled(t, "CreateApp")
-			} else if tt.expectedCreate {
+			} else if tc.expectedCreate {
 				clientsMock.API.AssertCalled(
 					t,
 					"CreateApp",
@@ -675,12 +675,12 @@ func TestInstall(t *testing.T) {
 				args := call.Arguments
 				switch call.Method {
 				case "CreateApp":
-					assert.Equal(t, tt.mockAuth.Token, args.Get(1))
-					assert.Equal(t, tt.expectedManifest, args.Get(2))
+					assert.Equal(t, tc.mockAuth.Token, args.Get(1))
+					assert.Equal(t, tc.expectedManifest, args.Get(2))
 				case "UpdateApp":
-					assert.Equal(t, tt.mockAuth.Token, args.Get(1))
-					assert.Equal(t, tt.mockApp.AppID, args.Get(2))
-					assert.Equal(t, tt.expectedManifest, args.Get(3))
+					assert.Equal(t, tc.mockAuth.Token, args.Get(1))
+					assert.Equal(t, tc.mockApp.AppID, args.Get(2))
+					assert.Equal(t, tc.expectedManifest, args.Get(3))
 				}
 			}
 		})
@@ -1332,11 +1332,11 @@ func TestInstallLocalApp(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.IO.On("IsTTY").Return(tt.mockIsTTY)
+			clientsMock.IO.On("IsTTY").Return(tc.mockIsTTY)
 			clientsMock.AddDefaultMocks()
 			clientsMock.API.On(
 				"CreateApp",
@@ -1345,8 +1345,8 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAPICreate,
-				tt.mockAPICreateError,
+				tc.mockAPICreate,
+				tc.mockAPICreateError,
 			)
 			clientsMock.API.On(
 				"DeveloperAppInstall",
@@ -1359,9 +1359,9 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAPIInstall,
-				tt.mockAPIInstallState,
-				tt.mockAPIInstallError,
+				tc.mockAPIInstall,
+				tc.mockAPIInstallState,
+				tc.mockAPIInstallError,
 			)
 			clientsMock.API.On(
 				"ExportAppManifest",
@@ -1369,7 +1369,7 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				api.ExportAppResult{Manifest: tt.mockManifest},
+				api.ExportAppResult{Manifest: tc.mockManifest},
 				nil,
 			)
 			clientsMock.API.On(
@@ -1377,7 +1377,7 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
-				tt.mockApp.AppID,
+				tc.mockApp.AppID,
 			).Return(
 				api.ValidateAppManifestResult{},
 				nil,
@@ -1391,39 +1391,39 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAPIUpdate,
-				tt.mockAPIUpdateError,
+				tc.mockAPIUpdate,
+				tc.mockAPIUpdateError,
 			)
 			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockAuthSession,
+				tc.mockAuthSession,
 				nil,
 			)
-			if tt.mockIsTTY {
+			if tc.mockIsTTY {
 				clientsMock.IO.On(
 					"ConfirmPrompt",
 					mock.Anything,
 					"Update app settings with changes to the local manifest?",
 					false,
 				).Return(
-					tt.mockConfirmPrompt,
+					tc.mockConfirmPrompt,
 					nil,
 				)
 			}
 			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
-			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.mockManifest, nil)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
+			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
-			if tt.mockBoltExperiment {
+			if tc.mockBoltExperiment {
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
-				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tt.mockManifestSource, nil)
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
 			}
-			if tt.mockBoltInstallExperiment {
+			if tc.mockBoltInstallExperiment {
 				clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, string(experiment.BoltInstall))
 				clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 			}
@@ -1433,7 +1433,7 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestHashInitial,
+				tc.mockManifestHashInitial,
 				nil,
 			)
 			mockProjectCache.On(
@@ -1441,7 +1441,7 @@ func TestInstallLocalApp(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.mockManifestHashUpdated,
+				tc.mockManifestHashUpdated,
 				nil,
 			)
 			mockProjectCache.On(
@@ -1458,16 +1458,16 @@ func TestInstallLocalApp(t *testing.T) {
 			app, _, state, err := InstallLocalApp(
 				ctx,
 				clients,
-				tt.mockOrgGrantWorkspaceID,
+				tc.mockOrgGrantWorkspaceID,
 				log,
-				tt.mockAuth,
-				tt.mockApp,
+				tc.mockAuth,
+				tc.mockApp,
 			)
 
 			require.NoError(t, err)
-			assert.Equal(t, tt.expectedInstallState, state)
-			assert.Equal(t, tt.expectedApp, app)
-			if tt.expectedUpdate {
+			assert.Equal(t, tc.expectedInstallState, state)
+			assert.Equal(t, tc.expectedApp, app)
+			if tc.expectedUpdate {
 				clientsMock.API.AssertCalled(
 					t,
 					"UpdateApp",
@@ -1479,7 +1479,7 @@ func TestInstallLocalApp(t *testing.T) {
 					mock.Anything,
 				)
 				clientsMock.API.AssertNotCalled(t, "CreateApp")
-			} else if tt.expectedCreate {
+			} else if tc.expectedCreate {
 				clientsMock.API.AssertCalled(
 					t,
 					"CreateApp",
@@ -1494,12 +1494,12 @@ func TestInstallLocalApp(t *testing.T) {
 				args := call.Arguments
 				switch call.Method {
 				case "CreateApp":
-					assert.Equal(t, tt.mockAuth.Token, args.Get(1))
-					assert.Equal(t, tt.expectedManifest, args.Get(2))
+					assert.Equal(t, tc.mockAuth.Token, args.Get(1))
+					assert.Equal(t, tc.expectedManifest, args.Get(2))
 				case "UpdateApp":
-					assert.Equal(t, tt.mockAuth.Token, args.Get(1))
-					assert.Equal(t, tt.mockApp.AppID, args.Get(2))
-					assert.Equal(t, tt.expectedManifest, args.Get(3))
+					assert.Equal(t, tc.mockAuth.Token, args.Get(1))
+					assert.Equal(t, tc.mockApp.AppID, args.Get(2))
+					assert.Equal(t, tc.expectedManifest, args.Get(3))
 				}
 			}
 		})
@@ -1583,19 +1583,19 @@ func TestValidateManifestForInstall(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			tt.setup(clientsMock)
-			clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, tt.app.AppID).
-				Return(tt.result, tt.err)
+			tc.setup(clientsMock)
+			clientsMock.API.On("ValidateAppManifest", mock.Anything, mock.Anything, mock.Anything, tc.app.AppID).
+				Return(tc.result, tc.err)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			err := validateManifestForInstall(ctx, clients, "xoxe.xoxp-1-token", tt.app, tt.manifest)
+			err := validateManifestForInstall(ctx, clients, "xoxe.xoxp-1-token", tc.app, tc.manifest)
 			assert.NoError(t, err)
 
-			tt.check(clientsMock)
+			tc.check(clientsMock)
 		})
 	}
 }
@@ -1656,33 +1656,33 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			expectedOutput:   "The bot token differs from the set SLACK_BOT_TOKEN environment variable",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.AddDefaultMocks()
-			if tt.envAppToken != "" {
-				clientsMock.Os.On("Getenv", "SLACK_APP_TOKEN").Return(tt.envAppToken)
+			if tc.envAppToken != "" {
+				clientsMock.Os.On("Getenv", "SLACK_APP_TOKEN").Return(tc.envAppToken)
 			}
-			if tt.envBotToken != "" {
+			if tc.envBotToken != "" {
 				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Unset()
-				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Return(tt.envBotToken)
+				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Return(tc.envBotToken)
 			}
 			clientsMock.Os.On("LookupEnv", "SLACK_APP_TOKEN").
-				Return(tt.envAppToken, tt.envAppToken != "")
+				Return(tc.envAppToken, tc.envAppToken != "")
 			clientsMock.Os.On("LookupEnv", "SLACK_BOT_TOKEN").
-				Return(tt.envBotToken, tt.envBotToken != "")
+				Return(tc.envBotToken, tc.envBotToken != "")
 			clientsMock.Os.On("Setenv", "SLACK_APP_TOKEN", mock.Anything).Return(nil)
 			clientsMock.Os.On("Setenv", "SLACK_BOT_TOKEN", mock.Anything).Return(nil)
 			output := &bytes.Buffer{}
 			clientsMock.IO.Stdout.SetOutput(output)
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			err := setAppEnvironmentTokens(ctx, clients, tt.result)
+			err := setAppEnvironmentTokens(ctx, clients, tc.result)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedAppToken, clients.Os.Getenv("SLACK_APP_TOKEN"))
-			assert.Equal(t, tt.expectedBotToken, clients.Os.Getenv("SLACK_BOT_TOKEN"))
-			assert.Contains(t, output.String(), tt.expectedOutput)
+			assert.Equal(t, tc.expectedAppToken, clients.Os.Getenv("SLACK_APP_TOKEN"))
+			assert.Equal(t, tc.expectedBotToken, clients.Os.Getenv("SLACK_BOT_TOKEN"))
+			assert.Contains(t, output.String(), tc.expectedOutput)
 		})
 	}
 }

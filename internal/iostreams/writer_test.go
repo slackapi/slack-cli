@@ -91,18 +91,18 @@ func Test_BoundariedWriter(t *testing.T) {
 			expectedBuff: "bold",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			for _, line := range tt.writes {
-				n, err := tt.bw.Write([]byte(line))
+			for _, line := range tc.writes {
+				n, err := tc.bw.Write([]byte(line))
 				require.NoError(t, err)
 				require.Equal(t, len(line), n)
 			}
-			if tt.bw.Buff != nil {
-				assert.Equal(t, tt.expectedBuff, tt.bw.Buff.(*bytes.Buffer).String())
+			if tc.bw.Buff != nil {
+				assert.Equal(t, tc.expectedBuff, tc.bw.Buff.(*bytes.Buffer).String())
 			}
-			if tt.bw.Stream != nil {
-				assert.Equal(t, strings.Join(tt.writes, ""), tt.bw.Stream.(*bytes.Buffer).String())
+			if tc.bw.Stream != nil {
+				assert.Equal(t, strings.Join(tc.writes, ""), tc.bw.Stream.(*bytes.Buffer).String())
 			}
 		})
 	}
@@ -142,18 +142,18 @@ func Test_BufferedWriter(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			for _, line := range tt.writes {
-				n, err := tt.bw.Write([]byte(line))
+			for _, line := range tc.writes {
+				n, err := tc.bw.Write([]byte(line))
 				require.NoError(t, err)
 				require.Equal(t, len(line), n)
 			}
-			if tt.bw.Buff != nil {
-				assert.Equal(t, strings.Join(tt.writes, ""), tt.bw.Buff.(*bytes.Buffer).String())
+			if tc.bw.Buff != nil {
+				assert.Equal(t, strings.Join(tc.writes, ""), tc.bw.Buff.(*bytes.Buffer).String())
 			}
-			if tt.bw.Stream != nil {
-				assert.Equal(t, strings.Join(tt.writes, ""), tt.bw.Stream.(*bytes.Buffer).String())
+			if tc.bw.Stream != nil {
+				assert.Equal(t, strings.Join(tc.writes, ""), tc.bw.Stream.(*bytes.Buffer).String())
 			}
 		})
 	}
@@ -185,15 +185,15 @@ func Test_FilteredWriter(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			for _, line := range tt.writes {
-				n, err := tt.fw.Write([]byte(line))
+			for _, line := range tc.writes {
+				n, err := tc.fw.Write([]byte(line))
 				require.NoError(t, err)
 				require.Equal(t, len(line), n)
 			}
-			if tt.fw.Stream != nil {
-				assert.Equal(t, tt.expectedStream, tt.fw.Stream.(*bytes.Buffer).String())
+			if tc.fw.Stream != nil {
+				assert.Equal(t, tc.expectedStream, tc.fw.Stream.(*bytes.Buffer).String())
 			}
 		})
 	}
@@ -217,7 +217,7 @@ func Test_WriteIndent(t *testing.T) {
 			expected: "   nice\n",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
@@ -225,10 +225,10 @@ func Test_WriteIndent(t *testing.T) {
 			io := NewIOStreams(config, fsMock, osMock)
 			buff := &bytes.Buffer{}
 			w := io.WriteIndent(buff)
-			n, err := w.Write([]byte(tt.input))
+			n, err := w.Write([]byte(tc.input))
 			require.NoError(t, err)
-			require.Equal(t, len(tt.input), n)
-			assert.Equal(t, tt.expected, buff.String())
+			require.Equal(t, len(tc.input), n)
+			assert.Equal(t, tc.expected, buff.String())
 		})
 	}
 }
@@ -254,22 +254,22 @@ func Test_WriteSecondary(t *testing.T) {
 			formatted: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			config := config.NewConfig(fsMock, osMock)
 			io := NewIOStreams(config, fsMock, osMock)
 			buff := &bytes.Buffer{}
-			style.ToggleStyles(tt.formatted)
+			style.ToggleStyles(tc.formatted)
 			defer func() {
 				style.ToggleStyles(false)
 			}()
 			w := io.WriteSecondary(buff)
-			n, err := w.Write([]byte(tt.input))
+			n, err := w.Write([]byte(tc.input))
 			require.NoError(t, err)
-			require.Equal(t, len(tt.input), n)
-			assert.Equal(t, tt.expected, buff.String())
+			require.Equal(t, len(tc.input), n)
+			assert.Equal(t, tc.expected, buff.String())
 		})
 	}
 }

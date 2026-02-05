@@ -22,24 +22,21 @@ import (
 )
 
 func Test_SlackAuth_AuthLevel(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		auth              *SlackAuth
 		expectedAuthLevel string
 	}{
-		{
-			name:              "Workspace-level Auth",
+		"Workspace-level Auth": {
 			auth:              &SlackAuth{IsEnterpriseInstall: false},
 			expectedAuthLevel: AuthLevelWorkspace,
 		},
-		{
-			name:              "Enterprise-level Auth",
+		"Enterprise-level Auth": {
 			auth:              &SlackAuth{IsEnterpriseInstall: true},
 			expectedAuthLevel: AuthLevelEnterprise,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			require.Equal(t, tc.auth.AuthLevel(), tc.expectedAuthLevel)
 		})
 	}
@@ -50,44 +47,37 @@ func Test_SlackAuth_ShouldRotateToken(t *testing.T) {
 	var refreshToken = "fakeRefreshToken"
 	var timeNow = int(time.Now().Unix())
 
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		input    *SlackAuth
 		expected bool
 	}{
-		{
-			name:     "nil case",
+		"nil case": {
 			input:    nil,
 			expected: false,
 		},
-		{
-			name:     "token but no refresh token",
+		"token but no refresh token": {
 			input:    &SlackAuth{Token: token},
 			expected: false,
 		},
-		{
-			name:     "token + refresh token present but expiration time is absent",
+		"token + refresh token present but expiration time is absent": {
 			input:    &SlackAuth{Token: token, RefreshToken: refreshToken},
 			expected: false,
 		},
-		{
-			name:     "token + refresh token + expiration present - but token expires in less than 5min",
+		"token + refresh token + expiration present - but token expires in less than 5min": {
 			input:    &SlackAuth{Token: token, RefreshToken: refreshToken, ExpiresAt: timeNow + 290},
 			expected: true,
 		},
-		{
-			name:     "token + refresh token + expiration present - and token does not expire in less than 5min",
+		"token + refresh token + expiration present - and token does not expire in less than 5min": {
 			input:    &SlackAuth{Token: token, RefreshToken: refreshToken, ExpiresAt: timeNow + 310},
 			expected: false,
 		},
-		{
-			name:     "token + refresh token + expiration present - and token expires in exactly 5min",
+		"token + refresh token + expiration present - and token expires in exactly 5min": {
 			input:    &SlackAuth{Token: token, RefreshToken: refreshToken, ExpiresAt: timeNow + 300},
 			expected: true,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			require.Equal(t, tc.expected, tc.input.ShouldRotateToken())
 		})
 	}
@@ -97,34 +87,29 @@ func Test_SlackAuth_TokenIsExpired(t *testing.T) {
 	var token = "fakeToken"
 	var timeNow = int(time.Now().Unix())
 
-	tests := []struct {
-		name     string
+	tests := map[string]struct {
 		input    *SlackAuth
 		expected bool
 	}{
-		{
-			name:     "nil case",
+		"nil case": {
 			input:    nil,
 			expected: false,
 		},
-		{
-			name:     "token but no expiration",
+		"token but no expiration": {
 			input:    &SlackAuth{Token: token},
 			expected: false,
 		},
-		{
-			name:     "token + expiration present - but token is expired",
+		"token + expiration present - but token is expired": {
 			input:    &SlackAuth{Token: token, ExpiresAt: timeNow - 1},
 			expected: true,
 		},
-		{
-			name:     "token + expiration present - and token is not expired",
+		"token + expiration present - and token is not expired": {
 			input:    &SlackAuth{Token: token, ExpiresAt: timeNow + 1},
 			expected: false,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			require.Equal(t, tc.expected, tc.input.TokenIsExpired())
 		})
 	}

@@ -79,13 +79,13 @@ func Test_AuthWithToken(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			apic, teardown := api.NewFakeClient(t, api.FakeClientParams{
 				ExpectedMethod:  "auth.test",
-				ExpectedRequest: fmt.Sprintf("token=%s", tt.token),
-				Response:        tt.response,
+				ExpectedRequest: fmt.Sprintf("token=%s", tc.token),
+				Response:        tc.response,
 			})
 			defer teardown()
 			appc := app.NewClient(apic, config, fs, os)
@@ -96,15 +96,15 @@ func Test_AuthWithToken(t *testing.T) {
 			ioMock.AddDefaultMocks()
 			c := NewClient(apic, appc, config, ioMock, fs)
 
-			auth, err := c.AuthWithToken(ctx, tt.token)
+			auth, err := c.AuthWithToken(ctx, tc.token)
 			auth.LastUpdated = time.Time{} // ignore time for this test
 
-			if tt.err.Code != "" {
+			if tc.err.Code != "" {
 				assert.Error(t, err, slackerror.New(slackerror.ErrNotAuthed))
-				assert.Equal(t, tt.expected, auth)
+				assert.Equal(t, tc.expected, auth)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expected, auth)
+				assert.Equal(t, tc.expected, auth)
 			}
 		})
 	}
@@ -554,13 +554,13 @@ func Test_SetSelectedAuth(t *testing.T) {
 			expectedAPIURL:  fmt.Sprintf("https://%s/api/", mockAPIHost),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, authClient, osMock := setup(t)
-			authClient.SetSelectedAuth(ctx, tt.auth, authClient.config, osMock)
-			assert.Equal(t, authClient.config.TeamFlag, tt.auth.TeamID)
-			assert.Equal(t, authClient.config.APIHostResolved, tt.expectedAPIHost)
-			osMock.AssertCalled(t, "Setenv", "SLACK_API_URL", tt.expectedAPIURL)
+			authClient.SetSelectedAuth(ctx, tc.auth, authClient.config, osMock)
+			assert.Equal(t, authClient.config.TeamFlag, tc.auth.TeamID)
+			assert.Equal(t, authClient.config.APIHostResolved, tc.expectedAPIHost)
+			osMock.AssertCalled(t, "Setenv", "SLACK_API_URL", tc.expectedAPIURL)
 		})
 	}
 }
@@ -599,7 +599,7 @@ func Test_IsAPIHostSlackDev(t *testing.T) {
 			expected: true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
@@ -608,8 +608,8 @@ func Test_IsAPIHostSlackDev(t *testing.T) {
 			ioMock := iostreams.NewIOStreamsMock(config, fsMock, osMock)
 			ioMock.AddDefaultMocks()
 			authClient := NewClient(nil, nil, config, ioMock, fsMock)
-			actual := authClient.IsAPIHostSlackDev(tt.hostname)
-			assert.Equal(t, tt.expected, actual)
+			actual := authClient.IsAPIHostSlackDev(tc.hostname)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -651,7 +651,7 @@ func Test_FilterKnownAuthErrors(t *testing.T) {
 			unfiltered: slackerror.New(slackerror.ErrNotFound),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			os := slackdeps.NewOsMock()
@@ -661,9 +661,9 @@ func Test_FilterKnownAuthErrors(t *testing.T) {
 			io := iostreams.NewIOStreamsMock(config, fs, os)
 			io.AddDefaultMocks()
 			auth := NewClient(nil, nil, config, io, fs)
-			filtered, unfiltered := auth.FilterKnownAuthErrors(ctx, tt.err)
-			assert.Equal(t, tt.filtered, filtered)
-			assert.Equal(t, tt.unfiltered, unfiltered)
+			filtered, unfiltered := auth.FilterKnownAuthErrors(ctx, tc.err)
+			assert.Equal(t, tc.filtered, filtered)
+			assert.Equal(t, tc.unfiltered, unfiltered)
 		})
 	}
 }

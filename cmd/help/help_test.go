@@ -65,7 +65,7 @@ func TestHelpFunc(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Remove any enabled experiments during the test and restore afterward
 			var _EnabledExperiments = experiment.EnabledExperiments
@@ -78,12 +78,12 @@ func TestHelpFunc(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			clientsMock.Config.ExperimentsFlag = tt.experiments
+			clientsMock.Config.ExperimentsFlag = tc.experiments
 			rootCmd := &cobra.Command{
 				Use:     "root",
 				Aliases: []string{"su"},
 				Run:     func(cmd *cobra.Command, args []string) {},
-				Example: style.ExampleCommandsf(tt.exampleCommands),
+				Example: style.ExampleCommandsf(tc.exampleCommands),
 			}
 			subCommand := &cobra.Command{
 				Use:   "demo",
@@ -99,7 +99,7 @@ func TestHelpFunc(t *testing.T) {
 
 			helpFunc := HelpFunc(clients, map[string]string{})
 			helpFunc(rootCmd, []string{})
-			for _, expectedString := range tt.expectedOutput {
+			for _, expectedString := range tc.expectedOutput {
 				assert.Contains(t, clientsMock.GetStdoutOutput(), expectedString)
 			}
 		})

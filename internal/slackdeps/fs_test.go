@@ -29,13 +29,13 @@ func Test_NewFs(t *testing.T) {
 			expectedFsType: &afero.OsFs{},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			fs := NewFs()
 
 			// Assertions
-			assert.IsType(t, tt.expectedFsType, fs)
+			assert.IsType(t, tc.expectedFsType, fs)
 		})
 	}
 }

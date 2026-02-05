@@ -39,10 +39,10 @@ func Test_AddAPIMethod(t *testing.T) {
 			newEndpoint: "",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_ = tt.err.AddAPIMethod(tt.newEndpoint)
-			require.Equal(t, tt.newEndpoint, tt.err.APIEndpoint)
+			_ = tc.err.AddAPIMethod(tc.newEndpoint)
+			require.Equal(t, tc.newEndpoint, tc.err.APIEndpoint)
 		})
 	}
 }
@@ -61,10 +61,10 @@ func Test_AddDetail(t *testing.T) {
 			detail: ErrorDetail{Message: "detail"},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			e := tt.err.AddDetail(tt.detail)
-			require.Contains(t, e.Details, tt.detail)
+			e := tc.err.AddDetail(tc.detail)
+			require.Contains(t, e.Details, tc.detail)
 		})
 	}
 }
@@ -91,10 +91,10 @@ func Test_AppendRemediation(t *testing.T) {
 			expected:    "hello world",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := New("").WithRemediation("%s", tt.initialMsg).AppendRemediation(tt.msgToAppend)
-			require.Equal(t, tt.expected, err.Remediation)
+			err := New("").WithRemediation("%s", tc.initialMsg).AppendRemediation(tc.msgToAppend)
+			require.Equal(t, tc.expected, err.Remediation)
 		})
 	}
 }
@@ -118,16 +118,16 @@ func Test_JSONUnmarshalErrorTest(t *testing.T) {
 			err:  New(ErrAccessDenied),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := JSONUnmarshalError(tt.err, tt.data)
-			if tt.err == nil {
+			err := JSONUnmarshalError(tc.err, tc.data)
+			if tc.err == nil {
 				require.Nil(t, err)
 			} else {
 				require.Equal(t, ErrUnableToParseJSON, err.Code)
-				require.Contains(t, err.Error(), string(tt.data[:]))
+				require.Contains(t, err.Error(), string(tc.data[:]))
 
-				transformedErr := ToSlackError(tt.err)
+				transformedErr := ToSlackError(tc.err)
 				require.Contains(t, err.Error(), transformedErr.Code)
 				require.Contains(t, err.Error(), transformedErr.Message)
 				require.Contains(t, err.Error(), transformedErr.Remediation)
@@ -154,10 +154,10 @@ func Test_New(t *testing.T) {
 			expected:  ErrorCodeMap[ErrAccessDenied],
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := New(tt.msgOrCode)
-			require.Equal(t, tt.expected.Error(), err.Error())
+			err := New(tc.msgOrCode)
+			require.Equal(t, tc.expected.Error(), err.Error())
 		})
 	}
 }
@@ -203,15 +203,15 @@ func Test_NewAPIError(t *testing.T) {
 			expected:  *testErr.AddAPIMethod("fakeMethod").WithDetails(ErrorDetails{{Code: "c1", Message: "m1"}}),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := NewAPIError(tt.code, tt.description, tt.details, tt.apiMethod)
-			require.Equal(t, tt.expected.Code, err.Code)
-			require.Equal(t, tt.expected.Description, err.Description)
-			require.Equal(t, tt.expected.Message, err.Message)
-			require.Equal(t, tt.expected.Details, err.Details)
-			require.Equal(t, tt.expected.APIEndpoint, err.APIEndpoint)
-			require.Equal(t, tt.expected.Error(), err.Error())
+			err := NewAPIError(tc.code, tc.description, tc.details, tc.apiMethod)
+			require.Equal(t, tc.expected.Code, err.Code)
+			require.Equal(t, tc.expected.Description, err.Description)
+			require.Equal(t, tc.expected.Message, err.Message)
+			require.Equal(t, tc.expected.Details, err.Details)
+			require.Equal(t, tc.expected.APIEndpoint, err.APIEndpoint)
+			require.Equal(t, tc.expected.Error(), err.Error())
 		})
 	}
 }
@@ -243,18 +243,18 @@ func Test_Error(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			res := tt.err.Error()
+			res := tc.err.Error()
 
-			if tt.err == nil {
+			if tc.err == nil {
 				require.Empty(t, res, "When slack error is nil, the string should be empty")
 			} else {
-				require.Contains(t, res, tt.err.Code)
-				require.Contains(t, res, tt.err.Message)
-				require.Contains(t, res, tt.err.APIEndpoint)
-				require.Contains(t, res, tt.err.Remediation)
-				for _, d := range tt.err.Details {
+				require.Contains(t, res, tc.err.Code)
+				require.Contains(t, res, tc.err.Message)
+				require.Contains(t, res, tc.err.APIEndpoint)
+				require.Contains(t, res, tc.err.Remediation)
+				for _, d := range tc.err.Details {
 					require.Contains(t, res, d.Message)
 					require.Contains(t, res, d.Code)
 					require.Contains(t, res, d.Remediation)
@@ -291,9 +291,9 @@ func Test_recursiveUnwrap(t *testing.T) {
 			expected: &Error{Message: "unknown"},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.expected, tt.err.recursiveUnwrap())
+			require.Equal(t, tc.expected, tc.err.recursiveUnwrap())
 		})
 	}
 }
@@ -324,10 +324,10 @@ func Test_ToSlackError(t *testing.T) {
 			expected: Error{Message: ""},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := ToSlackError(tt.err)
-			require.Equal(t, tt.expected, *err)
+			err := ToSlackError(tc.err)
+			require.Equal(t, tc.expected, *err)
 		})
 	}
 }
@@ -354,9 +354,9 @@ func Test_Unwrap(t *testing.T) {
 			expected: &err2,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.expected, tt.err.Unwrap())
+			require.Equal(t, tc.expected, tc.err.Unwrap())
 		})
 	}
 }
@@ -383,10 +383,10 @@ func Test_WithCode(t *testing.T) {
 			newCode: "code1",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := New(tt.oldCode).WithCode(tt.newCode)
-			require.Equal(t, tt.newCode, err.Code)
+			err := New(tc.oldCode).WithCode(tc.newCode)
+			require.Equal(t, tc.newCode, err.Code)
 		})
 	}
 }
@@ -413,10 +413,10 @@ func Test_WithMessage(t *testing.T) {
 			newMsg: "msg",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := New(tt.oldMsg).WithMessage("%s", tt.newMsg)
-			require.Equal(t, tt.newMsg, err.Message)
+			err := New(tc.oldMsg).WithMessage("%s", tc.newMsg)
+			require.Equal(t, tc.newMsg, err.Message)
 		})
 	}
 }
@@ -443,10 +443,10 @@ func Test_WithRemediation(t *testing.T) {
 			newMsg: "msg",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := New("").WithRemediation("%s", tt.newMsg)
-			require.Equal(t, tt.newMsg, err.Remediation)
+			err := New("").WithRemediation("%s", tc.newMsg)
+			require.Equal(t, tc.newMsg, err.Remediation)
 		})
 	}
 }
@@ -473,13 +473,13 @@ func Test_WithRootCause(t *testing.T) {
 			rootCause: &Error{Code: "code", Message: "msg", Details: ErrorDetails{{Message: "d3"}, {Message: "d4"}}},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 
-			errDetailsCountBefore := len(tt.err.Details) // keep track of the details count before adding the rootcause
-			err := tt.err.WithRootCause(tt.rootCause)    // call the function
+			errDetailsCountBefore := len(tc.err.Details) // keep track of the details count before adding the rootcause
+			err := tc.err.WithRootCause(tc.rootCause)    // call the function
 
-			rootCauseErr := ToSlackError(tt.rootCause) // cast the root cause error to a slack error for easy comparison
+			rootCauseErr := ToSlackError(tc.rootCause) // cast the root cause error to a slack error for easy comparison
 
 			// During rootCause addition, the rootCause error's message is added as a detail
 			// then in addition, all its details are also carried over
@@ -489,7 +489,7 @@ func Test_WithRootCause(t *testing.T) {
 			require.Contains(t, err.Error(), rootCauseErr.Code)
 			require.Contains(t, err.Error(), rootCauseErr.Message)
 			for _, d := range rootCauseErr.Details {
-				require.Contains(t, tt.err.Details, d) // see to it that all the details in rootCause were carried over
+				require.Contains(t, tc.err.Details, d) // see to it that all the details in rootCause were carried over
 			}
 		})
 	}

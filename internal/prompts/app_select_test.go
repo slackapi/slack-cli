@@ -242,32 +242,32 @@ func TestGetTokenApp(t *testing.T) {
 		},
 	}
 
-	for name, test := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.Auth.On(AuthWithToken, mock.Anything, test.tokenFlag).
-				Return(test.tokenAuth, test.tokenErr)
+			clientsMock.Auth.On(AuthWithToken, mock.Anything, tc.tokenFlag).
+				Return(tc.tokenAuth, tc.tokenErr)
 			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-				Return(test.appStatus, test.statusErr)
+				Return(tc.appStatus, tc.statusErr)
 			clientsMock.AddDefaultMocks()
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			for _, app := range test.saveLocal {
+			for _, app := range tc.saveLocal {
 				err := clients.AppClient().SaveLocal(ctx, app)
 				require.NoError(t, err)
 			}
-			selection, err := getTokenApp(ctx, clients, test.tokenFlag, test.appFlag)
+			selection, err := getTokenApp(ctx, clients, tc.tokenFlag, tc.appFlag)
 
-			if test.tokenErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.tokenErr, err)
-			} else if test.statusErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.statusErr, err)
+			if tc.tokenErr != nil && assert.Error(t, err) {
+				require.Equal(t, tc.tokenErr, err)
+			} else if tc.statusErr != nil && assert.Error(t, err) {
+				require.Equal(t, tc.statusErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.tokenAuth, selection.Auth)
-				expectedApp := test.appInfo
-				expectedApp.UserID = test.tokenAuth.UserID
+				assert.Equal(t, tc.tokenAuth, selection.Auth)
+				expectedApp := tc.appInfo
+				expectedApp.UserID = tc.tokenAuth.UserID
 				assert.Equal(t, expectedApp, selection.App)
 			}
 		})
@@ -357,35 +357,35 @@ func TestPrompt_AppSelectPrompt_TokenAppFlag(t *testing.T) {
 		},
 	}
 
-	for name, test := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.Auth.On(AuthWithToken, mock.Anything, test.tokenFlag).
-				Return(test.tokenAuth, nil)
+			clientsMock.Auth.On(AuthWithToken, mock.Anything, tc.tokenFlag).
+				Return(tc.tokenAuth, nil)
 			clientsMock.API.On(GetAppStatus, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-				Return(test.appStatus, test.appStatusErr)
+				Return(tc.appStatus, tc.appStatusErr)
 			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
-				TeamName: &test.tokenAuth.TeamDomain,
-				TeamID:   &test.tokenAuth.TeamID,
+				TeamName: &tc.tokenAuth.TeamDomain,
+				TeamID:   &tc.tokenAuth.TeamID,
 			}, nil)
 			clientsMock.AddDefaultMocks()
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			clients.Config.TokenFlag = test.tokenFlag
-			clients.Config.AppFlag = test.appFlag
+			clients.Config.TokenFlag = tc.tokenFlag
+			clients.Config.AppFlag = tc.appFlag
 
-			selection, err := AppSelectPrompt(ctx, clients, ShowAllEnvironments, test.selectStatus)
+			selection, err := AppSelectPrompt(ctx, clients, ShowAllEnvironments, tc.selectStatus)
 
-			if test.appStatusErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.appStatusErr, err)
-			} else if test.expectedErr != nil && assert.Error(t, err) {
-				require.Equal(t, test.expectedErr, err)
+			if tc.appStatusErr != nil && assert.Error(t, err) {
+				require.Equal(t, tc.appStatusErr, err)
+			} else if tc.expectedErr != nil && assert.Error(t, err) {
+				require.Equal(t, tc.expectedErr, err)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectedApp.Auth, selection.Auth)
-				expectedApp := test.expectedApp.App
-				expectedApp.UserID = test.expectedApp.Auth.UserID
+				assert.Equal(t, tc.expectedApp.Auth, selection.Auth)
+				expectedApp := tc.expectedApp.App
+				expectedApp.UserID = tc.expectedApp.Auth.UserID
 				assert.Equal(t, expectedApp, selection.App)
 			}
 		})
@@ -563,7 +563,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -571,21 +571,21 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
-				tt.mockTeam1StatusAppIDs,
+				tc.mockTeam1StatusAppIDs,
 				mock.Anything,
 			).Return(
-				tt.mockTeam1Status,
-				tt.mockTeam1StatusError,
+				tc.mockTeam1Status,
+				tc.mockTeam1StatusError,
 			)
 			clientsMock.API.On(
 				GetAppStatus,
 				mock.Anything,
 				mock.Anything,
-				tt.mockTeam2StatusAppIDs,
+				tc.mockTeam2StatusAppIDs,
 				mock.Anything,
 			).Return(
-				tt.mockTeam2Status,
-				tt.mockTeam2StatusError,
+				tc.mockTeam2Status,
+				tc.mockTeam2StatusError,
 			)
 			clientsMock.API.On(
 				"ValidateSession",
@@ -599,7 +599,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 				Auths,
 				mock.Anything,
 			).Return(
-				tt.mockAuths,
+				tc.mockAuths,
 				nil,
 			)
 			clientsMock.Auth.On(
@@ -607,38 +607,38 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 				mock.Anything,
 				team2TeamID,
 			).Return(
-				tt.mockTeam2SavedAuth,
-				tt.mockTeam2SavedAuthError,
+				tc.mockTeam2SavedAuth,
+				tc.mockTeam2SavedAuthError,
 			)
 			clientsMock.Auth.On(
 				AuthWithTeamID,
 				mock.Anything,
 				team1TeamID,
 			).Return(
-				tt.mockTeam1SavedAuth,
-				tt.mockTeam1SavedAuthError,
+				tc.mockTeam1SavedAuth,
+				tc.mockTeam1SavedAuthError,
 			)
 			clientsMock.Auth.On(
 				AuthWithTeamID,
 				mock.Anything,
 				enterprise1TeamID,
 			).Return(
-				tt.mockEnterprise1SavedAuth,
-				tt.mockEnterprise1SavedAuthError,
+				tc.mockEnterprise1SavedAuth,
+				tc.mockEnterprise1SavedAuthError,
 			)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			for _, app := range tt.mockAppsSavedDeployed {
+			for _, app := range tc.mockAppsSavedDeployed {
 				err := clients.AppClient().SaveDeployed(ctx, app)
 				require.NoError(t, err)
 			}
-			for _, app := range tt.mockAppsSavedLocal {
+			for _, app := range tc.mockAppsSavedLocal {
 				err := clients.AppClient().SaveLocal(ctx, app)
 				require.NoError(t, err)
 			}
 			apps, err := getApps(ctx, clients)
-			assert.Equal(t, tt.expectedError, err)
-			assert.Equal(t, tt.expectedApps, apps)
+			assert.Equal(t, tc.expectedError, err)
+			assert.Equal(t, tc.expectedApps, apps)
 		})
 	}
 }
@@ -1188,7 +1188,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			expectedError:            slackerror.New(slackerror.ErrTeamNotFound),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -1196,23 +1196,23 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				Auths,
 				mock.Anything,
 			).Return(
-				tt.mockAuths,
+				tc.mockAuths,
 				nil,
 			)
 			clientsMock.Auth.On(
 				AuthWithTeamID,
 				mock.Anything,
-				tt.mockAuthWithTeamIDTeamID,
+				tc.mockAuthWithTeamIDTeamID,
 			).Return(
 				types.SlackAuth{},
-				tt.mockAuthWithTeamIDError,
+				tc.mockAuthWithTeamIDError,
 			)
 			clientsMock.Auth.On(
 				AuthWithToken,
 				mock.Anything,
-				tt.mockFlagToken,
+				tc.mockFlagToken,
 			).Return(
-				tt.mockAuthWithToken,
+				tc.mockAuthWithToken,
 				nil,
 			)
 			clientsMock.API.On(
@@ -1360,10 +1360,10 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				),
 			).Return(
 				iostreams.SelectPromptResponse{
-					Flag:   tt.teamPromptResponseFlag,
-					Prompt: tt.teamPromptResponsePrompt,
-					Option: tt.teamPromptResponseOption,
-					Index:  tt.teamPromptResponseIndex,
+					Flag:   tc.teamPromptResponseFlag,
+					Prompt: tc.teamPromptResponsePrompt,
+					Option: tc.teamPromptResponseOption,
+					Index:  tc.teamPromptResponseIndex,
 				},
 				nil,
 			)
@@ -1371,7 +1371,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				SelectPrompt,
 				mock.Anything,
 				"Select an app",
-				tt.appPromptConfigOptions,
+				tc.appPromptConfigOptions,
 				iostreams.MatchPromptConfig(
 					iostreams.SelectPromptConfig{
 						Required: true,
@@ -1379,31 +1379,31 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 				),
 			).Return(
 				iostreams.SelectPromptResponse{
-					Flag:   tt.appPromptResponseFlag,
-					Prompt: tt.appPromptResponsePrompt,
-					Option: tt.appPromptResponseOption,
-					Index:  tt.appPromptResponseIndex,
+					Flag:   tc.appPromptResponseFlag,
+					Prompt: tc.appPromptResponsePrompt,
+					Option: tc.appPromptResponseOption,
+					Index:  tc.appPromptResponseIndex,
 				},
 				nil,
 			)
 			clientsMock.AddDefaultMocks()
-			clientsMock.Config.AppFlag = tt.mockFlagApp
-			clientsMock.Config.TeamFlag = tt.mockFlagTeam
-			clientsMock.Config.TokenFlag = tt.mockFlagToken
+			clientsMock.Config.AppFlag = tc.mockFlagApp
+			clientsMock.Config.TeamFlag = tc.mockFlagTeam
+			clientsMock.Config.TokenFlag = tc.mockFlagToken
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			for _, app := range tt.mockAppsDeployed {
+			for _, app := range tc.mockAppsDeployed {
 				err := clients.AppClient().SaveDeployed(ctx, app)
 				require.NoError(t, err)
 			}
-			for _, app := range tt.mockAppsLocal {
+			for _, app := range tc.mockAppsLocal {
 				err := clients.AppClient().SaveLocal(ctx, app)
 				require.NoError(t, err)
 			}
-			selectedApp, err := AppSelectPrompt(ctx, clients, tt.appPromptConfigEnvironment, tt.appPromptConfigStatus)
-			require.Equal(t, tt.expectedError, err)
-			require.Equal(t, tt.expectedSelection, selectedApp)
-			require.Contains(t, clientsMock.GetStdoutOutput(), tt.expectedStdout)
-			require.Contains(t, clientsMock.GetStderrOutput(), tt.expectedStderr)
+			selectedApp, err := AppSelectPrompt(ctx, clients, tc.appPromptConfigEnvironment, tc.appPromptConfigStatus)
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, tc.expectedSelection, selectedApp)
+			require.Contains(t, clientsMock.GetStdoutOutput(), tc.expectedStdout)
+			require.Contains(t, clientsMock.GetStderrOutput(), tc.expectedStderr)
 		})
 	}
 }
@@ -1596,7 +1596,7 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 			expectedGrant:        "all",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -1604,12 +1604,12 @@ func Test_ValidateGetOrgWorkspaceGrant(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 			})
-			if tt.mockPrompt != nil {
-				tt.mockPrompt(clientsMock)
+			if tc.mockPrompt != nil {
+				tc.mockPrompt(clientsMock)
 			}
-			returnedGrant, err := ValidateGetOrgWorkspaceGrant(ctx, clients, tt.app, tt.inputGrant, tt.firstPromptOptionAll)
-			assert.Equal(t, tt.expectedErr, err)
-			assert.Equal(t, tt.expectedGrant, returnedGrant)
+			returnedGrant, err := ValidateGetOrgWorkspaceGrant(ctx, clients, tc.app, tc.inputGrant, tc.firstPromptOptionAll)
+			assert.Equal(t, tc.expectedErr, err)
+			assert.Equal(t, tc.expectedGrant, returnedGrant)
 		})
 	}
 }
@@ -1707,7 +1707,7 @@ func Test_ValidateAuth(t *testing.T) {
 			ioIsTTYResponse:                     true,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -1718,8 +1718,8 @@ func Test_ValidateAuth(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.apiExchangeAuthTicketResultResponse,
-				tt.apiExchangeAuthTicketResultError,
+				tc.apiExchangeAuthTicketResultResponse,
+				tc.apiExchangeAuthTicketResultError,
 			)
 			clientsMock.API.On(
 				"GenerateAuthTicket",
@@ -1727,14 +1727,14 @@ func Test_ValidateAuth(t *testing.T) {
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.apiGenerateAuthTicketResultResponse,
-				tt.apiGenerateAuthTicketResultError,
+				tc.apiGenerateAuthTicketResultResponse,
+				tc.apiGenerateAuthTicketResultError,
 			)
-			if tt.authProvided.APIHost != nil {
+			if tc.authProvided.APIHost != nil {
 				clientsMock.API.On(
 					"Host",
 				).Return(
-					*tt.authProvided.APIHost,
+					*tc.authProvided.APIHost,
 				)
 			}
 			clientsMock.API.On(
@@ -1744,33 +1744,33 @@ func Test_ValidateAuth(t *testing.T) {
 			clientsMock.API.On(
 				"ValidateSession",
 				mock.Anything,
-				tt.authProvided.Token,
+				tc.authProvided.Token,
 			).Return(
-				tt.apiValidateSessionResponse,
-				tt.apiValidateSessionError,
+				tc.apiValidateSessionResponse,
+				tc.apiValidateSessionError,
 			)
 			clientsMock.Auth.On(
 				"FilterKnownAuthErrors",
 				mock.Anything,
-				tt.apiValidateSessionError,
+				tc.apiValidateSessionError,
 			).Return(
-				tt.authFilteredKnownAuthErrorsResponse,
-				tt.authFilteredKnownAuthErrorsError,
+				tc.authFilteredKnownAuthErrorsResponse,
+				tc.authFilteredKnownAuthErrorsError,
 			)
 			clientsMock.Auth.On(
 				"IsAPIHostSlackProd",
 				mock.Anything,
 			).Return(
-				tt.authIsAPIHostSlackProdResponse,
+				tc.authIsAPIHostSlackProdResponse,
 			)
 			clientsMock.Auth.On(
 				"SetAuth",
 				mock.Anything,
 				mock.Anything,
 			).Return(
-				tt.authSetAuthResponse,
+				tc.authSetAuthResponse,
 				"",
-				tt.authSetAuthError,
+				tc.authSetAuthError,
 			)
 			clientsMock.Auth.On(
 				"SetSelectedAuth",
@@ -1791,19 +1791,19 @@ func Test_ValidateAuth(t *testing.T) {
 			clientsMock.IO.On(
 				"IsTTY",
 			).Return(
-				tt.ioIsTTYResponse,
+				tc.ioIsTTYResponse,
 			)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			err := validateAuth(ctx, clients, &tt.authProvided)
+			err := validateAuth(ctx, clients, &tc.authProvided)
 
-			tt.authProvided.LastUpdated = time.Time{} // ignore time for this test
-			assert.Equal(t, tt.expectedErr, err)
-			if tt.authExpected.APIHost != nil {
-				clientsMock.API.AssertCalled(t, "SetHost", *tt.authExpected.APIHost)
+			tc.authProvided.LastUpdated = time.Time{} // ignore time for this tc
+			assert.Equal(t, tc.expectedErr, err)
+			if tc.authExpected.APIHost != nil {
+				clientsMock.API.AssertCalled(t, "SetHost", *tc.authExpected.APIHost)
 			}
-			assert.Equal(t, tt.authExpected, tt.authProvided)
+			assert.Equal(t, tc.authExpected, tc.authProvided)
 		})
 	}
 }

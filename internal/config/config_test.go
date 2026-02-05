@@ -99,17 +99,17 @@ func Test_Config_SkipLocalFs(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fs := slackdeps.NewFsMock()
 			os := slackdeps.NewOsMock()
 			os.AddDefaultMocks()
 			config := NewConfig(fs, os)
-			config.TokenFlag = tt.tokenFlag
-			config.AppFlag = tt.appFlag
+			config.TokenFlag = tc.tokenFlag
+			config.AppFlag = tc.appFlag
 
 			isHeadless := config.SkipLocalFs()
-			assert.Equal(t, tt.isHeadless, isHeadless)
+			assert.Equal(t, tc.isHeadless, isHeadless)
 		})
 	}
 }

@@ -142,7 +142,7 @@ func TestDoctorCheckProjectConfig(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -151,22 +151,22 @@ func TestDoctorCheckProjectConfig(t *testing.T) {
 
 			slackmock.CreateProject(t, ctx, clients.Fs, clients.Os, slackdeps.MockWorkingDirectory)
 
-			_, err := config.WriteProjectConfigFile(ctx, clients.Fs, clients.Os, tt.projectConfig)
+			_, err := config.WriteProjectConfigFile(ctx, clients.Fs, clients.Os, tc.projectConfig)
 			require.NoError(t, err)
 
 			expected := Section{
 				Label:       "Configurations",
 				Value:       "your project's CLI settings",
 				Subsections: []Section{},
-				Errors:      tt.expectedErrors,
+				Errors:      tc.expectedErrors,
 			}
 
-			if tt.expectedManifestSourceSection != nil {
-				expected.Subsections = append(expected.Subsections, *tt.expectedManifestSourceSection)
+			if tc.expectedManifestSourceSection != nil {
+				expected.Subsections = append(expected.Subsections, *tc.expectedManifestSourceSection)
 			}
 
-			if tt.expectedProjectSection != nil {
-				expected.Subsections = append(expected.Subsections, *tt.expectedProjectSection)
+			if tc.expectedProjectSection != nil {
+				expected.Subsections = append(expected.Subsections, *tc.expectedProjectSection)
 			}
 
 			section := checkProjectConfig(ctx, clients)
@@ -222,17 +222,17 @@ func TestDoctorCheckProjectDeps(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			clients := tt.mockHookSetup(clientsMock)
+			clients := tc.mockHookSetup(clientsMock)
 			expected := Section{
 				Label:       "Dependencies",
 				Value:       "requisites for development",
-				Subsections: tt.expectedSubsections,
-				Errors:      tt.expectedErrorSection,
+				Subsections: tc.expectedSubsections,
+				Errors:      tc.expectedErrorSection,
 			}
 
 			section := checkProjectDeps(ctx, clients)
@@ -250,14 +250,14 @@ func TestDoctorCheckCLIConfig(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			scm := &config.SystemConfigMock{}
 			scm.On("UserConfig", mock.Anything).Return(&config.SystemConfig{
-				SystemID: tt.systemID,
+				SystemID: tc.systemID,
 			}, nil)
 			clientsMock.Config.SystemConfig = scm
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -267,7 +267,7 @@ func TestDoctorCheckCLIConfig(t *testing.T) {
 				Subsections: []Section{
 					{
 						Label:       "System ID",
-						Value:       tt.systemID,
+						Value:       tc.systemID,
 						Subsections: []Section{},
 						Errors:      []slackerror.Error{},
 					},
@@ -423,11 +423,11 @@ func TestDoctorCheckCLICreds(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			clientsMock.Auth.On("Auths", mock.Anything).Return(tt.mockAuths, nil)
+			clientsMock.Auth.On("Auths", mock.Anything).Return(tc.mockAuths, nil)
 			clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slack.com/api/", nil)
 			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{}, nil)
 			clientsMock.AddDefaultMocks()
@@ -435,8 +435,8 @@ func TestDoctorCheckCLICreds(t *testing.T) {
 			expected := Section{
 				Label:       "Credentials",
 				Value:       "your Slack authentication",
-				Subsections: tt.expectedSections,
-				Errors:      tt.expectedErrorSection,
+				Subsections: tc.expectedSections,
+				Errors:      tc.expectedErrorSection,
 			}
 
 			section, err := checkCLICreds(ctx, clients)
@@ -520,17 +520,17 @@ func TestDoctorCheckProjectTooling(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			clients := tt.mockHookSetup(clientsMock)
+			clients := tc.mockHookSetup(clientsMock)
 			expected := Section{
 				Label:       "Runtime",
 				Value:       "foundations for the application",
-				Subsections: tt.expectedSubsections,
-				Errors:      tt.expectedErrorSection,
+				Subsections: tc.expectedSubsections,
+				Errors:      tc.expectedErrorSection,
 			}
 
 			section := checkProjectTooling(ctx, clients)

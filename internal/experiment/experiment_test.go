@@ -89,9 +89,9 @@ func Test_IsValid(t *testing.T) {
 			expectedRes: false,
 		},
 	}
-	for name, tt := range tableTests {
+	for name, tc := range tableTests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.expectedRes, isValid(tt.experiment))
+			require.Equal(t, tc.expectedRes, isValid(tc.experiment))
 		})
 	}
 }

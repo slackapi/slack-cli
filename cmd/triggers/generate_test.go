@@ -43,7 +43,7 @@ type unitTest struct {
 
 func Test_TriggerGenerate_accept_prompt(t *testing.T) {
 	projDir, _ := os.Getwd()
-	tt := unitTest{
+	tc := unitTest{
 		name:                   "Accept prompt to create a trigger",
 		triggersListResponse:   []types.DeployedTrigger{}, // no existing triggers
 		globResponse:           []string{fmt.Sprintf("%v/triggers/trigger.ts", projDir)},
@@ -54,8 +54,8 @@ func Test_TriggerGenerate_accept_prompt(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, nil /*trigger create error*/)
 
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
@@ -77,13 +77,13 @@ func Test_TriggerGenerate_accept_prompt(t *testing.T) {
 
 		// Execute test
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 	})
 }
 
 func Test_TriggerGenerate_decline_prompt(t *testing.T) {
 	projDir, _ := os.Getwd()
-	tt := unitTest{
+	tc := unitTest{
 		name:                   "Decline prompt to create a trigger",
 		triggersListResponse:   []types.DeployedTrigger{}, // no existing triggers
 		triggersCreateResponse: types.DeployedTrigger{},
@@ -94,8 +94,8 @@ func Test_TriggerGenerate_decline_prompt(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -113,12 +113,12 @@ func Test_TriggerGenerate_decline_prompt(t *testing.T) {
 
 		// Execute test
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 	})
 }
 
 func Test_TriggerGenerate_skip_prompt(t *testing.T) {
-	tt := unitTest{
+	tc := unitTest{
 		name:                 "Skip prompt if app has at least one trigger",
 		triggersListResponse: []types.DeployedTrigger{{Name: "existing trigger", ID: "Ft456", Type: "scheduled"}},
 		check: func(t *testing.T, trigger *types.DeployedTrigger, err error) {
@@ -127,8 +127,8 @@ func Test_TriggerGenerate_skip_prompt(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.API.On("ListCollaborators", mock.Anything, mock.Anything, mock.Anything).Return([]types.SlackUser{}, nil)
 		clientsMock.API.On("TriggerPermissionsList", mock.Anything, mock.Anything, mock.Anything).
 			Return(types.PermissionEveryone, []string{}, nil).Once()
@@ -141,13 +141,13 @@ func Test_TriggerGenerate_skip_prompt(t *testing.T) {
 
 		// Execute test
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 	})
 }
 
 func Test_TriggerGenerate_handle_error(t *testing.T) {
 	projDir, _ := os.Getwd()
-	tt := unitTest{
+	tc := unitTest{
 		name:                   "Handle error on trigger creation",
 		triggersListResponse:   []types.DeployedTrigger{}, // no existing triggers
 		globResponse:           []string{fmt.Sprintf("%v/triggers/trigger.ts", projDir)},
@@ -158,8 +158,8 @@ func Test_TriggerGenerate_handle_error(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, fmt.Errorf("something went wrong") /*trigger create error*/)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, fmt.Errorf("something went wrong") /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -179,13 +179,13 @@ func Test_TriggerGenerate_handle_error(t *testing.T) {
 
 		// Execute test
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 	})
 }
 
 func Test_TriggerGenerate_handle_invalid_paths(t *testing.T) {
 	projDir, _ := os.Getwd()
-	tt := unitTest{
+	tc := unitTest{
 		name:                   "Omit invalid paths in triggers project directory",
 		triggersListResponse:   []types.DeployedTrigger{},                                 // no existing triggers
 		globResponse:           []string{fmt.Sprintf("%v/triggers/trigger.ts~", projDir)}, // invalid trigger
@@ -197,8 +197,8 @@ func Test_TriggerGenerate_handle_invalid_paths(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 			clients.SDKConfig = hooks.NewSDKConfigMock()
@@ -209,13 +209,13 @@ func Test_TriggerGenerate_handle_invalid_paths(t *testing.T) {
 
 		// Execute test
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 	})
 }
 
 func Test_TriggerGenerate_Config_TriggerPaths_Default(t *testing.T) {
 	projDir, _ := os.Getwd()
-	tt := unitTest{
+	tc := unitTest{
 		name:                   "Should use default when 'trigger-path' is missing",
 		triggersListResponse:   []types.DeployedTrigger{}, // no existing triggers
 		globResponse:           []string{fmt.Sprintf("%v/triggers/trigger.ts", projDir)},
@@ -226,8 +226,8 @@ func Test_TriggerGenerate_Config_TriggerPaths_Default(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -248,14 +248,14 @@ func Test_TriggerGenerate_Config_TriggerPaths_Default(t *testing.T) {
 		// Execute test
 		clients.SDKConfig.Config.TriggerPaths = []string{} // No 'trigger-path' is set
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 		clientsMock.Os.AssertNumberOfCalls(t, "Glob", 1) // Assert default 'trigger-path' is used as Glob pattern
 	})
 }
 
 func Test_TriggerGenerate_Config_TriggerPaths_Custom(t *testing.T) {
 	projDir, _ := os.Getwd()
-	tt := unitTest{
+	tc := unitTest{
 		name:                   "Should use custom 'trigger-path' in hooks.json",
 		triggersListResponse:   []types.DeployedTrigger{}, // no existing triggers
 		globResponse:           []string{fmt.Sprintf("%v/triggers/trigger.ts", projDir)},
@@ -266,8 +266,8 @@ func Test_TriggerGenerate_Config_TriggerPaths_Custom(t *testing.T) {
 		},
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		ctx, clientsMock := prepareMocks(t, tt.triggersListResponse, tt.globResponse, tt.triggersCreateResponse, nil /*trigger create error*/)
+	t.Run(tc.name, func(t *testing.T) {
+		ctx, clientsMock := prepareMocks(t, tc.triggersListResponse, tc.globResponse, tc.triggersCreateResponse, nil /*trigger create error*/)
 		clientsMock.IO.On("SelectPrompt", mock.Anything, "Choose a trigger definition file:", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 			Flag: clientsMock.Config.Flags.Lookup("trigger-def"),
 		})).Return(iostreams.SelectPromptResponse{
@@ -288,7 +288,7 @@ func Test_TriggerGenerate_Config_TriggerPaths_Custom(t *testing.T) {
 		// Execute test
 		clients.SDKConfig.Config.TriggerPaths = []string{"my-triggers/*.ts", "my-triggers/*.js", "my-triggers/*.json"} // Custom 'trigger-path'
 		trigger, err := TriggerGenerate(ctx, clients, types.App{})
-		tt.check(t, trigger, err)
+		tc.check(t, trigger, err)
 		clientsMock.Os.AssertNumberOfCalls(t, "Glob", 3) // Assert custom 'trigger-path' is used as Glob pattern
 	})
 }
@@ -370,7 +370,7 @@ func Test_TriggerGenerate_MismatchedFlags(t *testing.T) {
 		return arguments
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -378,20 +378,20 @@ func Test_TriggerGenerate_MismatchedFlags(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := NewCreateCommand(clients)
-			err := cmd.Flags().Parse(createArgs(tt.flags))
+			err := cmd.Flags().Parse(createArgs(tc.flags))
 			require.NoError(t, err, "Failed to parse mocked flags")
 			clients.Config.SetFlags(cmd)
 			err = afero.WriteFile(clients.Fs, definitionFile, []byte(""), 0600)
 			require.NoError(t, err, "Cant write apps.json")
 
-			err = validateCreateCmdFlags(ctx, clients, &tt.flags)
-			if tt.err != nil {
+			err = validateCreateCmdFlags(ctx, clients, &tc.flags)
+			if tc.err != nil {
 				assert.NotNil(t, err)
-				assert.Equal(t, slackerror.ToSlackError(tt.err).Code, slackerror.ToSlackError(err).Code)
+				assert.Equal(t, slackerror.ToSlackError(tc.err).Code, slackerror.ToSlackError(err).Code)
 			} else {
 				assert.Nil(t, err)
 			}
-			for _, msg := range tt.message {
+			for _, msg := range tc.message {
 				assert.Contains(t, err.Error(), msg)
 			}
 		})
@@ -436,19 +436,19 @@ func Test_ShowTriggers(t *testing.T) {
 			expectedShown:     false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
-			clientsMock.IO.On("IsTTY").Return(tt.isTTY)
+			clientsMock.IO.On("IsTTY").Return(tc.isTTY)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = hooks.NewSDKConfigMock()
 			})
-			if !tt.hasGetTriggerHook {
+			if !tc.hasGetTriggerHook {
 				clients.SDKConfig.Hooks.GetTrigger.Command = ""
 			}
-			triggersShown := ShowTriggers(clients, tt.hideTriggersFlag)
-			assert.Equal(t, tt.expectedShown, triggersShown)
+			triggersShown := ShowTriggers(clients, tc.hideTriggersFlag)
+			assert.Equal(t, tc.expectedShown, triggersShown)
 		})
 	}
 }

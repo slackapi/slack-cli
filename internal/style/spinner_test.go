@@ -35,10 +35,10 @@ func Test_Spinner(t *testing.T) {
 			spins: false,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			buff := &bytes.Buffer{}
-			ToggleSpinner(tt.spins)
+			ToggleSpinner(tc.spins)
 			spinner := NewSpinner(buff)
 			active := spinner.Active()
 			assert.False(t, spinner.active)
@@ -58,7 +58,7 @@ func Test_Spinner(t *testing.T) {
 			assert.False(t, spinner.active)
 			assert.False(t, active)
 			assert.Equal(t, "ending!", status)
-			if !tt.spins {
+			if !tc.spins {
 				assert.Equal(t, buff.String(), "waiting\nchanged\nending!\n")
 			} else {
 				// No output is gathered because the test is not run in a terminal setting.

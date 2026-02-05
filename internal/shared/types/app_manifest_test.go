@@ -26,21 +26,19 @@ import (
 )
 
 func Test_RawJSON_UnmarshalJSON(t *testing.T) {
-	tests := []struct {
-		name              string
+	tests := map[string]struct {
 		blob              string
 		expectedErrorType error
 		expectedJSONData  string
 	}{
-		{
-			name:              "Unmarshal data",
+		"Unmarshal data": {
 			blob:              `{ "name": "foo" }`,
 			expectedErrorType: nil,
 			expectedJSONData:  `{ "name": "foo" }`,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			rawJSON := &RawJSON{}
 			err := rawJSON.UnmarshalJSON([]byte(tc.blob))
 
@@ -98,12 +96,12 @@ func Test_AppManifest_ConvertDataForRawJSON(t *testing.T) {
 			want: map[string]interface{}{"name": "foo", "fruits": []string{"mango", "pineapple"}},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert := assert.New(t)
-			have, err := json.Marshal(tt.have.convertData(*tt.have.Data))
+			have, err := json.Marshal(tc.have.convertData(*tc.have.Data))
 			assert.Nil(err)
-			want, err := json.Marshal(tt.want)
+			want, err := json.Marshal(tc.want)
 			assert.Nil(err)
 			assert.Equal(want, have)
 		})
@@ -120,12 +118,12 @@ func Test_AppManifest_ToRawJSON(t *testing.T) {
 			want: &RawJSON{JSONData: &json.RawMessage{}},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if got := ToRawJSON(tt.have); !reflect.DeepEqual(got, tt.want) {
+			if got := ToRawJSON(tc.have); !reflect.DeepEqual(got, tc.want) {
 				t.Log(got.Data)
 				t.Log(got.JSONData)
-				t.Errorf("ToRawJSON() = %v, want %v", got, tt.want)
+				t.Errorf("ToRawJSON() = %v, want %v", got, tc.want)
 			}
 		})
 	}
@@ -191,11 +189,11 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/file"]}}`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual, err := json.Marshal(tt.features)
+			actual, err := json.Marshal(tc.features)
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, string(actual))
+			assert.Equal(t, tc.want, string(actual))
 		})
 	}
 }
@@ -220,16 +218,16 @@ func Test_AppManifest_AppSettings_SiwsLinks(t *testing.T) {
 			expectedJSON:      `{"siws_links":{"initiate_uri":"an initiate uri"}}`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			manifest := AppManifest{
-				Settings: tt.settings,
+				Settings: tc.settings,
 			}
-			if tt.settings != nil {
-				actualJSON, err := json.Marshal(tt.settings)
+			if tc.settings != nil {
+				actualJSON, err := json.Marshal(tc.settings)
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedJSON, string(actualJSON))
-				assert.Equal(t, tt.expectedSiwsLinks, manifest.Settings.SiwsLinks)
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+				assert.Equal(t, tc.expectedSiwsLinks, manifest.Settings.SiwsLinks)
 			} else {
 				assert.Nil(t, manifest.Settings)
 			}
@@ -258,16 +256,16 @@ func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 			expectedJSON:                  `{"incoming_webhooks":{"incoming_webhooks_enabled":false}}`,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			manifest := AppManifest{
-				Settings: tt.settings,
+				Settings: tc.settings,
 			}
-			if tt.settings != nil {
-				actualJSON, err := json.Marshal(tt.settings)
+			if tc.settings != nil {
+				actualJSON, err := json.Marshal(tc.settings)
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedJSON, string(actualJSON))
-				assert.Equal(t, tt.expectedIncomingWebhooksLinks, manifest.Settings.IncomingWebhooks)
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+				assert.Equal(t, tc.expectedIncomingWebhooksLinks, manifest.Settings.IncomingWebhooks)
 			} else {
 				assert.Nil(t, manifest.Settings)
 			}
@@ -317,15 +315,15 @@ func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 			expectedRuntime: "    ",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			manifest := AppManifest{
-				Settings: tt.settings,
+				Settings: tc.settings,
 			}
-			assert.Equal(t, tt.expectedHosted, manifest.IsFunctionRuntimeSlackHosted())
-			assert.Equal(t, tt.expectedRuntime, manifest.FunctionRuntime())
-			if tt.settings != nil {
-				assert.Equal(t, tt.expectedRuntime, manifest.Settings.FunctionRuntime)
+			assert.Equal(t, tc.expectedHosted, manifest.IsFunctionRuntimeSlackHosted())
+			assert.Equal(t, tc.expectedRuntime, manifest.FunctionRuntime())
+			if tc.settings != nil {
+				assert.Equal(t, tc.expectedRuntime, manifest.Settings.FunctionRuntime)
 			}
 		})
 	}

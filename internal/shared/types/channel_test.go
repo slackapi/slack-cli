@@ -21,36 +21,31 @@ import (
 )
 
 func Test_SlackChannel_String(t *testing.T) {
-	tests := []struct {
-		name           string
+	tests := map[string]struct {
 		channel        *SlackChannel
 		expectedString string
 	}{
-		{
-			name:           "Both ChannelName and ID exist",
+		"Both ChannelName and ID exist": {
 			channel:        &SlackChannel{ChannelName: "#general", ID: "C01234"},
 			expectedString: "#general (C01234)",
 		},
-		// TODO(@mbrooks) This test represents the current behaviour, but should the expectedString be "#general" instead?
-		{
-			name:           "Only ChannelName exists",
+		// This test represents the current behaviour, but should the expectedString be "#general" instead?
+		"Only ChannelName exists": {
 			channel:        &SlackChannel{ChannelName: "#general"},
 			expectedString: "(#general)",
 		},
-		// TODO(@mbrooks) This test represents the current behaviour, but should the expectedString be "C01234" instead?
-		{
-			name:           "Only ID exists",
+		// This test represents the current behaviour, but should the expectedString be "C01234" instead?
+		"Only ID exists": {
 			channel:        &SlackChannel{ID: "C01234"},
 			expectedString: "",
 		},
-		{
-			name:           "Both ChannelName and ID do not exist",
+		"Both ChannelName and ID do not exist": {
 			channel:        &SlackChannel{},
 			expectedString: "",
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			require.Equal(t, tc.channel.String(), tc.expectedString)
 		})
 	}
