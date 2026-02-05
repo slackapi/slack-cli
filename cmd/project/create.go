@@ -64,7 +64,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 			{Command: "create my-project", Meaning: "Create a new project from a template"},
 			{Command: "create agent my-agent-app", Meaning: "Create a new AI Agent app"},
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
-			{Command: "create --name agent", Meaning: "Create a project named 'agent' (not an AI Agent)"},
+			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
