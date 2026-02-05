@@ -76,7 +76,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 	// Add flags
 	cmd.Flags().StringVarP(&createTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&createGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
-	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (use this to name your app 'agent')")
+	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
 
 	return cmd
 }
