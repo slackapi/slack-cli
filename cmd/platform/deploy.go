@@ -321,7 +321,7 @@ func errorMissingDeployHook(clients *shared.ClientFactory) error {
 				"To start a local development server, use:",
 				fmt.Sprintf("  %s", style.Commandf("run", false)),
 				"",
-				"For deployment options, see: https://docs.slack.dev/deployment",
+				"For deployment options, see: https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy",
 			}, "\n"))
 	}
 	return nil
