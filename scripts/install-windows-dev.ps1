@@ -58,19 +58,6 @@ function check_slack_binary_exist() {
       delay 0.2 "Heads up! A binary called ``$SLACK_CLI_NAME`` was found!"
       delay 0.3 "Now checking if it's the same Slack CLI..."
     }
-    & $SLACK_CLI_NAME _fingerprint | Tee-Object -Variable get_finger_print | Out-Null
-    if ($get_finger_print -ne $FINGERPRINT) {
-      & $SLACK_CLI_NAME --version | Tee-Object -Variable slack_cli_version | Out-Null
-      if (!($slack_cli_version -contains "Using ${SLACK_CLI_NAME}.exe v")) {
-        Write-Host "Error: Your existing ``$SLACK_CLI_NAME`` command is different from this Slack CLI!"
-        Write-Host "Halting the install to avoid accidentally overwriting it."
-
-        Write-Host "`nTry using an alias when installing to avoid name conflicts:"
-        Write-Host "`nirm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -Alias your-preferred-alias | iex"
-        throw
-      }
-    }
-    $message = "It is the same Slack CLI! Upgrading to the latest version..."
     if ($Version) {
       $SLACK_CLI_VERSION = $Version
       $message = "It is the same Slack CLI! Switching over to v$Version..."
@@ -219,10 +206,10 @@ function terms_of_service {
     [string]$Alias
   )
   $confirmed_alias = check_slack_binary_exist $Alias $Version $false
-  if (Get-Command $confirmed_alias) {
-    Write-Host "`nUse of the Slack CLI should comply with the Slack API Terms of Service:"
-    Write-Host "   https://slack.com/terms-of-service/api"
-  }
+  # if (Get-Command $confirmed_alias) {
+  Write-Host "`nUse of the Slack CLI should comply with the Slack API Terms of Service:"
+  Write-Host "   https://slack.com/terms-of-service/api"
+  # }
 }
 
 function feedback_message {
@@ -260,7 +247,7 @@ function next_step_message {
 trap {
   Write-Host "`nWe would love to know how things are going. Really. All of it."
   Write-Host "Submit installation issues: https://github.com/slackapi/slack-cli/issues"
-  exit 1
+  exit 7
 }
 
 install_slack_cli $Alias $Version
@@ -268,5 +255,5 @@ Write-Host "`nAdding developer tooling for an enhanced experience..."
 install_git $SkipGit
 Write-Host "Sweet! You're all set to start developing!"
 terms_of_service $Alias
-feedback_message $Alias
-next_step_message $Alias
+# feedback_message $Alias
+# next_step_message $Alias
