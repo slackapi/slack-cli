@@ -31,6 +31,7 @@ import (
 // Flags
 var createTemplateURLFlag string
 var createGitBranchFlag string
+var createAppNameFlag string
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -53,13 +54,17 @@ const viewMoreSamples = "slack-cli#view-more-samples"
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		SuggestFor: []string{"new"},
-		Use:        "create [name] [flags]",
+		Use:        "create [name | agent <name>] [flags]",
 		Short:      "Create a new Slack project",
-		Long:       `Create a new Slack project on your local machine from an optional template`,
+		Long: `Create a new Slack project on your local machine from an optional template.
+
+The 'agent' argument is a shortcut to create an AI Agent app. If you want to
+name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "create my-project", Meaning: "Create a new project from a template"},
 			{Command: "create agent my-agent-app", Meaning: "Create a new AI Agent app"},
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
+			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -71,6 +76,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	// Add flags
 	cmd.Flags().StringVarP(&createTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&createGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
+	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
 
 	return cmd
 }
@@ -85,6 +91,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	appNameArg := ""
 	categoryShortcut := ""
 	templateFlagProvided := cmd.Flags().Changed("template")
+	nameFlagProvided := cmd.Flags().Changed("name")
 
 	if len(args) > 0 {
 		switch args[0] {
@@ -106,6 +113,12 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		default:
 			appNameArg = args[0]
 		}
+	}
+
+	// --name flag overrides any positional app name argument
+	// This allows users to name their app "agent" without triggering the AI Agent shortcut
+	if nameFlagProvided {
+		appNameArg = createAppNameFlag
 	}
 
 	// Collect the template URL or select a starting template
