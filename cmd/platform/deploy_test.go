@@ -209,7 +209,7 @@ func TestDeployCommand_ErrorMissingDeployHook(t *testing.T) {
 	assert.Contains(t, slackErr.Message, "No deploy script found")
 	assert.Contains(t, slackErr.Remediation, "run")
 	assert.Contains(t, slackErr.Remediation, "local development server")
-	assert.Contains(t, slackErr.Remediation, "https://docs.slack.dev/deployment")
+	assert.Contains(t, slackErr.Remediation, "https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy")
 }
 
 func TestDeployCommand_DeployHook(t *testing.T) {
