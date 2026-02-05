@@ -318,8 +318,7 @@ func errorMissingDeployHook(clients *shared.ClientFactory) error {
 		return slackerror.New(slackerror.ErrSDKHookNotFound).
 			WithMessage("No deploy script found").
 			WithRemediation("%s", strings.Join([]string{
-				"To start a local development server, use:",
-				fmt.Sprintf("  %s", style.Commandf("run", false)),
+				"To start a local development server, use:", fmt.Sprintf("  %s", style.Commandf("run", false)),
 				"",
 				"For deployment options, see: https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy",
 			}, "\n"))
