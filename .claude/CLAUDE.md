@@ -9,6 +9,7 @@ The Slack CLI is a command-line interface for building apps on the Slack Platfor
 ## Development Commands
 
 ### Building
+
 ```bash
 make build              # Build the CLI (includes linting and cleaning)
 make build-ci           # Build for CI (skips lint and tests)
@@ -16,6 +17,7 @@ make build-ci           # Build for CI (skips lint and tests)
 ```
 
 ### Testing
+
 ```bash
 make test                                          # Run all unit tests
 make test testdir=cmd/auth testname=TestLoginCommand  # Run specific test
@@ -23,12 +25,14 @@ make coverage                                      # View test coverage report
 ```
 
 ### Linting
+
 ```bash
 make lint               # Run golangci-lint
 golangci-lint --version # Verify linter version
 ```
 
 ### Other Commands
+
 ```bash
 make init               # Initialize project (fetch tags, dependencies)
 make clean              # Remove build artifacts (bin/, dist/)
@@ -63,11 +67,13 @@ main.go           Entry point with tracing and context setup
 ### Key Architectural Patterns
 
 **Command Aliases**: Many commands have shortcut aliases defined in `cmd/root.go`'s `AliasMap`:
+
 - `slack login` → `slack auth login`
 - `slack deploy` → `slack platform deploy`
 - `slack create` → `slack project create`
 
 **Client Factory Pattern**: `internal/shared/clients.go` provides a `ClientFactory` that manages shared clients and configurations across commands:
+
 - `API()` - Slack API client
 - `Auth()` - Authentication client
 - `AppClient()` - App management client
@@ -84,6 +90,7 @@ Commands receive the `ClientFactory` and use it to access functionality.
 **Hook System**: `internal/hooks/` implements a lifecycle hook system that allows SDK projects to inject custom behavior at key points. The specification exists in `docs/reference/hooks` files.
 
 **Experiment System**: Features can be gated behind experiments defined in `internal/experiment/experiment.go`:
+
 - Add new experiments as constants
 - Register in `AllExperiments` slice
 - Enable permanently via `EnabledExperiments`
@@ -92,6 +99,7 @@ Commands receive the `ClientFactory` and use it to access functionality.
 ### Command Structure
 
 Commands follow this pattern:
+
 1. Define in `cmd/<category>/<command>.go`
 2. Create a Cobra command with use/short/long descriptions
 3. Add flags specific to that command
@@ -99,6 +107,7 @@ Commands follow this pattern:
 5. Add unit tests in `*_test.go` alongside
 
 Example command structure:
+
 ```go
 func NewExampleCommand(clients *shared.ClientFactory) *cobra.Command {
     return &cobra.Command{
@@ -125,6 +134,7 @@ func NewExampleCommand(clients *shared.ClientFactory) *cobra.Command {
 ### Table-Driven Test Conventions
 
 **Preferred: Map pattern** - uses `tc` for test case variable:
+
 ```go
 tests := map[string]struct {
     input    string
@@ -137,30 +147,18 @@ for name, tc := range tests {
 }
 ```
 
-**Legacy: Slice pattern** - uses `tc` for test case variable (do not use for new tests):
-```go
-tests := []struct {
-    name     string
-    input    string
-    expected string
-}{...}
-for _, tc := range tests {
-    t.Run(tc.name, func(t *testing.T) {
-        // use tc.field
-    })
-}
-```
-
 ## Version Management
 
 Versions use semantic versioning with git tags (format: `v*.*.*`).
 
 Version is generated dynamically using `git describe` and injected at build time:
+
 ```bash
 LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=`git describe --tags --match 'v*.*.*'`'
 ```
 
 **Versioning Rules**:
+
 - `semver:patch` - Bug fixes and changes behind experiment flags
 - `semver:minor` - New features (once experiments are removed)
 - `semver:major` - Breaking changes
@@ -186,6 +184,7 @@ When deprecating features, commands, or flags:
 ## Commit Message Format
 
 When creating commits and PRs, append to the end of the commit message:
+
 ```
 Co-Authored-By: Claude <svc-devxp-claude@slack-corp.com>
 ```
@@ -212,6 +211,7 @@ Use conventional commit format (feat:, fix:, chore:, etc.) for commit titles.
 ### Understanding API Calls
 
 All Slack API interactions go through `internal/api/`:
+
 - `client.go` - HTTP client setup
 - `app.go` - App management API calls
 - `auth.go` - Authentication API calls
