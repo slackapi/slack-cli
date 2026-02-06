@@ -245,12 +245,21 @@ func getAuths(ctx context.Context, clients *shared.ClientFactory) ([]types.Slack
 		}
 	}
 	if len(allAuths) == 0 {
-		auth := types.SlackAuth{}
-		err := validateAuth(ctx, clients, &auth)
-		if err != nil {
-			return nil, slackerror.New(slackerror.ErrNotAuthed)
+		// No workspaces connected - prompt user to login if interactive
+		if !clients.IO.IsTTY() {
+			return nil, slackerror.New(slackerror.ErrNotAuthed).
+				WithMessage("No workspaces connected").
+				WithRemediation("Run %s to sign in to a workspace", style.Commandf("login", false))
 		}
-		allAuths = append(allAuths, auth)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "wave",
+			Text:  "No workspaces connected. Sign in to get started.",
+		}))
+		newAuth, _, err := authpkg.LoginWithClients(ctx, clients, "", false)
+		if err != nil {
+			return nil, err
+		}
+		allAuths = append(allAuths, newAuth)
 	}
 	return allAuths, nil
 }
