@@ -15,6 +15,7 @@
 package project
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -238,6 +239,41 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 		}
 	}
 	return true, nil
+}
+
+// listTemplates prints available templates for the create command
+func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryShortcut string) error {
+	type categoryInfo struct {
+		id   string
+		name string
+	}
+
+	var categories []categoryInfo
+	if categoryShortcut == "agent" {
+		categories = []categoryInfo{
+			{id: "slack-cli#ai-apps", name: "AI Agent apps"},
+		}
+	} else {
+		categories = []categoryInfo{
+			{id: "slack-cli#getting-started", name: "Getting started"},
+			{id: "slack-cli#ai-apps", name: "AI Agent apps"},
+			{id: "slack-cli#automation-apps", name: "Automation apps"},
+		}
+	}
+
+	for _, category := range categories {
+		templates := getSelectionOptions(clients, category.id)
+		secondary := make([]string, len(templates))
+		for i, tmpl := range templates {
+			secondary[i] = tmpl.Repository
+		}
+		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			Text:      style.Bold(category.name),
+			Secondary: secondary,
+		}))
+	}
+
+	return nil
 }
 
 // getSelectionTemplate returns a custom formatted template used for selecting a
