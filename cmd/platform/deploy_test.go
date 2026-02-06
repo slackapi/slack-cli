@@ -214,11 +214,20 @@ func TestDeployCommand_ErrorMissingDeployHook(t *testing.T) {
 
 func TestDeployCommand_DeployHook(t *testing.T) {
 	tests := map[string]struct {
-		command        string
-		expectedStderr []string
-		expectedStdout string
-		expectedError  error
+		command             string
+		emptyDeployHook     bool
+		expectedStderr      []string
+		expectedStdout      string
+		expectedError       error
+		expectedMessage     string
+		expectedRemediation string
 	}{
+		"returns error when deploy hook is missing": {
+			emptyDeployHook:     true,
+			expectedError:       slackerror.New(slackerror.ErrSDKHookNotFound),
+			expectedMessage:     "No deploy script found",
+			expectedRemediation: "run",
+		},
 		"fails to execute an unknown script path": {
 			command:       "./deployer.sh",
 			expectedError: slackerror.New(slackerror.ErrSDKHookInvocationFailed),
@@ -274,7 +283,11 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 			sdkConfigMock := hooks.NewSDKConfigMock()
 			sdkConfigMock.Config.SupportedProtocols = []hooks.Protocol{hooks.HookProtocolDefault}
-			sdkConfigMock.Hooks.Deploy = hooks.HookScript{Name: "Deploy", Command: tc.command}
+			if tc.emptyDeployHook {
+				sdkConfigMock.Hooks.Deploy = hooks.HookScript{}
+			} else {
+				sdkConfigMock.Hooks.Deploy = hooks.HookScript{Name: "Deploy", Command: tc.command}
+			}
 
 			stdoutLogger := log.Logger{}
 			stdoutBuffer := bytes.Buffer{}
@@ -298,6 +311,15 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
 			testutil.MockCmdIO(clients.IO, cmd)
 
+			if tc.emptyDeployHook {
+				err := errorMissingDeployHook(clients)
+				require.Error(t, err)
+				slackErr := slackerror.ToSlackError(err)
+				assert.Equal(t, tc.expectedError.(*slackerror.Error).Code, slackErr.Code)
+				assert.Contains(t, slackErr.Message, tc.expectedMessage)
+				assert.Contains(t, slackErr.Remediation, tc.expectedRemediation)
+				return
+			}
 			err := cmd.ExecuteContext(ctx)
 			assert.Contains(t, stdoutBuffer.String(), tc.command)
 			if tc.expectedError != nil {
