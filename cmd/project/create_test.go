@@ -320,6 +320,46 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 			},
 		},
+		"lists all templates with --list flag": {
+			CmdArgs: []string{"--list"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedOutputs: []string{
+				"Getting started",
+				"AI Agent apps",
+				"Automation apps",
+				"slack-samples/bolt-js-starter-template",
+				"slack-samples/bolt-python-starter-template",
+				"slack-samples/bolt-js-assistant-template",
+				"slack-samples/bolt-python-assistant-template",
+				"slack-samples/bolt-js-custom-function-template",
+				"slack-samples/bolt-python-custom-function-template",
+				"slack-samples/deno-starter-template",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"lists agent templates with agent --list flag": {
+			CmdArgs: []string{"agent", "--list"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedOutputs: []string{
+				"AI Agent apps",
+				"slack-samples/bolt-js-assistant-template",
+				"slack-samples/bolt-python-assistant-template",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				output := cm.GetCombinedOutput()
+				assert.NotContains(t, output, "Getting started")
+				assert.NotContains(t, output, "Automation apps")
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCreateCommand(cf)
 	})
