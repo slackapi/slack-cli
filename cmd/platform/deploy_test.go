@@ -195,23 +195,6 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	}
 }
 
-func TestDeployCommand_ErrorMissingDeployHook(t *testing.T) {
-	clientsMock := shared.NewClientsMock()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
-		clients.SDKConfig = hooks.NewSDKConfigMock()
-		clients.SDKConfig.Hooks.Deploy.Command = ""
-	})
-
-	err := errorMissingDeployHook(clients)
-	require.Error(t, err)
-	slackErr := slackerror.ToSlackError(err)
-	assert.Equal(t, slackerror.ErrSDKHookNotFound, slackErr.Code)
-	assert.Contains(t, slackErr.Message, "No deploy script found")
-	assert.Contains(t, slackErr.Remediation, "run")
-	assert.Contains(t, slackErr.Remediation, "local development server")
-	assert.Contains(t, slackErr.Remediation, "https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy")
-}
-
 func TestDeployCommand_DeployHook(t *testing.T) {
 	tests := map[string]struct {
 		command             string
@@ -227,6 +210,12 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			expectedError:       slackerror.New(slackerror.ErrSDKHookNotFound),
 			expectedMessage:     "No deploy script found",
 			expectedRemediation: "run",
+		},
+		"returns error with docs URL in remediation when deploy hook is missing": {
+			emptyDeployHook:     true,
+			expectedError:       slackerror.New(slackerror.ErrSDKHookNotFound),
+			expectedMessage:     "No deploy script found",
+			expectedRemediation: "https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy",
 		},
 		"fails to execute an unknown script path": {
 			command:       "./deployer.sh",
