@@ -290,15 +290,6 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
 			testutil.MockCmdIO(clients.IO, cmd)
 
-			if tc.emptyDeployHook {
-				err := errorMissingDeployHook(clients)
-				require.Error(t, err)
-				slackErr := slackerror.ToSlackError(err)
-				assert.Equal(t, tc.expectedError.(*slackerror.Error).Code, slackErr.Code)
-				assert.Contains(t, slackErr.Message, tc.expectedMessage)
-				assert.Contains(t, slackErr.Remediation, tc.expectedRemediation)
-				return
-			}
 			err := cmd.ExecuteContext(ctx)
 			assert.Contains(t, stdoutBuffer.String(), tc.command)
 			if tc.expectedError != nil {
