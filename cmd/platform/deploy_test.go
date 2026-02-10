@@ -204,13 +204,10 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 
 func TestDeployCommand_DeployHook(t *testing.T) {
 	tests := map[string]struct {
-		command             string
-		emptyDeployHook     bool
-		expectedStderr      []string
-		expectedStdout      string
-		expectedError       error
-		expectedMessage     string
-		expectedRemediation string
+		command        string
+		expectedStderr []string
+		expectedStdout string
+		expectedError  error
 	}{
 		"fails to execute an unknown script path": {
 			command:       "./deployer.sh",
