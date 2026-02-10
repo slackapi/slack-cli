@@ -268,6 +268,7 @@ func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryS
 			secondary[i] = tmpl.Repository
 		}
 		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			Emoji:     "house_buildings",
 			Text:      style.Bold(category.name),
 			Secondary: secondary,
 		}))
