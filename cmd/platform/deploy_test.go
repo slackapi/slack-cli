@@ -267,11 +267,6 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 			sdkConfigMock := hooks.NewSDKConfigMock()
 			sdkConfigMock.Config.SupportedProtocols = []hooks.Protocol{hooks.HookProtocolDefault}
-			if tc.emptyDeployHook {
-				sdkConfigMock.Hooks.Deploy = hooks.HookScript{}
-			} else {
-				sdkConfigMock.Hooks.Deploy = hooks.HookScript{Name: "Deploy", Command: tc.command}
-			}
 
 			stdoutLogger := log.Logger{}
 			stdoutBuffer := bytes.Buffer{}
