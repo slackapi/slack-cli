@@ -257,7 +257,7 @@ func getAuths(ctx context.Context, clients *shared.ClientFactory) ([]types.Slack
 		}))
 		newAuth, _, err := authpkg.LoginWithClients(ctx, clients, "", false)
 		if err != nil {
-			return nil, slackerror.New(slackerror.ErrNotAuthed).WithCause(err)
+			return nil, slackerror.New(slackerror.ErrNotAuthed).WithRootCause(err)
 		}
 		allAuths = append(allAuths, newAuth)
 	}
