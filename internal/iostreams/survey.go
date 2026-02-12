@@ -175,7 +175,8 @@ var InputQuestionTemplate = fmt.Sprintf(`
 
 // InputPromptConfig holds additional config for an Input prompt
 type InputPromptConfig struct {
-	Required bool // Whether the input must be non-empty
+	Required bool   // Whether the input must be non-empty
+	Default  string // Default value pre-filled in the prompt
 }
 
 // GetFlags returns all flags for the Input prompt
@@ -200,6 +201,7 @@ func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputP
 	var input string
 	err := survey.AskOne(&survey.Input{
 		Message: message,
+		Default: cfg.Default,
 	}, &input, SurveyOptions(cfg)...)
 
 	if err != nil {

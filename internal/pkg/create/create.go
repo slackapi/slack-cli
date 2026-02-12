@@ -150,8 +150,8 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	return appDirPath, nil
 }
 
-// generateRandomAppName will create a random app name based on two words and a number
-func generateRandomAppName() string {
+// GenerateRandomAppName will create a random app name based on two words and a number
+func GenerateRandomAppName() string {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	var firstRandomNum = rand.Intn(len(adjectives))
 	var secondRandomNum = rand.Intn(len(animals))
@@ -162,7 +162,7 @@ func generateRandomAppName() string {
 // getAppDirName will validate and return the app's directory name
 func getAppDirName(appName string) (string, error) {
 	if len(appName) <= 0 {
-		return generateRandomAppName(), nil
+		return GenerateRandomAppName(), nil
 	}
 
 	// trim whitespace

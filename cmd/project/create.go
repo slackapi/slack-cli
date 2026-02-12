@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -125,6 +126,21 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	template, err := promptTemplateSelection(cmd, clients, categoryShortcut)
 	if err != nil {
 		return err
+	}
+
+	// Prompt for app name if not provided via flag or argument
+	if appNameArg == "" {
+		defaultName := create.GenerateRandomAppName()
+		cmd.Print(style.Secondary(fmt.Sprintf("  Press Enter to use the generated name: %s", defaultName)), "\n")
+		name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{})
+		if err != nil {
+			return err
+		}
+		if name != "" {
+			appNameArg = name
+		} else {
+			appNameArg = defaultName
+		}
 	}
 
 	// Set up spinners
