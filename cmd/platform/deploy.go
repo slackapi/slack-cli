@@ -316,16 +316,13 @@ func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Comm
 func errorMissingDeployHook(clients *shared.ClientFactory) error {
 	if !clients.SDKConfig.Hooks.Deploy.IsAvailable() {
 		return slackerror.New(slackerror.ErrSDKHookNotFound).
-			WithMessage("Missing the `deploy` hook from the `%s` file", config.GetProjectHooksJSONFilePath()).
+			WithMessage("No deploy script found").
 			WithRemediation("%s", strings.Join([]string{
-				"Provide a command or script to run with the deploy command by adding a new hook.",
+				"For deployment options, see:",
+				"  https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy",
 				"",
-				fmt.Sprintf("Example `%s` `deploy` hook:", config.GetProjectHooksJSONFilePath()),
-				"{",
-				`  "hooks": {`,
-				`    "deploy": "./deploy.sh"`,
-				"  }",
-				"}",
+				"To start a local development server, use:",
+				fmt.Sprintf("  %s", style.Commandf("run", false)),
 			}, "\n"))
 	}
 	return nil
