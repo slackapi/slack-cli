@@ -111,12 +111,14 @@ func TestDeployCommand(t *testing.T) {
 
 func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	tests := map[string]struct {
-		app            types.App
-		manifest       types.SlackYaml
-		manifestError  error
-		manifestSource config.ManifestSource
-		deployScript   string
-		expectedError  error
+		app                 types.App
+		manifest            types.SlackYaml
+		manifestError       error
+		manifestSource      config.ManifestSource
+		deployScript        string
+		expectedError       error
+		expectedMessage     string
+		expectedRemediation []string
 	}{
 		"fails when no manifest exists": {
 			manifestError:  slackerror.New(slackerror.ErrInvalidManifest),
@@ -142,8 +144,10 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			deployScript:   "sleep 4",
 		},
 		"fails if no deploy hook is provided": {
-			manifestSource: config.ManifestSourceLocal,
-			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
+			manifestSource:      config.ManifestSourceLocal,
+			expectedError:       slackerror.New(slackerror.ErrSDKHookNotFound),
+			expectedMessage:     "No deploy script found",
+			expectedRemediation: []string{"https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy", "run"},
 		},
 		"succeeds if the app exists and the manifest source is remote": {
 			app: types.App{
@@ -183,11 +187,14 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			err := hasValidDeploymentMethod(ctx, clients, app, types.SlackAuth{})
 			if tc.expectedError != nil {
 				require.Error(t, err)
-				assert.Equal(
-					t,
-					slackerror.ToSlackError(tc.expectedError).Code,
-					slackerror.ToSlackError(err).Code,
-				)
+				slackErr := slackerror.ToSlackError(err)
+				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackErr.Code)
+				if tc.expectedMessage != "" {
+					assert.Contains(t, slackErr.Message, tc.expectedMessage)
+				}
+				for _, r := range tc.expectedRemediation {
+					assert.Contains(t, slackErr.Remediation, r)
+				}
 			} else {
 				require.NoError(t, err)
 			}

@@ -32,6 +32,7 @@ import (
 var createTemplateURLFlag string
 var createGitBranchFlag string
 var createAppNameFlag string
+var createListFlag bool
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -77,6 +78,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 	cmd.Flags().StringVarP(&createTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&createGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
 	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
+	cmd.Flags().BoolVar(&createListFlag, "list", false, "list available app templates")
 
 	return cmd
 }
@@ -119,6 +121,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	// This allows users to name their app "agent" without triggering the AI Agent shortcut
 	if nameFlagProvided {
 		appNameArg = createAppNameFlag
+	}
+
+	// List templates and exit early if the --list flag is set
+	if createListFlag {
+		return listTemplates(ctx, clients, categoryShortcut)
 	}
 
 	// Collect the template URL or select a starting template
