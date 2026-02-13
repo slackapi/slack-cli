@@ -543,7 +543,8 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 				},
 			},
 		},
-		"returns unknown installation statuses for apps without auths": {
+		"returns unknown installation statuses for apps when status check fails": {
+			mockAuths: fakeAuthsByTeamDomainSlice,
 			mockAppsSavedDeployed: []types.App{
 				deployedTeam1InstalledApp,
 			},
@@ -559,6 +560,7 @@ func TestPrompt_AppSelectPrompt_GetApps(t *testing.T) {
 						TeamID:        team1TeamID,
 						InstallStatus: types.AppInstallationStatusUnknown,
 					},
+					Auth: fakeAuthsByTeamDomain[team1TeamDomain],
 				},
 			},
 		},
@@ -1093,6 +1095,7 @@ func TestPrompt_AppSelectPrompt(t *testing.T) {
 			expectedError:              slackerror.New(slackerror.ErrLocalAppNotSupported),
 		},
 		"errors if team id flag does not have authorization": {
+			mockAuths:                  []types.SlackAuth{fakeAuthsByTeamDomain[team2TeamDomain]},
 			mockFlagTeam:               team1TeamID,
 			appPromptConfigEnvironment: ShowHostedOnly,
 			appPromptConfigStatus:      ShowInstalledAndNewApps,
@@ -1804,6 +1807,102 @@ func Test_ValidateAuth(t *testing.T) {
 				clientsMock.API.AssertCalled(t, "SetHost", *tc.authExpected.APIHost)
 			}
 			assert.Equal(t, tc.authExpected, tc.authProvided)
+		})
+	}
+}
+
+// Test_getAuths_NoWorkspacesConnected tests the login prompt behavior when no
+// workspaces are connected
+func Test_getAuths_NoWorkspacesConnected(t *testing.T) {
+	tests := map[string]struct {
+		isTTY                               bool
+		expectedErr                         error
+		apiExchangeAuthTicketResultResponse api.ExchangeAuthTicketResult
+		apiExchangeAuthTicketResultError    error
+		apiGenerateAuthTicketResultResponse api.GenerateAuthTicketResult
+		apiGenerateAuthTicketResultError    error
+	}{
+		"returns error when not interactive and no workspaces connected": {
+			isTTY:       false,
+			expectedErr: slackerror.New(slackerror.ErrNotAuthed),
+		},
+		"prompts for login when interactive and no workspaces connected": {
+			isTTY: true,
+			apiExchangeAuthTicketResultResponse: api.ExchangeAuthTicketResult{
+				TeamDomain: team1TeamDomain,
+				TeamID:     team1TeamID,
+				Token:      team1Token,
+				UserID:     team1UserID,
+			},
+			apiGenerateAuthTicketResultResponse: api.GenerateAuthTicketResult{
+				Ticket: "ticket123",
+			},
+			expectedErr: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Auth.On(Auths, mock.Anything).Return([]types.SlackAuth{}, nil)
+			clientsMock.IO.On("IsTTY").Return(tc.isTTY)
+			clientsMock.API.On(
+				"GenerateAuthTicket",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(
+				tc.apiGenerateAuthTicketResultResponse,
+				tc.apiGenerateAuthTicketResultError,
+			)
+			clientsMock.API.On(
+				"ExchangeAuthTicket",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(
+				tc.apiExchangeAuthTicketResultResponse,
+				tc.apiExchangeAuthTicketResultError,
+			)
+			clientsMock.Auth.On(
+				"IsAPIHostSlackProd",
+				mock.Anything,
+			).Return(true)
+			clientsMock.Auth.On(
+				"SetAuth",
+				mock.Anything,
+				mock.Anything,
+			).Return(
+				types.SlackAuth{},
+				"",
+				nil,
+			)
+			clientsMock.IO.On(
+				"InputPrompt",
+				mock.Anything,
+				"Enter challenge code",
+				iostreams.InputPromptConfig{Required: true},
+			).Return(
+				"challengeCode",
+				nil,
+			)
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			auths, err := getAuths(ctx, clients)
+
+			if tc.expectedErr != nil {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedErr.(*slackerror.Error).Code, slackerror.ToSlackError(err).Code)
+				assert.Contains(t, slackerror.ToSlackError(err).Message, "No workspaces connected")
+			} else {
+				require.NoError(t, err)
+				require.Len(t, auths, 1)
+				assert.Equal(t, team1TeamID, auths[0].TeamID)
+				// Verify the welcome message was printed
+				assert.Contains(t, clientsMock.GetStdoutOutput(), "No workspaces connected")
+			}
 		})
 	}
 }
