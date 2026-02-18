@@ -46,6 +46,7 @@ func TestCreateCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"creates a bolt application from prompts": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
@@ -82,6 +83,7 @@ func TestCreateCommand(t *testing.T) {
 		"creates a deno application from flags": {
 			CmdArgs: []string{"--template", "slack-samples/deno-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
@@ -118,6 +120,7 @@ func TestCreateCommand(t *testing.T) {
 		"creates an agent app using agent argument shortcut": {
 			CmdArgs: []string{"agent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
 				// Should skip category prompt and go directly to language selection
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
 					Return(
@@ -344,6 +347,7 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"user accepts default name from prompt": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{

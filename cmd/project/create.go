@@ -17,8 +17,10 @@ package project
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/logger"
@@ -130,7 +132,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 
 	// Prompt for app name if not provided via flag or argument
 	if appNameArg == "" && clients.IO.IsTTY() {
-		defaultName := create.GenerateRandomAppName()
+		defaultName := generateRandomAppName()
 		cmd.Print(style.Secondary(fmt.Sprintf("  Press Enter to use the generated name: %s", defaultName)), "\n")
 		name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{})
 		if err != nil {
@@ -284,6 +286,15 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 		}))
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.CreateSuccess)
+}
+
+// generateRandomAppName will create a random app name based on two words and a number
+func generateRandomAppName() string {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	var firstRandomNum = rand.Intn(len(create.Adjectives))
+	var secondRandomNum = rand.Intn(len(create.Animals))
+	var randomName = fmt.Sprintf("%s-%s-%d", create.Adjectives[firstRandomNum], create.Animals[secondRandomNum], rand.Intn(1000))
+	return randomName
 }
 
 // printAppCreateError stops the creation spinners and displays the returned error message
