@@ -4,10 +4,13 @@ Create a new Slack project
 
 ## Description
 
-Create a new Slack project on your local machine from an optional template
+Create a new Slack project on your local machine from an optional template.
+
+The 'agent' argument is a shortcut to create an AI Agent app. If you want to
+name your app 'agent' (not create an AI Agent), use the --name flag instead.
 
 ```
-slack project create [name] [flags]
+slack project create [name | agent <name>] [flags]
 ```
 
 ## Flags
@@ -15,6 +18,8 @@ slack project create [name] [flags]
 ```
   -b, --branch string     name of git branch to checkout
   -h, --help              help for create
+      --list              list available app templates
+  -n, --name string       name for your app (overrides the name argument)
   -t, --template string   template URL for your app
 ```
 
@@ -38,8 +43,14 @@ slack project create [name] [flags]
 # Create a new project from a template
 $ slack create my-project
 
+# Create a new AI Agent app
+$ slack create agent my-agent-app
+
 # Start a new project from a specific template
 $ slack create my-project -t slack-samples/deno-hello-world
+
+# Create a project named 'my-project'
+$ slack create --name my-project
 ```
 
 ## See also
