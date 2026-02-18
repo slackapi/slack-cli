@@ -129,7 +129,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	}
 
 	// Prompt for app name if not provided via flag or argument
-	if appNameArg == "" {
+	if appNameArg == "" && clients.IO.IsTTY() {
 		defaultName := create.GenerateRandomAppName()
 		cmd.Print(style.Secondary(fmt.Sprintf("  Press Enter to use the generated name: %s", defaultName)), "\n")
 		name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{})
