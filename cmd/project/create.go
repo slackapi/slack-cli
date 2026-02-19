@@ -33,6 +33,7 @@ var createTemplateURLFlag string
 var createGitBranchFlag string
 var createAppNameFlag string
 var createListFlag bool
+var createSubdirFlag string
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -66,6 +67,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 			{Command: "create agent my-agent-app", Meaning: "Create a new AI Agent app"},
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
 			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
+			{Command: "create my-project -t org/monorepo --subdir apps/my-app", Meaning: "Create from a subdirectory of a template"},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -79,6 +81,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 	cmd.Flags().StringVarP(&createGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
 	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
 	cmd.Flags().BoolVar(&createListFlag, "list", false, "list available app templates")
+	cmd.Flags().StringVar(&createSubdirFlag, "subdir", "", "subdirectory within the template to use as project root")
 
 	return cmd
 }
@@ -141,6 +144,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		AppName:   appNameArg,
 		Template:  template,
 		GitBranch: createGitBranchFlag,
+		Subdir:    createSubdirFlag,
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 

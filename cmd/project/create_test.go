@@ -320,6 +320,52 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 			},
 		},
+		"passes subdir flag to create function": {
+			CmdArgs: []string{"--template", "slack-samples/bolt-js-starter-template", "--subdir", "apps/my-app"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Flag:   true,
+							Option: "slack-samples/bolt-js-starter-template",
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Flag:   true,
+							Option: "slack-samples/bolt-js-starter-template",
+						},
+						nil,
+					)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
+				require.NoError(t, err)
+				expected := create.CreateArgs{
+					Template: template,
+					Subdir:   "apps/my-app",
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+			},
+		},
+		"list flag ignores subdir": {
+			CmdArgs: []string{"--list", "--subdir", "foo"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedOutputs: []string{
+				"Getting started",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
 		"lists all templates with --list flag": {
 			CmdArgs: []string{"--list"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
