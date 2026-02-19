@@ -763,7 +763,7 @@ func OrgSelectWorkspacePrompt(ctx context.Context, clients *shared.ClientFactory
 		msg = fmt.Sprintf("%s   %s\n", msg, style.Secondary("Workspace not listed? Use the `--org-workspace-grant=<team_id>` flag"))
 	}
 
-	clients.IO.PrintInfo(ctx, false, msg)
+	clients.IO.PrintInfo(ctx, false, "%s", msg)
 	selection, err := clients.IO.SelectPrompt(ctx, "Choose a workspace to grant access:", teamDomains, iostreams.SelectPromptConfig{
 		PageSize: 4,
 		Required: true,
@@ -791,7 +791,7 @@ func ValidateGetOrgWorkspaceGrant(ctx context.Context, clients *shared.ClientFac
 	// Not an org app; should not be setting the org workspace flag
 	if !(newAppOrgAuth || types.IsEnterpriseTeamID(selection.App.TeamID)) && orgGrantWorkspaceID != "" {
 		orgGrantWorkspaceID = ""
-		clients.IO.PrintDebug(ctx, fmt.Sprintf("--%s flag ignored for app that wasn't created on an org", cmdutil.OrgGrantWorkspaceFlag))
+		clients.IO.PrintDebug(ctx, "--%s flag ignored for app that wasn't created on an org", cmdutil.OrgGrantWorkspaceFlag)
 	}
 
 	// Prevent user from adding grants for multiple org workspaces
@@ -886,7 +886,7 @@ func validateAuth(ctx context.Context, clients *shared.ClientFactory, auth *type
 	if unfilteredError != nil || !clients.IO.IsTTY() {
 		return err
 	}
-	clients.IO.PrintInfo(ctx, false, fmt.Sprintf("\n%sWhoops! Looks like your authentication may be expired or invalid", style.Emoji("lock")))
+	clients.IO.PrintInfo(ctx, false, "\n%sWhoops! Looks like your authentication may be expired or invalid", style.Emoji("lock"))
 	reauth, _, err := authpkg.Login(ctx, apiClient, clients.Auth(), clients.IO, "", false)
 	if err != nil {
 		return err

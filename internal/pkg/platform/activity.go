@@ -155,7 +155,7 @@ func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, tok
 			latestTimestamp = activity.Created
 		}
 
-		clients.IO.PrintInfo(ctx, false, prettifyActivity(activity))
+		clients.IO.PrintInfo(ctx, false, "%s", prettifyActivity(activity))
 	}
 
 	return latestTimestamp, len(result.Activities), nil

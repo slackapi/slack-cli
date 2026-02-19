@@ -308,7 +308,7 @@ func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Comm
 		},
 	})
 
-	clients.IO.PrintInfo(ctx, false, navigateText)
+	clients.IO.PrintInfo(ctx, false, "%s", navigateText)
 	return nil
 }
 

@@ -72,9 +72,9 @@ func printRevokeSuccess(ctx context.Context, clients *shared.ClientFactory) {
 	}
 
 	clients.IO.PrintTrace(ctx, slacktrace.AuthRevokeSuccess)
-	clients.IO.PrintInfo(ctx, false, fmt.Sprintf("\n%s", style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "wastebasket",
 		Text:      revokedAuthText,
 		Secondary: logoutNextSteps,
-	})))
+	}))
 }

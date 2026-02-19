@@ -277,7 +277,7 @@ func promptDatastoreQueryRequest(
 
 	// Display a hint for writing expressions
 	clients.IO.PrintInfo(ctx, false, "")
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "bulb",
 		Text:  "Expressions should use the following format",
 		Secondary: []string{
