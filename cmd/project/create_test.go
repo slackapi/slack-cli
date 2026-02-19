@@ -379,6 +379,39 @@ func TestCreateCommand(t *testing.T) {
 				}))
 			},
 		},
+		"non-TTY without name falls back to generated name": {
+			CmdArgs: []string{"--template", "slack-samples/bolt-js-starter-template"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				// IsTTY defaults to false via AddDefaultMocks, simulating piped output
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Flag:   true,
+							Option: "slack-samples/bolt-js-starter-template",
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Flag:   true,
+							Option: "slack-samples/bolt-js-starter-template",
+						},
+						nil,
+					)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// Should NOT prompt for name since not a TTY
+				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
+				// Should still call Create with a non-empty generated name
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
+					return args.AppName != ""
+				}))
+			},
+		},
 		"positional arg skips name prompt": {
 			CmdArgs: []string{"my-project"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
