@@ -85,19 +85,19 @@ func Test_getVenvPath(t *testing.T) {
 
 func Test_getPythonExecutable(t *testing.T) {
 	tests := []struct {
-		name             string
+		name               string
 		expectedExecutable string
-		skipOnOS         string
+		skipOnOS           string
 	}{
 		{
-			name:             "Get python executable on Unix",
+			name:               "Get python executable on Unix",
 			expectedExecutable: "python3",
-			skipOnOS:         "windows",
+			skipOnOS:           "windows",
 		},
 		{
-			name:             "Get python executable on Windows",
+			name:               "Get python executable on Windows",
 			expectedExecutable: "python",
-			skipOnOS:         "linux",
+			skipOnOS:           "linux",
 		},
 	}
 	for _, tt := range tests {
