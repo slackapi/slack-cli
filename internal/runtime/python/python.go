@@ -104,7 +104,10 @@ func createVirtualEnvironment(ctx context.Context, projectDirPath string) error 
 	return nil
 }
 
-// runPipInstall runs pip install with the given arguments
+// runPipInstall runs pip install with the given arguments.
+// The venv does not need to be activated because pip is invoked by its full
+// path inside the venv, which ensures packages are installed into the venv's
+// site-packages directory.
 func runPipInstall(ctx context.Context, venvPath string, projectDirPath string, args ...string) (string, error) {
 	pipPath := getPipExecutable(venvPath)
 
