@@ -17,7 +17,9 @@ package python
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -85,19 +87,19 @@ func Test_getVenvPath(t *testing.T) {
 
 func Test_getPythonExecutable(t *testing.T) {
 	tests := []struct {
-		name             string
+		name               string
 		expectedExecutable string
-		skipOnOS         string
+		skipOnOS           string
 	}{
 		{
-			name:             "Get python executable on Unix",
+			name:               "Get python executable on Unix",
 			expectedExecutable: "python3",
-			skipOnOS:         "windows",
+			skipOnOS:           "windows",
 		},
 		{
-			name:             "Get python executable on Windows",
+			name:               "Get python executable on Windows",
 			expectedExecutable: "python",
-			skipOnOS:         "linux",
+			skipOnOS:           "linux",
 		},
 	}
 	for _, tt := range tests {
@@ -310,6 +312,69 @@ func Test_venvExists(t *testing.T) {
 
 			result := venvExists(fs, tt.venvPath)
 			require.Equal(t, tt.expectedResult, result)
+		})
+	}
+}
+
+func Test_getVenvBinDir(t *testing.T) {
+	result := getVenvBinDir("/path/to/.venv")
+	if runtime.GOOS == "windows" {
+		require.Equal(t, filepath.Join("/path/to/.venv", "Scripts"), result)
+	} else {
+		require.Equal(t, filepath.Join("/path/to/.venv", "bin"), result)
+	}
+}
+
+func Test_ActivateVenvIfPresent(t *testing.T) {
+	tests := map[string]struct {
+		createVenv        bool
+		expectedActivated bool
+	}{
+		"activates venv when it exists": {
+			createVenv:        true,
+			expectedActivated: true,
+		},
+		"no-op when venv does not exist": {
+			createVenv:        false,
+			expectedActivated: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+			projectDir := "/path/to/project"
+			venvPath := filepath.Join(projectDir, ".venv")
+
+			// Save and restore env vars
+			t.Setenv("VIRTUAL_ENV", "")
+			t.Setenv("PYTHONHOME", "original-pythonhome")
+			originalPath := os.Getenv("PATH")
+			t.Setenv("PATH", originalPath)
+
+			if tc.createVenv {
+				// Create the pip executable so venvExists returns true
+				pipPath := getPipExecutable(venvPath)
+				err := fs.MkdirAll(filepath.Dir(pipPath), 0755)
+				require.NoError(t, err)
+				err = afero.WriteFile(fs, pipPath, []byte(""), 0755)
+				require.NoError(t, err)
+			}
+
+			err := ActivateVenvIfPresent(fs, projectDir)
+			require.NoError(t, err)
+
+			if tc.expectedActivated {
+				require.Equal(t, venvPath, os.Getenv("VIRTUAL_ENV"))
+				expectedBinDir := getVenvBinDir(venvPath)
+				require.Contains(t, os.Getenv("PATH"), expectedBinDir+string(filepath.ListSeparator))
+				// PYTHONHOME should be unset (empty)
+				_, pythonHomeSet := os.LookupEnv("PYTHONHOME")
+				require.False(t, pythonHomeSet)
+			} else {
+				require.Equal(t, "", os.Getenv("VIRTUAL_ENV"))
+				require.Equal(t, originalPath, os.Getenv("PATH"))
+				require.Equal(t, "original-pythonhome", os.Getenv("PYTHONHOME"))
+			}
 		})
 	}
 }

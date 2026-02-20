@@ -224,6 +224,12 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 		// Move upward one directory level
 		dirPath = filepath.Dir(dirPath)
 	}
+	// Activate Python virtual environment if present, so hook scripts
+	// can resolve the venv's Python and installed packages.
+	if err := runtime.ActivatePythonVenvIfPresent(c.Fs, dirPath); err != nil {
+		c.IO.PrintDebug(ctx, "failed to activate Python virtual environment: %s", err)
+	}
+
 	configFileBytes, err := afero.ReadFile(c.Fs, hooksJSONFilePath)
 	if err != nil {
 		return err // Fixes regression: do not wrap this error, so that the caller can use `os.IsNotExists`
