@@ -320,7 +320,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	// and its declared dependencies. Then requirements.txt is installed second so its version
 	// pins take precedence, as it typically serves as the lockfile.
 	if hasPyProjectToml {
-		outputs = append(outputs, "Installing dependencies from pyproject.toml")
+		ios.PrintDebug(ctx, "Installing dependencies from pyproject.toml")
 		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-e", ".")
 		if err != nil {
 			errs = append(errs, err)
@@ -331,7 +331,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	}
 
 	if hasRequirementsTxt {
-		outputs = append(outputs, "Installing dependencies from requirements.txt")
+		ios.PrintDebug(ctx, "Installing dependencies from requirements.txt")
 		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-r", "requirements.txt")
 		if err != nil {
 			errs = append(errs, err)
