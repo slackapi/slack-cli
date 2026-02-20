@@ -190,18 +190,18 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	projectSection, exists := config["project"]
 	if !exists {
 		err := fmt.Errorf("pyproject.toml missing project section")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	projectMap, ok := projectSection.(map[string]interface{})
 	if !ok {
 		err := fmt.Errorf("pyproject.toml project section is not a valid format")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	if _, exists := projectMap["dependencies"]; !exists {
 		err := fmt.Errorf("pyproject.toml missing dependencies array")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	// Use string manipulation to add the dependency while preserving formatting.
@@ -213,7 +213,7 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 
 	if len(matches) == 0 {
 		err := fmt.Errorf("pyproject.toml missing dependencies array")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	prefix := matches[1]  // "...dependencies = ["
@@ -308,11 +308,6 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 		if err != nil {
 			errs = append(errs, err)
 		}
-	}
-
-	// Return early if we had errors updating dependency files
-	if len(errs) > 0 {
-		return strings.Join(outputs, "\n"), errs[0]
 	}
 
 	// Install dependencies using pip
