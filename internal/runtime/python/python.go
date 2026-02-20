@@ -282,7 +282,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 
 	// Create virtual environment if it doesn't exist
 	if !venvExists(fs, venvPath) {
-		outputs = append(outputs, "Creating Python virtual environment")
+		ios.PrintDebug(ctx, "Creating Python virtual environment")
 		if err := createVirtualEnvironment(ctx, projectDirPath); err != nil {
 			outputs = append(outputs, fmt.Sprintf("Error creating virtual environment: %s", err))
 			return strings.Join(outputs, "\n"), err
