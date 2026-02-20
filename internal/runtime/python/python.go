@@ -68,6 +68,14 @@ func getVenvPath(projectDirPath string) string {
 	return filepath.Join(projectDirPath, ".venv")
 }
 
+// getPythonExecutable returns the Python executable name for the current OS
+func getPythonExecutable() string {
+	if runtime.GOOS == "windows" {
+		return "python"
+	}
+	return "python3"
+}
+
 // getPipExecutable returns the path to the pip executable in the virtual environment
 func getPipExecutable(venvPath string) string {
 	if runtime.GOOS == "windows" {
@@ -87,7 +95,7 @@ func venvExists(fs afero.Fs, venvPath string) bool {
 
 // createVirtualEnvironment creates a Python virtual environment
 func createVirtualEnvironment(ctx context.Context, projectDirPath string) error {
-	cmd := exec.CommandContext(ctx, "python3", "-m", "venv", ".venv")
+	cmd := exec.CommandContext(ctx, getPythonExecutable(), "-m", "venv", ".venv")
 	cmd.Dir = projectDirPath
 	output, err := cmd.CombinedOutput()
 	if err != nil {

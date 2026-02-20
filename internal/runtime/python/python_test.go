@@ -83,6 +83,34 @@ func Test_getVenvPath(t *testing.T) {
 	}
 }
 
+func Test_getPythonExecutable(t *testing.T) {
+	tests := []struct {
+		name             string
+		expectedExecutable string
+		skipOnOS         string
+	}{
+		{
+			name:             "Get python executable on Unix",
+			expectedExecutable: "python3",
+			skipOnOS:         "windows",
+		},
+		{
+			name:             "Get python executable on Windows",
+			expectedExecutable: "python",
+			skipOnOS:         "linux",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.skipOnOS != "" {
+				return
+			}
+			result := getPythonExecutable()
+			require.Equal(t, tt.expectedExecutable, result)
+		})
+	}
+}
+
 func Test_getPipExecutable(t *testing.T) {
 	tests := []struct {
 		name         string
