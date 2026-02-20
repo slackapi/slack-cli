@@ -326,7 +326,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 			errs = append(errs, err)
 			outputs = append(outputs, fmt.Sprintf("Error installing from pyproject.toml: %s\n%s", err, pipOutput))
 		} else {
-			outputs = append(outputs, "Successfully installed dependencies from pyproject.toml")
+			outputs = append(outputs, fmt.Sprintf("Installed dependencies from %s", style.Highlight("pyproject.toml")))
 		}
 	}
 
@@ -337,7 +337,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 			errs = append(errs, err)
 			outputs = append(outputs, fmt.Sprintf("Error installing from requirements.txt: %s\n%s", err, pipOutput))
 		} else {
-			outputs = append(outputs, "Successfully installed dependencies from requirements.txt")
+			outputs = append(outputs, fmt.Sprintf("Installed dependencies from %s", style.Highlight("requirements.txt")))
 		}
 	}
 
