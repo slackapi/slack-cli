@@ -305,17 +305,9 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	}
 
 	// Install dependencies using pip
-	if hasRequirementsTxt {
-		outputs = append(outputs, "Installing dependencies from requirements.txt")
-		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-r", "requirements.txt")
-		if err != nil {
-			errs = append(errs, err)
-			outputs = append(outputs, fmt.Sprintf("Error installing from requirements.txt: %s\n%s", err, pipOutput))
-		} else {
-			outputs = append(outputs, "Successfully installed dependencies from requirements.txt")
-		}
-	}
-
+	// When both files exist, pyproject.toml is installed first to set up the project package
+	// and its declared dependencies. Then requirements.txt is installed second so its version
+	// pins take precedence, as it typically serves as the lockfile.
 	if hasPyProjectToml {
 		outputs = append(outputs, "Installing dependencies from pyproject.toml")
 		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-e", ".")
@@ -324,6 +316,17 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 			outputs = append(outputs, fmt.Sprintf("Error installing from pyproject.toml: %s\n%s", err, pipOutput))
 		} else {
 			outputs = append(outputs, "Successfully installed dependencies from pyproject.toml")
+		}
+	}
+
+	if hasRequirementsTxt {
+		outputs = append(outputs, "Installing dependencies from requirements.txt")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-r", "requirements.txt")
+		if err != nil {
+			errs = append(errs, err)
+			outputs = append(outputs, fmt.Sprintf("Error installing from requirements.txt: %s\n%s", err, pipOutput))
+		} else {
+			outputs = append(outputs, "Successfully installed dependencies from requirements.txt")
 		}
 	}
 
