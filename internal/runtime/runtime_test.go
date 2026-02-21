@@ -15,6 +15,7 @@
 package runtime
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/hooks"
@@ -22,7 +23,9 @@ import (
 	"github.com/slackapi/slack-cli/internal/runtime/node"
 	"github.com/slackapi/slack-cli/internal/runtime/python"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -53,6 +56,56 @@ func Test_Runtime_New(t *testing.T) {
 			// Run the test
 			rt, _ := New(tc.runtime)
 			require.IsType(t, tc.expectedRuntimeType, rt)
+		})
+	}
+}
+
+func Test_ActivatePythonVenvIfPresent(t *testing.T) {
+	tests := map[string]struct {
+		createVenv        bool
+		expectedActivated bool
+	}{
+		"activates venv when it exists": {
+			createVenv:        true,
+			expectedActivated: true,
+		},
+		"no-op when venv does not exist": {
+			createVenv:        false,
+			expectedActivated: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			projectDir := "/path/to/project"
+			venvPath := filepath.Join(projectDir, ".venv")
+
+			osMock.On("Getenv", "PATH").Return("/usr/bin:/bin")
+			osMock.AddDefaultMocks()
+
+			if tc.createVenv {
+				// Create the pip executable so venvExists returns true
+				var pipPath string
+				pipPath = filepath.Join(venvPath, "bin", "pip")
+				err := fs.MkdirAll(filepath.Dir(pipPath), 0755)
+				require.NoError(t, err)
+				err = afero.WriteFile(fs, pipPath, []byte(""), 0755)
+				require.NoError(t, err)
+			}
+
+			activated, err := ActivatePythonVenvIfPresent(fs, osMock, projectDir)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedActivated, activated)
+
+			if tc.expectedActivated {
+				osMock.AssertCalled(t, "Setenv", "VIRTUAL_ENV", venvPath)
+				osMock.AssertCalled(t, "Setenv", "PATH", mock.Anything)
+				osMock.AssertCalled(t, "Unsetenv", "PYTHONHOME")
+			} else {
+				osMock.AssertNotCalled(t, "Setenv", mock.Anything, mock.Anything)
+				osMock.AssertNotCalled(t, "Unsetenv", mock.Anything)
+			}
 		})
 	}
 }
