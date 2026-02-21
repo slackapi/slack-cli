@@ -17,7 +17,6 @@ package python
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -342,14 +341,13 @@ func Test_ActivateVenvIfPresent(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fs := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
 			projectDir := "/path/to/project"
 			venvPath := filepath.Join(projectDir, ".venv")
 
-			// Save and restore env vars
-			t.Setenv("VIRTUAL_ENV", "")
-			t.Setenv("PYTHONHOME", "original-pythonhome")
-			originalPath := os.Getenv("PATH")
-			t.Setenv("PATH", originalPath)
+			originalPath := "/usr/bin:/bin"
+			osMock.On("Getenv", "PATH").Return(originalPath)
+			osMock.AddDefaultMocks()
 
 			if tc.createVenv {
 				// Create the pip executable so venvExists returns true
@@ -360,21 +358,18 @@ func Test_ActivateVenvIfPresent(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			activated, err := ActivateVenvIfPresent(fs, projectDir)
+			activated, err := ActivateVenvIfPresent(fs, osMock, projectDir)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedActivated, activated)
 
 			if tc.expectedActivated {
-				require.Equal(t, venvPath, os.Getenv("VIRTUAL_ENV"))
 				expectedBinDir := getVenvBinDir(venvPath)
-				require.Contains(t, os.Getenv("PATH"), expectedBinDir+string(filepath.ListSeparator))
-				// PYTHONHOME should be unset (empty)
-				_, pythonHomeSet := os.LookupEnv("PYTHONHOME")
-				require.False(t, pythonHomeSet)
+				osMock.AssertCalled(t, "Setenv", "VIRTUAL_ENV", venvPath)
+				osMock.AssertCalled(t, "Setenv", "PATH", expectedBinDir+string(filepath.ListSeparator)+originalPath)
+				osMock.AssertCalled(t, "Unsetenv", "PYTHONHOME")
 			} else {
-				require.Equal(t, "", os.Getenv("VIRTUAL_ENV"))
-				require.Equal(t, originalPath, os.Getenv("PATH"))
-				require.Equal(t, "original-pythonhome", os.Getenv("PYTHONHOME"))
+				osMock.AssertNotCalled(t, "Setenv", mock.Anything, mock.Anything)
+				osMock.AssertNotCalled(t, "Unsetenv", mock.Anything)
 			}
 		})
 	}

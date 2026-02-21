@@ -19,7 +19,6 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -95,7 +94,7 @@ func getVenvBinDir(venvPath string) string {
 // the same approach. Sourcing the shell-specific activate script (activate,
 // activate.fish, Activate.ps1) would be higher maintenance because it varies
 // by shell.
-func ActivateVenvIfPresent(fs afero.Fs, projectDir string) (bool, error) {
+func ActivateVenvIfPresent(fs afero.Fs, osClient types.Os, projectDir string) (bool, error) {
 	venvPath := getVenvPath(projectDir)
 	if !venvExists(fs, venvPath) {
 		return false, nil
@@ -103,13 +102,15 @@ func ActivateVenvIfPresent(fs afero.Fs, projectDir string) (bool, error) {
 
 	binDir := getVenvBinDir(venvPath)
 
-	if err := os.Setenv("VIRTUAL_ENV", venvPath); err != nil {
+	if err := osClient.Setenv("VIRTUAL_ENV", venvPath); err != nil {
 		return false, err
 	}
-	if err := os.Setenv("PATH", binDir+string(filepath.ListSeparator)+os.Getenv("PATH")); err != nil {
+	if err := osClient.Setenv("PATH", binDir+string(filepath.ListSeparator)+osClient.Getenv("PATH")); err != nil {
 		return false, err
 	}
-	os.Unsetenv("PYTHONHOME")
+	if err := osClient.Unsetenv("PYTHONHOME"); err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
