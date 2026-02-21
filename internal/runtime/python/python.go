@@ -15,11 +15,11 @@
 package python
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -132,12 +132,20 @@ func venvExists(fs afero.Fs, venvPath string) bool {
 }
 
 // createVirtualEnvironment creates a Python virtual environment
-func createVirtualEnvironment(ctx context.Context, projectDirPath string) error {
-	cmd := exec.CommandContext(ctx, getPythonExecutable(), "-m", "venv", ".venv")
-	cmd.Dir = projectDirPath
-	output, err := cmd.CombinedOutput()
+func createVirtualEnvironment(ctx context.Context, projectDirPath string, hookExecutor hooks.HookExecutor) error {
+	hookScript := hooks.HookScript{
+		Name:    "CreateVirtualEnvironment",
+		Command: fmt.Sprintf("%s -m venv .venv", getPythonExecutable()),
+	}
+	stdout := bytes.Buffer{}
+	hookExecOpts := hooks.HookExecOpts{
+		Hook:      hookScript,
+		Stdout:    &stdout,
+		Directory: projectDirPath,
+	}
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
 	if err != nil {
-		return fmt.Errorf("failed to create virtual environment: %w\nOutput: %s", err, string(output))
+		return fmt.Errorf("failed to create virtual environment: %w\nOutput: %s", err, stdout.String())
 	}
 	return nil
 }
@@ -146,20 +154,25 @@ func createVirtualEnvironment(ctx context.Context, projectDirPath string) error 
 // The venv does not need to be activated because pip is invoked by its full
 // path inside the venv, which ensures packages are installed into the venv's
 // site-packages directory.
-func runPipInstall(ctx context.Context, venvPath string, projectDirPath string, args ...string) (string, error) {
+func runPipInstall(ctx context.Context, venvPath string, projectDirPath string, hookExecutor hooks.HookExecutor, args ...string) (string, error) {
 	pipPath := getPipExecutable(venvPath)
-
-	// Build command: pip install [args]
-	cmdArgs := append([]string{"install"}, args...)
-	cmd := exec.CommandContext(ctx, pipPath, cmdArgs...)
-	cmd.Dir = projectDirPath
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(output), fmt.Errorf("pip install failed: %w", err)
+	cmdArgs := append([]string{pipPath, "install"}, args...)
+	hookScript := hooks.HookScript{
+		Name:    "InstallProjectDependencies",
+		Command: strings.Join(cmdArgs, " "),
 	}
-
-	return string(output), nil
+	stdout := bytes.Buffer{}
+	hookExecOpts := hooks.HookExecOpts{
+		Hook:      hookScript,
+		Stdout:    &stdout,
+		Directory: projectDirPath,
+	}
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
+	output := stdout.String()
+	if err != nil {
+		return output, fmt.Errorf("pip install failed: %w", err)
+	}
+	return output, nil
 }
 
 // installRequirementsTxt handles adding slack-cli-hooks to requirements.txt
@@ -228,18 +241,18 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	projectSection, exists := config["project"]
 	if !exists {
 		err := fmt.Errorf("pyproject.toml missing project section")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	projectMap, ok := projectSection.(map[string]interface{})
 	if !ok {
 		err := fmt.Errorf("pyproject.toml project section is not a valid format")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	if _, exists := projectMap["dependencies"]; !exists {
 		err := fmt.Errorf("pyproject.toml missing dependencies array")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	// Use string manipulation to add the dependency while preserving formatting.
@@ -251,7 +264,7 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 
 	if len(matches) == 0 {
 		err := fmt.Errorf("pyproject.toml missing dependencies array")
-		return fmt.Sprintf("Error: %s", err), err
+		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
 	}
 
 	prefix := matches[1]  // "...dependencies = ["
@@ -320,8 +333,8 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 
 	// Create virtual environment if it doesn't exist
 	if !venvExists(fs, venvPath) {
-		outputs = append(outputs, "Creating Python virtual environment")
-		if err := createVirtualEnvironment(ctx, projectDirPath); err != nil {
+		ios.PrintDebug(ctx, "Creating Python virtual environment")
+		if err := createVirtualEnvironment(ctx, projectDirPath, hookExecutor); err != nil {
 			outputs = append(outputs, fmt.Sprintf("Error creating virtual environment: %s", err))
 			return strings.Join(outputs, "\n"), err
 		}
@@ -348,34 +361,29 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 		}
 	}
 
-	// Return early if we had errors updating dependency files
-	if len(errs) > 0 {
-		return strings.Join(outputs, "\n"), errs[0]
-	}
-
 	// Install dependencies using pip
 	// When both files exist, pyproject.toml is installed first to set up the project package
 	// and its declared dependencies. Then requirements.txt is installed second so its version
 	// pins take precedence, as it typically serves as the lockfile.
 	if hasPyProjectToml {
-		outputs = append(outputs, "Installing dependencies from pyproject.toml")
-		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-e", ".")
+		ios.PrintDebug(ctx, "Installing dependencies from pyproject.toml")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, hookExecutor, "-e", ".")
 		if err != nil {
 			errs = append(errs, err)
 			outputs = append(outputs, fmt.Sprintf("Error installing from pyproject.toml: %s\n%s", err, pipOutput))
 		} else {
-			outputs = append(outputs, "Successfully installed dependencies from pyproject.toml")
+			outputs = append(outputs, fmt.Sprintf("Installed dependencies from %s", style.Highlight("pyproject.toml")))
 		}
 	}
 
 	if hasRequirementsTxt {
-		outputs = append(outputs, "Installing dependencies from requirements.txt")
-		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-r", "requirements.txt")
+		ios.PrintDebug(ctx, "Installing dependencies from requirements.txt")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, hookExecutor, "-r", "requirements.txt")
 		if err != nil {
 			errs = append(errs, err)
 			outputs = append(outputs, fmt.Sprintf("Error installing from requirements.txt: %s\n%s", err, pipOutput))
 		} else {
-			outputs = append(outputs, "Successfully installed dependencies from requirements.txt")
+			outputs = append(outputs, fmt.Sprintf("Installed dependencies from %s", style.Highlight("requirements.txt")))
 		}
 	}
 
