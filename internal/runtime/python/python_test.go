@@ -375,10 +375,6 @@ func Test_ActivateVenvIfPresent(t *testing.T) {
 	}
 }
 
-// Test_Python_InstallProjectDependencies tests the main function
-// NOTE: These tests require Python 3 and pip to be installed for full integration testing.
-// The function creates real virtual environments and runs real pip commands.
-// Unit tests below focus on testing individual components.
 func Test_Python_InstallProjectDependencies(t *testing.T) {
 	tests := map[string]struct {
 		existingFiles      map[string]string
