@@ -86,8 +86,7 @@ func Test_ActivatePythonVenvIfPresent(t *testing.T) {
 
 			if tc.createVenv {
 				// Create the pip executable so venvExists returns true
-				var pipPath string
-				pipPath = filepath.Join(venvPath, "bin", "pip")
+				pipPath := filepath.Join(venvPath, "bin", "pip")
 				err := fs.MkdirAll(filepath.Dir(pipPath), 0755)
 				require.NoError(t, err)
 				err = afero.WriteFile(fs, pipPath, []byte(""), 0755)
