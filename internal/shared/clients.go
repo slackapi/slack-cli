@@ -226,8 +226,10 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 	}
 	// Activate Python virtual environment if present, so hook scripts
 	// can resolve the venv's Python and installed packages.
-	if err := runtime.ActivatePythonVenvIfPresent(c.Fs, dirPath); err != nil {
+	if activated, err := runtime.ActivatePythonVenvIfPresent(c.Fs, dirPath); err != nil {
 		c.IO.PrintDebug(ctx, "failed to activate Python virtual environment: %s", err)
+	} else if activated {
+		c.IO.PrintDebug(ctx, "Activated Python virtual environment .venv")
 	}
 
 	configFileBytes, err := afero.ReadFile(c.Fs, hooksJSONFilePath)

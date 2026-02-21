@@ -360,8 +360,9 @@ func Test_ActivateVenvIfPresent(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err := ActivateVenvIfPresent(fs, projectDir)
+			activated, err := ActivateVenvIfPresent(fs, projectDir)
 			require.NoError(t, err)
+			require.Equal(t, tc.expectedActivated, activated)
 
 			if tc.expectedActivated {
 				require.Equal(t, venvPath, os.Getenv("VIRTUAL_ENV"))

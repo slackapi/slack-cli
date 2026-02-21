@@ -70,7 +70,7 @@ func New(runtimeName string) (Runtime, error) {
 // exists in the given project directory. This sets VIRTUAL_ENV, prepends the
 // venv bin directory to PATH, and unsets PYTHONHOME on the current process so
 // that child processes (hook scripts) inherit the activated venv.
-func ActivatePythonVenvIfPresent(fs afero.Fs, projectDir string) error {
+func ActivatePythonVenvIfPresent(fs afero.Fs, projectDir string) (bool, error) {
 	return python.ActivateVenvIfPresent(fs, projectDir)
 }
 
