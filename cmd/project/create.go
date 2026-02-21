@@ -236,7 +236,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 
 	// Include documentation and information about ROSI for deno apps
 	if isDenoProject {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "compass",
 			Text:  "Explore the documentation to learn more",
 			Secondary: []string{
@@ -245,7 +245,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 			},
 		}))
 
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "clipboard",
 			Text:  "Follow the steps below to begin development",
 			Secondary: []string{
@@ -268,7 +268,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 			"Start developing and see changes in real-time with "+style.Commandf("run", true),
 		)
 
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "clipboard",
 			Text:      "Next steps to begin development",
 			Secondary: secondaryOutput,

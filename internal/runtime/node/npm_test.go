@@ -35,6 +35,7 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 		hookExecuteResponse   string
 		hookExecuteError      error
 		expectedVerboseOutput string
+		expectedVerboseArgs   []any
 		expectedValue         string
 		expectedError         error
 	}{
@@ -53,7 +54,8 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 		"When error then PrintDebug": {
 			hookExecuteStdout:     "npm install stdout",
 			hookExecuteError:      errors.New("super error"),
-			expectedVerboseOutput: "Error executing 'npm install --no-package-lock --no-audit --progress=false --loglevel=verbose .': super error",
+			expectedVerboseOutput: "Error executing '%s': %s",
+			expectedVerboseArgs:   []any{"npm install --no-package-lock --no-audit --progress=false --loglevel=verbose .", errors.New("super error")},
 			expectedValue:         "",
 			expectedError:         errors.New("super error"),
 		},
@@ -89,7 +91,7 @@ func Test_NPMClient_InstallAllPackages(t *testing.T) {
 			require.Contains(t, value, tc.expectedValue)
 			require.Equal(t, tc.expectedError, err)
 			if tc.expectedVerboseOutput != "" {
-				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
+				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, tc.expectedVerboseArgs)
 			}
 		})
 	}
@@ -102,6 +104,7 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 		hookExecuteResponse   string
 		hookExecuteError      error
 		expectedVerboseOutput string
+		expectedVerboseArgs   []any
 		expectedValue         string
 		expectedError         error
 	}{
@@ -120,7 +123,8 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 		"When error then PrintDebug": {
 			hookExecuteStdout:     "npm install stdout",
 			hookExecuteError:      errors.New("super error"),
-			expectedVerboseOutput: "Error executing 'npm install --save-dev --no-audit --progress=false --loglevel=verbose @slack/cli-hooks': super error",
+			expectedVerboseOutput: "Error executing '%s': %s",
+			expectedVerboseArgs:   []any{"npm install --save-dev --no-audit --progress=false --loglevel=verbose @slack/cli-hooks", errors.New("super error")},
 			expectedValue:         "",
 			expectedError:         errors.New("super error"),
 		},
@@ -156,7 +160,7 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 			require.Contains(t, value, tc.expectedValue)
 			require.Equal(t, tc.expectedError, err)
 			if tc.expectedVerboseOutput != "" {
-				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
+				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, tc.expectedVerboseArgs)
 			}
 		})
 	}

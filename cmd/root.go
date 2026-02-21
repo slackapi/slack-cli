@@ -207,7 +207,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	cobra.OnInitialize(func() {
 		err := InitConfig(ctx, clients, rootCmd)
 		if err != nil {
-			clients.IO.PrintError(ctx, err.Error())
+			clients.IO.PrintError(ctx, "%s", err.Error())
 			clients.Os.Exit(int(iostreams.ExitError))
 		}
 	})
@@ -374,7 +374,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
 			clients.IO.SetExitCode(iostreams.ExitCancel)
-			clients.IO.PrintDebug(ctx, err.Error())
+			clients.IO.PrintDebug(ctx, "%s", err.Error())
 		} else {
 			if slackerror.Is(err, slackerror.ErrSDKHookNotFound) && clients.SDKConfig.Runtime == "" {
 				err = slackerror.New(slackerror.ErrRuntimeNotFound).
@@ -384,7 +384,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 			case iostreams.ExitOK:
 				clients.IO.SetExitCode(iostreams.ExitError)
 			}
-			clients.IO.PrintError(ctx, err.Error())
+			clients.IO.PrintError(ctx, "%s", err.Error())
 		}
 		clients.EventTracker.SetErrorMessage(err.Error())
 		if slackErr, ok := err.(*slackerror.Error); ok {

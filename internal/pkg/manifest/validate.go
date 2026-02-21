@@ -131,7 +131,7 @@ func attemptConnectorAppsApprovalRequests(ctx context.Context, clients *shared.C
 		Text:      "Administrator approval is required to use connectors",
 		Secondary: messages,
 	}))
-	clients.IO.PrintInfo(ctx, false, administratorApprovalNotice)
+	clients.IO.PrintInfo(ctx, false, "%s", administratorApprovalNotice)
 
 	sendApprovalRequests, err := clients.IO.ConfirmPrompt(ctx, "Request approval to install missing connectors?", true)
 	if err != nil {

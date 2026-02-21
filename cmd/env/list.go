@@ -124,7 +124,7 @@ func runEnvListCommandFunc(
 		)
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.EnvListVariables, variableNames...)
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "evergreen_tree",
 		Text:      "App Environment",
 		Secondary: variableLabel,
