@@ -15,10 +15,10 @@
 package python
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -94,12 +94,20 @@ func venvExists(fs afero.Fs, venvPath string) bool {
 }
 
 // createVirtualEnvironment creates a Python virtual environment
-func createVirtualEnvironment(ctx context.Context, projectDirPath string) error {
-	cmd := exec.CommandContext(ctx, getPythonExecutable(), "-m", "venv", ".venv")
-	cmd.Dir = projectDirPath
-	output, err := cmd.CombinedOutput()
+func createVirtualEnvironment(ctx context.Context, projectDirPath string, hookExecutor hooks.HookExecutor) error {
+	hookScript := hooks.HookScript{
+		Name:    "CreateVirtualEnvironment",
+		Command: fmt.Sprintf("%s -m venv .venv", getPythonExecutable()),
+	}
+	stdout := bytes.Buffer{}
+	hookExecOpts := hooks.HookExecOpts{
+		Hook:      hookScript,
+		Stdout:    &stdout,
+		Directory: projectDirPath,
+	}
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
 	if err != nil {
-		return fmt.Errorf("failed to create virtual environment: %w\nOutput: %s", err, string(output))
+		return fmt.Errorf("failed to create virtual environment: %w\nOutput: %s", err, stdout.String())
 	}
 	return nil
 }
@@ -108,20 +116,25 @@ func createVirtualEnvironment(ctx context.Context, projectDirPath string) error 
 // The venv does not need to be activated because pip is invoked by its full
 // path inside the venv, which ensures packages are installed into the venv's
 // site-packages directory.
-func runPipInstall(ctx context.Context, venvPath string, projectDirPath string, args ...string) (string, error) {
+func runPipInstall(ctx context.Context, venvPath string, projectDirPath string, hookExecutor hooks.HookExecutor, args ...string) (string, error) {
 	pipPath := getPipExecutable(venvPath)
-
-	// Build command: pip install [args]
-	cmdArgs := append([]string{"install"}, args...)
-	cmd := exec.CommandContext(ctx, pipPath, cmdArgs...)
-	cmd.Dir = projectDirPath
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return string(output), fmt.Errorf("pip install failed: %w", err)
+	cmdArgs := append([]string{pipPath, "install"}, args...)
+	hookScript := hooks.HookScript{
+		Name:    "InstallProjectDependencies",
+		Command: strings.Join(cmdArgs, " "),
 	}
-
-	return string(output), nil
+	stdout := bytes.Buffer{}
+	hookExecOpts := hooks.HookExecOpts{
+		Hook:      hookScript,
+		Stdout:    &stdout,
+		Directory: projectDirPath,
+	}
+	_, err := hookExecutor.Execute(ctx, hookExecOpts)
+	output := stdout.String()
+	if err != nil {
+		return output, fmt.Errorf("pip install failed: %w", err)
+	}
+	return output, nil
 }
 
 // installRequirementsTxt handles adding slack-cli-hooks to requirements.txt
@@ -283,7 +296,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	// Create virtual environment if it doesn't exist
 	if !venvExists(fs, venvPath) {
 		ios.PrintDebug(ctx, "Creating Python virtual environment")
-		if err := createVirtualEnvironment(ctx, projectDirPath); err != nil {
+		if err := createVirtualEnvironment(ctx, projectDirPath, hookExecutor); err != nil {
 			outputs = append(outputs, fmt.Sprintf("Error creating virtual environment: %s", err))
 			return strings.Join(outputs, "\n"), err
 		}
@@ -316,7 +329,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	// pins take precedence, as it typically serves as the lockfile.
 	if hasPyProjectToml {
 		ios.PrintDebug(ctx, "Installing dependencies from pyproject.toml")
-		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-e", ".")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, hookExecutor, "-e", ".")
 		if err != nil {
 			errs = append(errs, err)
 			outputs = append(outputs, fmt.Sprintf("Error installing from pyproject.toml: %s\n%s", err, pipOutput))
@@ -327,7 +340,7 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 
 	if hasRequirementsTxt {
 		ios.PrintDebug(ctx, "Installing dependencies from requirements.txt")
-		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, "-r", "requirements.txt")
+		pipOutput, err := runPipInstall(ctx, venvPath, projectDirPath, hookExecutor, "-r", "requirements.txt")
 		if err != nil {
 			errs = append(errs, err)
 			outputs = append(outputs, fmt.Sprintf("Error installing from requirements.txt: %s\n%s", err, pipOutput))

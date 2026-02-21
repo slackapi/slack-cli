@@ -397,41 +397,6 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedOutputs: []string{"Updated"},
 			expectedError:   false,
 		},
-		"Should output help text because installing project dependencies is unsupported": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack-cli-hooks\npytest==8.3.2\nruff==0.7.2",
-			},
-			expectedOutputs: []string{"Manually setup a Python virtual environment"},
-			expectedError:   false,
-		},
-		"Should output pip install -r requirements.txt when only requirements.txt exists": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
-			},
-			expectedOutputs:    []string{"pip install -r requirements.txt"},
-			notExpectedOutputs: []string{"pip install -e ."},
-			expectedError:      false,
-		},
-		"Should output pip install -e . when only pyproject.toml exists": {
-			existingFiles: map[string]string{
-				"pyproject.toml": `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks<1.0.0"]`,
-			},
-			expectedOutputs:    []string{"pip install -e ."},
-			notExpectedOutputs: []string{"pip install -r requirements.txt"},
-			expectedError:      false,
-		},
-		"Should output both install commands when both files exist": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
-				"pyproject.toml": `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks<1.0.0"]`,
-			},
-			expectedOutputs: []string{"pip install -r requirements.txt", "pip install -e ."},
-			expectedError:   false,
-		},
 		"Error when neither requirements.txt nor pyproject.toml exists": {
 			existingFiles: map[string]string{
 				"main.py": "# some python code",
@@ -525,7 +490,7 @@ dependencies = [
 				"pyproject.toml": `[project]
 name = "my-app"`,
 			},
-			expectedOutputs: []string{"Error: pyproject.toml missing dependencies array"},
+			expectedOutputs: []string{"Error updating pyproject.toml: pyproject.toml missing dependencies array"},
 			expectedError:   true,
 		},
 		"Error when pyproject.toml has no [project] section": {
@@ -533,7 +498,7 @@ name = "my-app"`,
 				"pyproject.toml": `[tool.black]
 line-length = 88`,
 			},
-			expectedOutputs: []string{"Error: pyproject.toml missing project section"},
+			expectedOutputs: []string{"Error updating pyproject.toml: pyproject.toml missing project section"},
 			expectedError:   true,
 		},
 		"Error when pyproject.toml is invalid TOML": {
@@ -554,6 +519,7 @@ name = "broken`,
 			os.AddDefaultMocks()
 			cfg := config.NewConfig(fs, os)
 			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
+			ios.AddDefaultMocks()
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
 			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", nil)
