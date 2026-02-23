@@ -370,7 +370,7 @@ func normalizeSubdir(subdir string) (string, error) {
 	if cleaned == "." || cleaned == "/" {
 		return "", nil
 	}
-	if strings.HasPrefix(cleaned, "..") || filepath.IsAbs(cleaned) {
+	if !filepath.IsLocal(cleaned) {
 		return "", slackerror.New(slackerror.ErrSubdirNotFound).
 			WithMessage("subdirectory path %q must be relative and within the template", subdir)
 	}
