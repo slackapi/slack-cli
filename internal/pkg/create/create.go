@@ -378,15 +378,14 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	if err != nil {
 		return slackerror.Wrap(err, "failed to create temporary directory")
 	}
-	// Remove so createApp can create it fresh (go-git requires non-existent target)
-	os.Remove(tmpDir)
 	defer os.RemoveAll(tmpDir)
 
-	if err := createApp(ctx, tmpDir, template, gitBranch, log, fs); err != nil {
+	cloneDir := filepath.Join(tmpDir, "repo")
+	if err := createApp(ctx, cloneDir, template, gitBranch, log, fs); err != nil {
 		return err
 	}
 
-	subdirPath := filepath.Join(tmpDir, subdir)
+	subdirPath := filepath.Join(cloneDir, subdir)
 	info, err := os.Stat(subdirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
