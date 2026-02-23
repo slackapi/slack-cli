@@ -45,8 +45,8 @@ const (
 	Placeholder Experiment = "placeholder"
 )
 
+// AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
-// AllExperiment is a list of all available experiments that can be enabled
 var AllExperiments = []Experiment{
 	BoltFrameworks,
 	BoltInstall,
@@ -54,8 +54,8 @@ var AllExperiments = []Experiment{
 	Placeholder,
 }
 
-// Please also add here 👇
 // EnabledExperiments is a list of experiments that are permanently enabled
+// Please also add here 👇
 var EnabledExperiments = []Experiment{
 	BoltFrameworks,
 	BoltInstall,
