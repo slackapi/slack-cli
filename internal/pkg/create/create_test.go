@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
+	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -192,6 +193,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		expectedOutputs        []string
 		unexpectedOutputs      []string
 		expectedVerboseOutputs []string
+		expectedVerboseArgs    []any
 	}{
 		"Should output added .slack, hooks.json, .gitignore, and caching": {
 			expectedOutputs: []string{
@@ -201,8 +203,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Cached dependencies with deno cache import_map.json",
 			},
 			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
+				"Detected a project using %s",
 			},
+			expectedVerboseArgs: []any{style.Highlight("Deno")},
 		},
 		"When hooks.json exists, should output found .slack and hooks.json": {
 			existingFiles: map[string]string{
@@ -218,8 +221,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Error adding the directory project-name/.slack",
 			},
 			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
+				"Detected a project using %s",
 			},
+			expectedVerboseArgs: []any{style.Highlight("Deno")},
 		},
 		"When slack.json exists, should output added .slack": {
 			existingFiles: map[string]string{
@@ -231,8 +235,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Cached dependencies with deno cache import_map.json",
 			},
 			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
+				"Detected a project using %s",
 			},
+			expectedVerboseArgs: []any{style.Highlight("Deno")},
 		},
 		"When no manifest source, default to project (local)": {
 			expectedOutputs: []string{
@@ -321,7 +326,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				require.NotContains(t, outputs, unexpectedOutput)
 			}
 			for _, expectedVerboseOutput := range tc.expectedVerboseOutputs {
-				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
+				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, expectedVerboseOutput, tc.expectedVerboseArgs)
 			}
 			assert.NotEmpty(t, clients.Config.ProjectID, "config.project_id")
 			// output := clientsMock.GetCombinedOutput()

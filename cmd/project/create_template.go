@@ -216,7 +216,7 @@ func confirmExternalTemplateSelection(cmd *cobra.Command, clients *shared.Client
 		return true, nil
 	}
 
-	clients.IO.PrintWarning(ctx, style.Sectionf(style.TextSection{
+	clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
 		Text: style.Bold("You are trying to use code published by an unknown author"),
 		Secondary: []string{
 			"We strongly advise reviewing the source code and dependencies of external",
@@ -267,7 +267,7 @@ func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryS
 		for i, tmpl := range templates {
 			secondary[i] = tmpl.Repository
 		}
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "house_buildings",
 			Text:      style.Bold(category.name),
 			Secondary: secondary,

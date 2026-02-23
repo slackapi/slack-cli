@@ -281,10 +281,9 @@ func distributePermissionFile(ctx context.Context, clients *shared.ClientFactory
 		switch permissions.Type {
 		case types.PermissionNamedEntities:
 			if len(permissions.UserIDs) == 0 {
-				clients.IO.PrintWarning(ctx, fmt.Sprintf(
-					"No users will have access to '%s'",
+				clients.IO.PrintWarning(ctx, "No users will have access to '%s'",
 					function,
-				))
+				)
 			}
 			err := updateNamedEntitiesDistribution(ctx, clients, app, function, permissions.UserIDs)
 			if err != nil {
@@ -292,11 +291,10 @@ func distributePermissionFile(ctx context.Context, clients *shared.ClientFactory
 			}
 		default:
 			if len(permissions.UserIDs) != 0 {
-				clients.IO.PrintWarning(ctx, fmt.Sprintf(
-					"The supplied user IDs to '%s' are overridden by the '%s' permission",
+				clients.IO.PrintWarning(ctx, "The supplied user IDs to '%s' are overridden by the '%s' permission",
 					function,
 					permissions.Type,
-				))
+				)
 			}
 			_, err := clients.API().FunctionDistributionSet(ctx, function, app.AppID, permissions.Type, "")
 			if err != nil {

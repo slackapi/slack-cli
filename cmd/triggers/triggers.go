@@ -403,7 +403,7 @@ func promptForTriggerID(ctx context.Context, cmd *cobra.Command, clients *shared
 
 func printNoTriggersMessage(ctx context.Context, IO iostreams.IOStreamer) {
 	fmt.Println()
-	IO.PrintInfo(ctx, true, style.Sectionf(style.TextSection{
+	IO.PrintInfo(ctx, true, "%s", style.Sectionf(style.TextSection{
 		Emoji: "zap",
 		Text:  "There are no triggers installed for this app",
 	}))

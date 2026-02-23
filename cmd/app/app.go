@@ -15,8 +15,6 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -51,13 +49,13 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			ctx := cmd.Context()
 			// DEPRECATED(semver:major): remove the "workspace" alias
 			if cmd.CalledAs() == "workspace" {
-				clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
+				clients.IO.PrintInfo(ctx, false,
 					"\n%s It looks like you used %s. This command will be deprecated in an upcoming release.\n    You can now use %s instead of %s.\n ",
 					style.Emoji("bulb"),
 					style.Commandf("workspace", true),
 					style.Commandf("app", true),
 					style.Commandf("workspace", true),
-				))
+				)
 			}
 			return nil
 		},
