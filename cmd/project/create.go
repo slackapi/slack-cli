@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -129,6 +130,12 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	// List templates and exit early if the --list flag is set
 	if createListFlag {
 		return listTemplates(ctx, clients, categoryShortcut)
+	}
+
+	// --subdir requires --template
+	if cmd.Flags().Changed("subdir") && !templateFlagProvided {
+		return slackerror.New(slackerror.ErrMismatchedFlags).
+			WithMessage("the --subdir flag requires the --template flag")
 	}
 
 	// Collect the template URL or select a starting template
