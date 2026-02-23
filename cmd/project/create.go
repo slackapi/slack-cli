@@ -81,7 +81,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 	cmd.Flags().StringVarP(&createGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
 	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
 	cmd.Flags().BoolVar(&createListFlag, "list", false, "list available app templates")
-	cmd.Flags().StringVar(&createSubdirFlag, "subdir", "", "subdirectory within the template to use as project root")
+	cmd.Flags().StringVar(&createSubdirFlag, "subdir", "", "subdirectory in the template to use as project")
 
 	return cmd
 }
