@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	authpkg "github.com/slackapi/slack-cli/internal/pkg/auth"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -109,7 +111,7 @@ func RunLoginCommand(clients *shared.ClientFactory, cmd *cobra.Command) (types.S
 			return types.SlackAuth{}, err
 		}
 		if selectedAuth.Token != "" {
-			printAuthSuccess(cmd, clients.IO, credentialsPath, selectedAuth.Token)
+			printAuthSuccess(cmd, clients.Config, clients.IO, credentialsPath, selectedAuth.Token)
 			printAuthNextSteps(ctx, clients)
 		}
 		return selectedAuth, err
@@ -119,14 +121,14 @@ func RunLoginCommand(clients *shared.ClientFactory, cmd *cobra.Command) (types.S
 	if err != nil {
 		return types.SlackAuth{}, err
 	} else {
-		printAuthSuccess(cmd, clients.IO, credentialsPath, selectedAuth.Token)
+		printAuthSuccess(cmd, clients.Config, clients.IO, credentialsPath, selectedAuth.Token)
 		printAuthNextSteps(ctx, clients)
 	}
 
 	return selectedAuth, nil
 }
 
-func printAuthSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, credentialsPath string, token string) {
+func printAuthSuccess(cmd *cobra.Command, config *config.Config, IO iostreams.IOStreamer, credentialsPath string, token string) {
 	ctx := cmd.Context()
 
 	var secondaryLog string
@@ -136,7 +138,13 @@ func printAuthSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, credentialsPa
 		secondaryLog = fmt.Sprintf("Service token:\n\n  %s\n\nMake sure to copy the token now and save it safely.", token)
 	}
 
-	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	// The legacy prompt leaves no blank line before the success message, so
+	// print one here. The Charm-based prompt already handles spacing.
+	if !config.WithExperimentOn(experiment.Charm) {
+		IO.PrintInfo(ctx, false, "")
+	}
+
+	IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "key",
 		Text:      "You've successfully authenticated!",
 		Secondary: []string{secondaryLog},
