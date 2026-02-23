@@ -163,8 +163,16 @@ func regexReplaceAppNameInManifest(src []byte, appName string) []byte {
 // regexReplaceAppNameInPackageJSON replaces the top-level "name" field in a package.json file
 func regexReplaceAppNameInPackageJSON(src []byte, appName string) []byte {
 	re := regexp.MustCompile(`(?m)^(\s*"name"\s*:\s*")([^"]*)(")`)
-	repl := fmt.Sprintf("${1}%s${3}", appName)
-	return re.ReplaceAll(src, []byte(repl))
+	loc := re.FindSubmatchIndex(src)
+	if loc == nil {
+		return src
+	}
+	// loc[4]:loc[5] is capture group 2 — the name value to replace
+	result := make([]byte, 0, len(src))
+	result = append(result, src[:loc[4]]...)
+	result = append(result, []byte(appName)...)
+	result = append(result, src[loc[5]:]...)
+	return result
 }
 
 // regexReplaceAppNameInPyprojectToml replaces the "name" field under the [project] section in a pyproject.toml file
