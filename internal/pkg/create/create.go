@@ -45,6 +45,12 @@ import (
 	"github.com/spf13/afero"
 )
 
+// copyIgnoreDirectories are directories to skip when copying a template.
+var copyIgnoreDirectories = []string{".git", ".venv", "node_modules"}
+
+// copyIgnoreFiles are files to skip when copying a template.
+var copyIgnoreFiles = []string{".DS_Store"}
+
 // CreateArgs are the arguments passed into the Create function
 type CreateArgs struct {
 	AppName   string
@@ -337,8 +343,8 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 		copyDirectoryOpts := goutils.CopyDirectoryOpts{
 			Src:               template.path,
 			Dst:               dirPath,
-			IgnoreDirectories: []string{".git", ".venv", "node_modules"},
-			IgnoreFiles:       []string{".DS_Store"},
+			IgnoreDirectories: copyIgnoreDirectories,
+			IgnoreFiles:       copyIgnoreFiles,
 		}
 		if err := goutils.CopyDirectory(copyDirectoryOpts); err != nil {
 			return slackerror.Wrap(err, "error copying local template")
@@ -403,8 +409,8 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	return goutils.CopyDirectory(goutils.CopyDirectoryOpts{
 		Src:               subdirPath,
 		Dst:               dirPath,
-		IgnoreDirectories: []string{".git", ".venv", "node_modules"},
-		IgnoreFiles:       []string{".DS_Store"},
+		IgnoreDirectories: copyIgnoreDirectories,
+		IgnoreFiles:       copyIgnoreFiles,
 	})
 }
 
