@@ -380,11 +380,12 @@ func normalizeSubdir(subdir string) (string, error) {
 // createAppFromSubdir clones the full template into a temp directory, then copies
 // only the specified subdirectory to the final project path.
 func createAppFromSubdir(ctx context.Context, dirPath string, template Template, gitBranch string, subdir string, log *logger.Logger, fs afero.Fs) error {
-	tmpDir, err := os.MkdirTemp("", "slack-create-*")
+	tmpDirRoot := afero.GetTempDir(fs, "")
+	tmpDir, err := afero.TempDir(fs, tmpDirRoot, "slack-create-")
 	if err != nil {
 		return slackerror.Wrap(err, "failed to create temporary directory")
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = fs.RemoveAll(tmpDir) }()
 
 	cloneDir := filepath.Join(tmpDir, "repo")
 	if err := createApp(ctx, cloneDir, template, gitBranch, log, fs); err != nil {
@@ -392,7 +393,7 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	}
 
 	subdirPath := filepath.Join(cloneDir, subdir)
-	info, err := os.Stat(subdirPath)
+	info, err := fs.Stat(subdirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return slackerror.New(slackerror.ErrSubdirNotFound).

@@ -17,7 +17,6 @@ package create
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -239,28 +238,28 @@ func TestNormalizeSubdir(t *testing.T) {
 
 func TestCreateAppFromSubdir(t *testing.T) {
 	tests := map[string]struct {
-		setupTemplate func(t *testing.T) string
+		setupTemplate func(t *testing.T, fs afero.Fs) string
 		subdir        string
 		expectError   bool
 		errorContains string
 		expectFiles   []string
 	}{
 		"extracts subdirectory from local template": {
-			setupTemplate: func(t *testing.T) string {
+			setupTemplate: func(t *testing.T, fs afero.Fs) string {
 				tmpDir := t.TempDir()
 				// Create a subdirectory with a file
 				subdir := filepath.Join(tmpDir, "apps", "my-app")
-				require.NoError(t, os.MkdirAll(subdir, 0755))
-				require.NoError(t, os.WriteFile(filepath.Join(subdir, "manifest.json"), []byte(`{}`), 0644))
+				require.NoError(t, fs.MkdirAll(subdir, 0755))
+				require.NoError(t, afero.WriteFile(fs, filepath.Join(subdir, "manifest.json"), []byte(`{}`), 0644))
 				// Create a file at root that should NOT be copied
-				require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "README.md"), []byte("root readme"), 0644))
+				require.NoError(t, afero.WriteFile(fs, filepath.Join(tmpDir, "README.md"), []byte("root readme"), 0644))
 				return tmpDir
 			},
 			subdir:      "apps/my-app",
 			expectFiles: []string{"manifest.json"},
 		},
 		"returns error for nonexistent subdirectory": {
-			setupTemplate: func(t *testing.T) string {
+			setupTemplate: func(t *testing.T, fs afero.Fs) string {
 				return t.TempDir()
 			},
 			subdir:        "nonexistent",
@@ -268,9 +267,9 @@ func TestCreateAppFromSubdir(t *testing.T) {
 			errorContains: "was not found in the template",
 		},
 		"returns error when subdir path is a file": {
-			setupTemplate: func(t *testing.T) string {
+			setupTemplate: func(t *testing.T, fs afero.Fs) string {
 				tmpDir := t.TempDir()
-				require.NoError(t, os.WriteFile(filepath.Join(tmpDir, "not-a-dir"), []byte("file"), 0644))
+				require.NoError(t, afero.WriteFile(fs, filepath.Join(tmpDir, "not-a-dir"), []byte("file"), 0644))
 				return tmpDir
 			},
 			subdir:        "not-a-dir",
@@ -280,14 +279,14 @@ func TestCreateAppFromSubdir(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			templateDir := tc.setupTemplate(t)
+			fs := afero.NewOsFs()
+			templateDir := tc.setupTemplate(t, fs)
 			outputDir := t.TempDir()
 			// Remove output dir so CopyDirectory can create it
-			require.NoError(t, os.Remove(outputDir))
+			require.NoError(t, fs.Remove(outputDir))
 
 			template := Template{path: templateDir, isLocal: true}
 			log := logger.New(func(event *logger.LogEvent) {})
-			fs := afero.NewOsFs()
 
 			err := createAppFromSubdir(t.Context(), outputDir, template, "", tc.subdir, log, fs)
 
@@ -299,7 +298,7 @@ func TestCreateAppFromSubdir(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				for _, f := range tc.expectFiles {
-					_, statErr := os.Stat(filepath.Join(outputDir, f))
+					_, statErr := fs.Stat(filepath.Join(outputDir, f))
 					assert.NoError(t, statErr, "expected file %s to exist", f)
 				}
 			}
