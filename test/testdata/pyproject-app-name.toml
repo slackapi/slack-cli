@@ -8,6 +8,7 @@ dependencies = [
     "slack-cli-hooks<1.0.0",
 ]
 
+# This comment appears before more details
 [tool.ruff]
 [tool.ruff.lint]
 [tool.ruff.format]
