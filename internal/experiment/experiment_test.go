@@ -26,6 +26,7 @@ func Test_Includes(t *testing.T) {
 
 	// Test expected experiments
 	require.Equal(t, true, Includes(Experiment("bolt")))
+	require.Equal(t, true, Includes(Experiment("charm")))
 
 	// Test invalid experiment
 	require.Equal(t, false, Includes(Experiment("should-fail")))

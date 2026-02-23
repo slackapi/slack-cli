@@ -132,7 +132,7 @@ func runAddClientSecretCommand(clients *shared.ClientFactory, cmd *cobra.Command
 		return err
 	}
 
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "sparkles",
 		Text: fmt.Sprintf(
 			"Successfully added external auth client secret for %s",
