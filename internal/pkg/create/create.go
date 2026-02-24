@@ -404,7 +404,7 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	}
 	if !info.IsDir() {
 		return slackerror.New(slackerror.ErrSubdirNotFound).
-			WithMessage("path %q in the template is not a directory", subdir)
+			WithMessage("Path %q in the template is not a directory", subdir)
 	}
 
 	return goutils.CopyDirectory(goutils.CopyDirectoryOpts{
