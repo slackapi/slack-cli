@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/charmbracelet/huh"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -144,6 +145,10 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// updateNotification will check for an update in the background and print a message after the command runs
 	var updateNotification *update.UpdateNotification
 
+	// Override huh's default user abort error with a Slack CLI error so that
+	// cancelled prompts are handled consistently as process interruptions.
+	huh.ErrUserAborted = slackerror.New(slackerror.ErrProcessInterrupted)
+
 	clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
 	rootCmd := NewRootCommand(clients, updateNotification)
 
@@ -207,7 +212,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	cobra.OnInitialize(func() {
 		err := InitConfig(ctx, clients, rootCmd)
 		if err != nil {
-			clients.IO.PrintError(ctx, err.Error())
+			clients.IO.PrintError(ctx, "%s", err.Error())
 			clients.Os.Exit(int(iostreams.ExitError))
 		}
 	})
@@ -374,7 +379,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
 			clients.IO.SetExitCode(iostreams.ExitCancel)
-			clients.IO.PrintDebug(ctx, err.Error())
+			clients.IO.PrintDebug(ctx, "%s", err.Error())
 		} else {
 			if slackerror.Is(err, slackerror.ErrSDKHookNotFound) && clients.SDKConfig.Runtime == "" {
 				err = slackerror.New(slackerror.ErrRuntimeNotFound).
@@ -384,7 +389,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 			case iostreams.ExitOK:
 				clients.IO.SetExitCode(iostreams.ExitError)
 			}
-			clients.IO.PrintError(ctx, err.Error())
+			clients.IO.PrintError(ctx, "%s", err.Error())
 		}
 		clients.EventTracker.SetErrorMessage(err.Error())
 		if slackErr, ok := err.(*slackerror.Error); ok {

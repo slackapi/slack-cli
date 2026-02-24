@@ -94,7 +94,7 @@ func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	if err != nil {
 		return err
 	}
-	clients.IO.PrintInfo(ctx, false, string(manifest))
+	clients.IO.PrintInfo(ctx, false, "%s", string(manifest))
 	return nil
 }
 

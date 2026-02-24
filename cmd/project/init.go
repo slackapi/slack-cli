@@ -115,7 +115,7 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	err = app.LinkExistingApp(ctx, clients, &types.App{}, true)
 	if err != nil {
 		// Display the error but continue to init
-		clients.IO.PrintError(ctx, err.Error())
+		clients.IO.PrintError(ctx, "%s", err.Error())
 	}
 
 	printNextStepSection(ctx, clients, projectDirPath)
@@ -141,7 +141,7 @@ func printNextStepSection(ctx context.Context, clients *shared.ClientFactory, pr
 		"When you're ready to deploy for production with "+style.Commandf("deploy", true),
 	)
 
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
 		Text:      "Next steps to begin development",
 		Secondary: secondaryOutput,

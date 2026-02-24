@@ -108,7 +108,7 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		// Display the variable name before getting the variable value
 		if len(args) < 2 && !clients.Config.Flags.Lookup("value").Changed {
 			mimickedInput := iostreams.MimicInputPrompt("Variable name", variableName)
-			clients.IO.PrintInfo(ctx, false, mimickedInput)
+			clients.IO.PrintInfo(ctx, false, "%s", mimickedInput)
 		}
 	}
 

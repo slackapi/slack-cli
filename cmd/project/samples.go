@@ -153,7 +153,7 @@ func listSampleSelection(ctx context.Context, clients *shared.ClientFactory, sam
 		exampleRepos...,
 	)
 	for _, sample := range samples {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "hammer_and_wrench",
 			Text: fmt.Sprintf(
 				" %s | %s | %d %s",

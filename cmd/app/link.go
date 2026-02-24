@@ -214,7 +214,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 					fmt.Sprintf(`manifest.source: "%s"`, config.ManifestSourceRemote),
 				).
 				WithRootCause(err)
-			clients.IO.PrintError(ctx, slackErr.Error())
+			clients.IO.PrintError(ctx, "%s", slackErr.Error())
 		}
 	}
 
