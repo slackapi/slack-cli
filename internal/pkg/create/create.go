@@ -397,7 +397,7 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	if err != nil {
 		if os.IsNotExist(err) {
 			return slackerror.New(slackerror.ErrSubdirNotFound).
-				WithMessage("subdirectory %q was not found in the template", subdir).
+				WithMessage("Subdirectory %q was not found in the template", subdir).
 				WithRemediation("Check that the path exists in the template at %q", template.GetTemplatePath())
 		}
 		return slackerror.Wrap(err, "failed to access subdirectory")
