@@ -1,0 +1,120 @@
+// Copyright 2022-2026 Salesforce, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package iostreams
+
+// Slack brand theme for charmbracelet/huh prompts.
+// Uses official Slack brand colors to give the CLI a fun, playful feel.
+
+import (
+	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
+)
+
+// Slack brand colors
+var (
+	slackAubergine       = lipgloss.Color("#4a154b")
+	slackBrightAuberg    = lipgloss.Color("#611f69")
+	slackBlue            = lipgloss.Color("#36c5f0")
+	slackGreen           = lipgloss.Color("#2eb67d")
+	slackYellow          = lipgloss.Color("#ecb22e")
+	slackRed             = lipgloss.Color("#e01e5a")
+	slackPool            = lipgloss.Color("#78d7dd")
+	slackLegalGray       = lipgloss.Color("#5e5d60")
+	slackOptionText      = lipgloss.AdaptiveColor{Light: "#1d1c1d", Dark: "#f4ede4"}
+	slackDescriptionText = lipgloss.AdaptiveColor{Light: "#454447", Dark: "#b9b5b0"}
+	slackPlaceholderText = lipgloss.AdaptiveColor{Light: "#5e5d60", Dark: "#868380"}
+)
+
+// ThemeSlack returns a huh theme styled with Slack brand colors.
+func ThemeSlack() *huh.Theme {
+	t := huh.ThemeBase()
+
+	// Focused field styles
+	t.Focused.Base = t.Focused.Base.
+		BorderForeground(slackBrightAuberg)
+	t.Focused.Title = lipgloss.NewStyle().
+		Foreground(slackAubergine).
+		Bold(true)
+	t.Focused.Description = lipgloss.NewStyle().
+		Foreground(slackDescriptionText)
+	t.Focused.ErrorIndicator = lipgloss.NewStyle().
+		Foreground(slackRed).
+		SetString(" *")
+	t.Focused.ErrorMessage = lipgloss.NewStyle().
+		Foreground(slackRed)
+
+	// Select styles
+	t.Focused.SelectSelector = lipgloss.NewStyle().
+		Foreground(slackBlue).
+		SetString("> ")
+	t.Focused.Option = lipgloss.NewStyle().
+		Foreground(slackOptionText)
+	t.Focused.NextIndicator = lipgloss.NewStyle().
+		Foreground(slackPool).
+		MarginLeft(1).
+		SetString("↓")
+	t.Focused.PrevIndicator = lipgloss.NewStyle().
+		Foreground(slackPool).
+		MarginRight(1).
+		SetString("↑")
+
+	// Multi-select styles
+	t.Focused.MultiSelectSelector = lipgloss.NewStyle().
+		Foreground(slackYellow).
+		SetString("> ")
+	t.Focused.SelectedOption = lipgloss.NewStyle().
+		Foreground(slackGreen)
+	t.Focused.SelectedPrefix = lipgloss.NewStyle().
+		Foreground(slackGreen).
+		SetString("[✓] ")
+	t.Focused.UnselectedOption = lipgloss.NewStyle().
+		Foreground(slackOptionText)
+	t.Focused.UnselectedPrefix = lipgloss.NewStyle().
+		Foreground(slackLegalGray).
+		SetString("[ ] ")
+
+	// Text input styles
+	t.Focused.TextInput.Cursor = lipgloss.NewStyle().
+		Foreground(slackYellow)
+	t.Focused.TextInput.Prompt = lipgloss.NewStyle().
+		Foreground(slackBlue)
+	t.Focused.TextInput.Placeholder = lipgloss.NewStyle().
+		Foreground(slackPlaceholderText)
+	t.Focused.TextInput.Text = lipgloss.NewStyle().
+		Foreground(slackOptionText)
+
+	// Button styles
+	button := lipgloss.NewStyle().
+		Padding(0, 2).
+		MarginRight(1)
+	t.Focused.FocusedButton = button.
+		Foreground(lipgloss.Color("#fff")).
+		Background(slackAubergine).
+		Bold(true)
+	t.Focused.BlurredButton = button.
+		Foreground(slackLegalGray).
+		Background(lipgloss.Color("#000"))
+
+	// Blurred field styles — subdued version of focused
+	t.Blurred = t.Focused
+	t.Blurred.Base = t.Focused.Base.
+		BorderStyle(lipgloss.HiddenBorder())
+	t.Blurred.SelectSelector = lipgloss.NewStyle().SetString("  ")
+	t.Blurred.MultiSelectSelector = lipgloss.NewStyle().SetString("  ")
+	t.Blurred.NextIndicator = lipgloss.NewStyle()
+	t.Blurred.PrevIndicator = lipgloss.NewStyle()
+
+	return t
+}
