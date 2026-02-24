@@ -47,12 +47,12 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&searchFlag, "search", "", "search query for Slack documentation")
+	cmd.Flags().StringVar(&searchFlag, "search", "", "search query for Slack docs")
 
 	return cmd
 }
 
-// runDocsCommand opens Slack developer documentation in the browser
+// runDocsCommand opens Slack developer docs in the browser
 func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
