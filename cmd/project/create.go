@@ -135,7 +135,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	// --subdir requires --template
 	if cmd.Flags().Changed("subdir") && !templateFlagProvided {
 		return slackerror.New(slackerror.ErrMismatchedFlags).
-			WithMessage("the --subdir flag requires the --template flag")
+			WithMessage("The --subdir flag requires the --template flag")
 	}
 
 	// Collect the template URL or select a starting template
