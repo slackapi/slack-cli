@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -84,21 +85,22 @@ func Test_getVenvPath(t *testing.T) {
 func Test_getPythonExecutable(t *testing.T) {
 	tests := map[string]struct {
 		expectedExecutable string
-		skipOnOS           string
+		onlyOnWindows      bool
 	}{
 		"Get python executable on Unix": {
 			expectedExecutable: "python3",
-			skipOnOS:           "windows",
+			onlyOnWindows:      false,
 		},
 		"Get python executable on Windows": {
 			expectedExecutable: "python",
-			skipOnOS:           "linux",
+			onlyOnWindows:      true,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			if tc.skipOnOS != "" {
-				return
+			isWindows := runtime.GOOS == "windows"
+			if tc.onlyOnWindows != isWindows {
+				t.Skip("skipping test on " + runtime.GOOS)
 			}
 			result := getPythonExecutable()
 			require.Equal(t, tc.expectedExecutable, result)
@@ -108,30 +110,29 @@ func Test_getPythonExecutable(t *testing.T) {
 
 func Test_getPipExecutable(t *testing.T) {
 	tests := map[string]struct {
-		venvPath     string
-		expectedPath string
-		skipOnOS     string
+		venvPath      string
+		expectedPath  string
+		onlyOnWindows bool
 	}{
 		"Get pip path on Unix": {
-			venvPath:     "/path/to/.venv",
-			expectedPath: "/path/to/.venv/bin/pip",
-			skipOnOS:     "windows",
+			venvPath:      "/path/to/.venv",
+			expectedPath:  "/path/to/.venv/bin/pip",
+			onlyOnWindows: false,
 		},
 		"Get pip path on Windows": {
-			venvPath:     "C:\\path\\to\\.venv",
-			expectedPath: "C:\\path\\to\\.venv\\Scripts\\pip.exe",
-			skipOnOS:     "linux",
+			venvPath:      "C:\\path\\to\\.venv",
+			expectedPath:  "C:\\path\\to\\.venv\\Scripts\\pip.exe",
+			onlyOnWindows: true,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := getPipExecutable(tc.venvPath)
-			// Only assert on the appropriate OS
-			if tc.skipOnOS != "" {
-				// Skip OS-specific test
-				return
+			isWindows := runtime.GOOS == "windows"
+			if tc.onlyOnWindows != isWindows {
+				t.Skip("skipping test on " + runtime.GOOS)
 			}
-			require.Contains(t, result, "pip")
+			result := getPipExecutable(tc.venvPath)
+			require.Equal(t, tc.expectedPath, result)
 		})
 	}
 }
