@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -165,7 +165,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			generateBoundary = mockBoundaryStringGenerator
@@ -177,8 +177,8 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			hookExecutor := &HookExecutorMessageBoundaryProtocol{
 				IO: ios,
 			}
-			response, err := hookExecutor.Execute(ctx, tt.opts)
-			tt.check(t, response, err, tt.opts.Exec)
+			response, err := hookExecutor.Execute(ctx, tc.opts)
+			tc.check(t, response, err, tc.opts.Exec)
 		})
 	}
 }

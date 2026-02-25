@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -36,6 +34,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "app list", Meaning: "List all teams with the app installed"},
 			{Command: "app settings", Meaning: "Open app settings in a web browser"},
 			{Command: "app uninstall", Meaning: "Uninstall an app from a team"},
+			{Command: "app unlink", Meaning: "Remove a linked app from the project"},
 			{Command: "app delete", Meaning: "Delete an app and app info from a team"},
 		}),
 		Args: cobra.NoArgs,
@@ -50,13 +49,13 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			ctx := cmd.Context()
 			// DEPRECATED(semver:major): remove the "workspace" alias
 			if cmd.CalledAs() == "workspace" {
-				clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
+				clients.IO.PrintInfo(ctx, false,
 					"\n%s It looks like you used %s. This command will be deprecated in an upcoming release.\n    You can now use %s instead of %s.\n ",
 					style.Emoji("bulb"),
 					style.Commandf("workspace", true),
 					style.Commandf("app", true),
 					style.Commandf("workspace", true),
-				))
+				)
 			}
 			return nil
 		},
@@ -69,6 +68,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.AddCommand(NewListCommand(clients))
 	cmd.AddCommand(NewSettingsCommand(clients))
 	cmd.AddCommand(NewUninstallCommand(clients))
+	cmd.AddCommand(NewUnlinkCommand(clients))
 
 	return cmd
 }

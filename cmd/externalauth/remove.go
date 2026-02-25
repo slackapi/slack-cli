@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		return err
 	}
 
-	clients.IO.PrintInfo(ctx, false, style.Highlight("\nNote that this command will not revoke existing tokens, only remove them from Slack systems. You might be able to revoke them from a provider's dev console or APIs\n"))
+	clients.IO.PrintInfo(ctx, false, "%s", style.Highlight("\nNote that this command will not revoke existing tokens, only remove them from Slack systems. You might be able to revoke them from a provider's dev console or APIs\n"))
 
 	confirmMessage := "Are you sure you want to remove all tokens for this app relevant to the specified provider from your current team/org?"
 	if allProvidersFlag {
@@ -231,6 +231,6 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		)
 	}
 
-	clients.IO.PrintInfo(ctx, false, text)
+	clients.IO.PrintInfo(ctx, false, "%s", text)
 	return nil
 }

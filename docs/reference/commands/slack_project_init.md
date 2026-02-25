@@ -15,7 +15,7 @@ Adds a .slack directory with the following files:
 Adds the Slack CLI hooks dependency to your project:
 - Deno:    Unsupported
 - Node.js: Updates package.json
-- Python:  Updates requirements.txt
+- Python:  Updates requirements.txt or pyproject.toml
 
 Installs your project dependencies when supported:
 - Deno:    Supported

@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,57 +21,77 @@ import (
 )
 
 func Test_AppendStringIfNotMember(t *testing.T) {
-	tests := []struct {
-		name          string
+	tests := map[string]struct {
 		newElement    string
 		originalSlice []string
 		expectedSlice []string
 	}{
-		{
-			name:          "Append new element",
+		"Append new element": {
 			newElement:    "four",
 			originalSlice: []string{"one", "two", "three"},
 			expectedSlice: []string{"one", "two", "three", "four"},
 		},
-		{
-			name:          "Do not append existing element",
+		"Do not append existing element": {
 			newElement:    "two",
 			originalSlice: []string{"one", "two", "three"},
 			expectedSlice: []string{"one", "two", "three"},
 		},
-		{
-			name:          "Append new element to empty list",
+		"Append new element to empty list": {
 			newElement:    "one",
 			originalSlice: []string{},
 			expectedSlice: []string{"one"},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			actualSlice := AppendStringIfNotMember(tt.originalSlice, tt.newElement)
-			require.ElementsMatch(t, tt.expectedSlice, actualSlice)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualSlice := AppendStringIfNotMember(tc.originalSlice, tc.newElement)
+			require.ElementsMatch(t, tc.expectedSlice, actualSlice)
 		})
 	}
 }
 
 func Test_Contains(t *testing.T) {
-	tests := []struct {
-		name            string
+	tests := map[string]struct {
 		listToCheck     []string
 		toFind          string
 		isCaseSensitive bool
 		want            bool
 	}{
-		{name: "not_case_sensitive_success", listToCheck: []string{"hi", "hey"}, toFind: "Hey", isCaseSensitive: false, want: true},
-		{name: "case_sensitive_success", listToCheck: []string{"hi", "Hey"}, toFind: "Hey", isCaseSensitive: true, want: true},
-		{name: "case_sensitive_fail", listToCheck: []string{"hi", "hey", "hello", "apple", "pear"}, toFind: "Hey", isCaseSensitive: true, want: false},
-		{name: "not_case_sensitive_fail", listToCheck: []string{"hi", "hey", "hello", "apple", "pear"}, toFind: "Peach", isCaseSensitive: false, want: false},
-		{name: "not_case_sensitive_substring", listToCheck: []string{"hi", "hey hello"}, toFind: "hey", isCaseSensitive: false, want: false},
+		"not_case_sensitive_success": {
+			listToCheck:     []string{"hi", "hey"},
+			toFind:          "Hey",
+			isCaseSensitive: false,
+			want:            true,
+		},
+		"case_sensitive_success": {
+			listToCheck:     []string{"hi", "Hey"},
+			toFind:          "Hey",
+			isCaseSensitive: true,
+			want:            true,
+		},
+		"case_sensitive_fail": {
+			listToCheck:     []string{"hi", "hey", "hello", "apple", "pear"},
+			toFind:          "Hey",
+			isCaseSensitive: true,
+			want:            false,
+		},
+		"not_case_sensitive_fail": {
+			listToCheck:     []string{"hi", "hey", "hello", "apple", "pear"},
+			toFind:          "Peach",
+			isCaseSensitive: false,
+			want:            false,
+		},
+		"not_case_sensitive_substring": {
+			listToCheck:     []string{"hi", "hey hello"},
+			toFind:          "hey",
+			isCaseSensitive: false,
+			want:            false,
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.listToCheck, tt.toFind, tt.isCaseSensitive); got != tt.want {
-				t.Errorf("method() = %v, want %v", got, tt.want)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if got := Contains(tc.listToCheck, tc.toFind, tc.isCaseSensitive); got != tc.want {
+				t.Errorf("method() = %v, want %v", got, tc.want)
 			}
 		})
 	}

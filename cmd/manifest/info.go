@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	if err != nil {
 		return err
 	}
-	clients.IO.PrintInfo(ctx, false, string(manifest))
+	clients.IO.PrintInfo(ctx, false, "%s", string(manifest))
 	return nil
 }
 

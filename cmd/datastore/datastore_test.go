@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,23 +134,23 @@ func TestSetQueryExpression(t *testing.T) {
 			expectedError: slackerror.New(slackerror.ErrInvalidAppFlag),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := setupDatastoreMocks()
-			clientsMock.Config.AppFlag = tt.appFlag
-			if tt.datastoreFlag != "" {
-				err := clientsMock.Config.Flags.Lookup("datastore").Value.Set(tt.datastoreFlag)
+			clientsMock.Config.AppFlag = tc.appFlag
+			if tc.datastoreFlag != "" {
+				err := clientsMock.Config.Flags.Lookup("datastore").Value.Set(tc.datastoreFlag)
 				require.NoError(t, err)
 				clientsMock.Config.Flags.Lookup("datastore").Changed = true
 			}
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			err := setQueryExpression(clients, tt.query, tt.expression, tt.method)
-			if tt.expectedError != nil {
+			err := setQueryExpression(clients, tc.query, tc.expression, tc.method)
+			if tc.expectedError != nil {
 				require.Error(t, err)
-				assert.Equal(t, tt.expectedError.(*slackerror.Error).Code, err.(*slackerror.Error).Code)
+				assert.Equal(t, tc.expectedError.(*slackerror.Error).Code, err.(*slackerror.Error).Code)
 			} else {
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedQuery, tt.query)
+				assert.Equal(t, tc.expectedQuery, tc.query)
 
 			}
 		})

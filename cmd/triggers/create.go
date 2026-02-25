@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -243,7 +243,7 @@ func ListWorkflows(
 		for callbackID := range slackYaml.Workflows {
 			workflows = workflows + fmt.Sprintf("- #/workflows/%s\n", callbackID)
 		}
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "bulb",
 			Text:  `The "workflow" property in the trigger definition file should be one of the following:`,
 			Secondary: []string{
@@ -252,7 +252,7 @@ func ListWorkflows(
 			},
 		}))
 	} else {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "warning",
 			Text:  "Your app has no workflows",
 			Secondary: []string{

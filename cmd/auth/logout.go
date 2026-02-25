@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -212,11 +212,11 @@ func printLogoutSuccess(ctx context.Context, clients *shared.ClientFactory, auth
 	}
 
 	clients.IO.PrintTrace(ctx, slacktrace.AuthLogoutSuccess)
-	clients.IO.PrintInfo(ctx, false, fmt.Sprintf("\n%s", style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "wastebasket",
 		Text:      revokedAuthText,
 		Secondary: logoutNextSteps,
-	})))
+	}))
 }
 
 // FormatAuthLabel returns a formatted auth label for user selection during logout

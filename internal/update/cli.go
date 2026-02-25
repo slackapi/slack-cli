@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const metadataURL = "https://api.slack.com/slackcli/metadata.json"
+const metadataURL = "https://docs.slack.dev/tools/metadata.json"
 
 // CLIDependency contains information about the
 // current version and the latest CLI release version

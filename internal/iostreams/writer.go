@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -150,7 +150,7 @@ type WriteDebugger struct {
 func (wr WriteDebugger) Write(p []byte) (n int, err error) {
 	lines := strings.Split(strings.TrimSpace(string(p)), "\n")
 	for _, line := range lines {
-		wr.io.PrintDebug(wr.ctx, line)
+		wr.io.PrintDebug(wr.ctx, "%s", line)
 	}
 	return len(p), nil
 }

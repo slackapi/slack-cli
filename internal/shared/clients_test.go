@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -111,20 +111,20 @@ func Test_ClientFactory_InitSDKConfig(t *testing.T) {
 			expectedError:         slackerror.New(slackerror.ErrHooksJSONLocation),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := NewClientFactory(clientsMock.MockClientFactory())
-			err := clients.Fs.MkdirAll(filepath.Dir(tt.mockHooksJSONFilePath), 0o755)
+			err := clients.Fs.MkdirAll(filepath.Dir(tc.mockHooksJSONFilePath), 0o755)
 			require.NoError(t, err)
-			err = afero.WriteFile(clients.Fs, tt.mockHooksJSONFilePath, []byte(tt.mockHooksJSONContent), 0o600)
+			err = afero.WriteFile(clients.Fs, tc.mockHooksJSONFilePath, []byte(tc.mockHooksJSONContent), 0o600)
 			require.NoError(t, err)
-			err = clients.InitSDKConfig(ctx, tt.mockWorkingDirectory)
-			assert.Equal(t, tt.expectedError, err)
-			assert.Equal(t, tt.expectedGetHooksScript, clients.SDKConfig.Hooks.GetHooks.Command)
-			assert.Equal(t, tt.expectedWorkingDirectory, clients.SDKConfig.WorkingDirectory)
+			err = clients.InitSDKConfig(ctx, tc.mockWorkingDirectory)
+			assert.Equal(t, tc.expectedError, err)
+			assert.Equal(t, tc.expectedGetHooksScript, clients.SDKConfig.Hooks.GetHooks.Command)
+			assert.Equal(t, tc.expectedWorkingDirectory, clients.SDKConfig.WorkingDirectory)
 		})
 	}
 }

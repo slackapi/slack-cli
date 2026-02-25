@@ -1,29 +1,62 @@
 name: Update dependencies
 on:
+  pull_request:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
 jobs:
+  dependabot:
+    name: "@dependabot"
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Collect metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2.5.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Milestone
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr edit --milestone "Next Release" "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Approve
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Automerge
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch' || steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   golang:
     name: Bump the Golang version
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     permissions:
       contents: none # Permissions are set with an application token
     steps:
       - name: Gather credentials
         id: credentials
-        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v2.1.1
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
         with:
           app-id: ${{ secrets.GH_APP_ID_RELEASER }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
       - name: Checkout the repo
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: true
           ref: main
           token: ${{ steps.credentials.outputs.token }}
       - name: Install Golang
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
         with:
           go-version: "stable"
       - name: Get the latest version
@@ -50,7 +83,7 @@ jobs:
           fi
           git commit --all -m "build(deps): bump golang to ${VERSION#go}"
           git push -u origin chore-bump-golang
-          gh pr create --title "build(deps): bump golang to ${VERSION#go}" --body "Automatic update to the latest release of Go" --milestone "Next Release" --label "code health"
+          gh pr create --title "build(deps): bump golang to ${VERSION#go}" --body "Automatic update to the latest release of Go" --milestone "Next Release" --label "code health" --label "semver:patch"
         env:
           GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
           VERSION: ${{ steps.version.outputs.latest }}

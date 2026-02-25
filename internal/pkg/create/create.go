@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,12 +100,12 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	// and debugs and the standard output here
 	clients.IO.PrintTrace(ctx, slacktrace.CreateStart)
 	clients.IO.PrintTrace(ctx, slacktrace.CreateProjectPath, projectDirPath)
-	clients.IO.PrintDebug(ctx, fmt.Sprintf("creating a new project called '%s'", appDirName))
-	clients.IO.PrintDebug(ctx, fmt.Sprintf("cloning project from template '%s'", createArgs.Template.path))
+	clients.IO.PrintDebug(ctx, "creating a new project called '%s'", appDirName)
+	clients.IO.PrintDebug(ctx, "cloning project from template '%s'", createArgs.Template.path)
 	if createArgs.GitBranch != "" {
-		clients.IO.PrintDebug(ctx, fmt.Sprintf("cloning project from branch '%s'", createArgs.GitBranch))
+		clients.IO.PrintDebug(ctx, "cloning project from branch '%s'", createArgs.GitBranch)
 	}
-	clients.IO.PrintDebug(ctx, fmt.Sprintf("writing project to path '%s'", projectDirPath))
+	clients.IO.PrintDebug(ctx, "writing project to path '%s'", projectDirPath)
 	projectDetails := []string{
 		fmt.Sprintf("Cloning template %s", style.Highlight(createArgs.Template.GetTemplatePath())),
 	}
@@ -375,7 +375,7 @@ func InstallProjectDependencies(
 	if err := clients.InitRuntime(ctx, projectDirPath); err != nil {
 		clients.IO.PrintDebug(ctx, "Error detecting the runtime of the project: %s", err)
 	} else {
-		clients.IO.PrintDebug(ctx, fmt.Sprintf("Detected a project using %s", style.Highlight(clients.Runtime.Name())))
+		clients.IO.PrintDebug(ctx, "Detected a project using %s", style.Highlight(clients.Runtime.Name()))
 	}
 
 	// Create a .slack directory

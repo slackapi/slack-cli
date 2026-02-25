@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
+	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -147,17 +148,17 @@ func Test_generateGitZipFileURL(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
 			httpClientMock := &slackhttp.HTTPClientMock{}
-			tt.setupHTTPClientMock(httpClientMock)
+			tc.setupHTTPClientMock(httpClientMock)
 
 			// Execute
-			url := generateGitZipFileURL(httpClientMock, tt.templateURL, tt.gitBranch)
+			url := generateGitZipFileURL(httpClientMock, tc.templateURL, tc.gitBranch)
 
 			// Assertions
-			assert.Equal(t, tt.expectedURL, url)
+			assert.Equal(t, tc.expectedURL, url)
 		})
 	}
 }
@@ -192,6 +193,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		expectedOutputs        []string
 		unexpectedOutputs      []string
 		expectedVerboseOutputs []string
+		expectedVerboseArgs    []any
 	}{
 		"Should output added .slack, hooks.json, .gitignore, and caching": {
 			expectedOutputs: []string{
@@ -201,8 +203,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Cached dependencies with deno cache import_map.json",
 			},
 			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
+				"Detected a project using %s",
 			},
+			expectedVerboseArgs: []any{style.Highlight("Deno")},
 		},
 		"When hooks.json exists, should output found .slack and hooks.json": {
 			existingFiles: map[string]string{
@@ -218,8 +221,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Error adding the directory project-name/.slack",
 			},
 			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
+				"Detected a project using %s",
 			},
+			expectedVerboseArgs: []any{style.Highlight("Deno")},
 		},
 		"When slack.json exists, should output added .slack": {
 			existingFiles: map[string]string{
@@ -231,8 +235,9 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				"Cached dependencies with deno cache import_map.json",
 			},
 			expectedVerboseOutputs: []string{
-				"Detected a project using Deno",
+				"Detected a project using %s",
 			},
+			expectedVerboseArgs: []any{style.Highlight("Deno")},
 		},
 		"When no manifest source, default to project (local)": {
 			expectedOutputs: []string{
@@ -259,7 +264,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Remove any enabled experiments during the test and restore afterward
 			var _EnabledExperiments = experiment.EnabledExperiments
@@ -280,7 +285,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 
 			// Set experiment flag
-			clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, tt.experiments...)
+			clientsMock.Config.ExperimentsFlag = append(clientsMock.Config.ExperimentsFlag, tc.experiments...)
 			clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 
 			// Create clients that is mocked for testing
@@ -288,8 +293,8 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 
 			// Set runtime to be Deno (or node or whatever)
 			clients.SDKConfig.Runtime = "deno"
-			if tt.runtime != "" {
-				clients.SDKConfig.Runtime = tt.runtime
+			if tc.runtime != "" {
+				clients.SDKConfig.Runtime = tc.runtime
 			}
 
 			// Create project directory
@@ -298,7 +303,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			}
 
 			// Create files
-			for filePath, fileData := range tt.existingFiles {
+			for filePath, fileData := range tc.existingFiles {
 				filePathAbs := filepath.Join(projectDirPath, filePath)
 				// Create the directory
 				if err := clients.Fs.MkdirAll(filepath.Dir(filePathAbs), 0755); err != nil {
@@ -311,21 +316,21 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			}
 
 			// Run the test
-			outputs := InstallProjectDependencies(ctx, clients, projectDirPath, tt.manifestSource)
+			outputs := InstallProjectDependencies(ctx, clients, projectDirPath, tc.manifestSource)
 
 			// Assertions
-			for _, expectedOutput := range tt.expectedOutputs {
+			for _, expectedOutput := range tc.expectedOutputs {
 				require.Contains(t, outputs, expectedOutput)
 			}
-			for _, unexpectedOutput := range tt.unexpectedOutputs {
+			for _, unexpectedOutput := range tc.unexpectedOutputs {
 				require.NotContains(t, outputs, unexpectedOutput)
 			}
-			for _, expectedVerboseOutput := range tt.expectedVerboseOutputs {
-				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, expectedVerboseOutput, mock.MatchedBy(func(args ...any) bool { return true }))
+			for _, expectedVerboseOutput := range tc.expectedVerboseOutputs {
+				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, expectedVerboseOutput, tc.expectedVerboseArgs)
 			}
 			assert.NotEmpty(t, clients.Config.ProjectID, "config.project_id")
 			// output := clientsMock.GetCombinedOutput()
-			// assert.Contains(t, output, tt.expectedOutputs)
+			// assert.Contains(t, output, tc.expectedOutputs)
 		})
 	}
 }

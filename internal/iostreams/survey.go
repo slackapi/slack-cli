@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/pflag"
@@ -120,6 +121,9 @@ func (cfg ConfirmPromptConfig) IsRequired() bool {
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
 // the message
 func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
+	if io.config.WithExperimentOn(experiment.Charm) {
+		return charmConfirmPrompt(io, ctx, message, defaultValue)
+	}
 
 	// Temporarily swap default template for custom one
 	defaultConfirmTemplate := survey.ConfirmQuestionTemplate
@@ -191,6 +195,10 @@ func (cfg InputPromptConfig) IsRequired() bool {
 // InputPrompt prompts the user for a string value for the message, which can
 // optionally be made required
 func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
+	if io.config.WithExperimentOn(experiment.Charm) {
+		return charmInputPrompt(io, ctx, message, cfg)
+	}
+
 	defaultInputTemplate := survey.InputQuestionTemplate
 	survey.InputQuestionTemplate = InputQuestionTemplate
 	defer func() {
@@ -263,6 +271,10 @@ func (cfg MultiSelectPromptConfig) IsRequired() bool {
 // MultiSelectPrompt prompts the user to select multiple values in a list and
 // returns the selected values
 func (io *IOStreams) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
+	if io.config.WithExperimentOn(experiment.Charm) {
+		return charmMultiSelectPrompt(io, ctx, message, options)
+	}
+
 	defaultMultiSelectTemplate := survey.MultiSelectQuestionTemplate
 	survey.MultiSelectQuestionTemplate = MultiSelectQuestionTemplate
 	defer func() {
@@ -338,6 +350,10 @@ func (io *IOStreams) PasswordPrompt(ctx context.Context, message string, cfg Pas
 	}
 	if !io.IsTTY() {
 		return PasswordPromptResponse{}, errInteractivityFlags(cfg)
+	}
+
+	if io.config.WithExperimentOn(experiment.Charm) {
+		return charmPasswordPrompt(io, ctx, message, cfg)
 	}
 
 	defaultPasswordTemplate := survey.PasswordQuestionTemplate
@@ -452,6 +468,10 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 		} else {
 			return SelectPromptResponse{}, nil
 		}
+	}
+
+	if io.config.WithExperimentOn(experiment.Charm) {
+		return charmSelectPrompt(io, ctx, msg, options, cfg)
 	}
 
 	defaultSelectTemplate := survey.SelectQuestionTemplate

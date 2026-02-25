@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
 package api
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -26,8 +23,7 @@ import (
 )
 
 func Test_API_AppsAuthExternalStart(t *testing.T) {
-	tests := []struct {
-		name                     string
+	tests := map[string]struct {
 		argsToken                string
 		argsAppID                string
 		argsProviderKey          string
@@ -35,8 +31,7 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 		expectedAuthorizationURL string
 		expectedErrorContains    string
 	}{
-		{
-			name:                     "Successful request",
+		"Successful request": {
 			argsToken:                "xoxp-123",
 			argsAppID:                "A0123",
 			argsProviderKey:          "provider-key",
@@ -44,8 +39,7 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 			expectedAuthorizationURL: "http://slack.com/authorization/url",
 			expectedErrorContains:    "",
 		},
-		{
-			name:                     "Response contains an error",
+		"Response contains an error": {
 			argsToken:                "xoxp-123",
 			argsAppID:                "A0123",
 			argsProviderKey:          "provider-key",
@@ -53,8 +47,7 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 			expectedAuthorizationURL: "",
 			expectedErrorContains:    "invalid scopes",
 		},
-		{
-			name:                     "Response contains invalid JSON",
+		"Response contains invalid JSON": {
 			argsToken:                "xoxp-123",
 			argsAppID:                "A0123",
 			argsProviderKey:          "provider-key",
@@ -64,61 +57,53 @@ func Test_API_AppsAuthExternalStart(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// Setup HTTP test server
-			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				json := tt.httpResponseJSON
-				_, err := fmt.Fprintln(w, json)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(httpHandlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appsAuthExternalStartMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
 			// Execute test
-			authorizationURL, err := apiClient.AppsAuthExternalStart(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey)
+			authorizationURL, err := c.AppsAuthExternalStart(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey)
 
 			// Assertions
-			require.Equal(t, tt.expectedAuthorizationURL, authorizationURL)
-			if tt.expectedErrorContains == "" {
+			require.Equal(t, tc.expectedAuthorizationURL, authorizationURL)
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
 }
 
 func Test_API_AppsAuthExternalRemove(t *testing.T) {
-	tests := []struct {
-		name                  string
+	tests := map[string]struct {
 		argsToken             string
 		argsAppID             string
 		argsProviderKey       string
 		httpResponseJSON      string
 		expectedErrorContains string
 	}{
-		{
-			name:                  "Successful request",
+		"Successful request": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			httpResponseJSON:      `{"ok": true}`,
 			expectedErrorContains: "",
 		},
-		{
-			name:                  "Response contains an error",
+		"Response contains an error": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
 			httpResponseJSON:      `{"ok":false,"error":"invalid scopes"}`,
 			expectedErrorContains: "invalid scopes",
 		},
-		{
-			name:                  "Response contains invalid JSON",
+		"Response contains invalid JSON": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -127,36 +112,31 @@ func Test_API_AppsAuthExternalRemove(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// Setup HTTP test server
-			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				json := tt.httpResponseJSON
-				_, err := fmt.Fprintln(w, json)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(httpHandlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appsAuthExternalDeleteMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
 			// Execute test
-			err := apiClient.AppsAuthExternalDelete(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, "")
+			err := c.AppsAuthExternalDelete(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey, "")
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
 }
 
 func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
-	tests := []struct {
-		name                  string
+	tests := map[string]struct {
 		argsToken             string
 		argsAppID             string
 		argsProviderKey       string
@@ -164,8 +144,7 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 		httpResponseJSON      string
 		expectedErrorContains string
 	}{
-		{
-			name:                  "Successful request",
+		"Successful request": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -173,8 +152,7 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 			httpResponseJSON:      `{"ok": true}`,
 			expectedErrorContains: "",
 		},
-		{
-			name:                  "Response contains an error",
+		"Response contains an error": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -182,8 +160,7 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 			httpResponseJSON:      `{"ok":false,"error":"client secret cannot be empty"}`,
 			expectedErrorContains: "client secret cannot be empty",
 		},
-		{
-			name:                  "Response contains invalid JSON",
+		"Response contains invalid JSON": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -192,44 +169,38 @@ func Test_API_AppsAuthExternalClientSecretAdd(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// Setup HTTP test server
-			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				json := tt.httpResponseJSON
-				_, err := fmt.Fprintln(w, json)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(httpHandlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appsAuthExternalClientSecretAddMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
 			// Execute test
-			err := apiClient.AppsAuthExternalClientSecretAdd(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsClientSecret)
+			err := c.AppsAuthExternalClientSecretAdd(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey, tc.argsClientSecret)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
 }
 
 func Test_API_AppsAuthExternalList(t *testing.T) {
-	tests := []struct {
-		name                           string
+	tests := map[string]struct {
 		argsToken                      string
 		argsAppID                      string
 		httpResponseJSON               string
 		expectedAuthorizationInfoLists types.ExternalAuthorizationInfoLists
 		expectedErrorContains          string
 	}{
-		{
-			name:             "Successful request",
+		"Successful request": {
 			argsToken:        "xoxp-123",
 			argsAppID:        "A0123",
 			httpResponseJSON: `{"ok": true,  "authorizations": [ { "provider_name": "Google",  "provider_key": "google",  "client_id": "xxxxx",  "client_secret_exists": true,  "valid_token_exists": true}]}`,
@@ -246,8 +217,7 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 			},
 			expectedErrorContains: "",
 		},
-		{
-			name:      "Successful request with external_token_ids and external_tokens",
+		"Successful request with external_token_ids and external_tokens": {
 			argsToken: "xoxp-123",
 			argsAppID: "A0123",
 			httpResponseJSON: `{"ok": true,
@@ -287,8 +257,7 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 			},
 			expectedErrorContains: "",
 		},
-		{
-			name:      "Successful request with workflows",
+		"Successful request with workflows": {
 			argsToken: "xoxp-123",
 			argsAppID: "A0123",
 			httpResponseJSON: `{
@@ -355,15 +324,13 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 			},
 			expectedErrorContains: "",
 		},
-		{
-			name:                  "Response contains an error",
+		"Response contains an error": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			httpResponseJSON:      `{"ok":false,"error":"app_not_found"}`,
 			expectedErrorContains: "app_not_found",
 		},
-		{
-			name:                  "Response contains invalid JSON",
+		"Response contains invalid JSON": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
@@ -371,36 +338,31 @@ func Test_API_AppsAuthExternalList(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// Setup HTTP test server
-			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				json := tt.httpResponseJSON
-				_, err := fmt.Fprintln(w, json)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(httpHandlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appsAuthExternalListMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
 			// Execute test
-			actual, err := apiClient.AppsAuthExternalList(ctx, tt.argsToken, tt.argsAppID, false /*include_workflows flag to return workflow auth info*/)
+			actual, err := c.AppsAuthExternalList(ctx, tc.argsToken, tc.argsAppID, false /*include_workflows flag to return workflow auth info*/)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedAuthorizationInfoLists, actual)
+				require.Equal(t, tc.expectedAuthorizationInfoLists, actual)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}
 }
 func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
-	tests := []struct {
-		name                  string
+	tests := map[string]struct {
 		argsToken             string
 		argsAppID             string
 		argsProviderKey       string
@@ -410,8 +372,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 		httpResponseJSON      string
 		expectedErrorContains string
 	}{
-		{
-			name:                  "Successful request",
+		"Successful request": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -421,8 +382,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			httpResponseJSON:      `{"ok": true}`,
 			expectedErrorContains: "",
 		},
-		{
-			name:                  "Response contains an error",
+		"Response contains an error": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -432,8 +392,7 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 			httpResponseJSON:      `{"ok":false,"error":"token id cannot be empty"}`,
 			expectedErrorContains: "token id cannot be empty",
 		},
-		{
-			name:                  "Response contains invalid JSON",
+		"Response contains invalid JSON": {
 			argsToken:             "xoxp-123",
 			argsAppID:             "A0123",
 			argsProviderKey:       "provider-key",
@@ -444,28 +403,24 @@ func Test_API_AppsAuthExternalSelectAuth(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// Setup HTTP test server
-			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				json := tt.httpResponseJSON
-				_, err := fmt.Fprintln(w, json)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(httpHandlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appsAuthExternalSelectAuthMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
 			// Execute test
-			err := apiClient.AppsAuthExternalSelectAuth(ctx, tt.argsToken, tt.argsAppID, tt.argsProviderKey, tt.argsWorkflowID, tt.argsExternalTokenID)
+			err := c.AppsAuthExternalSelectAuth(ctx, tc.argsToken, tc.argsAppID, tc.argsProviderKey, tc.argsWorkflowID, tc.argsExternalTokenID)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}

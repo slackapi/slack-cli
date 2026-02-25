@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,10 +35,10 @@ func Test_Update_ContainsSemVer(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual := ContainsSemVer(tt.version)
-			assert.Equal(t, tt.expected, actual)
+			actual := ContainsSemVer(tc.version)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

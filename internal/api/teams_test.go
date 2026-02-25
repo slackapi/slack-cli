@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
 package api
 
 import (
-	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -26,16 +23,14 @@ import (
 )
 
 func Test_API_TeamInfoResponse(t *testing.T) {
-	tests := []struct {
-		name                  string
+	tests := map[string]struct {
 		argsToken             string
 		argsTeamID            string
 		httpResponseJSON      string
 		expectedTeamsInfo     *types.TeamInfo
 		expectedErrorContains string
 	}{
-		{
-			name:             "Successful request",
+		"Successful request": {
 			argsToken:        "xoxp-123",
 			argsTeamID:       "T0123",
 			httpResponseJSON: `{"ok": true,  "team": { "id": "T12345", "name": "My Team", "domain": "example", "email_domain": "example.com", "enterprise_id": "E1234A12AB", "enterprise_name": "Umbrella Corporation" }}`,
@@ -45,15 +40,13 @@ func Test_API_TeamInfoResponse(t *testing.T) {
 			},
 			expectedErrorContains: "",
 		},
-		{
-			name:                  "Response contains an error",
+		"Response contains an error": {
 			argsToken:             "xoxp-123",
 			argsTeamID:            "T0123",
 			httpResponseJSON:      `{"ok":false,"error":"team_not_found"}`,
 			expectedErrorContains: "team_not_found",
 		},
-		{
-			name:                  "Response contains invalid JSON",
+		"Response contains invalid JSON": {
 			argsToken:             "xoxp-123",
 			argsTeamID:            "T0123",
 			httpResponseJSON:      `this is not valid json {"ok": true}`,
@@ -61,29 +54,25 @@ func Test_API_TeamInfoResponse(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 
-			// Setup HTTP test server
-			httpHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-				json := tt.httpResponseJSON
-				_, err := fmt.Fprintln(w, json)
-				require.NoError(t, err)
-			}
-			ts := httptest.NewServer(http.HandlerFunc(httpHandlerFunc))
-			defer ts.Close()
-			apiClient := NewClient(&http.Client{}, ts.URL, nil)
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: teamsInfoMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
 			// Execute test
-			actual, err := apiClient.TeamsInfo(ctx, tt.argsToken, tt.argsTeamID)
+			actual, err := c.TeamsInfo(ctx, tc.argsToken, tc.argsTeamID)
 
 			// Assertions
-			if tt.expectedErrorContains == "" {
+			if tc.expectedErrorContains == "" {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedTeamsInfo, actual)
+				require.Equal(t, tc.expectedTeamsInfo, actual)
 			} else {
-				require.Contains(t, err.Error(), tt.expectedErrorContains, "Expect error contains the message")
+				require.Contains(t, err.Error(), tc.expectedErrorContains, "Expect error contains the message")
 			}
 		})
 	}

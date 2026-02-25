@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -369,7 +369,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		users := strings.Split(accessFlags.users, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("User", "Users", len(users)), style.Emoji("party_popper"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("User", "Users", len(users)), style.Emoji("party_popper"))))
 
 	case "remove_user":
 		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
@@ -385,7 +385,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		users := strings.Split(accessFlags.users, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("User", "Users", len(users)), style.Emoji("firecracker"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("User", "Users", len(users)), style.Emoji("firecracker"))))
 
 	case "add_channel":
 		if currentAccessType != types.PermissionNamedEntities {
@@ -408,7 +408,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		channels := strings.Split(accessFlags.channels, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Channel", "Channels", len(channels)), style.Emoji("party_popper"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Channel", "Channels", len(channels)), style.Emoji("party_popper"))))
 
 	case "remove_channel":
 		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
@@ -424,7 +424,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		channels := strings.Split(accessFlags.channels, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Channel", "Channels", len(channels)), style.Emoji("firecracker"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Channel", "Channels", len(channels)), style.Emoji("firecracker"))))
 
 	case "add_workspace":
 		if currentAccessType != types.PermissionNamedEntities {
@@ -447,7 +447,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		workspaces := strings.Split(accessFlags.workspaces, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Workspace", "Workspaces", len(workspaces)), style.Emoji("party_popper"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Workspace", "Workspaces", len(workspaces)), style.Emoji("party_popper"))))
 
 	case "remove_workspace":
 		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
@@ -463,7 +463,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		workspaces := strings.Split(accessFlags.workspaces, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Workspace", "Workspaces", len(workspaces)), style.Emoji("firecracker"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Workspace", "Workspaces", len(workspaces)), style.Emoji("firecracker"))))
 
 	case "add_organization":
 		if currentAccessType != types.PermissionNamedEntities {
@@ -486,7 +486,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		organizations := strings.Split(accessFlags.organizations, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Organization", "Organizations", len(organizations)), style.Emoji("party_popper"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("Organization", "Organizations", len(organizations)), style.Emoji("party_popper"))))
 
 	case "remove_organization":
 		if currentAccessType == types.PermissionNamedEntities && len(currentAuthorizedEntities) == 0 {
@@ -502,7 +502,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 		}
 
 		organizations := strings.Split(accessFlags.organizations, ",")
-		clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Organization", "Organizations", len(organizations)), style.Emoji("firecracker"))))
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize("Organization", "Organizations", len(organizations)), style.Emoji("firecracker"))))
 
 	case "add_entities":
 		if currentAccessType != types.PermissionNamedEntities {
@@ -521,7 +521,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 				}
 				index++
 				namedEntityValList := strings.Split(namedEntityVal, ",")
-				clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize(cases.Title(language.Und, cases.NoLower).String(strings.TrimSuffix(namedEntityType, "s")), cases.Title(language.Und, cases.NoLower).String(namedEntityType), len(namedEntityValList)), style.Emoji("party_popper"))))
+				clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize(cases.Title(language.Und, cases.NoLower).String(strings.TrimSuffix(namedEntityType, "s")), cases.Title(language.Und, cases.NoLower).String(namedEntityType), len(namedEntityValList)), style.Emoji("party_popper"))))
 			}
 		} else {
 			for namedEntityType, namedEntityVal := range namedEntitiesValMap() {
@@ -530,7 +530,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 					return err
 				}
 				namedEntityValList := strings.Split(namedEntityVal, ",")
-				clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize(cases.Title(language.Und, cases.NoLower).String(strings.TrimSuffix(namedEntityType, "s")), cases.Title(language.Und, cases.NoLower).String(namedEntityType), len(namedEntityValList)), style.Emoji("party_popper"))))
+				clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize(cases.Title(language.Und, cases.NoLower).String(strings.TrimSuffix(namedEntityType, "s")), cases.Title(language.Und, cases.NoLower).String(namedEntityType), len(namedEntityValList)), style.Emoji("party_popper"))))
 			}
 		}
 
@@ -548,7 +548,7 @@ func manageNamedEntities(cmd *cobra.Command, clients *shared.ClientFactory, toke
 				return err
 			}
 			namedEntityValList := strings.Split(namedEntityVal, ",")
-			clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize(cases.Title(language.Und, cases.NoLower).String(strings.TrimSuffix(namedEntityType, "s")), cases.Title(language.Und, cases.NoLower).String(namedEntityType), len(namedEntityValList)), style.Emoji("firecracker"))))
+			clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s removed %s", style.Pluralize(cases.Title(language.Und, cases.NoLower).String(strings.TrimSuffix(namedEntityType, "s")), cases.Title(language.Und, cases.NoLower).String(namedEntityType), len(namedEntityValList)), style.Emoji("firecracker"))))
 		}
 	}
 	return nil
@@ -775,6 +775,6 @@ func AddAppCollaboratorsToNamedEntities(ctx context.Context, clients *shared.Cli
 		return err
 	}
 
-	clients.IO.PrintInfo(ctx, false, style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("App collaborator", "App collaborators", len(collaborators)), style.Emoji("party_popper"))))
+	clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("%s added %s", style.Pluralize("App collaborator", "App collaborators", len(collaborators)), style.Emoji("party_popper"))))
 	return nil
 }

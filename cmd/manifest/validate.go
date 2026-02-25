@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 				return err
 			}
 			if warn != nil {
-				clients.IO.PrintWarning(ctx, warn.Warning(clients.Config.DebugEnabled, "The following warnings were raised during manifest validation"))
+				clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "The following warnings were raised during manifest validation"))
 				return nil
 			}
 			if log != nil {

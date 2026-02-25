@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 var mockGitHubRepos = []create.GithubRepo{
@@ -100,12 +101,12 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 			expectedRepository: "slack-samples/deno-blank-template",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			sampler := create.NewMockSampler()
 			w := httptest.NewRecorder()
-			_, _ = io.WriteString(w, tt.mockSlackHTTPResponse)
+			_, _ = io.WriteString(w, tc.mockSlackHTTPResponse)
 			res := w.Result()
 			sampler.On("Do", mock.Anything).Return(res, nil)
 			clientsMock := shared.NewClientsMock()
@@ -127,20 +128,43 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 				iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("template"),
 				}),
-			).Return(tt.mockSelection, nil)
+			).Return(tc.mockSelection, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Execute test
-			repoName, err := PromptSampleSelection(ctx, clients, sampler)
-			assert.Equal(t, tt.expectedError, err)
-			assert.Equal(t, tt.expectedRepository, repoName)
+			samples, err := create.GetSampleRepos(sampler)
+			require.NoError(t, err)
+			repoName, err := promptSampleSelection(ctx, clients, samples)
+			assert.Equal(t, tc.expectedError, err)
+			assert.Equal(t, tc.expectedRepository, repoName)
 		})
 	}
 }
 
 func TestSamples_FilterRepos(t *testing.T) {
-	filteredRepos := filterRepos(mockGitHubRepos, "deno")
-	assert.Equal(t, len(filteredRepos), 2, "Expected filteredRepos length to be 2")
+	tests := map[string]struct {
+		language      string
+		expectedRepos int
+	}{
+		"deno matches deno": {
+			language:      "deno",
+			expectedRepos: 2,
+		},
+		"node matches bolt-js and bolt-ts": {
+			language:      "node",
+			expectedRepos: 1,
+		},
+		"no filter returns all options": {
+			language:      "",
+			expectedRepos: 4,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			filteredRepos := filterRepos(mockGitHubRepos, tc.language)
+			assert.Equal(t, tc.expectedRepos, len(filteredRepos))
+		})
+	}
 }
 
 func TestSamples_SortRepos(t *testing.T) {

@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -148,7 +148,7 @@ func printAuthSuccess(cmd *cobra.Command, IO iostreams.IOStreamer, credentialsPa
 func printAuthNextSteps(ctx context.Context, clients *shared.ClientFactory) {
 	project, _ := clients.SDKConfig.Exists()
 	if !project {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "bulb",
 			Text:  fmt.Sprintf("Get started by creating a new app with %s", style.Commandf("create my-app", true)),
 			Secondary: []string{
@@ -156,7 +156,7 @@ func printAuthNextSteps(ctx context.Context, clients *shared.ClientFactory) {
 			},
 		}))
 	} else {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "bulb",
 			Text:  fmt.Sprintf("Review existing installations of the app with %s", style.Commandf("app list", false)),
 			Secondary: []string{

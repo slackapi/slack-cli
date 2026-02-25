@@ -38,8 +38,7 @@ slack app settings [flags]
 ## Examples
 
 ```
-# Open app settings for a prompted app
-$ slack app settings
+$ slack app settings                    # Open app settings dashboard
 
 # Open app settings for a specific app
 $ slack app settings --app A0123456789

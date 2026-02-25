@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -245,12 +245,21 @@ func getAuths(ctx context.Context, clients *shared.ClientFactory) ([]types.Slack
 		}
 	}
 	if len(allAuths) == 0 {
-		auth := types.SlackAuth{}
-		err := validateAuth(ctx, clients, &auth)
-		if err != nil {
-			return nil, slackerror.New(slackerror.ErrNotAuthed)
+		// No workspaces connected - prompt user to login if interactive
+		if !clients.IO.IsTTY() {
+			return nil, slackerror.New(slackerror.ErrNotAuthed).
+				WithMessage("No workspaces connected").
+				WithRemediation("Run %s to sign in to a workspace", style.Commandf("login", false))
 		}
-		allAuths = append(allAuths, auth)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "wave",
+			Text:  "No workspaces connected. Sign in to get started.",
+		}))
+		newAuth, _, err := authpkg.LoginWithClients(ctx, clients, "", false)
+		if err != nil {
+			return nil, slackerror.New(slackerror.ErrNotAuthed).WithRootCause(err)
+		}
+		allAuths = append(allAuths, newAuth)
 	}
 	return allAuths, nil
 }
@@ -754,7 +763,7 @@ func OrgSelectWorkspacePrompt(ctx context.Context, clients *shared.ClientFactory
 		msg = fmt.Sprintf("%s   %s\n", msg, style.Secondary("Workspace not listed? Use the `--org-workspace-grant=<team_id>` flag"))
 	}
 
-	clients.IO.PrintInfo(ctx, false, msg)
+	clients.IO.PrintInfo(ctx, false, "%s", msg)
 	selection, err := clients.IO.SelectPrompt(ctx, "Choose a workspace to grant access:", teamDomains, iostreams.SelectPromptConfig{
 		PageSize: 4,
 		Required: true,
@@ -782,7 +791,7 @@ func ValidateGetOrgWorkspaceGrant(ctx context.Context, clients *shared.ClientFac
 	// Not an org app; should not be setting the org workspace flag
 	if !(newAppOrgAuth || types.IsEnterpriseTeamID(selection.App.TeamID)) && orgGrantWorkspaceID != "" {
 		orgGrantWorkspaceID = ""
-		clients.IO.PrintDebug(ctx, fmt.Sprintf("--%s flag ignored for app that wasn't created on an org", cmdutil.OrgGrantWorkspaceFlag))
+		clients.IO.PrintDebug(ctx, "--%s flag ignored for app that wasn't created on an org", cmdutil.OrgGrantWorkspaceFlag)
 	}
 
 	// Prevent user from adding grants for multiple org workspaces
@@ -877,8 +886,8 @@ func validateAuth(ctx context.Context, clients *shared.ClientFactory, auth *type
 	if unfilteredError != nil || !clients.IO.IsTTY() {
 		return err
 	}
-	clients.IO.PrintInfo(ctx, false, fmt.Sprintf("\n%sWhoops! Looks like your authentication may be expired or invalid", style.Emoji("lock")))
-	reauth, _, err := authpkg.Login(ctx, apiClient, clients.Auth(), clients.IO, "", false)
+	clients.IO.PrintInfo(ctx, false, "\n%sWhoops! Looks like your authentication may be expired or invalid", style.Emoji("lock"))
+	reauth, _, err := authpkg.Login(ctx, apiClient, clients.Auth(), clients.Config, clients.IO, "", false)
 	if err != nil {
 		return err
 	}

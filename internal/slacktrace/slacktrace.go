@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,6 +46,8 @@ const (
 	AppLinkSuccess                         = "SLACK_TRACE_APP_LINK_SUCCESS"
 	AppSettingsStart                       = "SLACK_TRACE_APP_SETTINGS_START"
 	AppSettingsSuccess                     = "SLACK_TRACE_APP_SETTINGS_SUCCESS"
+	AppUnlinkStart                         = "SLACK_TRACE_APP_UNLINK_START"
+	AppUnlinkSuccess                       = "SLACK_TRACE_APP_UNLINK_SUCCESS"
 	AuthListCount                          = "SLACK_TRACE_AUTH_LIST_COUNT"
 	AuthListInfo                           = "SLACK_TRACE_AUTH_LIST_INFO"
 	AuthListSuccess                        = "SLACK_TRACE_AUTH_LIST_SUCCESS"

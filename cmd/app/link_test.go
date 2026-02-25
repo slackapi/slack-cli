@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -722,7 +722,7 @@ func Test_Apps_LinkAppHeaderSection(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
 			ctx := slackcontext.MockContext(t.Context())
@@ -733,14 +733,14 @@ func Test_Apps_LinkAppHeaderSection(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Run the test
-			LinkAppHeaderSection(ctx, clients, tt.shouldConfirm)
+			LinkAppHeaderSection(ctx, clients, tc.shouldConfirm)
 
 			// Assertions
 			output := clientsMock.GetCombinedOutput()
-			for _, expectedOutput := range tt.expectedOutputs {
+			for _, expectedOutput := range tc.expectedOutputs {
 				require.Contains(t, output, expectedOutput)
 			}
-			for _, unexpectedOutput := range tt.unexpectedOutputs {
+			for _, unexpectedOutput := range tc.unexpectedOutputs {
 				require.NotContains(t, output, unexpectedOutput)
 			}
 		})

@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,51 +21,43 @@ import (
 )
 
 func Test_Triggers_IsKnownType(t *testing.T) {
-	tests := []struct {
-		name         string
+	tests := map[string]struct {
 		trigger      *Trigger
 		expectedBool bool
 	}{
-		{
-			name:         "Trigger type is TriggerTypeShortcut",
+		"Trigger type is TriggerTypeShortcut": {
 			trigger:      &Trigger{Type: TriggerTypeShortcut},
 			expectedBool: true,
 		},
-		{
-			name:         "Trigger type is TriggerTypeSlashCommand",
+		"Trigger type is TriggerTypeSlashCommand": {
 			trigger:      &Trigger{Type: TriggerTypeSlashCommand},
 			expectedBool: true,
 		},
-		{
-			name:         "Trigger type is TriggerTypeMessageShortcut",
+		"Trigger type is TriggerTypeMessageShortcut": {
 			trigger:      &Trigger{Type: TriggerTypeMessageShortcut},
 			expectedBool: true,
 		},
-		{
-			name:         "Trigger type is TriggerTypeEvent",
+		"Trigger type is TriggerTypeEvent": {
 			trigger:      &Trigger{Type: TriggerTypeEvent},
 			expectedBool: true,
 		},
-		{
-			name:         "Trigger type is TriggerTypeWebhook",
+		"Trigger type is TriggerTypeWebhook": {
 			trigger:      &Trigger{Type: TriggerTypeWebhook},
 			expectedBool: true,
 		},
-		{
-			name:         "Trigger type is TriggerTypeScheduled",
+		"Trigger type is TriggerTypeScheduled": {
 			trigger:      &Trigger{Type: TriggerTypeScheduled},
 			expectedBool: true,
 		},
-		{
-			name:         "Trigger type is invalid",
+		"Trigger type is invalid": {
 			trigger:      &Trigger{Type: "pickle pie"},
 			expectedBool: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			returnedBool := tt.trigger.IsKnownType()
-			require.Equal(t, tt.expectedBool, returnedBool)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			returnedBool := tc.trigger.IsKnownType()
+			require.Equal(t, tc.expectedBool, returnedBool)
 		})
 	}
 }

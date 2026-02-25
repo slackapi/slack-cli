@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ func (n *NPMClient) InstallAllPackages(ctx context.Context, dirPath string, hook
 	output := strings.TrimSpace(stdout.String())
 
 	if err != nil {
-		ios.PrintDebug(ctx, fmt.Sprintf("Error executing '%s': %s", hookScript.Command, err))
+		ios.PrintDebug(ctx, "Error executing '%s': %s", hookScript.Command, err)
 		return "", err
 	}
 
@@ -94,7 +94,7 @@ func (n *NPMClient) InstallDevPackage(ctx context.Context, pkgName string, dirPa
 	output := strings.TrimSpace(stdout.String())
 
 	if err != nil {
-		ios.PrintDebug(ctx, fmt.Sprintf("Error executing '%s': %s", hookScript.Command, err))
+		ios.PrintDebug(ctx, "Error executing '%s': %s", hookScript.Command, err)
 		npmSpan.SetTag("error", output)
 		return "", err
 	}
@@ -125,7 +125,7 @@ func (n *NPMClient) ListPackage(ctx context.Context, pkgName string, dirPath str
 	output := strings.TrimSpace(stdout.String())
 
 	if err != nil {
-		ios.PrintDebug(ctx, fmt.Sprintf("Error executing '%s': %s", hookScript.Command, err))
+		ios.PrintDebug(ctx, "Error executing '%s': %s", hookScript.Command, err)
 		npmSpan.SetTag("error", output)
 		return "", false
 	}

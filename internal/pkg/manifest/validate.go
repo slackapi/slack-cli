@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ func attemptConnectorAppsApprovalRequests(ctx context.Context, clients *shared.C
 		Text:      "Administrator approval is required to use connectors",
 		Secondary: messages,
 	}))
-	clients.IO.PrintInfo(ctx, false, administratorApprovalNotice)
+	clients.IO.PrintInfo(ctx, false, "%s", administratorApprovalNotice)
 
 	sendApprovalRequests, err := clients.IO.ConfirmPrompt(ctx, "Request approval to install missing connectors?", true)
 	if err != nil {

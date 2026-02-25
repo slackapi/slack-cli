@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -188,18 +188,18 @@ func getFullyQualifiedTriggerFilePaths(ctx context.Context, clients *shared.Clie
 			if isValidTriggerFilePath(file) {
 				triggerFilePaths = append(triggerFilePaths, file)
 			} else {
-				clients.IO.PrintDebug(ctx, fmt.Sprintf("Ignoring invalid trigger file path: %v", file))
+				clients.IO.PrintDebug(ctx, "Ignoring invalid trigger file path: %v", file)
 			}
 		}
 	}
 
 	if len(triggerFilePaths) <= 0 {
-		clients.IO.PrintInfo(ctx, false, style.SectionSecondaryf(
+		clients.IO.PrintInfo(ctx, false, "%s", style.SectionSecondaryf(
 			"No trigger definition files found\nLearn more about triggers:\nhttps://docs.slack.dev/tools/deno-slack-sdk/guides/creating-link-triggers",
 		))
 		return nil, nil
 	} else {
-		clients.IO.PrintInfo(ctx, false, style.SectionSecondaryf(
+		clients.IO.PrintInfo(ctx, false, "%s", style.SectionSecondaryf(
 			"Found %d trigger definition %s", len(triggerFilePaths), style.Pluralize("file", "files", len(triggerFilePaths)),
 		))
 	}

@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -223,7 +223,7 @@ func (u *UpdateNotification) isCI() bool {
 
 // isIgnoredCommand returns true when the process is in the list of commands.
 func (u *UpdateNotification) isIgnoredCommand() bool {
-	ignoredCommands := []string{"version"}
+	ignoredCommands := []string{"_fingerprint", "version"}
 	osStr := os.Args[0:]
 	if len(osStr) < 2 {
 		return false

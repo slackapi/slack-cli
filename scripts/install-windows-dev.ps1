@@ -1,4 +1,4 @@
-# Copyright 2022-2025 Salesforce, Inc.
+# Copyright 2022-2026 Salesforce, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -95,8 +95,8 @@ function install_slack_cli {
     }
     else {
       Write-Host "Finding the latest Slack CLI release version"
-      $cli_info = Invoke-RestMethod -Uri "https://api.slack.com/slackcli/metadata.json"
-      $SLACK_CLI_VERSION = $cli_info.'slack-cli'.releases.version[0]
+      $cli_info = Invoke-RestMethod -Uri "https://docs.slack.dev/tools/metadata.json"
+      $SLACK_CLI_VERSION = $cli_info.'slack-cli'.releases[0].version
     }
   }
   catch {

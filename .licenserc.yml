@@ -1,4 +1,4 @@
-# Copyright 2022-2025 Salesforce, Inc.
+# Copyright 2022-2026 Salesforce, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ header:
   license:
     spdx-id: Apache-2.0
     copyright-owner: Salesforce, Inc.
-    copyright-year: '2022-2025'
+    copyright-year: '2022-2026'
 
   paths-ignore:
     - '.circleci'

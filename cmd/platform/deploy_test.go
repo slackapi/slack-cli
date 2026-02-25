@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -111,12 +111,14 @@ func TestDeployCommand(t *testing.T) {
 
 func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	tests := map[string]struct {
-		app            types.App
-		manifest       types.SlackYaml
-		manifestError  error
-		manifestSource config.ManifestSource
-		deployScript   string
-		expectedError  error
+		app                 types.App
+		manifest            types.SlackYaml
+		manifestError       error
+		manifestSource      config.ManifestSource
+		deployScript        string
+		expectedError       error
+		expectedMessage     string
+		expectedRemediation []string
 	}{
 		"fails when no manifest exists": {
 			manifestError:  slackerror.New(slackerror.ErrInvalidManifest),
@@ -142,8 +144,10 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			deployScript:   "sleep 4",
 		},
 		"fails if no deploy hook is provided": {
-			manifestSource: config.ManifestSourceLocal,
-			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
+			manifestSource:      config.ManifestSourceLocal,
+			expectedError:       slackerror.New(slackerror.ErrSDKHookNotFound),
+			expectedMessage:     "No deploy script found",
+			expectedRemediation: []string{"https://docs.slack.dev/tools/slack-cli/reference/hooks/#deploy", "run"},
 		},
 		"succeeds if the app exists and the manifest source is remote": {
 			app: types.App{
@@ -160,34 +164,37 @@ func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 			expectedError:  slackerror.New(slackerror.ErrSDKHookNotFound),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tt.manifest, tt.manifestError)
-				manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tt.manifest, tt.manifestError)
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.manifest, tc.manifestError)
+				manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.manifest, tc.manifestError)
 				clients.AppClient().Manifest = manifestMock
 				projectConfigMock := config.NewProjectConfigMock()
 				projectConfigMock.On("GetManifestSource", mock.Anything).
-					Return(tt.manifestSource, nil)
+					Return(tc.manifestSource, nil)
 				clients.Config.ProjectConfig = projectConfigMock
 				clients.SDKConfig = hooks.NewSDKConfigMock()
-				clients.SDKConfig.Hooks.Deploy.Command = tt.deployScript
+				clients.SDKConfig.Hooks.Deploy.Command = tc.deployScript
 			})
 			app := types.App{}
-			if tt.app.AppID != "" {
-				app = tt.app
+			if tc.app.AppID != "" {
+				app = tc.app
 			}
 			err := hasValidDeploymentMethod(ctx, clients, app, types.SlackAuth{})
-			if tt.expectedError != nil {
+			if tc.expectedError != nil {
 				require.Error(t, err)
-				assert.Equal(
-					t,
-					slackerror.ToSlackError(tt.expectedError).Code,
-					slackerror.ToSlackError(err).Code,
-				)
+				slackErr := slackerror.ToSlackError(err)
+				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackErr.Code)
+				if tc.expectedMessage != "" {
+					assert.Contains(t, slackErr.Message, tc.expectedMessage)
+				}
+				for _, r := range tc.expectedRemediation {
+					assert.Contains(t, slackErr.Remediation, r)
+				}
 			} else {
 				require.NoError(t, err)
 			}
@@ -250,14 +257,14 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 		}
 		return contains
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			sdkConfigMock := hooks.NewSDKConfigMock()
 			sdkConfigMock.Config.SupportedProtocols = []hooks.Protocol{hooks.HookProtocolDefault}
-			sdkConfigMock.Hooks.Deploy = hooks.HookScript{Name: "Deploy", Command: tt.command}
+			sdkConfigMock.Hooks.Deploy = hooks.HookScript{Name: "Deploy", Command: tc.command}
 
 			stdoutLogger := log.Logger{}
 			stdoutBuffer := bytes.Buffer{}
@@ -282,16 +289,16 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			testutil.MockCmdIO(clients.IO, cmd)
 
 			err := cmd.ExecuteContext(ctx)
-			assert.Contains(t, stdoutBuffer.String(), tt.command)
-			if tt.expectedError != nil {
+			assert.Contains(t, stdoutBuffer.String(), tc.command)
+			if tc.expectedError != nil {
 				require.Error(t, err)
-				assert.Equal(t, err.(*slackerror.Error).Code, tt.expectedError.(*slackerror.Error).Code)
-				assert.Contains(t, stdoutBuffer.String(), tt.expectedStdout)
-				assert.True(t, containsSubstring(stderrBuffer.String(), tt.expectedStderr))
+				assert.Equal(t, err.(*slackerror.Error).Code, tc.expectedError.(*slackerror.Error).Code)
+				assert.Contains(t, stdoutBuffer.String(), tc.expectedStdout)
+				assert.True(t, containsSubstring(stderrBuffer.String(), tc.expectedStderr))
 			} else {
 				assert.NoError(t, err)
-				assert.Contains(t, stdoutBuffer.String(), tt.expectedStdout)
-				assert.True(t, containsSubstring(stderrBuffer.String(), tt.expectedStderr))
+				assert.Contains(t, stdoutBuffer.String(), tc.expectedStdout)
+				assert.True(t, containsSubstring(stderrBuffer.String(), tc.expectedStderr))
 			}
 		})
 	}
@@ -339,19 +346,19 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.API.On("Host").Return("https://slacker.com")
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := NewDeployCommand(clients)
-			log := &logger.LogEvent{Data: tt.event}
+			log := &logger.LogEvent{Data: tc.event}
 			err := printDeployHostingCompletion(clients, cmd, log)
 			assert.NoError(t, err)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.PlatformDeploySuccess, mock.Anything)
 			spinnerText, _ := deploySpinner.Status()
-			for _, line := range tt.expected {
+			for _, line := range tc.expected {
 				assert.Contains(t, spinnerText, line)
 			}
 		})

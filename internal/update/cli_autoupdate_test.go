@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -95,15 +95,15 @@ func Test_CLI_getUpdateFileName(t *testing.T) {
 			expectedErrorF:  "auto-updating for the operating system (dragonfly) is unsupported",
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			filename, err := getUpdateFileName(tt.version, tt.operatingSystem, tt.architecture)
-			if tt.expectedErrorF != "" {
+			filename, err := getUpdateFileName(tc.version, tc.operatingSystem, tc.architecture)
+			if tc.expectedErrorF != "" {
 				require.Error(t, err)
-				require.ErrorContains(t, err, tt.expectedErrorF)
+				require.ErrorContains(t, err, tc.expectedErrorF)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedFilename, filename)
+				require.Equal(t, tc.expectedFilename, filename)
 			}
 		})
 	}

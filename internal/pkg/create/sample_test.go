@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,18 +82,18 @@ func TestSamples_GetSampleRepos(t *testing.T) {
 			expectedError:    slackerror.New(slackerror.ErrSampleCreate),
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientMock := NewMockSampler()
 			w := httptest.NewRecorder()
-			_, _ = io.WriteString(w, fmt.Sprint(tt.slackAPIResponse))
+			_, _ = io.WriteString(w, fmt.Sprint(tc.slackAPIResponse))
 			res := w.Result()
 			req, err := http.NewRequest("GET", "https://www.slack.com/slack-samples/repositories", nil)
 			require.NoError(t, err)
 			req.Header.Set("Accept", "application/json")
 			clientMock.On("Do", req).Return(res, nil)
 			w = httptest.NewRecorder()
-			_, _ = io.WriteString(w, fmt.Sprint(tt.githubResponse))
+			_, _ = io.WriteString(w, fmt.Sprint(tc.githubResponse))
 			res = w.Result()
 			req, err = http.NewRequest("GET", "https://api.github.com/orgs/slack-samples/repos?type=public", nil)
 			require.NoError(t, err)
@@ -102,11 +102,11 @@ func TestSamples_GetSampleRepos(t *testing.T) {
 			clientMock.On("Do", req).Return(res, nil)
 
 			result, err := GetSampleRepos(clientMock)
-			if tt.expectedError != nil {
-				assert.Equal(t, slackerror.ToSlackError(err).Code, tt.expectedError.Code)
+			if tc.expectedError != nil {
+				assert.Equal(t, slackerror.ToSlackError(err).Code, tc.expectedError.Code)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tt.expectedResults, result)
+				assert.Equal(t, tc.expectedResults, result)
 			}
 		})
 	}

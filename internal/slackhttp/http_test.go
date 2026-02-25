@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,21 +54,21 @@ func Test_NewHTTPClient(t *testing.T) {
 			expectedTimeout: 120 * time.Second,
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			opts := HTTPClientOptions{
-				Retries:       tt.expectedRetries,
-				SkipTLSVerify: tt.expectedSkipTLSVerify,
-				TotalTimeOut:  tt.timeout,
+				Retries:       tc.expectedRetries,
+				SkipTLSVerify: tc.expectedSkipTLSVerify,
+				TotalTimeOut:  tc.timeout,
 			}
 
 			httpClient := NewHTTPClient(opts)
 
 			// Assertions
-			assert.Equal(t, tt.expectedTimeout, httpClient.Timeout)
-			assert.Equal(t, tt.expectedSkipTLSVerify, httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify)
-			assert.ObjectsAreEqual(tt.expectedProxy, httpClient.Transport.(*http.Transport).Proxy)
+			assert.Equal(t, tc.expectedTimeout, httpClient.Timeout)
+			assert.Equal(t, tc.expectedSkipTLSVerify, httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify)
+			assert.ObjectsAreEqual(tc.expectedProxy, httpClient.Transport.(*http.Transport).Proxy)
 			// TODO: add assertion for retries
 		})
 	}

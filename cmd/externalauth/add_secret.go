@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ func runAddClientSecretCommand(clients *shared.ClientFactory, cmd *cobra.Command
 		return err
 	}
 
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "sparkles",
 		Text: fmt.Sprintf(
 			"Successfully added external auth client secret for %s",

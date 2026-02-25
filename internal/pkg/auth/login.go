@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/auth"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -37,11 +38,11 @@ const InvalidNoPromptFlags = "Invalid arguments, both --ticket and --challenge f
 
 // LoginWithClients ...
 func LoginWithClients(ctx context.Context, clients *shared.ClientFactory, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	return Login(ctx, clients.API(), clients.Auth(), clients.IO, userToken, noRotation)
+	return Login(ctx, clients.API(), clients.Auth(), clients.Config, clients.IO, userToken, noRotation)
 }
 
 // Login takes the user through the Slack CLI login process
-func Login(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, io iostreams.IOStreamer, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
+func Login(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, config *config.Config, io iostreams.IOStreamer, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.login")
 	defer span.Finish()
 
@@ -51,7 +52,7 @@ func Login(ctx context.Context, apiClient api.APIInterface, authClient auth.Auth
 		return createNewLoginWithUserToken(ctx, apiClient, authClient, userToken, noRotation)
 	}
 
-	return createNewAuth(ctx, apiClient, authClient, io, noRotation)
+	return createNewAuth(ctx, apiClient, authClient, config, io, noRotation)
 }
 
 // createNewLoginWithUserToken function takes in an User Token (XOXP) and uses it to grab an existing auth
@@ -133,13 +134,15 @@ func createNewLoginWithUserToken(ctx context.Context, apiClient api.APIInterface
 //  2. Wait for a challenge code to be submitted
 //  3. Submit a request to exchange the ticket for an Auth response containing an access token
 //  4. Saves auth as a credential
-func createNewAuth(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, io iostreams.IOStreamer, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
+func createNewAuth(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, config *config.Config, io iostreams.IOStreamer, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
 	authTicket, err := requestAuthTicket(ctx, apiClient, io, noRotation)
 	if err != nil {
 		return types.SlackAuth{}, "", err
 	}
 
-	challengeCode, err := promptForChallengeCode(ctx, io)
+	challengeCode, err := io.InputPrompt(ctx, "Enter challenge code", iostreams.InputPromptConfig{
+		Required: true,
+	})
 	if err != nil {
 		return types.SlackAuth{}, "", err
 	}
@@ -192,13 +195,6 @@ func printAuthTicketSubmissionInstructions(ctx context.Context, IO iostreams.IOS
 	IO.PrintInfo(ctx, false, "\n%s\n%s\n", slashCommandDetails, authTicketText)
 
 	IO.PrintTrace(ctx, slacktrace.AuthLoginStart)
-}
-
-// promptForChallengeCode asks user to submit the valid challenge code received from the Slack authorization
-func promptForChallengeCode(ctx context.Context, IO iostreams.IOStreamer) (string, error) {
-	return IO.InputPrompt(ctx, "Enter challenge code", iostreams.InputPromptConfig{
-		Required: true,
-	})
 }
 
 // saveNewAuth saves a new auth to the credentials and returns the auth

@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,17 +54,17 @@ func Test_URLChecker(t *testing.T) {
 			},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Create mocks
 			httpClientMock := &slackhttp.HTTPClientMock{}
-			tt.setupHTTPClientMock(httpClientMock)
+			tc.setupHTTPClientMock(httpClientMock)
 
 			// Execute
-			url := URLChecker(httpClientMock, tt.url)
+			url := URLChecker(httpClientMock, tc.url)
 
 			// Assertions
-			assert.Equal(t, tt.expectedURL, url)
+			assert.Equal(t, tc.expectedURL, url)
 		})
 	}
 }

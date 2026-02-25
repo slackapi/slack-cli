@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ func (c *Client) printRequest(ctx context.Context, req *http.Request, skipDebugL
 	output = strings.Join(outputLines, "\n")
 	output = goutils.RedactPII(output)
 	if !skipDebugLog {
-		c.io.PrintDebug(ctx, output)
+		c.io.PrintDebug(ctx, "%s", output)
 	}
 }
 
@@ -74,7 +74,7 @@ func (c *Client) printResponse(ctx context.Context, resp *http.Response, skipDeb
 	output = goutils.RedactPII(output)
 
 	if !skipDebugLog {
-		c.io.PrintDebug(ctx, output)
+		c.io.PrintDebug(ctx, "%s", output)
 	}
 }
 

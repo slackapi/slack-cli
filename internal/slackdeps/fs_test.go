@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,13 +29,13 @@ func Test_NewFs(t *testing.T) {
 			expectedFsType: &afero.OsFs{},
 		},
 	}
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup
 			fs := NewFs()
 
 			// Assertions
-			assert.IsType(t, tt.expectedFsType, fs)
+			assert.IsType(t, tc.expectedFsType, fs)
 		})
 	}
 }

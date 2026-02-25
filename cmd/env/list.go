@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ func runEnvListCommandFunc(
 		)
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.EnvListVariables, variableNames...)
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "evergreen_tree",
 		Text:      "App Environment",
 		Secondary: variableLabel,

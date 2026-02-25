@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ func Test_Includes(t *testing.T) {
 
 	// Test expected experiments
 	require.Equal(t, true, Includes(Experiment("bolt")))
-	require.Equal(t, true, Includes(Experiment("read-only-collaborators")))
+	require.Equal(t, true, Includes(Experiment("charm")))
 
 	// Test invalid experiment
 	require.Equal(t, false, Includes(Experiment("should-fail")))
@@ -90,9 +90,9 @@ func Test_IsValid(t *testing.T) {
 			expectedRes: false,
 		},
 	}
-	for name, tt := range tableTests {
+	for name, tc := range tableTests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tt.expectedRes, isValid(tt.experiment))
+			require.Equal(t, tc.expectedRes, isValid(tc.experiment))
 		})
 	}
 }

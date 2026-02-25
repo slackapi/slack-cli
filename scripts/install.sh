@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2022-2025 Salesforce, Inc.
+# Copyright 2022-2026 Salesforce, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -40,6 +40,11 @@ if [ $(($# - $OPTIND)) -lt 1 ]; then
         fi
 fi
 
+# Emphasize text in a string
+bold() {
+        echo -en "\x1b[1m$1\x1b[0m"
+}
+
 # Print a message then pause for an amount of time
 delay() {
         local options="-e"
@@ -50,7 +55,7 @@ delay() {
         fi
 
         echo $options "$2"
-        sleep $1
+        sleep "$1"
 }
 
 # Replace /home/username/folder/file with ~/folder/file
@@ -69,12 +74,12 @@ version_lt() {
 install_slack_cli() {
         delay 0.6 "🥁 Hello and welcome! Now beginning to install the..."
 
-        delay 0.1 "\x1b[1m      ________ _     _    _____ _    __    _____ _    ________\x1b[0m"
-        delay 0.1 "\x1b[1m     /  ______/ |   / \ /  ____/ | /  /  /  ____/ | /___   __/\x1b[0m"
-        delay 0.1 "\x1b[1m    /______  |  |  / _ \  |   |      /   | |   |  |    |  |   \x1b[0m"
-        delay 0.1 "\x1b[1m     ____ /  |  |___ __ \ |____  |\  \   | |____  |__ _|  |___\x1b[0m"
-        delay 0.1 "\x1b[1m   /_______ /|______/  \_\ ____/_| \__\    _____/______/_____/\x1b[0m"
-        delay 0.2 "\x1b[0m"
+        delay 0.1 "$(bold "      ________ _     _    _____ _    __    _____ _    ________")"
+        delay 0.1 "$(bold "     /  ______/ |   / \ /  ____/ | /  /  /  ____/ | /___   __/")"
+        delay 0.1 "$(bold "    /______  |  |  / _ \  |   |      /   | |   |  |    |  |   ")"
+        delay 0.1 "$(bold "     ____ /  |  |___ __ \ |____  |\  \   | |____  |__ _|  |___")"
+        delay 0.1 "$(bold "   /_______ /|______/  \_\ ____/_| \__\    _____/______/_____/")"
+        delay 0.2 ""
 
         # Check if slack binary is already in user's system
         if [ -x "$(command -v "$SLACK_CLI_NAME")" ]; then
@@ -110,7 +115,7 @@ install_slack_cli() {
                 # Using grep and sed to parse the semver (excluding "v" to ensure consistence of binaries' filenames ) instead of jq to avoid extra dependencies requirement
                 #
                 echo -e "🔍 Searching for the latest version of the Slack CLI..."
-                LATEST_SLACK_CLI_VERSION=$(curl --silent "https://api.slack.com/slackcli/metadata.json" | grep -o '"version": "[^"]*' | grep -o '[^"]*$' | head -1)
+                LATEST_SLACK_CLI_VERSION=$(curl --silent "https://docs.slack.dev/tools/metadata.json" | grep -o '"version": "[^"]*' | grep -o '[^"]*$' | head -1)
                 if [ -z "$LATEST_SLACK_CLI_VERSION" ]; then
                         echo "🛑 Error: Installer cannot find the latest Slack CLI version!"
                         echo "🔖 Check the status of https://slack-status.com/ and try again"
@@ -169,24 +174,14 @@ install_slack_cli() {
         delay 0.1 "📠 Removing packaged download files from $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         rm "$slack_cli_install_dir/slack-cli.tar.gz"
 
-        delay 0.1 "🔗 Adding a symbolic link from /usr/local/bin/$SLACK_CLI_NAME to $(home_path "$slack_cli_bin_path")"
-        if [ ! -d /usr/local/bin ]; then
-                echo -e "⚠️  The /usr/local/bin directory does not exist!"
-                echo -e "🔐 Please create /usr/local/bin directory first and try again..."
-                return 1
-        fi
-        if [ -w /usr/local/bin ]; then
-                ln -sf "$slack_cli_bin_path" "/usr/local/bin/$SLACK_CLI_NAME"
+        if [ -d "/usr/local/bin" ] && [ -w "/usr/local/bin" ]; then
+                local_bin_path="/usr/local/bin"
         else
-                echo -e "⚠️  Failed to create a symbolic link!"
-                delay 0.1 "🔖 The installer doesn't have write access to /usr/local/bin"
-                echo -e "🔐 Please check permission and try again..."
-                return 1
+                local_bin_path="$HOME/.local/bin"
+                mkdir -p "$local_bin_path"
         fi
-        if ! command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
-                echo "📁 Manually add the Slack CLI command directory to your shell profile"
-                echo "   export PATH=\"$slack_cli_install_bin_dir:\$PATH\""
-        fi
+        delay 0.1 "🔗 Adding a symbolic link from $(home_path "$local_bin_path/$SLACK_CLI_NAME") to $(home_path "$slack_cli_bin_path")"
+        ln -sf "$slack_cli_bin_path" "$local_bin_path/$SLACK_CLI_NAME"
 }
 
 terms_of_service() {
@@ -213,8 +208,30 @@ next_step_message() {
         echo -e ""
         if command -v "$SLACK_CLI_NAME" >/dev/null 2>&1; then
                 echo -e "📺 Success! The Slack CLI is now installed!"
-                echo -e "🔐 Next, authorize your CLI in your workspace with \`$SLACK_CLI_NAME login\`"
+        else
+                echo -e "📚 Required manual setup"
+                echo -e "📝 Run the following commands to add the Slack CLI to your shell path:"
+                case "$(basename "$SHELL")" in
+                bash)
+                        echo -e "$(bold "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc")"
+                        echo -e "$(bold "   source ~/.bashrc")"
+                        ;;
+                fish)
+                        echo -e "$(bold "   mkdir -p \$HOME/.config/fish")"
+                        echo -e "$(bold "   echo 'fish_add_path \$HOME/.local/bin' >> \$HOME/.config/fish/config.fish")"
+                        echo -e "$(bold "   source \$HOME/.config/fish/config.fish")"
+                        ;;
+                zsh)
+                        echo -e "$(bold "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc")"
+                        echo -e "$(bold "   source ~/.zshrc")"
+                        ;;
+                *)
+                        echo -e "$(bold "   export PATH=\"$local_bin_path:\$PATH\"")"
+                        ;;
+                esac
         fi
+        echo -e "🔐 Next, authorize your CLI in your workspace with \`$(bold "$SLACK_CLI_NAME login")\`"
+        sleep 0.2
 }
 
 main() {

@@ -638,7 +638,7 @@ When commands or flags need to be removed, follow these steps:
 - Recommend alternative flags if available (ex: `internal/config/flags.go`)
 - Hide the flag from help menus with the `.Hidden` attribute
 - Optionally use the recommended flag whenever possible
-- Somehow mark the command for removal in the next major version
+- Somehow mark the flag for removal in the next major version
 
 </details>
 

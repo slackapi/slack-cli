@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,16 +52,16 @@ func Test_IOStreams_IsTTY(t *testing.T) {
 		},
 	}
 
-	for name, tt := range tests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			fsMock := slackdeps.NewFsMock()
 			osMock := slackdeps.NewOsMock()
 			config := config.NewConfig(fsMock, osMock)
-			osMock.On("Stdout").Return(&slackdeps.FileMock{FileInfo: tt.fileInfo})
+			osMock.On("Stdout").Return(&slackdeps.FileMock{FileInfo: tc.fileInfo})
 			io := NewIOStreams(config, fsMock, osMock)
 
 			isTTY := io.IsTTY()
-			assert.Equal(t, isTTY, tt.expected)
+			assert.Equal(t, isTTY, tc.expected)
 		})
 	}
 }

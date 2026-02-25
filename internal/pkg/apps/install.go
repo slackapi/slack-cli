@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -284,7 +284,7 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 			secondary,
 		},
 	}))
-	clients.IO.PrintInfo(ctx, false, status)
+	clients.IO.PrintInfo(ctx, false, "%s", status)
 }
 
 func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, token string, app types.App, appManifest types.AppManifest) error {
@@ -859,7 +859,7 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 	}
 
 	if foundBreakingChange {
-		clients.IO.PrintWarning(ctx, warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
+		clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
 		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", false)
 		if err != nil {
 			return false, err
@@ -879,7 +879,7 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 		return false, nil
 	}
 
-	clients.IO.PrintWarning(ctx, warn.Warning(clients.Config.DebugEnabled, additionalManifestInfoNotice))
+	clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, additionalManifestInfoNotice))
 
 	return true, nil
 }
@@ -891,7 +891,7 @@ func setAppEnvironmentTokens(ctx context.Context, clients *shared.ClientFactory,
 			return err
 		}
 	} else if token != result.APIAccessTokens.AppLevel {
-		clients.IO.PrintWarning(ctx, style.Sectionf(style.TextSection{
+		clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
 			Text: fmt.Sprintf("The app token differs from the set %s environment variable", style.Highlight("SLACK_APP_TOKEN")),
 			Secondary: []string{
 				"The environment variable will continue to be used",
@@ -904,7 +904,7 @@ func setAppEnvironmentTokens(ctx context.Context, clients *shared.ClientFactory,
 			return err
 		}
 	} else if token != result.APIAccessTokens.Bot {
-		clients.IO.PrintWarning(ctx, style.Sectionf(style.TextSection{
+		clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
 			Text: fmt.Sprintf("The bot token differs from the set %s environment variable", style.Highlight("SLACK_BOT_TOKEN")),
 			Secondary: []string{
 				"The environment variable will continue to be used",

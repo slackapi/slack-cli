@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ import (
 // Flags
 var createTemplateURLFlag string
 var createGitBranchFlag string
+var createAppNameFlag string
+var createListFlag bool
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -53,14 +55,19 @@ const viewMoreSamples = "slack-cli#view-more-samples"
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		SuggestFor: []string{"new"},
-		Use:        "create [name] [flags]",
+		Use:        "create [name | agent <name>] [flags]",
 		Short:      "Create a new Slack project",
-		Long:       `Create a new Slack project on your local machine from an optional template`,
+		Long: `Create a new Slack project on your local machine from an optional template.
+
+The 'agent' argument is a shortcut to create an AI Agent app. If you want to
+name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "create my-project", Meaning: "Create a new project from a template"},
+			{Command: "create agent my-agent-app", Meaning: "Create a new AI Agent app"},
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
+			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
 		}),
-		Args: cobra.MaximumNArgs(1),
+		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
 			return runCreateCommand(clients, cmd, args)
@@ -70,6 +77,8 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	// Add flags
 	cmd.Flags().StringVarP(&createTemplateURLFlag, "template", "t", "", "template URL for your app")
 	cmd.Flags().StringVarP(&createGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
+	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
+	cmd.Flags().BoolVar(&createListFlag, "list", false, "list available app templates")
 
 	return cmd
 }
@@ -80,14 +89,47 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	// Set up event logger
 	log := newCreateLogger(clients, cmd)
 
-	// Get optional app name passed as an arg
+	// Get optional app name passed as an arg and check for category shortcuts
 	appNameArg := ""
-	if len(args) > 0 && args[0] != "samples" && args[0] != "create" {
-		appNameArg = args[0]
+	categoryShortcut := ""
+	templateFlagProvided := cmd.Flags().Changed("template")
+	nameFlagProvided := cmd.Flags().Changed("name")
+
+	if len(args) > 0 {
+		switch args[0] {
+		case "samples", "create":
+			// These are special commands, not app names
+		case "agent":
+			// Only treat as shortcut if --template flag is not provided
+			if !templateFlagProvided {
+				// Shortcut to AI apps category
+				categoryShortcut = "agent"
+				// Check if a second argument was provided as the app name
+				if len(args) > 1 {
+					appNameArg = args[1]
+				}
+			} else {
+				// When --template is provided, "agent" is the app name
+				appNameArg = args[0]
+			}
+		default:
+			appNameArg = args[0]
+		}
+	}
+
+	// --name flag overrides any positional app name argument
+	// This allows users to name their app "agent" without triggering the AI Agent shortcut
+	if nameFlagProvided {
+		appNameArg = createAppNameFlag
+	}
+
+	// List templates and exit early if the --list flag is set
+	if createListFlag {
+		return listTemplates(ctx, clients, categoryShortcut)
 	}
 
 	// Collect the template URL or select a starting template
-	template, err := promptTemplateSelection(cmd, clients)
+	template, err := promptTemplateSelection(cmd, clients, categoryShortcut)
 	if err != nil {
 		return err
 	}
@@ -194,7 +236,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 
 	// Include documentation and information about ROSI for deno apps
 	if isDenoProject {
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "compass",
 			Text:  "Explore the documentation to learn more",
 			Secondary: []string{
@@ -203,7 +245,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 			},
 		}))
 
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji: "clipboard",
 			Text:  "Follow the steps below to begin development",
 			Secondary: []string{
@@ -226,7 +268,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 			"Start developing and see changes in real-time with "+style.Commandf("run", true),
 		)
 
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "clipboard",
 			Text:      "Next steps to begin development",
 			Secondary: secondaryOutput,

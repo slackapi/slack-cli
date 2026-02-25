@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,78 +27,68 @@ import (
 )
 
 func Test_Runtime_New(t *testing.T) {
-	tests := []struct {
-		name                string
+	tests := map[string]struct {
 		runtime             string
 		expectedRuntimeType Runtime
 	}{
-		{
-			name:                "Deno SDK",
+		"Deno SDK": {
 			runtime:             "deno",
 			expectedRuntimeType: deno.New(),
 		},
-		{
-			name:                "Bolt for JavaScript",
+		"Bolt for JavaScript": {
 			runtime:             "node",
 			expectedRuntimeType: node.New(),
 		},
-		{
-			name:                "Bolt for Python",
+		"Bolt for Python": {
 			runtime:             "python",
 			expectedRuntimeType: python.New(),
 		},
-		{
-			name:                "Unsupported Runtime",
+		"Unsupported Runtime": {
 			runtime:             "biggly-boo",
 			expectedRuntimeType: nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Run the test
-			rt, _ := New(tt.runtime)
-			require.IsType(t, tt.expectedRuntimeType, rt)
+			rt, _ := New(tc.runtime)
+			require.IsType(t, tc.expectedRuntimeType, rt)
 		})
 	}
 }
 
 func Test_Runtime_NewDetectProject(t *testing.T) {
-	tests := []struct {
-		name                string
+	tests := map[string]struct {
 		sdkConfig           hooks.SDKCLIConfig
 		expectedRuntimeType Runtime
 	}{
-		{
-			name:                "Deno SDK",
+		"Deno SDK": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: "deno"},
 			expectedRuntimeType: deno.New(),
 		},
-		{
-			name:                "Bolt for JavaScript",
+		"Bolt for JavaScript": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: "node"},
 			expectedRuntimeType: node.New(),
 		},
-		{
-			name:                "Bolt for Python",
+		"Bolt for Python": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: "python"},
 			expectedRuntimeType: python.New(),
 		},
-		{
-			name:                "Unsupported Runtime",
+		"Unsupported Runtime": {
 			sdkConfig:           hooks.SDKCLIConfig{Runtime: ""},
 			expectedRuntimeType: nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			fs := afero.NewMemMapFs()
 			projectDirPath := "/path/to/project-name"
 
 			// Run the test
-			rt, _ := NewDetectProject(ctx, fs, projectDirPath, tt.sdkConfig)
-			require.IsType(t, tt.expectedRuntimeType, rt)
+			rt, _ := NewDetectProject(ctx, fs, projectDirPath, tc.sdkConfig)
+			require.IsType(t, tc.expectedRuntimeType, rt)
 		})
 	}
 }

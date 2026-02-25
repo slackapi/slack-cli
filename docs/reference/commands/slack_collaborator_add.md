@@ -13,7 +13,9 @@ slack collaborator add [email|user_id] [flags]
 ## Flags
 
 ```
-  -h, --help   help for add
+  -h, --help                     help for add
+  -P, --permission-type string   collaborator permission type
+                                 ("owner" or "reader") (default "owner")
 ```
 
 ## Global flags

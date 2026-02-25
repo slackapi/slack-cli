@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,7 +147,7 @@ func printCountResult(ctx context.Context, clients *shared.ClientFactory, countR
 	clients.IO.PrintTrace(ctx, slacktrace.DatastoreCountSuccess)
 	clients.IO.PrintTrace(ctx, slacktrace.DatastoreCountTotal, fmt.Sprintf("%d", countResult.Count))
 	clients.IO.PrintTrace(ctx, slacktrace.DatastoreCountDatastore, countResult.Datastore)
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "tada",
 		Text: fmt.Sprintf(
 			"Counted %d matching items from datastore: %s",
@@ -203,7 +203,7 @@ func promptDatastoreCountRequest(
 
 	// Display a hint for writing expressions
 	clients.IO.PrintInfo(ctx, false, "")
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "bulb",
 		Text:  "Expressions should use the following format",
 		Secondary: []string{

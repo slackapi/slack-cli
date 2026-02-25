@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 			}
 			clients.Config.Flags.Lookup("environment").Changed = true
 
-			clients.IO.PrintInfo(ctx, false, "\n"+style.Sectionf(style.TextSection{
+			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "warning",
 				Text:  "Warning: Default App Environment",
 				Secondary: []string{

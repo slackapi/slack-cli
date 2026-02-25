@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,14 +91,13 @@ var SurveyStore = map[string]SlackSurvey{
 			RawPath: "https://github.com/slackapi/slack-cli/issues",
 		},
 		Info: func(ctx context.Context, clients *shared.ClientFactory) {
-			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
-				"%s\n%s\n",
+			clients.IO.PrintInfo(ctx, false, "%s\n%s\n",
 				style.Secondary("Ask questions, submit issues, or suggest features for the Slack CLI:"),
 				style.Secondary(style.Highlight("https://github.com/slackapi/slack-cli/issues")),
-			))
+			)
 		},
 		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 				Emoji: "love_letter",
 				Text:  "We would love to know how things are going",
 				Secondary: []string{
@@ -119,14 +118,13 @@ var SurveyStore = map[string]SlackSurvey{
 		PromptDescription: "Developer support for the Slack Platform, Slack API, Block Kit, and more",
 		URL:               url.URL{RawPath: "https://docs.slack.dev/developer-support"},
 		Info: func(ctx context.Context, clients *shared.ClientFactory) {
-			clients.IO.PrintInfo(ctx, false, fmt.Sprintf(
-				"%s\n%s\n",
+			clients.IO.PrintInfo(ctx, false, "%s\n%s\n",
 				style.Secondary("You can send us a message at "+style.Highlight(email)),
 				style.Secondary("Or, share your experiences at "+style.Highlight("https://docs.slack.dev/developer-support")),
-			))
+			)
 		},
 		Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-			clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 				Emoji: "love_letter",
 				Text:  "We would love to know how things are going",
 				Secondary: []string{
@@ -260,7 +258,7 @@ func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd 
 		return slackerror.New(slackerror.ErrFeedbackNameRequired)
 	}
 
-	clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "love_letter",
 		Text:  leadMessage,
 	}))
@@ -304,7 +302,7 @@ func initSurveyOpts(ctx context.Context, clients *shared.ClientFactory, surveys 
 	var opts []string
 	for _, s := range sortedSurveys {
 		if s.Config == nil {
-			clients.IO.PrintDebug(ctx, fmt.Sprintf("survey config not set; skipping %s", s.Name))
+			clients.IO.PrintDebug(ctx, "survey config not set; skipping %s", s.Name)
 			continue
 		}
 		names = append(names, s.Name)
@@ -322,7 +320,7 @@ func initSurveyOpts(ctx context.Context, clients *shared.ClientFactory, surveys 
 		}
 		t, err := time.Parse(time.RFC3339, cfg.CompletedAt)
 		if err != nil {
-			clients.IO.PrintDebug(ctx, err.Error())
+			clients.IO.PrintDebug(ctx, "%s", err.Error())
 			opts = append(opts, s.PromptDisplayText)
 			continue
 		}
@@ -362,7 +360,7 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	if ok { // Open survey in browser
 		clients.Browser().OpenURL(url)
 	} else { // Print survey URL
-		clients.IO.PrintInfo(ctx, false, fmt.Sprint("Feedback URL: \n", style.Secondary(url)))
+		clients.IO.PrintInfo(ctx, false, "Feedback URL: \n%s", style.Secondary(url))
 	}
 
 	// Record completion
@@ -465,6 +463,6 @@ func ShowSurveyMessages(ctx context.Context, clients *shared.ClientFactory) erro
 func ShowFeedbackMessageOnTerminate(ctx context.Context, clients *shared.ClientFactory) {
 	err := ShowSurveyMessages(ctx, clients)
 	if err != nil {
-		clients.IO.PrintError(ctx, err.Error())
+		clients.IO.PrintError(ctx, "%s", err.Error())
 	}
 }

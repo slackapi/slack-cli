@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Salesforce, Inc.
+// Copyright 2022-2026 Salesforce, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -214,7 +214,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 					fmt.Sprintf(`manifest.source: "%s"`, config.ManifestSourceRemote),
 				).
 				WithRootCause(err)
-			clients.IO.PrintError(ctx, slackErr.Error())
+			clients.IO.PrintError(ctx, "%s", slackErr.Error())
 		}
 	}
 
