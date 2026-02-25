@@ -29,7 +29,6 @@ func Test_Docs_DocsCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"opens docs homepage without search": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				// No special setup needed for basic functionality
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://docs.slack.dev"
@@ -78,15 +77,15 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			},
 		},
 		"handles search query with quotes": {
-			CmdArgs: []string{"--search", "function \"hello world\""},
+			CmdArgs: []string{"--search", "webhook \"send message\""},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedURL := "https://docs.slack.dev/search/?q=function+%22hello+world%22"
+				expectedURL := "https://docs.slack.dev/search/?q=webhook+%22send+message%22"
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Searching Slack developer docs: \"function \"hello world\"\"",
-				"https://docs.slack.dev/search/?q=function+%22hello+world%22",
+				"Searching Slack developer docs: \"webhook \"send message\"\"",
+				"https://docs.slack.dev/search/?q=webhook+%22send+message%22",
 			},
 		},
 		"handles empty search query as homepage": {
