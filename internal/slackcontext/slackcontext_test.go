@@ -112,7 +112,7 @@ func Test_SlackContext_SetOpenTracingTraceID(t *testing.T) {
 }
 
 func Test_SlackContext_OpenTracingTracer(t *testing.T) {
-	_, _tracer := tracer.SetupTracer(true, false)
+	_, _tracer := tracer.SetupTracer(true)
 
 	tests := map[string]struct {
 		expectedTracer opentracing.Tracer
@@ -139,7 +139,7 @@ func Test_SlackContext_OpenTracingTracer(t *testing.T) {
 }
 
 func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
-	_, _tracer := tracer.SetupTracer(true, false)
+	_, _tracer := tracer.SetupTracer(true)
 
 	tests := map[string]struct {
 		expectedTracer opentracing.Tracer
