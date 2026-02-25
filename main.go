@@ -19,11 +19,14 @@ import (
 	"os"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/cmd"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/ioutils"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
@@ -43,8 +46,18 @@ func main() {
 	//      - This would allow us to choose the correct API host based on flags
 	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveAPIHost`
 	// var isDevTarget = shared.NewClientFactory().AuthClient().UserDefaultAuthIsProd(ctx) // TODO - hack, remove shared.clients
-	var jaegerCloser, tracer = tracer.SetupTracer(false) // Always setup open tracing on prod
-	defer jaegerCloser.Close()
+	var jaegerCloser, tracer = tracer.SetupTracer(false, config.IsTelemetryDisabled(slackdeps.NewOs()))
+	defer func() {
+		done := make(chan struct{})
+		go func() {
+			jaegerCloser.Close()
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+		}
+	}()
 	ctx = slackcontext.SetOpenTracingTracer(ctx, tracer)
 
 	// Set context values

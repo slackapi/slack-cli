@@ -19,8 +19,17 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/spf13/afero"
 )
+
+// IsTelemetryDisabled checks environment variables to determine if telemetry
+// should be disabled. This can be called before Config is initialized.
+func IsTelemetryDisabled(os types.Os) bool {
+	var disableTelemetry = strings.TrimSpace(os.Getenv(slackDisableTelemetryEnv))
+	var testVersion = strings.TrimSpace(os.Getenv(version.EnvTestVersion))
+	return (disableTelemetry != "" && disableTelemetry != "false" && disableTelemetry != "0") || testVersion != ""
+}
 
 // GetDotEnvFileVariables collects only the variables in the .env file
 func (c *Config) GetDotEnvFileVariables() (map[string]string, error) {
@@ -60,9 +69,7 @@ func (c *Config) LoadEnvironmentVariables() error {
 	}
 
 	// Disable telemetry if either disable-telemetry or test-version environment variables
-	var disableTelemetry = strings.TrimSpace(c.os.Getenv(slackDisableTelemetryEnv))
-	var testVersion = strings.TrimSpace(c.os.Getenv(version.EnvTestVersion))
-	if (disableTelemetry != "" && disableTelemetry != "false" && disableTelemetry != "0") || testVersion != "" {
+	if IsTelemetryDisabled(c.os) {
 		c.DisableTelemetryFlag = true
 	}
 

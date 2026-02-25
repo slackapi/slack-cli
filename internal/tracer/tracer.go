@@ -24,7 +24,7 @@ import (
 )
 
 // SetupTracer sets up the tracer to send data to honeycomb
-func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
+func SetupTracer(isDev bool, disableTelemetry bool) (io.Closer, opentracing.Tracer) {
 	var collectorEndpoint = "https://slackb.com/traces/v1/jaeger"
 	if isDev {
 		collectorEndpoint = "https://dev.slackb.com/traces/v1/jaeger"
@@ -33,7 +33,7 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 	// Recommended configuration for production.
 	var jCfg = jaegercfg.Configuration{
 		ServiceName: "slack-cli", // Don't change this.  Required to distinguish logs & traces coming from the CLI
-		Disabled:    false,
+		Disabled:    disableTelemetry,
 		Reporter: &jaegercfg.ReporterConfig{
 			LogSpans:            false,
 			CollectorEndpoint:   collectorEndpoint,
