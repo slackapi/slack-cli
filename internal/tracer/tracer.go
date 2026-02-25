@@ -29,10 +29,6 @@ func SetupTracer(isDev bool, disableTelemetry bool) (io.Closer, opentracing.Trac
 	if isDev {
 		collectorEndpoint = "https://dev.slackb.com/traces/v1/jaeger"
 	}
-	if disableTelemetry {
-		collectorEndpoint = ""
-	}
-
 	// Recommended configuration for production.
 	var jCfg = jaegercfg.Configuration{
 		ServiceName: "slack-cli", // Don't change this.  Required to distinguish logs & traces coming from the CLI
