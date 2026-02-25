@@ -26,12 +26,12 @@ import (
 	"github.com/slackapi/slack-cli/cmd"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/ioutils"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/uber/jaeger-client-go"
 )
