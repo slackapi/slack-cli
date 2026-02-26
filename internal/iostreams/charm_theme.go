@@ -58,7 +58,7 @@ func ThemeSlack() *huh.Theme {
 	// Select styles
 	t.Focused.SelectSelector = lipgloss.NewStyle().
 		Foreground(slackBlue).
-		SetString("> ")
+		SetString("❱ ")
 	t.Focused.Option = lipgloss.NewStyle().
 		Foreground(slackOptionText)
 	t.Focused.NextIndicator = lipgloss.NewStyle().
