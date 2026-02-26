@@ -27,3 +27,15 @@ var ManifestSDKTS []byte
 
 //go:embed manifest-sdk-app-name.ts
 var ManifestSDKTSAppName []byte
+
+//go:embed package.json
+var PackageJSON []byte
+
+//go:embed package-app-name.json
+var PackageJSONAppName []byte
+
+//go:embed pyproject.toml
+var PyprojectTOML []byte
+
+//go:embed pyproject-app-name.toml
+var PyprojectTOMLAppName []byte

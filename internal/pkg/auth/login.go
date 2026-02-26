@@ -20,12 +20,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/huh"
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/auth"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -142,27 +140,11 @@ func createNewAuth(ctx context.Context, apiClient api.APIInterface, authClient a
 		return types.SlackAuth{}, "", err
 	}
 
-	challengeCode := ""
-	if !config.WithExperimentOn(experiment.Charm) {
-		challengeCode, err = io.InputPrompt(ctx, "Enter challenge code", iostreams.InputPromptConfig{
-			Required: true,
-		})
-		if err != nil {
-			return types.SlackAuth{}, "", err
-		}
-	} else {
-		form := huh.NewForm(
-			huh.NewGroup(
-				huh.NewInput().
-					Title("Enter challenge code").
-					Validate(huh.ValidateMinLength(1)).
-					Value(&challengeCode),
-			),
-		)
-		err := form.Run()
-		if err != nil {
-			return types.SlackAuth{}, "", err
-		}
+	challengeCode, err := io.InputPrompt(ctx, "Enter challenge code", iostreams.InputPromptConfig{
+		Required: true,
+	})
+	if err != nil {
+		return types.SlackAuth{}, "", err
 	}
 
 	authExchangeRes, err := apiClient.ExchangeAuthTicket(ctx, authTicket, challengeCode, version.Get())

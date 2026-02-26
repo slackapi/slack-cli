@@ -1,0 +1,12 @@
+{
+  "name": "bolt-app-template",
+  "version": "1.0.0",
+  "description": "A Slack app built with Bolt",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^4.0.0"
+  }
+}

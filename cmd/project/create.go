@@ -17,9 +17,12 @@ package project
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -142,6 +145,25 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	template, err := promptTemplateSelection(cmd, clients, categoryShortcut)
 	if err != nil {
 		return err
+	}
+
+	// Prompt for app name if not provided via flag or argument
+	if appNameArg == "" {
+		if clients.IO.IsTTY() {
+			defaultName := generateRandomAppName()
+			cmd.Print(style.Secondary(fmt.Sprintf("  Press Enter to use the generated name: %s", defaultName)), "\n")
+			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{})
+			if err != nil {
+				return err
+			}
+			if name != "" {
+				appNameArg = name
+			} else {
+				appNameArg = defaultName
+			}
+		} else {
+			appNameArg = generateRandomAppName()
+		}
 	}
 
 	// Set up spinners
@@ -286,6 +308,15 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 		}))
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.CreateSuccess)
+}
+
+// generateRandomAppName will create a random app name based on two words and a number
+func generateRandomAppName() string {
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	var firstRandomNum = rand.Intn(len(create.Adjectives))
+	var secondRandomNum = rand.Intn(len(create.Animals))
+	var randomName = fmt.Sprintf("%s-%s-%d", create.Adjectives[firstRandomNum], create.Animals[secondRandomNum], rand.Intn(1000))
+	return randomName
 }
 
 // printAppCreateError stops the creation spinners and displays the returned error message
