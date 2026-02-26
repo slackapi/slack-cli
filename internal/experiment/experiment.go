@@ -38,20 +38,24 @@ const (
 	//  manage their app manifest on app settings (remote manifest).
 	BoltInstall Experiment = "bolt-install"
 
+	// Charm experiment enables beautiful prompts.
+	Charm Experiment = "charm"
+
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
 )
 
+// AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
-// AllExperiment is a list of all available experiments that can be enabled
 var AllExperiments = []Experiment{
 	BoltFrameworks,
 	BoltInstall,
+	Charm,
 	Placeholder,
 }
 
-// Please also add here 👇
 // EnabledExperiments is a list of experiments that are permanently enabled
+// Please also add here 👇
 var EnabledExperiments = []Experiment{
 	BoltFrameworks,
 	BoltInstall,

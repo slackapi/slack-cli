@@ -84,7 +84,7 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 				return err
 			}
 			if warn != nil {
-				clients.IO.PrintWarning(ctx, warn.Warning(clients.Config.DebugEnabled, "The following warnings were raised during manifest validation"))
+				clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "The following warnings were raised during manifest validation"))
 				return nil
 			}
 			if log != nil {
