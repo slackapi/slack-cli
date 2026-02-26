@@ -43,11 +43,18 @@ import (
 	"github.com/spf13/afero"
 )
 
+// copyIgnoreDirectories are directories to skip when copying a template.
+var copyIgnoreDirectories = []string{".git", ".venv", "node_modules"}
+
+// copyIgnoreFiles are files to skip when copying a template.
+var copyIgnoreFiles = []string{".DS_Store"}
+
 // CreateArgs are the arguments passed into the Create function
 type CreateArgs struct {
 	AppName   string
 	Template  Template
 	GitBranch string
+	Subdir    string
 }
 
 // Create will create a new Slack app on the file system and app manifest on the Slack API.
@@ -119,8 +126,19 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	}))
 
 	// Create the project from a templateURL
-	if err := createApp(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, log, clients.Fs); err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
+	subdir, err := normalizeSubdir(createArgs.Subdir)
+	if err != nil {
+		return "", err
+	}
+
+	if subdir != "" {
+		if err := createAppFromSubdir(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, subdir, log, clients.Fs); err != nil {
+			return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
+		}
+	} else {
+		if err := createApp(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, log, clients.Fs); err != nil {
+			return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
+		}
 	}
 
 	// Change into the project directory to configure defaults and dependencies
@@ -315,8 +333,8 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 		copyDirectoryOpts := goutils.CopyDirectoryOpts{
 			Src:               template.path,
 			Dst:               dirPath,
-			IgnoreDirectories: []string{".git", ".venv", "node_modules"},
-			IgnoreFiles:       []string{".DS_Store"},
+			IgnoreDirectories: copyIgnoreDirectories,
+			IgnoreFiles:       copyIgnoreFiles,
 		}
 		if err := goutils.CopyDirectory(copyDirectoryOpts); err != nil {
 			return slackerror.Wrap(err, "error copying local template")
@@ -331,6 +349,60 @@ func createApp(ctx context.Context, dirPath string, template Template, gitBranch
 	}
 
 	return nil
+}
+
+// normalizeSubdir cleans the subdir path and returns "" if it resolves to root.
+func normalizeSubdir(subdir string) (string, error) {
+	if subdir == "" {
+		return "", nil
+	}
+	cleaned := filepath.Clean(subdir)
+	if cleaned == "." || cleaned == "/" {
+		return "", nil
+	}
+	if !filepath.IsLocal(cleaned) {
+		return "", slackerror.New(slackerror.ErrSubdirNotFound).
+			WithMessage("Subdirectory path %q must be relative and within the template", subdir)
+	}
+	return cleaned, nil
+}
+
+// createAppFromSubdir clones the full template into a temp directory, then copies
+// only the specified subdirectory to the final project path.
+func createAppFromSubdir(ctx context.Context, dirPath string, template Template, gitBranch string, subdir string, log *logger.Logger, fs afero.Fs) error {
+	tmpDirRoot := afero.GetTempDir(fs, "")
+	tmpDir, err := afero.TempDir(fs, tmpDirRoot, "slack-create-")
+	if err != nil {
+		return slackerror.Wrap(err, "failed to create temporary directory")
+	}
+	defer func() { _ = fs.RemoveAll(tmpDir) }()
+
+	cloneDir := filepath.Join(tmpDir, "repo")
+	if err := createApp(ctx, cloneDir, template, gitBranch, log, fs); err != nil {
+		return err
+	}
+
+	subdirPath := filepath.Join(cloneDir, subdir)
+	info, err := fs.Stat(subdirPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return slackerror.New(slackerror.ErrSubdirNotFound).
+				WithMessage("Subdirectory %q was not found in the template", subdir).
+				WithRemediation("Check that the path exists in the template at %q", template.GetTemplatePath())
+		}
+		return slackerror.Wrap(err, "failed to access subdirectory")
+	}
+	if !info.IsDir() {
+		return slackerror.New(slackerror.ErrSubdirNotFound).
+			WithMessage("Path %q in the template is not a directory", subdir)
+	}
+
+	return goutils.CopyDirectory(goutils.CopyDirectoryOpts{
+		Src:               subdirPath,
+		Dst:               dirPath,
+		IgnoreDirectories: copyIgnoreDirectories,
+		IgnoreFiles:       copyIgnoreFiles,
+	})
 }
 
 // InstallProjectDependencies installs the project runtime dependencies or
