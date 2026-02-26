@@ -39,6 +39,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/openformresponse"
 	"github.com/slackapi/slack-cli/cmd/platform"
 	"github.com/slackapi/slack-cli/cmd/project"
+	"github.com/slackapi/slack-cli/cmd/sandbox"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
@@ -173,6 +174,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		openformresponse.NewCommand(clients),
 		platform.NewCommand(clients),
 		project.NewCommand(clients),
+		sandbox.NewCommand(clients),
 		triggers.NewCommand(clients),
 		upgrade.NewCommand(clients),
 		versioncmd.NewCommand(clients),
