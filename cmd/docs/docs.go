@@ -66,7 +66,7 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	// Validate: if there are arguments, --search flag must be used
 	if len(args) > 0 && !cmd.Flags().Changed("search") {
 		return slackerror.New(slackerror.ErrDocsSearchFlagRequired).WithRemediation(
-			"Use --search flag: %s", 
+			"Use --search flag: %s",
 			style.Commandf(fmt.Sprintf("docs --search \"%s\"", args[0]), false),
 		)
 	}
