@@ -48,16 +48,26 @@ func NewClient(
 
 // UpdateDefaultProjectFiles should update any project specific files if any
 func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string) error {
-	var filenames = []string{"manifest.json", "manifest.js", "manifest.ts"}
+	// Files and their corresponding app name replacement functions
+	projectFiles := []struct {
+		filename string
+		replacer func([]byte, string) []byte
+	}{
+		{"manifest.json", regexReplaceAppNameInManifest},
+		{"manifest.js", regexReplaceAppNameInManifest},
+		{"manifest.ts", regexReplaceAppNameInManifest},
+		{"package.json", regexReplaceAppNameInPackageJSON},
+		{"pyproject.toml", regexReplaceAppNameInPyprojectToml},
+	}
 
-	for _, filename := range filenames {
-		filePath := filepath.Join(dirPath, filename)
+	for _, pf := range projectFiles {
+		filePath := filepath.Join(dirPath, pf.filename)
 		fileData, err := afero.ReadFile(fs, filePath)
 		if err != nil {
 			continue
 		}
 
-		fileData = regexReplaceAppNameInManifest(fileData, appDirName)
+		fileData = pf.replacer(fileData, appDirName)
 		if err := afero.WriteFile(fs, filePath, fileData, 0644); err != nil {
 			return err
 		}
@@ -148,4 +158,26 @@ func regexReplaceAppNameInManifest(src []byte, appName string) []byte {
 	srcUpdated = re.ReplaceAll(srcUpdated, []byte(repl))
 
 	return srcUpdated
+}
+
+// regexReplaceAppNameInPackageJSON replaces the top-level "name" field in a package.json file
+func regexReplaceAppNameInPackageJSON(src []byte, appName string) []byte {
+	re := regexp.MustCompile(`(?m)^(\s{2}"name"\s*:\s*")([^"]*)(")`)
+	loc := re.FindSubmatchIndex(src)
+	if loc == nil {
+		return src
+	}
+	// loc[4]:loc[5] is capture group 2 — the name value to replace
+	result := make([]byte, 0, len(src))
+	result = append(result, src[:loc[4]]...)
+	result = append(result, []byte(appName)...)
+	result = append(result, src[loc[5]:]...)
+	return result
+}
+
+// regexReplaceAppNameInPyprojectToml replaces the "name" field under the [project] section in a pyproject.toml file
+func regexReplaceAppNameInPyprojectToml(src []byte, appName string) []byte {
+	re := regexp.MustCompile(`(\[project\][^\[]*?name\s*=\s*")([^"]*)(")`)
+	repl := fmt.Sprintf("${1}%s${3}", appName)
+	return re.ReplaceAll(src, []byte(repl))
 }
