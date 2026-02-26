@@ -40,8 +40,16 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				"https://docs.slack.dev",
 			},
 		},
-		"opens docs with basic search query": {
-			CmdArgs: []string{"messaging"},
+		"fails when positional argument provided without search flag": {
+			CmdArgs:              []string{"Block Kit"},
+			ExpectedErrorStrings: []string{"Invalid docs command. Did you mean to search?"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// No browser calls should be made when command fails
+				cm.Browser.AssertNotCalled(t, "OpenURL")
+			},
+		},
+		"opens docs with search query using space syntax": {
+			CmdArgs: []string{"--search", "messaging"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://docs.slack.dev/search/?q=messaging"
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
@@ -53,7 +61,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			},
 		},
 		"handles search query with multiple words": {
-			CmdArgs: []string{"socket mode"},
+			CmdArgs: []string{"--search", "socket mode"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://docs.slack.dev/search/?q=socket+mode"
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
@@ -65,7 +73,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			},
 		},
 		"handles special characters in search query": {
-			CmdArgs: []string{"messages & webhooks"},
+			CmdArgs: []string{"--search", "messages & webhooks"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://docs.slack.dev/search/?q=messages+%26+webhooks"
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
@@ -77,7 +85,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			},
 		},
 		"handles search query with quotes": {
-			CmdArgs: []string{"webhook \"send message\""},
+			CmdArgs: []string{"--search", "webhook \"send message\""},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := "https://docs.slack.dev/search/?q=webhook+%22send+message%22"
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
@@ -86,18 +94,6 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			ExpectedOutputs: []string{
 				"Docs Search",
 				"https://docs.slack.dev/search/?q=webhook+%22send+message%22",
-			},
-		},
-		"handles empty search query": {
-			CmdArgs: []string{""},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedURL := "https://docs.slack.dev/search/?q="
-				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
-				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
-			},
-			ExpectedOutputs: []string{
-				"Docs Search",
-				"https://docs.slack.dev/search/?q=",
 			},
 		},
 		"handles search flag without argument": {

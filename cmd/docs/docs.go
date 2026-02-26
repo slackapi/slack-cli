@@ -19,6 +19,7 @@ import (
 	"net/url"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -37,25 +38,20 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 				Command: "docs",
 			},
 			{
-				Meaning: "Open Slack docs search page",
-				Command: "docs --search",
-			},
-			{
-				Meaning: "Search Slack docs",
+				Meaning: "Search Slack developer docs for Block Kit",
 				Command: "docs --search \"Block Kit\"",
 			},
 			{
-				Meaning: "Search Slack docs without search flag",
-				Command: "docs \"Block Kit\"",
+				Meaning: "Open Slack docs search page",
+				Command: "docs --search",
 			},
 		}),
-		Args: cobra.MaximumNArgs(1), // Allow 0-1 arguments for search query
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDocsCommand(clients, cmd, args)
 		},
 	}
 
-	cmd.Flags().BoolVar(&searchMode, "search", false, "open Slack docs search page")
+	cmd.Flags().BoolVar(&searchMode, "search", false, "open Slack docs search page or search with query")
 
 	return cmd
 }
@@ -67,17 +63,27 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	var docsURL string
 	var sectionText string
 
-	if len(args) > 0 {
-		// Search query provided as positional argument: slack docs "query"
-		searchQuery := url.QueryEscape(args[0])
-		docsURL = fmt.Sprintf("https://docs.slack.dev/search/?q=%s", searchQuery)
-		sectionText = "Docs Search"
-	} else if searchMode {
-		// Search flag provided without query: slack docs --search
-		docsURL = "https://docs.slack.dev/search/"
-		sectionText = "Docs Search"
+	// Validate: if there are arguments, --search flag must be used
+	if len(args) > 0 && !cmd.Flags().Changed("search") {
+		return slackerror.New(slackerror.ErrDocsSearchFlagRequired).WithRemediation(
+			"Use --search flag: %s", 
+			style.Commandf(fmt.Sprintf("docs --search \"%s\"", args[0]), false),
+		)
+	}
+
+	if cmd.Flags().Changed("search") {
+		if len(args) > 0 {
+			// --search "query" (space-separated) - use the first arg as the query
+			encodedQuery := url.QueryEscape(args[0])
+			docsURL = fmt.Sprintf("https://docs.slack.dev/search/?q=%s", encodedQuery)
+			sectionText = "Docs Search"
+		} else {
+			// --search (no argument) - open search page
+			docsURL = "https://docs.slack.dev/search/"
+			sectionText = "Docs Search"
+		}
 	} else {
-		// Default homepage: slack docs
+		// No search flag: default homepage
 		docsURL = "https://docs.slack.dev"
 		sectionText = "Docs Open"
 	}
@@ -92,10 +98,10 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 
 	clients.Browser().OpenURL(docsURL)
 
-	if len(args) > 0 || searchMode {
+	if cmd.Flags().Changed("search") {
 		traceValue := ""
 		if len(args) > 0 {
-			traceValue = args[0]
+			traceValue = args[0] // For space-separated syntax
 		}
 		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, traceValue)
 	} else {
