@@ -162,7 +162,7 @@ func regexReplaceAppNameInManifest(src []byte, appName string) []byte {
 
 // regexReplaceAppNameInPackageJSON replaces the top-level "name" field in a package.json file
 func regexReplaceAppNameInPackageJSON(src []byte, appName string) []byte {
-	re := regexp.MustCompile(`(?m)^(\s*"name"\s*:\s*")([^"]*)(")`)
+	re := regexp.MustCompile(`(?m)^(\s{2}"name"\s*:\s*")([^"]*)(")`)
 	loc := re.FindSubmatchIndex(src)
 	if loc == nil {
 		return src
