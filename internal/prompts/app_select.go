@@ -887,7 +887,7 @@ func validateAuth(ctx context.Context, clients *shared.ClientFactory, auth *type
 		return err
 	}
 	clients.IO.PrintInfo(ctx, false, "\n%sWhoops! Looks like your authentication may be expired or invalid", style.Emoji("lock"))
-	reauth, _, err := authpkg.Login(ctx, apiClient, clients.Auth(), clients.IO, "", false)
+	reauth, _, err := authpkg.Login(ctx, apiClient, clients.Auth(), clients.Config, clients.IO, "", false)
 	if err != nil {
 		return err
 	}

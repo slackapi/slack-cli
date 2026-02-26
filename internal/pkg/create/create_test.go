@@ -40,16 +40,30 @@ func TestGetProjectDirectoryName(t *testing.T) {
 	var appName string
 	var err error
 
-	// Test without app name test removed because more than one possible default name
+	// Test with empty name returns an error
+	appName, err = getAppDirName("")
+	assert.Error(t, err, "should return an error for empty name")
+	assert.Equal(t, "", appName)
+
 	// Test with app name
 	appName, err = getAppDirName("my-app")
 	assert.NoError(t, err, "should not return an error")
-	assert.Equal(t, appName, "my-app", "should return 'my-app'")
+	assert.Equal(t, "my-app", appName, "should return 'my-app'")
 
 	// Test with a dot in the app name
 	appName, err = getAppDirName(".my-app")
 	assert.NoError(t, err, "should not return an error")
-	assert.Equal(t, appName, ".my-app", "should return '.my-app'")
+	assert.Equal(t, ".my-app", appName, "should return '.my-app'")
+
+	// Spaces replaced with hyphens
+	appName, err = getAppDirName("my cool app")
+	assert.NoError(t, err)
+	assert.Equal(t, "my-cool-app", appName)
+
+	// Leading/trailing spaces trimmed
+	appName, err = getAppDirName("  my-app  ")
+	assert.NoError(t, err)
+	assert.Equal(t, "my-app", appName)
 }
 
 func TestGetAvailableDirectory(t *testing.T) {
