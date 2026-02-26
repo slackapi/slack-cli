@@ -326,7 +326,7 @@ func TestCreateCommand(t *testing.T) {
 				createClientMock = new(CreateClientMock)
 				CreateFunc = createClientMock.Create
 			},
-			ExpectedErrorStrings: []string{"the --subdir flag requires the --template flag"},
+			ExpectedErrorStrings: []string{"The --subdir flag requires the --template flag"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
