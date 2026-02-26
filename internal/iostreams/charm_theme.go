@@ -73,7 +73,7 @@ func ThemeSlack() *huh.Theme {
 	// Multi-select styles
 	t.Focused.MultiSelectSelector = lipgloss.NewStyle().
 		Foreground(slackYellow).
-		SetString("> ")
+		SetString("❱ ")
 	t.Focused.SelectedOption = lipgloss.NewStyle().
 		Foreground(slackGreen)
 	t.Focused.SelectedPrefix = lipgloss.NewStyle().
