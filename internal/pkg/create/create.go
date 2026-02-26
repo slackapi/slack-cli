@@ -18,13 +18,11 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -150,23 +148,15 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	return appDirPath, nil
 }
 
-// generateRandomAppName will create a random app name based on two words and a number
-func generateRandomAppName() string {
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	var firstRandomNum = rand.Intn(len(adjectives))
-	var secondRandomNum = rand.Intn(len(animals))
-	var randomName = fmt.Sprintf("%s-%s-%d", adjectives[firstRandomNum], animals[secondRandomNum], rand.Intn(1000))
-	return randomName
-}
-
 // getAppDirName will validate and return the app's directory name
 func getAppDirName(appName string) (string, error) {
 	if len(appName) <= 0 {
-		return generateRandomAppName(), nil
+		return "", fmt.Errorf("app name is required")
 	}
 
 	// trim whitespace
-	appName = strings.ReplaceAll(appName, " ", "")
+	appName = strings.TrimSpace(appName)
+	appName = strings.ReplaceAll(appName, " ", "-")
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {
