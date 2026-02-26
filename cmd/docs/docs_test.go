@@ -36,7 +36,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Slack developer docs",
+				"Docs Open",
 				"https://docs.slack.dev",
 			},
 		},
@@ -48,7 +48,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Searching Slack developer docs: \"messaging\"",
+				"Docs Search",
 				"https://docs.slack.dev/search/?q=messaging",
 			},
 		},
@@ -60,7 +60,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Searching Slack developer docs: \"socket mode\"",
+				"Docs Search",
 				"https://docs.slack.dev/search/?q=socket+mode",
 			},
 		},
@@ -72,7 +72,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Searching Slack developer docs: \"messages & webhooks\"",
+				"Docs Search",
 				"https://docs.slack.dev/search/?q=messages+%26+webhooks",
 			},
 		},
@@ -84,7 +84,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Searching Slack developer docs: \"webhook \"send message\"\"",
+				"Docs Search",
 				"https://docs.slack.dev/search/?q=webhook+%22send+message%22",
 			},
 		},
@@ -96,7 +96,7 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSuccess, mock.Anything)
 			},
 			ExpectedOutputs: []string{
-				"Slack developer docs",
+				"Docs Open",
 				"https://docs.slack.dev",
 			},
 		},

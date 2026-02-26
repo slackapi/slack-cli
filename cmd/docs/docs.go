@@ -63,11 +63,11 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 		// Build search URL
 		searchQuery := url.QueryEscape(searchFlag)
 		docsURL = fmt.Sprintf("https://docs.slack.dev/search/?q=%s", searchQuery)
-		sectionText = fmt.Sprintf("Searching Slack developer docs: \"%s\"", searchFlag)
+		sectionText = "Docs Search"
 	} else {
 		// Default docs homepage
 		docsURL = "https://docs.slack.dev"
-		sectionText = "Slack developer docs"
+		sectionText = "Docs Open"
 	}
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
@@ -80,7 +80,6 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 
 	clients.Browser().OpenURL(docsURL)
 
-	// Add trace for analytics
 	if searchFlag != "" {
 		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, searchFlag)
 	} else {
