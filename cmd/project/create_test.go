@@ -484,11 +484,9 @@ func TestCreateCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
-				expected := create.CreateArgs{
-					Template: template,
-					Subdir:   "apps/my-app",
-				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
+					return args.AppName != "" && args.Template == template && args.Subdir == "apps/my-app"
+				}))
 			},
 		},
 		"list flag ignores subdir": {
