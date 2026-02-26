@@ -128,7 +128,7 @@ func newDeleteLogger(clients *shared.ClientFactory, cmd *cobra.Command, envName 
 func confirmDeletion(ctx context.Context, IO iostreams.IOStreamer, app prompts.SelectedApp) (bool, error) {
 	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "warning",
-		Text:  style.Bold("Danger zone"),
+		Text:  style.Bold(" Danger zone"),
 		Secondary: []string{
 			fmt.Sprintf("App (%s) will be permanently deleted", app.App.AppID),
 			"All triggers, workflows, and functions will be deleted",
