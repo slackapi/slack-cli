@@ -17,6 +17,7 @@ package docs
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -65,16 +66,18 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 
 	// Validate: if there are arguments, --search flag must be used
 	if len(args) > 0 && !cmd.Flags().Changed("search") {
+		query := strings.Join(args, " ")
 		return slackerror.New(slackerror.ErrDocsSearchFlagRequired).WithRemediation(
 			"Use --search flag: %s",
-			style.Commandf(fmt.Sprintf("docs --search \"%s\"", args[0]), false),
+			style.Commandf(fmt.Sprintf("docs --search \"%s\"", query), false),
 		)
 	}
 
 	if cmd.Flags().Changed("search") {
 		if len(args) > 0 {
-			// --search "query" (space-separated) - use the first arg as the query
-			encodedQuery := url.QueryEscape(args[0])
+			// --search "query" (space-separated) - join all args as the query
+			query := strings.Join(args, " ")
+			encodedQuery := url.QueryEscape(query)
 			docsURL = fmt.Sprintf("https://docs.slack.dev/search/?q=%s", encodedQuery)
 			sectionText = "Docs Search"
 		} else {
@@ -101,7 +104,7 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	if cmd.Flags().Changed("search") {
 		traceValue := ""
 		if len(args) > 0 {
-			traceValue = args[0] // For space-separated syntax
+			traceValue = strings.Join(args, " ")
 		}
 		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, traceValue)
 	} else {

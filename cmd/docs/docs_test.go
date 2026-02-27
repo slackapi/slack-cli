@@ -48,6 +48,14 @@ func Test_Docs_DocsCommand(t *testing.T) {
 				cm.Browser.AssertNotCalled(t, "OpenURL")
 			},
 		},
+		"fails when multiple positional arguments provided without search flag": {
+			CmdArgs:              []string{"webhook", "send", "message"},
+			ExpectedErrorStrings: []string{"Invalid docs command. Did you mean to search?"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// No browser calls should be made when command fails
+				cm.Browser.AssertNotCalled(t, "OpenURL")
+			},
+		},
 		"opens docs with search query using space syntax": {
 			CmdArgs: []string{"--search", "messaging"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -58,6 +66,18 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			ExpectedOutputs: []string{
 				"Docs Search",
 				"https://docs.slack.dev/search/?q=messaging",
+			},
+		},
+		"handles search with multiple arguments": {
+			CmdArgs: []string{"--search", "Block", "Kit", "Element"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := "https://docs.slack.dev/search/?q=Block+Kit+Element"
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
+			},
+			ExpectedOutputs: []string{
+				"Docs Search",
+				"https://docs.slack.dev/search/?q=Block+Kit+Element",
 			},
 		},
 		"handles search query with multiple words": {
