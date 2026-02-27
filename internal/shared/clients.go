@@ -222,7 +222,12 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 			return slackerror.New(slackerror.ErrHooksJSONLocation)
 		}
 		// Move upward one directory level
-		dirPath = filepath.Dir(dirPath)
+		parentDir := filepath.Dir(dirPath)
+		if parentDir == dirPath {
+			// Reached a filesystem root not covered above (e.g. D:\ when SYSTEMROOT is on C:\)
+			return slackerror.New(slackerror.ErrHooksJSONLocation)
+		}
+		dirPath = parentDir
 	}
 	// Activate Python virtual environment if present, so hook scripts
 	// can resolve the venv's Python and installed packages.

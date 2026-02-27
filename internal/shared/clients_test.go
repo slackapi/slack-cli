@@ -110,6 +110,12 @@ func Test_ClientFactory_InitSDKConfig(t *testing.T) {
 			mockWorkingDirectory:  filepath.Join("path", "outside", "home", "to", "project"),
 			expectedError:         slackerror.New(slackerror.ErrHooksJSONLocation),
 		},
+		"errors if traversal reaches a filesystem root": {
+			mockHooksJSONContent:  "{}",
+			mockHooksJSONFilePath: filepath.Join(string(filepath.Separator), "other", "volume", "project", "package.json"),
+			mockWorkingDirectory:  filepath.Join(string(filepath.Separator), "other", "volume", "project"),
+			expectedError:         slackerror.New(slackerror.ErrHooksJSONLocation),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
