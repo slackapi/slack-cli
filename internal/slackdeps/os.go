@@ -53,6 +53,11 @@ func (c *Os) Setenv(key string, value string) error {
 	return os.Setenv(key, value)
 }
 
+// Unsetenv defaults to `os.Unsetenv` and can be mocked to test
+func (c *Os) Unsetenv(key string) error {
+	return os.Unsetenv(key)
+}
+
 // Getwd defaults to `os.Getwd` and can be mocked to test
 func (c *Os) Getwd() (dir string, err error) {
 	return os.Getwd()

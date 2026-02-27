@@ -1,0 +1,17 @@
+[project]
+name = "vibrant-butterfly-1234"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "slack-sdk==3.40.0",
+    "slack-bolt==1.27.0",
+    "slack-cli-hooks<1.0.0",
+]
+
+# This comment appears before more details
+[tool.ruff]
+[tool.ruff.lint]
+[tool.ruff.format]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

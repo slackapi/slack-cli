@@ -185,7 +185,7 @@ function install_git {
   }
   else {
     try {
-      git | Out-Null
+      Get-Command git -ErrorAction Stop | Out-Null
       Write-Host "Git is already installed. Nice!"
     }
     catch [System.Management.Automation.CommandNotFoundException] {
