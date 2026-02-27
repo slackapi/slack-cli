@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package iostreams
+package style
 
 // Slack brand theme for charmbracelet/huh prompts.
 // Uses official Slack brand colors to give the CLI a fun, playful feel.
