@@ -14,7 +14,7 @@
 
 package create
 
-var adjectives = []string{
+var Adjectives = []string{
 	"admiring",
 	"adoring",
 	"affectionate",
@@ -113,7 +113,7 @@ var adjectives = []string{
 	"zen",
 }
 
-var animals = []string{
+var Animals = []string{
 	"aardvark",
 	"alligator",
 	"alpaca",

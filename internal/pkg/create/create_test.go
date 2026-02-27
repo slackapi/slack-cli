@@ -22,6 +22,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
@@ -40,16 +41,30 @@ func TestGetProjectDirectoryName(t *testing.T) {
 	var appName string
 	var err error
 
-	// Test without app name test removed because more than one possible default name
+	// Test with empty name returns an error
+	appName, err = getAppDirName("")
+	assert.Error(t, err, "should return an error for empty name")
+	assert.Equal(t, "", appName)
+
 	// Test with app name
 	appName, err = getAppDirName("my-app")
 	assert.NoError(t, err, "should not return an error")
-	assert.Equal(t, appName, "my-app", "should return 'my-app'")
+	assert.Equal(t, "my-app", appName, "should return 'my-app'")
 
 	// Test with a dot in the app name
 	appName, err = getAppDirName(".my-app")
 	assert.NoError(t, err, "should not return an error")
-	assert.Equal(t, appName, ".my-app", "should return '.my-app'")
+	assert.Equal(t, ".my-app", appName, "should return '.my-app'")
+
+	// Spaces replaced with hyphens
+	appName, err = getAppDirName("my cool app")
+	assert.NoError(t, err)
+	assert.Equal(t, "my-cool-app", appName)
+
+	// Leading/trailing spaces trimmed
+	appName, err = getAppDirName("  my-app  ")
+	assert.NoError(t, err)
+	assert.Equal(t, "my-app", appName)
 }
 
 func TestGetAvailableDirectory(t *testing.T) {
@@ -182,6 +197,128 @@ func TestCreateGitArgs(t *testing.T) {
 	testGitArgs = createGitArgs(templatePath, "./", "    ")
 	expectedArgs = []string{"clone", "--depth=1", "git://github.com:slackapi/bolt-js-getting-started-app", "./"}
 	assert.Equal(t, expectedArgs, testGitArgs)
+}
+
+func TestNormalizeSubdir(t *testing.T) {
+	tests := map[string]struct {
+		input       string
+		expected    string
+		expectError bool
+	}{
+		"empty string returns empty": {
+			input:    "",
+			expected: "",
+		},
+		"dot returns empty": {
+			input:    ".",
+			expected: "",
+		},
+		"slash returns empty": {
+			input:    "/",
+			expected: "",
+		},
+		"simple subdir": {
+			input:    "pydantic-ai/",
+			expected: "pydantic-ai",
+		},
+		"dot-prefixed subdir": {
+			input:    "./my-app",
+			expected: "my-app",
+		},
+		"nested subdir": {
+			input:    "apps/my-app",
+			expected: "apps/my-app",
+		},
+		"parent traversal is rejected": {
+			input:       "../escape",
+			expectError: true,
+		},
+		"nested parent traversal is rejected": {
+			input:       "foo/../../escape",
+			expectError: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := normalizeSubdir(tc.input)
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expected, result)
+			}
+		})
+	}
+}
+
+func TestCreateAppFromSubdir(t *testing.T) {
+	tests := map[string]struct {
+		setupTemplate func(t *testing.T, fs afero.Fs) string
+		subdir        string
+		expectError   bool
+		errorContains string
+		expectFiles   []string
+	}{
+		"extracts subdirectory from local template": {
+			setupTemplate: func(t *testing.T, fs afero.Fs) string {
+				tmpDir := t.TempDir()
+				// Create a subdirectory with a file
+				subdir := filepath.Join(tmpDir, "apps", "my-app")
+				require.NoError(t, fs.MkdirAll(subdir, 0755))
+				require.NoError(t, afero.WriteFile(fs, filepath.Join(subdir, "manifest.json"), []byte(`{}`), 0644))
+				// Create a file at root that should NOT be copied
+				require.NoError(t, afero.WriteFile(fs, filepath.Join(tmpDir, "README.md"), []byte("root readme"), 0644))
+				return tmpDir
+			},
+			subdir:      "apps/my-app",
+			expectFiles: []string{"manifest.json"},
+		},
+		"returns error for nonexistent subdirectory": {
+			setupTemplate: func(t *testing.T, fs afero.Fs) string {
+				return t.TempDir()
+			},
+			subdir:        "nonexistent",
+			expectError:   true,
+			errorContains: "was not found in the template",
+		},
+		"returns error when subdir path is a file": {
+			setupTemplate: func(t *testing.T, fs afero.Fs) string {
+				tmpDir := t.TempDir()
+				require.NoError(t, afero.WriteFile(fs, filepath.Join(tmpDir, "not-a-dir"), []byte("file"), 0644))
+				return tmpDir
+			},
+			subdir:        "not-a-dir",
+			expectError:   true,
+			errorContains: "is not a directory",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := afero.NewOsFs()
+			templateDir := tc.setupTemplate(t, fs)
+			outputDir := t.TempDir()
+			// Remove output dir so CopyDirectory can create it
+			require.NoError(t, fs.Remove(outputDir))
+
+			template := Template{path: templateDir, isLocal: true}
+			log := logger.New(func(event *logger.LogEvent) {})
+
+			err := createAppFromSubdir(t.Context(), outputDir, template, "", tc.subdir, log, fs)
+
+			if tc.expectError {
+				assert.Error(t, err)
+				if tc.errorContains != "" {
+					assert.Contains(t, err.Error(), tc.errorContains)
+				}
+			} else {
+				assert.NoError(t, err)
+				for _, f := range tc.expectFiles {
+					_, statErr := fs.Stat(filepath.Join(outputDir, f))
+					assert.NoError(t, statErr, "expected file %s to exist", f)
+				}
+			}
+		})
+	}
 }
 
 func Test_Create_installProjectDependencies(t *testing.T) {

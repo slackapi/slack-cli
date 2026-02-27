@@ -225,6 +225,7 @@ const (
 	ErrSocketConnection                              = "socket_connection_error"
 	ErrScopesExceedAppConfig                         = "scopes_exceed_app_config"
 	ErrStreamingActivityLogs                         = "streaming_activity_logs_error"
+	ErrSubdirNotFound                                = "subdir_not_found"
 	ErrSurveyConfigNotFound                          = "survey_config_not_found"
 	ErrSystemConfigIDNotFound                        = "system_config_id_not_found"
 	ErrSystemRequirementsFailed                      = "system_requirements_failed"
@@ -1389,6 +1390,11 @@ Otherwise start your app for local development with: %s`,
 	ErrStreamingActivityLogs: {
 		Code:    "streaming_activity_logs_error",
 		Message: "Failed to stream the most recent activity logs",
+	},
+
+	ErrSubdirNotFound: {
+		Code:    ErrSubdirNotFound,
+		Message: "The specified subdirectory was not found in the template repository",
 	},
 
 	ErrSurveyConfigNotFound: {
