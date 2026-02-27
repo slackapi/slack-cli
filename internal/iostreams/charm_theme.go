@@ -40,7 +40,8 @@ var (
 func ThemeSlack() *huh.Theme {
 	t := huh.ThemeBase()
 
-	// Focused field styles
+	// Focused styles apply to the field the user is currently interacting with.
+	// Blurred styles apply to visible fields that are not currently active.
 	t.Focused.Base = t.Focused.Base.
 		BorderForeground(slackAubergine)
 	t.Focused.Title = lipgloss.NewStyle().
