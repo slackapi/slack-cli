@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -59,6 +60,238 @@ func Test_Python_IgnoreDirectories(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			p := New()
 			require.Equal(t, tc.expectedIgnoreDirectories, p.IgnoreDirectories())
+		})
+	}
+}
+
+func Test_getVenvPath(t *testing.T) {
+	tests := map[string]struct {
+		projectDirPath string
+		expectedPath   string
+	}{
+		"Get venv path": {
+			projectDirPath: "/path/to/project",
+			expectedPath:   "/path/to/project/.venv",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := getVenvPath(tc.projectDirPath)
+			require.Equal(t, tc.expectedPath, result)
+		})
+	}
+}
+
+func Test_getPythonExecutable(t *testing.T) {
+	tests := map[string]struct {
+		expectedExecutable string
+		onlyOnWindows      bool
+	}{
+		"Get python executable on Unix": {
+			expectedExecutable: "python3",
+			onlyOnWindows:      false,
+		},
+		"Get python executable on Windows": {
+			expectedExecutable: "python",
+			onlyOnWindows:      true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			isWindows := runtime.GOOS == "windows"
+			if tc.onlyOnWindows != isWindows {
+				t.Skip("skipping test on " + runtime.GOOS)
+			}
+			result := getPythonExecutable()
+			require.Equal(t, tc.expectedExecutable, result)
+		})
+	}
+}
+
+func Test_getPipExecutable(t *testing.T) {
+	tests := map[string]struct {
+		venvPath      string
+		expectedPath  string
+		onlyOnWindows bool
+	}{
+		"Get pip path on Unix": {
+			venvPath:      "/path/to/.venv",
+			expectedPath:  "/path/to/.venv/bin/pip",
+			onlyOnWindows: false,
+		},
+		"Get pip path on Windows": {
+			venvPath:      "C:\\path\\to\\.venv",
+			expectedPath:  "C:\\path\\to\\.venv\\Scripts\\pip.exe",
+			onlyOnWindows: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			isWindows := runtime.GOOS == "windows"
+			if tc.onlyOnWindows != isWindows {
+				t.Skip("skipping test on " + runtime.GOOS)
+			}
+			result := getPipExecutable(tc.venvPath)
+			require.Equal(t, tc.expectedPath, result)
+		})
+	}
+}
+
+func Test_installRequirementsTxt(t *testing.T) {
+	tests := map[string]struct {
+		existingContent string
+		expectedContent string
+		expectedOutput  string
+		expectedError   bool
+	}{
+		"Skip when slack-cli-hooks already exists": {
+			existingContent: "slack-cli-hooks\npytest==8.3.2\nruff==0.7.2",
+			expectedContent: "slack-cli-hooks\npytest==8.3.2\nruff==0.7.2",
+			expectedOutput:  "Found requirements.txt with",
+			expectedError:   false,
+		},
+		"Add after slack-bolt when it exists": {
+			existingContent: "slack-bolt==2.31.2\npytest==8.3.2\nruff==0.7.2",
+			expectedContent: "slack-bolt==2.31.2\nslack-cli-hooks<1.0.0\npytest==8.3.2\nruff==0.7.2",
+			expectedOutput:  "Updated requirements.txt with",
+			expectedError:   false,
+		},
+		"Add at end when slack-bolt doesn't exist": {
+			existingContent: "pytest==8.3.2\nruff==0.7.2",
+			expectedContent: "pytest==8.3.2\nruff==0.7.2\nslack-cli-hooks<1.0.0",
+			expectedOutput:  "Updated requirements.txt with",
+			expectedError:   false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+			projectDirPath := "/path/to/project"
+
+			// Create requirements.txt
+			requirementsPath := filepath.Join(projectDirPath, "requirements.txt")
+			err := fs.MkdirAll(projectDirPath, 0755)
+			require.NoError(t, err)
+			err = afero.WriteFile(fs, requirementsPath, []byte(tc.existingContent), 0644)
+			require.NoError(t, err)
+
+			// Test
+			output, err := installRequirementsTxt(fs, projectDirPath)
+
+			// Assertions
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			require.Contains(t, output, tc.expectedOutput)
+
+			// Verify file content
+			content, err := afero.ReadFile(fs, requirementsPath)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedContent, string(content))
+		})
+	}
+}
+
+func Test_installPyProjectToml(t *testing.T) {
+	tests := map[string]struct {
+		existingContent string
+		shouldContain   []string
+		expectedOutput  string
+		expectedError   bool
+	}{
+		"Skip when slack-cli-hooks already exists": {
+			existingContent: `[project]
+name = "my-app"
+dependencies = ["slack-cli-hooks<1.0.0", "pytest==8.3.2"]`,
+			shouldContain:  []string{"slack-cli-hooks"},
+			expectedOutput: "Found pyproject.toml with",
+			expectedError:  false,
+		},
+		"Add after slack-bolt when it exists": {
+			existingContent: `[project]
+name = "my-app"
+dependencies = ["slack-bolt>=1.0.0", "pytest==8.3.2"]`,
+			shouldContain:  []string{"slack-bolt", "slack-cli-hooks", "pytest"},
+			expectedOutput: "Updated pyproject.toml with",
+			expectedError:  false,
+		},
+		"Add at end when slack-bolt doesn't exist": {
+			existingContent: `[project]
+name = "my-app"
+dependencies = ["pytest==8.3.2"]`,
+			shouldContain:  []string{"slack-cli-hooks", "pytest"},
+			expectedOutput: "Updated pyproject.toml with",
+			expectedError:  false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+			projectDirPath := "/path/to/project"
+
+			// Create pyproject.toml
+			pyprojectPath := filepath.Join(projectDirPath, "pyproject.toml")
+			err := fs.MkdirAll(projectDirPath, 0755)
+			require.NoError(t, err)
+			err = afero.WriteFile(fs, pyprojectPath, []byte(tc.existingContent), 0644)
+			require.NoError(t, err)
+
+			// Test
+			output, err := installPyProjectToml(fs, projectDirPath)
+
+			// Assertions
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			require.Contains(t, output, tc.expectedOutput)
+
+			// Verify file content contains expected strings
+			content, err := afero.ReadFile(fs, pyprojectPath)
+			require.NoError(t, err)
+			for _, expected := range tc.shouldContain {
+				require.Contains(t, string(content), expected)
+			}
+		})
+	}
+}
+
+func Test_venvExists(t *testing.T) {
+	tests := map[string]struct {
+		venvPath       string
+		createPipFile  bool
+		expectedResult bool
+	}{
+		"Venv exists when pip file present": {
+			venvPath:       "/path/to/.venv",
+			createPipFile:  true,
+			expectedResult: true,
+		},
+		"Venv does not exist when pip file absent": {
+			venvPath:       "/path/to/.venv",
+			createPipFile:  false,
+			expectedResult: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+
+			if tc.createPipFile {
+				pipPath := getPipExecutable(tc.venvPath)
+				err := fs.MkdirAll(filepath.Dir(pipPath), 0755)
+				require.NoError(t, err)
+				err = afero.WriteFile(fs, pipPath, []byte(""), 0755)
+				require.NoError(t, err)
+			}
+
+			result := venvExists(fs, tc.venvPath)
+			require.Equal(t, tc.expectedResult, result)
 		})
 	}
 }
@@ -144,41 +377,6 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 				"requirements.txt": "pytest==8.3.2\nruff==0.7.2\nslack-cli-hooks<1.0.0",
 			},
 			expectedOutputs: []string{"Updated"},
-			expectedError:   false,
-		},
-		"Should output help text because installing project dependencies is unsupported": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack-cli-hooks\npytest==8.3.2\nruff==0.7.2",
-			},
-			expectedOutputs: []string{"Manually setup a Python virtual environment"},
-			expectedError:   false,
-		},
-		"Should output pip install -r requirements.txt when only requirements.txt exists": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
-			},
-			expectedOutputs:    []string{"pip install -r requirements.txt"},
-			notExpectedOutputs: []string{"pip install -e ."},
-			expectedError:      false,
-		},
-		"Should output pip install -e . when only pyproject.toml exists": {
-			existingFiles: map[string]string{
-				"pyproject.toml": `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks<1.0.0"]`,
-			},
-			expectedOutputs:    []string{"pip install -e ."},
-			notExpectedOutputs: []string{"pip install -r requirements.txt"},
-			expectedError:      false,
-		},
-		"Should output both install commands when both files exist": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack-cli-hooks\npytest==8.3.2",
-				"pyproject.toml": `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks<1.0.0"]`,
-			},
-			expectedOutputs: []string{"pip install -r requirements.txt", "pip install -e ."},
 			expectedError:   false,
 		},
 		"Error when neither requirements.txt nor pyproject.toml exists": {
@@ -274,7 +472,7 @@ dependencies = [
 				"pyproject.toml": `[project]
 name = "my-app"`,
 			},
-			expectedOutputs: []string{"Error: pyproject.toml missing dependencies array"},
+			expectedOutputs: []string{"Error updating pyproject.toml: pyproject.toml missing dependencies array"},
 			expectedError:   true,
 		},
 		"Error when pyproject.toml has no [project] section": {
@@ -282,7 +480,7 @@ name = "my-app"`,
 				"pyproject.toml": `[tool.black]
 line-length = 88`,
 			},
-			expectedOutputs: []string{"Error: pyproject.toml missing project section"},
+			expectedOutputs: []string{"Error updating pyproject.toml: pyproject.toml missing project section"},
 			expectedError:   true,
 		},
 		"Error when pyproject.toml is invalid TOML": {
@@ -303,6 +501,7 @@ name = "broken`,
 			os.AddDefaultMocks()
 			cfg := config.NewConfig(fs, os)
 			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
+			ios.AddDefaultMocks()
 
 			mockHookExecutor := &hooks.MockHookExecutor{}
 			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).Return("text output", nil)
