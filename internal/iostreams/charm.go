@@ -33,7 +33,7 @@ func charmInputPrompt(_ *IOStreams, _ context.Context, message string, cfg Input
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))
 	}
-	err := huh.NewForm(huh.NewGroup(field)).Run()
+	err := huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack()).Run()
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +46,7 @@ func charmConfirmPrompt(_ *IOStreams, _ context.Context, message string, default
 	field := huh.NewConfirm().
 		Title(message).
 		Value(&choice)
-	err := huh.NewForm(huh.NewGroup(field)).Run()
+	err := huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack()).Run()
 	if err != nil {
 		return false, err
 	}
@@ -76,7 +76,7 @@ func charmSelectPrompt(_ *IOStreams, _ context.Context, msg string, options []st
 		field.Height(cfg.PageSize + 2)
 	}
 
-	err := huh.NewForm(huh.NewGroup(field)).Run()
+	err := huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack()).Run()
 	if err != nil {
 		return SelectPromptResponse{}, err
 	}
@@ -95,7 +95,7 @@ func charmPasswordPrompt(_ *IOStreams, _ context.Context, message string, cfg Pa
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))
 	}
-	err := huh.NewForm(huh.NewGroup(field)).Run()
+	err := huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack()).Run()
 	if err != nil {
 		return PasswordPromptResponse{}, err
 	}
@@ -115,7 +115,7 @@ func charmMultiSelectPrompt(_ *IOStreams, _ context.Context, message string, opt
 		Options(opts...).
 		Value(&selected)
 
-	err := huh.NewForm(huh.NewGroup(field)).Run()
+	err := huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack()).Run()
 	if err != nil {
 		return []string{}, err
 	}

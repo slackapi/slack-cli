@@ -38,6 +38,9 @@ type Os interface {
 	// Setenv defaults to `os.Setenv` and can be mocked to test
 	Setenv(key string, value string) error
 
+	// Unsetenv defaults to `os.Unsetenv` and can be mocked to test
+	Unsetenv(key string) error
+
 	// Getwd defaults to `os.Getwd` and can be mocked to test
 	Getwd() (dir string, err error)
 

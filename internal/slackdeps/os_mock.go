@@ -46,6 +46,7 @@ func (m *OsMock) AddDefaultMocks() {
 	m.On("LookPath", mock.Anything).Return("", nil)
 	m.On("LookupEnv", mock.Anything).Return("", false)
 	m.On("Setenv", mock.Anything, mock.Anything).Return(nil)
+	m.On("Unsetenv", mock.Anything).Return(nil)
 	m.On("Getwd").Return(MockWorkingDirectory, nil)
 	m.On("UserHomeDir").Return(MockHomeDirectory, nil)
 	m.On("GetExecutionDir").Return(MockHomeDirectory, nil)
@@ -80,6 +81,14 @@ func (m *OsMock) Setenv(key string, value string) error {
 	m.On("Getenv", key).Return(value)
 	m.On("LookupEnv", key).Return(value, true)
 	args := m.Called(key, value)
+	return args.Error(0)
+}
+
+// Unsetenv mocks the unsetting of an environment variable
+func (m *OsMock) Unsetenv(key string) error {
+	m.On("Getenv", key).Return("")
+	m.On("LookupEnv", key).Return("", false)
+	args := m.Called(key)
 	return args.Error(0)
 }
 
