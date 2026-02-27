@@ -2,8 +2,7 @@
 bin/
 slack
 slack-cli
-hermes
-hermes-project*
+slack-cli.exe
 my-slack-app*
 coverage.out
 
@@ -11,7 +10,6 @@ coverage.out
 .gon.hcl
 
 # Slack app files
-.hermes
 .slack/
 environments.yaml
 
@@ -39,7 +37,3 @@ package-lock.json
 
 # End to End Test files
 test-e2e
-
-# Claude Code local files
-.claude/settings.local.json
-CLAUDE.local.md
