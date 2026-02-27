@@ -22,9 +22,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Slack brand colors
+// Slack brand colors according to https://a.slack-edge.com/4d5bb/marketing/img/media-kit/slack_brand_guidelines_september2020.pdf
 var (
-	slackAubergine       = lipgloss.Color("#83388a")
+	slackAubergine       = lipgloss.Color("#7C2852")
 	slackBlue            = lipgloss.Color("#36c5f0")
 	slackGreen           = lipgloss.Color("#2eb67d")
 	slackYellow          = lipgloss.Color("#ecb22e")
