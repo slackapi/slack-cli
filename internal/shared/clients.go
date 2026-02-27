@@ -222,8 +222,21 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 			return slackerror.New(slackerror.ErrHooksJSONLocation)
 		}
 		// Move upward one directory level
-		dirPath = filepath.Dir(dirPath)
+		parentDir := filepath.Dir(dirPath)
+		if parentDir == dirPath {
+			// Reached a filesystem root not covered above (e.g. D:\ when SYSTEMROOT is on C:\)
+			return slackerror.New(slackerror.ErrHooksJSONLocation)
+		}
+		dirPath = parentDir
 	}
+	// Activate Python virtual environment if present, so hook scripts
+	// can resolve the venv's Python and installed packages.
+	if activated, err := runtime.ActivatePythonVenvIfPresent(c.Fs, c.Os, dirPath); err != nil {
+		c.IO.PrintDebug(ctx, "failed to activate Python virtual environment: %s", err)
+	} else if activated {
+		c.IO.PrintDebug(ctx, "Activated Python virtual environment .venv")
+	}
+
 	configFileBytes, err := afero.ReadFile(c.Fs, hooksJSONFilePath)
 	if err != nil {
 		return err // Fixes regression: do not wrap this error, so that the caller can use `os.IsNotExists`

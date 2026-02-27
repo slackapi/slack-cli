@@ -22,10 +22,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Slack brand colors
+// Slack brand colors according to https://a.slack-edge.com/4d5bb/marketing/img/media-kit/slack_brand_guidelines_september2020.pdf
 var (
-	slackAubergine       = lipgloss.Color("#4a154b")
-	slackBrightAuberg    = lipgloss.Color("#611f69")
+	slackAubergine       = lipgloss.Color("#7C2852")
 	slackBlue            = lipgloss.Color("#36c5f0")
 	slackGreen           = lipgloss.Color("#2eb67d")
 	slackYellow          = lipgloss.Color("#ecb22e")
@@ -41,9 +40,10 @@ var (
 func ThemeSlack() *huh.Theme {
 	t := huh.ThemeBase()
 
-	// Focused field styles
+	// Focused styles apply to the field the user is currently interacting with.
+	// Blurred styles apply to visible fields that are not currently active.
 	t.Focused.Base = t.Focused.Base.
-		BorderForeground(slackBrightAuberg)
+		BorderForeground(slackAubergine)
 	t.Focused.Title = lipgloss.NewStyle().
 		Foreground(slackAubergine).
 		Bold(true)
@@ -58,7 +58,7 @@ func ThemeSlack() *huh.Theme {
 	// Select styles
 	t.Focused.SelectSelector = lipgloss.NewStyle().
 		Foreground(slackBlue).
-		SetString("> ")
+		SetString("❱ ")
 	t.Focused.Option = lipgloss.NewStyle().
 		Foreground(slackOptionText)
 	t.Focused.NextIndicator = lipgloss.NewStyle().
@@ -73,7 +73,7 @@ func ThemeSlack() *huh.Theme {
 	// Multi-select styles
 	t.Focused.MultiSelectSelector = lipgloss.NewStyle().
 		Foreground(slackYellow).
-		SetString("> ")
+		SetString("❱ ")
 	t.Focused.SelectedOption = lipgloss.NewStyle().
 		Foreground(slackGreen)
 	t.Focused.SelectedPrefix = lipgloss.NewStyle().
@@ -100,12 +100,12 @@ func ThemeSlack() *huh.Theme {
 		Padding(0, 2).
 		MarginRight(1)
 	t.Focused.FocusedButton = button.
-		Foreground(lipgloss.Color("#fff")).
+		Foreground(lipgloss.Color("#ffffff")).
 		Background(slackAubergine).
 		Bold(true)
 	t.Focused.BlurredButton = button.
 		Foreground(slackLegalGray).
-		Background(lipgloss.Color("#000"))
+		Background(lipgloss.Color("#f8f8f8"))
 
 	// Blurred field styles — subdued version of focused
 	t.Blurred = t.Focused
