@@ -35,6 +35,7 @@ $ slack create  # Create a new Slack app
 $ slack init    # Initialize an existing Slack app
 $ slack run     # Start a local development server
 $ slack deploy  # Deploy to the Slack Platform
+$ slack docs    # Open Slack developer docs
 ```
 
 ## See also
@@ -47,6 +48,7 @@ $ slack deploy  # Deploy to the Slack Platform
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
 * [slack delete](slack_delete)	 - Delete the app
 * [slack deploy](slack_deploy)	 - Deploy the app to the Slack Platform
+* [slack docs](slack_docs)	 - Open Slack developer docs
 * [slack doctor](slack_doctor)	 - Check and report on system and app information
 * [slack env](slack_env)	 - Add, remove, or list environment variables
 * [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
