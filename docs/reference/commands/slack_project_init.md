@@ -20,7 +20,7 @@ Adds the Slack CLI hooks dependency to your project:
 Installs your project dependencies when supported:
 - Deno:    Supported
 - Node.js: Supported
-- Python:  Unsupported
+- Python:  Supported
 
 Adds an existing app to your project (optional):
 - Prompts to add an existing app from app settings

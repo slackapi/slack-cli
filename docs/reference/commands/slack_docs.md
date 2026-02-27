@@ -1,39 +1,20 @@
-# `slack init`
+# `slack docs`
 
-Initialize a project to work with the Slack CLI
+Open Slack developer docs
 
 ## Description
 
-Initializes a project to support the Slack CLI.
-
-Adds a .slack directory with the following files:
-- project-name/.slack
-- project-name/.slack/.gitignore
-- project-name/.slack/config.json
-- project-name/.slack/hooks.json
-
-Adds the Slack CLI hooks dependency to your project:
-- Deno:    Unsupported
-- Node.js: Updates package.json
-- Python:  Updates requirements.txt or pyproject.toml
-
-Installs your project dependencies when supported:
-- Deno:    Supported
-- Node.js: Supported
-- Python:  Supported
-
-Adds an existing app to your project (optional):
-- Prompts to add an existing app from app settings
-- Runs the command `slack app link`
+Open the Slack developer docs in your browser, with optional search functionality
 
 ```
-slack init [flags]
+slack docs [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help   help for init
+  -h, --help     help for docs
+      --search   open Slack docs search page or search with query
 ```
 
 ## Global flags
@@ -53,7 +34,11 @@ slack init [flags]
 ## Examples
 
 ```
-$ slack init  # Initialize a project
+$ slack docs                       # Open Slack developer docs homepage
+
+# Search Slack developer docs for Block Kit
+$ slack docs --search "Block Kit"
+$ slack docs --search              # Open Slack docs search page
 ```
 
 ## See also

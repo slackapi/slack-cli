@@ -20,6 +20,7 @@ slack create [name | agent <name>] [flags]
   -h, --help              help for create
       --list              list available app templates
   -n, --name string       name for your app (overrides the name argument)
+      --subdir string     subdirectory in the template to use as project
   -t, --template string   template URL for your app
 ```
 
@@ -51,6 +52,9 @@ $ slack create my-project -t slack-samples/deno-hello-world
 
 # Create a project named 'my-project'
 $ slack create --name my-project
+
+# Create from a subdirectory of a template
+$ slack create my-project -t org/monorepo --subdir apps/my-app
 ```
 
 ## See also
