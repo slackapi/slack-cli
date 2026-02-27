@@ -22,6 +22,7 @@ import (
 	"slices"
 
 	"github.com/charmbracelet/huh"
+	"github.com/slackapi/slack-cli/internal/style"
 )
 
 // buildInputForm constructs a huh form for text input prompts.
@@ -32,7 +33,7 @@ func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.F
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))
 	}
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack())
+	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
 
 // charmInputPrompt prompts for text input using a charm huh form
@@ -50,7 +51,7 @@ func buildConfirmForm(message string, choice *bool) *huh.Form {
 	field := huh.NewConfirm().
 		Title(message).
 		Value(choice)
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack())
+	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
 
 // charmConfirmPrompt prompts for a yes/no confirmation using a charm huh form
@@ -85,7 +86,7 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 		field.Height(cfg.PageSize + 2)
 	}
 
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack())
+	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
 
 // charmSelectPrompt prompts the user to select one option using a charm huh form
@@ -109,7 +110,7 @@ func buildPasswordForm(message string, cfg PasswordPromptConfig, input *string) 
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))
 	}
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack())
+	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
 
 // charmPasswordPrompt prompts for a password (hidden input) using a charm huh form
@@ -134,7 +135,7 @@ func buildMultiSelectForm(message string, options []string, selected *[]string) 
 		Options(opts...).
 		Value(selected)
 
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(ThemeSlack())
+	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
 
 // charmMultiSelectPrompt prompts the user to select multiple options using a charm huh form

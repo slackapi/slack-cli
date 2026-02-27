@@ -121,7 +121,7 @@ func TestCharmSelect(t *testing.T) {
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
-		assert.Contains(t, view, "> Foo")
+		assert.Contains(t, view, "❱ Foo")
 	})
 
 	t.Run("cursor navigation moves selection", func(t *testing.T) {
@@ -132,8 +132,8 @@ func TestCharmSelect(t *testing.T) {
 
 		m, _ := f.Update(tea.KeyMsg{Type: tea.KeyDown})
 		view := ansi.Strip(m.View())
-		assert.Contains(t, view, "> Bar")
-		assert.False(t, strings.Contains(view, "> Foo"))
+		assert.Contains(t, view, "❱ Bar")
+		assert.False(t, strings.Contains(view, "❱ Foo"))
 	})
 
 	t.Run("submit selects the hovered option", func(t *testing.T) {
@@ -280,7 +280,7 @@ func TestCharmFormsUseSlackTheme(t *testing.T) {
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
-		assert.Contains(t, view, "> A")
+		assert.Contains(t, view, "❱ A")
 	})
 
 	t.Run("multi-select form renders themed prefixes", func(t *testing.T) {
