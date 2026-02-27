@@ -24,8 +24,7 @@ import (
 
 // Slack brand colors
 var (
-	slackAubergine       = lipgloss.Color("#4a154b")
-	slackBrightAuberg    = lipgloss.Color("#611f69")
+	slackAubergine       = lipgloss.Color("#83388a")
 	slackBlue            = lipgloss.Color("#36c5f0")
 	slackGreen           = lipgloss.Color("#2eb67d")
 	slackYellow          = lipgloss.Color("#ecb22e")
@@ -43,7 +42,7 @@ func ThemeSlack() *huh.Theme {
 
 	// Focused field styles
 	t.Focused.Base = t.Focused.Base.
-		BorderForeground(slackBrightAuberg)
+		BorderForeground(slackAubergine)
 	t.Focused.Title = lipgloss.NewStyle().
 		Foreground(slackAubergine).
 		Bold(true)
@@ -100,12 +99,12 @@ func ThemeSlack() *huh.Theme {
 		Padding(0, 2).
 		MarginRight(1)
 	t.Focused.FocusedButton = button.
-		Foreground(lipgloss.Color("#fff")).
+		Foreground(lipgloss.Color("#ffffff")).
 		Background(slackAubergine).
 		Bold(true)
 	t.Focused.BlurredButton = button.
 		Foreground(slackLegalGray).
-		Background(lipgloss.Color("#000"))
+		Background(lipgloss.Color("#f8f8f8"))
 
 	// Blurred field styles — subdued version of focused
 	t.Blurred = t.Focused
