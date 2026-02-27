@@ -96,6 +96,7 @@ const (
 	ErrDenoNotFound                                  = "deno_not_found"
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
 	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
+	ErrDocsSearchFlagRequired                        = "docs_search_flag_required"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
 	ErrFailedCreatingApp                             = "failed_creating_app"
@@ -678,6 +679,12 @@ Otherwise start your app for local development with: %s`,
 	ErrDocumentationGenerationFailed: {
 		Code:    ErrDocumentationGenerationFailed,
 		Message: "Failed to generate documentation",
+	},
+
+	ErrDocsSearchFlagRequired: {
+		Code:        ErrDocsSearchFlagRequired,
+		Message:     "Invalid docs command. Did you mean to search?",
+		Remediation: fmt.Sprintf("Use --search flag: %s", style.Commandf("docs --search \"<query>\"", false)),
 	},
 
 	ErrEnterpriseNotFound: {
