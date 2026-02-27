@@ -76,6 +76,45 @@ func getPythonExecutable() string {
 	return "python3"
 }
 
+// getVenvBinDir returns the platform-specific bin directory inside a virtual environment
+func getVenvBinDir(venvPath string) string {
+	if runtime.GOOS == "windows" {
+		return filepath.Join(venvPath, "Scripts")
+	}
+	return filepath.Join(venvPath, "bin")
+}
+
+// ActivateVenvIfPresent sets the process environment variables that a Python
+// virtual environment's activate script would set, so that child processes
+// (hook scripts) inherit the activated venv. This is a no-op when no .venv
+// directory exists in projectDir.
+//
+// The three env vars (VIRTUAL_ENV, PATH, PYTHONHOME) are the stable contract
+// defined by PEP 405 (Python 3.3, 2012). Other tools (Poetry, tox, pipx) use
+// the same approach. Sourcing the shell-specific activate script (activate,
+// activate.fish, Activate.ps1) would be higher maintenance because it varies
+// by shell.
+func ActivateVenvIfPresent(fs afero.Fs, osClient types.Os, projectDir string) (bool, error) {
+	venvPath := getVenvPath(projectDir)
+	if !venvExists(fs, venvPath) {
+		return false, nil
+	}
+
+	binDir := getVenvBinDir(venvPath)
+
+	if err := osClient.Setenv("VIRTUAL_ENV", venvPath); err != nil {
+		return false, err
+	}
+	if err := osClient.Setenv("PATH", binDir+string(filepath.ListSeparator)+osClient.Getenv("PATH")); err != nil {
+		return false, err
+	}
+	if err := osClient.Unsetenv("PYTHONHOME"); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 // getPipExecutable returns the path to the pip executable in the virtual environment
 func getPipExecutable(venvPath string) string {
 	if runtime.GOOS == "windows" {
