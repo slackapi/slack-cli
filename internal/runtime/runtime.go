@@ -66,6 +66,14 @@ func New(runtimeName string) (Runtime, error) {
 	return rt, nil
 }
 
+// ActivatePythonVenvIfPresent activates a Python virtual environment if one
+// exists in the given project directory. This sets VIRTUAL_ENV, prepends the
+// venv bin directory to PATH, and unsets PYTHONHOME on the current process so
+// that child processes (hook scripts) inherit the activated venv.
+func ActivatePythonVenvIfPresent(fs afero.Fs, os types.Os, projectDir string) (bool, error) {
+	return python.ActivateVenvIfPresent(fs, os, projectDir)
+}
+
 // NewDetectProject returns a new Runtime based on the project type of dirPath
 func NewDetectProject(ctx context.Context, fs afero.Fs, dirPath string, sdkConfig hooks.SDKCLIConfig) (Runtime, error) {
 	var rt Runtime

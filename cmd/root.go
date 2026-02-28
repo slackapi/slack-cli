@@ -28,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/collaborators"
 	"github.com/slackapi/slack-cli/cmd/datastore"
 	"github.com/slackapi/slack-cli/cmd/docgen"
+	"github.com/slackapi/slack-cli/cmd/docs"
 	"github.com/slackapi/slack-cli/cmd/doctor"
 	"github.com/slackapi/slack-cli/cmd/env"
 	"github.com/slackapi/slack-cli/cmd/externalauth"
@@ -95,6 +96,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			{Command: "init", Meaning: "Initialize an existing Slack app"},
 			{Command: "run", Meaning: "Start a local development server"},
 			{Command: "deploy", Meaning: "Deploy to the Slack Platform"},
+			{Command: "docs", Meaning: "Open Slack developer docs"},
 		}),
 		Long: strings.Join([]string{
 			`{{Emoji "sparkles"}}CLI to create, run, and deploy Slack apps`,
@@ -184,6 +186,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
 	topLevelCommands := []*cobra.Command{
+		docs.NewCommand(clients),
 		doctor.NewDoctorCommand(clients),
 		feedback.NewFeedbackCommand(clients),
 	}

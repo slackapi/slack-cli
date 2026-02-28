@@ -498,6 +498,14 @@ Approval is pending review
 
 ---
 
+### docs_search_flag_required {#docs_search_flag_required}
+
+**Message**: Invalid docs command. Did you mean to search?
+
+**Remediation**: Use --search flag: `slack docs --search "<query>"`
+
+---
+
 ### documentation_generation_failed {#documentation_generation_failed}
 
 **Message**: Failed to generate documentation
@@ -1351,6 +1359,12 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 ### streaming_activity_logs_error {#streaming_activity_logs_error}
 
 **Message**: Failed to stream the most recent activity logs
+
+---
+
+### subdir_not_found {#subdir_not_found}
+
+**Message**: The specified subdirectory was not found in the template repository
 
 ---
 

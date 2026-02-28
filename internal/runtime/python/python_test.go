@@ -296,6 +296,66 @@ func Test_venvExists(t *testing.T) {
 	}
 }
 
+func Test_getVenvBinDir(t *testing.T) {
+	result := getVenvBinDir("/path/to/.venv")
+	if runtime.GOOS == "windows" {
+		require.Equal(t, filepath.Join("/path/to/.venv", "Scripts"), result)
+	} else {
+		require.Equal(t, filepath.Join("/path/to/.venv", "bin"), result)
+	}
+}
+
+func Test_ActivateVenvIfPresent(t *testing.T) {
+	tests := map[string]struct {
+		createVenv        bool
+		expectedActivated bool
+	}{
+		"activates venv when it exists": {
+			createVenv:        true,
+			expectedActivated: true,
+		},
+		"no-op when venv does not exist": {
+			createVenv:        false,
+			expectedActivated: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			projectDir := "/path/to/project"
+			venvPath := filepath.Join(projectDir, ".venv")
+
+			originalPath := "/usr/bin:/bin"
+			osMock.On("Getenv", "PATH").Return(originalPath)
+			osMock.AddDefaultMocks()
+
+			if tc.createVenv {
+				// Create the pip executable so venvExists returns true
+				pipPath := getPipExecutable(venvPath)
+				err := fs.MkdirAll(filepath.Dir(pipPath), 0755)
+				require.NoError(t, err)
+				err = afero.WriteFile(fs, pipPath, []byte(""), 0755)
+				require.NoError(t, err)
+			}
+
+			activated, err := ActivateVenvIfPresent(fs, osMock, projectDir)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedActivated, activated)
+
+			if tc.expectedActivated {
+				expectedBinDir := getVenvBinDir(venvPath)
+				osMock.AssertCalled(t, "Setenv", "VIRTUAL_ENV", venvPath)
+				osMock.AssertCalled(t, "Setenv", "PATH", expectedBinDir+string(filepath.ListSeparator)+originalPath)
+				osMock.AssertCalled(t, "Unsetenv", "PYTHONHOME")
+			} else {
+				osMock.AssertNotCalled(t, "Setenv", mock.Anything, mock.Anything)
+				osMock.AssertNotCalled(t, "Unsetenv", mock.Anything)
+			}
+		})
+	}
+}
+
 func Test_Python_InstallProjectDependencies(t *testing.T) {
 	tests := map[string]struct {
 		existingFiles      map[string]string
