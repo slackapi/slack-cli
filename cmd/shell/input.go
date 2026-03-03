@@ -77,7 +77,7 @@ func (m inputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
-		return m, nil
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
