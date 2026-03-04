@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -85,25 +84,21 @@ func TestAppAddCommandPreRun(t *testing.T) {
 				cf.SDKConfig.WorkingDirectory = "."
 			},
 		},
-		"proceeds if manifest.source is local with the bolt experiment": {
+		"proceeds if manifest.source is local": {
 			ExpectedError: nil,
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
 		},
-		"proceeds if manifest.source is remote with the bolt experiment": {
+		"proceeds if manifest.source is remote": {
 			ExpectedError: nil,
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = "."
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, string(experiment.BoltFrameworks))
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				mockProjectConfig := config.NewProjectConfigMock()
 				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceRemote, nil)
 				cm.Config.ProjectConfig = mockProjectConfig
@@ -207,6 +202,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -279,6 +275,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -343,7 +340,7 @@ func TestAppAddCommand(t *testing.T) {
 					nil,
 				)
 
-				// Mock existing and updated cache
+				// Mock existing and updated cache - hashes must match for update to proceed
 				cm.API.On(
 					"ExportAppManifest",
 					mock.Anything,
@@ -357,10 +354,11 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("GetManifestHash", mock.Anything, mock.Anything).
 					Return(cache.Hash("b4b4"), nil)
 				mockProjectCache.On("NewManifestHash", mock.Anything, mock.Anything).
-					Return(cache.Hash("xoxo"), nil)
+					Return(cache.Hash("b4b4"), nil) // matching hash allows update to proceed
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -428,6 +426,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -515,6 +514,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -599,6 +599,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -685,6 +686,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -760,6 +762,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -816,6 +819,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
@@ -872,6 +876,7 @@ func TestAppAddCommand(t *testing.T) {
 				mockProjectCache.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).
 					Return(nil)
 				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 				mockProjectConfig.On("Cache").Return(mockProjectCache)
 				cm.Config.ProjectConfig = mockProjectConfig
 			},
