@@ -207,7 +207,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 
 func deleteAppOnTerminate(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, log *logger.Logger) {
 	clients.IO.PrintDebug(ctx, "Removing the local version of this app from the workspace")
-	_, err := apps.Delete(ctx, clients, log, app.TeamDomain, app, auth)
+	_, _, err := apps.Delete(ctx, clients, app.TeamDomain, app, auth)
 	if err != nil {
 		log.Data["on_cleanup_app_install_error"] = err.Error()
 		log.Info("on_cleanup_app_install_failed")

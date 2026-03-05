@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -107,7 +106,7 @@ func TestAppsDelete(t *testing.T) {
 				}
 			}
 
-			app, err := Delete(ctx, clients, logger.New(nil), tc.app.TeamDomain, tc.app, tc.auth)
+			app, _, err := Delete(ctx, clients, tc.app.TeamDomain, tc.app, tc.auth)
 			require.NoError(t, err)
 			assert.Equal(t, tc.app, app)
 			clientsMock.API.AssertCalled(

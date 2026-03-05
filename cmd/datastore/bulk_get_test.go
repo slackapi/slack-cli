@@ -22,7 +22,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -36,11 +35,9 @@ type BulkGetPkgMock struct {
 	mock.Mock
 }
 
-func (m *BulkGetPkgMock) BulkGet(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastoreBulkGet) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["bulkGetResult"] = types.AppDatastoreBulkGetResult{}
-	log.Log("info", "on_bulk_get_result")
-	return log.SuccessEvent(), nil
+func (m *BulkGetPkgMock) BulkGet(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastoreBulkGet) (types.AppDatastoreBulkGetResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastoreBulkGetResult{}, nil
 }
 
 func TestBulkGetCommandPreRun(t *testing.T) {
@@ -185,7 +182,7 @@ func TestBulkGetCommand(t *testing.T) {
 			// Prepare mocked command
 			bulkGetMock := new(BulkGetPkgMock)
 			BulkGet = bulkGetMock.BulkGet
-			bulkGetMock.On("BulkGet", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			bulkGetMock.On("BulkGet", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastoreBulkGetResult{}, nil)
 
 			cmd := NewBulkGetCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -198,7 +195,7 @@ func TestBulkGetCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				bulkGetMock.AssertCalled(t, "BulkGet", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				bulkGetMock.AssertCalled(t, "BulkGet", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done

@@ -24,7 +24,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -99,12 +98,12 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the update
-			log := newUpdateLogger(clients, cmd)
-			event, err := Update(ctx, clients, log, query)
+			result, err := Update(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreUpdateSuccess(cmd, event)
+			_ = printUpdateResult(clients, cmd, result)
+			printDatastoreUpdateSuccess(cmd)
 			return nil
 		},
 	}
@@ -129,27 +128,6 @@ func preRunUpdateCommandFunc(ctx context.Context, clients *shared.ClientFactory,
 	return cmdutil.IsSlackHostedProject(ctx, clients)
 }
 
-func newUpdateLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_update_result":
-				updateResult := types.AppDatastoreUpdateResult{}
-				if event.Data["updateResult"] != nil {
-					updateResult = event.Data["updateResult"].(types.AppDatastoreUpdateResult)
-				}
-				if cmd != nil {
-					// TODO: this can raise an error on indentation failures, but not sure how to handle that using logger
-					_ = printUpdateResult(clients, cmd, updateResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
-
 func printUpdateResult(clients *shared.ClientFactory, cmd *cobra.Command, updateResult types.AppDatastoreUpdateResult) error {
 	var datastore = updateResult.Datastore
 	var item = updateResult.Item
@@ -169,7 +147,7 @@ func printUpdateResult(clients *shared.ClientFactory, cmd *cobra.Command, update
 	return nil
 }
 
-func printDatastoreUpdateSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreUpdateSuccess(cmd *cobra.Command) {
 	commandText := style.Commandf("datastore query <expression>", true)
 	if cmd != nil {
 		cmd.Printf(
