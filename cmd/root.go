@@ -40,10 +40,12 @@ import (
 	"github.com/slackapi/slack-cli/cmd/openformresponse"
 	"github.com/slackapi/slack-cli/cmd/platform"
 	"github.com/slackapi/slack-cli/cmd/project"
+	"github.com/slackapi/slack-cli/cmd/shell"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -134,6 +136,9 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			return updateNotification.PrintAndPromptUpdates(cmd, version.Get())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if clients.Config.WithExperimentOn(experiment.Charm) && clients.IO.IsTTY() {
+				return shell.RunShell(cmd.Context(), clients)
+			}
 			return cmd.Help()
 		},
 	}
@@ -175,9 +180,30 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		openformresponse.NewCommand(clients),
 		platform.NewCommand(clients),
 		project.NewCommand(clients),
+		shell.NewCommand(clients),
 		triggers.NewCommand(clients),
 		upgrade.NewCommand(clients),
 		versioncmd.NewCommand(clients),
+	}
+
+	// Wire up shell's BuildCommandTree so the REPL can construct fresh
+	// command trees for each iteration without a circular import.
+	shell.BuildCommandTree = func(ctx context.Context, c *shared.ClientFactory) *cobra.Command {
+		root := NewRootCommand(c, nil)
+		for _, factory := range []func(*shared.ClientFactory) *cobra.Command{
+			app.NewCommand, auth.NewCommand, collaborators.NewCommand,
+			datastore.NewCommand, docgen.NewCommand, env.NewCommand,
+			externalauth.NewCommand, fingerprint.NewCommand, function.NewCommand,
+			manifest.NewCommand, openformresponse.NewCommand, platform.NewCommand,
+			project.NewCommand, triggers.NewCommand, upgrade.NewCommand,
+			versioncmd.NewCommand,
+		} {
+			root.AddCommand(factory(c))
+		}
+		root.AddCommand(docs.NewCommand(c), doctor.NewDoctorCommand(c), feedback.NewFeedbackCommand(c))
+		c.Config.InitializeGlobalFlags(root)
+		c.Config.SetFlags(root)
+		return root
 	}
 
 	for _, subCommand := range subCommands {
