@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
@@ -522,6 +523,42 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"creates a bolt application with charm dynamic form": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.AddDefaultMocks()
+				cm.IO.On("IsTTY").Unset()
+				cm.IO.On("IsTTY").Return(true)
+				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
+					Return("my-charm-app", nil)
+				// Enable the charm experiment
+				cm.Config.ExperimentsFlag = []string{string(experiment.Charm)}
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+				// Override the charm prompt function
+				charmPromptTemplateSelectionFunc = func(_ context.Context, _ *shared.ClientFactory) (templateSelectionResult, error) {
+					return templateSelectionResult{
+						CategoryID:   "slack-cli#getting-started",
+						TemplateRepo: "slack-samples/bolt-js-starter-template",
+					}, nil
+				}
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			Teardown: func() {
+				charmPromptTemplateSelectionFunc = charmPromptTemplateSelection
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
+				require.NoError(t, err)
+				expected := create.CreateArgs{
+					AppName:  "my-charm-app",
+					Template: template,
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				// Verify that the survey-based SelectPrompt for category was NOT called
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 			},
 		},
 		"lists agent templates with agent --list flag": {
