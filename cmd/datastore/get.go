@@ -24,7 +24,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -100,12 +99,12 @@ func NewGetCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the get
-			log := newGetLogger(clients, cmd)
-			event, err := Get(ctx, clients, log, query)
+			result, err := Get(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreGetSuccess(cmd, event)
+			_ = printGetResult(clients, cmd, result)
+			printDatastoreGetSuccess(cmd)
 			return nil
 		},
 	}
@@ -129,27 +128,6 @@ func preRunGetCommandFunc(ctx context.Context, clients *shared.ClientFactory, cm
 		return nil
 	}
 	return cmdutil.IsSlackHostedProject(ctx, clients)
-}
-
-func newGetLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_get_result":
-				getResult := types.AppDatastoreGetResult{}
-				if event.Data["getResult"] != nil {
-					getResult = event.Data["getResult"].(types.AppDatastoreGetResult)
-				}
-				if cmd != nil {
-					// TODO: this can raise an error on indentation failures, but not sure how to handle that using logger
-					_ = printGetResult(clients, cmd, getResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 func printGetResult(clients *shared.ClientFactory, cmd *cobra.Command, getResult types.AppDatastoreGetResult) error {
@@ -182,7 +160,7 @@ func printGetResult(clients *shared.ClientFactory, cmd *cobra.Command, getResult
 	return nil
 }
 
-func printDatastoreGetSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreGetSuccess(cmd *cobra.Command) {
 	if outputFlag == "text" {
 		commandText := style.Commandf("datastore get <expression>", true)
 		if cmd != nil {

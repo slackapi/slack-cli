@@ -539,7 +539,7 @@ func (r *LocalServer) WatchActivityLogs(ctx context.Context, minLevel string) er
 		IdleTimeoutM: 60 * 24,
 	}
 	// Next line runs in a ticker loop (based on TailArg above) that will return if the context is cancelled or an error occurs
-	return Activity(ctx, r.clients, r.log, activityArgs)
+	return Activity(ctx, r.clients, activityArgs)
 }
 
 // Message describes a web socket incoming message

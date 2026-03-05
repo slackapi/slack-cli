@@ -17,7 +17,6 @@ package datastore
 import (
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -48,16 +47,13 @@ func TestDatastoreUpdateArguments(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			log := logger.Logger{
-				Data: map[string]interface{}{},
-			}
 			clientsMock.API.On("AppsDatastoreUpdate", mock.Anything, mock.Anything, tc.Query).
 				Return(tc.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			event, err := Update(ctx, client, &log, tc.Query)
+			result, err := Update(ctx, client, tc.Query)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tc.Results, event.Data["updateResult"])
+				assert.Equal(t, tc.Results, result)
 			}
 		})
 	}
