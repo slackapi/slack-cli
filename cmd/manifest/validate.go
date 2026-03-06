@@ -93,14 +93,14 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 					cmd.Printf(
 						"\n%s: %s\n",
 						style.Bold("App Manifest Validation Result"),
-						style.Styler().Green("Valid"),
+						style.Green("Valid"),
 					)
 					clients.IO.PrintTrace(ctx, slacktrace.ManifestValidateSuccess)
 				} else {
 					cmd.Printf(
 						"\n%s: %s\n",
 						style.Bold("App Manifest Validation Result"),
-						style.Styler().Red("InValid"),
+						style.Red("InValid"),
 					)
 				}
 			}

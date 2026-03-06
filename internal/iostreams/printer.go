@@ -89,7 +89,7 @@ func (io *IOStreams) PrintInfo(ctx context.Context, shouldTrace bool, format str
 		span, _ := opentracing.StartSpanFromContext(ctx, "printInfo", opentracing.Tag{Key: "printInfo", Value: message})
 		defer span.Finish()
 	}
-	io.Stdout.Println(style.Styler().Reset(message))
+	io.Stdout.Println(message)
 }
 
 // PrintTrace prints traceID and values to stdout if SLACK_TEST_TRACE=true

@@ -869,12 +869,12 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 			clients.IO.PrintInfo(ctx, false,
 				"\n%s: %s",
 				style.Bold("Changes confirmed"),
-				style.Styler().Green("Continuing with install."),
+				style.Green("Continuing with install."),
 			)
 			return true, nil
 		}
 
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Styler().Red("App install canceled."))
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Red("App install canceled."))
 
 		return false, nil
 	}

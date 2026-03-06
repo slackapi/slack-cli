@@ -74,9 +74,9 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	}
 
 	if clients.SDKConfig.Hooks.CheckUpdate.IsAvailable() {
-		cmd.Printf("%s You are using the latest Slack CLI and SDK versions\n", style.Styler().Green("✔").String())
+		cmd.Printf("%s You are using the latest Slack CLI and SDK versions\n", style.Green("✔"))
 	} else {
-		cmd.Printf("%s You are using the latest Slack CLI version\n", style.Styler().Green("✔").String())
+		cmd.Printf("%s You are using the latest Slack CLI version\n", style.Green("✔"))
 	}
 
 	return nil
