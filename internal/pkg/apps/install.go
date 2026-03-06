@@ -126,26 +126,26 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	start := time.Now()
 	switch {
 	case manifestUpdates:
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		_, _ = clients.IO.WriteOut().Write([]byte("\n" + style.Sectionf(style.TextSection{
 			Emoji: "books",
 			Text:  "App Manifest",
 			Secondary: []string{
 				fmt.Sprintf(`Updated app manifest for "%s" in "%s"`, slackManifest.DisplayInformation.Name, *authSession.TeamName),
 			},
-		}))
+		})))
 		clients.IO.PrintDebug(ctx, "updating app %s", app.AppID)
 		_, err := apiInterface.UpdateApp(ctx, token, app.AppID, manifest, clients.Config.ForceFlag, true)
 		if err != nil {
 			return app, "", err
 		}
 	case manifestCreates:
-		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		_, _ = clients.IO.WriteOut().Write([]byte(style.Sectionf(style.TextSection{
 			Emoji: "books",
 			Text:  "App Manifest",
 			Secondary: []string{
 				fmt.Sprintf(`Creating app manifest for "%s" in "%s"`, slackManifest.DisplayInformation.Name, *authSession.TeamName),
 			},
-		}))
+		})))
 		clients.IO.PrintDebug(ctx, "app not found so creating a new app")
 		result, err := apiInterface.CreateApp(ctx, token, manifest, false)
 		if err != nil {
@@ -207,13 +207,13 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		outgoingDomains = *manifest.OutgoingDomains
 	}
 
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	_, _ = clients.IO.WriteOut().Write([]byte("\n" + style.Sectionf(style.TextSection{
 		Emoji: "house",
 		Text:  "App Install",
 		Secondary: []string{
 			fmt.Sprintf(`Installing "%s" app to "%s"`, manifest.DisplayInformation.Name, *authSession.TeamName),
 		},
-	}))
+	})))
 	// Note - we use DeveloperAppInstall endpoint for both local (dev) runs
 	// and hosted installs https://github.com/slackapi/slack-cli/pull/456#discussion_r830272175
 
@@ -245,9 +245,9 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		err = updateIcon(ctx, clients, iconPath, app.AppID, token)
 		if err != nil {
 			clients.IO.PrintDebug(ctx, "icon error: %s", err)
-			clients.IO.PrintInfo(ctx, false, "%s", style.SectionSecondaryf("Error updating app icon: %s", err))
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", err)))
 		} else {
-			clients.IO.PrintInfo(ctx, false, "%s", style.SectionSecondaryf("Updated app icon: %s", iconPath))
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
 		}
 		// TODO: Optimization.
 		// Save a md5 hash of the icon in environments.yaml
@@ -261,7 +261,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	// update config with latest yaml hash
 	// env.Hash = slackYaml.Hash
 
-	clients.IO.PrintInfo(ctx, false, "%s", style.SectionSecondaryf("Finished in %.1fs", time.Since(start).Seconds()))
+	_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Finished in %.1fs", time.Since(start).Seconds())))
 
 	return app, types.InstallSuccess, nil
 }
@@ -447,13 +447,13 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	start := time.Now()
 	switch {
 	case manifestUpdates:
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		_, _ = clients.IO.WriteOut().Write([]byte("\n" + style.Sectionf(style.TextSection{
 			Emoji: "books",
 			Text:  "App Manifest",
 			Secondary: []string{
 				fmt.Sprintf(`Updated app manifest for "%s" in "%s"`, slackManifest.DisplayInformation.Name, *authSession.TeamName),
 			},
-		}))
+		})))
 		clients.IO.PrintDebug(ctx, "updating app %s", app.AppID)
 		_, err := apiInterface.UpdateApp(ctx, token, app.AppID, manifest, clients.Config.ForceFlag, true)
 		if err != nil {
@@ -461,13 +461,13 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 			return app, api.DeveloperAppInstallResult{}, "", err
 		}
 	case manifestCreates:
-		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		_, _ = clients.IO.WriteOut().Write([]byte(style.Sectionf(style.TextSection{
 			Emoji: "books",
 			Text:  "App Manifest",
 			Secondary: []string{
 				fmt.Sprintf(`Creating app manifest for "%s" in "%s"`, slackManifest.DisplayInformation.Name, *authSession.TeamName),
 			},
-		}))
+		})))
 		clients.IO.PrintDebug(ctx, "app not found so creating a new app")
 		result, err := apiInterface.CreateApp(ctx, token, manifest, false)
 		if err != nil {
@@ -530,13 +530,13 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		outgoingDomains = *manifest.OutgoingDomains
 	}
 
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	_, _ = clients.IO.WriteOut().Write([]byte("\n" + style.Sectionf(style.TextSection{
 		Emoji: "house",
 		Text:  "App Install",
 		Secondary: []string{
 			fmt.Sprintf(`Installing "%s" app to "%s"`, manifest.DisplayInformation.Name, *authSession.TeamName),
 		},
-	}))
+	})))
 	var installState types.InstallState
 	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
 
@@ -582,7 +582,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	// update config with latest yaml hash
 	// env.Hash = slackYaml.Hash
 
-	clients.IO.PrintInfo(ctx, false, "%s", style.SectionSecondaryf("Finished in %.1fs", time.Since(start).Seconds()))
+	_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Finished in %.1fs", time.Since(start).Seconds())))
 
 	return app, result, types.InstallSuccess, nil
 }
