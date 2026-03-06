@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -44,9 +43,6 @@ var createSubdirFlag string
 var CreateFunc = create.Create
 
 var appCreateSpinner *style.Spinner
-
-const copyTemplate = "Copying"
-const cloneTemplate = "Cloning"
 
 // promptObject describes the Github app template
 type promptObject struct {
@@ -92,9 +88,6 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 
 func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-
-	// Set up event logger
-	log := newCreateLogger(clients, cmd)
 
 	// Get optional app name passed as an arg and check for category shortcuts
 	appNameArg := ""
@@ -177,86 +170,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
-	appDirPath, err := CreateFunc(ctx, clients, log, createArgs)
+	appCreateSpinner.Update("Creating app from template", "").Start()
+	appDirPath, err := CreateFunc(ctx, clients, createArgs)
 	if err != nil {
 		printAppCreateError(clients, cmd, err)
 		return err
 	}
+	appCreateSpinner.Update(style.Sectionf(style.TextSection{Emoji: "gear", Text: "Created project directory"}), "").Stop()
 	printCreateSuccess(ctx, clients, appDirPath)
 	return nil
-}
-
-/*
-App creation is setting up local project directory
-Events: on_app_create_completion
-*/
-
-// newCreateLogger creates a logger instance to receive event notifications
-func newCreateLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_app_create_template_default":
-				printAppCreateDefaultemplate(cmd, event)
-			case "on_app_create_template_custom":
-				printAppCreateCustomTemplate(cmd, event)
-			case "on_app_create_completion":
-				printProjectCreateCompletion(clients, cmd, event)
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
-
-/*
-App creation (not Create command) is cloning the template and creating the project directory
-Events: on_app_create_template_custom, on_app_create_completion
-*/
-
-func printAppCreateDefaultemplate(cmd *cobra.Command, event *logger.LogEvent) {
-	startAppCreateSpinner(copyTemplate)
-}
-
-// Print template URL if using custom app template
-func printAppCreateCustomTemplate(cmd *cobra.Command, event *logger.LogEvent) {
-	var verb string
-	templatePath := event.DataToString("templatePath")
-	isGit := event.DataToBool("isGit")
-	gitBranch := event.DataToString("gitBranch")
-
-	if isGit {
-		verb = cloneTemplate
-	} else {
-		verb = copyTemplate
-	}
-	templateText := fmt.Sprintf(
-		"%s template from %s",
-		verb,
-		templatePath,
-	)
-
-	if gitBranch != "" {
-		templateText = fmt.Sprintf("%s (branch: %s)", templateText, gitBranch)
-	}
-
-	cmd.Print(style.Secondary(templateText), "\n\n")
-
-	startAppCreateSpinner(verb)
-}
-
-func startAppCreateSpinner(verb string) {
-	appCreateSpinner.Update(verb+" app template", "").Start()
-}
-
-// Display message and added files at completion of app creation
-func printProjectCreateCompletion(clients *shared.ClientFactory, cmd *cobra.Command, event *logger.LogEvent) {
-	createCompletionText := style.Sectionf(style.TextSection{
-		Emoji: "gear",
-		Text:  "Created project directory",
-	})
-	appCreateSpinner.Update(createCompletionText, "").Stop()
 }
 
 // printCreateSuccess outputs an informative message after creating a new app
