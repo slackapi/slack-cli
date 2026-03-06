@@ -42,8 +42,6 @@ var createSubdirFlag string
 // TODO - Find best practice, such as using an Interface and Struct to create a client
 var CreateFunc = create.Create
 
-var appCreateSpinner *style.Spinner
-
 // promptObject describes the Github app template
 type promptObject struct {
 	Title       string // "Reverse string"
@@ -159,9 +157,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}
 	}
 
-	// Set up spinners
-	appCreateSpinner = style.NewSpinner(cmd.OutOrStdout())
-
 	createArgs := create.CreateArgs{
 		AppName:   appNameArg,
 		Template:  template,
@@ -170,13 +165,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
-	appCreateSpinner.Update("Creating app from template", "").Start()
 	appDirPath, err := CreateFunc(ctx, clients, createArgs)
 	if err != nil {
-		printAppCreateError(clients, cmd, err)
 		return err
 	}
-	appCreateSpinner.Update(style.Sectionf(style.TextSection{Emoji: "gear", Text: "Created project directory"}), "").Stop()
+
 	printCreateSuccess(ctx, clients, appDirPath)
 	return nil
 }
@@ -239,16 +232,4 @@ func generateRandomAppName() string {
 	var secondRandomNum = rand.Intn(len(create.Animals))
 	var randomName = fmt.Sprintf("%s-%s-%d", create.Adjectives[firstRandomNum], create.Animals[secondRandomNum], rand.Intn(1000))
 	return randomName
-}
-
-// printAppCreateError stops the creation spinners and displays the returned error message
-func printAppCreateError(clients *shared.ClientFactory, cmd *cobra.Command, err error) {
-	ctx := cmd.Context()
-	switch {
-	case appCreateSpinner.Active():
-		errorText := fmt.Sprintf("Error creating project directory: %s", err)
-		appCreateSpinner.Update(errorText, "warning").Stop()
-	default:
-	}
-	clients.IO.PrintTrace(ctx, slacktrace.CreateError)
 }
