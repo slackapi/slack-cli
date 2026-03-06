@@ -19,35 +19,31 @@ import (
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 // Add will add an app
-func Add(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, auth types.SlackAuth, app types.App, orgGrantWorkspaceID string) (types.InstallState, types.App, error) {
+func Add(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, orgGrantWorkspaceID string) (types.InstallState, types.App, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.add")
 	defer span.Finish()
 
 	// Validate the auth
-	ctx, authSession, err := getAuthSession(ctx, clients, auth)
+	ctx, _, err := getAuthSession(ctx, clients, auth)
 	if err != nil {
 		return "", types.App{}, slackerror.Wrap(err, slackerror.ErrAddAppToProject)
 	}
-	log.Data["teamName"] = *authSession.TeamName
-
-	log.Info("on_apps_add_init")
 
 	// Add app remotely via Slack API
-	installState, app, err := addAppRemotely(ctx, clients, log, auth, app, orgGrantWorkspaceID)
+	installState, app, err := addAppRemotely(ctx, clients, auth, app, orgGrantWorkspaceID)
 	if err != nil {
 		return "", types.App{}, slackerror.Wrap(err, slackerror.ErrAddAppToProject)
 	}
 
 	// Add app to apps.json
 	if !clients.Config.SkipLocalFs() {
-		if _, err := addAppLocally(ctx, clients, log, app); err != nil {
+		if _, err := addAppLocally(ctx, clients, app); err != nil {
 			return installState, types.App{}, slackerror.Wrap(err, slackerror.ErrAddAppToProject)
 		}
 	}
@@ -56,9 +52,7 @@ func Add(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 }
 
 // addAppLocally will add the app to the project's apps file with an empty AppID, TeamID, etc
-func addAppLocally(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, app types.App) (types.App, error) {
-	log.Info("on_apps_add_local")
-
+func addAppLocally(ctx context.Context, clients *shared.ClientFactory, app types.App) (types.App, error) {
 	app, err := clients.AppClient().NewDeployed(ctx, app.TeamID)
 	if err != nil {
 		if !strings.Contains(err.Error(), slackerror.ErrAppFound) { // Ignore the error when the app already exists
@@ -69,21 +63,17 @@ func addAppLocally(ctx context.Context, clients *shared.ClientFactory, log *logg
 }
 
 // addAppRemotely will create the app manifest using the current auth account's team
-func addAppRemotely(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, auth types.SlackAuth, app types.App, orgGrantWorkspaceID string) (types.InstallState, types.App, error) {
-	log.Info("on_apps_add_remote_init")
-
+func addAppRemotely(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, orgGrantWorkspaceID string) (types.InstallState, types.App, error) {
 	if app.TeamID == "" {
 		// App hasn't been created yet and
 		// so the target team ID set by the auth
 		app.TeamID = auth.TeamID
 	}
 
-	app, installState, err := Install(ctx, clients, log, auth, CreateAppManifestAndInstall, app, orgGrantWorkspaceID)
+	app, installState, err := Install(ctx, clients, auth, CreateAppManifestAndInstall, app, orgGrantWorkspaceID)
 	if err != nil {
 		return installState, types.App{}, slackerror.Wrap(err, slackerror.ErrAppAdd)
 	}
-
-	log.Info("on_apps_add_remote_success")
 
 	if !clients.Config.SkipLocalFs() {
 		app, err = clients.AppClient().GetDeployed(ctx, app.TeamID)
