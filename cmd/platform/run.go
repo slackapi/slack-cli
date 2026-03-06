@@ -21,12 +21,10 @@ import (
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	internalapp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
-	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
@@ -144,68 +142,11 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		OrgGrantWorkspaceID: runFlags.orgGrantWorkspaceID,
 	}
 
-	log := newRunLogger(clients, cmd)
-
 	// Run dev app locally
-	if _, _, err := runFunc(ctx, clients, log, runArgs); err != nil {
+	if _, err := runFunc(ctx, clients, runArgs); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// newRunLogger creates a logger instance to receive event notifications
-func newRunLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	ctx := cmd.Context()
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_update_app_install":
-				cmd.Println(style.Secondary(fmt.Sprintf(
-					`Updating local app install for "%s"`,
-					event.DataToString("teamName"),
-				)))
-			case "on_cloud_run_connection_connected":
-				clients.IO.PrintTrace(ctx, slacktrace.PlatformRunReady)
-				cmd.Println(style.Secondary("Connected, awaiting events"))
-			case "on_cloud_run_connection_message":
-				message := event.DataToString("cloud_run_connection_message")
-				clients.IO.PrintDebug(ctx, "received: %s", message)
-			case "on_cloud_run_connection_command_error":
-				message := event.DataToString("cloud_run_connection_command_error")
-				clients.IO.PrintError(ctx, "Error: %s", message)
-			case "on_cloud_run_watch_error":
-				message := event.DataToString("cloud_run_watch_error")
-				clients.IO.PrintError(ctx, "Error: %s", message)
-			case "on_cloud_run_watch_manifest_change":
-				path := event.DataToString("cloud_run_watch_manifest_change")
-				cmd.Println(style.Secondary(fmt.Sprintf("Manifest change detected: %s, reinstalling app...", path)))
-			case "on_cloud_run_watch_manifest_change_reinstalled":
-				cmd.Println(style.Secondary("App successfully reinstalled"))
-			case "on_cloud_run_watch_manifest_change_skipped_remote":
-				path := event.DataToString("cloud_run_watch_manifest_change_skipped")
-				cmd.Println(style.Secondary(fmt.Sprintf("Manifest change detected: %s, skipped reinstalling app because manifest.source=remote", path)))
-			case "on_cloud_run_watch_app_change":
-				path := event.DataToString("cloud_run_watch_app_change")
-				cmd.Println(style.Secondary(fmt.Sprintf("App change detected: %s, restarting server...", path)))
-			case "on_cleanup_app_install_done":
-				cmd.Println(style.Secondary(fmt.Sprintf(
-					`Cleaned up local app install for "%s".`,
-					event.DataToString("teamName"),
-				)))
-			case "on_cleanup_app_install_failed":
-				cmd.Println(style.Secondary(fmt.Sprintf(
-					`Cleaning up local app install for "%s" failed.`,
-					event.DataToString("teamName"),
-				)))
-				message := event.DataToString("on_cleanup_app_install_error")
-				clients.IO.PrintWarning(ctx, "Local app cleanup failed: %s", message)
-			case "on_abort_cleanup_app_install":
-				cmd.Println(style.Secondary("Aborting, local app might not be cleaned up."))
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
