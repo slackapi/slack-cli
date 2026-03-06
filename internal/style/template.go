@@ -33,7 +33,7 @@ type TemplateData map[string]interface{}
 func getTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"Title": func(s string) string {
-			return Styler().Bold(strings.ToUpper(s)).String()
+			return Header(s)
 		},
 		"IsAlias": func(cmdName string, aliases map[string]string) bool {
 			_, exists := aliases[cmdName]
@@ -79,7 +79,7 @@ func getTemplateFuncs() template.FuncMap {
 		"GetProcessName": processName,
 		"Error": func(message string, code string) string {
 			text := fmt.Sprintf("Error: %s (%s)", message, code)
-			return Styler().Index(redDark, text).String()
+			return Red(text)
 		},
 		"Suggestion": func(remediation string) string {
 			text := fmt.Sprintf("Suggestion: %s", remediation)
@@ -92,7 +92,7 @@ func getTemplateFuncs() template.FuncMap {
 			return Selector(text)
 		},
 		"Red": func(text string) string {
-			return Styler().Index(redDark, text).String()
+			return Red(text)
 		},
 		"rpad": func(s string, padding int) string {
 			formattedString := fmt.Sprintf("%%-%ds", padding)

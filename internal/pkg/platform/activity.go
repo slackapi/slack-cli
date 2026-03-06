@@ -220,9 +220,9 @@ func prettifyActivity(activity api.Activity) (log string) {
 
 	switch activity.Level {
 	case types.WARN:
-		return style.Styler().Yellow(msg).String()
+		return style.Yellow(msg)
 	case types.ERROR, types.FATAL:
-		return style.Styler().Red(msg).String()
+		return style.Red(msg)
 	}
 
 	return msg
@@ -282,7 +282,7 @@ func externalAuthResultToString(activity api.Activity) (result string) {
 		msg = msg + "\n\t\t" + strings.ReplaceAll(activity.Payload["extra_message"].(string), "\n", "\n\t\t")
 	}
 
-	return style.Styler().Gray(13, msg).String()
+	return style.Gray(msg)
 }
 
 func externalAuthStartedToString(activity api.Activity) (result string) {
@@ -300,7 +300,7 @@ func externalAuthStartedToString(activity api.Activity) (result string) {
 		msg = msg + "\n\t" + strings.ReplaceAll(activity.Payload["code"].(string), "\n", "\n\t")
 	}
 
-	return style.Styler().Gray(13, msg).String()
+	return style.Gray(msg)
 }
 
 func externalAuthTokenFetchResult(activity api.Activity) (result string) {
@@ -318,13 +318,13 @@ func externalAuthTokenFetchResult(activity api.Activity) (result string) {
 		msg = msg + "\n\t" + strings.ReplaceAll(activity.Payload["code"].(string), "\n", "\n\t")
 	}
 
-	return style.Styler().Gray(13, msg).String()
+	return style.Gray(msg)
 }
 
 func functionDeploymentToString(activity api.Activity) (result string) {
 	msg := fmt.Sprintf("Application %sd by user '%s' on team '%s'", activity.Payload["action"], activity.Payload["user_id"], activity.Payload["team_id"])
 	msg = fmt.Sprintf("%s %s [%s] %s", style.Emoji("cloud"), activity.CreatedPretty(), activity.Level, msg)
-	return style.Styler().Gray(13, msg).String()
+	return style.Gray(msg)
 }
 
 func functionExecutionOutputToString(activity api.Activity) (result string) {
