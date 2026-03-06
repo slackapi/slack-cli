@@ -25,7 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
+	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -44,9 +44,9 @@ type DeployPkgMock struct {
 	mock.Mock
 }
 
-func (m *DeployPkgMock) Deploy(ctx context.Context, clients *shared.ClientFactory, showPrompts bool, log *logger.Logger, app types.App) (*logger.LogEvent, error) {
-	args := m.Called(ctx, clients, showPrompts, log, app)
-	return args.Get(0).(*logger.LogEvent), args.Error(1)
+func (m *DeployPkgMock) Deploy(ctx context.Context, clients *shared.ClientFactory, showPrompts bool, app types.App) (platform.DeployResult, error) {
+	args := m.Called(ctx, clients, showPrompts, app)
+	return args.Get(0).(platform.DeployResult), args.Error(1)
 }
 
 // Setup a mock for Install package
@@ -79,8 +79,8 @@ func TestDeployCommand(t *testing.T) {
 
 	deployPkgMock := new(DeployPkgMock)
 	deployFunc = deployPkgMock.Deploy
-	deployPkgMock.On("Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&logger.LogEvent{
-		Data: logger.LogData{"authSession": "{}"},
+	deployPkgMock.On("Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(platform.DeployResult{
+		AuthSession: "{}",
 	}, nil)
 
 	appSelectMock := prompts.NewAppSelectMock()
@@ -106,7 +106,7 @@ func TestDeployCommand(t *testing.T) {
 		assert.Fail(t, "cmd.Execute had unexpected error", err.Error())
 	}
 
-	deployPkgMock.AssertCalled(t, "Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	deployPkgMock.AssertCalled(t, "Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
@@ -306,15 +306,15 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 
 func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 	tests := map[string]struct {
-		event    logger.LogData
+		result   platform.DeployResult
 		expected []string
 	}{
 		"information from a workspace deploy is printed": {
-			event: logger.LogData{
-				"appName":     "DeployerApp",
-				"appID":       "A123",
-				"deployTime":  "12.34",
-				"authSession": `{"user": "slackbot", "user_id": "USLACKBOT", "team": "speck", "team_id": "T001"}`,
+			result: platform.DeployResult{
+				AppName:     "DeployerApp",
+				AppID:       "A123",
+				DeployTime:  "12.34",
+				AuthSession: `{"user": "slackbot", "user_id": "USLACKBOT", "team": "speck", "team_id": "T001"}`,
 			},
 			expected: []string{
 				"DeployerApp deployed in 12.34",
@@ -324,11 +324,11 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 			},
 		},
 		"information from an enterprise deploy is printed": {
-			event: logger.LogData{
-				"appName":     "Spackulen",
-				"appID":       "A999",
-				"deployTime":  "8.05",
-				"authSession": `{"user": "stub", "user_id": "U111", "team": "spack", "team_id": "E002", "is_enterprise_install": true, "enterprise_id": "E002"}`,
+			result: platform.DeployResult{
+				AppName:     "Spackulen",
+				AppID:       "A999",
+				DeployTime:  "8.05",
+				AuthSession: `{"user": "stub", "user_id": "U111", "team": "spack", "team_id": "E002", "is_enterprise_install": true, "enterprise_id": "E002"}`,
 			},
 			expected: []string{
 				"Spackulen deployed in 8.05",
@@ -338,8 +338,8 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 			},
 		},
 		"a message is still displayed with missing info": {
-			event: logger.LogData{
-				"authSession": "{}",
+			result: platform.DeployResult{
+				AuthSession: "{}",
 			},
 			expected: []string{
 				"Successfully deployed the app!",
@@ -348,18 +348,25 @@ func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.API.On("Host").Return("https://slacker.com")
 			clientsMock.AddDefaultMocks()
+
+			stdoutBuffer := bytes.Buffer{}
+			stdoutLogger := log.Logger{}
+			stdoutLogger.SetOutput(&stdoutBuffer)
+			clientsMock.IO.Stdout = &stdoutLogger
+
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := NewDeployCommand(clients)
-			log := &logger.LogEvent{Data: tc.event}
-			err := printDeployHostingCompletion(clients, cmd, log)
+			cmd.SetContext(ctx)
+			err := printDeployHostingCompletion(clients, cmd, tc.result)
 			assert.NoError(t, err)
 			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.PlatformDeploySuccess, mock.Anything)
-			spinnerText, _ := deploySpinner.Status()
+			output := stdoutBuffer.String()
 			for _, line := range tc.expected {
-				assert.Contains(t, spinnerText, line)
+				assert.Contains(t, output, line)
 			}
 		})
 	}
