@@ -77,7 +77,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	}
 
 	// Update local install
-	installedApp, localInstallResult, installState, err := apps.InstallLocalApp(ctx, clients, runArgs.OrgGrantWorkspaceID, log, runArgs.Auth, runArgs.App)
+	installedApp, localInstallResult, installState, err := apps.InstallLocalApp(ctx, clients, runArgs.OrgGrantWorkspaceID, runArgs.Auth, runArgs.App)
 	if err != nil {
 		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
