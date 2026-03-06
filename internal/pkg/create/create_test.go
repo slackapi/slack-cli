@@ -22,7 +22,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
@@ -301,9 +300,8 @@ func TestCreateAppFromSubdir(t *testing.T) {
 			require.NoError(t, fs.Remove(outputDir))
 
 			template := Template{path: templateDir, isLocal: true}
-			log := logger.New(func(event *logger.LogEvent) {})
 
-			err := createAppFromSubdir(t.Context(), outputDir, template, "", tc.subdir, log, fs)
+			err := createAppFromSubdir(t.Context(), outputDir, template, "", tc.subdir, fs)
 
 			if tc.expectError {
 				assert.Error(t, err)
