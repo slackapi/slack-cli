@@ -414,7 +414,7 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 					r.log.Info("on_cloud_run_watch_manifest_change")
 
 					// Reinstall the app when manifest changes
-					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", r.log, auth, app); err != nil {
+					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", auth, app); err != nil {
 						r.log.Data["cloud_run_watch_error"] = err.Error()
 						r.log.Warn("on_cloud_run_watch_error")
 					} else {

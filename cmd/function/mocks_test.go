@@ -17,7 +17,6 @@ package function_test
 import (
 	"context"
 
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/stretchr/testify/mock"
@@ -27,22 +26,22 @@ type FunctionDistributorMock struct {
 	mock.Mock
 }
 
-func (m *FunctionDistributorMock) List(ctx context.Context, clients *shared.ClientFactory, fn string, log *logger.Logger) (types.Permission, []types.FunctionDistributionUser, error) {
+func (m *FunctionDistributorMock) List(ctx context.Context, clients *shared.ClientFactory, fn string) (types.Permission, []types.FunctionDistributionUser, error) {
 	args := m.Called()
 	return args.Get(0).(types.Permission), args.Get(1).([]types.FunctionDistributionUser), args.Error(2)
 }
 
-func (m *FunctionDistributorMock) Set(ctx context.Context, clients *shared.ClientFactory, function, distributionType, users string, log *logger.Logger) (string, error) {
+func (m *FunctionDistributorMock) Set(ctx context.Context, clients *shared.ClientFactory, function, distributionType, users string) (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
 }
 
-func (m *FunctionDistributorMock) AddUsers(ctx context.Context, clients *shared.ClientFactory, function, users string, log *logger.Logger) (string, error) {
+func (m *FunctionDistributorMock) AddUsers(ctx context.Context, clients *shared.ClientFactory, function, users string) (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
 }
 
-func (m *FunctionDistributorMock) RemoveUsers(ctx context.Context, clients *shared.ClientFactory, function, users string, log *logger.Logger) (string, error) {
+func (m *FunctionDistributorMock) RemoveUsers(ctx context.Context, clients *shared.ClientFactory, function, users string) (string, error) {
 	args := m.Called()
 	return args.String(0), args.Error(1)
 }
