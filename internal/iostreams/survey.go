@@ -174,8 +174,8 @@ var InputQuestionTemplate = fmt.Sprintf(`
     {{- if and .Help (not .ShowHelp)}}{{ print .Config.HelpInput }} for help {{- if and .Suggest}}, {{end}}{{end -}}
     {{- if and .Suggest }}{{color "cyan"}}{{ print .Config.SuggestInput }} for suggestions{{end -}}
   ]{{color "reset"}} {{end}}
-  {{- if .Default}}{{color "white"}}({{.Default}}) {{color "reset"}}{{end}}
-{{- end}}`, blue())
+  {{- if .Default}}{{color "%s"}}({{.Default}}) {{color "reset"}}{{end}}
+{{- end}}`, blue(), gray())
 
 // InputPromptConfig holds additional config for an Input prompt
 type InputPromptConfig struct {
