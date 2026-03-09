@@ -548,7 +548,7 @@ func TestCreateCommand(t *testing.T) {
 					return nil
 				}
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			Teardown: func() {
@@ -561,7 +561,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-charm-app",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that the survey-based SelectPrompt for category was NOT called
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 			},
@@ -586,7 +586,7 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"user cancelled"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"lists agent templates with agent --list flag": {
