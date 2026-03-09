@@ -35,7 +35,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/deputil"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
@@ -59,7 +58,7 @@ type CreateArgs struct {
 }
 
 // Create will create a new Slack app on the file system and app manifest on the Slack API.
-func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, createArgs CreateArgs) (appDirPath string, err error) {
+func Create(ctx context.Context, clients *shared.ClientFactory, createArgs CreateArgs) (appDirPath string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.create")
 	defer span.Finish()
 
@@ -133,11 +132,11 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	}
 
 	if subdir != "" {
-		if err := createAppFromSubdir(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, subdir, log, clients.Fs); err != nil {
+		if err := createAppFromSubdir(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, subdir, clients.Fs); err != nil {
 			return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
 		}
 	} else {
-		if err := createApp(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, log, clients.Fs); err != nil {
+		if err := createApp(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, clients.Fs); err != nil {
 			return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
 		}
 	}
@@ -160,9 +159,6 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	// CLI created projects always default to config.ManifestSourceLocal.
 	InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
 	clients.IO.PrintTrace(ctx, slacktrace.CreateDependenciesSuccess)
-
-	// Notify listeners that app directory is created
-	log.Log("info", "on_app_create_completion")
 
 	return appDirPath, nil
 }
@@ -236,15 +232,7 @@ func parentDirExists(dirPath string) (bool, error) {
 }
 
 // createApp will create the app directory using the default app template or a specified template URL.
-func createApp(ctx context.Context, dirPath string, template Template, gitBranch string, log *logger.Logger, fs afero.Fs) error {
-	log.Data["templatePath"] = template.path
-	log.Data["isGit"] = template.isGit
-	log.Data["gitBranch"] = gitBranch
-	log.Data["isSample"] = template.IsSample()
-
-	// Notify listeners
-	log.Log("info", "on_app_create_template")
-
+func createApp(ctx context.Context, dirPath string, template Template, gitBranch string, fs afero.Fs) error {
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
@@ -383,7 +371,7 @@ func normalizeSubdir(subdir string) (string, error) {
 
 // createAppFromSubdir clones the full template into a temp directory, then copies
 // only the specified subdirectory to the final project path.
-func createAppFromSubdir(ctx context.Context, dirPath string, template Template, gitBranch string, subdir string, log *logger.Logger, fs afero.Fs) error {
+func createAppFromSubdir(ctx context.Context, dirPath string, template Template, gitBranch string, subdir string, fs afero.Fs) error {
 	tmpDirRoot := afero.GetTempDir(fs, "")
 	tmpDir, err := afero.TempDir(fs, tmpDirRoot, "slack-create-")
 	if err != nil {
@@ -392,7 +380,7 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	defer func() { _ = fs.RemoveAll(tmpDir) }()
 
 	cloneDir := filepath.Join(tmpDir, "repo")
-	if err := createApp(ctx, cloneDir, template, gitBranch, log, fs); err != nil {
+	if err := createApp(ctx, cloneDir, template, gitBranch, fs); err != nil {
 		return err
 	}
 

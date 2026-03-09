@@ -24,7 +24,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -39,8 +38,8 @@ type CreateClientMock struct {
 	mock.Mock
 }
 
-func (m *CreateClientMock) Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, createArgs create.CreateArgs) (string, error) {
-	args := m.Called(ctx, clients, log, createArgs)
+func (m *CreateClientMock) Create(ctx context.Context, clients *shared.ClientFactory, createArgs create.CreateArgs) (string, error) {
+	args := m.Called(ctx, clients, createArgs)
 	return args.String(0), args.Error(1)
 }
 
@@ -70,7 +69,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
 					Return("my-app", nil)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -80,7 +79,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-app",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
@@ -107,7 +106,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
 					Return("my-deno-app", nil)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -117,7 +116,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-deno-app",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
@@ -137,7 +136,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
 					Return("my-agent", nil)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -147,7 +146,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-agent",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
@@ -166,7 +165,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -176,7 +175,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-agent-app",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since name was provided as arg
@@ -203,7 +202,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -213,7 +212,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "agent",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since name was provided as arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -239,7 +238,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -249,7 +248,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "agent",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt WAS called (shortcut was not triggered)
 				cm.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since --name flag was provided
@@ -269,7 +268,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -279,7 +278,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-custom-name", // --name flag overrides
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (shortcut was triggered)
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 			},
@@ -304,7 +303,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -314,7 +313,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-name", // --name flag overrides "my-project" positional arg
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since --name flag was provided
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -332,7 +331,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -342,7 +341,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-name", // --name flag overrides "my-project" positional arg
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (agent shortcut was triggered)
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since --name flag was provided
@@ -372,13 +371,13 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
 					Return("", nil)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 				// When the user accepts the default (empty return), the generated name is used
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
 					return args.AppName != ""
 				}))
 			},
@@ -404,14 +403,14 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Should NOT prompt for name since not a TTY
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 				// Should still call Create with a non-empty generated name
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
 					return args.AppName != ""
 				}))
 			},
@@ -436,7 +435,7 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -446,7 +445,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-project",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since name was provided as positional arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -459,7 +458,7 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"The --subdir flag requires the --template flag"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"passes subdir flag to create function": {
@@ -482,13 +481,13 @@ func TestCreateCommand(t *testing.T) {
 						nil,
 					)
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
 					return args.AppName != "" && args.Template == template && args.Subdir == "apps/my-app"
 				}))
 			},
@@ -503,7 +502,7 @@ func TestCreateCommand(t *testing.T) {
 				"Getting started",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"lists all templates with --list flag": {
@@ -525,7 +524,7 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/deno-starter-template",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"creates a bolt application with charm dynamic form": {
@@ -549,7 +548,7 @@ func TestCreateCommand(t *testing.T) {
 					return nil
 				}
 				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
 			},
 			Teardown: func() {
@@ -562,7 +561,7 @@ func TestCreateCommand(t *testing.T) {
 					AppName:  "my-charm-app",
 					Template: template,
 				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, expected)
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that the survey-based SelectPrompt for category was NOT called
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 			},
@@ -587,7 +586,7 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{"user cancelled"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"lists agent templates with agent --list flag": {
@@ -602,7 +601,7 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/bolt-python-assistant-template",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 				output := cm.GetCombinedOutput()
 				assert.NotContains(t, output, "Getting started")
 				assert.NotContains(t, output, "Automation apps")
