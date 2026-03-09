@@ -19,12 +19,11 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
-func Update(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, request types.AppDatastoreUpdate) (*logger.LogEvent, error) {
+func Update(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastoreUpdate) (types.AppDatastoreUpdateResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.update")
 	defer span.Finish()
 
@@ -33,12 +32,8 @@ func Update(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 
 	updateResult, err := clients.API().AppsDatastoreUpdate(ctx, token, request)
 	if err != nil {
-		return nil, err
+		return types.AppDatastoreUpdateResult{}, err
 	}
 
-	// Notify listeners
-	log.Data["updateResult"] = updateResult
-	log.Log("info", "on_update_result")
-
-	return log.SuccessEvent(), nil
+	return updateResult, nil
 }

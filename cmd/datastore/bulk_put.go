@@ -26,7 +26,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -117,12 +116,12 @@ func NewBulkPutCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the put
-			log := newBulkPutLogger(clients, cmd)
-			event, err := BulkPut(ctx, clients, log, query)
+			result, err := BulkPut(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreBulkPutSuccess(cmd, event)
+			_ = printBulkPutResult(clients, cmd, result)
+			printDatastoreBulkPutSuccess(cmd)
 			return nil
 		},
 	}
@@ -146,27 +145,6 @@ func preRunBulkPutCommandFunc(ctx context.Context, clients *shared.ClientFactory
 		return nil
 	}
 	return cmdutil.IsSlackHostedProject(ctx, clients)
-}
-
-func newBulkPutLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_bulk_put_result":
-				bulkPutResult := types.AppDatastoreBulkPutResult{}
-				if event.Data["bulkPutResult"] != nil {
-					bulkPutResult = event.Data["bulkPutResult"].(types.AppDatastoreBulkPutResult)
-				}
-				if cmd != nil {
-					// TODO: this can raise an error on indentation failures, but not sure how to handle that using logger
-					_ = printBulkPutResult(clients, cmd, bulkPutResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 func printBulkPutResult(clients *shared.ClientFactory, cmd *cobra.Command, putResult types.AppDatastoreBulkPutResult) error {
@@ -196,7 +174,7 @@ func printBulkPutResult(clients *shared.ClientFactory, cmd *cobra.Command, putRe
 	return nil
 }
 
-func printDatastoreBulkPutSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreBulkPutSuccess(cmd *cobra.Command) {
 	commandText := style.Commandf("datastore query <expression>", true)
 	if cmd != nil {
 		cmd.Printf(
