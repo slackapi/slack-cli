@@ -167,11 +167,11 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	return appDirPath, nil
 }
 
-// nonAlphanumericRe matches any character that is not a lowercase letter, digit, or dash.
-var nonAlphanumericRe = regexp.MustCompile(`[^a-z0-9-]+`)
-
 // multiDashRe matches consecutive dashes.
 var multiDashRe = regexp.MustCompile(`-{2,}`)
+
+// nonAlphanumericRe matches any character that is not a lowercase letter, digit, or dash.
+var nonAlphanumericRe = regexp.MustCompile(`[^a-z0-9-]+`)
 
 // getAppDirName will validate and return the app's directory name in kebab-case
 func getAppDirName(appName string) (string, error) {
