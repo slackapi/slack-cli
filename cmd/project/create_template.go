@@ -108,7 +108,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	if categoryShortcut == "agent" {
 		categoryID = "slack-cli#ai-apps"
 	} else if clients.Config.WithExperimentOn(experiment.Charm) {
-		result, err := charmPromptTemplateSelectionFunc(ctx, clients)
+		result, err := charmPromptTemplateSelection(ctx, clients)
 		if err != nil {
 			return create.Template{}, slackerror.ToSlackError(err)
 		}

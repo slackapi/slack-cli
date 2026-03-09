@@ -31,8 +31,9 @@ type templateSelectionResult struct {
 	TemplateRepo string // e.g. "slack-samples/bolt-js-starter-template"
 }
 
-// charmPromptTemplateSelectionFunc is a package-level function variable for test overriding.
-var charmPromptTemplateSelectionFunc = charmPromptTemplateSelection
+// runForm executes a huh form. It is a package-level variable so tests can
+// override the interactive terminal dependency while testing the surrounding logic.
+var runForm = func(f *huh.Form) error { return f.Run() }
 
 // buildTemplateSelectionForm constructs a single-screen huh form where the category
 // and template selects are in the same group. Changing the category dynamically
@@ -84,7 +85,7 @@ func charmPromptTemplateSelection(ctx context.Context, clients *shared.ClientFac
 
 	var category string
 	var template string
-	err := buildTemplateSelectionForm(clients, &category, &template).Run()
+	err := runForm(buildTemplateSelectionForm(clients, &category, &template))
 	if err != nil {
 		return templateSelectionResult{}, slackerror.ToSlackError(err)
 	}

@@ -15,6 +15,8 @@
 package project
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,6 +24,7 @@ import (
 	"github.com/charmbracelet/x/ansi"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // doAllUpdates recursively processes all commands returned by form updates,
@@ -158,5 +161,98 @@ func TestBuildTemplateSelectionForm(t *testing.T) {
 
 		view := f.View()
 		assert.Contains(t, view, "┃")
+	})
+}
+
+func TestCharmPromptTemplateSelection(t *testing.T) {
+	originalRunForm := runForm
+	t.Cleanup(func() { runForm = originalRunForm })
+
+	t.Run("returns selected category and template", func(t *testing.T) {
+		cm := shared.NewClientsMock()
+		cm.AddDefaultMocks()
+		clients := shared.NewClientFactory(cm.MockClientFactory())
+
+		runForm = func(f *huh.Form) error {
+			doAllUpdates(f, f.Init())
+			// Select first category (Starter app)
+			_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			doAllUpdates(f, cmd)
+			// Select first template (Bolt for JavaScript)
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			doAllUpdates(f, cmd)
+			return nil
+		}
+
+		result, err := charmPromptTemplateSelection(context.Background(), clients)
+		require.NoError(t, err)
+		assert.Equal(t, "slack-cli#getting-started", result.CategoryID)
+		assert.Equal(t, "slack-samples/bolt-js-starter-template", result.TemplateRepo)
+	})
+
+	t.Run("returns error when form fails", func(t *testing.T) {
+		cm := shared.NewClientsMock()
+		cm.AddDefaultMocks()
+		clients := shared.NewClientFactory(cm.MockClientFactory())
+
+		runForm = func(f *huh.Form) error {
+			return fmt.Errorf("user cancelled")
+		}
+
+		_, err := charmPromptTemplateSelection(context.Background(), clients)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "user cancelled")
+	})
+
+	t.Run("returns view more samples selection", func(t *testing.T) {
+		cm := shared.NewClientsMock()
+		cm.AddDefaultMocks()
+		clients := shared.NewClientFactory(cm.MockClientFactory())
+
+		runForm = func(f *huh.Form) error {
+			doAllUpdates(f, f.Init())
+			// Navigate to "View more samples" (4th option)
+			_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			doAllUpdates(f, cmd)
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			doAllUpdates(f, cmd)
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			doAllUpdates(f, cmd)
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			doAllUpdates(f, cmd)
+			// Select "Browse sample gallery..."
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			doAllUpdates(f, cmd)
+			return nil
+		}
+
+		result, err := charmPromptTemplateSelection(context.Background(), clients)
+		require.NoError(t, err)
+		assert.Equal(t, viewMoreSamples, result.CategoryID)
+		assert.Equal(t, viewMoreSamples, result.TemplateRepo)
+	})
+
+	t.Run("selects AI agent category and template", func(t *testing.T) {
+		cm := shared.NewClientsMock()
+		cm.AddDefaultMocks()
+		clients := shared.NewClientFactory(cm.MockClientFactory())
+
+		runForm = func(f *huh.Form) error {
+			doAllUpdates(f, f.Init())
+			// Navigate to "AI Agent app" (2nd option)
+			_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			doAllUpdates(f, cmd)
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			doAllUpdates(f, cmd)
+			// Select first template (Bolt for JavaScript)
+			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			doAllUpdates(f, cmd)
+			return nil
+		}
+
+		result, err := charmPromptTemplateSelection(context.Background(), clients)
+		require.NoError(t, err)
+		assert.Equal(t, "slack-cli#ai-apps", result.CategoryID)
+		assert.Equal(t, "slack-samples/bolt-js-assistant-template", result.TemplateRepo)
 	})
 }
