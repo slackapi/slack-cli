@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -37,11 +36,9 @@ type DeletePkgMock struct {
 	mock.Mock
 }
 
-func (m *DeletePkgMock) Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastoreDelete) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["deleteResult"] = types.AppDatastoreDeleteResult{}
-	log.Log("info", "on_delete_result")
-	return log.SuccessEvent(), nil
+func (m *DeletePkgMock) Delete(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastoreDelete) (types.AppDatastoreDeleteResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastoreDeleteResult{}, nil
 }
 
 func TestDeleteCommandPreRun(t *testing.T) {
@@ -213,7 +210,7 @@ func TestDeleteCommand(t *testing.T) {
 			// Create mocked command
 			deleteMock := new(DeletePkgMock)
 			Delete = deleteMock.Delete
-			deleteMock.On("Delete", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			deleteMock.On("Delete", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastoreDeleteResult{}, nil)
 
 			cmd := NewDeleteCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -229,7 +226,7 @@ func TestDeleteCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				deleteMock.AssertCalled(t, "Delete", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				deleteMock.AssertCalled(t, "Delete", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done

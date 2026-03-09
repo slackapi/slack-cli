@@ -22,7 +22,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -90,12 +89,12 @@ func NewBulkGetCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the get
-			log := newBulkGetLogger(clients, cmd, query)
-			event, err := BulkGet(ctx, clients, log, query)
+			result, err := BulkGet(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreBulkGetSuccess(cmd, event)
+			_ = printBulkGetResult(clients, cmd, query, result)
+			printDatastoreBulkGetSuccess(cmd)
 			return nil
 		},
 	}
@@ -119,27 +118,6 @@ func preRunBulkGetCommandFunc(ctx context.Context, clients *shared.ClientFactory
 		return nil
 	}
 	return cmdutil.IsSlackHostedProject(ctx, clients)
-}
-
-func newBulkGetLogger(clients *shared.ClientFactory, cmd *cobra.Command, request types.AppDatastoreBulkGet) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_bulk_get_result":
-				getResult := types.AppDatastoreBulkGetResult{}
-				if event.Data["bulkGetResult"] != nil {
-					getResult = event.Data["bulkGetResult"].(types.AppDatastoreBulkGetResult)
-				}
-				if cmd != nil {
-					// TODO: this can raise an error on indentation failures, but not sure how to handle that using logger
-					_ = printBulkGetResult(clients, cmd, request, getResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 func printBulkGetResult(clients *shared.ClientFactory, cmd *cobra.Command, request types.AppDatastoreBulkGet, getResult types.AppDatastoreBulkGetResult) error {
@@ -189,5 +167,5 @@ func printBulkGetResult(clients *shared.ClientFactory, cmd *cobra.Command, reque
 	return nil
 }
 
-func printDatastoreBulkGetSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreBulkGetSuccess(cmd *cobra.Command) {
 }

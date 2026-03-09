@@ -27,7 +27,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -126,12 +125,12 @@ func NewQueryCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the query
-			log := newQueryLogger(clients, cmd)
-			event, err := Query(ctx, clients, log, query)
+			result, err := Query(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreQuerySuccess(cmd, event)
+			_ = printQueryResult(clients, cmd, result)
+			printDatastoreQuerySuccess(cmd)
 			return nil
 		},
 	}
@@ -168,27 +167,6 @@ func preRunQueryCommandFunc(ctx context.Context, clients *shared.ClientFactory, 
 	return cmdutil.IsSlackHostedProject(ctx, clients)
 }
 
-func newQueryLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_query_result":
-				queryResult := types.AppDatastoreQueryResult{}
-				if event.Data["queryResult"] != nil {
-					queryResult = event.Data["queryResult"].(types.AppDatastoreQueryResult)
-				}
-				if cmd != nil {
-					// TODO: this can raise an error on indentation failures, but not sure how to handle that using logger
-					_ = printQueryResult(clients, cmd, queryResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
-
 func printQueryResult(clients *shared.ClientFactory, cmd *cobra.Command, queryResult types.AppDatastoreQueryResult) error {
 	var datastore = queryResult.Datastore
 	switch outputFlag {
@@ -223,7 +201,7 @@ func printQueryResult(clients *shared.ClientFactory, cmd *cobra.Command, queryRe
 	return nil
 }
 
-func printDatastoreQuerySuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreQuerySuccess(cmd *cobra.Command) {
 	if outputFlag == "text" {
 		commandText := style.Commandf("datastore put <expression>", true)
 		if cmd != nil {

@@ -20,7 +20,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -94,30 +93,14 @@ func RunUninstallCommand(ctx context.Context, clients *shared.ClientFactory, cmd
 		}
 	}
 
-	// Set up event logger and execute the command
-	log := newUninstallLogger(clients, cmd, teamDomain)
-	log.Data["appID"] = selection.App.AppID
-	env, err := apps.Uninstall(ctx, clients, log, teamDomain, selection.App, selection.Auth)
+	// Execute the command
+	env, teamName, err := apps.Uninstall(ctx, clients, teamDomain, selection.App, selection.Auth)
+	if err != nil {
+		return env, err
+	}
+	printUninstallApp(ctx, clients, selection.App.AppID, teamName)
 
-	return env, err
-}
-
-// newUninstallLogger creates a logger instance to receive event notifications
-func newUninstallLogger(clients *shared.ClientFactory, cmd *cobra.Command, envName string) *logger.Logger {
-	ctx := cmd.Context()
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			appID := event.DataToString("appID")
-			teamName := event.DataToString("teamName")
-			switch event.Name {
-			case "on_apps_uninstall_app_success":
-				printUninstallApp(ctx, clients, appID, teamName)
-			default:
-				// Ignore the event
-			}
-		},
-	)
+	return env, nil
 }
 
 func confirmUninstall(ctx context.Context, IO iostreams.IOStreamer, cmd *cobra.Command, selection prompts.SelectedApp) (bool, error) {
