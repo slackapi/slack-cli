@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -32,7 +31,7 @@ type listMockObject struct {
 	mock.Mock
 }
 
-func (m *listMockObject) MockListFunction(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger) ([]types.SlackAuth, error) {
+func (m *listMockObject) MockListFunction(ctx context.Context, clients *shared.ClientFactory) ([]types.SlackAuth, error) {
 	args := m.Called()
 	return args.Get(0).([]types.SlackAuth), args.Error(1)
 }

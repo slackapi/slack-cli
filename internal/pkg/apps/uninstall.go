@@ -19,7 +19,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -27,7 +26,7 @@ import (
 
 // Uninstall will uninstall the app that belongs to the teamDomain from the backend.
 // It will not modify the local project files (apps.json).
-func Uninstall(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, teamDomain string, app types.App, auth types.SlackAuth) (types.App, error) {
+func Uninstall(ctx context.Context, clients *shared.ClientFactory, teamDomain string, app types.App, auth types.SlackAuth) (types.App, string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.uninstall")
 	defer span.Finish()
 
@@ -37,32 +36,27 @@ func Uninstall(ctx context.Context, clients *shared.ClientFactory, log *logger.L
 	// Get Team Name
 	ctx, authSession, err := getAuthSession(ctx, clients, auth)
 	if err != nil {
-		return types.App{}, slackerror.Wrap(err, slackerror.ErrAppRemove)
-	}
-	if authSession.TeamName != nil {
-		log.Data["teamName"] = *authSession.TeamName
+		return types.App{}, "", slackerror.Wrap(err, slackerror.ErrAppRemove)
 	}
 
-	// Emit starting to remove app (requires teamName)
-	log.Info("on_apps_uninstall_init")
+	var teamName string
+	if authSession.TeamName != nil {
+		teamName = *authSession.TeamName
+	}
 
 	if app.AppID == "" {
 		err = slackerror.New("app for team " + teamDomain + " not found")
-		return types.App{}, slackerror.Wrap(err, slackerror.ErrAppRemove)
+		return types.App{}, "", slackerror.Wrap(err, slackerror.ErrAppRemove)
 	}
 
 	// Get token
 	token := config.GetContextToken(ctx)
 
 	// Uninstall the app
-	log.Info("on_apps_uninstall_app_init")
 	err = clients.API().UninstallApp(ctx, token, app.AppID, app.TeamID)
 	if err != nil {
-		return app, err
+		return app, teamName, err
 	}
-	log.Info("on_apps_uninstall_app_success")
 
-	// Not modifying apps.json / apps.dev.json
-
-	return app, nil
+	return app, teamName, nil
 }

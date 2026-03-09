@@ -23,7 +23,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -32,22 +31,22 @@ import (
 )
 
 // ManifestValidate validates the manifest from the project "get-manifest" hook
-func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, app types.App, token string) (*logger.LogEvent, slackerror.Warnings, error) {
+func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, app types.App, token string) (bool, slackerror.Warnings, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.ManifestValidate")
 	defer span.Finish()
 
 	if strings.TrimSpace(token) == "" {
-		return nil, nil, slackerror.New(slackerror.ErrAuthToken)
+		return false, nil, slackerror.New(slackerror.ErrAuthToken)
 	}
 
 	_, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {
-		return nil, nil, slackerror.New(slackerror.ErrAuthToken).WithRootCause(err)
+		return false, nil, slackerror.New(slackerror.ErrAuthToken).WithRootCause(err)
 	}
 
 	slackManifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
-		return nil, nil, slackerror.Wrap(err, slackerror.ErrAppManifestGenerate)
+		return false, nil, slackerror.Wrap(err, slackerror.ErrAppManifestGenerate)
 	}
 
 	// validate the manifest
@@ -58,15 +57,14 @@ func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, log *l
 	}
 
 	if err := HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
-		return nil, nil, err
+		return false, nil, err
 	}
 
 	if err != nil || len(validationResult.Warnings) > 0 {
-		return nil, validationResult.Warnings, err
+		return false, validationResult.Warnings, err
 	}
 
-	log.Data["isValid"] = true
-	return log.SuccessEvent(), nil, nil
+	return true, nil, nil
 }
 
 // HandleConnectorNotInstalled attempts install the certified app associated with any connector_not_installed error

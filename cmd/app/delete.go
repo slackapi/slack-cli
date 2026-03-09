@@ -20,7 +20,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -99,30 +98,14 @@ func RunDeleteCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 		}
 	}
 
-	// Set up event logger and execute the command
-	log := newDeleteLogger(clients, cmd, team)
-	log.Data["appID"] = selection.App.AppID
-	env, err := apps.Delete(ctx, clients, log, team, selection.App, selection.Auth)
+	// Execute the command
+	env, teamName, err := apps.Delete(ctx, clients, team, selection.App, selection.Auth)
+	if err != nil {
+		return env, err
+	}
+	printDeleteApp(ctx, clients, selection.App.AppID, teamName)
 
-	return env, err
-}
-
-// newDeleteLogger creates a logger instance to receive event notifications
-func newDeleteLogger(clients *shared.ClientFactory, cmd *cobra.Command, envName string) *logger.Logger {
-	ctx := cmd.Context()
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			appID := event.DataToString("appID")
-			teamName := event.DataToString("teamName")
-			switch event.Name {
-			case "on_apps_delete_app_success":
-				printDeleteApp(ctx, clients, appID, teamName)
-			default:
-				// Ignore the event
-			}
-		},
-	)
+	return env, nil
 }
 
 func confirmDeletion(ctx context.Context, IO iostreams.IOStreamer, app prompts.SelectedApp) (bool, error) {

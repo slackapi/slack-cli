@@ -18,7 +18,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -32,7 +31,7 @@ type ListPkgMock struct {
 	mock.Mock
 }
 
-func (m *ListPkgMock) List(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger) ([]types.SlackAuth, error) {
+func (m *ListPkgMock) List(ctx context.Context, clients *shared.ClientFactory) ([]types.SlackAuth, error) {
 	m.Called()
 	return []types.SlackAuth{}, nil
 }

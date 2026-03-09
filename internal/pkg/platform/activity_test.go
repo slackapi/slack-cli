@@ -21,7 +21,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -240,7 +239,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 			// Setup default mock actions
 			clientsMock.AddDefaultMocks()
 
-			err := Activity(ctxMock, clients, &logger.Logger{}, tc.Args)
+			err := Activity(ctxMock, clients, tc.Args)
 			if tc.ExpectedError != nil {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.ExpectedError.Error(), err)

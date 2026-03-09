@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -37,11 +36,9 @@ type UpdatePkgMock struct {
 	mock.Mock
 }
 
-func (m *UpdatePkgMock) Update(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastoreUpdate) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["updateResult"] = types.AppDatastoreUpdateResult{}
-	log.Log("info", "on_update_result")
-	return log.SuccessEvent(), nil
+func (m *UpdatePkgMock) Update(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastoreUpdate) (types.AppDatastoreUpdateResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastoreUpdateResult{}, nil
 }
 
 func TestUpdateCommandPreRun(t *testing.T) {
@@ -329,7 +326,7 @@ func TestUpdateCommand(t *testing.T) {
 			// Prepare mocked command
 			updateMock := new(UpdatePkgMock)
 			Update = updateMock.Update
-			updateMock.On("Update", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			updateMock.On("Update", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastoreUpdateResult{}, nil)
 
 			cmd := NewUpdateCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -345,7 +342,7 @@ func TestUpdateCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				updateMock.AssertCalled(t, "Update", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				updateMock.AssertCalled(t, "Update", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done
