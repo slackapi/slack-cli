@@ -19,12 +19,11 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
-func BulkDelete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, request types.AppDatastoreBulkDelete) (*logger.LogEvent, error) {
+func BulkDelete(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastoreBulkDelete) (types.AppDatastoreBulkDeleteResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.bulkDelete")
 	defer span.Finish()
 
@@ -33,12 +32,8 @@ func BulkDelete(ctx context.Context, clients *shared.ClientFactory, log *logger.
 
 	deleteResult, err := clients.API().AppsDatastoreBulkDelete(ctx, token, request)
 	if err != nil {
-		return nil, err
+		return types.AppDatastoreBulkDeleteResult{}, err
 	}
 
-	// Notify listeners
-	log.Data["bulkDeleteResult"] = deleteResult
-	log.Log("info", "on_bulk_delete_result")
-
-	return log.SuccessEvent(), nil
+	return deleteResult, nil
 }

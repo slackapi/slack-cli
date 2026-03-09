@@ -25,7 +25,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -41,11 +40,9 @@ type BulkPutPkgMock struct {
 	mock.Mock
 }
 
-func (m *BulkPutPkgMock) BulkPut(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastoreBulkPut) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["bulkPutResult"] = types.AppDatastoreBulkPutResult{}
-	log.Log("info", "on_bulk_put_result")
-	return log.SuccessEvent(), nil
+func (m *BulkPutPkgMock) BulkPut(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastoreBulkPut) (types.AppDatastoreBulkPutResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastoreBulkPutResult{}, nil
 }
 
 func TestBulkPutCommandPreRun(t *testing.T) {
@@ -202,7 +199,7 @@ func TestBulkPutCommand(t *testing.T) {
 			// Prepare mocked command
 			bulkPutMock := new(BulkPutPkgMock)
 			BulkPut = bulkPutMock.BulkPut
-			bulkPutMock.On("BulkPut", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			bulkPutMock.On("BulkPut", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastoreBulkPutResult{}, nil)
 
 			cmd := NewBulkPutCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -215,7 +212,7 @@ func TestBulkPutCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				bulkPutMock.AssertCalled(t, "BulkPut", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				bulkPutMock.AssertCalled(t, "BulkPut", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done

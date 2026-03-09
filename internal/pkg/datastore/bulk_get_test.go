@@ -17,7 +17,6 @@ package datastore
 import (
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -60,16 +59,13 @@ func TestDatastoreBulkGetArguments(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
-			log := logger.Logger{
-				Data: map[string]interface{}{},
-			}
 			clientsMock.API.On("AppsDatastoreBulkGet", mock.Anything, mock.Anything, tc.Query).
 				Return(tc.Results, nil)
 			client := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			event, err := BulkGet(ctx, client, &log, tc.Query)
+			result, err := BulkGet(ctx, client, tc.Query)
 			if assert.NoError(t, err) {
-				assert.Equal(t, tc.Results, event.Data["bulkGetResult"])
+				assert.Equal(t, tc.Results, result)
 			}
 		})
 	}
