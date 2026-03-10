@@ -157,7 +157,6 @@ func hasValidDeploymentMethod(
 // deployHook executes the provided program and streams IO for the process
 func deployHook(ctx context.Context, clients *shared.ClientFactory) (platform.DeployResult, error) {
 	result := platform.DeployResult{
-		// FIXME: Include app information
 		AuthSession: "{}",
 	}
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
