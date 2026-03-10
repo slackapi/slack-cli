@@ -1681,3 +1681,54 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 		})
 	}
 }
+
+func TestContinueDespiteWarning(t *testing.T) {
+	tests := map[string]struct {
+		warnings       slackerror.Warnings
+		confirmPrompt  bool
+		expectedResult bool
+	}{
+		"user confirms breaking change": {
+			warnings: slackerror.Warnings{
+				{Code: "breaking_change", Message: "something changed"},
+			},
+			confirmPrompt:  true,
+			expectedResult: true,
+		},
+		"user declines breaking change": {
+			warnings: slackerror.Warnings{
+				{Code: "breaking_change", Message: "something changed"},
+			},
+			confirmPrompt:  false,
+			expectedResult: false,
+		},
+		"non-breaking warning continues without prompt": {
+			warnings: slackerror.Warnings{
+				{Code: "some_warning", Message: "just a warning"},
+			},
+			expectedResult: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.AddDefaultMocks()
+			output := &bytes.Buffer{}
+			clientsMock.IO.Stdout.SetOutput(output)
+			stderr := &bytes.Buffer{}
+			clientsMock.IO.Stderr.SetOutput(stderr)
+			clientsMock.IO.On(
+				"ConfirmPrompt",
+				mock.Anything,
+				"Confirm changes?",
+				false,
+			).Return(tc.confirmPrompt, nil)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			result, err := continueDespiteWarning(ctx, clients, tc.warnings)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedResult, result)
+		})
+	}
+}

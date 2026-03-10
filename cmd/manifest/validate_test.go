@@ -37,8 +37,8 @@ type ManifestValidatePkgMock struct {
 }
 
 func (m *ManifestValidatePkgMock) ManifestValidate(ctx context.Context, clients *shared.ClientFactory, app types.App, token string) (bool, slackerror.Warnings, error) {
-	m.Called(ctx, clients, app, token)
-	return true, nil, nil
+	args := m.Called(ctx, clients, app, token)
+	return args.Bool(0), nil, args.Error(2)
 }
 
 func TestManifestValidateCommand(t *testing.T) {
@@ -63,7 +63,7 @@ func TestManifestValidateCommand(t *testing.T) {
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
 
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil, nil)
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
@@ -138,7 +138,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 	// Mock the manifest validate package
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil, nil)
 
 	// Should execute without error
 	err := cmd.ExecuteContext(ctx)
@@ -200,12 +200,36 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 	// Mock the manifest validate package
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil, nil)
 
 	// Should execute without error
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
 	clientsMock.Auth.AssertCalled(t, "SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestManifestValidateCommand_InvalidManifest(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
+		clients.SDKConfig = hooks.NewSDKConfigMock()
+	})
+
+	cmd := NewValidateCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+
+	appSelectMock := prompts.NewAppSelectMock()
+	appSelectPromptFunc = appSelectMock.AppSelectPrompt
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
+
+	manifestValidatePkgMock := new(ManifestValidatePkgMock)
+	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, nil, nil)
+
+	err := cmd.ExecuteContext(ctx)
+	require.NoError(t, err)
 }
 
 func TestManifestValidateCommand_HandleOtherErrors(t *testing.T) {
