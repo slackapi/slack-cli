@@ -264,6 +264,60 @@ func TestSurveyIcons(t *testing.T) {
 * Example commands
  */
 
+func TestStyleFlags(t *testing.T) {
+	defer func() {
+		ToggleStyles(false)
+		ToggleCharm(false)
+	}()
+	ToggleStyles(true)
+	ToggleCharm(true)
+
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"short and long flag with type and description": {
+			input:    "  -s, --long string   Description text",
+			expected: Yellow("  -s, --long string   ") + Secondary("Description text"),
+		},
+		"long-only flag with description": {
+			input:    "      --verbose       Enable verbose output",
+			expected: Yellow("      --verbose       ") + Secondary("Enable verbose output"),
+		},
+		"plain text without flag pattern returned unchanged": {
+			input:    "some plain text",
+			expected: "some plain text",
+		},
+		"empty string returned unchanged": {
+			input:    "",
+			expected: "",
+		},
+		"multiline flag output": {
+			input:    "  -a, --all           Show all\n      --verbose       Enable verbose",
+			expected: Yellow("  -a, --all           ") + Secondary("Show all") + "\n" + Yellow("      --verbose       ") + Secondary("Enable verbose"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := StyleFlags(tc.input)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func TestStyleFlags_CharmDisabled(t *testing.T) {
+	defer func() {
+		ToggleStyles(false)
+		ToggleCharm(false)
+	}()
+	ToggleStyles(false)
+	ToggleCharm(false)
+
+	input := "  -s, --long string   Description text"
+	actual := StyleFlags(input)
+	assert.Equal(t, input, actual)
+}
+
 func Test_ExampleCommandsf(t *testing.T) {
 	tests := map[string]struct {
 		name     string
@@ -363,6 +417,67 @@ func Test_ExampleTemplatef(t *testing.T) {
 			assert.Equal(t, strings.Join(tc.expected, "\n"), actual)
 		})
 	}
+}
+
+func Test_styleExampleLine(t *testing.T) {
+	defer func() {
+		ToggleStyles(false)
+		ToggleCharm(false)
+	}()
+	ToggleStyles(true)
+	ToggleCharm(true)
+
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"full-line comment is styled as secondary": {
+			input:    "# Create a new project",
+			expected: Secondary("# Create a new project"),
+		},
+		"command with inline comment splits styling": {
+			input:    "$ slack create  # Create a project",
+			expected: Yellow("$ ") + CommandText("slack create") + Secondary("  # Create a project"),
+		},
+		"command without comment is styled as command": {
+			input:    "$ slack create my-app",
+			expected: Yellow("$ ") + CommandText("slack create my-app"),
+		},
+		"plain text without prefix is returned as-is": {
+			input:    "some other text",
+			expected: "some other text",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := styleExampleLine(tc.input)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func Test_ExampleTemplatef_Charm(t *testing.T) {
+	defer func() {
+		ToggleStyles(false)
+		ToggleCharm(false)
+	}()
+	ToggleStyles(true)
+	ToggleCharm(true)
+
+	template := []string{
+		"# Create a new project from a selected template",
+		"$ slack create",
+		"",
+		"$ slack create my-project -t sample/repo-url  # Create a named project",
+	}
+	expected := []string{
+		fmt.Sprintf("  %s", Secondary("# Create a new project from a selected template")),
+		fmt.Sprintf("  %s%s", Yellow("$ "), CommandText("slack create")),
+		"",
+		fmt.Sprintf("  %s%s%s", Yellow("$ "), CommandText("slack create my-project -t sample/repo-url"), Secondary("  # Create a named project")),
+	}
+	actual := ExampleTemplatef(strings.Join(template, "\n"))
+	assert.Equal(t, strings.Join(expected, "\n"), actual)
 }
 
 /*

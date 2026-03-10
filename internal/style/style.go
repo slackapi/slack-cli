@@ -57,6 +57,11 @@ func ToggleCharm(active bool) {
 	isCharmEnabled = active
 }
 
+// IsCharmEnabled reports whether lipgloss/charm styling is active
+func IsCharmEnabled() bool {
+	return isCharmEnabled
+}
+
 // render applies a lipgloss style to text, returning plain text when colors are disabled.
 func render(s lipgloss.Style, text string) string {
 	if !isColorShown {
@@ -127,7 +132,7 @@ func LinkText(path string) string {
 	if !isCharmEnabled {
 		return legacyLinkText(path)
 	}
-	return render(lipgloss.NewStyle().Foreground(slackDescriptionText).Underline(true), path)
+	return render(lipgloss.NewStyle().Foreground(slackPool).Underline(true), path)
 }
 
 func Selector(text string) string {
@@ -148,7 +153,7 @@ func Warning(text string) string {
 	if !isCharmEnabled {
 		return legacyWarning(text)
 	}
-	return render(lipgloss.NewStyle().Foreground(slackYellow).Bold(true), text)
+	return render(lipgloss.NewStyle().Foreground(slackGreen).Bold(true), text)
 }
 
 func Header(text string) string {

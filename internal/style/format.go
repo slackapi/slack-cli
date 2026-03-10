@@ -253,17 +253,64 @@ func ExampleCommandsf(commands []ExampleCommand) string {
 // ExampleTemplatef indents and styles command examples for the help messages
 func ExampleTemplatef(template string) string {
 	lines := strings.Split(template, "\n")
-	re := regexp.MustCompile(`(^#.*$)|(  #.*$)`)
+	reComment := regexp.MustCompile(`(^#.*$)|(  #.*$)`)
 	examples := []string{}
 	for _, cmd := range lines {
 		example := ""
 		if cmd != "" {
-			styled := re.ReplaceAllStringFunc(cmd, Secondary)
-			example = fmt.Sprintf("  %s", styled)
+			if isCharmEnabled {
+				example = fmt.Sprintf("  %s", styleExampleLine(cmd))
+			} else {
+				styled := reComment.ReplaceAllStringFunc(cmd, Secondary)
+				example = fmt.Sprintf("  %s", styled)
+			}
 		}
 		examples = append(examples, example)
 	}
 	return strings.Join(examples, "\n")
+}
+
+// styleExampleLine styles an example line for charm, splitting command and comment portions.
+func styleExampleLine(line string) string {
+	// Full-line comments
+	if strings.HasPrefix(line, "#") {
+		return Secondary(line)
+	}
+	// Split inline comments: "$ slack login    # Log in"
+	if idx := strings.Index(line, "  #"); idx >= 0 {
+		command := line[:idx]
+		comment := line[idx:]
+		return styleExampleCommand(command) + Secondary(comment)
+	}
+	// No comment — style the whole line as a command if it starts with $
+	if strings.HasPrefix(line, "$") {
+		return styleExampleCommand(line)
+	}
+	return line
+}
+
+// styleExampleCommand styles a "$ command" string with a green prompt and blue command text.
+func styleExampleCommand(cmd string) string {
+	if strings.HasPrefix(cmd, "$ ") {
+		return Yellow("$ ") + CommandText(cmd[2:])
+	}
+	return CommandText(cmd)
+}
+
+// StyleFlags post-processes Cobra's FlagUsages() output to colorize flag names and descriptions.
+// Each line is expected to have the format: "  -s, --long TYPE    Description text"
+func StyleFlags(text string) string {
+	re := regexp.MustCompile(`^(\s{2,6}-\S.*?\s{2,})(\S.*)$`)
+	lines := strings.Split(text, "\n")
+	styled := make([]string, len(lines))
+	for i, line := range lines {
+		if m := re.FindStringSubmatch(line); m != nil {
+			styled[i] = Yellow(m[1]) + Secondary(m[2])
+		} else {
+			styled[i] = line
+		}
+	}
+	return strings.Join(styled, "\n")
 }
 
 // LocalRunDisplayName appends the (local) tag to apps created by the run command

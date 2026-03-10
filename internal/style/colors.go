@@ -34,23 +34,23 @@ var lightDark = lipgloss.LightDark(hasDarkBG)
 
 // Brand colors — primary on light backgrounds, secondary on dark backgrounds
 var (
-	slackAubergine color.Color = lightDark(lipgloss.Color("#4a154b"), lipgloss.Color("#b26ec3")) // Core/Aubergine → Sec/Mauve
-	slackBlue      color.Color = lightDark(lipgloss.Color("#36c5f0"), lipgloss.Color("#78d7dd")) // Core/Slack blue → Sec/Pool
-	slackGreen     color.Color = lipgloss.Color("#2eb67d")                                       // Core/Slack green (reads well on both)
-	slackYellow    color.Color = lightDark(lipgloss.Color("#ecb22e"), lipgloss.Color("#ffd57e")) // Core/Slack yellow → Sec/Sandbar
-	slackRed       color.Color = lightDark(lipgloss.Color("#e01e5a"), lipgloss.Color("#f2606a")) // Core/Slack red → Sec/Salmon
-	slackRedDark   color.Color = lightDark(lipgloss.Color("#5e1237"), lipgloss.Color("#f2606a")) // Sec/Berry → Sec/Salmon
+	slackAubergine color.Color = lightDark(lipgloss.Color("#39063a"), lipgloss.Color("#eabdfb")) // Core/Aubergine → Sec/Mauve
+	slackBlue      color.Color = lightDark(lipgloss.Color("#36c5f0"), lipgloss.Color("#67d7f8")) // Core/Slack blue → Sec/Pool
+	slackGreen     color.Color = lightDark(lipgloss.Color("#2eb67d"), lipgloss.Color("#74dbaf")) // Core/Slack green (reads well on both)
+	slackYellow    color.Color = lightDark(lipgloss.Color("#ecb22e"), lipgloss.Color("#f4c360")) // Core/Slack yellow → Sec/Sandbar
+	slackRed       color.Color = lightDark(lipgloss.Color("#e01e5a"), lipgloss.Color("#ffa3c2")) // Core/Slack red → Sec/Salmon
+	slackRedDark   color.Color = lightDark(lipgloss.Color("#5e1237"), lipgloss.Color("#edb4ce")) // Sec/Berry → Sec/Salmon
 )
 
 // Supplementary colors
 var (
-	slackPool      color.Color = lipgloss.Color("#78d7dd")                                       // Sec/Pool
+	slackPool      color.Color = lipgloss.Color("#78d7dd")
 	slackLegalGray color.Color = lightDark(lipgloss.Color("#5e5d60"), lipgloss.Color("#eaeaea")) // Sec/Legal → Sec/Inactive gray
 )
 
 // Adaptive text colors
 var (
 	slackOptionText      color.Color = lightDark(lipgloss.Color("#1d1c1d"), lipgloss.Color("#f4ede4")) // Core/Black → Core/Horchatta
-	slackDescriptionText color.Color = lightDark(lipgloss.Color("#454447"), lipgloss.Color("#5e5d60")) // Sec/Small text → Sec/Inactive gray
-	slackPlaceholderText color.Color = lightDark(lipgloss.Color("#5e5d60"), lipgloss.Color("#5e5d60")) // Sec/Legal → Sec/Inactive gray
+	slackDescriptionText color.Color = lightDark(lipgloss.Color("#454447"), lipgloss.Color("#eaeaea")) // Sec/Small text → Sec/Inactive gray
+	slackPlaceholderText color.Color = lightDark(lipgloss.Color("#ffd57e"), lipgloss.Color("#fed4be")) // Sec/Legal → Core/Horchatta
 )

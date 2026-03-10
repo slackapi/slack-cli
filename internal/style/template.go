@@ -57,6 +57,13 @@ func getTemplateFuncs() template.FuncMap {
 			if len(experiments) == 0 {
 				return ExampleTemplatef("None")
 			}
+			if isCharmEnabled {
+				styled := make([]string, len(experiments))
+				for i, exp := range experiments {
+					styled[i] = "  " + Red(exp)
+				}
+				return strings.Join(styled, "\n")
+			}
 			return ExampleTemplatef(strings.Join(experiments, "\n"))
 		},
 		"HasAliasSubcommands": func(parentName string, aliases map[string]string) bool {
@@ -100,6 +107,49 @@ func getTemplateFuncs() template.FuncMap {
 		},
 		"trimTrailingWhitespaces": func(s string) string {
 			return strings.TrimRightFunc(s, unicode.IsSpace)
+		},
+		// Charm-only template functions — return plain text when charm is off
+		"ToDescription": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Secondary(text)
+		},
+		"ToSecondary": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Secondary(text)
+		},
+		"ToPrompt": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Yellow(text)
+		},
+		"ToGroupName": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Warning(text)
+		},
+		"ToAliasParent": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Red(text)
+		},
+		"ToDarken": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Darken(text)
+		},
+		"ToFlags": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return StyleFlags(text)
 		},
 	}
 }
