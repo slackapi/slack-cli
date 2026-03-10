@@ -305,69 +305,23 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 }
 
 func TestDeployCommand_PrintHostingCompletion(t *testing.T) {
-	tests := map[string]struct {
-		result   platform.DeployResult
-		expected []string
-	}{
-		"information from a workspace deploy is printed": {
-			result: platform.DeployResult{
-				AppName:     "DeployerApp",
-				AppID:       "A123",
-				DeployTime:  "12.34",
-				AuthSession: `{"user": "slackbot", "user_id": "USLACKBOT", "team": "speck", "team_id": "T001"}`,
-			},
-			expected: []string{
-				"DeployerApp deployed in 12.34",
-				"Dashboard:  https://slacker.com/apps/A123",
-				"App Owner:  slackbot (USLACKBOT)",
-				"Workspace:  speck (T001)",
-			},
-		},
-		"information from an enterprise deploy is printed": {
-			result: platform.DeployResult{
-				AppName:     "Spackulen",
-				AppID:       "A999",
-				DeployTime:  "8.05",
-				AuthSession: `{"user": "stub", "user_id": "U111", "team": "spack", "team_id": "E002", "is_enterprise_install": true, "enterprise_id": "E002"}`,
-			},
-			expected: []string{
-				"Spackulen deployed in 8.05",
-				"Dashboard   :  https://slacker.com/apps/A999",
-				"App Owner   :  stub (U111)",
-				"Organization:  spack (E002)",
-			},
-		},
-		"a message is still displayed with missing info": {
-			result: platform.DeployResult{
-				AuthSession: "{}",
-			},
-			expected: []string{
-				"Successfully deployed the app!",
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := slackcontext.MockContext(t.Context())
-			clientsMock := shared.NewClientsMock()
-			clientsMock.API.On("Host").Return("https://slacker.com")
-			clientsMock.AddDefaultMocks()
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
 
-			stdoutBuffer := bytes.Buffer{}
-			stdoutLogger := log.Logger{}
-			stdoutLogger.SetOutput(&stdoutBuffer)
-			clientsMock.IO.Stdout = &stdoutLogger
+	stdoutBuffer := bytes.Buffer{}
+	stdoutLogger := log.Logger{}
+	stdoutLogger.SetOutput(&stdoutBuffer)
+	clientsMock.IO.Stdout = &stdoutLogger
 
-			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			cmd := NewDeployCommand(clients)
-			cmd.SetContext(ctx)
-			err := printDeployHostingCompletion(clients, cmd, tc.result)
-			assert.NoError(t, err)
-			clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.PlatformDeploySuccess, mock.Anything)
-			output := stdoutBuffer.String()
-			for _, line := range tc.expected {
-				assert.Contains(t, output, line)
-			}
-		})
-	}
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	cmd := NewDeployCommand(clients)
+	cmd.SetContext(ctx)
+	err := printDeployHostingCompletion(clients, cmd)
+	assert.NoError(t, err)
+	clientsMock.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.PlatformDeploySuccess, mock.Anything)
+	output := stdoutBuffer.String()
+	assert.Contains(t, output, "Visit Slack to try out your live app!")
+	assert.Contains(t, output, "deploy")
+	assert.Contains(t, output, "activity --tail")
 }

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/cmd/triggers"
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -91,7 +92,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	}
 
 	// deploy the app
-	appID, deployTime, err := deployApp(ctx, clients, app)
+	appID, deployTime, err := deployApp(ctx, clients, app, manifest, authSession)
 	if err != nil {
 		return DeployResult{}, slackerror.Wrap(err, slackerror.ErrAppDeploy)
 	}
@@ -111,7 +112,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	}, nil
 }
 
-func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App) (string, string, error) {
+func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App, manifest types.SlackYaml, authSession api.AuthSession) (string, string, error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "deployApp")
 	defer span.Finish()
@@ -138,24 +139,39 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	var result packageResult
 
 	// TODO: Packaging the app can happen in parallel with getting the presigned S3 post params
+	packageSpinner := style.NewSpinner(clients.IO.WriteErr())
+	defer func() {
+		packageSpinner.Stop()
+	}()
 
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Secondary("Packaging app for deployment"))
+	packageSpinner.Update("Packaging app for deployment", "").Start()
+
 	result, err = packageArchive(ctx, clients, projDir, app.AppID)
 	if err != nil {
 		return "", "", fmt.Errorf("error packaging project: %s", err)
 	}
+
 	var elapsedPackage = time.Since(startPackage)
 	packagedSize := fmt.Sprintf("%.3fMB", float64(result.Size)/1000000)
 	packagedTime := fmt.Sprintf("%.1fs", elapsedPackage.Seconds())
-
 	defer os.Remove(result.Filename)
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+
+	time.Sleep(5 * time.Second)
+
+	packageSuccessText := style.Sectionf(style.TextSection{
 		Emoji:     "gift",
 		Text:      "App packaged and ready to deploy",
 		Secondary: []string{fmt.Sprintf("%s was packaged in %s", packagedSize, packagedTime)},
-	}))
+	})
+	packageSpinner.Update(packageSuccessText, "").Stop()
 
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Secondary("Deploying to Slack Platform (this will take a moment)"))
+	deploySpinner := style.NewSpinner(clients.IO.WriteErr())
+	defer func() {
+		deploySpinner.Stop()
+	}()
+
+	deploySpinnerText := "Deploying to Slack Platform" + style.Secondary(" (this will take a moment)")
+	deploySpinner.Update(deploySpinnerText, "").Start()
 
 	//upload zip to s3
 	var startDeploy = time.Now()
@@ -187,7 +203,47 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 		_ = clients.API().AddVariable(ctx, token, app.AppID, "SLACK_API_URL", apiHostURL)
 	}
 
+	successfulDeployText := deploySuccessText(clients, app, manifest, authSession, deployTime)
+	deploySpinner.Update(successfulDeployText, "").Stop()
+
 	return app.AppID, deployTime, nil
+}
+
+// deploySuccessText formats the success message and app information for a deployed app
+func deploySuccessText(clients *shared.ClientFactory, app types.App, manifest types.SlackYaml, authSession api.AuthSession, deployTime string) string {
+	parsedAppInfo := map[string]string{}
+
+	host := clients.API().Host()
+	if app.AppID != "" && host != "" {
+		parsedAppInfo["Dashboard"] = fmt.Sprintf("%s/apps/%s", host, app.AppID)
+	}
+
+	if authSession.UserName != nil && authSession.UserID != nil {
+		userInfo := fmt.Sprintf("%s (%s)", *authSession.UserName, *authSession.UserID)
+		parsedAppInfo["App Owner"] = userInfo
+	}
+
+	if authSession.TeamName != nil && authSession.TeamID != nil {
+		workspaceInfo := fmt.Sprintf("%s (%s)", *authSession.TeamName, *authSession.TeamID)
+		if authSession.EnterpriseID != nil {
+			parsedAppInfo["Organization"] = workspaceInfo
+		} else {
+			parsedAppInfo["Workspace"] = workspaceInfo
+		}
+	}
+
+	var finalMessage string
+	if manifest.DisplayInformation.Name != "" && deployTime != "" {
+		finalMessage = fmt.Sprintf("%s deployed in %s", style.Bold(manifest.DisplayInformation.Name), deployTime)
+	} else {
+		finalMessage = "Successfully deployed the app!"
+	}
+
+	return style.Sectionf(style.TextSection{
+		Emoji:     "rocket",
+		Text:      finalMessage,
+		Secondary: []string{style.Mapf(parsedAppInfo)},
+	})
 }
 
 // DeployResult contains data collected during the deploy process for output

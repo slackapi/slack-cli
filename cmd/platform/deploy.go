@@ -16,14 +16,12 @@ package platform
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/feedback"
 	"github.com/slackapi/slack-cli/cmd/triggers"
-	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
@@ -83,22 +81,21 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 				return nil
 			}
 
-			var result platform.DeployResult
 			switch {
 			case clients.SDKConfig.Hooks.Deploy.IsAvailable():
-				result, err = deployHook(ctx, clients)
+				_, err = deployHook(ctx, clients)
 				if err != nil {
 					return err
 				}
 			default:
 				showTriggers := triggers.ShowTriggers(clients, deployFlags.hideTriggers)
-				result, err = deployFunc(ctx, clients, showTriggers, app)
+				_, err = deployFunc(ctx, clients, showTriggers, app)
 				if err != nil {
 					return err
 				}
 			}
 
-			err = printDeployHostingCompletion(clients, cmd, result)
+			err = printDeployHostingCompletion(clients, cmd)
 			if err != nil {
 				return err
 			}
@@ -198,50 +195,8 @@ func deployHook(ctx context.Context, clients *shared.ClientFactory) (platform.De
 	return result, nil
 }
 
-func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Command, result platform.DeployResult) error {
+func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	var ctx = cmd.Context()
-	var authSession api.AuthSession
-
-	err := json.Unmarshal([]byte(result.AuthSession), &authSession)
-	if err != nil {
-		return err
-	}
-
-	parsedAppInfo := map[string]string{}
-
-	host := clients.API().Host()
-	if result.AppID != "" && host != "" {
-		parsedAppInfo["Dashboard"] = fmt.Sprintf("%s/apps/%s", host, result.AppID)
-	}
-
-	if authSession.UserName != nil && authSession.UserID != nil {
-		userInfo := fmt.Sprintf("%s (%s)", *authSession.UserName, *authSession.UserID)
-		parsedAppInfo["App Owner"] = userInfo
-	}
-
-	if authSession.TeamName != nil && authSession.TeamID != nil {
-		workspaceInfo := fmt.Sprintf("%s (%s)", *authSession.TeamName, *authSession.TeamID)
-		if authSession.EnterpriseID != nil {
-			parsedAppInfo["Organization"] = workspaceInfo
-		} else {
-			parsedAppInfo["Workspace"] = workspaceInfo
-		}
-	}
-
-	var finalMessage string
-	if result.AppName != "" && result.DeployTime != "" {
-		finalMessage = fmt.Sprintf("%s deployed in %s", style.Bold(result.AppName), result.DeployTime)
-	} else {
-		finalMessage = "Successfully deployed the app!"
-	}
-
-	successfulDeployText := style.Sectionf(style.TextSection{
-		Emoji:     "rocket",
-		Text:      finalMessage,
-		Secondary: []string{style.Mapf(parsedAppInfo)},
-	})
-
-	clients.IO.PrintInfo(ctx, false, "\n%s", successfulDeployText)
 
 	clients.IO.PrintTrace(ctx, slacktrace.PlatformDeploySuccess)
 
