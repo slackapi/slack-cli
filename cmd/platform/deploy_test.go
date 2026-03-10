@@ -25,7 +25,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -44,9 +43,9 @@ type DeployPkgMock struct {
 	mock.Mock
 }
 
-func (m *DeployPkgMock) Deploy(ctx context.Context, clients *shared.ClientFactory, showPrompts bool, app types.App) (platform.DeployResult, error) {
+func (m *DeployPkgMock) Deploy(ctx context.Context, clients *shared.ClientFactory, showPrompts bool, app types.App) error {
 	args := m.Called(ctx, clients, showPrompts, app)
-	return args.Get(0).(platform.DeployResult), args.Error(1)
+	return args.Error(0)
 }
 
 // Setup a mock for Install package
@@ -79,9 +78,7 @@ func TestDeployCommand(t *testing.T) {
 
 	deployPkgMock := new(DeployPkgMock)
 	deployFunc = deployPkgMock.Deploy
-	deployPkgMock.On("Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(platform.DeployResult{
-		AuthSession: "{}",
-	}, nil)
+	deployPkgMock.On("Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{}, nil)

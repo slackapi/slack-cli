@@ -89,7 +89,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 				}
 			default:
 				showTriggers := triggers.ShowTriggers(clients, deployFlags.hideTriggers)
-				_, err = deployFunc(ctx, clients, showTriggers, app)
+				err = deployFunc(ctx, clients, showTriggers, app)
 				if err != nil {
 					return err
 				}

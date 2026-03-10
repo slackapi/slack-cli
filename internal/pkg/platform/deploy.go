@@ -17,7 +17,6 @@ package platform
 import (
 	"archive/zip"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -37,25 +36,25 @@ import (
 )
 
 // Deploy will package and upload an app to the Slack Platform
-func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers bool, app types.App) (DeployResult, error) {
+func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers bool, app types.App) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.deploy")
 	defer span.Finish()
 
 	// Get auth token
 	token := config.GetContextToken(ctx)
 	if strings.TrimSpace(token) == "" {
-		return DeployResult{}, slackerror.New(slackerror.ErrAuthToken)
+		return slackerror.New(slackerror.ErrAuthToken)
 	}
 
 	if app.IsNew() {
 		err := slackerror.New("no app found to deploy")
-		return DeployResult{}, slackerror.Wrap(err, slackerror.ErrAppDeploy)
+		return slackerror.Wrap(err, slackerror.ErrAppDeploy)
 	}
 
 	// Validate auth session
 	authSession, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {
-		return DeployResult{}, slackerror.Wrap(err, slackerror.ErrSlackAuth)
+		return slackerror.Wrap(err, slackerror.ErrSlackAuth)
 	}
 
 	// Add enterprise_id returned from auth session to app if exists
@@ -66,8 +65,6 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 		// TODO: should we also SetAppEnterpriseID for metrics tracking?
 	}
 
-	authString, _ := json.Marshal(authSession)
-	authSessionJSON := string(authString)
 	if authSession.UserID != nil {
 		ctx = config.SetContextUserID(ctx, *authSession.UserID)
 		clients.EventTracker.SetAuthUserID(*authSession.UserID)
@@ -79,37 +76,31 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	// updating an app manifest should happen before an app is deployed.
 	manifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, token, app.AppID)
 	if err != nil {
-		return DeployResult{}, slackerror.Wrap(err, slackerror.ErrAppManifestAccess)
+		return slackerror.Wrap(err, slackerror.ErrAppManifestAccess)
 	}
-	appName := manifest.DisplayInformation.Name
 
 	if showTriggers {
 		// Generate an optional trigger when none exist
 		_, err = triggers.TriggerGenerate(ctx, clients, app)
 		if err != nil {
-			return DeployResult{}, slackerror.Wrap(err, slackerror.ErrAppDeploy)
+			return slackerror.Wrap(err, slackerror.ErrAppDeploy)
 		}
 	}
 
 	// deploy the app
-	appID, deployTime, err := deployApp(ctx, clients, app, manifest, authSession)
+	_, _, err = deployApp(ctx, clients, app, manifest, authSession)
 	if err != nil {
-		return DeployResult{}, slackerror.Wrap(err, slackerror.ErrAppDeploy)
+		return slackerror.Wrap(err, slackerror.ErrAppDeploy)
 	}
 
 	// Save app to apps.json
 	if !clients.Config.SkipLocalFs() {
 		if err := clients.AppClient().SaveDeployed(ctx, app); err != nil {
-			return DeployResult{}, slackerror.Wrap(err, slackerror.ErrAppDeploy)
+			return slackerror.Wrap(err, slackerror.ErrAppDeploy)
 		}
 	}
 
-	return DeployResult{
-		AppName:     appName,
-		AppID:       appID,
-		DeployTime:  deployTime,
-		AuthSession: authSessionJSON,
-	}, nil
+	return nil
 }
 
 func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App, manifest types.SlackYaml, authSession api.AuthSession) (string, string, error) {
@@ -244,14 +235,6 @@ func deploySuccessText(clients *shared.ClientFactory, app types.App, manifest ty
 		Text:      finalMessage,
 		Secondary: []string{style.Mapf(parsedAppInfo)},
 	})
-}
-
-// DeployResult contains data collected during the deploy process for output
-type DeployResult struct {
-	AppName     string
-	AppID       string
-	DeployTime  string
-	AuthSession string
 }
 
 type packageResult struct {
