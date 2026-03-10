@@ -77,7 +77,7 @@ type DocsOutput struct {
 // ProgrammaticSearchOutput represents the output from local docs search
 type ProgrammaticSearchOutput = search.SearchResponse
 
-// findDocsRepo tries to locate the docs repository  
+// findDocsRepo tries to locate the docs repository
 func findDocsRepo() string {
 	return search.FindDocsRepo()
 }
@@ -109,12 +109,12 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	if cmd.Flags().Changed("search") {
 		if len(args) > 0 {
 			query = strings.Join(args, " ")
-			
+
 			// Check output format
 			if outputFormat == "json" {
 				return runProgrammaticSearchCommand(clients, ctx, query)
 			}
-			
+
 			// Default browser search
 			encodedQuery := url.QueryEscape(query)
 			docsURL = fmt.Sprintf("https://docs.slack.dev/search/?q=%s", encodedQuery)
@@ -140,14 +140,14 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 			Query: query,
 			Type:  docType,
 		}
-		
+
 		jsonBytes, err := json.MarshalIndent(output, "", "  ")
 		if err != nil {
 			return slackerror.New(slackerror.ErrDocsJSONEncodeFailed)
 		}
-		
+
 		fmt.Println(string(jsonBytes))
-		
+
 		// Still print trace for analytics
 		if cmd.Flags().Changed("search") {
 			traceValue := query
@@ -155,7 +155,7 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 		} else {
 			clients.IO.PrintTrace(ctx, slacktrace.DocsSuccess)
 		}
-		
+
 		return nil
 	}
 
