@@ -348,6 +348,38 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
+		"name prompt includes placeholder with generated name": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0,
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0,
+						},
+						nil,
+					)
+				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
+					Return("my-app", nil)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// Verify that InputPrompt was called with a config that has a non-empty Placeholder
+				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.MatchedBy(func(cfg iostreams.InputPromptConfig) bool {
+					return cfg.Placeholder != ""
+				}))
+			},
+		},
 		"user accepts default name from prompt": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)

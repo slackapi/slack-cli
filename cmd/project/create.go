@@ -142,8 +142,9 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	if appNameArg == "" {
 		if clients.IO.IsTTY() {
 			defaultName := generateRandomAppName()
-			cmd.Print(style.Secondary(fmt.Sprintf("  Press Enter to use the generated name: %s", defaultName)), "\n")
-			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{})
+			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{
+				Placeholder: defaultName,
+			})
 			if err != nil {
 				return err
 			}
