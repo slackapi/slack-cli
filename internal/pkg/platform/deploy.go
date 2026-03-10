@@ -88,7 +88,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	}
 
 	// deploy the app
-	_, _, err = deployApp(ctx, clients, app, manifest, authSession)
+	err = deployApp(ctx, clients, app, manifest, authSession)
 	if err != nil {
 		return slackerror.Wrap(err, slackerror.ErrAppDeploy)
 	}
@@ -103,7 +103,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	return nil
 }
 
-func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App, manifest types.SlackYaml, authSession api.AuthSession) (string, string, error) {
+func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App, manifest types.SlackYaml, authSession api.AuthSession) error {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "deployApp")
 	defer span.Finish()
@@ -111,17 +111,17 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	var token = config.GetContextToken(ctx)
 
 	if app.AppID == "" {
-		return "", "", fmt.Errorf("failed to deploy: %s", slackerror.New("app was not created"))
+		return fmt.Errorf("failed to deploy: %s", slackerror.New("app was not created"))
 	}
 
 	// TODO: use clients.os, ensure mock exists
 	projDir, err := os.Getwd()
 	if err != nil {
-		return "", "", fmt.Errorf("error getting working directory: %s", err)
+		return fmt.Errorf("error getting working directory: %s", err)
 	}
 
 	if clients.Runtime == nil {
-		return "", "", slackerror.New(slackerror.ErrRuntimeNotSupported).
+		return slackerror.New(slackerror.ErrRuntimeNotSupported).
 			WithMessage("The project runtime is not supported by this CLI")
 	}
 
@@ -139,7 +139,7 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 
 	result, err = packageArchive(ctx, clients, projDir, app.AppID)
 	if err != nil {
-		return "", "", fmt.Errorf("error packaging project: %s", err)
+		return fmt.Errorf("error packaging project: %s", err)
 	}
 
 	var elapsedPackage = time.Since(startPackage)
@@ -168,19 +168,19 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	var startDeploy = time.Now()
 	s3Params, err := clients.API().GetPresignedS3PostParams(ctx, token, app.AppID)
 	if err != nil {
-		return "", "", slackerror.Wrapf(err, "failed generating s3 upload params %s", app.AppID)
+		return slackerror.Wrapf(err, "failed generating s3 upload params %s", app.AppID)
 	}
 
 	fileName, err := clients.API().UploadPackageToS3(ctx, clients.Fs, app.AppID, s3Params, result.Filename)
 	if err != nil {
-		return "", "", slackerror.Wrapf(err, "failed uploading the zip file to s3 %s", app.AppID)
+		return slackerror.Wrapf(err, "failed uploading the zip file to s3 %s", app.AppID)
 	}
 
 	// upload
 	runtime := strings.ToLower(clients.Runtime.Name())
 	err = clients.API().UploadApp(ctx, token, runtime, app.AppID, fileName)
 	if err != nil {
-		return "", "", fmt.Errorf("error uploading app: %s", err)
+		return fmt.Errorf("error uploading app: %s", err)
 	}
 	var elapsedDeploy = time.Since(startDeploy)
 	var deployTime = fmt.Sprintf("%.1fs", elapsedDeploy.Seconds())
@@ -197,7 +197,7 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	successfulDeployText := deploySuccessText(clients, app, manifest, authSession, deployTime)
 	deploySpinner.Update(successfulDeployText, "").Stop()
 
-	return app.AppID, deployTime, nil
+	return nil
 }
 
 // deploySuccessText formats the success message and app information for a deployed app
