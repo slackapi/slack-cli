@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	charm.land/bubbletea/v2 v2.0.2
-	charm.land/huh/v2 v2.0.1
+	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.1
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/briandowns/spinner v1.23.2
