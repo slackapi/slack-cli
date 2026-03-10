@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -162,15 +163,28 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	return appDirPath, nil
 }
 
-// getAppDirName will validate and return the app's directory name
+// multiDashRe matches consecutive dashes.
+var multiDashRe = regexp.MustCompile(`-{2,}`)
+
+// nonAlphanumericRe matches any character that is not a lowercase letter, digit, or dash.
+var nonAlphanumericRe = regexp.MustCompile(`[^a-z0-9-]+`)
+
+// getAppDirName will validate and return the app's directory name in kebab-case
 func getAppDirName(appName string) (string, error) {
 	if len(appName) <= 0 {
 		return "", fmt.Errorf("app name is required")
 	}
 
-	// trim whitespace
+	// Normalize to kebab-case: lowercase, replace non-alphanumeric with dashes, collapse, and trim
 	appName = strings.TrimSpace(appName)
-	appName = strings.ReplaceAll(appName, " ", "-")
+	appName = strings.ToLower(appName)
+	appName = nonAlphanumericRe.ReplaceAllString(appName, "-")
+	appName = multiDashRe.ReplaceAllString(appName, "-")
+	appName = strings.Trim(appName, "-")
+
+	if len(appName) == 0 {
+		return "", fmt.Errorf("app name must contain at least one alphanumeric character")
+	}
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {

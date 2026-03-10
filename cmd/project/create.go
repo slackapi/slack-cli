@@ -144,8 +144,9 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	if appNameArg == "" {
 		if clients.IO.IsTTY() {
 			defaultName := generateRandomAppName()
-			cmd.Print(style.Secondary(fmt.Sprintf("  Press Enter to use the generated name: %s", defaultName)), "\n")
-			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{})
+			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{
+				Placeholder: defaultName,
+			})
 			if err != nil {
 				return err
 			}
@@ -159,9 +160,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}
 	}
 
-	// Set up spinners
-	appCreateSpinner = style.NewSpinner(cmd.OutOrStdout())
-
 	createArgs := create.CreateArgs{
 		AppName:   appNameArg,
 		Template:  template,
@@ -173,7 +171,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	appCreateSpinner.Update("Creating app from template", "").Start()
 	appDirPath, err := CreateFunc(ctx, clients, createArgs)
 	if err != nil {
-		printAppCreateError(clients, cmd, err)
 		return err
 	}
 	appCreateSpinner.Update(style.Sectionf(style.TextSection{Emoji: "gear", Text: "Created project directory"}), "").Stop()
@@ -239,16 +236,4 @@ func generateRandomAppName() string {
 	var secondRandomNum = rand.Intn(len(create.Animals))
 	var randomName = fmt.Sprintf("%s-%s-%d", create.Adjectives[firstRandomNum], create.Animals[secondRandomNum], rand.Intn(1000))
 	return randomName
-}
-
-// printAppCreateError stops the creation spinners and displays the returned error message
-func printAppCreateError(clients *shared.ClientFactory, cmd *cobra.Command, err error) {
-	ctx := cmd.Context()
-	switch {
-	case appCreateSpinner.Active():
-		errorText := fmt.Sprintf("Error creating project directory: %s", err)
-		appCreateSpinner.Update(errorText, "warning").Stop()
-	default:
-	}
-	clients.IO.PrintTrace(ctx, slacktrace.CreateError)
 }
