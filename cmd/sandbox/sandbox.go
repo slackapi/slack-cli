@@ -29,9 +29,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long: `Manage your Slack developer sandboxes without leaving your terminal.
 Use the --team flag to select the authentication to use for these commands.
 
-Prefer a UI? Head over to https://api.slack.com/developer-program/sandboxes
+Prefer a UI? Head over to {{LinkText "https://api.slack.com/developer-program/sandboxes"}}
 
-New to the Developer Program? Sign up at https://api.slack.com/developer-program/join`,
+New to the Developer Program? Sign up at {{LinkText "https://api.slack.com/developer-program/join"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return requireSandboxExperiment(clients)
