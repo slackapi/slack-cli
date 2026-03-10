@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strconv"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
@@ -26,22 +25,11 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
-const (
-	sandboxCreateMethod = "enterprise.signup.createDevOrg"
-	sandboxListMethod   = "developer.sandbox.list"
-	sandboxDeleteMethod = "developer.sandbox.delete"
-)
+const sandboxListMethod = "developer.sandbox.list"
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
-	CreateSandbox(ctx context.Context, token string, name, domain, password, locale, owningOrgID, templateID, eventCode string, archiveDate int64) (types.CreateSandboxResult, error)
 	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
-	DeleteSandbox(ctx context.Context, token string, sandboxTeamID string) error
-}
-
-type createSandboxResponse struct {
-	extendedBaseResponse
-	types.CreateSandboxResult
 }
 
 type listSandboxesResponse struct {
@@ -50,51 +38,6 @@ type listSandboxesResponse struct {
 }
 
 var listSandboxFilterEnum = []string{"active", "archived"}
-
-// CreateSandbox provisions a new Developer Sandbox (developer org and primary user).
-func (c *Client) CreateSandbox(ctx context.Context, token string, name, domain, password, locale, owningOrgID, templateID, eventCode string, archiveDate int64) (types.CreateSandboxResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateSandbox")
-	defer span.Finish()
-
-	values := url.Values{}
-	values.Add("token", token)
-	values.Add("org_name", name)
-	values.Add("domain", domain)
-	values.Add("password", password)
-	if locale != "" {
-		values.Add("locale", locale)
-	}
-	if owningOrgID != "" {
-		values.Add("owning_org_id", owningOrgID)
-	}
-	if templateID != "" {
-		values.Add("template_id", templateID)
-	}
-	if eventCode != "" {
-		values.Add("event_code", eventCode)
-	}
-	if archiveDate > 0 {
-		values.Add("archive_date", strconv.FormatInt(archiveDate, 10))
-	}
-
-	b, err := c.postForm(ctx, sandboxCreateMethod, values)
-	if err != nil {
-		return types.CreateSandboxResult{}, errHTTPRequestFailed.WithRootCause(err)
-	}
-
-	resp := createSandboxResponse{}
-	err = goutils.JSONUnmarshal(b, &resp)
-	if err != nil {
-		return types.CreateSandboxResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxCreateMethod)
-	}
-
-	if !resp.Ok {
-		return types.CreateSandboxResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxCreateMethod)
-	}
-
-	return resp.CreateSandboxResult, nil
-}
 
 // ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
 func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
@@ -141,33 +84,4 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	}
 
 	return resp.Sandboxes, nil
-}
-
-// DeleteSandbox permanently deletes the specified sandbox.
-// Required: token, sandbox_team_id
-func (c *Client) DeleteSandbox(ctx context.Context, token string, sandboxTeamID string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.DeleteSandbox")
-	defer span.Finish()
-
-	values := url.Values{}
-	values.Add("token", token)
-	values.Add("sandbox_team_id", sandboxTeamID)
-
-	b, err := c.postForm(ctx, sandboxDeleteMethod, values)
-	if err != nil {
-		return errHTTPRequestFailed.WithRootCause(err)
-	}
-
-	resp := extendedBaseResponse{}
-	err = goutils.JSONUnmarshal(b, &resp)
-	if err != nil {
-		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxDeleteMethod)
-	}
-
-	if !resp.Ok {
-		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxDeleteMethod)
-	}
-
-	return nil
 }

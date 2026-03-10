@@ -25,8 +25,8 @@ import (
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sandbox <subcommand> [flags] --experiment=sandboxes",
-		Short: "Create and manage your sandboxes",
-		Long: `Create, list, or delete Slack developer sandboxes without leaving your terminal.
+		Short: "Manage your sandboxes",
+		Long: `Manage your Slack developer sandboxes without leaving your terminal.
 Use the --team flag to select the authentication to use for these commands.
 
 Prefer a UI? Head over to https://api.slack.com/developer-program/sandboxes
@@ -41,9 +41,7 @@ New to the Developer Program? Sign up at https://api.slack.com/developer-program
 		},
 	}
 
-	cmd.AddCommand(NewCreateCommand(clients))
 	cmd.AddCommand(NewListCommand(clients))
-	cmd.AddCommand(NewDeleteCommand(clients))
 
 	return cmd
 }
