@@ -83,7 +83,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 
 			switch {
 			case clients.SDKConfig.Hooks.Deploy.IsAvailable():
-				_, err = deployHook(ctx, clients)
+				err = deployHook(ctx, clients)
 				if err != nil {
 					return err
 				}
@@ -155,10 +155,7 @@ func hasValidDeploymentMethod(
 }
 
 // deployHook executes the provided program and streams IO for the process
-func deployHook(ctx context.Context, clients *shared.ClientFactory) (platform.DeployResult, error) {
-	result := platform.DeployResult{
-		AuthSession: "{}",
-	}
+func deployHook(ctx context.Context, clients *shared.ClientFactory) error {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "mailbox_with_mail",
 		Text:      "App Deploy",
@@ -186,12 +183,12 @@ func deployHook(ctx context.Context, clients *shared.ClientFactory) (platform.De
 		IO: clients.IO,
 	}
 	if _, err := shell.Execute(ctx, hookExecOpts); err != nil {
-		return result, err
+		return err
 	}
 	// Follow successful hook executions with a newline to match section formatting
 	// but break immediately after an error!
 	_, _ = clients.IO.WriteOut().Write([]byte("\n"))
-	return result, nil
+	return nil
 }
 
 func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Command) error {
