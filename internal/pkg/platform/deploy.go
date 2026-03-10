@@ -88,8 +88,7 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 	}
 
 	// deploy the app
-	err = deployApp(ctx, clients, app, manifest, authSession)
-	if err != nil {
+	if err := deployApp(ctx, clients, app, manifest, authSession); err != nil {
 		return slackerror.Wrap(err, slackerror.ErrAppDeploy)
 	}
 
@@ -130,6 +129,8 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	var result packageResult
 
 	// TODO: Packaging the app can happen in parallel with getting the presigned S3 post params
+
+	// Package the app for deployment
 	packageSpinner := style.NewSpinner(clients.IO.WriteErr())
 	defer func() {
 		packageSpinner.Stop()
@@ -156,6 +157,7 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	})
 	packageSpinner.Update(packageSuccessText, "").Stop()
 
+	// Deploy the app to the Slack Platform
 	deploySpinner := style.NewSpinner(clients.IO.WriteErr())
 	defer func() {
 		deploySpinner.Stop()
