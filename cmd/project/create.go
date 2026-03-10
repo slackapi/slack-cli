@@ -42,8 +42,6 @@ var createSubdirFlag string
 // TODO - Find best practice, such as using an Interface and Struct to create a client
 var CreateFunc = create.Create
 
-var appCreateSpinner *style.Spinner
-
 // promptObject describes the Github app template
 type promptObject struct {
 	Title       string // "Reverse string"
@@ -168,12 +166,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
-	appCreateSpinner.Update("Creating app from template", "").Start()
 	appDirPath, err := CreateFunc(ctx, clients, createArgs)
 	if err != nil {
 		return err
 	}
-	appCreateSpinner.Update(style.Sectionf(style.TextSection{Emoji: "gear", Text: "Created project directory"}), "").Stop()
+
 	printCreateSuccess(ctx, clients, appDirPath)
 	return nil
 }
