@@ -32,6 +32,8 @@ import (
 
 var searchMode bool
 var outputFormat string
+var searchLimit int
+var searchOffset int
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -52,8 +54,12 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 				Command: "docs --search \"Block Kit\" --output=json",
 			},
 			{
-				Meaning: "Search and open in browser (default)",
-				Command: "docs --search \"Block Kit\" --output=browser",
+				Meaning: "Search with custom limit",
+				Command: "docs --search \"Block Kit\" --output=json --limit=50",
+			},
+			{
+				Meaning: "Search with pagination",
+				Command: "docs --search \"Block Kit\" --output=json --limit=20 --offset=20",
 			},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -63,6 +69,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	cmd.Flags().BoolVar(&searchMode, "search", false, "search Slack docs with optional query")
 	cmd.Flags().StringVar(&outputFormat, "output", "browser", "output format: browser, json")
+	cmd.Flags().IntVar(&searchLimit, "limit", 20, "maximum number of results to return")
+	cmd.Flags().IntVar(&searchOffset, "offset", 0, "number of results to skip (for pagination)")
 
 	return cmd
 }
@@ -85,7 +93,7 @@ func findDocsRepo() string {
 // runProgrammaticSearch executes the local search
 func runProgrammaticSearch(query string, docsPath string) (*ProgrammaticSearchOutput, error) {
 	contentDir := filepath.Join(docsPath, "content")
-	return search.SearchDocs(query, "", 20, contentDir)
+	return search.SearchDocs(query, "", searchLimit, searchOffset, contentDir)
 }
 
 // runDocsCommand opens Slack developer docs in the browser or performs programmatic search

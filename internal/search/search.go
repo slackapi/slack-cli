@@ -37,11 +37,21 @@ type SearchResult struct {
 
 // SearchResponse represents the complete search response
 type SearchResponse struct {
-	Query   string         `json:"query"`
-	Filter  string         `json:"filter"`
-	Results []SearchResult `json:"results"`
-	Total   int            `json:"total"`
-	Showing int            `json:"showing"`
+	Query      string          `json:"query"`
+	Filter     string          `json:"filter"`
+	Results    []SearchResult  `json:"results"`
+	Total      int             `json:"total"`
+	Showing    int             `json:"showing"`
+	Pagination *PaginationInfo `json:"pagination,omitempty"`
+}
+
+// PaginationInfo provides pagination metadata
+type PaginationInfo struct {
+	Limit      int  `json:"limit"`
+	Offset     int  `json:"offset"`
+	Page       int  `json:"page"`        // 1-based page number
+	HasNext    bool `json:"has_next"`
+	HasPrevious bool `json:"has_previous"`
 }
 
 // FrontMatter represents the YAML frontmatter in markdown files
@@ -302,7 +312,7 @@ func findMarkdownFiles(dir string) ([]string, error) {
 }
 
 // SearchDocs performs a programmatic search of documentation files
-func SearchDocs(query, filter string, limit int, contentDir string) (*SearchResponse, error) {
+func SearchDocs(query, filter string, limit, offset int, contentDir string) (*SearchResponse, error) {
 	if contentDir == "" {
 		return nil, fmt.Errorf("content directory not specified")
 	}
@@ -385,22 +395,48 @@ func SearchDocs(query, filter string, limit int, contentDir string) (*SearchResp
 		return results[i].Score > results[j].Score
 	})
 
-	// Limit results
+	// Apply pagination
 	total := len(results)
+	
+	// Handle offset
+	if offset >= total {
+		results = []SearchResult{} // No results if offset too high
+	} else if offset > 0 {
+		results = results[offset:]
+	}
+	
+	// Handle limit
 	if limit > 0 && limit < len(results) {
 		results = results[:limit]
 	}
-
+	
 	if filter == "" {
 		filter = "all"
 	}
 
+	// Calculate pagination info
+	var pagination *PaginationInfo
+	if limit > 0 {
+		page := (offset / limit) + 1
+		hasNext := offset+len(results) < total
+		hasPrevious := offset > 0
+		
+		pagination = &PaginationInfo{
+			Limit:       limit,
+			Offset:      offset,
+			Page:        page,
+			HasNext:     hasNext,
+			HasPrevious: hasPrevious,
+		}
+	}
+
 	response := &SearchResponse{
-		Query:   query,
-		Filter:  filter,
-		Results: results,
-		Total:   total,
-		Showing: len(results),
+		Query:      query,
+		Filter:     filter,
+		Results:    results,
+		Total:      total,
+		Showing:    len(results),
+		Pagination: pagination,
 	}
 
 	return response, nil
