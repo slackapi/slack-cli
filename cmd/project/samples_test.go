@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	createPkg "github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -72,7 +71,7 @@ func TestSamplesCommand(t *testing.T) {
 						},
 						nil,
 					)
-				CreateFunc = func(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, createArgs createPkg.CreateArgs) (appDirPath string, err error) {
+				CreateFunc = func(ctx context.Context, clients *shared.ClientFactory, createArgs createPkg.CreateArgs) (appDirPath string, err error) {
 					return createArgs.AppName, nil
 				}
 			},

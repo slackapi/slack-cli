@@ -19,12 +19,11 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
-func Query(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, request types.AppDatastoreQuery) (*logger.LogEvent, error) {
+func Query(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastoreQuery) (types.AppDatastoreQueryResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.query")
 	defer span.Finish()
 
@@ -33,11 +32,8 @@ func Query(ctx context.Context, clients *shared.ClientFactory, log *logger.Logge
 
 	queryResult, err := clients.API().AppsDatastoreQuery(ctx, token, request)
 	if err != nil {
-		return nil, err
+		return types.AppDatastoreQueryResult{}, err
 	}
 
-	// Notify listeners
-	log.Data["queryResult"] = queryResult
-	log.Log("info", "on_query_result")
-	return log.SuccessEvent(), nil
+	return queryResult, nil
 }

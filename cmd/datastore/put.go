@@ -24,7 +24,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -99,12 +98,12 @@ func NewPutCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the put
-			log := newPutLogger(clients, cmd)
-			event, err := Put(ctx, clients, log, query)
+			result, err := Put(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastorePutSuccess(cmd, event)
+			_ = printPutResult(clients, cmd, result)
+			printDatastorePutSuccess(cmd)
 			return nil
 		},
 	}
@@ -129,27 +128,6 @@ func preRunPutCommandFunc(ctx context.Context, clients *shared.ClientFactory, cm
 	return cmdutil.IsSlackHostedProject(ctx, clients)
 }
 
-func newPutLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_put_result":
-				putResult := types.AppDatastorePutResult{}
-				if event.Data["putResult"] != nil {
-					putResult = event.Data["putResult"].(types.AppDatastorePutResult)
-				}
-				if cmd != nil {
-					// TODO: this can raise an error on indentation failures, but not sure how to handle that using logger
-					_ = printPutResult(clients, cmd, putResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
-
 func printPutResult(clients *shared.ClientFactory, cmd *cobra.Command, putResult types.AppDatastorePutResult) error {
 	var datastore = putResult.Datastore
 	var item = putResult.Item
@@ -169,7 +147,7 @@ func printPutResult(clients *shared.ClientFactory, cmd *cobra.Command, putResult
 	return nil
 }
 
-func printDatastorePutSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastorePutSuccess(cmd *cobra.Command) {
 	commandText := style.Commandf("datastore query <expression>", true)
 	if cmd != nil {
 		cmd.Printf(

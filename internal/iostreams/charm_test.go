@@ -53,6 +53,15 @@ func TestCharmInput(t *testing.T) {
 		assert.Contains(t, view, "Huh")
 	})
 
+	t.Run("renders placeholder text", func(t *testing.T) {
+		var input string
+		f := buildInputForm("Name?", InputPromptConfig{Placeholder: "my-cool-app"}, &input)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, "my-cool-app")
+	})
+
 	t.Run("stores typed value", func(t *testing.T) {
 		var input string
 		f := buildInputForm("Name?", InputPromptConfig{}, &input)

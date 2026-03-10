@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -37,11 +36,9 @@ type PutPkgMock struct {
 	mock.Mock
 }
 
-func (m *PutPkgMock) Put(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastorePut) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["putResult"] = types.AppDatastorePutResult{}
-	log.Log("info", "on_put_result")
-	return log.SuccessEvent(), nil
+func (m *PutPkgMock) Put(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastorePut) (types.AppDatastorePutResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastorePutResult{}, nil
 }
 
 func TestPutCommandPreRun(t *testing.T) {
@@ -231,7 +228,7 @@ func TestPutCommand(t *testing.T) {
 			// Prepare mocked command
 			putMock := new(PutPkgMock)
 			Put = putMock.Put
-			putMock.On("Put", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			putMock.On("Put", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastorePutResult{}, nil)
 
 			cmd := NewPutCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -247,7 +244,7 @@ func TestPutCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				putMock.AssertCalled(t, "Put", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				putMock.AssertCalled(t, "Put", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done
