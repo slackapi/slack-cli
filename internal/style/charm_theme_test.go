@@ -40,7 +40,7 @@ func TestThemeSlack(t *testing.T) {
 
 	t.Run("focused title uses aubergine foreground", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#7C2852"), s.Focused.Title.GetForeground())
+		assert.Equal(t, slackAubergine, s.Focused.Title.GetForeground())
 	})
 
 	t.Run("focused select selector renders cursor", func(t *testing.T) {
@@ -63,12 +63,12 @@ func TestThemeSlack(t *testing.T) {
 
 	t.Run("focused error message uses red foreground", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#e01e5a"), s.Focused.ErrorMessage.GetForeground())
+		assert.Equal(t, slackRed, s.Focused.ErrorMessage.GetForeground())
 	})
 
 	t.Run("focused button uses aubergine background", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#7C2852"), s.Focused.FocusedButton.GetBackground())
+		assert.Equal(t, slackAubergine, s.Focused.FocusedButton.GetBackground())
 	})
 
 	t.Run("focused button is bold", func(t *testing.T) {
@@ -98,21 +98,21 @@ func TestThemeSlack(t *testing.T) {
 
 	t.Run("focused border uses aubergine", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#7C2852"), s.Focused.Base.GetBorderLeftForeground())
+		assert.Equal(t, slackAubergine, s.Focused.Base.GetBorderLeftForeground())
 	})
 
 	t.Run("focused text input prompt uses blue", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#36c5f0"), s.Focused.TextInput.Prompt.GetForeground())
+		assert.Equal(t, slackBlue, s.Focused.TextInput.Prompt.GetForeground())
 	})
 
 	t.Run("focused text input cursor uses yellow", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#ecb22e"), s.Focused.TextInput.Cursor.GetForeground())
+		assert.Equal(t, slackYellow, s.Focused.TextInput.Cursor.GetForeground())
 	})
 
 	t.Run("focused selected option uses green", func(t *testing.T) {
 		s := styles()
-		assert.Equal(t, lipgloss.Color("#2eb67d"), s.Focused.SelectedOption.GetForeground())
+		assert.Equal(t, slackGreen, s.Focused.SelectedOption.GetForeground())
 	})
 }
