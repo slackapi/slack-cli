@@ -19,7 +19,18 @@ package style
 //
 // Colors from https://a.slack-edge.com/4d5bb/marketing/img/media-kit/slack_brand_guidelines_september2020.pdf
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"image/color"
+	"os"
+
+	lipgloss "charm.land/lipgloss/v2"
+)
+
+// hasDarkBG caches the terminal background detection at package init.
+var hasDarkBG = lipgloss.HasDarkBackground(os.Stdin, os.Stdout)
+
+// lightDark selects a color based on the terminal background.
+var lightDark = lipgloss.LightDark(hasDarkBG)
 
 // Brand colors
 var (
@@ -39,7 +50,7 @@ var (
 
 // Adaptive colors that adjust for light/dark terminal backgrounds
 var (
-	slackOptionText      = lipgloss.AdaptiveColor{Light: "#1d1c1d", Dark: "#f4ede4"}
-	slackDescriptionText = lipgloss.AdaptiveColor{Light: "#454447", Dark: "#b9b5b0"}
-	slackPlaceholderText = lipgloss.AdaptiveColor{Light: "#5e5d60", Dark: "#868380"}
+	slackOptionText      color.Color = lightDark(lipgloss.Color("#1d1c1d"), lipgloss.Color("#f4ede4"))
+	slackDescriptionText color.Color = lightDark(lipgloss.Color("#454447"), lipgloss.Color("#b9b5b0"))
+	slackPlaceholderText color.Color = lightDark(lipgloss.Color("#5e5d60"), lipgloss.Color("#868380"))
 )

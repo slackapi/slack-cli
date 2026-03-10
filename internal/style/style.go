@@ -19,7 +19,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	lipgloss "charm.land/lipgloss/v2"
 	"github.com/kyokomi/emoji/v2"
 	"github.com/logrusorgru/aurora/v4"
 )

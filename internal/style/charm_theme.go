@@ -18,13 +18,18 @@ package style
 // Uses official Slack brand colors defined in colors.go.
 
 import (
-	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/lipgloss"
+	huh "charm.land/huh/v2"
+	lipgloss "charm.land/lipgloss/v2"
 )
 
-// ThemeSlack returns a huh theme styled with Slack brand colors.
-func ThemeSlack() *huh.Theme {
-	t := huh.ThemeBase()
+// ThemeSlack returns a huh Theme styled with Slack brand colors.
+func ThemeSlack() huh.Theme {
+	return huh.ThemeFunc(themeSlack)
+}
+
+// themeSlack builds Slack-branded huh styles.
+func themeSlack(isDark bool) *huh.Styles {
+	t := huh.ThemeBase(isDark)
 
 	// Focused styles apply to the field the user is currently interacting with.
 	// Blurred styles apply to visible fields that are not currently active.

@@ -22,7 +22,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/charmbracelet/huh"
+	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
