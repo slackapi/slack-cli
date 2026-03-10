@@ -33,11 +33,12 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/slacktrace"
+	"github.com/slackapi/slack-cli/internal/style"
 )
 
 // for lazy testing
@@ -78,7 +79,6 @@ type LocalHostedContext struct {
 // response management to the script hook
 type LocalServer struct {
 	clients            *shared.ClientFactory
-	log                *logger.Logger
 	token              string
 	localHostedContext LocalHostedContext
 	cliConfig          hooks.SDKCLIConfig
@@ -143,7 +143,8 @@ func (r *LocalServer) Start(ctx context.Context) error {
 
 // Listen waits for incoming events over a socket connection and invokes the deno-sdk-powered app with each payload. Responds to each event in a way that mimics the behaviour of a hosted app.
 func (r *LocalServer) Listen(ctx context.Context, errChan chan<- error, done chan<- bool) {
-	r.log.Info("on_cloud_run_connection_connected")
+	r.clients.IO.PrintTrace(ctx, slacktrace.PlatformRunReady)
+	r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary("Connected, awaiting events"))
 
 	// Listen for socket messages
 	for {
@@ -169,8 +170,7 @@ func (r *LocalServer) Listen(ctx context.Context, errChan chan<- error, done cha
 				}
 				return
 			}
-			r.log.Data["cloud_run_connection_message"] = string(messageBytes)
-			r.log.Debug("on_cloud_run_connection_message")
+			r.clients.IO.PrintDebug(ctx, "received: %s", string(messageBytes))
 
 			var msg Message
 			err = json.Unmarshal(messageBytes, &msg)
@@ -222,12 +222,9 @@ func (r *LocalServer) Listen(ctx context.Context, errChan chan<- error, done cha
 
 				if err != nil {
 					// Log the error but do not return because the user may be able to recover inside their app code
-					r.log.Data["cloud_run_connection_command_error"] = fmt.Sprintf("%s\n%s", err, out)
-					r.log.Warn("on_cloud_run_connection_command_error")
+					r.clients.IO.PrintError(ctx, "Error: %s\n%s", err, out)
 					break
 				}
-
-				r.log.Info("on_cloud_run_connection_command_output")
 
 				linkResponse = &LinkResponse{
 					EnvelopeID: msg.EnvelopeID,
@@ -407,23 +404,19 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 				return
 			case event := <-w.Event:
 				if isRemoteManifest {
-					r.log.Data["cloud_run_watch_manifest_change_skipped"] = event.Path
-					r.log.Info("on_cloud_run_watch_manifest_change_skipped_remote")
+					r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, skipped reinstalling app because manifest.source=remote", event.Path)))
 				} else {
-					r.log.Data["cloud_run_watch_manifest_change"] = event.Path
-					r.log.Info("on_cloud_run_watch_manifest_change")
+					r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, reinstalling app...", event.Path)))
 
 					// Reinstall the app when manifest changes
 					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", auth, app); err != nil {
-						r.log.Data["cloud_run_watch_error"] = err.Error()
-						r.log.Warn("on_cloud_run_watch_error")
+						r.clients.IO.PrintError(ctx, "Error: %s", err)
 					} else {
-						r.log.Info("on_cloud_run_watch_manifest_change_reinstalled")
+						r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary("App successfully reinstalled"))
 					}
 				}
 			case err := <-w.Error:
-				r.log.Data["cloud_run_watch_error"] = err.Error()
-				r.log.Warn("on_cloud_run_watch_error")
+				r.clients.IO.PrintError(ctx, "Error: %s", err)
 			case <-w.Closed:
 				return
 			}
@@ -488,8 +481,7 @@ func (r *LocalServer) WatchApp(ctx context.Context) error {
 				r.clients.IO.PrintDebug(ctx, "App file watcher context canceled, returning.")
 				return
 			case event := <-w.Event:
-				r.log.Data["cloud_run_watch_app_change"] = event.Path
-				r.log.Info("on_cloud_run_watch_app_change")
+				r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("App change detected: %s, restarting server...", event.Path)))
 
 				// Stop the previous process before starting a new one
 				r.stopDelegateProcess(ctx)
@@ -503,8 +495,7 @@ func (r *LocalServer) WatchApp(ctx context.Context) error {
 					}
 				}()
 			case err := <-w.Error:
-				r.log.Data["cloud_run_watch_error"] = err.Error()
-				r.log.Warn("on_cloud_run_watch_error")
+				r.clients.IO.PrintError(ctx, "Error: %s", err)
 			case <-w.Closed:
 				return
 			}
