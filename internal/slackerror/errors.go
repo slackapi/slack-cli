@@ -96,6 +96,7 @@ const (
 	ErrDenoNotFound                                  = "deno_not_found"
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
 	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
+	ErrDocsJSONEncodeFailed                          = "docs_json_encode_failed"
 	ErrDocsSearchFlagRequired                        = "docs_search_flag_required"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
@@ -679,6 +680,11 @@ Otherwise start your app for local development with: %s`,
 	ErrDocumentationGenerationFailed: {
 		Code:    ErrDocumentationGenerationFailed,
 		Message: "Failed to generate documentation",
+	},
+
+	ErrDocsJSONEncodeFailed: {
+		Code:    ErrDocsJSONEncodeFailed,
+		Message: "Failed to encode docs output as JSON",
 	},
 
 	ErrDocsSearchFlagRequired: {
