@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -625,12 +624,10 @@ func TestInstall(t *testing.T) {
 			mockProjectConfig.On("Cache").Return(mockProjectCache)
 			clientsMock.Config.ProjectConfig = mockProjectConfig
 
-			log := logger.New(func(event *logger.LogEvent) {})
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			app, state, err := Install(
 				ctx,
 				clients,
-				log,
 				tc.mockAuth,
 				false,
 				tc.mockApp,
@@ -1453,13 +1450,11 @@ func TestInstallLocalApp(t *testing.T) {
 			mockProjectConfig.On("Cache").Return(mockProjectCache)
 			clientsMock.Config.ProjectConfig = mockProjectConfig
 
-			log := logger.New(func(event *logger.LogEvent) {})
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			app, _, state, err := InstallLocalApp(
 				ctx,
 				clients,
 				tc.mockOrgGrantWorkspaceID,
-				log,
 				tc.mockAuth,
 				tc.mockApp,
 			)

@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -52,7 +51,7 @@ func TestAuthList(t *testing.T) {
 	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, errors.New("There was an error"))
 
 	t.Run("Handles error getting auth slice", func(t *testing.T) {
-		_, err := List(ctx, clients, &logger.Logger{})
+		_, err := List(ctx, clients)
 		require.Error(t, err)
 	})
 }
@@ -94,7 +93,7 @@ func TestAuthList_SortedAuths(t *testing.T) {
 
 	clientsMock.Auth.On("Auths", mock.Anything).Return(mockAuths, nil)
 
-	_, err := List(ctx, clients, &logger.Logger{})
+	_, err := List(ctx, clients)
 	require.NoError(t, err)
 
 	// require.Equal(t, expectSortedAuths[0], authB, "should sort alphabetically as first elem")

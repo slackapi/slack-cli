@@ -414,7 +414,7 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 					r.log.Info("on_cloud_run_watch_manifest_change")
 
 					// Reinstall the app when manifest changes
-					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", r.log, auth, app); err != nil {
+					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", auth, app); err != nil {
 						r.log.Data["cloud_run_watch_error"] = err.Error()
 						r.log.Warn("on_cloud_run_watch_error")
 					} else {
@@ -539,7 +539,7 @@ func (r *LocalServer) WatchActivityLogs(ctx context.Context, minLevel string) er
 		IdleTimeoutM: 60 * 24,
 	}
 	// Next line runs in a ticker loop (based on TailArg above) that will return if the context is cancelled or an error occurs
-	return Activity(ctx, r.clients, r.log, activityArgs)
+	return Activity(ctx, r.clients, activityArgs)
 }
 
 // Message describes a web socket incoming message

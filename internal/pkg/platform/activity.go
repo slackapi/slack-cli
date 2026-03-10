@@ -24,7 +24,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -47,7 +46,6 @@ const (
 func Activity(
 	ctx context.Context,
 	clients *shared.ClientFactory,
-	log *logger.Logger,
 	args types.ActivityArgs,
 ) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.activity")

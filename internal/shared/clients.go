@@ -232,7 +232,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 	// Activate Python virtual environment if present, so hook scripts
 	// can resolve the venv's Python and installed packages.
 	if activated, err := runtime.ActivatePythonVenvIfPresent(c.Fs, c.Os, dirPath); err != nil {
-		c.IO.PrintDebug(ctx, "failed to activate Python virtual environment: %s", err)
+		c.IO.PrintWarning(ctx, "Failed to activate Python virtual environment: %s", err)
 	} else if activated {
 		c.IO.PrintDebug(ctx, "Activated Python virtual environment .venv")
 	}
