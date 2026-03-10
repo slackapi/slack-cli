@@ -118,6 +118,88 @@ func TestPluralize(t *testing.T) {
 	}
 }
 
+func TestStyleFunctions(t *testing.T) {
+	tests := map[string]struct {
+		fn       func(string) string
+		input    string
+		expected string
+	}{
+		"CommandText returns non-empty": {
+			fn:    CommandText,
+			input: "deploy",
+		},
+		"Error returns non-empty": {
+			fn:    Error,
+			input: "something failed",
+		},
+		"Warning returns non-empty": {
+			fn:    Warning,
+			input: "be careful",
+		},
+		"Input returns non-empty": {
+			fn:    Input,
+			input: "user input",
+		},
+		"Bright returns non-empty": {
+			fn:    Bright,
+			input: "bright text",
+		},
+		"Bold returns non-empty": {
+			fn:    Bold,
+			input: "bold text",
+		},
+		"Darken returns non-empty": {
+			fn:    Darken,
+			input: "dark text",
+		},
+		"Highlight returns non-empty": {
+			fn:    Highlight,
+			input: "important",
+		},
+		"Underline returns non-empty": {
+			fn:    Underline,
+			input: "underlined",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := tc.fn(tc.input)
+			assert.Contains(t, result, tc.input)
+		})
+	}
+}
+
+func TestFaint(t *testing.T) {
+	tests := map[string]struct {
+		colorShown bool
+		input      string
+	}{
+		"with color disabled returns input unchanged": {
+			colorShown: false,
+			input:      "faint text",
+		},
+		"with color enabled wraps with ANSI codes": {
+			colorShown: true,
+			input:      "faint text",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			prev := isColorShown
+			defer func() { isColorShown = prev }()
+			isColorShown = tc.colorShown
+
+			result := Faint(tc.input)
+			assert.Contains(t, result, tc.input)
+			if tc.colorShown {
+				assert.Contains(t, result, "\x1b[0;2m")
+			} else {
+				assert.Equal(t, tc.input, result)
+			}
+		})
+	}
+}
+
 // Verify no text is output when no emoji is given
 func TestEmojiEmpty(t *testing.T) {
 	alias := ""

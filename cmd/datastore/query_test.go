@@ -465,3 +465,55 @@ func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsTo
 	}
 	return data, nil
 }
+
+func Test_mapAttributeFlag(t *testing.T) {
+	tests := map[string]struct {
+		flag    string
+		wantErr bool
+	}{
+		"valid JSON": {
+			flag: `{"#name":"name"}`,
+		},
+		"invalid JSON": {
+			flag:    `not json`,
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := mapAttributeFlag(tc.flag)
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+			}
+		})
+	}
+}
+
+func Test_getExpressionPatterns(t *testing.T) {
+	tests := map[string]struct {
+		expression string
+		wantAttrs  int
+		wantVals   int
+	}{
+		"expression with attributes and values": {
+			expression: "#name = :name AND #status = :status",
+			wantAttrs:  2,
+			wantVals:   2,
+		},
+		"empty expression": {
+			expression: "",
+			wantAttrs:  0,
+			wantVals:   0,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			attrs, vals := getExpressionPatterns(tc.expression)
+			assert.Len(t, attrs, tc.wantAttrs)
+			assert.Len(t, vals, tc.wantVals)
+		})
+	}
+}

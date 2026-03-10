@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/stretchr/testify/assert"
@@ -361,6 +362,115 @@ func Test_ExampleTemplatef(t *testing.T) {
 			}()
 			actual := ExampleTemplatef(strings.Join(tc.template, "\n"))
 			assert.Equal(t, strings.Join(tc.expected, "\n"), actual)
+		})
+	}
+}
+
+func TestMapf(t *testing.T) {
+	t.Run("formats a map with aligned keys", func(t *testing.T) {
+		m := map[string]string{
+			"key": "value",
+		}
+		result := Mapf(m)
+		assert.Contains(t, result, "key")
+		assert.Contains(t, result, "value")
+	})
+
+	t.Run("returns empty for empty map", func(t *testing.T) {
+		m := map[string]string{}
+		result := Mapf(m)
+		assert.Empty(t, result)
+	})
+}
+
+func TestHomePath(t *testing.T) {
+	tests := map[string]struct {
+		path     string
+		contains string
+	}{
+		"non-home path is unchanged": {
+			path:     "/tmp/some/path",
+			contains: "/tmp/some/path",
+		},
+		"empty path is unchanged": {
+			path:     "",
+			contains: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := HomePath(tc.path)
+			assert.Contains(t, result, tc.contains)
+		})
+	}
+}
+
+func TestTeamSelectLabel(t *testing.T) {
+	tests := map[string]struct {
+		teamDomain string
+		teamID     string
+	}{
+		"formats team domain and ID": {
+			teamDomain: "my-workspace",
+			teamID:     "T12345",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := TeamSelectLabel(tc.teamDomain, tc.teamID)
+			assert.Contains(t, result, tc.teamDomain)
+			assert.Contains(t, result, tc.teamID)
+		})
+	}
+}
+
+func TestTimeAgo(t *testing.T) {
+	now := int(time.Now().Unix())
+	tests := map[string]struct {
+		datetime int
+		contains string
+	}{
+		"seconds ago": {
+			datetime: now - 30,
+			contains: "seconds ago",
+		},
+		"minutes ago": {
+			datetime: now - 120,
+			contains: "minutes ago",
+		},
+		"hours ago": {
+			datetime: now - 7200,
+			contains: "hours ago",
+		},
+		"days ago": {
+			datetime: now - 86400*3,
+			contains: "days ago",
+		},
+		"weeks ago": {
+			datetime: now - 86400*14,
+			contains: "weeks ago",
+		},
+		"months ago": {
+			datetime: now - 86400*60,
+			contains: "months ago",
+		},
+		"years ago": {
+			datetime: now - 86400*800,
+			contains: "years ago",
+		},
+		"future time": {
+			datetime: now + 3600,
+			contains: "until",
+		},
+		"singular minute": {
+			datetime: now - 90,
+			contains: "minute ago",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := TimeAgo(tc.datetime)
+			assert.Contains(t, result, tc.contains)
 		})
 	}
 }

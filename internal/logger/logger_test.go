@@ -17,6 +17,7 @@ package logger
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -40,4 +41,46 @@ func TestLogger(t *testing.T) {
 
 	log.Log("info", "app_create")
 	cmdClientMock.AssertCalled(t, "OnEvent")
+}
+
+func TestLoggerDebug(t *testing.T) {
+	cmdClientMock := new(CmdClientMock)
+	cmdClientMock.On("OnEvent").Return()
+
+	log := New(cmdClientMock.OnEvent)
+	log.Debug("debug_event")
+	cmdClientMock.AssertCalled(t, "OnEvent")
+}
+
+func TestLoggerInfo(t *testing.T) {
+	cmdClientMock := new(CmdClientMock)
+	cmdClientMock.On("OnEvent").Return()
+
+	log := New(cmdClientMock.OnEvent)
+	log.Info("info_event")
+	cmdClientMock.AssertCalled(t, "OnEvent")
+}
+
+func TestLoggerWarn(t *testing.T) {
+	cmdClientMock := new(CmdClientMock)
+	cmdClientMock.On("OnEvent").Return()
+
+	log := New(cmdClientMock.OnEvent)
+	log.Warn("warn_event")
+	cmdClientMock.AssertCalled(t, "OnEvent")
+}
+
+func TestLoggerSuccessEvent(t *testing.T) {
+	log := New(nil)
+	log.Data = LogData{"key": "value"}
+	event := log.SuccessEvent()
+	assert.Equal(t, "info", event.Level)
+	assert.Equal(t, "success", event.Name)
+	assert.Equal(t, log.Data, event.Data)
+}
+
+func TestLoggerLogWithNilHandler(t *testing.T) {
+	log := New(nil)
+	// Should not panic when onEvent is nil
+	log.Log("info", "no_handler")
 }

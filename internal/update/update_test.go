@@ -111,6 +111,39 @@ func Test_Update_HasUpdate(t *testing.T) {
 	}
 }
 
+func Test_Update_SetEnabled(t *testing.T) {
+	u := &UpdateNotification{}
+	u.SetEnabled(true)
+	require.True(t, u.Enabled())
+	u.SetEnabled(false)
+	require.False(t, u.Enabled())
+}
+
+func Test_Update_SetEnv(t *testing.T) {
+	u := &UpdateNotification{}
+	u.SetEnv("SLACK_SKIP_UPDATE")
+	require.Equal(t, "SLACK_SKIP_UPDATE", u.Env())
+	u.SetEnv("")
+	require.Equal(t, "", u.Env())
+}
+
+func Test_Update_SetHours(t *testing.T) {
+	u := &UpdateNotification{}
+	u.SetHours(48.0)
+	require.Equal(t, 48.0, u.Hours())
+	u.SetHours(0)
+	require.Equal(t, 0.0, u.Hours())
+}
+
+func Test_Update_Dependencies(t *testing.T) {
+	dep := &mockDependency{}
+	u := &UpdateNotification{
+		dependencies: []Dependency{dep},
+	}
+	require.Len(t, u.Dependencies(), 1)
+	require.Equal(t, dep, u.Dependencies()[0])
+}
+
 func Test_Update_isIgnoredCommand(t *testing.T) {
 	for name, tc := range map[string]struct {
 		command  string
