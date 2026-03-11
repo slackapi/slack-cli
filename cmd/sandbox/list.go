@@ -119,9 +119,9 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 		if s.Status != "" {
 			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
-				clients.IO.PrintInfo(ctx, false, "    %s", style.Styler().Red(status))
+				clients.IO.PrintInfo(ctx, false, "    %s", style.Red(status))
 			} else {
-				clients.IO.PrintInfo(ctx, false, "    %s", style.Styler().Green(status))
+				clients.IO.PrintInfo(ctx, false, "    %s", style.Green(status))
 			}
 		}
 
