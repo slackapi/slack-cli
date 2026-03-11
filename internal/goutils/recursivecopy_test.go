@@ -83,6 +83,7 @@ func Test_ShouldIgnore(t *testing.T) {
 	}
 }
 
+// TODO: Refactor to use afero.Fs once Copy accepts it. Currently uses t.TempDir() which is safe.
 func Test_Copy(t *testing.T) {
 	t.Run("copies a regular file", func(t *testing.T) {
 		srcDir := t.TempDir()
@@ -109,6 +110,7 @@ func Test_Copy(t *testing.T) {
 	})
 }
 
+// TODO: Refactor to use afero.Fs once CopySymLink accepts it. Currently uses t.TempDir() which is safe.
 func Test_CopySymLink(t *testing.T) {
 	t.Run("copies a symbolic link", func(t *testing.T) {
 		srcDir := t.TempDir()
@@ -134,6 +136,7 @@ func Test_CopySymLink(t *testing.T) {
 	})
 }
 
+// TODO: Refactor to use afero.Fs once CopyDirectory accepts it. Currently uses t.TempDir() which is safe.
 func Test_CopyDirectory(t *testing.T) {
 	t.Run("copies directory structure", func(t *testing.T) {
 		srcDir := t.TempDir()
