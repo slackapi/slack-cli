@@ -104,7 +104,7 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(section))
 
 	if len(sandboxes) == 0 {
-		clients.IO.PrintInfo(ctx, false, "   %s\n", style.Secondary(fmt.Sprintf("No sandboxes found %s", style.Emoji("ghost"))))
+		clients.IO.PrintInfo(ctx, false, "   %s\n", style.Secondary("No sandboxes found"))
 		return nil
 	}
 
@@ -116,17 +116,17 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
 		}
 
-		if s.DateCreated > 0 {
-			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
-		}
-
 		if s.Status != "" {
 			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
-				clients.IO.PrintInfo(ctx, false, "    %s %s", style.Emoji("warning"), status)
+				clients.IO.PrintInfo(ctx, false, "    %s", style.Styler().Red(status))
 			} else {
-				clients.IO.PrintInfo(ctx, false, "    %s%s", style.Emoji("green_circle"), status)
+				clients.IO.PrintInfo(ctx, false, "    %s", style.Styler().Green(status))
 			}
+		}
+
+		if s.DateCreated > 0 {
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
 		}
 
 		if s.DateArchived > 0 {
@@ -134,7 +134,7 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			now := time.Now()
 			archivedDate := time.Date(archivedTime.Year(), archivedTime.Month(), archivedTime.Day(), 0, 0, 0, 0, time.Local)
 			todayDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-			label := "Active until:"
+			label := "Expires:"
 			if archivedDate.Before(todayDate) {
 				label = "Archived:"
 			}

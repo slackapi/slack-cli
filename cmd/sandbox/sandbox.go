@@ -29,13 +29,15 @@ import (
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sandbox <subcommand> [flags] --experiment=sandboxes",
-		Short: "Manage your sandboxes",
-		Long: `Manage your Slack developer sandboxes without leaving your terminal.
+		Short: "Manage developer sandboxes",
+		Long: `Manage Slack developer sandboxes without leaving your terminal.
 Use the --team flag to select the authentication to use for these commands.
 
-Prefer a UI? Head over to {{LinkText "https://api.slack.com/developer-program/sandboxes"}}
+Prefer a UI? Head over to
+{{LinkText "https://api.slack.com/developer-program/sandboxes"}}
 
-New to the Developer Program? Sign up at {{LinkText "https://api.slack.com/developer-program/join"}}`,
+New to the Developer Program? Sign up at
+{{LinkText "https://api.slack.com/developer-program/join"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{}),
 		Aliases: []string{"sandboxes"},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -63,7 +65,6 @@ func requireSandboxExperiment(clients *shared.ClientFactory) error {
 // getSandboxAuth returns the auth to be used for sandbox management.
 // Uses the global --token or --team flag if present, otherwise prompts the user to select a team.
 func getSandboxAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
-
 	// Check for the global --token flag
 	if clients.Config.TokenFlag != "" {
 		auth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag)

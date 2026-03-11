@@ -16,10 +16,10 @@ package types
 
 // Sandbox represents a Slack Developer Sandbox from the developer.sandbox.list API.
 type Sandbox struct {
-	SandboxTeamID string `json:"sandbox_team_id"` // Encoded team ID of the developer sandbox
-	SandboxName   string `json:"sandbox_name"`    // Name of the developer sandbox
-	SandboxDomain string `json:"sandbox_domain"`  // Domain of the developer sandbox
-	DateCreated   int64  `json:"date_created"`    // When the developer sandbox was created, as epoch seconds
 	DateArchived  int64  `json:"date_archived"`   // When the developer sandbox is or will be archived, as epoch seconds
+	DateCreated   int64  `json:"date_created"`    // When the developer sandbox was created, as epoch seconds
+	SandboxDomain string `json:"sandbox_domain"`  // Domain of the developer sandbox
+	SandboxName   string `json:"sandbox_name"`    // Name of the developer sandbox
+	SandboxTeamID string `json:"sandbox_team_id"` // Encoded team ID of the developer sandbox
 	Status        string `json:"status"`          // Status of the developer sandbox: Active or Archived
 }
