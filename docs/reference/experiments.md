@@ -10,6 +10,7 @@ The following is a list of currently available experiments. We'll remove experim
   - `slack create` and `slack init` now set manifest source to "app settings" (remote) for Bolt JS & Bolt Python projects ([PR#96](https://github.com/slackapi/slack-cli/pull/96)).
   - `slack run` and `slack install` support creating and installing Bolt Framework apps that have the manifest source set to "app settings (remote)" ([PR#111](https://github.com/slackapi/slack-cli/pull/111), [PR#154](https://github.com/slackapi/slack-cli/pull/154)).
 - `charm`: shows beautiful prompts ([PR#348](https://github.com/slackapi/slack-cli/pull/348)).
+- `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
 
 ## Experiments changelog
 

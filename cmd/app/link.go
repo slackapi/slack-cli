@@ -18,13 +18,13 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
+	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -262,7 +262,7 @@ func LinkAppFooterSection(ctx context.Context, clients *shared.ClientFactory, ap
 
 // promptExistingApp gathers details to represent app information
 func promptExistingApp(ctx context.Context, clients *shared.ClientFactory) (types.App, *types.SlackAuth, error) {
-	slackAuth, err := promptTeamSlackAuth(ctx, clients)
+	slackAuth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select the existing app team")
 	if err != nil {
 		return types.App{}, &types.SlackAuth{}, err
 	}
@@ -289,61 +289,6 @@ func promptExistingApp(ctx context.Context, clients *shared.ClientFactory) (type
 		return app, slackAuth, nil
 	}
 	return apps[0], slackAuth, nil
-}
-
-// promptTeamSlackAuth retrieves an authenticated team from input
-func promptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
-	allAuths, err := clients.Auth().Auths(ctx)
-	if err != nil {
-		return &types.SlackAuth{}, err
-	}
-	slices.SortFunc(allAuths, func(i, j types.SlackAuth) int {
-		if i.TeamDomain == j.TeamDomain {
-			return strings.Compare(i.TeamID, j.TeamID)
-		}
-		return strings.Compare(i.TeamDomain, j.TeamDomain)
-	})
-	var teamLabels []string
-	for _, auth := range allAuths {
-		teamLabels = append(
-			teamLabels,
-			style.TeamSelectLabel(auth.TeamDomain, auth.TeamID),
-		)
-	}
-	selection, err := clients.IO.SelectPrompt(
-		ctx,
-		"Select the existing app team",
-		teamLabels,
-		iostreams.SelectPromptConfig{
-			Required: true,
-			Flag:     clients.Config.Flags.Lookup("team"),
-		},
-	)
-	if err != nil {
-		return &types.SlackAuth{}, err
-	}
-	if selection.Prompt {
-		clients.Auth().SetSelectedAuth(ctx, allAuths[selection.Index], clients.Config, clients.Os)
-		return &allAuths[selection.Index], nil
-	}
-	teamMatch := false
-	teamIndex := -1
-	for ii, auth := range allAuths {
-		if selection.Option == auth.TeamID || selection.Option == auth.TeamDomain {
-			if teamMatch {
-				return &types.SlackAuth{}, slackerror.New(slackerror.ErrMissingAppTeamID).
-					WithMessage("The team cannot be determined by team domain").
-					WithRemediation("Provide the team ID for the installed app")
-			}
-			teamMatch = true
-			teamIndex = ii
-		}
-	}
-	if !teamMatch {
-		return &types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound)
-	}
-	clients.Auth().SetSelectedAuth(ctx, allAuths[teamIndex], clients.Config, clients.Os)
-	return &allAuths[teamIndex], nil
 }
 
 // promptAppID retrieves an app ID from user input

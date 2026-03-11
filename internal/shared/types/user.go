@@ -72,4 +72,5 @@ type UserInfo struct {
 
 type UserProfile struct {
 	DisplayName string `json:"display_name"`
+	Email       string `json:"email,omitempty"`
 }
