@@ -17,6 +17,7 @@ package api
 import (
 	"context"
 	"net/url"
+	"strconv"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
@@ -24,11 +25,17 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
-const sandboxListMethod = "developer.sandbox.list"
+const (
+	sandboxListMethod   = "developer.sandbox.list"
+	sandboxCreateMethod = "enterprise.signup.createDevOrg"
+	sandboxDeleteMethod = "developer.sandbox.delete"
+)
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
 	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
+	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID, template, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error)
+	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 }
 
 type listSandboxesResponse struct {
@@ -68,4 +75,84 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	}
 
 	return resp.Sandboxes, nil
+}
+
+type createSandboxResponse struct {
+	extendedBaseResponse
+	TeamID string `json:"team_id"`
+	UserID string `json:"user_id"`
+	URL    string `json:"url"`
+}
+
+// CreateSandbox creates a new developer sandbox
+func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID, template, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateSandbox")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("org_name", name)
+	values.Add("domain", domain)
+	values.Add("password", password)
+	if locale != "" {
+		values.Add("locale", locale)
+	}
+	if owningOrgID != "" {
+		values.Add("owning_org_id", owningOrgID)
+	}
+	if template != "" {
+		values.Add("template", template)
+	}
+	if eventCode != "" {
+		values.Add("event_code", eventCode)
+	}
+	if archiveDate > 0 {
+		values.Add("archive_date", strconv.FormatInt(archiveDate, 10))
+	}
+
+	b, err := c.postForm(ctx, sandboxCreateMethod, values)
+	if err != nil {
+		return "", "", errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := createSandboxResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return "", "", errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxCreateMethod)
+	}
+
+	if !resp.Ok {
+		return "", "", slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxCreateMethod)
+	}
+
+	return resp.TeamID, resp.URL, nil
+}
+
+// DeleteSandbox permanently deletes a developer sandbox
+func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) error {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.DeleteSandbox")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("sandbox_team_id", sandboxID)
+
+	b, err := c.postForm(ctx, sandboxDeleteMethod, values)
+	if err != nil {
+		return errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := extendedBaseResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxDeleteMethod)
+	}
+
+	if !resp.Ok {
+		return slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxDeleteMethod)
+	}
+
+	return nil
 }

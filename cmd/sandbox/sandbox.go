@@ -49,6 +49,8 @@ New to the Developer Program? Sign up at
 	}
 
 	cmd.AddCommand(NewListCommand(clients))
+	cmd.AddCommand(NewCreateCommand(clients))
+	cmd.AddCommand(NewDeleteCommand(clients))
 
 	return cmd
 }
@@ -75,6 +77,7 @@ func getSandboxAuth(ctx context.Context, clients *shared.ClientFactory) (*types.
 	}
 
 	// Prompt the user to select a team to use for authentication
+	clients.IO.PrintInfo(ctx, false, style.Secondary("Choose a Slack team where your email address matches your Slack developer account"))
 	auth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select a team for authentication")
 	if err != nil {
 		return nil, err
