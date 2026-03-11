@@ -38,7 +38,7 @@ type ManifestValidatePkgMock struct {
 
 func (m *ManifestValidatePkgMock) ManifestValidate(ctx context.Context, clients *shared.ClientFactory, app types.App, token string) (bool, slackerror.Warnings, error) {
 	args := m.Called(ctx, clients, app, token)
-	return args.Bool(0), nil, args.Error(2)
+	return args.Bool(0), args.Get(1).(slackerror.Warnings), args.Error(2)
 }
 
 func TestManifestValidateCommand(t *testing.T) {
