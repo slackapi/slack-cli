@@ -21,6 +21,7 @@ import (
 	"image/png"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -62,7 +63,7 @@ func Test_ResizeImageToBytes(t *testing.T) {
 
 func Test_ResizeImageFromFileToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 100, 100)
-	fs := afero.NewMemMapFs()
+	fs := slackdeps.NewFsMock()
 	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
 	require.NoError(t, err)
 
@@ -72,7 +73,7 @@ func Test_ResizeImageFromFileToBytes(t *testing.T) {
 }
 
 func Test_ResizeImageFromFileToBytes_FileNotFound(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := slackdeps.NewFsMock()
 	_, err := ResizeImageFromFileToBytes(fs, "/nonexistent.png", 50, 50)
 	assert.Error(t, err)
 }
@@ -98,7 +99,7 @@ func Test_CropResizeImageRatioToBytes(t *testing.T) {
 
 func Test_CropResizeImageRatioFromFile(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
-	fs := afero.NewMemMapFs()
+	fs := slackdeps.NewFsMock()
 	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
 	require.NoError(t, err)
 
@@ -108,14 +109,14 @@ func Test_CropResizeImageRatioFromFile(t *testing.T) {
 }
 
 func Test_CropResizeImageRatioFromFile_FileNotFound(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := slackdeps.NewFsMock()
 	_, err := CropResizeImageRatioFromFile(fs, "/nonexistent.png", 100, 1, 1)
 	assert.Error(t, err)
 }
 
 func Test_CropResizeImageRatioFromFileToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
-	fs := afero.NewMemMapFs()
+	fs := slackdeps.NewFsMock()
 	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
 	require.NoError(t, err)
 
@@ -125,7 +126,7 @@ func Test_CropResizeImageRatioFromFileToBytes(t *testing.T) {
 }
 
 func Test_CropResizeImageRatioFromFileToBytes_FileNotFound(t *testing.T) {
-	fs := afero.NewMemMapFs()
+	fs := slackdeps.NewFsMock()
 	_, err := CropResizeImageRatioFromFileToBytes(fs, "/nonexistent.png", 100, 1, 1)
 	assert.Error(t, err)
 }
