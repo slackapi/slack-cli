@@ -34,8 +34,13 @@ var listCmdFlags listFlags
 func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [flags]",
-		Short: "List your sandboxes",
-		Long:  `List details of your sandboxes`,
+		Short: "List developer sandboxes",
+		Long: strings.Join([]string{
+			"List details about your developer sandboxes.",
+			"",
+			"The listed developer sandboxes belong to a developer program account",
+			"that matches the email address of the authenticated user.",
+		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox list", Meaning: "List your sandboxes"},
 			{Command: "sandbox list --filter active", Meaning: "List active sandboxes only"},
