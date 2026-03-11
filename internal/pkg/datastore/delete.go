@@ -19,12 +19,11 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
-func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, request types.AppDatastoreDelete) (*logger.LogEvent, error) {
+func Delete(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastoreDelete) (types.AppDatastoreDeleteResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.delete")
 	defer span.Finish()
 
@@ -33,12 +32,8 @@ func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 
 	deleteResult, err := clients.API().AppsDatastoreDelete(ctx, token, request)
 	if err != nil {
-		return nil, err
+		return types.AppDatastoreDeleteResult{}, err
 	}
 
-	// Notify listeners
-	log.Data["deleteResult"] = deleteResult
-	log.Log("info", "on_delete_result")
-
-	return log.SuccessEvent(), nil
+	return deleteResult, nil
 }

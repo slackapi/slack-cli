@@ -21,7 +21,7 @@ import (
 	"context"
 	"slices"
 
-	"github.com/charmbracelet/huh"
+	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
@@ -29,6 +29,7 @@ import (
 func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
+		Placeholder(cfg.Placeholder).
 		Value(input)
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))

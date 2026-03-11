@@ -28,6 +28,7 @@ type APIInterface interface {
 	DatastoresClient
 	ExternalAuthClient
 	FunctionDistributionClient
+	SandboxClient
 	SessionsClient
 	StepsClient
 	TeamClient

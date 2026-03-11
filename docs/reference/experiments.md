@@ -7,6 +7,7 @@ The Slack CLI has an experiment (`-e`) flag behind which we put features current
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
 - `charm`: shows beautiful prompts ([PR#348](https://github.com/slackapi/slack-cli/pull/348)).
+- `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
 
 ## Experiments changelog
 

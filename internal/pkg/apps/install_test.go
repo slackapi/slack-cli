@@ -22,7 +22,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -85,6 +84,7 @@ func TestInstall(t *testing.T) {
 				TeamName:     &mockTeamDomain,
 				UserID:       &mockUserID,
 			},
+
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -143,6 +143,7 @@ func TestInstall(t *testing.T) {
 				TeamName:     &mockTeamDomain,
 				UserID:       &mockUserID,
 			},
+
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -202,6 +203,7 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
+
 			mockConfirmPrompt:  true,
 			mockIsTTY:          true,
 			mockManifestSource: config.ManifestSourceLocal,
@@ -267,6 +269,8 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
+			mockConfirmPrompt: true,
+			mockIsTTY:         true,
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -279,7 +283,7 @@ func TestInstall(t *testing.T) {
 				},
 			},
 			mockManifestHashInitial: cache.Hash("123"),
-			mockManifestHashUpdated: cache.Hash("123"), // matching hash allows update to proceed
+			mockManifestHashUpdated: cache.Hash("789"),
 			expectedApp: types.App{
 				AppID:  "A003",
 				TeamID: mockTeamID,
@@ -314,6 +318,7 @@ func TestInstall(t *testing.T) {
 				TeamName:     &mockTeamDomain,
 				UserID:       &mockUserID,
 			},
+
 			mockManifestSource: config.ManifestSourceRemote,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -366,6 +371,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockAPICreateError: slackerror.New(slackerror.ErrAppCreate),
 			mockAPIUpdateError: slackerror.New(slackerror.ErrAppAdd),
+
 			mockManifestSource: config.ManifestSourceRemote,
 			expectedApp: types.App{
 				AppID:  "A004",
@@ -394,6 +400,7 @@ func TestInstall(t *testing.T) {
 			mockAPICreateError:      slackerror.New(slackerror.ErrAppCreate),
 			mockAPIUpdateError:      slackerror.New(slackerror.ErrAppAdd),
 			mockAPIInstallError:     slackerror.New(slackerror.ErrAppInstall),
+
 			mockManifestHashInitial: "pt1",
 			mockManifestHashUpdated: "pt2",
 			mockManifestSource:      config.ManifestSourceLocal,
@@ -429,8 +436,9 @@ func TestInstall(t *testing.T) {
 				TeamName:     &mockTeamDomain,
 				UserID:       &mockUserID,
 			},
-			mockConfirmPrompt: false,
-			mockIsTTY:         true,
+
+			mockConfirmPrompt:  false,
+			mockIsTTY:          true,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
@@ -470,6 +478,7 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
+
 			mockManifestAppRemote: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
@@ -612,12 +621,10 @@ func TestInstall(t *testing.T) {
 			mockProjectConfig.On("Cache").Return(mockProjectCache)
 			clientsMock.Config.ProjectConfig = mockProjectConfig
 
-			log := logger.New(func(event *logger.LogEvent) {})
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			app, state, err := Install(
 				ctx,
 				clients,
-				log,
 				tc.mockAuth,
 				false,
 				tc.mockApp,
@@ -683,28 +690,28 @@ func TestInstallLocalApp(t *testing.T) {
 	mockUserID := "U001"
 
 	tests := map[string]struct {
-		mockApp                 types.App
-		mockAPICreate           api.CreateAppResult
-		mockAPICreateError      error
-		mockAPIInstall          api.DeveloperAppInstallResult
-		mockAPIInstallState     types.InstallState
-		mockAPIInstallError     error
-		mockAPIUpdate           api.UpdateAppResult
-		mockAPIUpdateError      error
-		mockAuth                types.SlackAuth
-		mockAuthSession         api.AuthSession
-		mockConfirmPrompt       bool
-		mockIsTTY               bool
-		mockManifest            types.SlackYaml
-		mockManifestHashInitial cache.Hash
-		mockManifestHashUpdated cache.Hash
-		mockManifestSource      config.ManifestSource
-		mockOrgGrantWorkspaceID string
-		expectedApp             types.App
-		expectedCreate          bool
-		expectedInstallState    types.InstallState
-		expectedManifest        types.AppManifest
-		expectedUpdate          bool
+		mockApp                   types.App
+		mockAPICreate             api.CreateAppResult
+		mockAPICreateError        error
+		mockAPIInstall            api.DeveloperAppInstallResult
+		mockAPIInstallState       types.InstallState
+		mockAPIInstallError       error
+		mockAPIUpdate             api.UpdateAppResult
+		mockAPIUpdateError        error
+		mockAuth                  types.SlackAuth
+		mockAuthSession           api.AuthSession
+		mockConfirmPrompt         bool
+		mockIsTTY                 bool
+		mockManifest              types.SlackYaml
+		mockManifestHashInitial   cache.Hash
+		mockManifestHashUpdated   cache.Hash
+		mockManifestSource        config.ManifestSource
+		mockOrgGrantWorkspaceID   string
+		expectedApp               types.App
+		expectedCreate            bool
+		expectedInstallState      types.InstallState
+		expectedManifest          types.AppManifest
+		expectedUpdate            bool
 	}{
 		"create and install a new ROSI app with a local function runtime using expected rosi defaults": {
 			mockApp: types.App{},
@@ -725,6 +732,7 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamName:     &mockTeamDomain,
 				UserID:       &mockUserID,
 			},
+			mockManifestSource: config.ManifestSourceLocal,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
@@ -789,6 +797,9 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
+			mockConfirmPrompt:  true,
+			mockIsTTY:          true,
+			mockManifestSource: config.ManifestSourceLocal,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
@@ -811,7 +822,7 @@ func TestInstallLocalApp(t *testing.T) {
 				},
 			},
 			mockManifestHashInitial: cache.Hash("123"),
-			mockManifestHashUpdated: cache.Hash("123"), // matching hash allows update to proceed
+			mockManifestHashUpdated: cache.Hash("789"),
 			mockAPIInstallState:     types.InstallSuccess,
 			expectedApp: types.App{
 				AppID:  "A002",
@@ -864,6 +875,7 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
+			mockManifestSource:  config.ManifestSourceLocal,
 			mockAPIInstallState: types.InstallSuccess,
 			mockConfirmPrompt:   true,
 			mockIsTTY:           true,
@@ -907,6 +919,53 @@ func TestInstallLocalApp(t *testing.T) {
 			expectedInstallState: types.InstallSuccess,
 			expectedUpdate:       true,
 		},
+		"skip updating and allow installing an existing bolt app with a remote manifest": {
+			mockApp: types.App{
+				AppID:  "A004",
+				IsDev:  true,
+				TeamID: mockTeamID,
+				UserID: mockUserID,
+			},
+			mockAuth: types.SlackAuth{
+				TeamID:     mockTeamID,
+				TeamDomain: mockTeamDomain,
+				Token:      mockToken,
+				UserID:     mockUserID,
+			},
+			mockAuthSession: api.AuthSession{
+				TeamID:   &mockTeamID,
+				TeamName: &mockTeamDomain,
+				UserID:   &mockUserID,
+			},
+			mockManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{
+						Name: "example-3",
+					},
+					Features: &types.AppFeatures{
+						BotUser: types.BotUser{
+							DisplayName: "example-3",
+						},
+					},
+					Settings: &types.AppSettings{
+						SocketModeEnabled: &mockTrue,
+					},
+				},
+			},
+			mockAPICreateError:  slackerror.New(slackerror.ErrAppCreate),
+			mockAPIUpdateError:  slackerror.New(slackerror.ErrAppAdd),
+			mockAPIInstallState: types.InstallSuccess,
+			mockManifestSource:  config.ManifestSourceRemote,
+			expectedApp: types.App{
+				AppID:  "A004",
+				IsDev:  true,
+				TeamID: mockTeamID,
+				UserID: mockUserID,
+			},
+			expectedCreate:       false,
+			expectedInstallState: types.InstallSuccess,
+			expectedUpdate:       false,
+		},
 		"create and install a new ROSI app when manifest is local": {
 			mockApp: types.App{},
 			mockAPICreate: api.CreateAppResult{
@@ -939,8 +998,10 @@ func TestInstallLocalApp(t *testing.T) {
 					},
 				},
 			},
-			mockManifestSource:  config.ManifestSourceLocal,
-			mockAPIInstallState: types.InstallSuccess,
+
+
+			mockManifestSource:        config.ManifestSourceLocal,
+			mockAPIInstallState:       types.InstallSuccess,
 			expectedApp: types.App{
 				AppID:        "A001",
 				EnterpriseID: mockEnterpriseID,
@@ -1004,10 +1065,12 @@ func TestInstallLocalApp(t *testing.T) {
 					},
 				},
 			},
-			mockManifestSource:      config.ManifestSourceLocal,
-			mockManifestHashInitial: cache.Hash("123"),
-			mockManifestHashUpdated: cache.Hash("789"),
-			mockAPIInstallState:     types.InstallSuccess,
+
+
+			mockManifestSource:        config.ManifestSourceLocal,
+			mockManifestHashInitial:   cache.Hash("123"),
+			mockManifestHashUpdated:   cache.Hash("789"),
+			mockAPIInstallState:       types.InstallSuccess,
 			expectedApp: types.App{
 				AppID:  "A002",
 				IsDev:  true,
@@ -1068,8 +1131,10 @@ func TestInstallLocalApp(t *testing.T) {
 					},
 				},
 			},
-			mockAPIInstallState: types.InstallSuccess,
-			mockManifestSource:  config.ManifestSourceLocal,
+
+
+			mockAPIInstallState:       types.InstallSuccess,
+			mockManifestSource:        config.ManifestSourceLocal,
 			expectedApp: types.App{
 				AppID:        "A001",
 				EnterpriseID: mockEnterpriseID,
@@ -1132,12 +1197,14 @@ func TestInstallLocalApp(t *testing.T) {
 			mockAPIUpdate: api.UpdateAppResult{
 				AppID: "A004",
 			},
-			mockAPIInstallState:     types.InstallSuccess,
-			mockManifestSource:      config.ManifestSourceLocal,
-			mockManifestHashInitial: cache.Hash("123"),
-			mockManifestHashUpdated: cache.Hash("789"),
-			mockConfirmPrompt:       true,
-			mockIsTTY:               true,
+
+
+			mockAPIInstallState:       types.InstallSuccess,
+			mockManifestSource:        config.ManifestSourceLocal,
+			mockManifestHashInitial:   cache.Hash("123"),
+			mockManifestHashUpdated:   cache.Hash("789"),
+			mockConfirmPrompt:         true,
+			mockIsTTY:                 true,
 			expectedApp: types.App{
 				AppID:  "A004",
 				IsDev:  true,
@@ -1195,8 +1262,10 @@ func TestInstallLocalApp(t *testing.T) {
 					},
 				},
 			},
-			mockManifestSource:  config.ManifestSourceRemote,
-			mockAPIInstallState: types.InstallSuccess,
+
+
+			mockManifestSource:        config.ManifestSourceRemote,
+			mockAPIInstallState:       types.InstallSuccess,
 			expectedApp: types.App{
 				AppID:        "A001",
 				EnterpriseID: mockEnterpriseID,
@@ -1255,10 +1324,12 @@ func TestInstallLocalApp(t *testing.T) {
 					},
 				},
 			},
-			mockAPICreateError:  slackerror.New(slackerror.ErrAppCreate),
-			mockAPIUpdateError:  slackerror.New(slackerror.ErrAppAdd),
-			mockAPIInstallState: types.InstallSuccess,
-			mockManifestSource:  config.ManifestSourceRemote,
+			mockAPICreateError:        slackerror.New(slackerror.ErrAppCreate),
+			mockAPIUpdateError:        slackerror.New(slackerror.ErrAppAdd),
+			mockAPIInstallState:       types.InstallSuccess,
+
+
+			mockManifestSource:        config.ManifestSourceRemote,
 			expectedApp: types.App{
 				AppID:  "A004",
 				IsDev:  true,
@@ -1384,13 +1455,11 @@ func TestInstallLocalApp(t *testing.T) {
 			mockProjectConfig.On("Cache").Return(mockProjectCache)
 			clientsMock.Config.ProjectConfig = mockProjectConfig
 
-			log := logger.New(func(event *logger.LogEvent) {})
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			app, _, state, err := InstallLocalApp(
 				ctx,
 				clients,
 				tc.mockOrgGrantWorkspaceID,
-				log,
 				tc.mockAuth,
 				tc.mockApp,
 			)
@@ -1614,6 +1683,64 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			assert.Equal(t, tc.expectedAppToken, clients.Os.Getenv("SLACK_APP_TOKEN"))
 			assert.Equal(t, tc.expectedBotToken, clients.Os.Getenv("SLACK_BOT_TOKEN"))
 			assert.Contains(t, output.String(), tc.expectedOutput)
+		})
+	}
+}
+
+func TestContinueDespiteWarning(t *testing.T) {
+	tests := map[string]struct {
+		warnings       slackerror.Warnings
+		confirmPrompt  bool
+		expectsPrompt  bool
+		expectedResult bool
+	}{
+		"user confirms breaking change": {
+			warnings: slackerror.Warnings{
+				{Code: "breaking_change", Message: "something changed"},
+			},
+			confirmPrompt:  true,
+			expectsPrompt:  true,
+			expectedResult: true,
+		},
+		"user declines breaking change": {
+			warnings: slackerror.Warnings{
+				{Code: "breaking_change", Message: "something changed"},
+			},
+			confirmPrompt:  false,
+			expectsPrompt:  true,
+			expectedResult: false,
+		},
+		"non-breaking warning continues without prompt": {
+			warnings: slackerror.Warnings{
+				{Code: "some_warning", Message: "just a warning"},
+			},
+			expectsPrompt:  false,
+			expectedResult: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.AddDefaultMocks()
+			output := &bytes.Buffer{}
+			clientsMock.IO.Stdout.SetOutput(output)
+			stderr := &bytes.Buffer{}
+			clientsMock.IO.Stderr.SetOutput(stderr)
+			clientsMock.IO.On(
+				"ConfirmPrompt",
+				mock.Anything,
+				"Confirm changes?",
+				false,
+			).Return(tc.confirmPrompt, nil)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			result, err := continueDespiteWarning(ctx, clients, tc.warnings)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedResult, result)
+			if !tc.expectsPrompt {
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
+			}
 		})
 	}
 }

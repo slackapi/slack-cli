@@ -21,7 +21,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -73,6 +72,51 @@ func Test_prettifyActivity(t *testing.T) {
 				"a789",
 				"Trace=a123",
 				`{"some":"data"}`,
+			},
+		},
+		"warn level activity should contain the message": {
+			activity: api.Activity{
+				TraceID:     "w123",
+				Level:       types.WARN,
+				EventType:   "unknown",
+				ComponentID: "w789",
+				Payload: map[string]interface{}{
+					"some": "warning",
+				},
+				Created: 1686939542,
+			},
+			expectedResults: []string{
+				`{"some":"warning"}`,
+			},
+		},
+		"error level activity should contain the message": {
+			activity: api.Activity{
+				TraceID:     "e123",
+				Level:       types.ERROR,
+				EventType:   "unknown",
+				ComponentID: "e789",
+				Payload: map[string]interface{}{
+					"some": "error",
+				},
+				Created: 1686939542,
+			},
+			expectedResults: []string{
+				`{"some":"error"}`,
+			},
+		},
+		"fatal level activity should contain the message": {
+			activity: api.Activity{
+				TraceID:     "f123",
+				Level:       types.FATAL,
+				EventType:   "unknown",
+				ComponentID: "f789",
+				Payload: map[string]interface{}{
+					"some": "fatal",
+				},
+				Created: 1686939542,
+			},
+			expectedResults: []string{
+				`{"some":"fatal"}`,
 			},
 		},
 	}
@@ -240,7 +284,7 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 			// Setup default mock actions
 			clientsMock.AddDefaultMocks()
 
-			err := Activity(ctxMock, clients, &logger.Logger{}, tc.Args)
+			err := Activity(ctxMock, clients, tc.Args)
 			if tc.ExpectedError != nil {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.ExpectedError.Error(), err)

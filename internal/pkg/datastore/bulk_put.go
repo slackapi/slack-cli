@@ -19,12 +19,11 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
-func BulkPut(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, request types.AppDatastoreBulkPut) (*logger.LogEvent, error) {
+func BulkPut(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastoreBulkPut) (types.AppDatastoreBulkPutResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.bulkPut")
 	defer span.Finish()
 
@@ -33,12 +32,8 @@ func BulkPut(ctx context.Context, clients *shared.ClientFactory, log *logger.Log
 
 	bulkPutResult, err := clients.API().AppsDatastoreBulkPut(ctx, token, request)
 	if err != nil {
-		return nil, err
+		return types.AppDatastoreBulkPutResult{}, err
 	}
 
-	// Notify listeners
-	log.Data["bulkPutResult"] = bulkPutResult
-	log.Log("info", "on_bulk_put_result")
-
-	return log.SuccessEvent(), nil
+	return bulkPutResult, nil
 }

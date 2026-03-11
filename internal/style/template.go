@@ -33,7 +33,7 @@ type TemplateData map[string]interface{}
 func getTemplateFuncs() template.FuncMap {
 	return template.FuncMap{
 		"Title": func(s string) string {
-			return Styler().Bold(strings.ToUpper(s)).String()
+			return Header(s)
 		},
 		"IsAlias": func(cmdName string, aliases map[string]string) bool {
 			_, exists := aliases[cmdName]
@@ -57,6 +57,13 @@ func getTemplateFuncs() template.FuncMap {
 			if len(experiments) == 0 {
 				return ExampleTemplatef("None")
 			}
+			if isCharmEnabled {
+				styled := make([]string, len(experiments))
+				for i, exp := range experiments {
+					styled[i] = "  " + Red(exp)
+				}
+				return strings.Join(styled, "\n")
+			}
 			return ExampleTemplatef(strings.Join(experiments, "\n"))
 		},
 		"HasAliasSubcommands": func(parentName string, aliases map[string]string) bool {
@@ -79,7 +86,7 @@ func getTemplateFuncs() template.FuncMap {
 		"GetProcessName": processName,
 		"Error": func(message string, code string) string {
 			text := fmt.Sprintf("Error: %s (%s)", message, code)
-			return Styler().Index(redDark, text).String()
+			return Red(text)
 		},
 		"Suggestion": func(remediation string) string {
 			text := fmt.Sprintf("Suggestion: %s", remediation)
@@ -92,7 +99,7 @@ func getTemplateFuncs() template.FuncMap {
 			return Selector(text)
 		},
 		"Red": func(text string) string {
-			return Styler().Index(redDark, text).String()
+			return Red(text)
 		},
 		"rpad": func(s string, padding int) string {
 			formattedString := fmt.Sprintf("%%-%ds", padding)
@@ -100,6 +107,49 @@ func getTemplateFuncs() template.FuncMap {
 		},
 		"trimTrailingWhitespaces": func(s string) string {
 			return strings.TrimRightFunc(s, unicode.IsSpace)
+		},
+		// Charm-only template functions — return plain text when charm is off
+		"ToDescription": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Secondary(text)
+		},
+		"ToSecondary": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Secondary(text)
+		},
+		"ToPrompt": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Yellow(text)
+		},
+		"ToGroupName": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Warning(text)
+		},
+		"ToAliasParent": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Red(text)
+		},
+		"ToDarken": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return Darken(text)
+		},
+		"ToFlags": func(text string) string {
+			if !isCharmEnabled {
+				return text
+			}
+			return StyleFlags(text)
 		},
 	}
 }

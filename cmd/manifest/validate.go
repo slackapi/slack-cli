@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/manifest"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -78,8 +77,7 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 
 			clients.Config.ManifestEnv = app.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.App.TeamDomain, selection.App.IsDev)
 
-			logger := newValidateLogger(clients, cmd)
-			log, warn, err := manifestValidateFunc(ctx, clients, logger, selection.App, token)
+			isValid, warn, err := manifestValidateFunc(ctx, clients, selection.App, token)
 			if err != nil {
 				return err
 			}
@@ -87,41 +85,25 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 				clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "The following warnings were raised during manifest validation"))
 				return nil
 			}
-			if log != nil {
-				var isValid = log.DataToBool("isValid")
-				if isValid {
-					cmd.Printf(
-						"\n%s: %s\n",
-						style.Bold("App Manifest Validation Result"),
-						style.Styler().Green("Valid"),
-					)
-					clients.IO.PrintTrace(ctx, slacktrace.ManifestValidateSuccess)
-				} else {
-					cmd.Printf(
-						"\n%s: %s\n",
-						style.Bold("App Manifest Validation Result"),
-						style.Styler().Red("InValid"),
-					)
-				}
+			if isValid {
+				cmd.Printf(
+					"\n%s: %s\n",
+					style.Bold("App Manifest Validation Result"),
+					style.Green("Valid"),
+				)
+				clients.IO.PrintTrace(ctx, slacktrace.ManifestValidateSuccess)
+			} else {
+				cmd.Printf(
+					"\n%s: %s\n",
+					style.Bold("App Manifest Validation Result"),
+					style.Red("InValid"),
+				)
 			}
 			return nil
 		},
 	}
 
 	return cmd
-}
-
-// newValidateLogger creates a logger instance to receive event notifications
-func newValidateLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 // gatherAuthenticationToken returns some user token and configures authentication

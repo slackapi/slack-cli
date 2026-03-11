@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -38,7 +37,6 @@ type ActivityPkgMock struct {
 func (m *ActivityPkgMock) Activity(
 	ctx context.Context,
 	clients *shared.ClientFactory,
-	log *logger.Logger,
 	args types.ActivityArgs,
 ) error {
 	m.Called()
