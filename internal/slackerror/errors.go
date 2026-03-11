@@ -1121,7 +1121,7 @@ Otherwise start your app for local development with: %s`,
 
 	ErrMissingExperiment: {
 		Code:    ErrMissingExperiment,
-		Message: "The feature is behind an experiment flag",
+		Message: "The feature is behind an experiment not toggled on",
 	},
 
 	ErrMissingFunctionIdentifier: {

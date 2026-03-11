@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -35,11 +34,10 @@ type createFlags struct {
 	locale      string
 	owningOrgID string
 	template    string
+	demoIDs     []string
 	eventCode   string
 	ttl         string
-	autoLogin   bool
 	output      string
-	token       string
 }
 
 var createCmdFlags createFlags
@@ -47,14 +45,11 @@ var createCmdFlags createFlags
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [flags]",
-		Short: "Create a new sandbox",
-		Long: `Create a new Slack developer sandbox.
-
-Provisions a new sandbox. Domain is derived from org name if --domain is not provided.`,
+		Short: "Create a developer sandbox",
+		Long:  `Create a new Slack developer sandbox`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "sandbox create --name test-box", Meaning: "Create a sandbox named test-box"},
-			{Command: "sandbox create --name test-box --password mypass --owning-org-id E12345", Meaning: "Create a sandbox with login password and owning org"},
-			{Command: "sandbox create --name test-box --domain test-box --ttl 24h --output json", Meaning: "Create an ephemeral sandbox for CI/CD with JSON output"},
+			{Command: "sandbox create --name test-box --password mypass", Meaning: "Create a sandbox named test-box"},
+			{Command: "sandbox create --name test-box --password mypass --domain test-box --ttl 1d", Meaning: "Create a temporary sandbox that will be archived in 1 day"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -68,16 +63,24 @@ Provisions a new sandbox. Domain is derived from org name if --domain is not pro
 	cmd.Flags().StringVar(&createCmdFlags.name, "name", "", "Organization name for the new sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain (e.g., pizzaknifefight). If not provided, derived from org name")
 	cmd.Flags().StringVar(&createCmdFlags.password, "password", "", "Password used to log into the sandbox")
-	cmd.Flags().StringVar(&createCmdFlags.owningOrgID, "owning-org-id", "", "Enterprise team ID that manages your developer account, if applicable")
 	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template ID for pre-defined data to preload")
+	cmd.Flags().StringSliceVar(&createCmdFlags.demoIDs, "demo-ids", nil, "Demo IDs to preload in the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.eventCode, "event-code", "", "Event code for the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.ttl, "ttl", "", "Time-to-live duration; sandbox will be archived after this period (e.g., 2h, 1d, 7d)")
 	cmd.Flags().StringVar(&createCmdFlags.output, "output", "text", "Output format: json, text")
-	cmd.Flags().StringVar(&createCmdFlags.token, "token", "", "Service account token for CI/CD authentication")
 
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("domain")
-	cmd.MarkFlagRequired("password")
+	// If one's developer account is managed by multiple Production Slack teams, one of those team IDs must be provided in the command
+	cmd.Flags().StringVar(&createCmdFlags.owningOrgID, "owning-org-id", "", "Enterprise team ID that manages your developer account, if applicable")
+
+	if err := cmd.MarkFlagRequired("name"); err != nil {
+		panic(err)
+	}
+	if err := cmd.MarkFlagRequired("domain"); err != nil {
+		panic(err)
+	}
+	if err := cmd.MarkFlagRequired("password"); err != nil {
+		panic(err)
+	}
 
 	return cmd
 }
@@ -85,7 +88,7 @@ Provisions a new sandbox. Domain is derived from org name if --domain is not pro
 func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	token, err := getSandboxToken(ctx, clients, createCmdFlags.token)
+	auth, err := getSandboxAuth(ctx, clients)
 	if err != nil {
 		return err
 	}
@@ -100,7 +103,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
-	result, err := clients.API().CreateSandbox(ctx, token,
+	teamID, sandboxURL, err := clients.API().CreateSandbox(ctx, auth.Token,
 		createCmdFlags.name,
 		domain,
 		createCmdFlags.password,
@@ -118,15 +121,11 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	case "json":
 		encoder := json.NewEncoder(clients.IO.WriteOut())
 		encoder.SetIndent("", "  ")
-		if err := encoder.Encode(result); err != nil {
+		if err := encoder.Encode(map[string]string{"team_id": teamID, "url": sandboxURL}); err != nil {
 			return err
 		}
 	default:
-		printCreateSuccess(cmd, clients, result)
-	}
-
-	if createCmdFlags.autoLogin && result.URL != "" {
-		clients.Browser().OpenURL(result.URL)
+		printCreateSuccess(cmd, clients, teamID, sandboxURL)
 	}
 
 	return nil
@@ -195,15 +194,14 @@ func slugFromsandboxName(name string) string {
 	return string(b)
 }
 
-func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, result types.CreateSandboxResult) {
+func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, teamID, url string) {
 	ctx := cmd.Context()
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "beach_with_umbrella",
 		Text:  " Sandbox Created",
 		Secondary: []string{
-			fmt.Sprintf("Team ID: %s", result.TeamID),
-			fmt.Sprintf("User ID: %s", result.UserID),
-			fmt.Sprintf("URL: %s", result.URL),
+			fmt.Sprintf("Team ID: %s", teamID),
+			fmt.Sprintf("URL: %s", url),
 		},
 	}))
 }

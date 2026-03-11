@@ -28,7 +28,6 @@ type deleteFlags struct {
 	sandboxID string
 	force     bool
 	yes       bool
-	token     string
 }
 
 var deleteCmdFlags deleteFlags
@@ -36,10 +35,10 @@ var deleteCmdFlags deleteFlags
 func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete [flags]",
-		Short: "Delete a sandbox",
+		Short: "Delete a developer sandbox",
 		Long:  `Permanently delete a sandbox and all of its data`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "sandbox delete --sandbox E0123456", Meaning: "Delete a sandbox identified by its team ID"},
+			{Command: "sandbox delete --sandbox-id E0123456", Meaning: "Delete a sandbox identified by its team ID"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -50,10 +49,12 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&deleteCmdFlags.sandboxID, "sandbox", "", "Sandbox team ID to delete")
+	cmd.Flags().StringVar(&deleteCmdFlags.sandboxID, "sandbox-id", "", "Sandbox team ID to delete")
 	cmd.Flags().BoolVar(&deleteCmdFlags.force, "force", false, "Skip confirmation prompt")
-	cmd.Flags().StringVar(&deleteCmdFlags.token, "token", "", "Service account token for CI/CD authentication")
-	cmd.MarkFlagRequired("sandbox")
+
+	if err := cmd.MarkFlagRequired("sandbox-id"); err != nil {
+		panic(err)
+	}
 
 	return cmd
 }
@@ -61,7 +62,7 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	token, auth, err := getSandboxTokenAndAuth(ctx, clients, deleteCmdFlags.token)
+	auth, err := getSandboxAuth(ctx, clients)
 	if err != nil {
 		return err
 	}
@@ -93,7 +94,7 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
-	if err := clients.API().DeleteSandbox(ctx, token, deleteCmdFlags.sandboxID); err != nil {
+	if err := clients.API().DeleteSandbox(ctx, auth.Token, deleteCmdFlags.sandboxID); err != nil {
 		return err
 	}
 
@@ -105,7 +106,7 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		},
 	}))
 
-	err = printSandboxes(cmd, clients, token, auth)
+	err = printSandboxes(cmd, clients, auth.Token, auth)
 	if err != nil {
 		return err
 	}
