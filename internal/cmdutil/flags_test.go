@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIsFlagChanged(t *testing.T) {
+func Test_IsFlagChanged(t *testing.T) {
 	tests := map[string]struct {
 		flag     string
 		setFlag  bool

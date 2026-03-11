@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestExtractAndWriteFile(t *testing.T) {
+func Test_ExtractAndWriteFile(t *testing.T) {
 	tests := map[string]struct {
 		fileName string
 		content  string
@@ -73,7 +73,7 @@ func TestExtractAndWriteFile(t *testing.T) {
 	})
 }
 
-func TestUnzip(t *testing.T) {
+func Test_Unzip(t *testing.T) {
 	t.Run("extracts a zip archive", func(t *testing.T) {
 		srcDir := t.TempDir()
 		destDir := t.TempDir()
@@ -108,7 +108,7 @@ func TestUnzip(t *testing.T) {
 	})
 }
 
-func TestUntarGzip(t *testing.T) {
+func Test_UntarGzip(t *testing.T) {
 	t.Run("extracts a tar.gz archive", func(t *testing.T) {
 		srcDir := t.TempDir()
 		destDir := t.TempDir()

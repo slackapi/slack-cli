@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHost(t *testing.T) {
+func Test_Client_Host(t *testing.T) {
 	tests := map[string]struct {
 		host     string
 		expected string
@@ -42,7 +42,7 @@ func TestHost(t *testing.T) {
 	}
 }
 
-func TestSetHost(t *testing.T) {
+func Test_Client_SetHost(t *testing.T) {
 	tests := map[string]struct {
 		initial string
 		newHost string

@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestShouldIgnore(t *testing.T) {
+func Test_ShouldIgnore(t *testing.T) {
 	tests := map[string]struct {
 		val        string
 		list       []string
@@ -83,7 +83,7 @@ func TestShouldIgnore(t *testing.T) {
 	}
 }
 
-func TestCopy(t *testing.T) {
+func Test_Copy(t *testing.T) {
 	t.Run("copies a regular file", func(t *testing.T) {
 		srcDir := t.TempDir()
 		dstDir := t.TempDir()
@@ -109,7 +109,7 @@ func TestCopy(t *testing.T) {
 	})
 }
 
-func TestCopySymLink(t *testing.T) {
+func Test_CopySymLink(t *testing.T) {
 	t.Run("copies a symbolic link", func(t *testing.T) {
 		srcDir := t.TempDir()
 		dstDir := t.TempDir()
@@ -134,7 +134,7 @@ func TestCopySymLink(t *testing.T) {
 	})
 }
 
-func TestCopyDirectory(t *testing.T) {
+func Test_CopyDirectory(t *testing.T) {
 	t.Run("copies directory structure", func(t *testing.T) {
 		srcDir := t.TempDir()
 		dstDir := filepath.Join(t.TempDir(), "dst")

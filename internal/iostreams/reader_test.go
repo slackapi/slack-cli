@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestReadIn(t *testing.T) {
+func Test_ReadIn(t *testing.T) {
 	tests := map[string]struct {
 		input    string
 		expected string

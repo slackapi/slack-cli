@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestContextToken(t *testing.T) {
+func Test_Context_Token(t *testing.T) {
 	tests := map[string]struct {
 		token    string
 		expected string
@@ -47,7 +47,7 @@ func TestContextToken(t *testing.T) {
 	})
 }
 
-func TestContextEnterpriseID(t *testing.T) {
+func Test_Context_EnterpriseID(t *testing.T) {
 	tests := map[string]struct {
 		enterpriseID string
 		expected     string
@@ -73,7 +73,7 @@ func TestContextEnterpriseID(t *testing.T) {
 	})
 }
 
-func TestContextTeamID(t *testing.T) {
+func Test_Context_TeamID(t *testing.T) {
 	tests := map[string]struct {
 		teamID   string
 		expected string
@@ -99,7 +99,7 @@ func TestContextTeamID(t *testing.T) {
 	})
 }
 
-func TestContextTeamDomain(t *testing.T) {
+func Test_Context_TeamDomain(t *testing.T) {
 	tests := map[string]struct {
 		teamDomain string
 		expected   string
@@ -125,7 +125,7 @@ func TestContextTeamDomain(t *testing.T) {
 	})
 }
 
-func TestContextUserID(t *testing.T) {
+func Test_Context_UserID(t *testing.T) {
 	tests := map[string]struct {
 		userID   string
 		expected string

@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAccessLabels(t *testing.T) {
+func Test_AccessLabels(t *testing.T) {
 	tests := map[string]struct {
 		current         types.Permission
 		expectedCurrent string
@@ -50,7 +50,7 @@ func TestAccessLabels(t *testing.T) {
 	}
 }
 
-func TestTriggerAccessLabels(t *testing.T) {
+func Test_TriggerAccessLabels(t *testing.T) {
 	tests := map[string]struct {
 		current         types.Permission
 		expectedCurrent string

@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestClient_AddCollaborator_Ok(t *testing.T) {
+func Test_Client_AddCollaborator_Ok(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsAddMethod,
@@ -33,7 +33,7 @@ func TestClient_AddCollaborator_Ok(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestClient_AddCollaborator_WithUserID(t *testing.T) {
+func Test_Client_AddCollaborator_WithUserID(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsAddMethod,
@@ -44,7 +44,7 @@ func TestClient_AddCollaborator_WithUserID(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestClient_AddCollaborator_Error(t *testing.T) {
+func Test_Client_AddCollaborator_Error(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsAddMethod,
@@ -56,7 +56,7 @@ func TestClient_AddCollaborator_Error(t *testing.T) {
 	require.Contains(t, err.Error(), "user_not_found")
 }
 
-func TestClient_ListCollaborators_Ok(t *testing.T) {
+func Test_Client_ListCollaborators_Ok(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsListMethod,
@@ -69,7 +69,7 @@ func TestClient_ListCollaborators_Ok(t *testing.T) {
 	require.Equal(t, "U123", users[0].ID)
 }
 
-func TestClient_ListCollaborators_Error(t *testing.T) {
+func Test_Client_ListCollaborators_Error(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsListMethod,
@@ -81,7 +81,7 @@ func TestClient_ListCollaborators_Error(t *testing.T) {
 	require.Contains(t, err.Error(), "app_not_found")
 }
 
-func TestClient_RemoveCollaborator_Ok(t *testing.T) {
+func Test_Client_RemoveCollaborator_Ok(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsRemoveMethod,
@@ -93,7 +93,7 @@ func TestClient_RemoveCollaborator_Ok(t *testing.T) {
 	require.Empty(t, warnings)
 }
 
-func TestClient_RemoveCollaborator_Error(t *testing.T) {
+func Test_Client_RemoveCollaborator_Error(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsRemoveMethod,
@@ -105,7 +105,7 @@ func TestClient_RemoveCollaborator_Error(t *testing.T) {
 	require.Contains(t, err.Error(), "cannot_remove_owner")
 }
 
-func TestClient_UpdateCollaborator_Ok(t *testing.T) {
+func Test_Client_UpdateCollaborator_Ok(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsUpdateMethod,
@@ -116,7 +116,7 @@ func TestClient_UpdateCollaborator_Ok(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestClient_UpdateCollaborator_Error(t *testing.T) {
+func Test_Client_UpdateCollaborator_Error(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
 		ExpectedMethod: collaboratorsUpdateMethod,

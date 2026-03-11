@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetHostname(t *testing.T) {
+func Test_GetHostname(t *testing.T) {
 	t.Run("returns a non-empty hashed hostname", func(t *testing.T) {
 		hostname := GetHostname()
 		assert.NotEmpty(t, hostname)

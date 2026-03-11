@@ -40,7 +40,7 @@ func createTestPNG(t *testing.T, width, height int) []byte {
 	return buf.Bytes()
 }
 
-func TestResizeImage(t *testing.T) {
+func Test_ResizeImage(t *testing.T) {
 	pngData := createTestPNG(t, 100, 100)
 	reader := bytes.NewReader(pngData)
 
@@ -51,7 +51,7 @@ func TestResizeImage(t *testing.T) {
 	assert.Equal(t, 50, resized.Bounds().Dy())
 }
 
-func TestResizeImageToBytes(t *testing.T) {
+func Test_ResizeImageToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 100, 100)
 	reader := bytes.NewReader(pngData)
 
@@ -60,7 +60,7 @@ func TestResizeImageToBytes(t *testing.T) {
 	assert.NotEmpty(t, result)
 }
 
-func TestResizeImageFromFileToBytes(t *testing.T) {
+func Test_ResizeImageFromFileToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 100, 100)
 	fs := afero.NewMemMapFs()
 	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
@@ -71,13 +71,13 @@ func TestResizeImageFromFileToBytes(t *testing.T) {
 	assert.NotEmpty(t, result)
 }
 
-func TestResizeImageFromFileToBytes_FileNotFound(t *testing.T) {
+func Test_ResizeImageFromFileToBytes_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	_, err := ResizeImageFromFileToBytes(fs, "/nonexistent.png", 50, 50)
 	assert.Error(t, err)
 }
 
-func TestCropResizeImageRatio(t *testing.T) {
+func Test_CropResizeImageRatio(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
 	reader := bytes.NewReader(pngData)
 
@@ -87,7 +87,7 @@ func TestCropResizeImageRatio(t *testing.T) {
 	assert.Equal(t, 100, result.Bounds().Dx())
 }
 
-func TestCropResizeImageRatioToBytes(t *testing.T) {
+func Test_CropResizeImageRatioToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
 	reader := bytes.NewReader(pngData)
 
@@ -96,7 +96,7 @@ func TestCropResizeImageRatioToBytes(t *testing.T) {
 	assert.NotEmpty(t, result)
 }
 
-func TestCropResizeImageRatioFromFile(t *testing.T) {
+func Test_CropResizeImageRatioFromFile(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
 	fs := afero.NewMemMapFs()
 	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
@@ -107,13 +107,13 @@ func TestCropResizeImageRatioFromFile(t *testing.T) {
 	assert.NotNil(t, result)
 }
 
-func TestCropResizeImageRatioFromFile_FileNotFound(t *testing.T) {
+func Test_CropResizeImageRatioFromFile_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	_, err := CropResizeImageRatioFromFile(fs, "/nonexistent.png", 100, 1, 1)
 	assert.Error(t, err)
 }
 
-func TestCropResizeImageRatioFromFileToBytes(t *testing.T) {
+func Test_CropResizeImageRatioFromFileToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
 	fs := afero.NewMemMapFs()
 	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
@@ -124,13 +124,13 @@ func TestCropResizeImageRatioFromFileToBytes(t *testing.T) {
 	assert.NotEmpty(t, result)
 }
 
-func TestCropResizeImageRatioFromFileToBytes_FileNotFound(t *testing.T) {
+func Test_CropResizeImageRatioFromFileToBytes_FileNotFound(t *testing.T) {
 	fs := afero.NewMemMapFs()
 	_, err := CropResizeImageRatioFromFileToBytes(fs, "/nonexistent.png", 100, 1, 1)
 	assert.Error(t, err)
 }
 
-func TestResizeImage_InvalidReader(t *testing.T) {
+func Test_ResizeImage_InvalidReader(t *testing.T) {
 	reader := bytes.NewReader([]byte("not a valid image"))
 	_, err := ResizeImage(reader, 50, 50)
 	assert.Error(t, err)
