@@ -110,22 +110,22 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 
 	timeFormat := "2006-01-02" // We only support the granularity of the day for now, rather than a more precise datetime
 	for _, s := range sandboxes {
-		cmd.Printf("  %s (%s)\n", style.Bold(s.SandboxName), s.SandboxTeamID)
+		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.SandboxName), s.SandboxTeamID)
 
 		if s.SandboxDomain != "" {
-			cmd.Printf("    %s\n", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
 		}
 
 		if s.DateCreated > 0 {
-			cmd.Printf("    %s\n", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
 		}
 
 		if s.Status != "" {
 			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
-				cmd.Printf("    %s %s\n", style.Emoji("warning"), status)
+				clients.IO.PrintInfo(ctx, false, "    %s %s", style.Emoji("warning"), status)
 			} else {
-				cmd.Printf("    %s%s\n", style.Emoji("green_circle"), status)
+				clients.IO.PrintInfo(ctx, false, "    %s%s", style.Emoji("green_circle"), status)
 			}
 		}
 
@@ -138,10 +138,10 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			if archivedDate.Before(todayDate) {
 				label = "Archived:"
 			}
-			cmd.Printf("    %s\n", style.Secondary(fmt.Sprintf("%s %s", label, archivedTime.Format(timeFormat))))
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("%s %s", label, archivedTime.Format(timeFormat))))
 		}
 
-		cmd.Println()
+		clients.IO.PrintInfo(ctx, false, "")
 	}
 
 	clients.IO.PrintInfo(ctx, false, "Learn more at %s", style.Secondary("https://docs.slack.dev/tools/developer-sandboxes"))
