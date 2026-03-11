@@ -20,7 +20,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -48,9 +47,9 @@ type RunPkgMock struct {
 	mock.Mock
 }
 
-func (m *RunPkgMock) Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, runArgs platform.RunArgs) (*logger.LogEvent, types.InstallState, error) {
-	args := m.Called(ctx, clients, log, runArgs)
-	return log.SuccessEvent(), types.InstallSuccess, args.Error(0)
+func (m *RunPkgMock) Run(ctx context.Context, clients *shared.ClientFactory, runArgs platform.RunArgs) (types.InstallState, error) {
+	args := m.Called(ctx, clients, runArgs)
+	return types.InstallSuccess, args.Error(0)
 }
 
 func TestRunCommand_Flags(t *testing.T) {
@@ -222,7 +221,7 @@ func TestRunCommand_Flags(t *testing.T) {
 
 			runPkgMock := new(RunPkgMock)
 			runFunc = runPkgMock.Run
-			runPkgMock.On("Run", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			runPkgMock.On("Run", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			cmd := NewRunCommand(clients)
 			testutil.MockCmdIO(clients.IO, cmd)
@@ -234,7 +233,7 @@ func TestRunCommand_Flags(t *testing.T) {
 			// Check args passed into the run function
 			if tc.expectedErr == nil {
 				assert.NoError(t, err)
-				runPkgMock.AssertCalled(t, "Run", mock.Anything, mock.Anything, mock.Anything,
+				runPkgMock.AssertCalled(t, "Run", mock.Anything, mock.Anything,
 					tc.expectedRunArgs,
 				)
 			} else {
@@ -256,7 +255,7 @@ func TestRunCommand_Help(t *testing.T) {
 
 	runPkgMock := new(RunPkgMock)
 	runFunc = runPkgMock.Run
-	runPkgMock.On("Run", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	runPkgMock.On("Run", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err := cmd.ExecuteContext(ctx)
 	assert.NoError(t, err)
