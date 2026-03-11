@@ -148,8 +148,6 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	packagedTime := fmt.Sprintf("%.1fs", elapsedPackage.Seconds())
 	defer os.Remove(result.Filename)
 
-	time.Sleep(5 * time.Second)
-
 	packageSuccessText := style.Sectionf(style.TextSection{
 		Emoji:     "gift",
 		Text:      "App packaged and ready to deploy",
