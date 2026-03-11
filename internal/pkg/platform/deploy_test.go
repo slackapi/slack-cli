@@ -23,9 +23,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func strPtr(s string) *string { return &s }
-func boolPtr(b bool) *bool    { return &b }
-
 func TestDeploySuccessText(t *testing.T) {
 	tests := map[string]struct {
 		app         types.App
@@ -42,10 +39,10 @@ func TestDeploySuccessText(t *testing.T) {
 				},
 			},
 			authSession: api.AuthSession{
-				UserName: strPtr("slackbot"),
-				UserID:   strPtr("USLACKBOT"),
-				TeamName: strPtr("speck"),
-				TeamID:   strPtr("T001"),
+				UserName: new("slackbot"),
+				UserID:   new("USLACKBOT"),
+				TeamName: new("speck"),
+				TeamID:   new("T001"),
 			},
 			deployTime: "12.34",
 			expected: []string{
@@ -63,12 +60,12 @@ func TestDeploySuccessText(t *testing.T) {
 				},
 			},
 			authSession: api.AuthSession{
-				UserName:            strPtr("stub"),
-				UserID:              strPtr("U111"),
-				TeamName:            strPtr("spack"),
-				TeamID:              strPtr("E002"),
-				EnterpriseID:        strPtr("E002"),
-				IsEnterpriseInstall: boolPtr(true),
+				UserName:            new("stub"),
+				UserID:              new("U111"),
+				TeamName:            new("spack"),
+				TeamID:              new("E002"),
+				EnterpriseID:        new("E002"),
+				IsEnterpriseInstall: new(bool(true)),
 			},
 			deployTime: "8.05",
 			expected: []string{
