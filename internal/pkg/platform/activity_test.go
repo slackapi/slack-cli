@@ -693,7 +693,7 @@ func Test_activityToStringFunctions(t *testing.T) {
 		"functionDeploymentToString": {
 			fn:       functionDeploymentToString,
 			activity: baseActivity,
-			contains: []string{"deployd", "U123", "T456"},
+			contains: []string{"deployed", "U123", "T456"},
 		},
 		"functionExecutionOutputToString": {
 			fn:       functionExecutionOutputToString,

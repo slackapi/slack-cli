@@ -320,7 +320,7 @@ func externalAuthTokenFetchResult(activity api.Activity) (result string) {
 }
 
 func functionDeploymentToString(activity api.Activity) (result string) {
-	msg := fmt.Sprintf("Application %sd by user '%s' on team '%s'", activity.Payload["action"], activity.Payload["user_id"], activity.Payload["team_id"])
+	msg := fmt.Sprintf("Application %sed by user '%s' on team '%s'", activity.Payload["action"], activity.Payload["user_id"], activity.Payload["team_id"])
 	msg = fmt.Sprintf("%s %s [%s] %s", style.Emoji("cloud"), activity.CreatedPretty(), activity.Level, msg)
 	return style.Styler().Gray(13, msg).String()
 }

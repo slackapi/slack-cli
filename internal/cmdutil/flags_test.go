@@ -34,7 +34,7 @@ func TestIsFlagChanged(t *testing.T) {
 			cmd := &cobra.Command{Use: "test"}
 			cmd.Flags().String("app-id", "", "app ID")
 			if tc.setFlag && tc.flag == "app-id" {
-				cmd.Flags().Set("app-id", "A12345")
+				_ = cmd.Flags().Set("app-id", "A12345")
 			}
 			result := IsFlagChanged(cmd, tc.flag)
 			assert.Equal(t, tc.expected, result)
