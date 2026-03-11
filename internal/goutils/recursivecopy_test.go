@@ -59,7 +59,7 @@ func Test_ShouldIgnore(t *testing.T) {
 			expected: true,
 		},
 		"returns false when ignoreFunc returns false": {
-			val:  "readme.md",
+			val:  "README.md",
 			list: []string{},
 			ignoreFunc: func(s string) bool {
 				return s == "secret.txt"
