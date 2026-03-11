@@ -27,7 +27,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -140,12 +139,8 @@ func Test_LocalServer_Start(t *testing.T) {
 				AppID:          "A12345",
 				TeamID:         "justiceleague",
 			}
-			log := logger.Logger{
-				Data: map[string]interface{}{},
-			}
 			server := LocalServer{
 				clients,
-				&log,
 				"ABC123",
 				localContext,
 				clients.SDKConfig,
@@ -353,12 +348,8 @@ func Test_LocalServer_Listen(t *testing.T) {
 				AppID:          "A12345",
 				TeamID:         "justiceleague",
 			}
-			log := logger.Logger{
-				Data: map[string]interface{}{},
-			}
 			server := LocalServer{
 				clients,
-				&log,
 				"ABC123",
 				localContext,
 				clients.SDKConfig,
