@@ -42,7 +42,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 			"that matches the email address of the authenticated user.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "sandbox list", Meaning: "List your sandboxes"},
+			{Command: "sandbox list", Meaning: "List developer sandboxes"},
 			{Command: "sandbox list --filter active", Meaning: "List active sandboxes only"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
