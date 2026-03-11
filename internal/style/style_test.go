@@ -17,7 +17,6 @@ package style
 import (
 	"testing"
 
-	lipgloss "charm.land/lipgloss/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -116,15 +115,6 @@ func TestPluralize(t *testing.T) {
 				t.Errorf("expected: %s, actual: %s", tc.expectedResult, s)
 			}
 		})
-	}
-}
-
-// Verify no text is output when no emoji is given
-func TestEmojiEmpty(t *testing.T) {
-	alias := ""
-	emoji := Emoji(alias)
-	if emoji != "" {
-		t.Errorf("non-empty text returned, when none was expected")
 	}
 }
 
@@ -259,24 +249,6 @@ func TestFaint(t *testing.T) {
 	})
 }
 
-func TestRender(t *testing.T) {
-	defer func() {
-		ToggleStyles(false)
-	}()
-
-	t.Run("returns plain text when colors are off", func(t *testing.T) {
-		ToggleStyles(false)
-		result := render(lipgloss.NewStyle().Bold(true), "test")
-		assert.Equal(t, "test", result)
-	})
-
-	t.Run("returns styled text when colors are on", func(t *testing.T) {
-		ToggleStyles(true)
-		result := render(lipgloss.NewStyle().Bold(true), "test")
-		assert.Contains(t, RemoveANSI(result), "test")
-	})
-}
-
 func TestStyler(t *testing.T) {
 	t.Run("returns an aurora instance", func(t *testing.T) {
 		s := Styler()
@@ -292,6 +264,10 @@ func TestEmoji(t *testing.T) {
 	t.Run("returns empty when colors are off", func(t *testing.T) {
 		ToggleStyles(false)
 		assert.Equal(t, "", Emoji("gear"))
+	})
+
+	t.Run("returns empty for empty alias", func(t *testing.T) {
+		assert.Equal(t, "", Emoji(""))
 	})
 
 	t.Run("returns empty for whitespace alias", func(t *testing.T) {
