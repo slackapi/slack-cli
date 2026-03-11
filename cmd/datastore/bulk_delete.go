@@ -21,7 +21,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -88,12 +87,12 @@ func NewBulkDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the delete
-			log := newBulkDeleteLogger(clients, cmd)
-			event, err := BulkDelete(ctx, clients, log, query)
+			result, err := BulkDelete(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreBulkDeleteSuccess(cmd, event)
+			_ = printBulkDeleteResult(clients, cmd, result)
+			printDatastoreBulkDeleteSuccess(cmd)
 			return nil
 		},
 	}
@@ -116,26 +115,6 @@ func preRunBulkDeleteCommandFunc(ctx context.Context, clients *shared.ClientFact
 		return nil
 	}
 	return cmdutil.IsSlackHostedProject(ctx, clients)
-}
-
-func newBulkDeleteLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_bulk_delete_result":
-				deleteResult := types.AppDatastoreBulkDeleteResult{}
-				if event.Data["bulkDeleteResult"] != nil {
-					deleteResult = event.Data["bulkDeleteResult"].(types.AppDatastoreBulkDeleteResult)
-				}
-				if cmd != nil {
-					_ = printBulkDeleteResult(clients, cmd, deleteResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 func printBulkDeleteResult(clients *shared.ClientFactory, cmd *cobra.Command, deleteResult types.AppDatastoreBulkDeleteResult) error {
@@ -166,7 +145,7 @@ func printBulkDeleteResult(clients *shared.ClientFactory, cmd *cobra.Command, de
 	return nil
 }
 
-func printDatastoreBulkDeleteSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreBulkDeleteSuccess(cmd *cobra.Command) {
 	commandText := style.Commandf("datastore query <expression>", true)
 	if cmd != nil {
 		cmd.Printf(

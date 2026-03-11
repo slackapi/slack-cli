@@ -15,8 +15,12 @@
 package sandbox
 
 import (
+	"context"
+
 	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -25,14 +29,17 @@ import (
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sandbox <subcommand> [flags] --experiment=sandboxes",
-		Short: "Create and manage your sandboxes",
-		Long: `Create, list, or delete Slack developer sandboxes without leaving your terminal.
+		Short: "Manage developer sandboxes",
+		Long: `Manage Slack developer sandboxes without leaving your terminal.
 Use the --team flag to select the authentication to use for these commands.
 
-Prefer a UI? Head over to https://api.slack.com/developer-program/sandboxes
+Prefer a UI? Head over to
+{{LinkText "https://api.slack.com/developer-program/sandboxes"}}
 
-New to the Developer Program? Sign up at https://api.slack.com/developer-program/join`,
+New to the Developer Program? Sign up at
+{{LinkText "https://api.slack.com/developer-program/join"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{}),
+		Aliases: []string{"sandboxes"},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return requireSandboxExperiment(clients)
 		},
@@ -41,9 +48,7 @@ New to the Developer Program? Sign up at https://api.slack.com/developer-program
 		},
 	}
 
-	cmd.AddCommand(NewCreateCommand(clients))
 	cmd.AddCommand(NewListCommand(clients))
-	cmd.AddCommand(NewDeleteCommand(clients))
 
 	return cmd
 }
@@ -55,4 +60,25 @@ func requireSandboxExperiment(clients *shared.ClientFactory) error {
 			WithRemediation("To try them out, just add the --experiment=sandboxes flag to your command!")
 	}
 	return nil
+}
+
+// getSandboxAuth returns the auth to be used for sandbox management.
+// Uses the global --token or --team flag if present, otherwise prompts the user to select a team.
+func getSandboxAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
+	// Check for the global --token flag
+	if clients.Config.TokenFlag != "" {
+		auth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag)
+		if err != nil {
+			return nil, err
+		}
+		return &auth, nil
+	}
+
+	// Prompt the user to select a team to use for authentication
+	auth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select a team for authentication")
+	if err != nil {
+		return nil, err
+	}
+
+	return auth, nil
 }

@@ -26,8 +26,7 @@ import (
 )
 
 type listFlags struct {
-	filter string
-	token  string
+	status string
 }
 
 var listCmdFlags listFlags
@@ -35,11 +34,16 @@ var listCmdFlags listFlags
 func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [flags]",
-		Short: "List your sandboxes",
-		Long:  `List all of your active or archived sandboxes.`,
+		Short: "List developer sandboxes",
+		Long: strings.Join([]string{
+			"List details about your developer sandboxes.",
+			"",
+			"The listed developer sandboxes belong to a developer program account",
+			"that matches the email address of the authenticated user.",
+		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "sandbox list", Meaning: "List your sandboxes"},
-			{Command: "sandbox list --filter active", Meaning: "List active sandboxes only"},
+			{Command: "sandbox list", Meaning: "List developer sandboxes"},
+			{Command: "sandbox list --status active", Meaning: "List active sandboxes only"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return requireSandboxExperiment(clients)
@@ -49,8 +53,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&listCmdFlags.filter, "filter", "", "Filter by status: active, archived")
-	cmd.Flags().StringVar(&listCmdFlags.token, "token", "", "Service account token for CI/CD authentication")
+	cmd.Flags().StringVar(&listCmdFlags.status, "status", "", "Filter by status: active, archived")
 
 	return cmd
 }
@@ -58,13 +61,13 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	token, auth, err := getSandboxTokenAndAuth(ctx, clients, listCmdFlags.token)
+	auth, err := getSandboxAuth(ctx, clients)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println()
-	err = printSandboxes(cmd, clients, token, auth)
+	clients.IO.PrintInfo(ctx, false, "")
+	err = printSandboxes(cmd, clients, auth.Token, auth)
 	if err != nil {
 		return err
 	}
@@ -75,7 +78,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token string, auth *types.SlackAuth) error {
 	ctx := cmd.Context()
 
-	sandboxes, err := clients.API().ListSandboxes(ctx, token, listCmdFlags.filter)
+	sandboxes, err := clients.API().ListSandboxes(ctx, token, listCmdFlags.status)
 	if err != nil {
 		return err
 	}
@@ -91,6 +94,9 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 		Emoji: "beach_with_umbrella",
 		Text:  " Developer Sandboxes",
 	}
+
+	// Some users' logins may not include the scope needed to access the email address from the `users.info` method, so it may not be set
+	// Learn more: https://docs.slack.dev/reference/methods/users.info/#email-addresses
 	if email != "" {
 		section.Secondary = []string{fmt.Sprintf("Owned by Slack developer account %s", email)}
 	}
@@ -98,32 +104,47 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(section))
 
 	if len(sandboxes) == 0 {
-		clients.IO.PrintInfo(ctx, false, "%s\n", style.Secondary("No sandboxes found. Create one with `slack sandbox create --name <name>`"))
+		clients.IO.PrintInfo(ctx, false, "   %s\n", style.Secondary("No sandboxes found"))
 		return nil
 	}
 
-	timeFormat := "2006-01-02 15:04"
+	timeFormat := "2006-01-02" // We only support the granularity of the day for now, rather than a more precise datetime
 	for _, s := range sandboxes {
-		cmd.Printf("  %s (%s)\n", style.Bold(s.SandboxName), s.SandboxTeamID)
+		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.SandboxName), s.SandboxTeamID)
+
 		if s.SandboxDomain != "" {
-			cmd.Printf("    %s\n", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
 		}
+
 		if s.Status != "" {
 			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
-				cmd.Printf("    %s %s\n", style.Emoji("warning"), status)
+				clients.IO.PrintInfo(ctx, false, "    %s", style.Styler().Red(status))
 			} else {
-				cmd.Printf("    %s\n", status)
+				clients.IO.PrintInfo(ctx, false, "    %s", style.Styler().Green(status))
 			}
 		}
+
 		if s.DateCreated > 0 {
-			cmd.Printf("    %s\n", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
 		}
+
 		if s.DateArchived > 0 {
-			cmd.Printf("    %s\n", style.Secondary(fmt.Sprintf("Archived: %s", time.Unix(s.DateArchived, 0).Format(timeFormat))))
+			archivedTime := time.Unix(s.DateArchived, 0).In(time.Local)
+			now := time.Now()
+			archivedDate := time.Date(archivedTime.Year(), archivedTime.Month(), archivedTime.Day(), 0, 0, 0, 0, time.Local)
+			todayDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+			label := "Expires:"
+			if archivedDate.Before(todayDate) {
+				label = "Archived:"
+			}
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("%s %s", label, archivedTime.Format(timeFormat))))
 		}
-		cmd.Println()
+
+		clients.IO.PrintInfo(ctx, false, "")
 	}
+
+	clients.IO.PrintInfo(ctx, false, "Learn more at %s", style.Secondary("https://docs.slack.dev/tools/developer-sandboxes"))
 
 	return nil
 }

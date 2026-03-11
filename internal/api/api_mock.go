@@ -215,19 +215,9 @@ func (m *APIMock) FunctionDistributionRemoveUsers(ctx context.Context, callbackI
 
 // SandboxClient
 
-func (m *APIMock) CreateSandbox(ctx context.Context, token string, orgName, domain, password, locale, owningOrgID, templateID, eventCode string, archiveDate int64) (types.CreateSandboxResult, error) {
-	args := m.Called(ctx, token, orgName, domain, password, locale, owningOrgID, templateID, eventCode, archiveDate)
-	return args.Get(0).(types.CreateSandboxResult), args.Error(1)
-}
-
 func (m *APIMock) ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error) {
 	args := m.Called(ctx, token, filter)
 	return args.Get(0).([]types.Sandbox), args.Error(1)
-}
-
-func (m *APIMock) DeleteSandbox(ctx context.Context, token string, sandboxTeamID string) error {
-	args := m.Called(ctx, token, sandboxTeamID)
-	return args.Error(0)
 }
 
 // DatastoresClient

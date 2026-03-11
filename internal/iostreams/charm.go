@@ -29,6 +29,7 @@ import (
 func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
+		Placeholder(cfg.Placeholder).
 		Value(input)
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))

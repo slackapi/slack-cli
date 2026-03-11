@@ -31,6 +31,10 @@ make lint               # Run golangci-lint
 golangci-lint --version # Verify linter version
 ```
 
+### Formatting
+
+Always run `gofmt -w` on changed Go files after making edits to ensure proper formatting.
+
 ### Other Commands
 
 ```bash

@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/datastore"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -98,12 +97,12 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 			}
 
 			// Perform the delete
-			log := newDeleteLogger(clients, cmd)
-			event, err := Delete(ctx, clients, log, query)
+			result, err := Delete(ctx, clients, query)
 			if err != nil {
 				return err
 			}
-			printDatastoreDeleteSuccess(cmd, event)
+			printDeleteResult(clients, cmd, result)
+			printDatastoreDeleteSuccess(cmd)
 			return nil
 		},
 	}
@@ -128,26 +127,6 @@ func preRunDeleteCommandFunc(ctx context.Context, clients *shared.ClientFactory,
 	return cmdutil.IsSlackHostedProject(ctx, clients)
 }
 
-func newDeleteLogger(clients *shared.ClientFactory, cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_delete_result":
-				deleteResult := types.AppDatastoreDeleteResult{}
-				if event.Data["deleteResult"] != nil {
-					deleteResult = event.Data["deleteResult"].(types.AppDatastoreDeleteResult)
-				}
-				if cmd != nil {
-					printDeleteResult(clients, cmd, deleteResult)
-				}
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
-
 func printDeleteResult(clients *shared.ClientFactory, cmd *cobra.Command, deleteResult types.AppDatastoreDeleteResult) {
 	var datastore = deleteResult.Datastore
 	var id = deleteResult.ID
@@ -162,7 +141,7 @@ func printDeleteResult(clients *shared.ClientFactory, cmd *cobra.Command, delete
 	)
 }
 
-func printDatastoreDeleteSuccess(cmd *cobra.Command, event *logger.LogEvent) {
+func printDatastoreDeleteSuccess(cmd *cobra.Command) {
 	commandText := style.Commandf("datastore query <expression>", true)
 	if cmd != nil {
 		cmd.Printf(

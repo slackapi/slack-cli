@@ -174,12 +174,13 @@ var InputQuestionTemplate = fmt.Sprintf(`
     {{- if and .Help (not .ShowHelp)}}{{ print .Config.HelpInput }} for help {{- if and .Suggest}}, {{end}}{{end -}}
     {{- if and .Suggest }}{{color "cyan"}}{{ print .Config.SuggestInput }} for suggestions{{end -}}
   ]{{color "reset"}} {{end}}
-  {{- if .Default}}{{color "white"}}({{.Default}}) {{color "reset"}}{{end}}
-{{- end}}`, blue())
+  {{- if .Default}}{{color "%s"}}({{.Default}}) {{color "reset"}}{{end}}
+{{- end}}`, blue(), gray())
 
 // InputPromptConfig holds additional config for an Input prompt
 type InputPromptConfig struct {
-	Required bool // Whether the input must be non-empty
+	Required    bool   // Whether the input must be non-empty
+	Placeholder string // Placeholder text shown when input is empty
 }
 
 // GetFlags returns all flags for the Input prompt
@@ -208,6 +209,7 @@ func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputP
 	var input string
 	err := survey.AskOne(&survey.Input{
 		Message: message,
+		Default: cfg.Placeholder,
 	}, &input, SurveyOptions(cfg)...)
 
 	if err != nil {

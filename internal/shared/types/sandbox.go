@@ -16,32 +16,10 @@ package types
 
 // Sandbox represents a Slack Developer Sandbox from the developer.sandbox.list API.
 type Sandbox struct {
-	SandboxTeamID string `json:"sandbox_team_id"` // Encoded team ID of the developer sandbox
-	SandboxName   string `json:"sandbox_name"`    // Name of the developer sandbox
-	SandboxDomain string `json:"sandbox_domain"`  // Domain of the developer sandbox
-	DateCreated   int64  `json:"date_created"`    // When the developer sandbox was created, as epoch seconds
 	DateArchived  int64  `json:"date_archived"`   // When the developer sandbox is or will be archived, as epoch seconds
+	DateCreated   int64  `json:"date_created"`    // When the developer sandbox was created, as epoch seconds
+	SandboxDomain string `json:"sandbox_domain"`  // Domain of the developer sandbox
+	SandboxName   string `json:"sandbox_name"`    // Name of the developer sandbox
+	SandboxTeamID string `json:"sandbox_team_id"` // Encoded team ID of the developer sandbox
 	Status        string `json:"status"`          // Status of the developer sandbox: Active or Archived
-}
-
-// CreateSandboxRequest is the request payload for creating a sandbox.
-// Matches enterprise.signup.createDevOrg API contract.
-type CreateSandboxRequest struct {
-	Token       string `json:"token"`
-	OrgName     string `json:"org_name"`
-	Domain      string `json:"domain"`
-	Password    string `json:"password,omitempty"`
-	Locale      string `json:"locale,omitempty"`
-	OwningOrgID string `json:"owning_org_id,omitempty"`
-	TemplateID  string `json:"template_id,omitempty"`
-	EventCode   string `json:"event_code,omitempty"`
-	ArchiveDate int64  `json:"archive_date,omitempty"` // When the sandbox will be archived, as epoch seconds
-}
-
-// CreateSandboxResult is the response from creating a sandbox.
-// Matches enterprise.signup.createDevOrg API output.
-type CreateSandboxResult struct {
-	UserID string `json:"user_id"`
-	TeamID string `json:"team_id"`
-	URL    string `json:"url"`
 }

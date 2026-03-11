@@ -16,18 +16,15 @@ package platform
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/feedback"
 	"github.com/slackapi/slack-cli/cmd/triggers"
-	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -52,9 +49,6 @@ type deployCmdFlags struct {
 
 var deployFlags deployCmdFlags
 
-var packageSpinner *style.Spinner
-var deploySpinner *style.Spinner
-
 func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy [flags]",
@@ -68,15 +62,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var event *logger.LogEvent
 			ctx := cmd.Context()
-
-			packageSpinner = style.NewSpinner(cmd.OutOrStdout())
-			deploySpinner = style.NewSpinner(cmd.OutOrStdout())
-			defer func() {
-				packageSpinner.Stop()
-				deploySpinner.Stop()
-			}()
 
 			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowAllApps)
 			if err != nil {
@@ -94,22 +80,22 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
 				return nil
 			}
+
 			switch {
 			case clients.SDKConfig.Hooks.Deploy.IsAvailable():
-				event, err = deployHook(ctx, clients)
+				err = deployHook(ctx, clients)
 				if err != nil {
 					return err
 				}
 			default:
-				log := newDeployLogger(cmd)
 				showTriggers := triggers.ShowTriggers(clients, deployFlags.hideTriggers)
-				event, err = deployFunc(ctx, clients, showTriggers, log, app)
+				err = deployFunc(ctx, clients, showTriggers, app)
 				if err != nil {
 					return err
 				}
 			}
 
-			err = printDeployHostingCompletion(clients, cmd, event)
+			err = printDeployHostingCompletion(clients, cmd)
 			if err != nil {
 				return err
 			}
@@ -125,25 +111,6 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&deployFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 
 	return cmd
-}
-
-// newDeployLogger creates a logger instance to receive event notifications
-func newDeployLogger(cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_app_package":
-				printDeployPackage(cmd, event)
-			case "on_app_package_completion":
-				printDeployPackageCompletion(cmd, event)
-			case "on_app_deploy_hosting":
-				printDeployHosting(cmd, event)
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 // hasValidDeploymentMethod errors if an app has no known ways to deploy
@@ -188,11 +155,7 @@ func hasValidDeploymentMethod(
 }
 
 // deployHook executes the provided program and streams IO for the process
-func deployHook(ctx context.Context, clients *shared.ClientFactory) (*logger.LogEvent, error) {
-	var log = logger.LogEvent{
-		// FIXME: Include app information
-		Data: logger.LogData{"authSession": "{}"},
-	}
+func deployHook(ctx context.Context, clients *shared.ClientFactory) error {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "mailbox_with_mail",
 		Text:      "App Deploy",
@@ -220,82 +183,16 @@ func deployHook(ctx context.Context, clients *shared.ClientFactory) (*logger.Log
 		IO: clients.IO,
 	}
 	if _, err := shell.Execute(ctx, hookExecOpts); err != nil {
-		return &log, err
+		return err
 	}
 	// Follow successful hook executions with a newline to match section formatting
 	// but break immediately after an error!
 	_, _ = clients.IO.WriteOut().Write([]byte("\n"))
-	return &log, nil
+	return nil
 }
 
-func printDeployPackage(cmd *cobra.Command, event *logger.LogEvent) {
-	cmd.Println()
-	packageSpinner.Update("Packaging app for deployment", "").Start()
-}
-
-func printDeployPackageCompletion(cmd *cobra.Command, event *logger.LogEvent) {
-	packagedSize := event.DataToString("packagedSize")
-	packagedTime := event.DataToString("packagedTime")
-
-	deployPackageSuccessText := style.Sectionf(style.TextSection{
-		Emoji:     "gift",
-		Text:      "App packaged and ready to deploy",
-		Secondary: []string{fmt.Sprintf("%s was packaged in %s", packagedSize, packagedTime)},
-	})
-	packageSpinner.Update(deployPackageSuccessText, "").Stop()
-}
-
-func printDeployHosting(cmd *cobra.Command, event *logger.LogEvent) {
-	deployHostingText := "Deploying to Slack Platform" + style.Secondary(" (this will take a moment)")
-	deploySpinner.Update(deployHostingText, "").Start()
-}
-
-func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Command, event *logger.LogEvent) error {
+func printDeployHostingCompletion(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	var ctx = cmd.Context()
-	var authSession api.AuthSession
-
-	appName := event.DataToString("appName")
-	deployTime := event.DataToString("deployTime")
-	err := json.Unmarshal([]byte(event.DataToString("authSession")), &authSession)
-	if err != nil {
-		return err
-	}
-
-	parsedAppInfo := map[string]string{}
-
-	host := clients.API().Host()
-	if appID := event.DataToString("appID"); appID != "" && host != "" {
-		parsedAppInfo["Dashboard"] = fmt.Sprintf("%s/apps/%s", host, appID)
-	}
-
-	if authSession.UserName != nil && authSession.UserID != nil {
-		userInfo := fmt.Sprintf("%s (%s)", *authSession.UserName, *authSession.UserID)
-		parsedAppInfo["App Owner"] = userInfo
-	}
-
-	if authSession.TeamName != nil && authSession.TeamID != nil {
-		workspaceInfo := fmt.Sprintf("%s (%s)", *authSession.TeamName, *authSession.TeamID)
-		if authSession.EnterpriseID != nil {
-			parsedAppInfo["Organization"] = workspaceInfo
-		} else {
-			parsedAppInfo["Workspace"] = workspaceInfo
-		}
-	}
-
-	var finalMessage string
-	if appName != "" && deployTime != "" {
-		finalMessage = fmt.Sprintf("%s deployed in %s", style.Bold(appName), deployTime)
-	} else {
-		finalMessage = "Successfully deployed the app!"
-	}
-
-	successfulDeployText := style.Sectionf(style.TextSection{
-		Emoji:     "rocket",
-		Text:      finalMessage,
-		Secondary: []string{style.Mapf(parsedAppInfo)},
-	})
-
-	deploySpinner.Update(successfulDeployText, "").Stop()
 
 	clients.IO.PrintTrace(ctx, slacktrace.PlatformDeploySuccess)
 

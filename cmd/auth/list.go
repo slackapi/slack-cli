@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/auth"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -52,32 +51,13 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 // runListCommand will execute the list command
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	log := newListLogger(cmd, clients.IO)
-	userAuthList, err := listFunc(ctx, clients, log)
+	userAuthList, err := listFunc(ctx, clients)
 	if err != nil {
 		return err
 	}
+	printAuthList(cmd, clients.IO, userAuthList)
 	printAuthListSuccess(cmd, clients.IO, userAuthList)
 	return nil
-}
-
-// newListLogger creates a logger instance to receive event notifications
-func newListLogger(cmd *cobra.Command, IO iostreams.IOStreamer) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			case "on_auth_list":
-				userAuthList := []types.SlackAuth{}
-				if event.Data["userAuthList"] != nil {
-					userAuthList = event.Data["userAuthList"].([]types.SlackAuth)
-				}
-				printAuthList(cmd, IO, userAuthList)
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }
 
 // printAuthList will display a list of all authorizations available and highlight the default.

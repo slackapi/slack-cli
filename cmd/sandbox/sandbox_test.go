@@ -12,51 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package auth
+package sandbox
 
 import (
-	"context"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-// Setup a mock for the List package
-type ListPkgMock struct {
-	mock.Mock
-}
-
-func (m *ListPkgMock) List(ctx context.Context, clients *shared.ClientFactory) ([]types.SlackAuth, error) {
-	m.Called()
-	return []types.SlackAuth{}, nil
-}
-
-func TestListCommand(t *testing.T) {
-	// Create mocks
+func TestSandboxCommand(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 
-	// Create clients that is mocked for testing
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	clientsMock.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
+	clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 
-	// Create the command
-	cmd := NewListCommand(clients)
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	cmd := NewCommand(clients)
 	testutil.MockCmdIO(clients.IO, cmd)
 
-	listPkgMock := new(ListPkgMock)
-	listFunc = listPkgMock.List
-
-	listPkgMock.On("List").Return([]types.SlackAuth{}, nil)
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
 	}
-
-	listPkgMock.AssertCalled(t, "List")
 }

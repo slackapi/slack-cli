@@ -23,12 +23,12 @@ import (
 	"github.com/slackapi/slack-cli/cmd/feedback"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
+	"github.com/slackapi/slack-cli/internal/style"
 )
 
 // RunArgs are the arguments passed into the Run function
@@ -43,7 +43,7 @@ type RunArgs struct {
 }
 
 // Run locally runs your app.
-func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, runArgs RunArgs) (*logger.LogEvent, types.InstallState, error) {
+func Run(ctx context.Context, clients *shared.ClientFactory, runArgs RunArgs) (types.InstallState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.create")
 	defer span.Finish()
 
@@ -54,9 +54,9 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	authSession, err := clients.API().ValidateSession(ctx, runArgs.Auth.Token)
 	if err != nil {
 		err = slackerror.Wrap(err, "No auth session found")
-		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
+		return "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
-	log.Data["teamName"] = *authSession.TeamName
+	teamName := *authSession.TeamName
 
 	if authSession.UserID != nil {
 		ctx = config.SetContextUserID(ctx, *authSession.UserID)
@@ -73,17 +73,17 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	// For CLI Run command execute successfully
 	if !clients.SDKConfig.Hooks.Start.IsAvailable() {
 		var err = slackerror.New(slackerror.ErrSDKHookNotFound).WithMessage("The `start` script was not found")
-		return nil, "", err
+		return "", err
 	}
 
 	// Update local install
-	installedApp, localInstallResult, installState, err := apps.InstallLocalApp(ctx, clients, runArgs.OrgGrantWorkspaceID, log, runArgs.Auth, runArgs.App)
+	installedApp, localInstallResult, installState, err := apps.InstallLocalApp(ctx, clients, runArgs.OrgGrantWorkspaceID, runArgs.Auth, runArgs.App)
 	if err != nil {
-		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
+		return "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
 
 	if installState == types.InstallRequestPending || installState == types.InstallRequestCancelled || installState == types.InstallRequestNotSent {
-		return log.SuccessEvent(), types.InstallSuccess, nil
+		return types.InstallSuccess, nil
 	}
 
 	if runArgs.ShowTriggers {
@@ -93,17 +93,17 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 			if strings.Contains(err.Error(), "workflow_not_found") {
 				listErr := triggers.ListWorkflows(ctx, clients, runArgs.App, runArgs.Auth)
 				if listErr != nil {
-					return nil, "", slackerror.Wrap(listErr, "Error listing workflows").WithRootCause(err)
+					return "", slackerror.Wrap(listErr, "Error listing workflows").WithRootCause(err)
 				}
 			}
-			return nil, "", err
+			return "", err
 		}
 	}
 
 	// Gather environment variables from an environment file
 	variables, err := clients.Config.GetDotEnvFileVariables()
 	if err != nil {
-		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun).
+		return "", slackerror.Wrap(err, slackerror.ErrLocalAppRun).
 			WithMessage("Failed to read the local .env file")
 	}
 
@@ -123,7 +123,6 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 
 	var server = LocalServer{
 		clients:            clients,
-		log:                log,
 		token:              localInstallResult.APIAccessTokens.AppLevel,
 		localHostedContext: localHostedContext,
 		cliConfig:          cliConfig,
@@ -141,7 +140,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 		<-ctx.Done()
 		clients.IO.PrintDebug(ctx, "Interrupt signal received in Run command, cleaning up and shutting down")
 		if cleanup {
-			deleteAppOnTerminate(ctx, clients, runArgs.Auth, installedApp, log)
+			deleteAppOnTerminate(ctx, clients, runArgs.Auth, installedApp, teamName)
 		}
 		feedback.ShowFeedbackMessageOnTerminate(ctx, clients)
 		// Notify Slack backend we are closing connection; this should trigger an echoing close message from Slack
@@ -196,21 +195,22 @@ func Run(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 	if err := <-errChan; err != nil {
 		switch slackerror.ToSlackError(err).Code {
 		case slackerror.ErrLocalAppRunCleanExit:
-			return log.SuccessEvent(), types.InstallSuccess, nil
+			return types.InstallSuccess, nil
 		case slackerror.ErrSDKHookInvocationFailed:
-			return nil, "", err
+			return "", err
 		}
-		return nil, "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
+		return "", slackerror.Wrap(err, slackerror.ErrLocalAppRun)
 	}
-	return log.SuccessEvent(), types.InstallSuccess, nil
+	return types.InstallSuccess, nil
 }
 
-func deleteAppOnTerminate(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, log *logger.Logger) {
+func deleteAppOnTerminate(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, teamName string) {
 	clients.IO.PrintDebug(ctx, "Removing the local version of this app from the workspace")
-	_, err := apps.Delete(ctx, clients, log, app.TeamDomain, app, auth)
+	_, _, err := apps.Delete(ctx, clients, app.TeamDomain, app, auth)
 	if err != nil {
-		log.Data["on_cleanup_app_install_error"] = err.Error()
-		log.Info("on_cleanup_app_install_failed")
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf(`Cleaning up local app install for "%s" failed.`, teamName)))
+		clients.IO.PrintWarning(ctx, "Local app cleanup failed: %s", err)
+	} else {
+		clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf(`Cleaned up local app install for "%s".`, teamName)))
 	}
-	log.Info("on_cleanup_app_install_done")
 }

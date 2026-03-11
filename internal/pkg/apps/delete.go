@@ -20,14 +20,13 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 // Delete will delete the app for this teamDomain both remotely (API) and locally (project)
-func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, teamDomain string, app types.App, auth types.SlackAuth) (types.App, error) {
+func Delete(ctx context.Context, clients *shared.ClientFactory, teamDomain string, app types.App, auth types.SlackAuth) (types.App, string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.delete")
 	defer span.Finish()
 
@@ -37,36 +36,29 @@ func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	// Get Team Name
 	ctx, authSession, err := getAuthSession(ctx, clients, auth)
 	if err != nil {
-		return types.App{}, slackerror.Wrap(err, slackerror.ErrAppRemove)
+		return types.App{}, "", slackerror.Wrap(err, slackerror.ErrAppRemove)
 	}
 
-	// Is this needed anymore?
+	var teamName string
 	if authSession.TeamName != nil {
-		log.Data["teamName"] = *authSession.TeamName
+		teamName = *authSession.TeamName
 	}
-
-	// Emit starting to remove app (requires teamName)
-	log.Info("on_apps_delete_init")
 
 	if app.AppID == "" {
 		err = slackerror.New(slackerror.ErrAppNotFound).WithMessage("App not found for team '%s'", teamDomain)
-		return types.App{}, slackerror.Wrap(err, slackerror.ErrAppRemove)
+		return types.App{}, "", slackerror.Wrap(err, slackerror.ErrAppRemove)
 	}
-
-	log.Info("on_apps_delete_app_init")
 
 	// Delete app remotely via Slack API
 	err = clients.API().DeleteApp(ctx, config.GetContextToken(ctx), app.AppID)
 	if err != nil {
-		return app, err
+		return app, teamName, err
 	}
-	log.Info("on_apps_delete_app_success")
 
 	// Remove the saved app from project files
-	log.Info("on_apps_remove_project")
 	removedApp, err := clients.AppClient().Remove(ctx, app)
 	if err != nil {
-		return types.App{}, err
+		return types.App{}, teamName, err
 	}
 	if removedApp.IsNew() {
 		clients.IO.PrintDebug(
@@ -76,7 +68,7 @@ func Delete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 			app.TeamID,
 		)
 	}
-	return app, nil
+	return app, teamName, nil
 }
 
 // getAuthSession return the api.AuthSession for the current auth
