@@ -26,7 +26,7 @@ import (
 )
 
 type listFlags struct {
-	filter string
+	status string
 }
 
 var listCmdFlags listFlags
@@ -43,7 +43,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox list", Meaning: "List developer sandboxes"},
-			{Command: "sandbox list --filter active", Meaning: "List active sandboxes only"},
+			{Command: "sandbox list --status active", Meaning: "List active sandboxes only"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return requireSandboxExperiment(clients)
@@ -53,7 +53,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&listCmdFlags.filter, "filter", "", "Filter by status: active, archived")
+	cmd.Flags().StringVar(&listCmdFlags.status, "status", "", "Filter by status: active, archived")
 
 	return cmd
 }
@@ -78,7 +78,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token string, auth *types.SlackAuth) error {
 	ctx := cmd.Context()
 
-	sandboxes, err := clients.API().ListSandboxes(ctx, token, listCmdFlags.filter)
+	sandboxes, err := clients.API().ListSandboxes(ctx, token, listCmdFlags.status)
 	if err != nil {
 		return err
 	}

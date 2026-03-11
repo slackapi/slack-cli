@@ -78,8 +78,8 @@ func TestListCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
-		"with filter": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token", "--filter", "active"},
+		"with status": {
+			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token", "--status", "active"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
