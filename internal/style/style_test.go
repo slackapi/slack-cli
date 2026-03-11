@@ -129,18 +129,30 @@ func TestEmojiEmpty(t *testing.T) {
 }
 
 func TestToggleCharm(t *testing.T) {
-	defer func() {
-		isCharmEnabled = false
-	}()
-	t.Run("enables charm styling", func(t *testing.T) {
-		ToggleCharm(true)
-		assert.True(t, isCharmEnabled)
-	})
-	t.Run("disables charm styling", func(t *testing.T) {
-		isCharmEnabled = true
-		ToggleCharm(false)
-		assert.False(t, isCharmEnabled)
-	})
+	tests := map[string]struct {
+		initial  bool
+		toggle   bool
+		expected bool
+	}{
+		"enables charm styling": {
+			initial:  false,
+			toggle:   true,
+			expected: true,
+		},
+		"disables charm styling": {
+			initial:  true,
+			toggle:   false,
+			expected: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			isCharmEnabled = tc.initial
+			defer func() { isCharmEnabled = false }()
+			ToggleCharm(tc.toggle)
+			assert.Equal(t, tc.expected, isCharmEnabled)
+		})
+	}
 }
 
 // testStyleFunc verifies a style function returns the original text (stripped of ANSI)

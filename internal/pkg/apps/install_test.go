@@ -1686,6 +1686,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 	tests := map[string]struct {
 		warnings       slackerror.Warnings
 		confirmPrompt  bool
+		expectsPrompt  bool
 		expectedResult bool
 	}{
 		"user confirms breaking change": {
@@ -1693,6 +1694,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 				{Code: "breaking_change", Message: "something changed"},
 			},
 			confirmPrompt:  true,
+			expectsPrompt:  true,
 			expectedResult: true,
 		},
 		"user declines breaking change": {
@@ -1700,12 +1702,14 @@ func TestContinueDespiteWarning(t *testing.T) {
 				{Code: "breaking_change", Message: "something changed"},
 			},
 			confirmPrompt:  false,
+			expectsPrompt:  true,
 			expectedResult: false,
 		},
 		"non-breaking warning continues without prompt": {
 			warnings: slackerror.Warnings{
 				{Code: "some_warning", Message: "just a warning"},
 			},
+			expectsPrompt:  false,
 			expectedResult: true,
 		},
 	}
@@ -1729,6 +1733,9 @@ func TestContinueDespiteWarning(t *testing.T) {
 			result, err := continueDespiteWarning(ctx, clients, tc.warnings)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedResult, result)
+			if !tc.expectsPrompt {
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
+			}
 		})
 	}
 }
