@@ -21,7 +21,7 @@ import (
 	"context"
 	"slices"
 
-	"github.com/charmbracelet/huh"
+	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/style"
 )
 

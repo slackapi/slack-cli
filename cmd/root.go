@@ -22,7 +22,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/charmbracelet/huh"
+	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -45,6 +45,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -299,6 +300,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
+	style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
 	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
 	clients.Config.Version = clients.CLIVersion
 

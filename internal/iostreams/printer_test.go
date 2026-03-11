@@ -143,6 +143,40 @@ func Test_PrintWarning(t *testing.T) {
 	}
 }
 
+func Test_PrintInfo(t *testing.T) {
+	tests := map[string]struct {
+		format    string
+		arguments []any
+		expected  string
+	}{
+		"prints a formatted info to stdout": {
+			format:    "hello %s - noon is %d",
+			arguments: []any{"world", 12},
+			expected:  "hello world - noon is 12\n",
+		},
+		"prints unformatted info to stdout": {
+			format:   "something happened",
+			expected: "something happened\n",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.AddDefaultMocks()
+			config := config.NewConfig(fsMock, osMock)
+			io := NewIOStreams(config, fsMock, osMock)
+			stdoutBuffer := bytes.Buffer{}
+			stdoutLogger := log.Logger{}
+			stdoutLogger.SetOutput(&stdoutBuffer)
+			io.Stdout = &stdoutLogger
+			io.PrintInfo(ctx, false, tc.format, tc.arguments...)
+			assert.Equal(t, tc.expected, stdoutBuffer.String())
+		})
+	}
+}
+
 func Test_IOStreams_PrintTrace(t *testing.T) {
 	tests := map[string]struct {
 		traceID        string

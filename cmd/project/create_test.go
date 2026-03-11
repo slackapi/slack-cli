@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh"
+	tea "charm.land/bubbletea/v2"
+	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -573,9 +573,9 @@ func TestCreateCommand(t *testing.T) {
 				runForm = func(f *huh.Form) error {
 					doAllUpdates(f, f.Init())
 					// Select first category (Starter app) then first template (Bolt for JS)
-					_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+					_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 					doAllUpdates(f, cmd)
-					_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+					_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 					doAllUpdates(f, cmd)
 					return nil
 				}
