@@ -298,7 +298,6 @@ func styleExampleCommand(cmd string) string {
 }
 
 // StyleFlags post-processes Cobra's FlagUsages() output to colorize flag names and descriptions.
-// Each line is expected to have the format: "  -s, --long TYPE    Description text"
 func StyleFlags(text string) string {
 	re := regexp.MustCompile(`^(\s{2,6}-\S.*?\s{2,})(\S.*)$`)
 	lines := strings.Split(text, "\n")
