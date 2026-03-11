@@ -15,8 +15,12 @@
 package sandbox
 
 import (
+	"context"
+
 	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -53,4 +57,26 @@ func requireSandboxExperiment(clients *shared.ClientFactory) error {
 			WithRemediation("To try them out, just add the --experiment=sandboxes flag to your command!")
 	}
 	return nil
+}
+
+// getSandboxAuth returns the auth to be used for sandbox management.
+// Uses the global --token or --team flag if present, otherwise prompts the user to select a team.
+func getSandboxAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
+
+	// Check for the global --token flag
+	if clients.Config.TokenFlag != "" {
+		auth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag)
+		if err != nil {
+			return nil, err
+		}
+		return &auth, nil
+	}
+
+	// Prompt the user to select a team to use for authentication
+	auth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select a team for authentication")
+	if err != nil {
+		return nil, err
+	}
+
+	return auth, nil
 }

@@ -56,13 +56,13 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	token, auth, err := getSandboxAuth(ctx, clients)
+	auth, err := getSandboxAuth(ctx, clients)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println()
-	err = printSandboxes(cmd, clients, token, auth)
+	clients.IO.PrintInfo(ctx, false, "")
+	err = printSandboxes(cmd, clients, auth.Token, auth)
 	if err != nil {
 		return err
 	}
