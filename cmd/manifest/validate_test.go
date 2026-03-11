@@ -63,7 +63,7 @@ func TestManifestValidateCommand(t *testing.T) {
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
 
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil, nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, slackerror.Warnings{}, nil)
 	err := cmd.ExecuteContext(ctx)
 	if err != nil {
 		assert.Fail(t, "cmd.Execute had unexpected error")
@@ -138,7 +138,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_OneUserAuth(t *tes
 	// Mock the manifest validate package
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil, nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, slackerror.Warnings{}, nil)
 
 	// Should execute without error
 	err := cmd.ExecuteContext(ctx)
@@ -200,7 +200,7 @@ func TestManifestValidateCommand_HandleMissingAppInstallError_MoreThanOneUserAut
 	// Mock the manifest validate package
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, nil, nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(true, slackerror.Warnings{}, nil)
 
 	// Should execute without error
 	err := cmd.ExecuteContext(ctx)
@@ -226,7 +226,7 @@ func TestManifestValidateCommand_InvalidManifest(t *testing.T) {
 
 	manifestValidatePkgMock := new(ManifestValidatePkgMock)
 	manifestValidateFunc = manifestValidatePkgMock.ManifestValidate
-	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, nil, nil)
+	manifestValidatePkgMock.On("ManifestValidate", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(false, slackerror.Warnings{}, nil)
 
 	err := cmd.ExecuteContext(ctx)
 	require.NoError(t, err)
