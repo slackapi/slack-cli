@@ -213,6 +213,13 @@ func (m *APIMock) FunctionDistributionRemoveUsers(ctx context.Context, callbackI
 	return args.Error(0)
 }
 
+// SandboxClient
+
+func (m *APIMock) ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error) {
+	args := m.Called(ctx, token, filter)
+	return args.Get(0).([]types.Sandbox), args.Error(1)
+}
+
 // DatastoresClient
 
 func (m *APIMock) AppsDatastorePut(ctx context.Context, token string, request types.AppDatastorePut) (types.AppDatastorePutResult, error) {
