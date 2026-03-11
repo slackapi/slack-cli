@@ -29,7 +29,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/mod v0.33.0
 	golang.org/x/sys v0.42.0
-	golang.org/x/text v0.34.0
+	golang.org/x/text v0.35.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -42,6 +42,7 @@ require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/chainguard-dev/git-urls v1.0.2 // indirect
+	github.com/charmbracelet/bubbles v1.0.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.2 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20260205113103-524a6607adb8 // indirect
 	github.com/charmbracelet/x/exp/ordered v0.1.0 // indirect
