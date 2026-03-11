@@ -90,6 +90,8 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 		Text:  " Developer Sandboxes",
 	}
 
+	// Some users' logins may not include the scope needed to access the email address from the `users.info` method, so it may not be set
+	// Learn more: https://docs.slack.dev/reference/methods/users.info/#email-addresses
 	if email != "" {
 		section.Secondary = []string{fmt.Sprintf("Owned by Slack developer account %s", email)}
 	}
@@ -97,7 +99,7 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(section))
 
 	if len(sandboxes) == 0 {
-		clients.IO.PrintInfo(ctx, false, "%s\n", style.Secondary("No sandboxes found. Create one with `slack sandbox create --name <name>`"))
+		clients.IO.PrintInfo(ctx, false, "   %s\n", style.Secondary(fmt.Sprintf("No sandboxes found %s", style.Emoji("ghost"))))
 		return nil
 	}
 

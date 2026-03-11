@@ -16,7 +16,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 
 	"github.com/opentracing/opentracing-go"
@@ -37,26 +36,11 @@ type listSandboxesResponse struct {
 	Sandboxes []types.Sandbox `json:"sandboxes"`
 }
 
-var listSandboxFilterEnum = []string{"active", "archived"}
-
 // ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
 func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListSandboxes")
 	defer span.Finish()
-
-	if status != "" {
-		valid := false
-		for _, v := range listSandboxFilterEnum {
-			if status == v {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return nil, errInvalidArguments.WithRootCause(fmt.Errorf("allowed values for sandbox status filter: %v", listSandboxFilterEnum))
-		}
-	}
 
 	values := url.Values{}
 	values.Add("token", token)

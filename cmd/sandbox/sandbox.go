@@ -37,6 +37,7 @@ Prefer a UI? Head over to {{LinkText "https://api.slack.com/developer-program/sa
 
 New to the Developer Program? Sign up at {{LinkText "https://api.slack.com/developer-program/join"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{}),
+		Aliases: []string{"sandboxes"},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return requireSandboxExperiment(clients)
 		},
