@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO: Refactor to use afero.Fs once ExtractAndWriteFile accepts it. Currently uses t.TempDir() which is safe.
 func Test_ExtractAndWriteFile(t *testing.T) {
 	tests := map[string]struct {
 		fileName string
@@ -73,6 +74,7 @@ func Test_ExtractAndWriteFile(t *testing.T) {
 	})
 }
 
+// TODO: Refactor to use afero.Fs once Unzip accepts it. Currently uses t.TempDir() which is safe.
 func Test_Unzip(t *testing.T) {
 	t.Run("extracts a zip archive", func(t *testing.T) {
 		srcDir := t.TempDir()
@@ -108,6 +110,7 @@ func Test_Unzip(t *testing.T) {
 	})
 }
 
+// TODO: Refactor to use afero.Fs once UntarGzip accepts it. Currently uses t.TempDir() which is safe.
 func Test_UntarGzip(t *testing.T) {
 	t.Run("extracts a tar.gz archive", func(t *testing.T) {
 		srcDir := t.TempDir()
