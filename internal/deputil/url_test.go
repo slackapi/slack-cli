@@ -53,6 +53,30 @@ func Test_URLChecker(t *testing.T) {
 				httpClientMock.On("Head", mock.Anything).Return(nil, fmt.Errorf("HTTPClient error"))
 			},
 		},
+		"Returns an empty string for HTTP 500 Internal Server Error": {
+			url:         "https://example.com/server-error",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusInternalServerError, "Internal Server Error")
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
+			},
+		},
+		"Returns an empty string for HTTP 301 redirect": {
+			url:         "https://example.com/redirect",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusMovedPermanently, "Moved")
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
+			},
+		},
+		"Returns an empty string for HTTP 403 Forbidden": {
+			url:         "https://example.com/forbidden",
+			expectedURL: "",
+			setupHTTPClientMock: func(httpClientMock *slackhttp.HTTPClientMock) {
+				res := slackhttp.MockHTTPResponse(http.StatusForbidden, "Forbidden")
+				httpClientMock.On("Head", mock.Anything).Return(res, nil)
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

@@ -24,6 +24,44 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestSetFlags(t *testing.T) {
+	fs := slackdeps.NewFsMock()
+	os := slackdeps.NewOsMock()
+	config := NewConfig(fs, os)
+	cmd := &cobra.Command{}
+	cmd.Flags().String("test-flag", "default", "a test flag")
+
+	config.SetFlags(cmd)
+	assert.NotNil(t, config.Flags)
+	f := config.Flags.Lookup("test-flag")
+	assert.NotNil(t, f)
+	assert.Equal(t, "default", f.DefValue)
+}
+
+func TestInitializeGlobalFlags(t *testing.T) {
+	fs := slackdeps.NewFsMock()
+	os := slackdeps.NewOsMock()
+	config := NewConfig(fs, os)
+	cmd := &cobra.Command{}
+
+	config.InitializeGlobalFlags(cmd)
+
+	// Verify that key persistent flags were registered
+	flagNames := []string{
+		"apihost", "app", "config-dir", "experiment",
+		"force", "no-color", "skip-update", "slackdev",
+		"runtime", "team", "token", "verbose",
+	}
+	for _, name := range flagNames {
+		f := cmd.PersistentFlags().Lookup(name)
+		assert.NotNil(t, f, "flag %s should be registered", name)
+	}
+
+	// Verify hidden flags
+	assert.True(t, cmd.PersistentFlags().Lookup("apihost").Hidden)
+	assert.True(t, cmd.PersistentFlags().Lookup("slackdev").Hidden)
+}
+
 func TestDeprecatedFlagSubstitutions(t *testing.T) {
 	tests := map[string]struct {
 		expectedWarnings    []string

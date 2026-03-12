@@ -24,6 +24,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestNewBrowser(t *testing.T) {
+	t.Run("returns a GoBrowser with the provided writer", func(t *testing.T) {
+		buff := bytes.Buffer{}
+		b := NewBrowser(&buff)
+		assert.NotNil(t, b)
+		assert.Equal(t, &buff, b.out)
+	})
+}
+
 func TestBrowserOpenURL(t *testing.T) {
 	t.Run("print the url if opening the browser fails", func(t *testing.T) {
 		path := os.Getenv("PATH")
