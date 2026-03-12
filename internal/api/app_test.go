@@ -520,50 +520,76 @@ func TestClient_DeveloperAppInstall_RequestAppApproval(t *testing.T) {
 	}
 }
 
-func TestClient_GetAppStatus_Ok(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appStatusMethod,
-		Response:       `{"ok":true,"apps":[{"app_id":"A123","status":"installed"}]}`,
-	})
-	defer teardown()
-	result, err := c.GetAppStatus(ctx, "token", []string{"A123"}, "T123")
-	require.NoError(t, err)
-	require.NotNil(t, result)
+func Test_Client_GetAppStatus(t *testing.T) {
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
+	}{
+		"OK result": {
+			httpResponseJSON: `{"ok":true,"apps":[{"app_id":"A123","status":"installed"}]}`,
+		},
+		"Error result": {
+			httpResponseJSON: `{"ok":false,"error":"invalid_app"}`,
+			wantErr:          true,
+			errMessage:       "invalid_app",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appStatusMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
+
+			result, err := c.GetAppStatus(ctx, "token", []string{"A123"}, "T123")
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMessage)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, result)
+			}
+		})
+	}
 }
 
-func TestClient_GetAppStatus_Error(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appStatusMethod,
-		Response:       `{"ok":false,"error":"invalid_app"}`,
-	})
-	defer teardown()
-	_, err := c.GetAppStatus(ctx, "token", []string{"A123"}, "T123")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "invalid_app")
-}
+func Test_Client_ConnectionsOpen(t *testing.T) {
+	tests := map[string]struct {
+		httpResponseJSON string
+		wantErr          bool
+		errMessage       string
+		expectedURL      string
+	}{
+		"OK result": {
+			httpResponseJSON: `{"ok":true,"url":"wss://example.com/ws"}`,
+			expectedURL:      "wss://example.com/ws",
+		},
+		"Error result": {
+			httpResponseJSON: `{"ok":false,"error":"token_revoked"}`,
+			wantErr:          true,
+			errMessage:       "token_revoked",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appConnectionsOpenMethod,
+				Response:       tc.httpResponseJSON,
+			})
+			defer teardown()
 
-func TestClient_ConnectionsOpen_Ok(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appConnectionsOpenMethod,
-		Response:       `{"ok":true,"url":"wss://example.com/ws"}`,
-	})
-	defer teardown()
-	result, err := c.ConnectionsOpen(ctx, "token")
-	require.NoError(t, err)
-	require.Equal(t, "wss://example.com/ws", result.URL)
-}
-
-func TestClient_ConnectionsOpen_Error(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appConnectionsOpenMethod,
-		Response:       `{"ok":false,"error":"token_revoked"}`,
-	})
-	defer teardown()
-	_, err := c.ConnectionsOpen(ctx, "token")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "token_revoked")
+			result, err := c.ConnectionsOpen(ctx, "token")
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMessage)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedURL, result.URL)
+			}
+		})
+	}
 }
