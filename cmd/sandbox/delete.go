@@ -27,7 +27,6 @@ import (
 type deleteFlags struct {
 	sandboxID string
 	force     bool
-	yes       bool
 }
 
 var deleteCmdFlags deleteFlags
@@ -67,7 +66,7 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
-	skipConfirm := deleteCmdFlags.force || deleteCmdFlags.yes
+	skipConfirm := deleteCmdFlags.force
 	if !skipConfirm {
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "warning",
