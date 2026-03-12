@@ -20,7 +20,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -82,9 +81,6 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
 		return err
-	}
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		return nil
 	}
 	clients.Config.SetFlags(cmd)
 	return nil

@@ -74,6 +74,51 @@ func Test_prettifyActivity(t *testing.T) {
 				`{"some":"data"}`,
 			},
 		},
+		"warn level activity should contain the message": {
+			activity: api.Activity{
+				TraceID:     "w123",
+				Level:       types.WARN,
+				EventType:   "unknown",
+				ComponentID: "w789",
+				Payload: map[string]interface{}{
+					"some": "warning",
+				},
+				Created: 1686939542,
+			},
+			expectedResults: []string{
+				`{"some":"warning"}`,
+			},
+		},
+		"error level activity should contain the message": {
+			activity: api.Activity{
+				TraceID:     "e123",
+				Level:       types.ERROR,
+				EventType:   "unknown",
+				ComponentID: "e789",
+				Payload: map[string]interface{}{
+					"some": "error",
+				},
+				Created: 1686939542,
+			},
+			expectedResults: []string{
+				`{"some":"error"}`,
+			},
+		},
+		"fatal level activity should contain the message": {
+			activity: api.Activity{
+				TraceID:     "f123",
+				Level:       types.FATAL,
+				EventType:   "unknown",
+				ComponentID: "f789",
+				Payload: map[string]interface{}{
+					"some": "fatal",
+				},
+				Created: 1686939542,
+			},
+			expectedResults: []string{
+				`{"some":"fatal"}`,
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

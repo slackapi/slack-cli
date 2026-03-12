@@ -356,10 +356,10 @@ func printInstallUpdateResponse(updateInfo SDKInstallUpdateResponse) {
 				if update.PreviousVersion != update.InstalledVersion {
 					fmt.Printf(
 						style.Indent(" %s %s\n      %s → %s\n\n"),
-						style.Styler().Green("✔"),
+						style.Green("✔"),
 						style.Bold(update.Name),
 						style.Secondary(update.PreviousVersion),
-						style.Styler().Green(update.InstalledVersion),
+						style.Green(update.InstalledVersion),
 					)
 				}
 			}

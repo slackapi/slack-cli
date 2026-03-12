@@ -24,7 +24,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/pkg/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -54,12 +53,6 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		return types.App{}, "", err
 	}
 
-	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		if !manifestUpdates && !manifestCreates {
-			return app, "", nil
-		}
-	}
-
 	// Get the token for the authenticated workspace
 	apiInterface := clients.API()
 	token := auth.Token
@@ -83,31 +76,21 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
-	// if the manifest source is local or if we are creating a new app. After an app is created,
-	// app settings becomes the source of truth for remote manifests, so updates and installs always
-	// get the latest manifest from app settings.
-	// When the BoltInstall experiment is disabled, we get the manifest from the local file because
-	// this is how the original implementation worked.
+	// Get the manifest from the local file if the manifest source is local or if we are creating
+	// a new app. After an app is created, app settings becomes the source of truth for remote
+	// manifests, so updates and installs always get the latest manifest from app settings.
 	var slackManifest types.SlackYaml
-	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return app, "", err
+	}
+	if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return app, "", err
 		}
-		if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
-			slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
-			if err != nil {
-				return app, "", err
-			}
-		} else {
-			slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
-			if err != nil {
-				return app, "", err
-			}
-		}
 	} else {
-		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+		slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return app, "", err
 		}
@@ -374,12 +357,6 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return types.App{}, api.DeveloperAppInstallResult{}, "", err
 	}
 
-	if !clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		if !manifestUpdates && !manifestCreates {
-			return app, api.DeveloperAppInstallResult{}, "", nil
-		}
-	}
-
 	apiInterface := clients.API()
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
@@ -403,31 +380,21 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		// app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// When the BoltInstall experiment is enabled, we need to get the manifest from the local file
-	// if the manifest source is local or if we are creating a new app. After an app is created,
-	// app settings becomes the source of truth for remote manifests, so updates and installs always
-	// get the latest manifest from app settings.
-	// When the BoltInstall experiment is disabled, we get the manifest from the local file because
-	// this is how the original implementation worked.
+	// Get the manifest from the local file if the manifest source is local or if we are creating
+	// a new app. After an app is created, app settings becomes the source of truth for remote
+	// manifests, so updates and installs always get the latest manifest from app settings.
 	var slackManifest types.SlackYaml
-	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return app, api.DeveloperAppInstallResult{}, "", err
+	}
+	if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return app, api.DeveloperAppInstallResult{}, "", err
 		}
-		if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
-			slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
-			if err != nil {
-				return app, api.DeveloperAppInstallResult{}, "", err
-			}
-		} else {
-			slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
-			if err != nil {
-				return app, api.DeveloperAppInstallResult{}, "", err
-			}
-		}
 	} else {
-		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+		slackManifest, err = clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
 		if err != nil {
 			return app, api.DeveloperAppInstallResult{}, "", err
 		}
@@ -712,27 +679,11 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 // shouldCreateManifest decides if an app manifest needs to be created for an
 // app to exist
 func shouldCreateManifest(ctx context.Context, clients *shared.ClientFactory, app types.App) (bool, error) {
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		return app.AppID == "", nil
-	}
-
-	// When the BoltInstall experiment is enabled, apps can always be created with any manifest source.
-	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		return app.AppID == "", nil
-	}
-
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if err != nil {
-		return false, err
-	}
-	return app.AppID == "" && manifestSource == config.ManifestSourceLocal, nil
+	return app.AppID == "", nil
 }
 
 // shouldCacheManifest decides if an app manifest hash should be saved to cache
 func shouldCacheManifest(ctx context.Context, clients *shared.ClientFactory, app types.App) (bool, error) {
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		return false, nil
-	}
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return false, err
@@ -764,9 +715,6 @@ func shouldCacheManifest(ctx context.Context, clients *shared.ClientFactory, app
 func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, app types.App, auth types.SlackAuth) (bool, error) {
 	if app.AppID == "" {
 		return false, nil
-	}
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		return true, nil
 	}
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
@@ -881,12 +829,12 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 			clients.IO.PrintInfo(ctx, false,
 				"\n%s: %s",
 				style.Bold("Changes confirmed"),
-				style.Styler().Green("Continuing with install."),
+				style.Green("Continuing with install."),
 			)
 			return true, nil
 		}
 
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Styler().Red("App install canceled."))
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Red("App install canceled."))
 
 		return false, nil
 	}

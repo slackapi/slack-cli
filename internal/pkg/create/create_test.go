@@ -427,15 +427,13 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				`Updated config.json manifest source to "app settings" (remote)`,
 			},
 		},
-		"When bolt-install experiment and Deno project, should set manifest source to project (local)": {
-			experiments: []string{"bolt-install"},
+		"When Deno project, should set manifest source to project (local)": {
 			expectedOutputs: []string{
 				`Updated config.json manifest source to "project" (local)`,
 			},
 		},
-		"When bolt-install experiment and non-Deno project, should set manifest source to app settings (remote)": {
-			experiments: []string{"bolt-install"},
-			runtime:     "node",
+		"When non-Deno project, should set manifest source to app settings (remote)": {
+			runtime: "node",
 			expectedOutputs: []string{
 				`Updated config.json manifest source to "app settings" (remote)`,
 			},
