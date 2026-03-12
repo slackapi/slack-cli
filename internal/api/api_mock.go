@@ -220,6 +220,16 @@ func (m *APIMock) ListSandboxes(ctx context.Context, token string, filter string
 	return args.Get(0).([]types.Sandbox), args.Error(1)
 }
 
+func (m *APIMock) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID, template, eventCode string, archiveDate int64) (string, string, error) {
+	args := m.Called(ctx, token, name, domain, password, locale, owningOrgID, template, eventCode, archiveDate)
+	return args.String(0), args.String(1), args.Error(2)
+}
+
+func (m *APIMock) DeleteSandbox(ctx context.Context, token, sandboxID string) error {
+	args := m.Called(ctx, token, sandboxID)
+	return args.Error(0)
+}
+
 // DatastoresClient
 
 func (m *APIMock) AppsDatastorePut(ctx context.Context, token string, request types.AppDatastorePut) (types.AppDatastorePutResult, error) {

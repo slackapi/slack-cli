@@ -268,6 +268,7 @@ const (
 	ErrUserRemovedFromTeam                           = "user_removed_from_team"
 	ErrWorkflowNotFound                              = "workflow_not_found"
 	ErrYaml                                          = "yaml_error"
+	ErrSandboxDomainTaken                            = "domain_taken"
 )
 
 var ErrorCodeMap = map[string]Error{
@@ -1613,5 +1614,10 @@ Otherwise start your app for local development with: %s`,
 	ErrYaml: {
 		Code:    ErrYaml,
 		Message: "An error occurred while parsing the app manifest YAML file",
+	},
+
+	ErrSandboxDomainTaken: {
+		Code:    ErrSandboxDomainTaken,
+		Message: "This domain has been claimed by another sandbox",
 	},
 }
