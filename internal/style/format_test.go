@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetKeyLength(t *testing.T) {
+func Test_getKeyLength(t *testing.T) {
 	tests := map[string]struct {
 		keys     map[string]string
 		expected int
@@ -53,7 +53,7 @@ func TestGetKeyLength(t *testing.T) {
 	}
 }
 
-func TestSectionf(t *testing.T) {
+func Test_Sectionf(t *testing.T) {
 	tests := map[string]struct {
 		section  TextSection
 		expected string
@@ -82,7 +82,7 @@ func TestSectionHeaderfEmpty(t *testing.T) {
 	assert.Equal(t, "", SectionHeaderf("tada", ""))
 }
 
-func TestSectionSecondaryf(t *testing.T) {
+func Test_SectionSecondaryf(t *testing.T) {
 	tests := map[string]struct {
 		format   string
 		args     []interface{}
@@ -130,7 +130,7 @@ func TestSectionSecondaryf(t *testing.T) {
 	}
 }
 
-func TestCommandf(t *testing.T) {
+func Test_Commandf(t *testing.T) {
 	tests := map[string]struct {
 		process   string
 		command   string

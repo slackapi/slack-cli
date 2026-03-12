@@ -135,6 +135,15 @@ func NewExampleCommand(clients *shared.ClientFactory) *cobra.Command {
 - Mock the `ClientFactory` and its dependencies for testing
 - Always mock file system operations using `afero.Fs` to enable testability
 
+### Test Naming Conventions
+
+Test function names use the format `Test_StructName_FunctionName` for methods on a struct, or `Test_FunctionName` for package-level functions:
+
+```go
+func Test_Client_GetAppStatus(t *testing.T) { ... }  // struct method
+func Test_getKeyLength(t *testing.T) { ... }          // package-level function
+```
+
 ### Table-Driven Test Conventions
 
 **Preferred: Map pattern** - uses `tc` for test case variable:

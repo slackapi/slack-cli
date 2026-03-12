@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConfirmPromptConfig(t *testing.T) {
+func Test_ConfirmPromptConfig(t *testing.T) {
 	tests := map[string]struct {
 		cfg      ConfirmPromptConfig
 		required bool
@@ -48,7 +48,7 @@ func TestConfirmPromptConfig(t *testing.T) {
 	}
 }
 
-func TestInputPromptConfig(t *testing.T) {
+func Test_InputPromptConfig(t *testing.T) {
 	tests := map[string]struct {
 		cfg      InputPromptConfig
 		required bool
@@ -70,7 +70,7 @@ func TestInputPromptConfig(t *testing.T) {
 	}
 }
 
-func TestMultiSelectPromptConfig(t *testing.T) {
+func Test_MultiSelectPromptConfig(t *testing.T) {
 	tests := map[string]struct {
 		cfg      MultiSelectPromptConfig
 		required bool
@@ -92,7 +92,7 @@ func TestMultiSelectPromptConfig(t *testing.T) {
 	}
 }
 
-func TestPasswordPromptConfig(t *testing.T) {
+func Test_PasswordPromptConfig(t *testing.T) {
 	t.Run("without flag", func(t *testing.T) {
 		cfg := PasswordPromptConfig{Required: true}
 		assert.True(t, cfg.IsRequired())
@@ -110,7 +110,7 @@ func TestPasswordPromptConfig(t *testing.T) {
 	})
 }
 
-func TestSelectPromptConfig(t *testing.T) {
+func Test_SelectPromptConfig(t *testing.T) {
 	t.Run("no flags", func(t *testing.T) {
 		cfg := SelectPromptConfig{Required: true}
 		assert.True(t, cfg.IsRequired())
@@ -134,7 +134,7 @@ func TestSelectPromptConfig(t *testing.T) {
 	})
 }
 
-func TestSurveyOptions(t *testing.T) {
+func Test_SurveyOptions(t *testing.T) {
 	tests := map[string]struct {
 		cfg         PromptConfig
 		expectedLen int
@@ -156,13 +156,13 @@ func TestSurveyOptions(t *testing.T) {
 	}
 }
 
-func TestDefaultSelectPromptConfig(t *testing.T) {
+func Test_DefaultSelectPromptConfig(t *testing.T) {
 	cfg := DefaultSelectPromptConfig()
 	assert.True(t, cfg.IsRequired())
 	assert.Empty(t, cfg.GetFlags())
 }
 
-func TestRetrieveFlagValue(t *testing.T) {
+func Test_retrieveFlagValue(t *testing.T) {
 	fsMock := slackdeps.NewFsMock()
 	osMock := slackdeps.NewOsMock()
 	cfg := config.NewConfig(fsMock, osMock)
