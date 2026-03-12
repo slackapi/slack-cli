@@ -490,3 +490,192 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 		})
 	}
 }
+
+func Test_Client_AppsDatastoreBulkPut(t *testing.T) {
+	tests := map[string]struct {
+		request          types.AppDatastoreBulkPut
+		httpResponseJSON string
+		statusCode       int
+		wantErr          bool
+		errMessage       string
+	}{
+		"success": {
+			request: types.AppDatastoreBulkPut{
+				Datastore: "my_ds",
+				App:       "A1",
+				Items:     []map[string]interface{}{{"id": "1", "name": "test"}},
+			},
+			httpResponseJSON: `{"ok":true,"datastore":"my_ds"}`,
+		},
+		"api_error": {
+			request: types.AppDatastoreBulkPut{
+				Datastore: "my_ds",
+				App:       "A1",
+				Items:     []map[string]interface{}{{"id": "1"}},
+			},
+			httpResponseJSON: `{"ok":false,"error":"datastore_error"}`,
+			wantErr:          true,
+			errMessage:       "datastore_error",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreBulkPutMethod,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
+			})
+			defer teardown()
+			_, err := c.AppsDatastoreBulkPut(ctx, "token", tc.request)
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMessage)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_Client_AppsDatastoreCount(t *testing.T) {
+	tests := map[string]struct {
+		request          types.AppDatastoreCount
+		httpResponseJSON string
+		statusCode       int
+		wantCount        int
+		wantErr          bool
+		errMessage       string
+	}{
+		"success": {
+			request: types.AppDatastoreCount{
+				Datastore: "my_ds",
+				App:       "A1",
+			},
+			httpResponseJSON: `{"ok":true,"datastore":"my_ds","count":42}`,
+			wantCount:        42,
+		},
+		"api_error": {
+			request: types.AppDatastoreCount{
+				Datastore: "my_ds",
+				App:       "A1",
+			},
+			httpResponseJSON: `{"ok":false,"error":"datastore_error"}`,
+			wantErr:          true,
+			errMessage:       "datastore_error",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreCountMethod,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
+			})
+			defer teardown()
+			got, err := c.AppsDatastoreCount(ctx, "token", tc.request)
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMessage)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.wantCount, got.Count)
+			}
+		})
+	}
+}
+
+func Test_Client_AppsDatastoreBulkDelete(t *testing.T) {
+	tests := map[string]struct {
+		request          types.AppDatastoreBulkDelete
+		httpResponseJSON string
+		statusCode       int
+		wantErr          bool
+		errMessage       string
+	}{
+		"success": {
+			request: types.AppDatastoreBulkDelete{
+				Datastore: "my_ds",
+				App:       "A1",
+				IDs:       []string{"id1", "id2"},
+			},
+			httpResponseJSON: `{"ok":true}`,
+		},
+		"api_error": {
+			request: types.AppDatastoreBulkDelete{
+				Datastore: "my_ds",
+				App:       "A1",
+				IDs:       []string{"id1"},
+			},
+			httpResponseJSON: `{"ok":false,"error":"not_found"}`,
+			wantErr:          true,
+			errMessage:       "not_found",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreBulkDeleteMethod,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
+			})
+			defer teardown()
+			_, err := c.AppsDatastoreBulkDelete(ctx, "token", tc.request)
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMessage)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_Client_AppsDatastoreBulkGet(t *testing.T) {
+	tests := map[string]struct {
+		request          types.AppDatastoreBulkGet
+		httpResponseJSON string
+		statusCode       int
+		wantErr          bool
+		errMessage       string
+	}{
+		"success": {
+			request: types.AppDatastoreBulkGet{
+				Datastore: "my_ds",
+				App:       "A1",
+				IDs:       []string{"id1", "id2"},
+			},
+			httpResponseJSON: `{"ok":true,"datastore":"my_ds","items":[{"id":"id1","name":"test"}]}`,
+		},
+		"api_error": {
+			request: types.AppDatastoreBulkGet{
+				Datastore: "my_ds",
+				App:       "A1",
+				IDs:       []string{"id1"},
+			},
+			httpResponseJSON: `{"ok":false,"error":"not_found"}`,
+			wantErr:          true,
+			errMessage:       "not_found",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appDatastoreBulkGetMethod,
+				Response:       tc.httpResponseJSON,
+				StatusCode:     tc.statusCode,
+			})
+			defer teardown()
+			_, err := c.AppsDatastoreBulkGet(ctx, "token", tc.request)
+			if tc.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errMessage)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
