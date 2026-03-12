@@ -76,47 +76,7 @@ func Test_InputPromptConfig(t *testing.T) {
 	}
 }
 
-func Test_MultiSelectPromptConfig(t *testing.T) {
-	tests := map[string]struct {
-		cfg      MultiSelectPromptConfig
-		required bool
-	}{
-		"required true": {
-			cfg:      MultiSelectPromptConfig{Required: true},
-			required: true,
-		},
-		"required false": {
-			cfg:      MultiSelectPromptConfig{Required: false},
-			required: false,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.required, tc.cfg.IsRequired())
-			assert.Empty(t, tc.cfg.GetFlags())
-		})
-	}
-}
-
-func Test_PasswordPromptConfig(t *testing.T) {
-	t.Run("without flag", func(t *testing.T) {
-		cfg := PasswordPromptConfig{Required: true}
-		assert.True(t, cfg.IsRequired())
-		assert.Empty(t, cfg.GetFlags())
-	})
-	t.Run("with flag", func(t *testing.T) {
-		var val string
-		fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
-		fs.StringVar(&val, "token", "", "token flag")
-		flag := fs.Lookup("token")
-		cfg := PasswordPromptConfig{Required: false, Flag: flag}
-		assert.False(t, cfg.IsRequired())
-		assert.Len(t, cfg.GetFlags(), 1)
-		assert.Equal(t, "token", cfg.GetFlags()[0].Name)
-	})
-}
-
-func Test_retrieveFlagValue(t *testing.T) {
+func Test_IOStreams_retrieveFlagValue(t *testing.T) {
 	fsMock := slackdeps.NewFsMock()
 	osMock := slackdeps.NewOsMock()
 	cfg := config.NewConfig(fsMock, osMock)
@@ -186,6 +146,46 @@ func Test_retrieveFlagValue(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_MultiSelectPromptConfig(t *testing.T) {
+	tests := map[string]struct {
+		cfg      MultiSelectPromptConfig
+		required bool
+	}{
+		"required true": {
+			cfg:      MultiSelectPromptConfig{Required: true},
+			required: true,
+		},
+		"required false": {
+			cfg:      MultiSelectPromptConfig{Required: false},
+			required: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.required, tc.cfg.IsRequired())
+			assert.Empty(t, tc.cfg.GetFlags())
+		})
+	}
+}
+
+func Test_PasswordPromptConfig(t *testing.T) {
+	t.Run("without flag", func(t *testing.T) {
+		cfg := PasswordPromptConfig{Required: true}
+		assert.True(t, cfg.IsRequired())
+		assert.Empty(t, cfg.GetFlags())
+	})
+	t.Run("with flag", func(t *testing.T) {
+		var val string
+		fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+		fs.StringVar(&val, "token", "", "token flag")
+		flag := fs.Lookup("token")
+		cfg := PasswordPromptConfig{Required: false, Flag: flag}
+		assert.False(t, cfg.IsRequired())
+		assert.Len(t, cfg.GetFlags(), 1)
+		assert.Equal(t, "token", cfg.GetFlags()[0].Name)
+	})
 }
 
 func Test_SelectPromptConfig(t *testing.T) {
