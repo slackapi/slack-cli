@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetFlags(t *testing.T) {
+func Test_SetFlags(t *testing.T) {
 	fs := slackdeps.NewFsMock()
 	os := slackdeps.NewOsMock()
 	config := NewConfig(fs, os)
@@ -38,7 +38,7 @@ func TestSetFlags(t *testing.T) {
 	assert.Equal(t, "default", f.DefValue)
 }
 
-func TestInitializeGlobalFlags(t *testing.T) {
+func Test_InitializeGlobalFlags(t *testing.T) {
 	fs := slackdeps.NewFsMock()
 	os := slackdeps.NewOsMock()
 	config := NewConfig(fs, os)

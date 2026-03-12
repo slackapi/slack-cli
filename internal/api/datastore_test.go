@@ -491,7 +491,7 @@ func TestClient_AppsDatastoreGet(t *testing.T) {
 	}
 }
 
-func TestClient_AppsDatastoreBulkPut(t *testing.T) {
+func Test_Client_AppsDatastoreBulkPut(t *testing.T) {
 	tests := map[string]struct {
 		request          types.AppDatastoreBulkPut
 		httpResponseJSON string
@@ -538,7 +538,7 @@ func TestClient_AppsDatastoreBulkPut(t *testing.T) {
 	}
 }
 
-func TestClient_AppsDatastoreCount(t *testing.T) {
+func Test_Client_AppsDatastoreCount(t *testing.T) {
 	tests := map[string]struct {
 		request          types.AppDatastoreCount
 		httpResponseJSON string
@@ -586,7 +586,7 @@ func TestClient_AppsDatastoreCount(t *testing.T) {
 	}
 }
 
-func TestClient_AppsDatastoreBulkDelete(t *testing.T) {
+func Test_Client_AppsDatastoreBulkDelete(t *testing.T) {
 	tests := map[string]struct {
 		request          types.AppDatastoreBulkDelete
 		httpResponseJSON string
@@ -633,7 +633,7 @@ func TestClient_AppsDatastoreBulkDelete(t *testing.T) {
 	}
 }
 
-func TestClient_AppsDatastoreBulkGet(t *testing.T) {
+func Test_Client_AppsDatastoreBulkGet(t *testing.T) {
 	tests := map[string]struct {
 		request          types.AppDatastoreBulkGet
 		httpResponseJSON string
