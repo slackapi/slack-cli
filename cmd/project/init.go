@@ -108,7 +108,6 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 
 	// Install the project dependencies, such as .slack/ and runtime packages
 	// Existing projects initialized always default to config.ManifestSourceLocal.
-	// The link command will switch it to config.ManifestSourceRemote
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
 
 	// Add an existing app to the project

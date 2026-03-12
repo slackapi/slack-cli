@@ -521,12 +521,12 @@ func InstallProjectDependencies(
 		manifestSource = config.ManifestSourceLocal
 	}
 
-	// Set non-Deno (non-ROSI) projects to ManifestSourceRemote.
+	// Set non-Deno (non-ROSI) projects to ManifestSourceLocal.
 	// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
 	if clients.Runtime != nil {
 		isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
 		if !isDenoProject {
-			manifestSource = config.ManifestSourceRemote
+			manifestSource = config.ManifestSourceLocal
 		}
 	}
 
