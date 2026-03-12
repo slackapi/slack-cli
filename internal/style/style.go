@@ -153,7 +153,7 @@ func Warning(text string) string {
 	if !isCharmEnabled {
 		return legacyWarning(text)
 	}
-	return render(lipgloss.NewStyle().Foreground(slackGreen).Bold(true), text)
+	return render(lipgloss.NewStyle().Foreground(slackYellow).Bold(true), text)
 }
 
 func Header(text string) string {

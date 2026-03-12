@@ -24,6 +24,91 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_SetFlags(t *testing.T) {
+	fs := slackdeps.NewFsMock()
+	os := slackdeps.NewOsMock()
+	config := NewConfig(fs, os)
+	cmd := &cobra.Command{}
+	cmd.Flags().String("test-flag", "default", "a test flag")
+
+	config.SetFlags(cmd)
+	assert.NotNil(t, config.Flags)
+	f := config.Flags.Lookup("test-flag")
+	assert.NotNil(t, f)
+	assert.Equal(t, "default", f.DefValue)
+}
+
+func Test_InitializeGlobalFlags(t *testing.T) {
+	fs := slackdeps.NewFsMock()
+	os := slackdeps.NewOsMock()
+	config := NewConfig(fs, os)
+	cmd := &cobra.Command{}
+
+	config.InitializeGlobalFlags(cmd)
+
+	tests := map[string]struct {
+		longform  string
+		shorthand string
+		hidden    bool
+	}{
+		"apihost": {
+			longform: "apihost",
+			hidden:   true,
+		},
+		"app": {
+			longform:  "app",
+			shorthand: "a",
+		},
+		"config-dir": {
+			longform: "config-dir",
+		},
+		"experiment": {
+			longform: "experiment",
+		},
+		"force": {
+			longform:  "force",
+			shorthand: "f",
+		},
+		"no-color": {
+			longform: "no-color",
+		},
+		"runtime": {
+			longform:  "runtime",
+			shorthand: "r",
+			hidden:    true,
+		},
+		"skip-update": {
+			longform:  "skip-update",
+			shorthand: "s",
+		},
+		"slackdev": {
+			longform: "slackdev",
+			hidden:   true,
+		},
+		"team": {
+			longform:  "team",
+			shorthand: "w",
+		},
+		"token": {
+			longform: "token",
+		},
+		"verbose": {
+			longform:  "verbose",
+			shorthand: "v",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			f := cmd.PersistentFlags().Lookup(tc.longform)
+			assert.NotNil(t, f, "flag %s should be registered", tc.longform)
+			if tc.shorthand != "" {
+				assert.Equal(t, tc.shorthand, f.Shorthand, "flag %s shorthand mismatch", tc.longform)
+			}
+			assert.Equal(t, tc.hidden, f.Hidden, "flag %s hidden mismatch", tc.longform)
+		})
+	}
+}
+
 func TestDeprecatedFlagSubstitutions(t *testing.T) {
 	tests := map[string]struct {
 		expectedWarnings    []string
