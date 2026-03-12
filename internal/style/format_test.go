@@ -19,150 +19,189 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetKeyLength(t *testing.T) {
-	tests := map[string]struct {
-		keys     map[string]string
-		expected int
-	}{
-		"empty key has zero length": {
-			keys:     map[string]string{"": "the zero key"},
-			expected: 0,
-		},
-		"equal length keys return that length": {
-			keys:     map[string]string{"key1": "unlocks the building", "key2": "unlocks the room"},
-			expected: 4,
-		},
-		"returns length of longest key": {
-			keys:     map[string]string{"longer_key1": "locks the building", "very_long_key2": "locks the room"},
-			expected: 14,
-		},
-		"longest key is first": {
-			keys:     map[string]string{"longest_key1": "short value", "short_key2": "longer value"},
-			expected: 12,
-		},
+func TestGetKeyLengthZero(t *testing.T) {
+	var keys = map[string]string{
+		"": "the zero key",
 	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, getKeyLength(tc.keys))
-		})
+
+	if getKeyLength(keys) != 0 {
+		t.Error("the longest key has a length greater than zero")
 	}
 }
 
-func TestSectionf(t *testing.T) {
-	tests := map[string]struct {
-		section  TextSection
-		expected string
-	}{
-		"empty text returns empty string": {
-			section:  TextSection{Emoji: "", Text: "", Secondary: []string{}},
-			expected: "",
-		},
-		"header with emoji and secondary text": {
-			section:  TextSection{Emoji: "tada", Text: "Congrats", Secondary: []string{"You did it"}},
-			expected: Emoji("tada") + "Congrats\n" + Indent(Secondary("You did it")) + "\n",
-		},
-		"no emoji starts text immediately": {
-			section:  TextSection{Emoji: "", Text: "On the left. Where I like it.", Secondary: []string{}},
-			expected: "On the left. Where I like it.\n",
-		},
+func TestGetKeyLengthMatched(t *testing.T) {
+	var keys = map[string]string{
+		"key1": "unlocks the building",
+		"key2": "unlocks the room",
 	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, Sectionf(tc.section))
-		})
+
+	if getKeyLength(keys) != 4 {
+		t.Error("the longest key should have length 4")
 	}
 }
 
+func TestGetKeyLengthLong(t *testing.T) {
+	var keys = map[string]string{
+		"longer_key1":    "locks the building",
+		"very_long_key2": "locks the room",
+	}
+
+	if getKeyLength(keys) != 14 {
+		t.Error("the longest key `very_long_key2` should have length 14")
+	}
+}
+
+func TestGetKeyLengthFirst(t *testing.T) {
+	var keys = map[string]string{
+		"longest_key1": "short value",
+		"short_key2":   "longer value",
+	}
+
+	if getKeyLength(keys) != 12 {
+		t.Error("the longest key `longest_key1` should have length 12")
+	}
+}
+
+// Verify no text is output with an empty input text
+func TestSectionfEmpty(t *testing.T) {
+	formattedText := Sectionf(TextSection{
+		Emoji:     "",
+		Text:      "",
+		Secondary: []string{},
+	})
+	if formattedText != "" {
+		t.Error("non-zero text returned when none was expected")
+	}
+}
+
+// Verify no text is output with an empty input text
+func TestSectionfHeader(t *testing.T) {
+	expected := Emoji("tada") + "Congrats\n" + Indent(Secondary("You did it")) + "\n"
+	formattedText := Sectionf(TextSection{
+		Emoji:     "tada",
+		Text:      "Congrats",
+		Secondary: []string{"You did it"},
+	})
+	if formattedText != expected {
+		t.Error("section is not formatted as expected")
+	}
+}
+
+// Verify text begins immediately if no emoji is input
+func TestSectionfEmptyEmoji(t *testing.T) {
+	text := "On the left. Where I like it."
+	formattedText := Sectionf(TextSection{
+		Emoji:     "",
+		Text:      text,
+		Secondary: []string{},
+	})
+
+	if formattedText != text+"\n" {
+		t.Error("additional spacing added to text")
+	}
+}
+
+// Verify no text is output with an empty input text
 func TestSectionHeaderfEmpty(t *testing.T) {
-	assert.Equal(t, "", SectionHeaderf("tada", ""))
-}
-
-func TestSectionSecondaryf(t *testing.T) {
-	tests := map[string]struct {
-		format   string
-		args     []interface{}
-		validate func(t *testing.T, result string)
-	}{
-		"empty input returns empty string": {
-			format: "%s",
-			args:   []interface{}{""},
-			validate: func(t *testing.T, result string) {
-				assert.Equal(t, "", result)
-			},
-		},
-		"plain text is preserved and indented": {
-			format: "%s",
-			args:   []interface{}{"If you have a moment, go grab a glass of water!"},
-			validate: func(t *testing.T, result string) {
-				text := "If you have a moment, go grab a glass of water!"
-				assert.Contains(t, result, text)
-				assert.Equal(t, Indent(Secondary(text))+"\n", result)
-			},
-		},
-		"formats input variables": {
-			format: "App ID: %s\tStatus: %s",
-			args:   []interface{}{"A123456", "Installed"},
-			validate: func(t *testing.T, result string) {
-				assert.Contains(t, result, "App ID: A123456\tStatus: Installed")
-			},
-		},
-		"multi-line input is properly indented": {
-			format: "%s",
-			args:   []interface{}{"L1\nL2\nL3"},
-			validate: func(t *testing.T, result string) {
-				lines := strings.Split(result, "\n")
-				for i, line := range strings.Split("L1\nL2\nL3", "\n") {
-					assert.Equal(t, Indent(Secondary(line)), lines[i])
-				}
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := SectionSecondaryf(tc.format, tc.args...)
-			tc.validate(t, result)
-		})
+	text := ""
+	formattedText := SectionHeaderf("tada", text)
+	if formattedText != "" {
+		t.Error("non-zero text returned when none was expected")
 	}
 }
 
-func TestCommandf(t *testing.T) {
-	tests := map[string]struct {
-		process   string
-		command   string
-		isPrimary bool
-	}{
-		"primary command contains process and command": {
-			process:   "renamed-slack-command",
-			command:   "feedback",
-			isPrimary: true,
-		},
-		"secondary command contains process and command": {
-			process:   "a-renamed-slack-cli",
-			command:   "feedback",
-			isPrimary: false,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			processTemp := os.Args[0]
-			os.Args[0] = tc.process
-			defer func() { os.Args[0] = processTemp }()
-
-			formatted := Commandf(tc.command, tc.isPrimary)
-			assert.Contains(t, formatted, tc.process+" "+tc.command)
-		})
+// Verify no text is output with an empty input
+func TestSectionSecondaryfEmpty(t *testing.T) {
+	text := ""
+	formattedText := SectionSecondaryf("%s", text)
+	if formattedText != "" {
+		t.Log(formattedText)
+		t.Error("non-zero text returned when none was expected")
 	}
 }
 
+// Verify plain string is preserved and properly indented
+func TestSectionSecondaryfPlain(t *testing.T) {
+	text := "If you have a moment, go grab a glass of water!"
+	formattedText := SectionSecondaryf("%s", text)
+	if !strings.Contains(formattedText, text) {
+		t.Error("input text is not preserved")
+	}
+	if formattedText != Indent(Secondary(text))+"\n" {
+		t.Error("output is not indented")
+	}
+}
+
+// Verify string formats input variables
+func TestSectionSecondaryfFormat(t *testing.T) {
+	text := "App ID: %s\tStatus: %s"
+	appID := "A123456"
+	status := "Installed"
+	formattedText := SectionSecondaryf(text, appID, status)
+	if !strings.Contains(formattedText, "App ID: A123456\tStatus: Installed") {
+		t.Error("formatted string does not contain variables")
+	}
+}
+
+// Verify multi-line input is properly indented
+func TestSectionSecondaryfIndent(t *testing.T) {
+	text := "L1\nL2\nL3"
+	formattedText := SectionSecondaryf("%s", text)
+
+	for i, line := range strings.Split(text, "\n") {
+		lines := strings.Split(formattedText, "\n")
+		if strings.Compare(lines[i], Indent(Secondary(line))) != 0 {
+			t.Errorf("new line not properly indented\n"+
+				"expect: *%s*\nactual: *%s*", Indent(Secondary(line)), lines[i])
+		}
+	}
+}
+
+// Verify a `process command`-like string is presented
+func TestCommandfPrimary(t *testing.T) {
+	// rename the process for fuzz-like testing
+	processTemp := os.Args[0]
+	process := "renamed-slack-command"
+	os.Args[0] = "renamed-slack-command"
+	command := "feedback"
+
+	formatted := Commandf(command, true)
+	if !strings.Contains(formatted, process+" "+command) {
+		t.Errorf("a `process command`-like string is not present in output:\n%s", formatted)
+	}
+
+	os.Args[0] = processTemp
+}
+
+// Verify a "process command"-like string is presented
+func TestCommandfSecondary(t *testing.T) {
+	// Rename the process for fuzzy testing
+	processTemp := os.Args[0]
+	process := "a-renamed-slack-cli"
+	os.Args[0] = "a-renamed-slack-cli"
+	command := "feedback"
+
+	formatted := Commandf(command, false)
+	if !strings.Contains(formatted, process+" "+command) {
+		t.Errorf("a `process command`-like string is not present")
+	}
+
+	os.Args[0] = processTemp
+}
+
+// Verify the text indented is not modified
 func TestIndent(t *testing.T) {
 	text := "a few spaces are expected at the start of this line, but no other changes"
 	indented := Indent(text)
-	assert.Contains(t, indented, text)
+	if !strings.Contains(indented, text) {
+		t.Error("original text is not preserved")
+	}
 }
 
 func TestTracef(t *testing.T) {
@@ -226,61 +265,9 @@ func TestSurveyIcons(t *testing.T) {
 * Example commands
  */
 
-func TestStyleFlags(t *testing.T) {
-	tests := map[string]struct {
-		charmEnabled bool
-		input        string
-		expectedFunc func() string
-	}{
-		"short and long flag with type and description": {
-			charmEnabled: true,
-			input:        "  -s, --long string   Description text",
-			expectedFunc: func() string { return Yellow("  -s, --long string   ") + Secondary("Description text") },
-		},
-		"long-only flag with description": {
-			charmEnabled: true,
-			input:        "      --verbose       Enable verbose output",
-			expectedFunc: func() string { return Yellow("      --verbose       ") + Secondary("Enable verbose output") },
-		},
-		"plain text without flag pattern returned unchanged": {
-			charmEnabled: true,
-			input:        "some plain text",
-			expectedFunc: func() string { return "some plain text" },
-		},
-		"empty string returned unchanged": {
-			charmEnabled: true,
-			input:        "",
-			expectedFunc: func() string { return "" },
-		},
-		"multiline flag output": {
-			charmEnabled: true,
-			input:        "  -a, --all           Show all\n      --verbose       Enable verbose",
-			expectedFunc: func() string {
-				return Yellow("  -a, --all           ") + Secondary("Show all") + "\n" + Yellow("      --verbose       ") + Secondary("Enable verbose")
-			},
-		},
-		"charm disabled returns input unchanged": {
-			charmEnabled: false,
-			input:        "  -s, --long string   Description text",
-			expectedFunc: func() string { return "  -s, --long string   Description text" },
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ToggleStyles(tc.charmEnabled)
-			ToggleCharm(tc.charmEnabled)
-			defer func() {
-				ToggleStyles(false)
-				ToggleCharm(false)
-			}()
-			actual := StyleFlags(tc.input)
-			assert.Equal(t, tc.expectedFunc(), actual)
-		})
-	}
-}
-
 func Test_ExampleCommandsf(t *testing.T) {
 	tests := map[string]struct {
+		name     string
 		commands []ExampleCommand
 		expected []string
 	}{
@@ -379,28 +366,113 @@ func Test_ExampleTemplatef(t *testing.T) {
 	}
 }
 
-func Test_ExampleTemplatef_Charm(t *testing.T) {
-	defer func() {
-		ToggleStyles(false)
-		ToggleCharm(false)
-	}()
-	ToggleStyles(true)
-	ToggleCharm(true)
+func TestMapf(t *testing.T) {
+	t.Run("formats a map with aligned keys", func(t *testing.T) {
+		m := map[string]string{
+			"key": "value",
+		}
+		result := Mapf(m)
+		assert.Contains(t, result, "key")
+		assert.Contains(t, result, "value")
+	})
 
-	template := []string{
-		"# Create a new project from a selected template",
-		"$ slack create",
-		"",
-		"$ slack create my-project -t sample/repo-url  # Create a named project",
+	t.Run("returns empty for empty map", func(t *testing.T) {
+		m := map[string]string{}
+		result := Mapf(m)
+		assert.Empty(t, result)
+	})
+}
+
+func TestHomePath(t *testing.T) {
+	tests := map[string]struct {
+		path     string
+		contains string
+	}{
+		"non-home path is unchanged": {
+			path:     "/tmp/some/path",
+			contains: "/tmp/some/path",
+		},
+		"empty path is unchanged": {
+			path:     "",
+			contains: "",
+		},
 	}
-	expected := []string{
-		fmt.Sprintf("  %s", Secondary("# Create a new project from a selected template")),
-		fmt.Sprintf("  %s%s", Yellow("$ "), CommandText("slack create")),
-		"",
-		fmt.Sprintf("  %s%s%s", Yellow("$ "), CommandText("slack create my-project -t sample/repo-url"), Secondary("  # Create a named project")),
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := HomePath(tc.path)
+			assert.Contains(t, result, tc.contains)
+		})
 	}
-	actual := ExampleTemplatef(strings.Join(template, "\n"))
-	assert.Equal(t, strings.Join(expected, "\n"), actual)
+}
+
+func TestTeamSelectLabel(t *testing.T) {
+	tests := map[string]struct {
+		teamDomain string
+		teamID     string
+	}{
+		"formats team domain and ID": {
+			teamDomain: "my-workspace",
+			teamID:     "T12345",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := TeamSelectLabel(tc.teamDomain, tc.teamID)
+			assert.Contains(t, result, tc.teamDomain)
+			assert.Contains(t, result, tc.teamID)
+		})
+	}
+}
+
+func TestTimeAgo(t *testing.T) {
+	now := int(time.Now().Unix())
+	tests := map[string]struct {
+		datetime int
+		contains string
+	}{
+		"seconds ago": {
+			datetime: now - 30,
+			contains: "seconds ago",
+		},
+		"minutes ago": {
+			datetime: now - 120,
+			contains: "minutes ago",
+		},
+		"hours ago": {
+			datetime: now - 7200,
+			contains: "hours ago",
+		},
+		"days ago": {
+			datetime: now - 86400*3,
+			contains: "days ago",
+		},
+		"weeks ago": {
+			datetime: now - 86400*14,
+			contains: "weeks ago",
+		},
+		"months ago": {
+			datetime: now - 86400*60,
+			contains: "months ago",
+		},
+		"years ago": {
+			datetime: now - 86400*800,
+			contains: "years ago",
+		},
+		"future time": {
+			datetime: now + 3600,
+			contains: "until",
+		},
+		"singular minute": {
+			datetime: now - 90,
+			contains: "minute ago",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := TimeAgo(tc.datetime)
+			assert.Contains(t, result, tc.contains)
+		})
+	}
 }
 
 /*

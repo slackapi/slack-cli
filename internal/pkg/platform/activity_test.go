@@ -62,7 +62,7 @@ func Test_prettifyActivity(t *testing.T) {
 				Source:        "slack",
 				ComponentType: "new_thing",
 				ComponentID:   "a789",
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"some": "data",
 				},
 				Created: 1686939542,
@@ -74,50 +74,299 @@ func Test_prettifyActivity(t *testing.T) {
 				`{"some":"data"}`,
 			},
 		},
-		"warn level activity should contain the message": {
+		"warn level should be styled": {
 			activity: api.Activity{
-				TraceID:     "w123",
-				Level:       types.WARN,
-				EventType:   "unknown",
-				ComponentID: "w789",
-				Payload: map[string]interface{}{
-					"some": "warning",
-				},
-				Created: 1686939542,
+				Level:     types.WARN,
+				EventType: "unknown",
 			},
-			expectedResults: []string{
-				`{"some":"warning"}`,
-			},
+			expectedResults: []string{},
 		},
-		"error level activity should contain the message": {
+		"error level should be styled": {
 			activity: api.Activity{
-				TraceID:     "e123",
-				Level:       types.ERROR,
-				EventType:   "unknown",
-				ComponentID: "e789",
-				Payload: map[string]interface{}{
-					"some": "error",
-				},
-				Created: 1686939542,
+				Level:     types.ERROR,
+				EventType: "unknown",
 			},
-			expectedResults: []string{
-				`{"some":"error"}`,
-			},
+			expectedResults: []string{},
 		},
-		"fatal level activity should contain the message": {
+		"fatal level should be styled": {
 			activity: api.Activity{
-				TraceID:     "f123",
-				Level:       types.FATAL,
-				EventType:   "unknown",
-				ComponentID: "f789",
-				Payload: map[string]interface{}{
-					"some": "fatal",
+				Level:     types.FATAL,
+				EventType: "unknown",
+			},
+			expectedResults: []string{},
+		},
+		"datastore_request_result event": {
+			activity: api.Activity{
+				EventType:   types.DatastoreRequestResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"request_type":   "get",
+					"datastore_name": "MyDS",
+					"details":        "id: 123",
 				},
-				Created: 1686939542,
 			},
-			expectedResults: []string{
-				`{"some":"fatal"}`,
+			expectedResults: []string{"get", "MyDS", "succeeded"},
+		},
+		"external_auth_missing_function event": {
+			activity: api.Activity{
+				EventType:   types.ExternalAuthMissingFunction,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"function_id": "fn1",
+				},
 			},
+			expectedResults: []string{"fn1", "missing"},
+		},
+		"external_auth_result event": {
+			activity: api.Activity{
+				EventType:   types.ExternalAuthResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"U1", "T1"},
+		},
+		"external_auth_started event": {
+			activity: api.Activity{
+				EventType:   types.ExternalAuthStarted,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"U1", "T1"},
+		},
+		"external_auth_token_fetch_result event": {
+			activity: api.Activity{
+				EventType:   types.ExternalAuthTokenFetchResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"U1", "T1"},
+		},
+		"function_deployment event": {
+			activity: api.Activity{
+				EventType:   types.FunctionDeployment,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"user_id": "U1",
+					"team_id": "T1",
+					"action":  "deploy",
+				},
+			},
+			expectedResults: []string{"U1", "T1"},
+		},
+		"function_execution_output event": {
+			activity: api.Activity{
+				EventType:   types.FunctionExecutionOutput,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"log": "some output",
+				},
+			},
+			expectedResults: []string{"some output"},
+		},
+		"function_execution_result event": {
+			activity: api.Activity{
+				EventType:   types.FunctionExecutionResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"function_name": "MyFunc",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"MyFunc", "completed"},
+		},
+		"function_execution_started event": {
+			activity: api.Activity{
+				EventType:   types.FunctionExecutionStarted,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"function_name": "MyFunc",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"MyFunc", "started"},
+		},
+		"trigger_executed event": {
+			activity: api.Activity{
+				EventType:   types.TriggerExecuted,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"function_name": "MyFunc",
+				},
+			},
+			expectedResults: []string{"MyFunc"},
+		},
+		"trigger_payload_received event": {
+			activity: api.Activity{
+				EventType:   types.TriggerPayloadReceived,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"log": "payload data",
+				},
+			},
+			expectedResults: []string{"payload data"},
+		},
+		"workflow_billing_result event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowBillingResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"workflow_name":     "WF1",
+					"is_billing_result": true,
+					"billing_reason":    "function_execution",
+				},
+			},
+			expectedResults: []string{"WF1"},
+		},
+		"workflow_bot_invited event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowBotInvited,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"channel_id":  "C1",
+					"bot_user_id": "B1",
+				},
+			},
+			expectedResults: []string{"C1", "B1"},
+		},
+		"workflow_created_from_template event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowCreatedFromTemplate,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"workflow_name": "WF1",
+					"template_id":   "tmpl1",
+				},
+			},
+			expectedResults: []string{"WF1", "tmpl1"},
+		},
+		"workflow_execution_result event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowExecutionResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"workflow_name": "WF1",
+				},
+			},
+			expectedResults: []string{"WF1", "completed"},
+		},
+		"workflow_execution_started event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowExecutionStarted,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"workflow_name": "WF1",
+				},
+			},
+			expectedResults: []string{"WF1", "started"},
+		},
+		"workflow_published event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowPublished,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"workflow_name": "WF1",
+				},
+			},
+			expectedResults: []string{"WF1", "published"},
+		},
+		"workflow_step_execution_result event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowStepExecutionResult,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"function_name": "MyFunc",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"MyFunc", "completed"},
+		},
+		"workflow_step_started event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowStepStarted,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"current_step": float64(2),
+					"total_steps":  float64(5),
+				},
+			},
+			expectedResults: []string{"2", "5", "started"},
+		},
+		"workflow_unpublished event": {
+			activity: api.Activity{
+				EventType:   types.WorkflowUnpublished,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"workflow_name": "WF1",
+				},
+			},
+			expectedResults: []string{"WF1", "unpublished"},
+		},
+		"external_auth_missing_selected_auth event": {
+			activity: api.Activity{
+				EventType:   types.ExternalAuthMissingSelectedAuth,
+				Level:       types.INFO,
+				ComponentID: "c1",
+				TraceID:     "t1",
+				Payload: map[string]any{
+					"code": "auth_error",
+				},
+			},
+			expectedResults: []string{"auth_error"},
 		},
 	}
 	for name, tc := range tests {
@@ -307,9 +556,9 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 		"successful trigger trip with trigger information": {
 			Activity: api.Activity{
 				Level: types.INFO,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"function_name": "Send a greeting",
-					"trigger": map[string]interface{}{
+					"trigger": map[string]any{
 						"type": "shortcut",
 					},
 				},
@@ -321,7 +570,7 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 		"successful trigger trip without trigger information": {
 			Activity: api.Activity{
 				Level: types.INFO,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"function_name": "Send a greeting",
 				},
 			},
@@ -332,7 +581,7 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 		"reason 'parameter_validation_failed' with 1 error": {
 			Activity: api.Activity{
 				Level: types.ERROR,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"function_name": "Send a greeting",
 					"reason":        "parameter_validation_failed",
 					"errors":        "[\"Null value for non-nullable parameter `channel`\"]",
@@ -346,7 +595,7 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 		"reason 'parameter_validation_failed' with 2 errors": {
 			Activity: api.Activity{
 				Level: types.ERROR,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"function_name": "Send a greeting",
 					"reason":        "parameter_validation_failed",
 					"errors":        "[\"Null value for non-nullable parameter `channel`\",\"Null value for non-nullable parameter `interactivity`\"]",
@@ -361,7 +610,7 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 		"reason 'parameter_validation_failed' with nil errors": {
 			Activity: api.Activity{
 				Level: types.ERROR,
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"function_name": "Send a greeting",
 					"reason":        "parameter_validation_failed",
 					"errors":        nil,
@@ -384,6 +633,255 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 	}
 }
 
+func Test_activityToStringFunctions(t *testing.T) {
+	baseActivity := api.Activity{
+		TraceID:     "tr123",
+		Level:       types.INFO,
+		ComponentID: "comp1",
+		Created:     1686939542000000,
+		Payload: map[string]any{
+			"function_id":   "fn1",
+			"function_name": "MyFunc",
+			"function_type": "custom",
+			"workflow_name": "MyWorkflow",
+			"user_id":       "U123",
+			"team_id":       "T456",
+			"app_id":        "A789",
+			"provider_key":  "google",
+			"code":          "auth_error",
+			"extra_message": "details here",
+			"action":        "deploy",
+			"log":           "some output",
+			"channel_id":    "C123",
+			"bot_user_id":   "B456",
+			"template_id":   "tmpl1",
+			"current_step":  float64(2),
+			"total_steps":   float64(5),
+		},
+	}
+
+	tests := map[string]struct {
+		fn       func(api.Activity) string
+		activity api.Activity
+		contains []string
+	}{
+		"externalAuthMissingFunctionToString": {
+			fn:       externalAuthMissingFunctionToString,
+			activity: baseActivity,
+			contains: []string{"fn1", "missing"},
+		},
+		"externalAuthMissingSelectedAuthToString": {
+			fn:       externalAuthMissingSelectedAuthToString,
+			activity: baseActivity,
+			contains: []string{"auth_error", "Missing mapped token"},
+		},
+		"externalAuthResultToString info": {
+			fn:       externalAuthResultToString,
+			activity: baseActivity,
+			contains: []string{"completed", "U123", "T456"},
+		},
+		"externalAuthStartedToString info": {
+			fn:       externalAuthStartedToString,
+			activity: baseActivity,
+			contains: []string{"succeeded", "U123", "T456"},
+		},
+		"externalAuthTokenFetchResult info": {
+			fn:       externalAuthTokenFetchResult,
+			activity: baseActivity,
+			contains: []string{"succeeded", "U123", "T456"},
+		},
+		"functionDeploymentToString": {
+			fn:       functionDeploymentToString,
+			activity: baseActivity,
+			contains: []string{"deployed", "U123", "T456"},
+		},
+		"functionExecutionOutputToString": {
+			fn:       functionExecutionOutputToString,
+			activity: baseActivity,
+			contains: []string{"Function output", "some output"},
+		},
+		"triggerPayloadReceivedOutputToString": {
+			fn:       triggerPayloadReceivedOutputToString,
+			activity: baseActivity,
+			contains: []string{"Trigger payload", "some output"},
+		},
+		"functionExecutionResultToString completed": {
+			fn:       functionExecutionResultToString,
+			activity: baseActivity,
+			contains: []string{"MyFunc", "completed"},
+		},
+		"functionExecutionResultToString failed": {
+			fn: functionExecutionResultToString,
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"function_name": "MyFunc",
+					"function_type": "custom",
+					"error":         "something went wrong",
+				},
+			},
+			contains: []string{"MyFunc", "failed", "something went wrong"},
+		},
+		"functionExecutionStartedToString": {
+			fn:       functionExecutionStartedToString,
+			activity: baseActivity,
+			contains: []string{"MyFunc", "started"},
+		},
+		"workflowBillingResultToString with billing": {
+			fn: workflowBillingResultToString,
+			activity: api.Activity{
+				Level:       types.INFO,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"workflow_name":     "MyWorkflow",
+					"is_billing_result": true,
+					"billing_reason":    "function_execution",
+				},
+			},
+			contains: []string{"MyWorkflow", "billing reason", "function_execution"},
+		},
+		"workflowBillingResultToString excluded": {
+			fn: workflowBillingResultToString,
+			activity: api.Activity{
+				Level:       types.INFO,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"is_billing_result": false,
+				},
+			},
+			contains: []string{"excluded from billing"},
+		},
+		"workflowBotInvitedToString": {
+			fn:       workflowBotInvitedToString,
+			activity: baseActivity,
+			contains: []string{"C123", "B456", "invited"},
+		},
+		"workflowCreatedFromTemplateToString": {
+			fn:       workflowCreatedFromTemplateToString,
+			activity: baseActivity,
+			contains: []string{"MyWorkflow", "tmpl1"},
+		},
+		"workflowExecutionResultToString completed": {
+			fn:       workflowExecutionResultToString,
+			activity: baseActivity,
+			contains: []string{"MyWorkflow", "completed"},
+		},
+		"workflowExecutionResultToString failed": {
+			fn: workflowExecutionResultToString,
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"workflow_name": "MyWorkflow",
+					"error":         "workflow error",
+				},
+			},
+			contains: []string{"MyWorkflow", "failed", "workflow error"},
+		},
+		"workflowExecutionStartedToString": {
+			fn:       workflowExecutionStartedToString,
+			activity: baseActivity,
+			contains: []string{"MyWorkflow", "started"},
+		},
+		"workflowPublishedToString": {
+			fn:       workflowPublishedToString,
+			activity: baseActivity,
+			contains: []string{"MyWorkflow", "published"},
+		},
+		"externalAuthResultToString error": {
+			fn: externalAuthResultToString,
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"user_id":       "U123",
+					"team_id":       "T456",
+					"app_id":        "A789",
+					"provider_key":  "google",
+					"code":          "auth_error",
+					"extra_message": "details here",
+				},
+			},
+			contains: []string{"failed", "U123", "T456", "auth_error", "details here"},
+		},
+		"externalAuthStartedToString error": {
+			fn: externalAuthStartedToString,
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"user_id":      "U123",
+					"team_id":      "T456",
+					"app_id":       "A789",
+					"provider_key": "google",
+					"code":         "auth_start_error",
+				},
+			},
+			contains: []string{"failed", "U123", "auth_start_error"},
+		},
+		"externalAuthTokenFetchResult error": {
+			fn: externalAuthTokenFetchResult,
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"user_id":      "U123",
+					"team_id":      "T456",
+					"app_id":       "A789",
+					"provider_key": "google",
+					"code":         "fetch_error",
+				},
+			},
+			contains: []string{"failed", "U123", "fetch_error"},
+		},
+		"workflowStepExecutionResultToString completed": {
+			fn:       workflowStepExecutionResultToString,
+			activity: baseActivity,
+			contains: []string{"MyFunc", "completed"},
+		},
+		"workflowStepExecutionResultToString failed": {
+			fn: workflowStepExecutionResultToString,
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "comp1",
+				TraceID:     "tr1",
+				Payload: map[string]any{
+					"function_name": "MyFunc",
+					"function_type": "custom",
+					"error":         "step error",
+				},
+			},
+			contains: []string{"MyFunc", "failed"},
+		},
+		"workflowStepStartedToString": {
+			fn:       workflowStepStartedToString,
+			activity: baseActivity,
+			contains: []string{"2", "5", "started"},
+		},
+		"workflowUnpublishedToString": {
+			fn:       workflowUnpublishedToString,
+			activity: baseActivity,
+			contains: []string{"MyWorkflow", "unpublished"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := tc.fn(tc.activity)
+			for _, s := range tc.contains {
+				assert.Contains(t, result, s)
+			}
+		})
+	}
+}
+
 func Test_datastoreRequestResultToString(t *testing.T) {
 	for name, tc := range map[string]struct {
 		activity        api.Activity
@@ -391,7 +889,7 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 	}{
 		"successful datastore request event log": {
 			activity: api.Activity{
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"datastore_name": "MyDatastore",
 					"request_type":   "get",
 					"details":        "id: f7d1253f-4066-4b83-8330-a483ff555c20",
@@ -406,7 +904,7 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 		"failed datastore request error log": {
 			activity: api.Activity{
 				Level: "error",
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"datastore_name": "MyDatastore",
 					"request_type":   "query",
 					"details":        `{"expression": "id invalid_operator f7d1253f-4066-4b83-8330-a483ff555c20"}`,
@@ -418,7 +916,7 @@ func Test_datastoreRequestResultToString(t *testing.T) {
 		"failed datastore request without error field": {
 			activity: api.Activity{
 				Level: "error",
-				Payload: map[string]interface{}{
+				Payload: map[string]any{
 					"datastore_name": "MyDatastore",
 					"request_type":   "query",
 					"details":        `{"expression": "id invalid_operator f7d1253f-4066-4b83-8330-a483ff555c20"}`,

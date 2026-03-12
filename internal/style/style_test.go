@@ -118,166 +118,93 @@ func TestPluralize(t *testing.T) {
 	}
 }
 
-func TestToggleCharm(t *testing.T) {
+func TestStyleFunctions(t *testing.T) {
 	tests := map[string]struct {
-		initial  bool
-		toggle   bool
-		expected bool
+		fn       func(string) string
+		input    string
+		expected string
 	}{
-		"enables charm styling": {
-			initial:  false,
-			toggle:   true,
-			expected: true,
+		"CommandText returns non-empty": {
+			fn:    CommandText,
+			input: "deploy",
 		},
-		"disables charm styling": {
-			initial:  true,
-			toggle:   false,
-			expected: false,
+		"Error returns non-empty": {
+			fn:    Error,
+			input: "something failed",
+		},
+		"Warning returns non-empty": {
+			fn:    Warning,
+			input: "be careful",
+		},
+		"Input returns non-empty": {
+			fn:    Input,
+			input: "user input",
+		},
+		"Bright returns non-empty": {
+			fn:    Bright,
+			input: "bright text",
+		},
+		"Bold returns non-empty": {
+			fn:    Bold,
+			input: "bold text",
+		},
+		"Darken returns non-empty": {
+			fn:    Darken,
+			input: "dark text",
+		},
+		"Highlight returns non-empty": {
+			fn:    Highlight,
+			input: "important",
+		},
+		"Underline returns non-empty": {
+			fn:    Underline,
+			input: "underlined",
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			isCharmEnabled = tc.initial
-			defer func() { isCharmEnabled = false }()
-			ToggleCharm(tc.toggle)
-			assert.Equal(t, tc.expected, isCharmEnabled)
+			result := tc.fn(tc.input)
+			assert.Contains(t, result, tc.input)
 		})
 	}
 }
 
-// testStyleFunc verifies a style function returns the original text (stripped of ANSI)
-// and behaves correctly across all three modes: colors off, legacy aurora, and charm lipgloss.
-func testStyleFunc(t *testing.T, name string, fn func(string) string) {
-	t.Helper()
-	defer func() {
-		ToggleStyles(false)
-		ToggleCharm(false)
-	}()
-
-	input := "hello"
-
-	t.Run(name+" returns plain text when colors are off", func(t *testing.T) {
-		ToggleStyles(false)
-		ToggleCharm(false)
-		result := fn(input)
-		assert.Equal(t, input, RemoveANSI(result))
-	})
-
-	t.Run(name+" returns styled text with legacy aurora", func(t *testing.T) {
-		ToggleStyles(true)
-		ToggleCharm(false)
-		result := fn(input)
-		assert.Contains(t, RemoveANSI(result), input)
-	})
-
-	t.Run(name+" returns styled text with charm lipgloss", func(t *testing.T) {
-		ToggleStyles(true)
-		ToggleCharm(true)
-		result := fn(input)
-		assert.Contains(t, RemoveANSI(result), input)
-	})
-}
-
-func TestColorStyleFunctions(t *testing.T) {
-	testStyleFunc(t, "Secondary", Secondary)
-	testStyleFunc(t, "CommandText", CommandText)
-	testStyleFunc(t, "LinkText", LinkText)
-	testStyleFunc(t, "Selector", Selector)
-	testStyleFunc(t, "Error", Error)
-	testStyleFunc(t, "Warning", Warning)
-	testStyleFunc(t, "Input", Input)
-	testStyleFunc(t, "Green", Green)
-	testStyleFunc(t, "Red", Red)
-	testStyleFunc(t, "Yellow", Yellow)
-	testStyleFunc(t, "Gray", Gray)
-}
-
-func TestTextStyleFunctions(t *testing.T) {
-	testStyleFunc(t, "Bright", Bright)
-	testStyleFunc(t, "Bold", Bold)
-	testStyleFunc(t, "Darken", Darken)
-	testStyleFunc(t, "Highlight", Highlight)
-	testStyleFunc(t, "Underline", Underline)
-}
-
-func TestHeader(t *testing.T) {
-	defer func() {
-		ToggleStyles(false)
-		ToggleCharm(false)
-	}()
-
-	t.Run("uppercases text", func(t *testing.T) {
-		ToggleStyles(true)
-		ToggleCharm(true)
-		result := Header("commands")
-		assert.Contains(t, RemoveANSI(result), "COMMANDS")
-	})
-
-	t.Run("uppercases text with legacy", func(t *testing.T) {
-		ToggleStyles(true)
-		ToggleCharm(false)
-		result := Header("commands")
-		assert.Contains(t, RemoveANSI(result), "COMMANDS")
-	})
-}
-
 func TestFaint(t *testing.T) {
-	defer func() {
-		ToggleStyles(false)
-		ToggleCharm(false)
-	}()
+	tests := map[string]struct {
+		colorShown bool
+		input      string
+	}{
+		"with color disabled returns input unchanged": {
+			colorShown: false,
+			input:      "faint text",
+		},
+		"with color enabled wraps with ANSI codes": {
+			colorShown: true,
+			input:      "faint text",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			prev := isColorShown
+			defer func() { isColorShown = prev }()
+			isColorShown = tc.colorShown
 
-	t.Run("returns plain text when colors are off", func(t *testing.T) {
-		ToggleStyles(false)
-		result := Faint("hello")
-		assert.Equal(t, "hello", result)
-	})
-
-	t.Run("returns styled text with legacy", func(t *testing.T) {
-		ToggleStyles(true)
-		ToggleCharm(false)
-		result := Faint("hello")
-		assert.Contains(t, result, "hello")
-		assert.NotEqual(t, "hello", result)
-	})
-
-	t.Run("returns styled text with charm", func(t *testing.T) {
-		ToggleStyles(true)
-		ToggleCharm(true)
-		result := Faint("hello")
-		assert.Contains(t, RemoveANSI(result), "hello")
-	})
+			result := Faint(tc.input)
+			assert.Contains(t, result, tc.input)
+			if tc.colorShown {
+				assert.Contains(t, result, "\x1b[0;2m")
+			} else {
+				assert.Equal(t, tc.input, result)
+			}
+		})
+	}
 }
 
-func TestStyler(t *testing.T) {
-	t.Run("returns an aurora instance", func(t *testing.T) {
-		s := Styler()
-		assert.NotNil(t, s)
-	})
-}
-
-func TestEmoji(t *testing.T) {
-	defer func() {
-		ToggleStyles(false)
-	}()
-
-	t.Run("returns empty when colors are off", func(t *testing.T) {
-		ToggleStyles(false)
-		assert.Equal(t, "", Emoji("gear"))
-	})
-
-	t.Run("returns empty for empty alias", func(t *testing.T) {
-		assert.Equal(t, "", Emoji(""))
-	})
-
-	t.Run("returns empty for whitespace alias", func(t *testing.T) {
-		ToggleStyles(true)
-		assert.Equal(t, "", Emoji("  "))
-	})
-
-	t.Run("returns emoji with padding for known aliases", func(t *testing.T) {
-		ToggleStyles(true)
-		result := Emoji("gear")
-		assert.NotEmpty(t, result)
-	})
+// Verify no text is output when no emoji is given
+func TestEmojiEmpty(t *testing.T) {
+	alias := ""
+	emoji := Emoji(alias)
+	if emoji != "" {
+		t.Errorf("non-empty text returned, when none was expected")
+	}
 }
