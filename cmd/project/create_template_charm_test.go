@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh"
+	tea "charm.land/bubbletea/v2"
+	huh "charm.land/huh/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/stretchr/testify/assert"
@@ -77,7 +77,7 @@ func TestBuildTemplateSelectionForm(t *testing.T) {
 		doAllUpdates(f, f.Init())
 
 		// Submit first option (Starter app -> getting-started)
-		_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+		_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 		doAllUpdates(f, cmd)
 
 		view := ansi.Strip(f.View())
@@ -95,13 +95,13 @@ func TestBuildTemplateSelectionForm(t *testing.T) {
 		doAllUpdates(f, f.Init())
 
 		// Navigate down to "View more samples" (4th option, index 3)
-		_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+		_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		doAllUpdates(f, cmd)
-		_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+		_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		doAllUpdates(f, cmd)
-		_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+		_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		doAllUpdates(f, cmd)
-		_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+		_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 		doAllUpdates(f, cmd)
 
 		assert.Equal(t, viewMoreSamples, category)
@@ -119,11 +119,11 @@ func TestBuildTemplateSelectionForm(t *testing.T) {
 		doAllUpdates(f, f.Init())
 
 		// Navigate to Automation app (3rd option, index 2) and submit
-		_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+		_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		doAllUpdates(f, cmd)
-		_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+		_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		doAllUpdates(f, cmd)
-		_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+		_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 		doAllUpdates(f, cmd)
 
 		view := ansi.Strip(f.View())
@@ -140,10 +140,10 @@ func TestBuildTemplateSelectionForm(t *testing.T) {
 		doAllUpdates(f, f.Init())
 
 		// Select first category (Starter app)
-		_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+		_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 		doAllUpdates(f, cmd)
 		// Select first template (Bolt for JavaScript)
-		_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+		_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 		doAllUpdates(f, cmd)
 
 		assert.Equal(t, "slack-cli#getting-started", category)
@@ -176,10 +176,10 @@ func TestCharmPromptTemplateSelection(t *testing.T) {
 		runForm = func(f *huh.Form) error {
 			doAllUpdates(f, f.Init())
 			// Select first category (Starter app)
-			_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 			doAllUpdates(f, cmd)
 			// Select first template (Bolt for JavaScript)
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 			doAllUpdates(f, cmd)
 			return nil
 		}
@@ -212,16 +212,16 @@ func TestCharmPromptTemplateSelection(t *testing.T) {
 		runForm = func(f *huh.Form) error {
 			doAllUpdates(f, f.Init())
 			// Navigate to "View more samples" (4th option)
-			_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 			doAllUpdates(f, cmd)
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 			doAllUpdates(f, cmd)
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 			doAllUpdates(f, cmd)
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 			doAllUpdates(f, cmd)
 			// Select "Browse sample gallery..."
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 			doAllUpdates(f, cmd)
 			return nil
 		}
@@ -240,12 +240,12 @@ func TestCharmPromptTemplateSelection(t *testing.T) {
 		runForm = func(f *huh.Form) error {
 			doAllUpdates(f, f.Init())
 			// Navigate to "AI Agent app" (2nd option)
-			_, cmd := f.Update(tea.KeyMsg{Type: tea.KeyDown})
+			_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 			doAllUpdates(f, cmd)
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 			doAllUpdates(f, cmd)
 			// Select first template (Bolt for JavaScript)
-			_, cmd = f.Update(tea.KeyMsg{Type: tea.KeyEnter})
+			_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
 			doAllUpdates(f, cmd)
 			return nil
 		}

@@ -17,9 +17,83 @@ package platform
 import (
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPlatformDeploy(t *testing.T) {
-	assert.True(t, true, "fake deploy")
+func TestDeploySuccessText(t *testing.T) {
+	tests := map[string]struct {
+		app         types.App
+		manifest    types.SlackYaml
+		authSession api.AuthSession
+		deployTime  string
+		expected    []string
+	}{
+		"information from a workspace deploy is printed": {
+			app: types.App{AppID: "A123"},
+			manifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "DeployerApp"},
+				},
+			},
+			authSession: api.AuthSession{
+				UserName: new("slackbot"),
+				UserID:   new("USLACKBOT"),
+				TeamName: new("speck"),
+				TeamID:   new("T001"),
+			},
+			deployTime: "12.34",
+			expected: []string{
+				"DeployerApp deployed in 12.34",
+				"Dashboard:  https://slacker.com/apps/A123",
+				"App Owner:  slackbot (USLACKBOT)",
+				"Workspace:  speck (T001)",
+			},
+		},
+		"information from an enterprise deploy is printed": {
+			app: types.App{AppID: "A999"},
+			manifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "Spackulen"},
+				},
+			},
+			authSession: api.AuthSession{
+				UserName:            new("stub"),
+				UserID:              new("U111"),
+				TeamName:            new("spack"),
+				TeamID:              new("E002"),
+				EnterpriseID:        new("E002"),
+				IsEnterpriseInstall: new(bool(true)),
+			},
+			deployTime: "8.05",
+			expected: []string{
+				"Spackulen deployed in 8.05",
+				"Dashboard   :  https://slacker.com/apps/A999",
+				"App Owner   :  stub (U111)",
+				"Organization:  spack (E002)",
+			},
+		},
+		"a message is still displayed with missing info": {
+			app:         types.App{},
+			manifest:    types.SlackYaml{},
+			authSession: api.AuthSession{},
+			expected: []string{
+				"Successfully deployed the app!",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			clientsMock := shared.NewClientsMock()
+			clientsMock.API.On("Host").Return("https://slacker.com")
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			output := deploySuccessText(clients, tc.app, tc.manifest, tc.authSession, tc.deployTime)
+			for _, line := range tc.expected {
+				assert.Contains(t, output, line)
+			}
+		})
+	}
 }
