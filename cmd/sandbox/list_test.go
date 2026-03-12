@@ -49,7 +49,7 @@ func TestListCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
-		"with sandboxes": {
+		"with active sandboxes": {
 			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
@@ -73,7 +73,36 @@ func TestListCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com"},
+			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com", "Status: ACTIVE"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
+			},
+		},
+		"with archived sandbox": {
+			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				testToken := "xoxb-test-token"
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
+				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				sandboxes := []types.Sandbox{
+					{
+						SandboxTeamID: "T456",
+						SandboxName:   "old-sandbox",
+						SandboxDomain: "old-sandbox",
+						Status:        "archived",
+						DateCreated:   1700000000,
+						DateArchived:  1710000000,
+					},
+				}
+				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
+				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
+
+				cm.AddDefaultMocks()
+				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+			},
+			ExpectedStdoutOutputs: []string{"old-sandbox", "T456", "Status: ARCHIVED"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
