@@ -141,7 +141,7 @@ Test function names use the format `Test_StructName_FunctionName` for methods on
 
 ```go
 func Test_Client_GetAppStatus(t *testing.T) { ... }  // struct method
-func Test_getKeyLength(t *testing.T) { ... }          // package-level function
+func Test_getKeyLength(t *testing.T) { ... }         // package-level function
 ```
 
 ### Test Ordering Conventions
