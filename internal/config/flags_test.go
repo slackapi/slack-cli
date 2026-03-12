@@ -46,20 +46,67 @@ func Test_InitializeGlobalFlags(t *testing.T) {
 
 	config.InitializeGlobalFlags(cmd)
 
-	// Verify that key persistent flags were registered
-	flagNames := []string{
-		"apihost", "app", "config-dir", "experiment",
-		"force", "no-color", "skip-update", "slackdev",
-		"runtime", "team", "token", "verbose",
+	tests := map[string]struct {
+		longform  string
+		shorthand string
+		hidden    bool
+	}{
+		"apihost": {
+			longform: "apihost",
+			hidden:   true,
+		},
+		"app": {
+			longform:  "app",
+			shorthand: "a",
+		},
+		"config-dir": {
+			longform: "config-dir",
+		},
+		"experiment": {
+			longform: "experiment",
+		},
+		"force": {
+			longform:  "force",
+			shorthand: "f",
+		},
+		"no-color": {
+			longform: "no-color",
+		},
+		"runtime": {
+			longform:  "runtime",
+			shorthand: "r",
+			hidden:    true,
+		},
+		"skip-update": {
+			longform:  "skip-update",
+			shorthand: "s",
+		},
+		"slackdev": {
+			longform: "slackdev",
+			hidden:   true,
+		},
+		"team": {
+			longform:  "team",
+			shorthand: "w",
+		},
+		"token": {
+			longform: "token",
+		},
+		"verbose": {
+			longform:  "verbose",
+			shorthand: "v",
+		},
 	}
-	for _, name := range flagNames {
-		f := cmd.PersistentFlags().Lookup(name)
-		assert.NotNil(t, f, "flag %s should be registered", name)
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			f := cmd.PersistentFlags().Lookup(tc.longform)
+			assert.NotNil(t, f, "flag %s should be registered", tc.longform)
+			if tc.shorthand != "" {
+				assert.Equal(t, tc.shorthand, f.Shorthand, "flag %s shorthand mismatch", tc.longform)
+			}
+			assert.Equal(t, tc.hidden, f.Hidden, "flag %s hidden mismatch", tc.longform)
+		})
 	}
-
-	// Verify hidden flags
-	assert.True(t, cmd.PersistentFlags().Lookup("apihost").Hidden)
-	assert.True(t, cmd.PersistentFlags().Lookup("slackdev").Hidden)
 }
 
 func TestDeprecatedFlagSubstitutions(t *testing.T) {
