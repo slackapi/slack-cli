@@ -26,7 +26,7 @@ func Test_GetHostname(t *testing.T) {
 		assert.NotEmpty(t, hostname)
 		// The hostname should be hashed, not the raw hostname
 		// It should not be "unknown" on a normal system
-		assert.NotEqual(t, "", hostname)
+		assert.NotEqual(t, "unknown", hostname)
 	})
 
 	t.Run("returns consistent results", func(t *testing.T) {
