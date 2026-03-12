@@ -24,6 +24,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_Commandf(t *testing.T) {
+	tests := map[string]struct {
+		process   string
+		command   string
+		isPrimary bool
+	}{
+		"primary command contains process and command": {
+			process:   "renamed-slack-command",
+			command:   "feedback",
+			isPrimary: true,
+		},
+		"secondary command contains process and command": {
+			process:   "a-renamed-slack-cli",
+			command:   "feedback",
+			isPrimary: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			processTemp := os.Args[0]
+			os.Args[0] = tc.process
+			defer func() { os.Args[0] = processTemp }()
+
+			formatted := Commandf(tc.command, tc.isPrimary)
+			assert.Contains(t, formatted, tc.process+" "+tc.command)
+		})
+	}
+}
+
 func Test_getKeyLength(t *testing.T) {
 	tests := map[string]struct {
 		keys     map[string]string
@@ -51,6 +80,12 @@ func Test_getKeyLength(t *testing.T) {
 			assert.Equal(t, tc.expected, getKeyLength(tc.keys))
 		})
 	}
+}
+
+func TestIndent(t *testing.T) {
+	text := "a few spaces are expected at the start of this line, but no other changes"
+	indented := Indent(text)
+	assert.Contains(t, indented, text)
 }
 
 func Test_Sectionf(t *testing.T) {
@@ -130,39 +165,27 @@ func Test_SectionSecondaryf(t *testing.T) {
 	}
 }
 
-func Test_Commandf(t *testing.T) {
+func TestSurveyIcons(t *testing.T) {
 	tests := map[string]struct {
-		process   string
-		command   string
-		isPrimary bool
+		styleEnabled bool
 	}{
-		"primary command contains process and command": {
-			process:   "renamed-slack-command",
-			command:   "feedback",
-			isPrimary: true,
+		"styles are not enabled": {
+			styleEnabled: false,
 		},
-		"secondary command contains process and command": {
-			process:   "a-renamed-slack-cli",
-			command:   "feedback",
-			isPrimary: false,
+		"styles are enabled": {
+			styleEnabled: true,
 		},
 	}
+
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			processTemp := os.Args[0]
-			os.Args[0] = tc.process
-			defer func() { os.Args[0] = processTemp }()
+			core.DisableColor = false
+			isStyleEnabled = tc.styleEnabled
 
-			formatted := Commandf(tc.command, tc.isPrimary)
-			assert.Contains(t, formatted, tc.process+" "+tc.command)
+			_ = SurveyIcons()
+			assert.NotEqual(t, tc.styleEnabled, core.DisableColor)
 		})
 	}
-}
-
-func TestIndent(t *testing.T) {
-	text := "a few spaces are expected at the start of this line, but no other changes"
-	indented := Indent(text)
-	assert.Contains(t, indented, text)
 }
 
 func TestTracef(t *testing.T) {
@@ -195,29 +218,6 @@ func TestTracef(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			trace := Tracef(tc.traceID, tc.traceValues...)
 			assert.Equal(t, tc.expected, trace)
-		})
-	}
-}
-
-func TestSurveyIcons(t *testing.T) {
-	tests := map[string]struct {
-		styleEnabled bool
-	}{
-		"styles are not enabled": {
-			styleEnabled: false,
-		},
-		"styles are enabled": {
-			styleEnabled: true,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			core.DisableColor = false
-			isStyleEnabled = tc.styleEnabled
-
-			_ = SurveyIcons()
-			assert.NotEqual(t, tc.styleEnabled, core.DisableColor)
 		})
 	}
 }

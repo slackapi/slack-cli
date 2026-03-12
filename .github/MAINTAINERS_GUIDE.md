@@ -397,6 +397,16 @@ func Test_Client_GetAppStatus(t *testing.T) { ... }
 func Test_getKeyLength(t *testing.T) { ... }
 ```
 
+#### Test ordering conventions
+
+Test functions should be ordered alphabetically within each file. When a file has
+logical sections (separated by comments), tests should be alphabetical within each
+section.
+
+Getter and setter functions should be grouped together under the base name. Ignore
+the `Get` or `Set` prefix when determining alphabetical order. For example,
+`Test_AppName` and `Test_SetAppName` are both sorted under `A` for `AppName`.
+
 #### Contributing tests
 
 If you'd like to add tests, please review our

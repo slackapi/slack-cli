@@ -25,16 +25,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_IOSteams_NewIOStreams(t *testing.T) {
-	var io *IOStreams
-	fsMock := slackdeps.NewFsMock()
-	osMock := slackdeps.NewOsMock()
-	config := config.NewConfig(fsMock, osMock)
-	config.DebugEnabled = true
-	io = NewIOStreams(config, fsMock, osMock)
-	require.True(t, io.config.DebugEnabled, "iostreams references config")
-}
-
 func Test_IOStreams_ExitCode(t *testing.T) {
 	tests := map[string]struct {
 		setCode  ExitCode
@@ -63,6 +53,16 @@ func Test_IOStreams_ExitCode(t *testing.T) {
 			assert.Equal(t, tc.expected, io.GetExitCode())
 		})
 	}
+}
+
+func Test_IOSteams_NewIOStreams(t *testing.T) {
+	var io *IOStreams
+	fsMock := slackdeps.NewFsMock()
+	osMock := slackdeps.NewOsMock()
+	config := config.NewConfig(fsMock, osMock)
+	config.DebugEnabled = true
+	io = NewIOStreams(config, fsMock, osMock)
+	require.True(t, io.config.DebugEnabled, "iostreams references config")
 }
 
 func Test_IOStreams_IsTTY(t *testing.T) {
@@ -97,7 +97,7 @@ func Test_IOStreams_IsTTY(t *testing.T) {
 	}
 }
 
-func Test_SetCmdIO(t *testing.T) {
+func Test_IOStreams_SetCmdIO(t *testing.T) {
 	fsMock := slackdeps.NewFsMock()
 	osMock := slackdeps.NewOsMock()
 	cfg := config.NewConfig(fsMock, osMock)

@@ -48,6 +48,12 @@ func Test_ConfirmPromptConfig(t *testing.T) {
 	}
 }
 
+func Test_DefaultSelectPromptConfig(t *testing.T) {
+	cfg := DefaultSelectPromptConfig()
+	assert.True(t, cfg.IsRequired())
+	assert.Empty(t, cfg.GetFlags())
+}
+
 func Test_InputPromptConfig(t *testing.T) {
 	tests := map[string]struct {
 		cfg      InputPromptConfig
@@ -108,58 +114,6 @@ func Test_PasswordPromptConfig(t *testing.T) {
 		assert.Len(t, cfg.GetFlags(), 1)
 		assert.Equal(t, "token", cfg.GetFlags()[0].Name)
 	})
-}
-
-func Test_SelectPromptConfig(t *testing.T) {
-	t.Run("no flags", func(t *testing.T) {
-		cfg := SelectPromptConfig{Required: true}
-		assert.True(t, cfg.IsRequired())
-		assert.Empty(t, cfg.GetFlags())
-	})
-	t.Run("single flag", func(t *testing.T) {
-		var val string
-		fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
-		fs.StringVar(&val, "app", "", "app flag")
-		flag := fs.Lookup("app")
-		cfg := SelectPromptConfig{Flag: flag}
-		assert.Len(t, cfg.GetFlags(), 1)
-	})
-	t.Run("multiple flags", func(t *testing.T) {
-		var v1, v2 string
-		fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
-		fs.StringVar(&v1, "a", "", "")
-		fs.StringVar(&v2, "b", "", "")
-		cfg := SelectPromptConfig{Flags: []*pflag.Flag{fs.Lookup("a"), fs.Lookup("b")}}
-		assert.Len(t, cfg.GetFlags(), 2)
-	})
-}
-
-func Test_SurveyOptions(t *testing.T) {
-	tests := map[string]struct {
-		cfg         PromptConfig
-		expectedLen int
-	}{
-		"required config returns 5 options": {
-			cfg:         ConfirmPromptConfig{Required: true},
-			expectedLen: 5,
-		},
-		"optional config returns 5 options": {
-			cfg:         ConfirmPromptConfig{Required: false},
-			expectedLen: 5,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			opts := SurveyOptions(tc.cfg)
-			assert.Len(t, opts, tc.expectedLen)
-		})
-	}
-}
-
-func Test_DefaultSelectPromptConfig(t *testing.T) {
-	cfg := DefaultSelectPromptConfig()
-	assert.True(t, cfg.IsRequired())
-	assert.Empty(t, cfg.GetFlags())
 }
 
 func Test_retrieveFlagValue(t *testing.T) {
@@ -230,6 +184,52 @@ func Test_retrieveFlagValue(t *testing.T) {
 					assert.Nil(t, flag)
 				}
 			}
+		})
+	}
+}
+
+func Test_SelectPromptConfig(t *testing.T) {
+	t.Run("no flags", func(t *testing.T) {
+		cfg := SelectPromptConfig{Required: true}
+		assert.True(t, cfg.IsRequired())
+		assert.Empty(t, cfg.GetFlags())
+	})
+	t.Run("single flag", func(t *testing.T) {
+		var val string
+		fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+		fs.StringVar(&val, "app", "", "app flag")
+		flag := fs.Lookup("app")
+		cfg := SelectPromptConfig{Flag: flag}
+		assert.Len(t, cfg.GetFlags(), 1)
+	})
+	t.Run("multiple flags", func(t *testing.T) {
+		var v1, v2 string
+		fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+		fs.StringVar(&v1, "a", "", "")
+		fs.StringVar(&v2, "b", "", "")
+		cfg := SelectPromptConfig{Flags: []*pflag.Flag{fs.Lookup("a"), fs.Lookup("b")}}
+		assert.Len(t, cfg.GetFlags(), 2)
+	})
+}
+
+func Test_SurveyOptions(t *testing.T) {
+	tests := map[string]struct {
+		cfg         PromptConfig
+		expectedLen int
+	}{
+		"required config returns 5 options": {
+			cfg:         ConfirmPromptConfig{Required: true},
+			expectedLen: 5,
+		},
+		"optional config returns 5 options": {
+			cfg:         ConfirmPromptConfig{Required: false},
+			expectedLen: 5,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			opts := SurveyOptions(tc.cfg)
+			assert.Len(t, opts, tc.expectedLen)
 		})
 	}
 }
