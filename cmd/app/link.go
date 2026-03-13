@@ -151,10 +151,11 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	}
 
 	// App Manifest section
-	manifestSource, _ := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if !manifestSource.Exists() {
-		manifestSource = config.ManifestSourceLocal
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return err
 	}
+
 	configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "books",
