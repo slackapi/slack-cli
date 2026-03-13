@@ -161,7 +161,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 		Emoji: "books",
 		Text:  "App Manifest",
 		Secondary: []string{
-			"Manifest source is " + style.Highlight(manifestSource.Human()),
+			"Manifest source is gathered from " + style.Highlight(manifestSource.Human()),
 			"Manifest source is configured in " + style.Highlight(configPath),
 		},
 	}))
