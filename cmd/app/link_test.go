@@ -466,7 +466,7 @@ func Test_Apps_Link(t *testing.T) {
 					mock.Anything,
 				).Return(iostreams.SelectPromptResponse{
 					Flag:   true,
-					Option: "deployed",
+					Option: "local",
 				}, nil)
 				cm.API.On(
 					"GetAppStatus",
@@ -483,8 +483,10 @@ func Test_Apps_Link(t *testing.T) {
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
 					TeamID:       mockLinkSlackAuth1.TeamID,
 					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
+					UserID:       mockLinkSlackAuth1.UserID,
+					IsDev:        true,
 				}
-				actualApp, err := cm.AppClient.GetDeployed(
+				actualApp, err := cm.AppClient.GetLocal(
 					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
@@ -496,28 +498,18 @@ func Test_Apps_Link(t *testing.T) {
 				assert.Contains(t, output, `"project" (local)`)
 			},
 		},
-		"displays manifest info for Run-on-Slack apps with local manifest source": {
+		"links app when manifest source is remote": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					mockLinkSlackAuth1,
 					mockLinkSlackAuth2,
+					mockLinkSlackAuth1,
 				}, nil)
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
-				// Set manifest source to local
-				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
+				// Set manifest source to remote
+				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceRemote); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
-				// Mock manifest for Run-on-Slack app
-				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
-					AppManifest: types.AppManifest{
-						Settings: &types.AppSettings{
-							FunctionRuntime: types.SlackHosted,
-						},
-					},
-				}, nil)
-				cf.AppClient().Manifest = manifestMock
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
@@ -541,7 +533,7 @@ func Test_Apps_Link(t *testing.T) {
 					mock.Anything,
 				).Return(iostreams.SelectPromptResponse{
 					Flag:   true,
-					Option: "deployed",
+					Option: "local",
 				}, nil)
 				cm.API.On(
 					"GetAppStatus",
@@ -558,8 +550,10 @@ func Test_Apps_Link(t *testing.T) {
 					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
 					TeamID:       mockLinkSlackAuth1.TeamID,
 					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
+					UserID:       mockLinkSlackAuth1.UserID,
+					IsDev:        true,
 				}
-				actualApp, err := cm.AppClient.GetDeployed(
+				actualApp, err := cm.AppClient.GetLocal(
 					ctx,
 					mockLinkSlackAuth1.TeamID,
 				)
@@ -568,76 +562,7 @@ func Test_Apps_Link(t *testing.T) {
 				// Assert manifest source info is displayed
 				output := cm.GetCombinedOutput()
 				assert.Contains(t, output, "App Manifest")
-				assert.Contains(t, output, `"project" (local)`)
-			},
-		},
-		"displays manifest info for GBP apps with local manifest source": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					mockLinkSlackAuth1,
-					mockLinkSlackAuth2,
-				}, nil)
-				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, ctx, cm, cf)
-				// Set manifest source to local
-				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
-					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
-				}
-				// Mock manifest for GBP app
-				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
-				cf.AppClient().Manifest = manifestMock
-				cm.IO.On("SelectPrompt",
-					mock.Anything,
-					"Select the existing app team",
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-				).Return(iostreams.SelectPromptResponse{
-					Flag:   true,
-					Option: mockLinkSlackAuth1.TeamDomain,
-				}, nil)
-				cm.IO.On("InputPrompt",
-					mock.Anything,
-					"Enter the existing app ID",
-					mock.Anything,
-				).Return(mockLinkAppID1, nil)
-				cm.IO.On("SelectPrompt",
-					mock.Anything,
-					"Choose the app environment",
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-				).Return(iostreams.SelectPromptResponse{
-					Flag:   true,
-					Option: "deployed",
-				}, nil)
-				cm.API.On(
-					"GetAppStatus",
-					mock.Anything,
-					mockLinkSlackAuth1.Token,
-					[]string{mockLinkAppID1},
-					mockLinkSlackAuth1.TeamID,
-				).Return(api.GetAppStatusResult{}, nil)
-			},
-			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedApp := types.App{
-					AppID:        mockLinkAppID1,
-					TeamDomain:   mockLinkSlackAuth1.TeamDomain,
-					TeamID:       mockLinkSlackAuth1.TeamID,
-					EnterpriseID: mockLinkSlackAuth1.EnterpriseID,
-				}
-				actualApp, err := cm.AppClient.GetDeployed(
-					ctx,
-					mockLinkSlackAuth1.TeamID,
-				)
-				require.NoError(t, err)
-				assert.Equal(t, expectedApp, actualApp)
-				// Assert manifest source info is displayed
-				output := cm.GetCombinedOutput()
-				assert.Contains(t, output, "App Manifest")
-				assert.Contains(t, output, `"project" (local)`)
+				assert.Contains(t, output, `"app settings" (remote)`)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
