@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/cmd/app"
-	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -108,8 +107,7 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 
 	// Install the project dependencies, such as .slack/ and runtime packages
 	// Existing projects initialized always default to config.ManifestSourceLocal.
-	// The link command will switch it to config.ManifestSourceRemote
-	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
+	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
 	// Add an existing app to the project
 	err = app.LinkExistingApp(ctx, clients, &types.App{}, true)
