@@ -431,7 +431,7 @@ func Test_Apps_Link(t *testing.T) {
 			CmdArgs:       []string{},
 			ExpectedError: slackerror.New(slackerror.ErrAppNotFound),
 		},
-		"accepting manifest source prompt should save information about the provided deployed app": {
+		"links app when manifest source is local": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth2,
@@ -439,16 +439,10 @@ func Test_Apps_Link(t *testing.T) {
 				}, nil)
 				cm.AddDefaultMocks()
 				setupAppLinkCommandMocks(t, ctx, cm, cf)
-				// Set manifest source to project to trigger confirmation prompt
+				// Set manifest source to local
 				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
-				// Accept manifest source confirmation prompt
-				cm.IO.On("ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				).Return(true, nil)
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
@@ -496,49 +490,13 @@ func Test_Apps_Link(t *testing.T) {
 				)
 				require.NoError(t, err)
 				assert.Equal(t, expectedApp, actualApp)
-				// Assert manifest confirmation prompt accepted
-				cm.IO.AssertCalled(t, "ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				)
+				// Assert manifest source info is displayed
+				output := cm.GetCombinedOutput()
+				assert.Contains(t, output, "App Manifest")
+				assert.Contains(t, output, `"project" (local)`)
 			},
 		},
-		"declining manifest source prompt should not link app": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				setupAppLinkCommandMocks(t, ctx, cm, cf)
-				// Set manifest source to project to trigger confirmation prompt
-				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
-					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
-				}
-				// Decline manifest source confirmation prompt
-				cm.IO.On("ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				).Return(false, nil)
-			},
-			CmdArgs: []string{},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				// Assert manifest confirmation prompt accepted
-				cm.IO.AssertCalled(t, "ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				)
-
-				// Assert no apps saved
-				apps, _, err := cm.AppClient.GetDeployedAll(ctx)
-				require.NoError(t, err)
-				require.Len(t, apps, 0)
-
-				apps, err = cm.AppClient.GetLocalAll(ctx)
-				require.NoError(t, err)
-				require.Len(t, apps, 0)
-			},
-		},
-		"manifest source prompt should not display for Run-on-Slack apps with local manifest source": {
+		"displays manifest info for Run-on-Slack apps with local manifest source": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
@@ -607,15 +565,13 @@ func Test_Apps_Link(t *testing.T) {
 				)
 				require.NoError(t, err)
 				assert.Equal(t, expectedApp, actualApp)
-				// Assert manifest confirmation prompt was not displayed
-				cm.IO.AssertNotCalled(t, "ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				)
+				// Assert manifest source info is displayed
+				output := cm.GetCombinedOutput()
+				assert.Contains(t, output, "App Manifest")
+				assert.Contains(t, output, `"project" (local)`)
 			},
 		},
-		"manifest source prompt should display for GBP apps with local manifest source": {
+		"displays manifest info for GBP apps with local manifest source": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					mockLinkSlackAuth1,
@@ -627,15 +583,10 @@ func Test_Apps_Link(t *testing.T) {
 				if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceLocal); err != nil {
 					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
 				}
-				// Mock manifest for Run-on-Slack app
+				// Mock manifest for GBP app
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
 				cf.AppClient().Manifest = manifestMock
-				cm.IO.On("ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				).Return(true, nil)
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
@@ -683,12 +634,10 @@ func Test_Apps_Link(t *testing.T) {
 				)
 				require.NoError(t, err)
 				assert.Equal(t, expectedApp, actualApp)
-				// Assert manifest confirmation prompt was displayed
-				cm.IO.AssertCalled(t, "ConfirmPrompt",
-					mock.Anything,
-					LinkAppManifestSourceConfirmPromptText,
-					mock.Anything,
-				)
+				// Assert manifest source info is displayed
+				output := cm.GetCombinedOutput()
+				assert.Contains(t, output, "App Manifest")
+				assert.Contains(t, output, `"project" (local)`)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {

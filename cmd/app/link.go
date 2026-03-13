@@ -16,7 +16,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -35,9 +34,6 @@ import (
 
 // LinkAppConfirmPromptText is displayed when prompting to add an existing app
 const LinkAppConfirmPromptText = "Do you want to add an existing app?"
-
-// LinkAppManifestSourceConfirmPromptText is displayed before updating the manifest source
-const LinkAppManifestSourceConfirmPromptText = "Do you want to update the manifest source to remote?"
 
 // appLinkFlagSet contains flag values to reference
 type appLinkFlagSet struct {
@@ -131,11 +127,9 @@ func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, sh
 }
 
 // LinkExistingApp prompts for an existing App ID and saves the details to the project.
-// When shouldConfirm is true, a confirmation prompt will ask the user is they want to
+// When shouldConfirm is true, a confirmation prompt will ask the user if they want to
 // link an existing app and additional information is included in the header.
 // The shouldConfirm option is encouraged for third-party callers.
-// The link command requires manifest source to be remote. When it is not, a
-// confirmation prompt is displayed before updating the manifest source value.
 func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool) (err error) {
 	// Header section
 	LinkAppHeaderSection(ctx, clients, shouldConfirm)
@@ -156,67 +150,20 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 		}
 	}
 
-	// Confirm to update manifest source to remote.
-	// - Update the manifest source to remote when its a GBP project with a local manifest.
-	// - Do not update manifest source for ROSI projects, because they can only be local manifests.
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	isManifestSourceRemote := manifestSource.Equals(config.ManifestSourceRemote)
-	isSlackHostedProject := cmdutil.IsSlackHostedProject(ctx, clients) == nil
-
-	if err != nil || (!isManifestSourceRemote && !isSlackHostedProject) {
-		// When undefined, the default is config.ManifestSourceLocal
-		if !manifestSource.Exists() {
-			manifestSource = config.ManifestSourceLocal
-		}
-
-		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-			Emoji: "warning",
-			Text:  "Warning",
-			Secondary: []string{
-				"Linking an existing app requires the app manifest source to be managed by",
-				fmt.Sprintf("%s.", config.ManifestSourceRemote.Human()),
-				" ",
-				fmt.Sprintf(`App manifest source can be %s or %s:`, config.ManifestSourceLocal.Human(), config.ManifestSourceRemote.Human()),
-				fmt.Sprintf("- %s: uses manifest from your project's source code for all apps", config.ManifestSourceLocal.String()),
-				fmt.Sprintf("- %s: uses manifest from app settings for each app", config.ManifestSourceRemote.String()),
-				" ",
-				fmt.Sprintf(style.Highlight(`Your manifest source is set to %s.`), manifestSource.Human()),
-				" ",
-				fmt.Sprintf("Current manifest source in %s:", style.Highlight(filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename))),
-				fmt.Sprintf(style.Highlight(`  %s: "%s"`), "manifest.source", manifestSource.String()),
-				" ",
-				fmt.Sprintf("Updating manifest source will be changed in %s:", style.Highlight(filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename))),
-				fmt.Sprintf(style.Highlight(`  %s: "%s"`), "manifest.source", config.ManifestSourceRemote),
-			},
-		}))
-
-		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppManifestSourceConfirmPromptText, false)
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "Error prompting to update the manifest source to %s: %s", config.ManifestSourceRemote, err)
-			return err
-		}
-
-		if !proceed {
-			// Add newline to match the trailing newline inserted from the footer section
-			clients.IO.PrintInfo(ctx, false, "")
-			return nil
-		}
-
-		if err := config.SetManifestSource(ctx, clients.Fs, clients.Os, config.ManifestSourceRemote); err != nil {
-			// Log the error to the verbose output
-			clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
-			// Display a user-friendly error with a workaround
-			slackErr := slackerror.New(slackerror.ErrProjectConfigManifestSource).
-				WithMessage("Failed to update the manifest source to %s", config.ManifestSourceRemote).
-				WithRemediation(
-					"You can manually update the manifest source by setting the following\nproperty in %s:\n  %s",
-					filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename),
-					fmt.Sprintf(`manifest.source: "%s"`, config.ManifestSourceRemote),
-				).
-				WithRootCause(err)
-			clients.IO.PrintError(ctx, "%s", slackErr.Error())
-		}
+	// App Manifest section
+	manifestSource, _ := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if !manifestSource.Exists() {
+		manifestSource = config.ManifestSourceLocal
 	}
+	configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		Emoji: "books",
+		Text:  "App Manifest",
+		Secondary: []string{
+			"Manifest source is " + style.Highlight(manifestSource.Human()),
+			"Manifest source is configured in " + style.Highlight(configPath),
+		},
+	}))
 
 	// Prompt to get app details
 	var auth *types.SlackAuth
