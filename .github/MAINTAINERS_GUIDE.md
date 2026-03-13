@@ -383,6 +383,30 @@ The branch name can also be set by changing
 for the `build-lint-test-e2e-test` workflow in the `.circleci/config.yml` file,
 but take care not to merge this change into `main`!
 
+#### Test naming conventions
+
+Test function names should use the format `Test_StructName_FunctionName` for methods
+on a struct, or `Test_FunctionName` for package-level functions. The underscore after
+`Test` separates the Go test prefix from the identifier being tested:
+
+```go
+// Testing a method on a struct
+func Test_Client_GetAppStatus(t *testing.T) { ... }
+
+// Testing a package-level function
+func Test_getKeyLength(t *testing.T) { ... }
+```
+
+#### Test ordering conventions
+
+Test functions should be ordered alphabetically within each file. When a file has
+logical sections (separated by comments), tests should be alphabetical within each
+section.
+
+Getter and setter functions should be grouped together under the base name. Ignore
+the `Get` or `Set` prefix when determining alphabetical order. For example,
+`Test_AppName` and `Test_SetAppName` are both sorted under `A` for `AppName`.
+
 #### Contributing tests
 
 If you'd like to add tests, please review our
