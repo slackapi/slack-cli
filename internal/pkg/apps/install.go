@@ -752,7 +752,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	case saved.Equals(""):
 		notice = "Manifest values for this app are overwritten on reinstall"
 	default:
-		notice = "The manifest on app settings has been changed since last update!"
+		notice = style.Yellow("The manifest on app settings has been changed since last update")
 	}
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "books",
@@ -764,10 +764,7 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	}
 	continues, err := clients.IO.ConfirmPrompt(
 		ctx,
-		fmt.Sprintf(
-			"Update app settings with changes to the %s manifest?",
-			config.ManifestSourceLocal.String(),
-		),
+		"Overwrite manifest on app settings with the project's manifest file?",
 		false,
 	)
 	if err != nil {

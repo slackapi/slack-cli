@@ -108,10 +108,8 @@ func Test_Project_InitCommand(t *testing.T) {
 				}, nil)
 				// Default setup
 				setupProjectInitCommandMocks(t, ctx, cm, cf)
-				// Do not link an existing app
+				// Link an existing app
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(true, nil)
-				// Mock prompt to link an existing app
-				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppManifestSourceConfirmPromptText, mock.Anything).Return(true, nil)
 				// Mock prompt for team
 				cm.IO.On("SelectPrompt",
 					mock.Anything,

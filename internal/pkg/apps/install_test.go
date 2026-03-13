@@ -574,7 +574,7 @@ func TestInstall(t *testing.T) {
 				clientsMock.IO.On(
 					"ConfirmPrompt",
 					mock.Anything,
-					"Update app settings with changes to the local manifest?",
+					"Overwrite manifest on app settings with the project's manifest file?",
 					false,
 				).Return(
 					tc.mockConfirmPrompt,
@@ -1396,7 +1396,7 @@ func TestInstallLocalApp(t *testing.T) {
 				clientsMock.IO.On(
 					"ConfirmPrompt",
 					mock.Anything,
-					"Update app settings with changes to the local manifest?",
+					"Overwrite manifest on app settings with the project's manifest file?",
 					false,
 				).Return(
 					tc.mockConfirmPrompt,
