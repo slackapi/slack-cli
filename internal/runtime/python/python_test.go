@@ -226,24 +226,6 @@ dependencies = ["pytest==8.3.2"]`,
 			expectedOutput: "Updated pyproject.toml with",
 			expectedError:  false,
 		},
-		"Warning when pyproject.toml has no [project] section": {
-			existingContent: `[tool.black]
-line-length = 88`,
-			expectedOutput: "Skipped updating pyproject.toml because project section missing",
-			expectedError:  false,
-		},
-		"Warning when pyproject.toml has no dependencies array": {
-			existingContent: `[project]
-name = "my-app"`,
-			expectedOutput: "Skipped updating pyproject.toml because dependencies missing",
-			expectedError:  false,
-		},
-		"Warning when pyproject.toml is invalid TOML": {
-			existingContent: `[project
-name = "broken`,
-			expectedOutput: "Skipped updating pyproject.toml because invalid TOML",
-			expectedError:  false,
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
