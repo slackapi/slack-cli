@@ -25,7 +25,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cache"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -60,7 +59,7 @@ type ProjectConfigManager interface {
 
 // ProjectConfig is the project-level config file
 type ProjectConfig struct {
-	Experiments []experiment.Experiment `json:"experiments,omitempty"`
+	Experiments map[string]bool         `json:"experiments,omitempty"`
 	Manifest    *ManifestConfig         `json:"manifest,omitempty"`
 	ProjectID   string                  `json:"project_id,omitempty"`
 	Surveys     map[string]SurveyConfig `json:"surveys,omitempty"`
@@ -70,6 +69,23 @@ type ProjectConfig struct {
 
 	// os is the `os` package that's shared by all packages and enables testing & mocking
 	os types.Os
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for ProjectConfig to support
+// backwards compatibility with the old array format for experiments.
+func (c *ProjectConfig) UnmarshalJSON(data []byte) error {
+	type Alias ProjectConfig
+	aux := &struct {
+		RawExperiments json.RawMessage `json:"experiments,omitempty"`
+		*Alias
+	}{
+		Alias: (*Alias)(c),
+	}
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	c.Experiments = unmarshalExperimentsField(aux.RawExperiments)
+	return nil
 }
 
 // NewProjectConfig read and writes to the project-level configuration file

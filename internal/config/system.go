@@ -26,7 +26,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -63,7 +62,7 @@ type SystemConfigManager interface {
 
 // SystemConfig contains the system-level config file
 type SystemConfig struct {
-	Experiments         []experiment.Experiment `json:"experiments,omitempty"`
+	Experiments         map[string]bool         `json:"experiments,omitempty"`
 	LastUpdateCheckedAt time.Time               `json:"last_update_checked_at,omitempty"`
 	Surveys             map[string]SurveyConfig `json:"surveys,omitempty"`
 	SystemID            string                  `json:"system_id,omitempty"`
@@ -80,6 +79,25 @@ type SystemConfig struct {
 
 	// configFileLock is a file locking mutex that works across goroutines for configFileName
 	configFileLock sync.Mutex
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for SystemConfig to support
+// backwards compatibility with the old array format for experiments.
+// Old format: "experiments": ["charm", "sandboxes"]
+// New format: "experiments": {"charm": true, "sandboxes": true}
+func (c *SystemConfig) UnmarshalJSON(data []byte) error {
+	type Alias SystemConfig
+	aux := &struct {
+		RawExperiments json.RawMessage `json:"experiments,omitempty"`
+		*Alias
+	}{
+		Alias: (*Alias)(c),
+	}
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	c.Experiments = unmarshalExperimentsField(aux.RawExperiments)
+	return nil
 }
 
 // NewSystemConfig read and writes to the system-level configuration directory

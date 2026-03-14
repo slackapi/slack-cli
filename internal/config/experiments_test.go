@@ -19,7 +19,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"slices"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/experiment"
@@ -40,7 +39,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		mockOutput, mockPrintDebug := setupMockPrintDebug()
 
 		// Write our test script to the memory file system used by the mock
-		jsonContents := []byte(fmt.Sprintf("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[\"%s\"]}", validExperiment))
+		jsonContents := []byte(fmt.Sprintf(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":{"%s":true}}`, validExperiment))
 		_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 
 		config.LoadExperiments(ctx, mockPrintDebug)
@@ -50,13 +49,28 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 			fmt.Sprintf("active system experiments: [%s]", validExperiment))
 	})
 
+	t.Run("Correctly finds experiments from old array format in config.json", func(t *testing.T) {
+		// Setup
+		ctx, fs, _, config, pathToConfigJSON, teardown := setup(t)
+		defer teardown(t)
+		_, mockPrintDebug := setupMockPrintDebug()
+
+		// Write old array format
+		jsonContents := []byte(fmt.Sprintf(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":["%s"]}`, validExperiment))
+		_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
+
+		config.LoadExperiments(ctx, mockPrintDebug)
+		experimentOn := config.WithExperimentOn(validExperiment)
+		assert.Equal(t, true, experimentOn)
+	})
+
 	t.Run("Correctly returns false when experiments are not in config.json", func(t *testing.T) {
 		// Setup
 		ctx, fs, _, config, pathToConfigJSON, teardown := setup(t)
 		defer teardown(t)
 		mockOutput, mockPrintDebug := setupMockPrintDebug()
 
-		jsonContents := []byte("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[]}")
+		jsonContents := []byte(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":{}}`)
 		_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 
 		config.LoadExperiments(ctx, mockPrintDebug)
@@ -72,7 +86,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		mockOutput, mockPrintDebug := setupMockPrintDebug()
 
 		// Write no contents via config.json
-		jsonContents := []byte("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[]}")
+		jsonContents := []byte(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":{}}`)
 		_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 		config.ExperimentsFlag = []string{string(validExperiment)}
 
@@ -89,7 +103,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		defer teardown(t)
 		mockOutput, mockPrintDebug := setupMockPrintDebug()
 
-		jsonContents := []byte(fmt.Sprintf("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[\"%s\"]}", invalidExperiment))
+		jsonContents := []byte(fmt.Sprintf(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":{"%s":true}}`, invalidExperiment))
 		_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 		config.LoadExperiments(ctx, mockPrintDebug)
 		assert.Contains(t, mockOutput.String(),
@@ -120,7 +134,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 				mockOutput, mockPrintDebug := setupMockPrintDebug()
 
 				// Write contents via config.json
-				jsonContents := []byte(fmt.Sprintf("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[\"%s\"]}", tc.experiment))
+				jsonContents := []byte(fmt.Sprintf(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":{"%s":true}}`, tc.experiment))
 				_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 
 				config.LoadExperiments(ctx, mockPrintDebug)
@@ -172,7 +186,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		require.NoError(t, err)
 		err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
-		jsonContents := []byte(fmt.Sprintf(`{"experiments":["%s"]}`, experiment.Placeholder))
+		jsonContents := []byte(fmt.Sprintf(`{"experiments":{"%s":true}}`, experiment.Placeholder))
 		err = afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte(jsonContents), 0600)
 		require.NoError(t, err)
 
@@ -182,39 +196,34 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 			fmt.Sprintf("active project experiments: [%s]", experiment.Placeholder))
 	})
 
-	t.Run("Loads valid experiments from project configs and removes duplicates", func(t *testing.T) {
+	t.Run("Loads valid experiments from project configs and deduplicates via map merge", func(t *testing.T) {
 		ctx, fs, _, config, _, teardown := setup(t)
 		defer teardown(t)
-		mockOutput, mockPrintDebug := setupMockPrintDebug()
+		_, mockPrintDebug := setupMockPrintDebug()
 		err := fs.Mkdir(slackdeps.MockWorkingDirectory, 0755)
 		require.NoError(t, err)
 		err = fs.Mkdir(filepath.Join(slackdeps.MockWorkingDirectory, ProjectConfigDirName), 0755)
 		require.NoError(t, err)
 		err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
-		jsonContents := []byte(fmt.Sprintf(
-			`{"experiments":["%s", "%s", "%s"]}`,
-			experiment.Placeholder,
-			experiment.Placeholder,
-			experiment.Placeholder,
-		))
+		jsonContents := []byte(fmt.Sprintf(`{"experiments":{"%s":true}}`, experiment.Placeholder))
 		err = afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte(jsonContents), 0600)
 		require.NoError(t, err)
 
+		// Also set via flag to test dedup
+		config.ExperimentsFlag = []string{string(experiment.Placeholder)}
+
 		config.LoadExperiments(ctx, mockPrintDebug)
 		assert.True(t, config.WithExperimentOn(experiment.Placeholder))
-		assert.Contains(t, mockOutput.String(), fmt.Sprintf(
-			"active project experiments: [%s %s %s]",
-			experiment.Placeholder,
-			experiment.Placeholder,
-			experiment.Placeholder,
-		))
-		// Assert that duplicates are removed and slice length is reduced
-		// Add in the permanently enabled experiments before comparing
-		activeExperiments := append(experiment.EnabledExperiments, experiment.Placeholder)
-		slices.Sort(activeExperiments)
-		activeExperiments = slices.Compact(activeExperiments)
-		assert.Equal(t, activeExperiments, config.experiments)
+		// Assert that experiments are deduplicated via map
+		exps := config.GetExperiments()
+		count := 0
+		for _, exp := range exps {
+			if exp == experiment.Placeholder {
+				count++
+			}
+		}
+		assert.Equal(t, 1, count, "experiment should appear exactly once")
 	})
 
 	t.Run("Loads valid experiments and enabled default experiments", func(t *testing.T) {
@@ -227,7 +236,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		require.NoError(t, err)
 		err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
-		jsonContents := []byte(`{"experiments":[]}`) // No experiments
+		jsonContents := []byte(`{"experiments":{}}`) // No experiments
 		err = afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte(jsonContents), 0600)
 		require.NoError(t, err)
 
@@ -244,7 +253,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		assert.True(t, config.WithExperimentOn(experiment.Placeholder))
 		assert.Contains(t, mockOutput.String(), "active project experiments: []")
 		assert.Contains(t, mockOutput.String(), fmt.Sprintf("active permanently enabled experiments: [%s]", experiment.Placeholder))
-		assert.Equal(t, []experiment.Experiment{experiment.Placeholder}, config.experiments)
+		assert.ElementsMatch(t, []experiment.Experiment{experiment.Placeholder}, config.GetExperiments())
 	})
 
 	t.Run("Logs an invalid experiments in project configs", func(t *testing.T) {
@@ -257,7 +266,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		require.NoError(t, err)
 		err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
-		jsonContents := []byte(fmt.Sprintf("{\"experiments\":[\"%s\"]}", "experiment-37"))
+		jsonContents := []byte(`{"experiments":{"experiment-37":true}}`)
 		err = afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte(jsonContents), 0600)
 		require.NoError(t, err)
 
@@ -283,7 +292,7 @@ func Test_Config_GetExperiments(t *testing.T) {
 		_, mockPrintDebug := setupMockPrintDebug()
 
 		// Write contents via config.json
-		var configJSON = []byte(fmt.Sprintf("{\"last_update_checked_at\":\"2023-05-11T15:41:07.799619-07:00\",\"experiments\":[\"%s\",\"%s\"]}", validExperiment, validExperiment))
+		var configJSON = []byte(fmt.Sprintf(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":{"%s":true}}`, validExperiment))
 		_ = afero.WriteFile(fs, pathToConfigJSON, configJSON, 0600)
 
 		// Set contexts of experiment flag
