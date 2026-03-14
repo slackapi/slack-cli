@@ -216,12 +216,13 @@ func installRequirementsTxt(fs afero.Fs, projectDirPath string) (output string, 
 }
 
 // installPyProjectToml handles adding slack-cli-hooks to pyproject.toml
-func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, err error) {
+func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afero.Fs, projectDirPath string) (output string, err error) {
 	pyProjectFilePath := filepath.Join(projectDirPath, "pyproject.toml")
 
 	file, err := afero.ReadFile(fs, pyProjectFilePath)
 	if err != nil {
-		return fmt.Sprintf("Error reading pyproject.toml: %s", err), err
+		ios.PrintDebug(ctx, "Warning: could not read pyproject.toml: %s", err)
+		return "Skipped updating pyproject.toml because not found", nil
 	}
 
 	fileData := string(file)
@@ -235,25 +236,26 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	var config map[string]interface{}
 	err = toml.Unmarshal(file, &config)
 	if err != nil {
-		return fmt.Sprintf("Error parsing pyproject.toml: %s", err), err
+		ios.PrintDebug(ctx, "Warning: could not parse pyproject.toml: %s", err)
+		return "Skipped updating pyproject.toml because invalid TOML", nil
 	}
 
 	// Verify `project` section and `project.dependencies` array exist
 	projectSection, exists := config["project"]
 	if !exists {
-		err := fmt.Errorf("pyproject.toml missing project section")
-		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
+		ios.PrintDebug(ctx, "Warning: pyproject.toml missing [project] section")
+		return "Skipped updating pyproject.toml because project section missing", nil
 	}
 
 	projectMap, ok := projectSection.(map[string]interface{})
 	if !ok {
-		err := fmt.Errorf("pyproject.toml project section is not a valid format")
-		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
+		ios.PrintDebug(ctx, "Warning: pyproject.toml [project] section is not a valid format")
+		return "Skipped updating pyproject.toml because project section invalid", nil
 	}
 
 	if _, exists := projectMap["dependencies"]; !exists {
-		err := fmt.Errorf("pyproject.toml missing dependencies array")
-		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
+		ios.PrintDebug(ctx, "Warning: pyproject.toml missing dependencies array in [project] section")
+		return "Skipped updating pyproject.toml because dependencies missing", nil
 	}
 
 	// Use string manipulation to add the dependency while preserving formatting.
@@ -264,8 +266,8 @@ func installPyProjectToml(fs afero.Fs, projectDirPath string) (output string, er
 	matches := dependenciesRegex.FindStringSubmatch(fileData)
 
 	if len(matches) == 0 {
-		err := fmt.Errorf("pyproject.toml missing dependencies array")
-		return fmt.Sprintf("Error updating pyproject.toml: %s", err), err
+		ios.PrintDebug(ctx, "Warning: pyproject.toml dependencies array could not be located")
+		return "Skipped updating pyproject.toml because dependencies missing", nil
 	}
 
 	prefix := matches[1]  // "...dependencies = ["
@@ -347,7 +349,9 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 	// Handle requirements.txt if it exists
 	if hasRequirementsTxt {
 		output, err := installRequirementsTxt(fs, projectDirPath)
-		outputs = append(outputs, output)
+		if output != "" {
+			outputs = append(outputs, output)
+		}
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -355,8 +359,10 @@ func (p *Python) InstallProjectDependencies(ctx context.Context, projectDirPath 
 
 	// Handle pyproject.toml if it exists
 	if hasPyProjectToml {
-		output, err := installPyProjectToml(fs, projectDirPath)
-		outputs = append(outputs, output)
+		output, err := installPyProjectToml(ctx, ios, fs, projectDirPath)
+		if output != "" {
+			outputs = append(outputs, output)
+		}
 		if err != nil {
 			errs = append(errs, err)
 		}
