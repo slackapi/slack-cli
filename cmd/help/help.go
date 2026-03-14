@@ -37,10 +37,16 @@ func HelpFunc(
 		}
 		style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
 		experiments := []string{}
-		for _, exp := range clients.Config.GetExperiments() {
-			if experiment.Includes(exp) {
-				experiments = append(experiments, string(exp))
+		for _, exp := range experiment.AllExperiments {
+			if clients.Config.WithExperimentOn(exp) {
+				experiments = append(experiments, fmt.Sprintf("%s ENABLED", string(exp)))
 			} else {
+				experiments = append(experiments, fmt.Sprintf("%s DISABLED", string(exp)))
+			}
+		}
+		// Also show any non-standard experiments that are active but not in AllExperiments
+		for _, exp := range clients.Config.GetExperiments() {
+			if !experiment.Includes(exp) {
 				invalidExperiment := fmt.Sprintf("%s (invalid)", string(exp))
 				experiments = append(experiments, style.Secondary(invalidExperiment))
 			}
