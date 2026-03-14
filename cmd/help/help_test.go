@@ -43,9 +43,7 @@ func TestHelpFunc(t *testing.T) {
 				"FLAGS",
 				"--help   mock help flag",
 				"EXPERIMENTS",
-				"charm DISABLED",
-				"placeholder DISABLED",
-				"sandboxes DISABLED",
+				"None",
 			},
 		},
 		"examples are included in output": {
@@ -61,7 +59,7 @@ func TestHelpFunc(t *testing.T) {
 			experiments: []string{"placeholder", "unknown"},
 			expectedOutput: []string{
 				"EXPERIMENTS",
-				"placeholder ENABLED",
+				"placeholder",
 				"unknown (invalid)",
 			},
 		},
