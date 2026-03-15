@@ -45,6 +45,20 @@ func RemoveANSI(str string) string {
 	return ansiRegex.ReplaceAllString(str, "")
 }
 
+// RemoveEmoji strips non-ASCII characters (such as emoji) from a string
+// and collapses any resulting extra whitespace.
+//
+// https://en.wikipedia.org/wiki/ASCII#Printable_character_table
+func RemoveEmoji(str string) string {
+	var b strings.Builder
+	for _, r := range str {
+		if r <= 127 {
+			b.WriteRune(r)
+		}
+	}
+	return strings.Join(strings.Fields(b.String()), " ")
+}
+
 // ToggleStyles sets styles and formatting values to the active state
 func ToggleStyles(active bool) {
 	isStyleEnabled = active

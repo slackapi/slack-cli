@@ -121,9 +121,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 
 		// Prompt to choose a category
 		selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return optionsForCategory[index].Description
-			},
 			Flag:     clients.Config.Flags.Lookup("template"),
 			Required: true,
 			Template: templateForCategory,
@@ -157,9 +154,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 
 		// Prompt to choose a template
 		selection, err := clients.IO.SelectPrompt(ctx, prompt, titles, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return options[index].Description
-			},
 			Flag:     clients.Config.Flags.Lookup("template"),
 			Required: true,
 			Template: template,
