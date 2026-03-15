@@ -409,9 +409,10 @@ var selectQuestionTemplate = fmt.Sprintf(`
 
 // SelectPromptConfig holds additional config for a survey.Select prompt
 type SelectPromptConfig struct {
-	Description func(value string, index int) string // Optional text displayed below each prompt option
+	Description func(value string, index int) string // Optional text displayed with each prompt option
 	Flag        *pflag.Flag                          // The single flag substitute for this prompt
 	Flags       []*pflag.Flag                        // Otherwise multiple flag substitutes for this prompt
+	Help        string                               // Optional help text displayed below the select title
 	PageSize    int                                  // The number of options displayed before the user needs to scroll
 	Required    bool                                 // If a response is required
 	Template    string                               // Custom formatting of the selection prompt
