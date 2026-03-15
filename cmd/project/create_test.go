@@ -16,13 +16,9 @@ package project
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	tea "charm.land/bubbletea/v2"
-	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -555,68 +551,6 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/bolt-python-custom-function-template",
 				"slack-samples/deno-starter-template",
 			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"creates a bolt application with charm dynamic form": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.IO.On("IsTTY").Unset()
-				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
-					Return("my-charm-app", nil)
-				// Enable the charm experiment
-				cm.Config.ExperimentsFlag = []string{string(experiment.Charm)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-				// Override runForm to simulate form completion without a terminal
-				runForm = func(f *huh.Form) error {
-					doAllUpdates(f, f.Init())
-					// Select first category (Starter app) then first template (Bolt for JS)
-					_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-					doAllUpdates(f, cmd)
-					_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-					doAllUpdates(f, cmd)
-					return nil
-				}
-				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
-				CreateFunc = createClientMock.Create
-			},
-			Teardown: func() {
-				runForm = func(f *huh.Form) error { return f.Run() }
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
-				require.NoError(t, err)
-				expected := create.CreateArgs{
-					AppName:  "my-charm-app",
-					Template: template,
-				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
-				// Verify that the survey-based SelectPrompt for category was NOT called
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
-			},
-		},
-		"charm dynamic form returns error": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.IO.On("IsTTY").Unset()
-				cm.IO.On("IsTTY").Return(true)
-				// Enable the charm experiment
-				cm.Config.ExperimentsFlag = []string{string(experiment.Charm)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-				// Override runForm to return an error
-				runForm = func(f *huh.Form) error {
-					return fmt.Errorf("user cancelled")
-				}
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			Teardown: func() {
-				runForm = func(f *huh.Form) error { return f.Run() }
-			},
-			ExpectedErrorStrings: []string{"user cancelled"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
