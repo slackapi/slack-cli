@@ -196,7 +196,7 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 			fmt.Sprintf("active project experiments: [%s]", experiment.Placeholder))
 	})
 
-	t.Run("Loads valid experiments from project configs and deduplicates via map merge", func(t *testing.T) {
+	t.Run("Loads valid experiments from project configs and removes duplicates", func(t *testing.T) {
 		ctx, fs, _, config, _, teardown := setup(t)
 		defer teardown(t)
 		_, mockPrintDebug := setupMockPrintDebug()
@@ -206,7 +206,13 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		require.NoError(t, err)
 		err = afero.WriteFile(fs, GetProjectHooksJSONFilePath(slackdeps.MockWorkingDirectory), []byte("{}\n"), 0600)
 		require.NoError(t, err)
-		jsonContents := []byte(fmt.Sprintf(`{"experiments":{"%s":true}}`, experiment.Placeholder))
+		jsonContents := []byte(
+			fmt.Sprintf(`{"experiments":{"%s":true, "%s":true, "%s":true}}`,
+				experiment.Placeholder,
+				experiment.Placeholder,
+				experiment.Placeholder,
+			),
+		)
 		err = afero.WriteFile(fs, GetProjectConfigJSONFilePath(slackdeps.MockWorkingDirectory), []byte(jsonContents), 0600)
 		require.NoError(t, err)
 
