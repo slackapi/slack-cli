@@ -35,12 +35,24 @@ var embedPromptSamplesTmpl string
 // promptSampleSelection gathers upstream samples to select from
 func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, sampleRepos []create.GithubRepo) (string, error) {
 	filteredRepos := []create.GithubRepo{}
-	selection, err := clients.IO.SelectPrompt(ctx, "Select a language:",
-		[]string{
-			fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
-			fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
-			fmt.Sprintf("Deno Slack SDK %s", style.Secondary("Deno")),
-		},
+	languageOptions := []string{
+		fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+		fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+		fmt.Sprintf("Deno Slack SDK %s", style.Secondary("Deno")),
+	}
+	if clients.Config.WithExperimentOn(experiment.Templates) {
+		languageOptions = []string{
+			"Bolt for JavaScript",
+			"Bolt for Python",
+			"Deno Slack SDK",
+		}
+	}
+	languagePrompt := "Select a language:"
+	if clients.Config.WithExperimentOn(experiment.Templates) {
+		languagePrompt = "Select a framework:"
+	}
+	selection, err := clients.IO.SelectPrompt(ctx, languagePrompt,
+		languageOptions,
 		iostreams.SelectPromptConfig{
 			Flags: []*pflag.Flag{
 				clients.Config.Flags.Lookup("language"),

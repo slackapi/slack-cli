@@ -8,6 +8,7 @@ The following is a list of currently available experiments. We'll remove experim
 
 - `charm`: shows beautiful prompts ([PR#348](https://github.com/slackapi/slack-cli/pull/348)).
 - `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
+- `templates`: brings agents, search, and blank templates to the `create` command.
 
 ## Experiments changelog
 
