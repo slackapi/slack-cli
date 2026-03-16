@@ -399,13 +399,17 @@ func Test_getKeyLength(t *testing.T) { ... }
 
 #### Test ordering conventions
 
-Test functions should be ordered alphabetically within each file. When a file has
-logical sections (separated by comments), tests should be alphabetical within each
-section.
+Constructor functions (`NewXYZ`) should always be declared first, at the top of the
+test file. After constructors, test functions should be ordered alphabetically. When
+a file has logical sections (separated by comments), tests should be alphabetical
+within each section.
 
 Getter and setter functions should be grouped together under the base name. Ignore
 the `Get` or `Set` prefix when determining alphabetical order. For example,
 `Test_AppName` and `Test_SetAppName` are both sorted under `A` for `AppName`.
+
+Exceptions to alphabetical ordering can be made when it doesn't work well for
+readability or logical grouping.
 
 #### Contributing tests
 
