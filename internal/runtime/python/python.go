@@ -222,7 +222,7 @@ func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afer
 	file, err := afero.ReadFile(fs, pyProjectFilePath)
 	if err != nil {
 		ios.PrintDebug(ctx, "Warning: could not read pyproject.toml: %s", err)
-		return "Skipped updating pyproject.toml because not found", nil
+		return "Skipped updating pyproject.toml because file cannot be read", nil
 	}
 
 	fileData := string(file)
