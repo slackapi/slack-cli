@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -30,12 +31,57 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// getSelectionOptions returns the app template options for a given category.
 func getSelectionOptions(clients *shared.ClientFactory, categoryID string) []promptObject {
+	if clients.Config.WithExperimentOn(experiment.Templates) {
+		templatePromptObjects := map[string]([]promptObject){
+			"slack-cli#starter-templates": {
+				{
+					Title:       "Starter template",
+					Description: "Getting started Slack app",
+					Repository:  "slack-cli#starter-templates/getting-started",
+				},
+				{
+					Title:       "Automation template",
+					Description: "Custom steps and workflows",
+					Repository:  "slack-cli#starter-templates/automation-apps",
+				},
+				{
+					Title:       "Search template",
+					Description: "Real-time enterprise search",
+					Repository:  "slack-cli#starter-templates/search-template",
+				},
+				{
+					Title:       "Blank template",
+					Description: "Minimal setup that will start",
+					Repository:  "slack-cli#starter-templates/blank-template",
+				},
+			},
+			"slack-cli#ai-apps": {
+				{
+					Title:       "Support agent",
+					Description: "Resolve IT support cases with Casey",
+					Repository:  "slack-cli#ai-apps/support-agent",
+				},
+				{
+					Title:       "Custom agent",
+					Description: "Minimal setup with the Slack MCP server",
+					Repository:  "slack-cli#ai-apps/mcp-server",
+				},
+				{
+					Title:       "Assistant template",
+					Description: "Scaffold for a custom assistant",
+					Repository:  "slack-cli#ai-apps/assistant-template",
+				},
+			},
+		}
+		return templatePromptObjects[categoryID]
+	}
+
 	if strings.TrimSpace(categoryID) == "" {
 		categoryID = "slack-cli#getting-started"
 	}
 
-	// App categories and templates
 	templatePromptObjects := map[string]([]promptObject){
 		"slack-cli#getting-started": []promptObject{
 			{
@@ -76,7 +122,127 @@ func getSelectionOptions(clients *shared.ClientFactory, categoryID string) []pro
 	return templatePromptObjects[categoryID]
 }
 
+// getFrameworkOptions returns the framework choices for a given template
+// selection.
+//
+// The order of entries should match the unfolded selection order for sake of
+// new entries. This is not an implementation requirement.
+func getFrameworkOptions(template string) []promptObject {
+	frameworkPromptObjects := map[string][]promptObject{
+		"slack-cli#starter-templates/getting-started": {
+			{
+				Title:      "Bolt for JavaScript",
+				Repository: "slack-samples/bolt-js-starter-template",
+			},
+			{
+				Title:       "Bolt for JavaScript",
+				Description: "TypeScript",
+				Repository:  "slack-samples/bolt-ts-starter-template",
+			},
+			{
+				Title:      "Bolt for Python",
+				Repository: "slack-samples/bolt-python-starter-template",
+			},
+		},
+		"slack-cli#starter-templates/automation-apps": {
+			{
+				Title:      "Bolt for JavaScript",
+				Repository: "slack-samples/bolt-js-custom-function-template",
+			},
+			{
+				Title:       "Bolt for JavaScript",
+				Description: "TypeScript",
+				Repository:  "slack-samples/bolt-ts-custom-step-template",
+			},
+			{
+				Title:      "Bolt for Python",
+				Repository: "slack-samples/bolt-python-custom-function-template",
+			},
+			{
+				Title:      "Deno Slack SDK",
+				Repository: "slack-samples/deno-starter-template",
+			},
+		},
+		"slack-cli#starter-templates/search-template": {
+			{
+				Title:      "Bolt for JavaScript",
+				Repository: "slack-samples/bolt-js-search-template",
+			},
+			{
+				Title:       "Bolt for JavaScript",
+				Description: "TypeScript",
+				Repository:  "slack-samples/bolt-ts-search-template",
+			},
+			{
+				Title:      "Bolt for Python",
+				Repository: "slack-samples/bolt-python-search-template",
+			},
+		},
+		"slack-cli#starter-templates/blank-template": {
+			{
+				Title:      "Bolt for JavaScript",
+				Repository: "slack-samples/bolt-js-blank-template",
+			},
+		},
+		"slack-cli#ai-apps/support-agent": {
+			{
+				Title:       "Claude Agent SDK",
+				Description: "Bolt for Python",
+				Repository:  "slack-samples/bolt-python-support-agent",
+				Subdir:      "claude-agent-sdk",
+			},
+			{
+				Title:       "OpenAI Agents SDK",
+				Description: "Bolt for Python",
+				Repository:  "slack-samples/bolt-python-support-agent",
+				Subdir:      "openai-agents-sdk",
+			},
+			{
+				Title:       "Pydantic AI",
+				Description: "Bolt for Python",
+				Repository:  "slack-samples/bolt-python-support-agent",
+				Subdir:      "pydantic-ai",
+			},
+		},
+		"slack-cli#ai-apps/assistant-template": {
+			{
+				Title:      "Bolt for JavaScript",
+				Repository: "slack-samples/bolt-js-assistant-template",
+			},
+			{
+				Title:      "Bolt for Python",
+				Repository: "slack-samples/bolt-python-assistant-template",
+			},
+		},
+		"slack-cli#ai-apps/mcp-server": {
+			{
+				Title:      "Bolt for JavaScript",
+				Repository: "slack-samples/bolt-js-slack-mcp-server",
+			},
+		},
+	}
+	return frameworkPromptObjects[template]
+}
+
+// getSelectionOptionsForCategory returns the top-level category options for
+// the create command template selection.
 func getSelectionOptionsForCategory(clients *shared.ClientFactory) []promptObject {
+	if clients.Config.WithExperimentOn(experiment.Templates) {
+		return []promptObject{
+			{
+				Title:      "Starter templates",
+				Repository: "slack-cli#starter-templates",
+			},
+			{
+				Title:      "AI agent apps",
+				Repository: "slack-cli#ai-apps",
+			},
+			{
+				Title:      "View more samples",
+				Repository: viewMoreSamples,
+			},
+		}
+	}
 	return []promptObject{
 		{
 			Title:      fmt.Sprintf("Starter app %s", style.Secondary("Getting started Slack app")),
@@ -101,14 +267,22 @@ func getSelectionOptionsForCategory(clients *shared.ClientFactory) []promptObjec
 func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, categoryShortcut string) (create.Template, error) {
 	ctx := cmd.Context()
 	var categoryID string
-	var selectedTemplate string
 
 	// Check if a category shortcut was provided
-	if categoryShortcut == "agent" {
-		categoryID = "slack-cli#ai-apps"
+	if categoryShortcut != "" {
+		switch categoryShortcut {
+		case "agent":
+			categoryID = "slack-cli#ai-apps"
+		default:
+			return create.Template{}, slackerror.New(slackerror.ErrInvalidArgs).
+				WithMessage("The %s category was not found", categoryShortcut)
+		}
 	} else {
 		// Prompt for the category
 		promptForCategory := "Select an app:"
+		if clients.Config.WithExperimentOn(experiment.Templates) {
+			promptForCategory = "Select a category:"
+		}
 		optionsForCategory := getSelectionOptionsForCategory(clients)
 		titlesForCategory := make([]string, len(optionsForCategory))
 		for i, m := range optionsForCategory {
@@ -121,9 +295,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 
 		// Prompt to choose a category
 		selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return optionsForCategory[index].Description
-			},
 			Flag:     clients.Config.Flags.Lookup("template"),
 			Required: true,
 			Template: templateForCategory,
@@ -131,76 +302,91 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 		if err != nil {
 			return create.Template{}, slackerror.ToSlackError(err)
 		} else if selection.Flag {
-			selectedTemplate = selection.Option
+			template, err := create.ResolveTemplateURL(selection.Option)
+			if err != nil {
+				return create.Template{}, err
+			}
+			confirm, err := confirmExternalTemplateSelection(cmd, clients, template)
+			if err != nil {
+				return create.Template{}, slackerror.ToSlackError(err)
+			} else if !confirm {
+				return create.Template{}, slackerror.New(slackerror.ErrUntrustedSource)
+			}
+			return template, nil
 		} else if selection.Prompt {
 			categoryID = optionsForCategory[selection.Index].Repository
 		}
 
-		// Set template to view more samples, so the sample prompt is triggered
 		if categoryID == viewMoreSamples {
-			selectedTemplate = viewMoreSamples
+			sampler := api.NewHTTPClient(api.HTTPClientOptions{
+				TotalTimeOut: 60 * time.Second,
+			})
+			samples, err := create.GetSampleRepos(sampler)
+			if err != nil {
+				return create.Template{}, err
+			}
+			selectedSample, err := promptSampleSelection(ctx, clients, samples)
+			if err != nil {
+				return create.Template{}, err
+			}
+			return create.ResolveTemplateURL(selectedSample)
 		}
 	}
 
-	// Prompt for the template
-	if selectedTemplate == "" {
-		prompt := "Select a language:"
-		options := getSelectionOptions(clients, categoryID)
-		titles := make([]string, len(options))
-		for i, m := range options {
-			titles[i] = m.Title
-		}
-		template := getSelectionTemplate(clients)
-
-		// Print a trace with info about the template title options provided by CLI
-		clients.IO.PrintTrace(ctx, slacktrace.CreateTemplateOptions, strings.Join(titles, ", "))
-
-		// Prompt to choose a template
-		selection, err := clients.IO.SelectPrompt(ctx, prompt, titles, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return options[index].Description
-			},
-			Flag:     clients.Config.Flags.Lookup("template"),
-			Required: true,
-			Template: template,
-		})
-		if err != nil {
-			return create.Template{}, slackerror.ToSlackError(err)
-		} else if selection.Flag {
-			selectedTemplate = selection.Option
-		} else if selection.Prompt {
-			selectedTemplate = options[selection.Index].Repository
-		}
+	// Prompt for the example template
+	prompt := "Select a language:"
+	if clients.Config.WithExperimentOn(experiment.Templates) {
+		prompt = "Select a template:"
 	}
-
-	// Ensure user is okay to proceed if template source is from a non-trusted source
-	switch selectedTemplate {
-	case viewMoreSamples:
-		sampler := api.NewHTTPClient(api.HTTPClientOptions{
-			TotalTimeOut: 60 * time.Second,
-		})
-		samples, err := create.GetSampleRepos(sampler)
-		if err != nil {
-			return create.Template{}, err
-		}
-		selectedSample, err := promptSampleSelection(ctx, clients, samples)
-		if err != nil {
-			return create.Template{}, err
-		}
-		return create.ResolveTemplateURL(selectedSample)
-	default:
-		template, err := create.ResolveTemplateURL(selectedTemplate)
-		if err != nil {
-			return create.Template{}, err
-		}
-		confirm, err := confirmExternalTemplateSelection(cmd, clients, template)
-		if err != nil {
-			return create.Template{}, slackerror.ToSlackError(err)
-		} else if !confirm {
-			return create.Template{}, slackerror.New(slackerror.ErrUntrustedSource)
-		}
-		return template, nil
+	options := getSelectionOptions(clients, categoryID)
+	titles := make([]string, len(options))
+	for i, m := range options {
+		titles[i] = m.Title
 	}
+	clients.IO.PrintTrace(ctx, slacktrace.CreateTemplateOptions, strings.Join(titles, ", "))
+
+	selection, err := clients.IO.SelectPrompt(ctx, prompt, titles, iostreams.SelectPromptConfig{
+		Description: func(value string, index int) string {
+			return options[index].Description
+		},
+		Required: true,
+		Template: getSelectionTemplate(clients),
+	})
+	if err != nil {
+		return create.Template{}, err
+	} else if selection.Flag {
+		return create.Template{}, slackerror.New(slackerror.ErrPrompt)
+	} else if selection.Prompt && !clients.Config.WithExperimentOn(experiment.Templates) {
+		return create.ResolveTemplateURL(options[selection.Index].Repository)
+	}
+	template := options[selection.Index].Repository
+
+	// Prompt for the example framework
+	examples := getFrameworkOptions(template)
+	choices := make([]string, len(examples))
+	for i, opt := range examples {
+		choices[i] = opt.Title
+	}
+	choice, err := clients.IO.SelectPrompt(ctx, "Select a framework:", choices, iostreams.SelectPromptConfig{
+		Description: func(value string, index int) string {
+			return examples[index].Description
+		},
+		Required: true,
+	})
+	if err != nil {
+		return create.Template{}, err
+	} else if choice.Flag {
+		return create.Template{}, slackerror.New(slackerror.ErrPrompt)
+	}
+	example := examples[choice.Index]
+	resolved, err := create.ResolveTemplateURL(example.Repository)
+	if err != nil {
+		return create.Template{}, err
+	}
+	if example.Subdir != "" {
+		resolved.SetSubdir(example.Subdir)
+	}
+	return resolved, nil
 }
 
 // confirmExternalTemplateSelection prompts the user to confirm that they want to create an app from
@@ -249,9 +435,25 @@ func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryS
 	}
 
 	var categories []categoryInfo
-	if categoryShortcut == "agent" {
+	if categoryShortcut == "agent" && clients.Config.WithExperimentOn(experiment.Templates) {
+		categories = []categoryInfo{
+			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
+			{id: "slack-cli#ai-apps/mcp-server", name: "Custom agent"},
+			{id: "slack-cli#ai-apps/assistant-template", name: "Assistant templates"},
+		}
+	} else if categoryShortcut == "agent" {
 		categories = []categoryInfo{
 			{id: "slack-cli#ai-apps", name: "AI Agent apps"},
+		}
+	} else if clients.Config.WithExperimentOn(experiment.Templates) {
+		categories = []categoryInfo{
+			{id: "slack-cli#starter-templates/getting-started", name: "Starter templates"},
+			{id: "slack-cli#starter-templates/automation-apps", name: "Automation templates"},
+			{id: "slack-cli#starter-templates/search-template", name: "Search templates"},
+			{id: "slack-cli#starter-templates/blank-template", name: "Blank templates"},
+			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
+			{id: "slack-cli#ai-apps/mcp-server", name: "Custom agent"},
+			{id: "slack-cli#ai-apps/assistant-template", name: "Assistant templates"},
 		}
 	} else {
 		categories = []categoryInfo{
@@ -262,10 +464,19 @@ func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryS
 	}
 
 	for _, category := range categories {
-		templates := getSelectionOptions(clients, category.id)
-		secondary := make([]string, len(templates))
-		for i, tmpl := range templates {
-			secondary[i] = tmpl.Repository
+		var secondary []string
+		if !clients.Config.WithExperimentOn(experiment.Templates) {
+			for _, tmpl := range getSelectionOptions(clients, category.id) {
+				secondary = append(secondary, tmpl.Repository)
+			}
+		} else {
+			for _, tmpl := range getFrameworkOptions(category.id) {
+				repo := tmpl.Repository
+				if tmpl.Subdir != "" {
+					repo = fmt.Sprintf("%s --subdir %s", repo, tmpl.Subdir)
+				}
+				secondary = append(secondary, repo)
+			}
 		}
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "house_buildings",

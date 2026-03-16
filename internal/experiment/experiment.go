@@ -33,11 +33,14 @@ const (
 	// Charm experiment enables beautiful prompts.
 	Charm Experiment = "charm"
 
+	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
+	Placeholder Experiment = "placeholder"
+
 	// Sandboxes experiment lets users who have joined the Slack Developer Program use the CLI to manage their sandboxes.
 	Sandboxes Experiment = "sandboxes"
 
-	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
-	Placeholder Experiment = "placeholder"
+	// Templates experiment brings agents and more to the create command templates.
+	Templates Experiment = "templates"
 )
 
 // AllExperiments is a list of all available experiments that can be enabled
@@ -46,6 +49,7 @@ var AllExperiments = []Experiment{
 	Charm,
 	Placeholder,
 	Sandboxes,
+	Templates,
 }
 
 // EnabledExperiments is a list of experiments that are permanently enabled

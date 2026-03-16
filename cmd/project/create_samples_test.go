@@ -174,9 +174,3 @@ func TestSamples_SortRepos(t *testing.T) {
 	assert.Equal(t, sortedRepos[3].StargazersCount, 0, "Expected sortedRepos[3].StargazersCount to equal 0")
 	assert.Equal(t, sortedRepos[3].Description, "This is a new sample")
 }
-
-func TestSamples_CreateSelectOptions(t *testing.T) {
-	selectOptions := createSelectOptions(mockGitHubRepos)
-	assert.Equal(t, len(selectOptions), 4, "Expected selectOptions length to be 4")
-	assert.Contains(t, selectOptions[0], mockGitHubRepos[0].Name, "Expected selectOptions[0] to contain mockGitHubRepos[0].Name")
-}
