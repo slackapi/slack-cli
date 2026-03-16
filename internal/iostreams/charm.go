@@ -83,10 +83,6 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 		Options(opts...).
 		Value(selected)
 
-	if cfg.PageSize > 0 {
-		field.Height(cfg.PageSize + 2)
-	}
-
 	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
 

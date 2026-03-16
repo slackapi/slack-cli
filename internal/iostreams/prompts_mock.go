@@ -43,31 +43,31 @@ func MatchPromptConfig(match PromptConfig) interface{} {
 	})
 }
 
-// ConfirmPrompt mocks the confirm prompt from go-survey
+// ConfirmPrompt mocks the confirm prompt
 func (m *IOStreamsMock) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
 	args := m.Called(ctx, message, defaultValue)
-	return args.Bool(0), nil
+	return args.Bool(0), args.Error(1)
 }
 
-// InputPrompt mocks the input prompt from go-survey
+// InputPrompt mocks the input prompt
 func (m *IOStreamsMock) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
 	args := m.Called(ctx, message, cfg)
-	return args.String(0), nil
+	return args.String(0), args.Error(1)
 }
 
-// SelectPrompt mocks the select prompt from go-survey
+// MultiSelectPrompt mocks the multi-select prompt
 func (m *IOStreamsMock) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
-	args := m.Called(ctx, message)
-	return args.Get(0).([]string), nil
+	args := m.Called(ctx, message, options)
+	return args.Get(0).([]string), args.Error(1)
 }
 
-// PasswordPrompt mocks the password prompt or flag selection
+// PasswordPrompt mocks the password prompt
 func (m *IOStreamsMock) PasswordPrompt(ctx context.Context, message string, cfg PasswordPromptConfig) (PasswordPromptResponse, error) {
 	args := m.Called(ctx, message, cfg)
 	return args.Get(0).(PasswordPromptResponse), args.Error(1)
 }
 
-// SelectPrompt mocks the select prompt from go-survey
+// SelectPrompt mocks the select prompt
 func (m *IOStreamsMock) SelectPrompt(ctx context.Context, message string, options []string, cfg SelectPromptConfig) (SelectPromptResponse, error) {
 	args := m.Called(ctx, message, options, cfg)
 	return args.Get(0).(SelectPromptResponse), args.Error(1)
