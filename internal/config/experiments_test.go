@@ -56,7 +56,12 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 		_, mockPrintDebug := setupMockPrintDebug()
 
 		// Write old array format
-		jsonContents := []byte(fmt.Sprintf(`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":["%s"]}`, validExperiment))
+		jsonContents := []byte(
+			fmt.Sprintf(
+				`{"last_update_checked_at":"2023-05-11T15:41:07.799619-07:00","experiments":["%s"]}`,
+				validExperiment,
+			),
+		)
 		_ = afero.WriteFile(fs, pathToConfigJSON, jsonContents, 0600)
 
 		config.LoadExperiments(ctx, mockPrintDebug)
