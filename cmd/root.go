@@ -22,7 +22,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/charmbracelet/huh"
+	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -40,10 +40,12 @@ import (
 	"github.com/slackapi/slack-cli/cmd/openformresponse"
 	"github.com/slackapi/slack-cli/cmd/platform"
 	"github.com/slackapi/slack-cli/cmd/project"
+	"github.com/slackapi/slack-cli/cmd/sandbox"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -175,6 +177,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		openformresponse.NewCommand(clients),
 		platform.NewCommand(clients),
 		project.NewCommand(clients),
+		sandbox.NewCommand(clients),
 		triggers.NewCommand(clients),
 		upgrade.NewCommand(clients),
 		versioncmd.NewCommand(clients),
@@ -297,6 +300,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
+	style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
 	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
 	clients.Config.Version = clients.CLIVersion
 

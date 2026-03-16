@@ -16,13 +16,10 @@ package app
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -84,9 +81,6 @@ func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
 		return err
-	}
-	if !clients.Config.WithExperimentOn(experiment.BoltFrameworks) {
-		return nil
 	}
 	clients.Config.SetFlags(cmd)
 	return nil
@@ -186,11 +180,8 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 
 	clients.Config.ManifestEnv = app.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.App.TeamDomain, selection.App.IsDev)
 
-	// Set up event logger
-	log := newAddLogger(clients, selection.Auth.TeamDomain)
-
 	// Install dev app or prod app to a workspace
-	installedApp, installState, err := appInstall(ctx, clients, log, selection, orgGrantWorkspaceID)
+	installedApp, installState, err := appInstall(ctx, clients, selection, orgGrantWorkspaceID)
 	if err != nil {
 		return ctx, installState, types.App{}, err // pass the installState because some callers may use it to handle the error
 	}
@@ -201,74 +192,19 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 	return ctx, installState, installedApp, nil
 }
 
-// newAddLogger creates a logger instance to receive event notifications
-func newAddLogger(clients *shared.ClientFactory, envName string) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			teamName := event.DataToString("teamName")
-			appName := event.DataToString("appName")
-			switch event.Name {
-			case "app_install_manifest":
-				// Ignore this event and format manifest outputs in create/update events
-			case "app_install_manifest_create":
-				_, _ = clients.IO.WriteOut().Write([]byte(style.Sectionf(style.TextSection{
-					Emoji: "books",
-					Text:  "App Manifest",
-					Secondary: []string{
-						fmt.Sprintf(`Creating app manifest for "%s" in "%s"`, appName, teamName),
-					},
-				})))
-			case "app_install_manifest_update":
-				_, _ = clients.IO.WriteOut().Write([]byte("\n" + style.Sectionf(style.TextSection{
-					Emoji: "books",
-					Text:  "App Manifest",
-					Secondary: []string{
-						fmt.Sprintf(`Updated app manifest for "%s" in "%s"`, appName, teamName),
-					},
-				})))
-			case "app_install_start":
-				_, _ = clients.IO.WriteOut().Write([]byte("\n" + style.Sectionf(style.TextSection{
-					Emoji: "house",
-					Text:  "App Install",
-					Secondary: []string{
-						fmt.Sprintf(`Installing "%s" app to "%s"`, appName, teamName),
-					},
-				})))
-			case "app_install_icon_success":
-				iconPath := event.DataToString("iconPath")
-				_, _ = clients.IO.WriteOut().Write([]byte(
-					style.SectionSecondaryf("Updated app icon: %s", iconPath),
-				))
-			case "app_install_icon_error":
-				iconError := event.DataToString("iconError")
-				_, _ = clients.IO.WriteOut().Write([]byte(
-					style.SectionSecondaryf("Error updating app icon: %s", iconError),
-				))
-			case "app_install_complete":
-				_, _ = clients.IO.WriteOut().Write([]byte(
-					style.SectionSecondaryf("Finished in %s", event.DataToString("installTime")),
-				))
-			default:
-				// Ignore the event
-			}
-		},
-	)
-}
-
 // printAddSuccess will print a list of the environments
 func printAddSuccess(clients *shared.ClientFactory, cmd *cobra.Command, appInstance types.App) error {
 	return runListCommand(cmd, clients)
 }
 
 // appInstall will install an app to a team. It supports both local and deployed app types.
-func appInstall(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (types.App, types.InstallState, error) {
+func appInstall(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (types.App, types.InstallState, error) {
 	if selection != nil && selection.App.IsDev {
 		// Install local dev app to a team
-		installedApp, _, installState, err := appInstallDevAppFunc(ctx, clients, "", log, selection.Auth, selection.App)
+		installedApp, _, installState, err := appInstallDevAppFunc(ctx, clients, "", selection.Auth, selection.App)
 		return installedApp, installState, err
 	} else {
-		installState, installedApp, err := appInstallProdAppFunc(ctx, clients, log, selection.Auth, selection.App, orgGrantWorkspaceID)
+		installState, installedApp, err := appInstallProdAppFunc(ctx, clients, selection.Auth, selection.App, orgGrantWorkspaceID)
 		return installedApp, installState, err
 	}
 }

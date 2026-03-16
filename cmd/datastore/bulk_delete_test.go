@@ -22,7 +22,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -36,11 +35,9 @@ type BulkDeletePkgMock struct {
 	mock.Mock
 }
 
-func (m *BulkDeletePkgMock) BulkDelete(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastoreBulkDelete) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["bulkDeleteResult"] = types.AppDatastoreBulkDeleteResult{}
-	log.Log("info", "on_bulk_delete_result")
-	return log.SuccessEvent(), nil
+func (m *BulkDeletePkgMock) BulkDelete(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastoreBulkDelete) (types.AppDatastoreBulkDeleteResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastoreBulkDeleteResult{}, nil
 }
 
 func TestBulkDeleteCommandPreRun(t *testing.T) {
@@ -185,7 +182,7 @@ func TestBulkDeleteCommand(t *testing.T) {
 			// Create mocked command
 			bulkDeleteMock := new(BulkDeletePkgMock)
 			BulkDelete = bulkDeleteMock.BulkDelete
-			bulkDeleteMock.On("BulkDelete", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			bulkDeleteMock.On("BulkDelete", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastoreBulkDeleteResult{}, nil)
 
 			cmd := NewBulkDeleteCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -198,7 +195,7 @@ func TestBulkDeleteCommand(t *testing.T) {
 			// Create mocked command
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				bulkDeleteMock.AssertCalled(t, "BulkDelete", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				bulkDeleteMock.AssertCalled(t, "BulkDelete", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done

@@ -22,7 +22,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
@@ -38,33 +37,75 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGetProjectDirectoryName(t *testing.T) {
-	var appName string
-	var err error
-
-	// Test with empty name returns an error
-	appName, err = getAppDirName("")
-	assert.Error(t, err, "should return an error for empty name")
-	assert.Equal(t, "", appName)
-
-	// Test with app name
-	appName, err = getAppDirName("my-app")
-	assert.NoError(t, err, "should not return an error")
-	assert.Equal(t, "my-app", appName, "should return 'my-app'")
-
-	// Test with a dot in the app name
-	appName, err = getAppDirName(".my-app")
-	assert.NoError(t, err, "should not return an error")
-	assert.Equal(t, ".my-app", appName, "should return '.my-app'")
-
-	// Spaces replaced with hyphens
-	appName, err = getAppDirName("my cool app")
-	assert.NoError(t, err)
-	assert.Equal(t, "my-cool-app", appName)
-
-	// Leading/trailing spaces trimmed
-	appName, err = getAppDirName("  my-app  ")
-	assert.NoError(t, err)
-	assert.Equal(t, "my-app", appName)
+	tests := map[string]struct {
+		input    string
+		expected string
+		hasError bool
+	}{
+		"empty name returns error": {
+			input:    "",
+			hasError: true,
+		},
+		"simple kebab-case name": {
+			input:    "my-app",
+			expected: "my-app",
+		},
+		"spaces replaced with hyphens": {
+			input:    "my cool app",
+			expected: "my-cool-app",
+		},
+		"leading and trailing spaces trimmed": {
+			input:    "  my-app  ",
+			expected: "my-app",
+		},
+		"uppercase converted to lowercase": {
+			input:    "My Slack App",
+			expected: "my-slack-app",
+		},
+		"mixed case normalized": {
+			input:    "My-Slack-App",
+			expected: "my-slack-app",
+		},
+		"special characters replaced with dashes": {
+			input:    "my_app!@#test",
+			expected: "my-app-test",
+		},
+		"consecutive special characters collapsed to single dash": {
+			input:    "my---app",
+			expected: "my-app",
+		},
+		"leading and trailing special characters trimmed": {
+			input:    "---my-app---",
+			expected: "my-app",
+		},
+		"dots converted to dashes": {
+			input:    ".my-app",
+			expected: "my-app",
+		},
+		"only special characters returns error": {
+			input:    "!!!",
+			hasError: true,
+		},
+		"numbers preserved": {
+			input:    "app123",
+			expected: "app123",
+		},
+		"complex mixed input": {
+			input:    "  My Cool App! (v2)  ",
+			expected: "my-cool-app-v2",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := getAppDirName(tc.input)
+			if tc.hasError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expected, result)
+			}
+		})
+	}
 }
 
 func TestGetAvailableDirectory(t *testing.T) {
@@ -301,9 +342,8 @@ func TestCreateAppFromSubdir(t *testing.T) {
 			require.NoError(t, fs.Remove(outputDir))
 
 			template := Template{path: templateDir, isLocal: true}
-			log := logger.New(func(event *logger.LogEvent) {})
 
-			err := createAppFromSubdir(t.Context(), outputDir, template, "", tc.subdir, log, fs)
+			err := createAppFromSubdir(t.Context(), outputDir, template, "", tc.subdir, fs)
 
 			if tc.expectError {
 				assert.Error(t, err)
@@ -326,6 +366,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		experiments            []string
 		runtime                string
 		manifestSource         config.ManifestSource
+		expectedManifestSource config.ManifestSource
 		existingFiles          map[string]string
 		expectedOutputs        []string
 		unexpectedOutputs      []string
@@ -378,26 +419,38 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		},
 		"When no manifest source, default to project (local)": {
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "project" (local)`,
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
-		"When manifest source is provided, should set it": {
-			manifestSource: config.ManifestSourceRemote,
+		"When remote manifest source is provided, should use it": {
+			manifestSource:         config.ManifestSourceRemote,
+			expectedManifestSource: config.ManifestSourceRemote,
+			existingFiles: map[string]string{
+				".slack/hooks.json": "{}",
+			},
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "app settings" (remote)`,
+				`Updated app manifest source to "app settings" (remote)`,
 			},
 		},
-		"When bolt-install experiment and Deno project, should set manifest source to project (local)": {
-			experiments: []string{"bolt-install"},
+		"When local manifest source is provided, should use it": {
+			manifestSource:         config.ManifestSourceLocal,
+			expectedManifestSource: config.ManifestSourceLocal,
+			existingFiles: map[string]string{
+				".slack/hooks.json": "{}",
+			},
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "project" (local)`,
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
-		"When bolt-install experiment and non-Deno project, should set manifest source to app settings (remote)": {
-			experiments: []string{"bolt-install"},
-			runtime:     "node",
+		"When Deno project, should set manifest source to project (local)": {
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "app settings" (remote)`,
+				`Updated app manifest source to "project" (local)`,
+			},
+		},
+		"When non-Deno project, should set manifest source to project (local)": {
+			runtime: "node",
+			expectedOutputs: []string{
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
 	}
@@ -452,8 +505,15 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				}
 			}
 
+			// Set manifest source
+			if tc.manifestSource != "" {
+				if err := config.SetManifestSource(ctx, clientsMock.Fs, clientsMock.Os, tc.manifestSource); err != nil {
+					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
+				}
+			}
+
 			// Run the test
-			outputs := InstallProjectDependencies(ctx, clients, projectDirPath, tc.manifestSource)
+			outputs := InstallProjectDependencies(ctx, clients, projectDirPath)
 
 			// Assertions
 			for _, expectedOutput := range tc.expectedOutputs {
@@ -464,6 +524,13 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			}
 			for _, expectedVerboseOutput := range tc.expectedVerboseOutputs {
 				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, expectedVerboseOutput, tc.expectedVerboseArgs)
+			}
+			if tc.expectedManifestSource != "" {
+				actualManifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+				if err != nil {
+					require.FailNow(t, fmt.Sprintf("Failed to get the manifest source: %s", err))
+				}
+				assert.Equal(t, tc.expectedManifestSource, actualManifestSource)
 			}
 			assert.NotEmpty(t, clients.Config.ProjectID, "config.project_id")
 			// output := clientsMock.GetCombinedOutput()

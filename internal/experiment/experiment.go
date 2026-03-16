@@ -30,16 +30,11 @@ type Experiment string
 // e.g. --experiment=first-toggle,second-toggle
 
 const (
-	// BoltFrameworks experiment adds CLI support for Bolt JavaScript & Bolt Python.
-	// These frameworks will be introducing remote function support.
-	BoltFrameworks Experiment = "bolt"
-
-	// BoltInstall experiment enables developerInstall to work with Bolt projects that
-	//  manage their app manifest on app settings (remote manifest).
-	BoltInstall Experiment = "bolt-install"
-
 	// Charm experiment enables beautiful prompts.
 	Charm Experiment = "charm"
+
+	// Sandboxes experiment lets users who have joined the Slack Developer Program use the CLI to manage their sandboxes.
+	Sandboxes Experiment = "sandboxes"
 
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
@@ -48,18 +43,14 @@ const (
 // AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
 var AllExperiments = []Experiment{
-	BoltFrameworks,
-	BoltInstall,
 	Charm,
 	Placeholder,
+	Sandboxes,
 }
 
 // EnabledExperiments is a list of experiments that are permanently enabled
 // Please also add here 👇
-var EnabledExperiments = []Experiment{
-	BoltFrameworks,
-	BoltInstall,
-}
+var EnabledExperiments = []Experiment{}
 
 // Includes checks that a supplied experiment is included within AllExperiments
 func Includes(expToCheck Experiment) bool {

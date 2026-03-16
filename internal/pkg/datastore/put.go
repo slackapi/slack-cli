@@ -19,12 +19,11 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
 
-func Put(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, request types.AppDatastorePut) (*logger.LogEvent, error) {
+func Put(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastorePut) (types.AppDatastorePutResult, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.put")
 	defer span.Finish()
 
@@ -33,12 +32,8 @@ func Put(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger,
 
 	putResult, err := clients.API().AppsDatastorePut(ctx, token, request)
 	if err != nil {
-		return nil, err
+		return types.AppDatastorePutResult{}, err
 	}
 
-	// Notify listeners
-	log.Data["putResult"] = putResult
-	log.Log("info", "on_put_result")
-
-	return log.SuccessEvent(), nil
+	return putResult, nil
 }

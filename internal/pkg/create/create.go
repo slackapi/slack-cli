@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
@@ -32,9 +33,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/archiveutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/deputil"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
@@ -58,7 +57,7 @@ type CreateArgs struct {
 }
 
 // Create will create a new Slack app on the file system and app manifest on the Slack API.
-func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, createArgs CreateArgs) (appDirPath string, err error) {
+func Create(ctx context.Context, clients *shared.ClientFactory, createArgs CreateArgs) (appDirPath string, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.create")
 	defer span.Finish()
 
@@ -132,11 +131,11 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 	}
 
 	if subdir != "" {
-		if err := createAppFromSubdir(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, subdir, log, clients.Fs); err != nil {
+		if err := createAppFromSubdir(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, subdir, clients.Fs); err != nil {
 			return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
 		}
 	} else {
-		if err := createApp(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, log, clients.Fs); err != nil {
+		if err := createApp(ctx, projectDirPath, createArgs.Template, createArgs.GitBranch, clients.Fs); err != nil {
 			return "", slackerror.Wrap(err, slackerror.ErrAppCreate)
 		}
 	}
@@ -157,24 +156,34 @@ func Create(ctx context.Context, clients *shared.ClientFactory, log *logger.Logg
 
 	// Install project dependencies to add CLI support and cache dev dependencies.
 	// CLI created projects always default to config.ManifestSourceLocal.
-	InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
+	InstallProjectDependencies(ctx, clients, projectDirPath)
 	clients.IO.PrintTrace(ctx, slacktrace.CreateDependenciesSuccess)
-
-	// Notify listeners that app directory is created
-	log.Log("info", "on_app_create_completion")
 
 	return appDirPath, nil
 }
 
-// getAppDirName will validate and return the app's directory name
+// multiDashRe matches consecutive dashes.
+var multiDashRe = regexp.MustCompile(`-{2,}`)
+
+// nonAlphanumericRe matches any character that is not a lowercase letter, digit, or dash.
+var nonAlphanumericRe = regexp.MustCompile(`[^a-z0-9-]+`)
+
+// getAppDirName will validate and return the app's directory name in kebab-case
 func getAppDirName(appName string) (string, error) {
 	if len(appName) <= 0 {
 		return "", fmt.Errorf("app name is required")
 	}
 
-	// trim whitespace
+	// Normalize to kebab-case: lowercase, replace non-alphanumeric with dashes, collapse, and trim
 	appName = strings.TrimSpace(appName)
-	appName = strings.ReplaceAll(appName, " ", "-")
+	appName = strings.ToLower(appName)
+	appName = nonAlphanumericRe.ReplaceAllString(appName, "-")
+	appName = multiDashRe.ReplaceAllString(appName, "-")
+	appName = strings.Trim(appName, "-")
+
+	if len(appName) == 0 {
+		return "", fmt.Errorf("app name must contain at least one alphanumeric character")
+	}
 
 	// name cannot be a reserved word
 	if goutils.Contains(reserved, appName, false) {
@@ -222,15 +231,7 @@ func parentDirExists(dirPath string) (bool, error) {
 }
 
 // createApp will create the app directory using the default app template or a specified template URL.
-func createApp(ctx context.Context, dirPath string, template Template, gitBranch string, log *logger.Logger, fs afero.Fs) error {
-	log.Data["templatePath"] = template.path
-	log.Data["isGit"] = template.isGit
-	log.Data["gitBranch"] = gitBranch
-	log.Data["isSample"] = template.IsSample()
-
-	// Notify listeners
-	log.Log("info", "on_app_create_template")
-
+func createApp(ctx context.Context, dirPath string, template Template, gitBranch string, fs afero.Fs) error {
 	if template.isGit {
 		doctorSection, err := doctor.CheckGit(ctx)
 		if doctorSection.HasError() || err != nil {
@@ -369,7 +370,7 @@ func normalizeSubdir(subdir string) (string, error) {
 
 // createAppFromSubdir clones the full template into a temp directory, then copies
 // only the specified subdirectory to the final project path.
-func createAppFromSubdir(ctx context.Context, dirPath string, template Template, gitBranch string, subdir string, log *logger.Logger, fs afero.Fs) error {
+func createAppFromSubdir(ctx context.Context, dirPath string, template Template, gitBranch string, subdir string, fs afero.Fs) error {
 	tmpDirRoot := afero.GetTempDir(fs, "")
 	tmpDir, err := afero.TempDir(fs, tmpDirRoot, "slack-create-")
 	if err != nil {
@@ -378,7 +379,7 @@ func createAppFromSubdir(ctx context.Context, dirPath string, template Template,
 	defer func() { _ = fs.RemoveAll(tmpDir) }()
 
 	cloneDir := filepath.Join(tmpDir, "repo")
-	if err := createApp(ctx, cloneDir, template, gitBranch, log, fs); err != nil {
+	if err := createApp(ctx, cloneDir, template, gitBranch, fs); err != nil {
 		return err
 	}
 
@@ -412,7 +413,6 @@ func InstallProjectDependencies(
 	ctx context.Context,
 	clients *shared.ClientFactory,
 	projectDirPath string,
-	manifestSource config.ManifestSource,
 ) []string {
 	var outputs []string
 
@@ -515,32 +515,20 @@ func InstallProjectDependencies(
 		}
 	}
 
-	// Default manifest source to ManifestSourceLocal
-	if !manifestSource.Exists() {
-		manifestSource = config.ManifestSourceLocal
-	}
-
-	// When the BoltInstall experiment is enabled, set non-ROSI projects to ManifestSourceRemote.
-	if clients.Config.WithExperimentOn(experiment.BoltInstall) {
-		// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
-		if clients.Runtime != nil {
-			isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
-			if !isDenoProject {
-				manifestSource = config.ManifestSourceRemote
-			}
-		}
+	// Get the manifest source from the project-level config
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		clients.IO.PrintDebug(ctx, "Error getting manifest source: %s", err)
 	}
 
 	// Set "manifest.source" in .slack/config.json
 	if err := config.SetManifestSource(ctx, clients.Fs, clients.Os, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
-		configJSONFilename := config.ProjectConfigJSONFilename
 		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
-			"Updated %s manifest source to %s",
-			configJSONFilename,
+			"Updated app manifest source to %s",
 			manifestSourceStyled,
 		))
 	}

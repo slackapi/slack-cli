@@ -24,7 +24,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -39,11 +38,9 @@ type QueryDatastorePkgMock struct {
 	mock.Mock
 }
 
-func (m *QueryDatastorePkgMock) Query(ctx context.Context, clients *shared.ClientFactory, log *logger.Logger, query types.AppDatastoreQuery) (*logger.LogEvent, error) {
-	m.Called(ctx, clients, log, query)
-	log.Data["queryResult"] = types.AppDatastoreQueryResult{}
-	log.Log("info", "on_query_result")
-	return log.SuccessEvent(), nil
+func (m *QueryDatastorePkgMock) Query(ctx context.Context, clients *shared.ClientFactory, query types.AppDatastoreQuery) (types.AppDatastoreQueryResult, error) {
+	m.Called(ctx, clients, query)
+	return types.AppDatastoreQueryResult{}, nil
 }
 
 func TestQueryCommandPreRun(t *testing.T) {
@@ -328,7 +325,7 @@ func TestQueryCommand(t *testing.T) {
 			// Prepare mocked command
 			queryMock := new(QueryDatastorePkgMock)
 			Query = queryMock.Query
-			queryMock.On("Query", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			queryMock.On("Query", mock.Anything, mock.Anything, mock.Anything).Return(types.AppDatastoreQueryResult{}, nil)
 
 			cmd := NewQueryCommand(clients)
 			// TODO: could maybe refactor this to the os/fs mocks level to more clearly communicate "fake being in an app directory"
@@ -345,7 +342,7 @@ func TestQueryCommand(t *testing.T) {
 			// Perform test
 			err := cmd.ExecuteContext(ctx)
 			if assert.NoError(t, err) {
-				queryMock.AssertCalled(t, "Query", mock.Anything, mock.Anything, mock.Anything, tc.Query)
+				queryMock.AssertCalled(t, "Query", mock.Anything, mock.Anything, tc.Query)
 			}
 
 			// Cleanup when done
@@ -467,4 +464,56 @@ func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsTo
 		}
 	}
 	return data, nil
+}
+
+func Test_getExpressionPatterns(t *testing.T) {
+	tests := map[string]struct {
+		expression string
+		wantAttrs  int
+		wantVals   int
+	}{
+		"expression with attributes and values": {
+			expression: "#name = :name AND #status = :status",
+			wantAttrs:  2,
+			wantVals:   2,
+		},
+		"empty expression": {
+			expression: "",
+			wantAttrs:  0,
+			wantVals:   0,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			attrs, vals := getExpressionPatterns(tc.expression)
+			assert.Len(t, attrs, tc.wantAttrs)
+			assert.Len(t, vals, tc.wantVals)
+		})
+	}
+}
+
+func Test_mapAttributeFlag(t *testing.T) {
+	tests := map[string]struct {
+		flag    string
+		wantErr bool
+	}{
+		"valid JSON": {
+			flag: `{"#name":"name"}`,
+		},
+		"invalid JSON": {
+			flag:    `not json`,
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := mapAttributeFlag(tc.flag)
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+			}
+		})
+	}
 }

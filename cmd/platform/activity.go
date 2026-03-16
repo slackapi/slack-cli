@@ -19,7 +19,6 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/logger"
 	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -130,23 +129,9 @@ func runActivityCommand(clients *shared.ClientFactory, cmd *cobra.Command, args 
 		TraceID:           traceID,
 	}
 
-	log := newActivityLogger(cmd)
-	if err := activityFunc(ctx, clients, log, activityArgs); err != nil {
+	if err := activityFunc(ctx, clients, activityArgs); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// newActivityLogger creates a logger instance to receive event notifications
-func newActivityLogger(cmd *cobra.Command) *logger.Logger {
-	return logger.New(
-		// OnEvent
-		func(event *logger.LogEvent) {
-			switch event.Name {
-			default:
-				// Ignore the event
-			}
-		},
-	)
 }

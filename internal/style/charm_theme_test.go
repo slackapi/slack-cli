@@ -17,96 +17,102 @@ package style
 import (
 	"testing"
 
-	"github.com/charmbracelet/lipgloss"
+	huh "charm.land/huh/v2"
+	lipgloss "charm.land/lipgloss/v2"
 	"github.com/stretchr/testify/assert"
 )
 
+// styles is a helper that resolves the ThemeSlack for testing (isDark=false).
+func styles() *huh.Styles {
+	return ThemeSlack().Theme(false)
+}
+
 func TestThemeSlack(t *testing.T) {
 	t.Run("returns a non-nil theme", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.NotNil(t, theme)
+		s := styles()
+		assert.NotNil(t, s)
 	})
 
 	t.Run("focused title is bold", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.True(t, theme.Focused.Title.GetBold())
+		s := styles()
+		assert.True(t, s.Focused.Title.GetBold())
 	})
 
 	t.Run("focused title uses aubergine foreground", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#7C2852"), theme.Focused.Title.GetForeground())
+		s := styles()
+		assert.Equal(t, slackAubergine, s.Focused.Title.GetForeground())
 	})
 
 	t.Run("focused select selector renders cursor", func(t *testing.T) {
-		theme := ThemeSlack()
-		rendered := theme.Focused.SelectSelector.Render()
+		s := styles()
+		rendered := s.Focused.SelectSelector.Render()
 		assert.Contains(t, rendered, "❱")
 	})
 
 	t.Run("focused multi-select selected prefix renders checkmark", func(t *testing.T) {
-		theme := ThemeSlack()
-		rendered := theme.Focused.SelectedPrefix.Render()
+		s := styles()
+		rendered := s.Focused.SelectedPrefix.Render()
 		assert.Contains(t, rendered, "✓")
 	})
 
 	t.Run("focused multi-select unselected prefix renders brackets", func(t *testing.T) {
-		theme := ThemeSlack()
-		rendered := theme.Focused.UnselectedPrefix.Render()
+		s := styles()
+		rendered := s.Focused.UnselectedPrefix.Render()
 		assert.Contains(t, rendered, "[ ]")
 	})
 
 	t.Run("focused error message uses red foreground", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#e01e5a"), theme.Focused.ErrorMessage.GetForeground())
+		s := styles()
+		assert.Equal(t, slackRed, s.Focused.ErrorMessage.GetForeground())
 	})
 
 	t.Run("focused button uses aubergine background", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#7C2852"), theme.Focused.FocusedButton.GetBackground())
+		s := styles()
+		assert.Equal(t, slackAubergine, s.Focused.FocusedButton.GetBackground())
 	})
 
 	t.Run("focused button is bold", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.True(t, theme.Focused.FocusedButton.GetBold())
+		s := styles()
+		assert.True(t, s.Focused.FocusedButton.GetBold())
 	})
 
 	t.Run("blurred select selector is blank", func(t *testing.T) {
-		theme := ThemeSlack()
-		rendered := theme.Blurred.SelectSelector.Render()
+		s := styles()
+		rendered := s.Blurred.SelectSelector.Render()
 		assert.Contains(t, rendered, "  ")
 		assert.NotContains(t, rendered, "❱")
 	})
 
 	t.Run("blurred multi-select selector is blank", func(t *testing.T) {
-		theme := ThemeSlack()
-		rendered := theme.Blurred.MultiSelectSelector.Render()
+		s := styles()
+		rendered := s.Blurred.MultiSelectSelector.Render()
 		assert.Contains(t, rendered, "  ")
 		assert.NotContains(t, rendered, "❱")
 	})
 
 	t.Run("blurred border is hidden", func(t *testing.T) {
-		theme := ThemeSlack()
-		borderStyle := theme.Blurred.Base.GetBorderStyle()
+		s := styles()
+		borderStyle := s.Blurred.Base.GetBorderStyle()
 		assert.Equal(t, lipgloss.HiddenBorder(), borderStyle)
 	})
 
 	t.Run("focused border uses aubergine", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#7C2852"), theme.Focused.Base.GetBorderLeftForeground())
+		s := styles()
+		assert.Equal(t, slackAubergine, s.Focused.Base.GetBorderLeftForeground())
 	})
 
 	t.Run("focused text input prompt uses blue", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#36c5f0"), theme.Focused.TextInput.Prompt.GetForeground())
+		s := styles()
+		assert.Equal(t, slackBlue, s.Focused.TextInput.Prompt.GetForeground())
 	})
 
 	t.Run("focused text input cursor uses yellow", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#ecb22e"), theme.Focused.TextInput.Cursor.GetForeground())
+		s := styles()
+		assert.Equal(t, slackYellow, s.Focused.TextInput.Cursor.GetForeground())
 	})
 
 	t.Run("focused selected option uses green", func(t *testing.T) {
-		theme := ThemeSlack()
-		assert.Equal(t, lipgloss.Color("#2eb67d"), theme.Focused.SelectedOption.GetForeground())
+		s := styles()
+		assert.Equal(t, slackGreen, s.Focused.SelectedOption.GetForeground())
 	})
 }

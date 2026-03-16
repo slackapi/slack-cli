@@ -6,15 +6,14 @@ The Slack CLI has an experiment (`-e`) flag behind which we put features current
 
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
-- `bolt-install`: enables creating, installing, and running Bolt projects that manage their app manifest on app settings (remote manifest).
-  - `slack create` and `slack init` now set manifest source to "app settings" (remote) for Bolt JS & Bolt Python projects ([PR#96](https://github.com/slackapi/slack-cli/pull/96)).
-  - `slack run` and `slack install` support creating and installing Bolt Framework apps that have the manifest source set to "app settings (remote)" ([PR#111](https://github.com/slackapi/slack-cli/pull/111), [PR#154](https://github.com/slackapi/slack-cli/pull/154)).
 - `charm`: shows beautiful prompts ([PR#348](https://github.com/slackapi/slack-cli/pull/348)).
+- `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
 
+- **March 2026**: Concluded the `bolt` and `bolt-install` experiments with full Bolt framework support now enabled by default in the Slack CLI. All Bolt project features including remote manifest management are now standard functionality. See the announcement [here](https://slack.dev/slackcli-supports-bolt-apps/).
 - **February 2026**: Added the `charm` experiment.
 - **December 2025**: Concluded the `read-only-collaborators` experiment with full support introduced to the Slack CLI. See the changelog announcement [here](https://docs.slack.dev/changelog/2025/12/04/slack-cli).
 - **June 2025**:
