@@ -156,7 +156,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 
 	// Install project dependencies to add CLI support and cache dev dependencies.
 	// CLI created projects always default to config.ManifestSourceLocal.
-	InstallProjectDependencies(ctx, clients, projectDirPath, config.ManifestSourceLocal)
+	InstallProjectDependencies(ctx, clients, projectDirPath)
 	clients.IO.PrintTrace(ctx, slacktrace.CreateDependenciesSuccess)
 
 	return appDirPath, nil
@@ -413,7 +413,6 @@ func InstallProjectDependencies(
 	ctx context.Context,
 	clients *shared.ClientFactory,
 	projectDirPath string,
-	manifestSource config.ManifestSource,
 ) []string {
 	var outputs []string
 
@@ -516,30 +515,20 @@ func InstallProjectDependencies(
 		}
 	}
 
-	// Default manifest source to ManifestSourceLocal
-	if !manifestSource.Exists() {
-		manifestSource = config.ManifestSourceLocal
-	}
-
-	// Set non-Deno (non-ROSI) projects to ManifestSourceRemote.
-	// TODO: should check if Slack hosted project, but the SDKConfig has not been initialized yet.
-	if clients.Runtime != nil {
-		isDenoProject := strings.Contains(strings.ToLower(clients.Runtime.Name()), "deno")
-		if !isDenoProject {
-			manifestSource = config.ManifestSourceRemote
-		}
+	// Get the manifest source from the project-level config
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		clients.IO.PrintDebug(ctx, "Error getting manifest source: %s", err)
 	}
 
 	// Set "manifest.source" in .slack/config.json
 	if err := config.SetManifestSource(ctx, clients.Fs, clients.Os, manifestSource); err != nil {
 		clients.IO.PrintDebug(ctx, "Error setting manifest source in project-level config: %s", err)
 	} else {
-		configJSONFilename := config.ProjectConfigJSONFilename
 		manifestSourceStyled := style.Highlight(manifestSource.Human())
 
 		outputs = append(outputs, fmt.Sprintf(
-			"Updated %s manifest source to %s",
-			configJSONFilename,
+			"Updated app manifest source to %s",
 			manifestSourceStyled,
 		))
 	}
