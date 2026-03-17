@@ -191,9 +191,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	} else {
 		// Prompt for the category
 		promptForCategory := "Select an app:"
-		if clients.Config.WithExperimentOn(experiment.Templates) {
-			promptForCategory = "Select a category:"
-		}
 		optionsForCategory := getSelectionOptionsForCategory(clients)
 		titlesForCategory := make([]string, len(optionsForCategory))
 		for i, m := range optionsForCategory {
