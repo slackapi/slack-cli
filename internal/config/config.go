@@ -15,6 +15,7 @@
 package config
 
 import (
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/spf13/afero"
 	"github.com/spf13/pflag"
@@ -62,7 +63,7 @@ type Config struct {
 
 	// Feature experiments
 	ExperimentsFlag []string
-	experiments     map[string]bool
+	experiments     map[experiment.Experiment]bool
 
 	// Eventually this will also load the global and project slack config files
 	DomainAuthTokens string

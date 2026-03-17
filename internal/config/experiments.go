@@ -31,10 +31,10 @@ func (c *Config) LoadExperiments(
 	ctx context.Context,
 	printDebug func(ctx context.Context, format string, a ...interface{}),
 ) {
-	experiments := map[string]bool{}
+	experiments := map[experiment.Experiment]bool{}
 	// Load from flags
 	for _, flagValue := range c.ExperimentsFlag {
-		experiments[flagValue] = true
+		experiments[experiment.Experiment(flagValue)] = true
 	}
 	printDebug(ctx, fmt.Sprintf("active flag experiments: %s", formatExperimentMap(experiments)))
 	// Load from project config file
@@ -42,26 +42,26 @@ func (c *Config) LoadExperiments(
 	if err != nil && slackerror.ToSlackError(err).Code != slackerror.ErrInvalidAppDirectory {
 		printDebug(ctx, fmt.Sprintf("failed to parse project-level config file: %s", err))
 	} else if err == nil {
-		printDebug(ctx, fmt.Sprintf("active project experiments: %s", formatExperimentMap(projectConfig.Experiments)))
-		maps.Copy(experiments, projectConfig.Experiments)
+		printDebug(ctx, fmt.Sprintf("active project experiments: %s", formatExperimentMap(toExperimentMap(projectConfig.Experiments))))
+		maps.Copy(experiments, toExperimentMap(projectConfig.Experiments))
 	}
 	// Load from system config file
 	userConfig, err := c.SystemConfig.UserConfig(ctx)
 	if err != nil {
 		printDebug(ctx, fmt.Sprintf("failed to parse system-level config file: %s", err))
 	} else {
-		printDebug(ctx, fmt.Sprintf("active system experiments: %s", formatExperimentMap(userConfig.Experiments)))
-		maps.Copy(experiments, userConfig.Experiments)
+		printDebug(ctx, fmt.Sprintf("active system experiments: %s", formatExperimentMap(toExperimentMap(userConfig.Experiments))))
+		maps.Copy(experiments, toExperimentMap(userConfig.Experiments))
 	}
 	// Load from permanently enabled list
 	for _, exp := range experiment.EnabledExperiments {
-		experiments[string(exp)] = true
+		experiments[exp] = true
 	}
 	printDebug(ctx, fmt.Sprintf("active permanently enabled experiments: %s", experiment.EnabledExperiments))
 	// Audit the experiments
 	c.experiments = experiments
 	for name := range c.experiments {
-		if !experiment.Includes(experiment.Experiment(name)) {
+		if !experiment.Includes(name) {
 			printDebug(ctx, fmt.Sprintf("invalid experiment found: %s", name))
 		}
 	}
@@ -72,7 +72,7 @@ func (c *Config) GetExperiments() []experiment.Experiment {
 	result := make([]experiment.Experiment, 0, len(c.experiments))
 	for name, enabled := range c.experiments {
 		if enabled {
-			result = append(result, experiment.Experiment(name))
+			result = append(result, name)
 		}
 	}
 	sort.Slice(result, func(i, j int) bool {
@@ -83,19 +83,28 @@ func (c *Config) GetExperiments() []experiment.Experiment {
 
 // WithExperimentOn checks whether an experiment is currently toggled on
 func (c *Config) WithExperimentOn(experimentToCheck experiment.Experiment) bool {
-	return c.experiments[string(experimentToCheck)]
+	return c.experiments[experimentToCheck]
+}
+
+// toExperimentMap converts a map[string]bool to map[experiment.Experiment]bool
+func toExperimentMap(m map[string]bool) map[experiment.Experiment]bool {
+	result := make(map[experiment.Experiment]bool, len(m))
+	for name, enabled := range m {
+		result[experiment.Experiment(name)] = enabled
+	}
+	return result
 }
 
 // formatExperimentMap returns a string representation of the experiments map
 // for debug logging, formatted similar to the old slice format.
-func formatExperimentMap(m map[string]bool) string {
+func formatExperimentMap(m map[experiment.Experiment]bool) string {
 	if len(m) == 0 {
 		return "[]"
 	}
 	names := make([]string, 0, len(m))
 	for name, enabled := range m {
 		if enabled {
-			names = append(names, name)
+			names = append(names, string(name))
 		}
 	}
 	sort.Strings(names)
