@@ -72,8 +72,8 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 	for _, opt := range options {
 		key := opt
 		if cfg.Description != nil {
-			if desc := cfg.Description(opt, len(opts)); desc != "" {
-				key = opt + "\n  " + desc
+			if desc := style.RemoveEmoji(cfg.Description(opt, len(opts))); desc != "" {
+				key = opt + " - " + desc
 			}
 		}
 		opts = append(opts, huh.NewOption(key, opt))
@@ -81,6 +81,7 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 
 	field := huh.NewSelect[string]().
 		Title(msg).
+		Description(cfg.Help).
 		Options(opts...).
 		Value(selected)
 
