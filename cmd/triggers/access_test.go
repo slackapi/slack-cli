@@ -271,7 +271,7 @@ func TestTriggersAccessCommand(t *testing.T) {
 				clientsMock.API.On("UserInfo", mock.Anything, mock.Anything, "collaborator_ID").
 					Return(&types.UserInfo{}, nil).Once()
 				// confirm to add app collaborators
-				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Include app collaborators?", mock.Anything).Return(true)
+				clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Include app collaborators?", mock.Anything).Return(true, nil)
 				// set access type to named_entities
 				clientsMock.API.On("TriggerPermissionsSet", mock.Anything, mock.Anything, fakeTriggerID, "collaborator_ID", types.PermissionNamedEntities, "users").Maybe().
 					Return([]string{}, nil)

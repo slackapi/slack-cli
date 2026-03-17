@@ -37,3 +37,6 @@ package-lock.json
 
 # End to End Test files
 test-e2e
+
+# VHS demo recordings
+demos/

@@ -186,7 +186,7 @@ func TestDeleteCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a task_id", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("1234")
+				}).Return("1234", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
