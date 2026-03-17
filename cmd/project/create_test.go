@@ -611,30 +611,20 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedOutputs: []string{
-				"Starter templates",
+				"Getting started",
 				"slack-samples/bolt-js-starter-template",
-				"slack-samples/bolt-ts-starter-template",
 				"slack-samples/bolt-python-starter-template",
-				"Automation templates",
-				"slack-samples/bolt-js-custom-function-template",
-				"slack-samples/bolt-ts-custom-step-template",
-				"slack-samples/bolt-python-custom-function-template",
-				"slack-samples/deno-starter-template",
-				"Search templates",
-				"slack-samples/bolt-js-search-template",
-				"slack-samples/bolt-ts-search-template",
-				"slack-samples/bolt-python-search-template",
-				"Blank templates",
-				"slack-samples/bolt-js-blank-template",
 				"Support agent",
 				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Custom agent",
-				"slack-samples/bolt-js-slack-mcp-server",
-				"Assistant templates",
 				"slack-samples/bolt-js-assistant-template",
 				"slack-samples/bolt-python-assistant-template",
+				"Automation apps",
+				"slack-samples/bolt-js-custom-function-template",
+				"slack-samples/bolt-python-custom-function-template",
+				"slack-samples/deno-starter-template",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
@@ -655,16 +645,14 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Custom agent",
-				"slack-samples/bolt-js-slack-mcp-server",
-				"Assistant templates",
 				"slack-samples/bolt-js-assistant-template",
 				"slack-samples/bolt-python-assistant-template",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 				output := cm.GetCombinedOutput()
-				assert.NotContains(t, output, "Starter templates")
-				assert.NotContains(t, output, "Blank templates")
+				assert.NotContains(t, output, "Getting started")
+				assert.NotContains(t, output, "Automation apps")
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
