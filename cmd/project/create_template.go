@@ -251,7 +251,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	// Prompt for the example template
 	prompt := "Select a language:"
 	if clients.Config.WithExperimentOn(experiment.Templates) {
-		if strings.HasPrefix(categoryID, "slack-cli#") && !strings.Contains(categoryID, "/") {
+		if categoryID == "slack-cli#ai-apps" {
 			prompt = "Select a template:"
 		} else {
 			prompt = "Select a framework:"
