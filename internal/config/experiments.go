@@ -32,19 +32,11 @@ func (c *Config) LoadExperiments(
 	printDebug func(ctx context.Context, format string, a ...interface{}),
 ) {
 	experiments := map[experiment.Experiment]bool{}
-	// Load from flags
-	for _, flagValue := range c.ExperimentsFlag {
-		experiments[experiment.Experiment(flagValue)] = true
+	// Load from permanently enabled list (lowest priority)
+	for _, exp := range experiment.EnabledExperiments {
+		experiments[exp] = true
 	}
-	printDebug(ctx, fmt.Sprintf("active flag experiments: %s", formatExperimentMap(experiments)))
-	// Load from project config file
-	projectConfig, err := ReadProjectConfigFile(ctx, c.fs, c.os)
-	if err != nil && slackerror.ToSlackError(err).Code != slackerror.ErrInvalidAppDirectory {
-		printDebug(ctx, fmt.Sprintf("failed to parse project-level config file: %s", err))
-	} else if err == nil {
-		printDebug(ctx, fmt.Sprintf("active project experiments: %s", formatExperimentMap(toExperimentMap(projectConfig.Experiments))))
-		maps.Copy(experiments, toExperimentMap(projectConfig.Experiments))
-	}
+	printDebug(ctx, fmt.Sprintf("active permanently enabled experiments: %s", experiment.EnabledExperiments))
 	// Load from system config file
 	userConfig, err := c.SystemConfig.UserConfig(ctx)
 	if err != nil {
@@ -53,11 +45,19 @@ func (c *Config) LoadExperiments(
 		printDebug(ctx, fmt.Sprintf("active system experiments: %s", formatExperimentMap(toExperimentMap(userConfig.Experiments))))
 		maps.Copy(experiments, toExperimentMap(userConfig.Experiments))
 	}
-	// Load from permanently enabled list
-	for _, exp := range experiment.EnabledExperiments {
-		experiments[exp] = true
+	// Load from project config file
+	projectConfig, err := ReadProjectConfigFile(ctx, c.fs, c.os)
+	if err != nil && slackerror.ToSlackError(err).Code != slackerror.ErrInvalidAppDirectory {
+		printDebug(ctx, fmt.Sprintf("failed to parse project-level config file: %s", err))
+	} else if err == nil {
+		printDebug(ctx, fmt.Sprintf("active project experiments: %s", formatExperimentMap(toExperimentMap(projectConfig.Experiments))))
+		maps.Copy(experiments, toExperimentMap(projectConfig.Experiments))
 	}
-	printDebug(ctx, fmt.Sprintf("active permanently enabled experiments: %s", experiment.EnabledExperiments))
+	// Load from flags (highest priority)
+	for _, flagValue := range c.ExperimentsFlag {
+		experiments[experiment.Experiment(flagValue)] = true
+	}
+	printDebug(ctx, fmt.Sprintf("active flag experiments: %s", formatExperimentMap(experiments)))
 	// Audit the experiments
 	c.experiments = experiments
 	for name := range c.experiments {
