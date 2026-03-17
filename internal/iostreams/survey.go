@@ -14,29 +14,49 @@
 
 package iostreams
 
-// Interactive prompts and configurations are contained in this file
-// Prompts are implemented with the survey library github.com/go-survey/survey
-// Text color and styling in templates is handled by github.com/mgutz/ansi
-// Numeric color codes match ANSI https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+// Survey-based prompt implementations using the survey library.
+// Templates, color helpers, and survey-specific configuration live here.
+// Shared prompt types and IOStreams methods live in prompts.go.
 
 import (
 	"context"
 	"fmt"
 	"runtime"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/AlecAivazis/survey/v2/terminal"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
-	"github.com/spf13/pflag"
 )
 
-// PromptConfig contains general information about a prompt
-type PromptConfig interface {
-	GetFlags() []*pflag.Flag // GetFlags returns all flags for the prompt
-	IsRequired() bool        // IsRequired returns if a response must be provided
+// blue returns a color code for blue text that can be used in survey templates
+//
+// The code is compatible with the ANSI range supported by the OS and terminal
+func blue() string {
+	if runtime.GOOS == "windows" {
+		return "cyan"
+	}
+	return "39"
+}
+
+// gray returns a color code for gray text that can be used in survey templates
+//
+// The code is compatible with the ANSI range supported by the OS and terminal
+func gray() string {
+	if runtime.GOOS == "windows" {
+		return "default"
+	}
+	return "246"
+}
+
+// MimicInputPrompt formats a message and value to appear as a prompted input
+func MimicInputPrompt(message string, value string) string {
+	return fmt.Sprintf(
+		"%s %s %s",
+		style.Darken("?"),
+		style.Highlight(message),
+		style.Input(value),
+	)
 }
 
 // SurveyOptions returns the current options applied to survey prompts
@@ -69,26 +89,6 @@ func SurveyOptions(cfg PromptConfig) []survey.AskOpt {
 	}
 }
 
-// blue returns a color code for blue text that can be used in survey templates
-//
-// The code is compatible with the ANSI range supported by the OS and terminal
-func blue() string {
-	if runtime.GOOS == "windows" {
-		return "cyan"
-	}
-	return "39"
-}
-
-// gray returns a color code for gray text that can be used in survey templates
-//
-// The code is compatible with the ANSI range supported by the OS and terminal
-func gray() string {
-	if runtime.GOOS == "windows" {
-		return "default"
-	}
-	return "246"
-}
-
 // ConfirmQuestionTemplate is the formatted template for the confirm prompt
 //
 // Reference: https://github.com/go-survey/survey/blob/fa37277e6394c29db7bcc94062cb30cd7785a126/confirm.go#L25
@@ -103,28 +103,8 @@ var ConfirmQuestionTemplate = fmt.Sprintf(`
   {{- color "%s"}}{{if .Default}}(Y/n) {{else}}(y/N) {{end}}{{color "reset"}}
 {{- end}}`, blue(), gray())
 
-// ConfirmPromptConfig holds additional configs for a Confirm prompt
-type ConfirmPromptConfig struct {
-	Required bool // If a response is required
-}
-
-// GetFlags returns all flags for the Confirm prompt
-func (cfg ConfirmPromptConfig) GetFlags() []*pflag.Flag {
-	return []*pflag.Flag{}
-}
-
-// IsRequired returns if a response is required
-func (cfg ConfirmPromptConfig) IsRequired() bool {
-	return cfg.Required
-}
-
-// ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
-// the message
-func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
-	if io.config.WithExperimentOn(experiment.Charm) {
-		return charmConfirmPrompt(io, ctx, message, defaultValue)
-	}
-
+// surveyConfirmPrompt prompts for a yes/no confirmation using a survey form
+func surveyConfirmPrompt(io *IOStreams, _ context.Context, message string, defaultValue bool) (bool, error) {
 	// Temporarily swap default template for custom one
 	defaultConfirmTemplate := survey.ConfirmQuestionTemplate
 	survey.ConfirmQuestionTemplate = ConfirmQuestionTemplate
@@ -177,29 +157,8 @@ var InputQuestionTemplate = fmt.Sprintf(`
   {{- if .Default}}{{color "%s"}}({{.Default}}) {{color "reset"}}{{end}}
 {{- end}}`, blue(), gray())
 
-// InputPromptConfig holds additional config for an Input prompt
-type InputPromptConfig struct {
-	Required    bool   // Whether the input must be non-empty
-	Placeholder string // Placeholder text shown when input is empty
-}
-
-// GetFlags returns all flags for the Input prompt
-func (cfg InputPromptConfig) GetFlags() []*pflag.Flag {
-	return []*pflag.Flag{}
-}
-
-// IsRequired returns if a response is required
-func (cfg InputPromptConfig) IsRequired() bool {
-	return cfg.Required
-}
-
-// InputPrompt prompts the user for a string value for the message, which can
-// optionally be made required
-func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
-	if io.config.WithExperimentOn(experiment.Charm) {
-		return charmInputPrompt(io, ctx, message, cfg)
-	}
-
+// surveyInputPrompt prompts for text input using a survey form
+func surveyInputPrompt(io *IOStreams, _ context.Context, message string, cfg InputPromptConfig) (string, error) {
 	defaultInputTemplate := survey.InputQuestionTemplate
 	survey.InputQuestionTemplate = InputQuestionTemplate
 	defer func() {
@@ -220,16 +179,6 @@ func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputP
 		return "", err
 	}
 	return input, nil
-}
-
-// MimicInputPrompt formats a message and value to appear as a prompted input
-func MimicInputPrompt(message string, value string) string {
-	return fmt.Sprintf(
-		"%s %s %s",
-		style.Darken("?"),
-		style.Highlight(message),
-		style.Input(value),
-	)
 }
 
 // MultiSelectQuestionTemplate represents a formatted template with all hints
@@ -255,28 +204,8 @@ var MultiSelectQuestionTemplate = fmt.Sprintf(`
   {{- end}}
 {{- end}}`, blue(), blue())
 
-// MultiSelectPromptConfig holds additional configs for a MultiSelect prompt
-type MultiSelectPromptConfig struct {
-	Required bool // If a response is required
-}
-
-// GetFlags returns all flags for the MultiSelect prompt
-func (cfg MultiSelectPromptConfig) GetFlags() []*pflag.Flag {
-	return []*pflag.Flag{}
-}
-
-// IsRequired returns if a response is required
-func (cfg MultiSelectPromptConfig) IsRequired() bool {
-	return cfg.Required
-}
-
-// MultiSelectPrompt prompts the user to select multiple values in a list and
-// returns the selected values
-func (io *IOStreams) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
-	if io.config.WithExperimentOn(experiment.Charm) {
-		return charmMultiSelectPrompt(io, ctx, message, options)
-	}
-
+// surveyMultiSelectPrompt prompts for multiple selections using a survey form
+func surveyMultiSelectPrompt(io *IOStreams, _ context.Context, message string, options []string) ([]string, error) {
 	defaultMultiSelectTemplate := survey.MultiSelectQuestionTemplate
 	survey.MultiSelectQuestionTemplate = MultiSelectQuestionTemplate
 	defer func() {
@@ -313,51 +242,8 @@ var passwordQuestionTemplate = fmt.Sprintf(`
 {{- color "default+hb"}}{{ .Message }} {{color "%s"}}
 {{- if and .Help (not .ShowHelp)}}{{color "cyan"}}[{{ .Config.HelpInput }} for help]{{color "reset"}} {{end}}`, gray())
 
-// PasswordPromptConfig holds additional config for a survey.Select prompt
-type PasswordPromptConfig struct {
-	Flag     *pflag.Flag // The flag substitute for this prompt
-	Required bool        // If a response is required
-	Template string      // Custom formatting of the password prompt
-}
-
-// GetFlags returns all flags for the password prompt
-func (cfg PasswordPromptConfig) GetFlags() []*pflag.Flag {
-	switch {
-	case cfg.Flag != nil:
-		return []*pflag.Flag{cfg.Flag}
-	default:
-		return []*pflag.Flag{}
-	}
-}
-
-// IsRequired returns if a response is required
-func (cfg PasswordPromptConfig) IsRequired() bool {
-	return cfg.Required
-}
-
-// PasswordPromptResponse holds response information from a password prompt
-type PasswordPromptResponse struct {
-	Value  string // The value of the response
-	Flag   bool   // If a flag value was used
-	Prompt bool   // If a survey input was provided
-}
-
-// PasswordPrompt prompts the user with a hidden text input for the message
-func (io *IOStreams) PasswordPrompt(ctx context.Context, message string, cfg PasswordPromptConfig) (PasswordPromptResponse, error) {
-	if cfg.Flag != nil && cfg.Flag.Changed {
-		if cfg.Required && cfg.Flag.Value.String() == "" {
-			return PasswordPromptResponse{}, slackerror.New(slackerror.ErrMissingFlag)
-		}
-		return PasswordPromptResponse{Flag: true, Value: cfg.Flag.Value.String()}, nil
-	}
-	if !io.IsTTY() {
-		return PasswordPromptResponse{}, errInteractivityFlags(cfg)
-	}
-
-	if io.config.WithExperimentOn(experiment.Charm) {
-		return charmPasswordPrompt(io, ctx, message, cfg)
-	}
-
+// surveyPasswordPrompt prompts for a password (hidden input) using a survey form
+func surveyPasswordPrompt(io *IOStreams, _ context.Context, message string, cfg PasswordPromptConfig) (PasswordPromptResponse, error) {
 	defaultPasswordTemplate := survey.PasswordQuestionTemplate
 	if cfg.Template != "" {
 		survey.PasswordQuestionTemplate = cfg.Template
@@ -407,76 +293,8 @@ var selectQuestionTemplate = fmt.Sprintf(`
 	{{- end}}
 {{- end}}`, blue())
 
-// SelectPromptConfig holds additional config for a survey.Select prompt
-type SelectPromptConfig struct {
-	Description func(value string, index int) string // Optional text displayed with each prompt option
-	Flag        *pflag.Flag                          // The single flag substitute for this prompt
-	Flags       []*pflag.Flag                        // Otherwise multiple flag substitutes for this prompt
-	Help        string                               // Optional help text displayed below the select title
-	PageSize    int                                  // The number of options displayed before the user needs to scroll
-	Required    bool                                 // If a response is required
-	Template    string                               // Custom formatting of the selection prompt
-}
-
-// GetFlags returns all flags for the prompt
-func (cfg SelectPromptConfig) GetFlags() []*pflag.Flag {
-	switch {
-	case cfg.Flag != nil:
-		return []*pflag.Flag{cfg.Flag}
-	case cfg.Flags != nil:
-		return cfg.Flags
-	default:
-		return []*pflag.Flag{}
-	}
-}
-
-// IsRequired returns if a response is required
-func (cfg SelectPromptConfig) IsRequired() bool {
-	return cfg.Required
-}
-
-// SelectPromptResponse holds response information from a selection prompt
-type SelectPromptResponse struct {
-	Index  int    // The index of any selection
-	Option string // The value of the response
-
-	Flag   bool // If a flag value was used
-	Prompt bool // If a survey selection was made
-}
-
-// DefaultSelectPromptConfig returns default config object for a survey.Select prompt
-func DefaultSelectPromptConfig() SelectPromptConfig {
-	return SelectPromptConfig{
-		Required: true,
-	}
-}
-
-// SelectPrompt prompts the user to make a selection and returns the choice
-func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []string, cfg SelectPromptConfig) (SelectPromptResponse, error) {
-	if flag, err := io.retrieveFlagValue(cfg.GetFlags()); err != nil {
-		return SelectPromptResponse{}, err
-	} else if flag != nil {
-		if cfg.Required && cfg.Flag.Value.String() == "" {
-			return SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingFlag)
-		}
-		return SelectPromptResponse{Flag: true, Option: flag.Value.String()}, nil
-	}
-
-	if len(options) == 0 {
-		return SelectPromptResponse{}, slackerror.New(slackerror.ErrMissingOptions)
-	}
-	if !io.IsTTY() {
-		if cfg.IsRequired() {
-			return SelectPromptResponse{}, errInteractivityFlags(cfg)
-		} else {
-			return SelectPromptResponse{}, nil
-		}
-	}
-
-	if io.config.WithExperimentOn(experiment.Charm) {
-		return charmSelectPrompt(io, ctx, msg, options, cfg)
-	}
-
+// surveySelectPrompt prompts for a single selection using a survey form
+func surveySelectPrompt(io *IOStreams, _ context.Context, msg string, options []string, cfg SelectPromptConfig) (SelectPromptResponse, error) {
 	defaultSelectTemplate := survey.SelectQuestionTemplate
 	if cfg.Template != "" {
 		survey.SelectQuestionTemplate = cfg.Template
@@ -509,50 +327,4 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 		return SelectPromptResponse{}, err
 	}
 	return SelectPromptResponse{Prompt: true, Index: index, Option: options[index]}, nil
-}
-
-// retrieveFlagValue returns the only changed flag in the flagset
-func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, error) {
-	var flag *pflag.Flag
-	if flagset == nil {
-		return nil, nil
-	}
-	for _, opt := range flagset {
-		if opt == nil {
-			continue
-		}
-		if !opt.Changed {
-			continue
-		} else if flag != nil {
-			return nil, slackerror.New(slackerror.ErrMismatchedFlags)
-		}
-		flag = opt
-	}
-	return flag, nil
-}
-
-// errInteractivityFlags formats an error for when flag substitutes are needed
-func errInteractivityFlags(cfg PromptConfig) error {
-	flags := cfg.GetFlags()
-	var remediation string
-	var helpMessage = "Learn more about this command with `--help`"
-
-	if len(flags) == 1 {
-		remediation = fmt.Sprintf("Try running the command with the `--%s` flag included", flags[0].Name)
-		helpMessage = "Learn more about this flag with `--help`"
-	} else if len(flags) > 1 {
-		var names []string
-		for _, flag := range flags {
-			names = append(names, flag.Name)
-		}
-		flags := strings.Join(names, "`\n   `--")
-		remediation = fmt.Sprintf("Consider using the following flags when running this command:\n   `--%s`", flags)
-		helpMessage = "Learn more about these flags with `--help`"
-	}
-
-	return slackerror.New(slackerror.ErrPrompt).
-		WithDetails(slackerror.ErrorDetails{
-			slackerror.ErrorDetail{Message: "The input device is not a TTY or does not support interactivity"},
-		}).
-		WithRemediation("%s\n%s", remediation, helpMessage)
 }
