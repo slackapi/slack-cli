@@ -20,7 +20,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -195,29 +194,6 @@ func TestTracef(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			trace := Tracef(tc.traceID, tc.traceValues...)
 			assert.Equal(t, tc.expected, trace)
-		})
-	}
-}
-
-func TestSurveyIcons(t *testing.T) {
-	tests := map[string]struct {
-		styleEnabled bool
-	}{
-		"styles are not enabled": {
-			styleEnabled: false,
-		},
-		"styles are enabled": {
-			styleEnabled: true,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			core.DisableColor = false
-			isStyleEnabled = tc.styleEnabled
-
-			_ = SurveyIcons()
-			assert.NotEqual(t, tc.styleEnabled, core.DisableColor)
 		})
 	}
 }

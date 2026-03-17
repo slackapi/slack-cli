@@ -109,9 +109,10 @@ type PasswordPromptResponse struct {
 
 // SelectPromptConfig holds additional config for a selection prompt
 type SelectPromptConfig struct {
-	Description func(value string, index int) string // Optional text displayed below each prompt option
+	Description func(value string, index int) string // Optional text displayed with each prompt option
 	Flag        *pflag.Flag                          // The single flag substitute for this prompt
 	Flags       []*pflag.Flag                        // Otherwise multiple flag substitutes for this prompt
+	Help        string                               // Optional help text displayed below the select title
 	PageSize    int                                  // DEPRECATED: The number of options displayed before the user needs to scroll
 	Required    bool                                 // If a response is required
 	Template    string                               // DEPRECATED: Custom formatting of the selection prompt
@@ -141,6 +142,13 @@ type SelectPromptResponse struct {
 
 	Flag   bool // If a flag value was used
 	Prompt bool // If a survey selection was made
+}
+
+// DefaultSelectPromptConfig returns default config object for a selection prompt
+func DefaultSelectPromptConfig() SelectPromptConfig {
+	return SelectPromptConfig{
+		Required: true,
+	}
 }
 
 // retrieveFlagValue returns the only changed flag in the flagset

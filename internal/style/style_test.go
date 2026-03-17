@@ -58,6 +58,36 @@ func TestRemoveANSI(t *testing.T) {
 	}
 }
 
+func TestRemoveEmoji(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"plain text is unchanged": {
+			input:    "A simple description",
+			expected: "A simple description",
+		},
+		"emoji flags are removed": {
+			input:    "A translation bot 🇨🇳 🇮🇹 🇹🇭 🇫🇷",
+			expected: "A translation bot",
+		},
+		"mixed emoji and text": {
+			input:    "Hello 🌍 world 🚀 test",
+			expected: "Hello world test",
+		},
+		"empty string": {
+			input:    "",
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := RemoveEmoji(tc.input)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
 func TestToggleStyles(t *testing.T) {
 	defer func() {
 		ToggleStyles(false)
