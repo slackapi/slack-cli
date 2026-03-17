@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -107,16 +106,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	// Check if a category shortcut was provided
 	if categoryShortcut == "agent" {
 		categoryID = "slack-cli#ai-apps"
-	} else if clients.Config.WithExperimentOn(experiment.Charm) {
-		result, err := charmPromptTemplateSelection(ctx, clients)
-		if err != nil {
-			return create.Template{}, slackerror.ToSlackError(err)
-		}
-		if result.CategoryID == viewMoreSamples || result.TemplateRepo == viewMoreSamples {
-			selectedTemplate = viewMoreSamples
-		} else {
-			selectedTemplate = result.TemplateRepo
-		}
 	} else {
 		// Prompt for the category
 		promptForCategory := "Select an app:"
@@ -132,9 +121,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 
 		// Prompt to choose a category
 		selection, err := clients.IO.SelectPrompt(ctx, promptForCategory, titlesForCategory, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return optionsForCategory[index].Description
-			},
 			Flag:     clients.Config.Flags.Lookup("template"),
 			Required: true,
 			Template: templateForCategory,
@@ -168,9 +154,6 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 
 		// Prompt to choose a template
 		selection, err := clients.IO.SelectPrompt(ctx, prompt, titles, iostreams.SelectPromptConfig{
-			Description: func(value string, index int) string {
-				return options[index].Description
-			},
 			Flag:     clients.Config.Flags.Lookup("template"),
 			Required: true,
 			Template: template,
