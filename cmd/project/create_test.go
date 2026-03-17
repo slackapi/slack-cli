@@ -188,7 +188,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0}, nil)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil)
 				createClientMock = new(CreateClientMock)
 				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)

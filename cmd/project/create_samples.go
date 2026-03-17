@@ -48,9 +48,6 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 		}
 	}
 	languagePrompt := "Select a language:"
-	if clients.Config.WithExperimentOn(experiment.Templates) {
-		languagePrompt = "Select a framework:"
-	}
 	selection, err := clients.IO.SelectPrompt(ctx, languagePrompt,
 		languageOptions,
 		iostreams.SelectPromptConfig{

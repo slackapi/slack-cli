@@ -117,11 +117,7 @@ func getSelectionOptions(clients *shared.ClientFactory, categoryID string) []pro
 	return templatePromptObjects[categoryID]
 }
 
-// getFrameworkOptions returns the framework choices for a given template
-// selection.
-//
-// The order of entries should match the unfolded selection order for sake of
-// new entries. This is not an implementation requirement.
+// getFrameworkOptions returns the framework choices for a given template.
 func getFrameworkOptions(template string) []promptObject {
 	frameworkPromptObjects := map[string][]promptObject{
 		"slack-cli#ai-apps/support-agent": {
@@ -254,7 +250,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 		if categoryID == "slack-cli#ai-apps" {
 			prompt = "Select a template:"
 		} else {
-			prompt = "Select a framework:"
+			prompt = "Select a language:"
 		}
 	}
 	options := getSelectionOptions(clients, categoryID)
@@ -286,7 +282,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	for i, opt := range examples {
 		choices[i] = opt.Title
 	}
-	choice, err := clients.IO.SelectPrompt(ctx, "Select a framework:", choices, iostreams.SelectPromptConfig{
+	choice, err := clients.IO.SelectPrompt(ctx, "Select a language:", choices, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
 			return examples[index].Description
 		},
