@@ -37,11 +37,11 @@ func getSelectionOptions(clients *shared.ClientFactory, categoryID string) []pro
 		templatePromptObjects := map[string]([]promptObject){
 			"slack-cli#getting-started": {
 				{
-					Title:      "Bolt for JavaScript",
+					Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
 					Repository: "slack-samples/bolt-js-starter-template",
 				},
 				{
-					Title:      "Bolt for Python",
+					Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
 					Repository: "slack-samples/bolt-python-starter-template",
 				},
 			},
@@ -57,15 +57,15 @@ func getSelectionOptions(clients *shared.ClientFactory, categoryID string) []pro
 			},
 			"slack-cli#automation-apps": {
 				{
-					Title:      "Bolt for JavaScript",
+					Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
 					Repository: "slack-samples/bolt-js-custom-function-template",
 				},
 				{
-					Title:      "Bolt for Python",
+					Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
 					Repository: "slack-samples/bolt-python-custom-function-template",
 				},
 				{
-					Title:      "Deno Slack SDK",
+					Title:      fmt.Sprintf("Deno Slack SDK %s", style.Secondary("Deno")),
 					Repository: "slack-samples/deno-starter-template",
 				},
 			},
@@ -139,11 +139,11 @@ func getFrameworkOptions(template string) []promptObject {
 		},
 		"slack-cli#ai-apps/custom-agent": {
 			{
-				Title:      "Bolt for JavaScript",
+				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
 				Repository: "slack-samples/bolt-js-assistant-template",
 			},
 			{
-				Title:      "Bolt for Python",
+				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
 				Repository: "slack-samples/bolt-python-assistant-template",
 			},
 		},
