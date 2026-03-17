@@ -29,6 +29,7 @@ import (
 func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
+		Prompt(style.Chevron() + " ").
 		Placeholder(cfg.Placeholder).
 		Value(input)
 	if cfg.Required {
@@ -107,6 +108,7 @@ func charmSelectPrompt(_ *IOStreams, _ context.Context, msg string, options []st
 func buildPasswordForm(message string, cfg PasswordPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
+		Prompt(style.Chevron() + " ").
 		EchoMode(huh.EchoModePassword).
 		Value(input)
 	if cfg.Required {
