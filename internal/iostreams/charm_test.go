@@ -21,6 +21,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	huh "charm.land/huh/v2"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,6 +38,15 @@ func TestCharmInput(t *testing.T) {
 
 		view := ansi.Strip(f.View())
 		assert.Contains(t, view, "Enter your name")
+	})
+
+	t.Run("renders the chevron prompt", func(t *testing.T) {
+		var input string
+		f := buildInputForm("Name?", InputPromptConfig{}, &input)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, style.Chevron())
 	})
 
 	t.Run("accepts typed input", func(t *testing.T) {
@@ -136,7 +146,7 @@ func TestCharmSelect(t *testing.T) {
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
-		assert.Contains(t, view, "❱ Foo")
+		assert.Contains(t, view, style.Chevron()+" Foo")
 	})
 
 	t.Run("cursor navigation moves selection", func(t *testing.T) {
@@ -147,8 +157,8 @@ func TestCharmSelect(t *testing.T) {
 
 		m, _ := f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		view := ansi.Strip(m.View())
-		assert.Contains(t, view, "❱ Bar")
-		assert.False(t, strings.Contains(view, "❱ Foo"))
+		assert.Contains(t, view, style.Chevron()+" Bar")
+		assert.False(t, strings.Contains(view, style.Chevron()+" Foo"))
 	})
 
 	t.Run("submit selects the hovered option", func(t *testing.T) {
@@ -205,6 +215,15 @@ func TestCharmPassword(t *testing.T) {
 
 		view := ansi.Strip(f.View())
 		assert.Contains(t, view, "Enter password")
+	})
+
+	t.Run("renders the chevron prompt", func(t *testing.T) {
+		var input string
+		f := buildPasswordForm("Enter password", PasswordPromptConfig{}, &input)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, style.Chevron())
 	})
 
 	t.Run("typed characters are masked in view", func(t *testing.T) {
@@ -302,7 +321,7 @@ func TestCharmFormsUseSlackTheme(t *testing.T) {
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
-		assert.Contains(t, view, "❱ A")
+		assert.Contains(t, view, style.Chevron()+" A")
 	})
 
 	t.Run("multi-select form renders themed prefixes", func(t *testing.T) {
