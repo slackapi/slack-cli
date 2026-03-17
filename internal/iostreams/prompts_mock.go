@@ -43,6 +43,13 @@ func MatchPromptConfig(match PromptConfig) interface{} {
 	})
 }
 
+// DefaultSelectPromptConfig returns default config object for a selection prompt
+func DefaultSelectPromptConfig() SelectPromptConfig {
+	return SelectPromptConfig{
+		Required: true,
+	}
+}
+
 // ConfirmPrompt mocks the confirm prompt
 func (m *IOStreamsMock) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
 	args := m.Called(ctx, message, defaultValue)

@@ -144,13 +144,6 @@ type SelectPromptResponse struct {
 	Prompt bool // If a survey selection was made
 }
 
-// DefaultSelectPromptConfig returns default config object for a selection prompt
-func DefaultSelectPromptConfig() SelectPromptConfig {
-	return SelectPromptConfig{
-		Required: true,
-	}
-}
-
 // retrieveFlagValue returns the only changed flag in the flagset
 func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, error) {
 	var flag *pflag.Flag
