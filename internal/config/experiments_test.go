@@ -49,11 +49,11 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 			fmt.Sprintf("active system experiments: [%s]", validExperiment))
 	})
 
-	t.Run("Correctly finds experiments from old array format in config.json", func(t *testing.T) {
+	t.Run("Returns a parse error with remediation for old array format in config.json", func(t *testing.T) {
 		// Setup
 		ctx, fs, _, config, pathToConfigJSON, teardown := setup(t)
 		defer teardown(t)
-		_, mockPrintDebug := setupMockPrintDebug()
+		mockOutput, mockPrintDebug := setupMockPrintDebug()
 
 		// Write old array format
 		jsonContents := []byte(
@@ -66,7 +66,8 @@ func Test_Config_WithExperimentOn(t *testing.T) {
 
 		config.LoadExperiments(ctx, mockPrintDebug)
 		experimentOn := config.WithExperimentOn(validExperiment)
-		assert.Equal(t, true, experimentOn)
+		assert.Equal(t, false, experimentOn)
+		assert.Contains(t, mockOutput.String(), "failed to parse system-level config file")
 	})
 
 	t.Run("Correctly returns false when experiments are not in config.json", func(t *testing.T) {

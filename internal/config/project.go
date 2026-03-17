@@ -71,23 +71,6 @@ type ProjectConfig struct {
 	os types.Os
 }
 
-// UnmarshalJSON implements custom JSON unmarshaling for ProjectConfig to support
-// backwards compatibility with the old array format for experiments.
-func (c *ProjectConfig) UnmarshalJSON(data []byte) error {
-	type Alias ProjectConfig
-	aux := &struct {
-		RawExperiments json.RawMessage `json:"experiments,omitempty"`
-		*Alias
-	}{
-		Alias: (*Alias)(c),
-	}
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	c.Experiments = unmarshalExperimentsField(aux.RawExperiments)
-	return nil
-}
-
 // NewProjectConfig read and writes to the project-level configuration file
 func NewProjectConfig(fs afero.Fs, os types.Os) *ProjectConfig {
 	projectConfig := &ProjectConfig{
@@ -276,7 +259,11 @@ func ReadProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os) (Proje
 		return projectConfig, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of project-level config file").
 			WithRootCause(err).
-			WithRemediation("Check that %s is valid JSON", style.HomePath(projectConfigFilePath))
+			WithRemediation(
+				"Check that %s is valid JSON. %s",
+				style.HomePath(projectConfigFilePath),
+				experimentsFormatHint,
+			)
 	}
 	if projectConfig.Surveys == nil {
 		projectConfig.Surveys = map[string]SurveyConfig{}

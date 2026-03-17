@@ -25,6 +25,10 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
+// experimentsFormatHint is a remediation hint for config files that use the
+// deprecated array format for experiments instead of the current object format.
+const experimentsFormatHint = `If the "experiments" field is an array (e.g. ["exp1"]), update it to an object (e.g. {"exp1": true})`
+
 // LoadExperiments parses experiments from the command flags and configuration
 // files and stores the findings in Config
 func (c *Config) LoadExperiments(

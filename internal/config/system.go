@@ -81,25 +81,6 @@ type SystemConfig struct {
 	configFileLock sync.Mutex
 }
 
-// UnmarshalJSON implements custom JSON unmarshaling for SystemConfig to support
-// backwards compatibility with the old array format for experiments.
-// Old format: "experiments": ["charm", "sandboxes"]
-// New format: "experiments": {"charm": true, "sandboxes": true}
-func (c *SystemConfig) UnmarshalJSON(data []byte) error {
-	type Alias SystemConfig
-	aux := &struct {
-		RawExperiments json.RawMessage `json:"experiments,omitempty"`
-		*Alias
-	}{
-		Alias: (*Alias)(c),
-	}
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	c.Experiments = unmarshalExperimentsField(aux.RawExperiments)
-	return nil
-}
-
 // NewSystemConfig read and writes to the system-level configuration directory
 func NewSystemConfig(fs afero.Fs, os types.Os) *SystemConfig {
 	systemConfig := &SystemConfig{
@@ -151,7 +132,11 @@ func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
 		return &config, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of system-level config file").
 			WithRootCause(err).
-			WithRemediation("Check that %s is valid JSON", style.HomePath(path))
+			WithRemediation(
+				"Check that %s is valid JSON. %s",
+				style.HomePath(path),
+				experimentsFormatHint,
+			)
 	}
 
 	if config.Surveys == nil {
