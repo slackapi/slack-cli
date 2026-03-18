@@ -29,6 +29,7 @@ import (
 func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
+		Prompt(style.Chevron() + " ").
 		Placeholder(cfg.Placeholder).
 		Value(input)
 	if cfg.Required {
@@ -71,8 +72,8 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 	for _, opt := range options {
 		key := opt
 		if cfg.Description != nil {
-			if desc := cfg.Description(opt, len(opts)); desc != "" {
-				key = opt + "\n  " + desc
+			if desc := style.RemoveEmoji(cfg.Description(opt, len(opts))); desc != "" {
+				key = opt + " - " + desc
 			}
 		}
 		opts = append(opts, huh.NewOption(key, opt))
@@ -80,12 +81,9 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 
 	field := huh.NewSelect[string]().
 		Title(msg).
+		Description(cfg.Help).
 		Options(opts...).
 		Value(selected)
-
-	if cfg.PageSize > 0 {
-		field.Height(cfg.PageSize + 2)
-	}
 
 	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
 }
@@ -106,6 +104,7 @@ func charmSelectPrompt(_ *IOStreams, _ context.Context, msg string, options []st
 func buildPasswordForm(message string, cfg PasswordPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
+		Prompt(style.Chevron() + " ").
 		EchoMode(huh.EchoModePassword).
 		Value(input)
 	if cfg.Required {

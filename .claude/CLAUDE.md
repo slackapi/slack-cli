@@ -135,6 +135,19 @@ func NewExampleCommand(clients *shared.ClientFactory) *cobra.Command {
 - Mock the `ClientFactory` and its dependencies for testing
 - Always mock file system operations using `afero.Fs` to enable testability
 
+### Test Naming Conventions
+
+Test function names use the format `Test_StructName_FunctionName` for methods on a struct, or `Test_FunctionName` for package-level functions:
+
+```go
+func Test_Client_GetAppStatus(t *testing.T) { ... }  // struct method
+func Test_getKeyLength(t *testing.T) { ... }         // package-level function
+```
+
+### Test Ordering Conventions
+
+Constructor functions (`NewXYZ`) should always be declared first, at the top of the test file. After constructors, test functions should be ordered alphabetically within each file. When a file has logical sections (separated by comments), tests should be alphabetical within each section. Getter and setter functions are grouped together under the base name — ignore the `Get` or `Set` prefix when determining order (e.g. `Test_AppName` and `Test_SetAppName` both sort under `A`). Exceptions to alphabetical ordering can be made when it doesn't work well for readability or logical grouping.
+
 ### Table-Driven Test Conventions
 
 **Preferred: Map pattern** - uses `tc` for test case variable:
