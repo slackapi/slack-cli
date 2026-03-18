@@ -30,5 +30,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.slack.dev)"
     ]
+  },
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true
   }
 }
