@@ -224,7 +224,7 @@ func Test_Os_Setenv(t *testing.T) {
 			err := o.Setenv(tc.key, tc.value)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, o.Getenv(tc.key))
-			t.Cleanup(func() { o.Unsetenv(tc.key) })
+			t.Cleanup(func() { _ = o.Unsetenv(tc.key) })
 		})
 	}
 }
