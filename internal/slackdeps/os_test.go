@@ -191,17 +191,42 @@ func Test_Os_LookupEnv(t *testing.T) {
 	}
 }
 
-func Test_Os_SetenvUnsetenv(t *testing.T) {
-	o := NewOs()
-	key := "SLACK_TEST_OS_SETENV"
-
-	err := o.Setenv(key, "test_value")
-	require.NoError(t, err)
-	require.Equal(t, "test_value", o.Getenv(key))
-
-	err = o.Unsetenv(key)
-	require.NoError(t, err)
-	require.Equal(t, "", o.Getenv(key))
+func Test_Os_Setenv(t *testing.T) {
+	tests := map[string]struct {
+		key          string
+		value        string
+		initialValue string
+		expected     string
+	}{
+		"sets a new env var": {
+			key:      "SLACK_TEST_OS_SETENV_NEW",
+			value:    "hello",
+			expected: "hello",
+		},
+		"overwrites an existing env var": {
+			key:          "SLACK_TEST_OS_SETENV_OVERWRITE",
+			value:        "updated",
+			initialValue: "original",
+			expected:     "updated",
+		},
+		"sets an empty value": {
+			key:      "SLACK_TEST_OS_SETENV_EMPTY",
+			value:    "",
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := NewOs()
+			if tc.initialValue != "" {
+				t.Setenv(tc.key, tc.initialValue)
+			}
+			err := o.Setenv(tc.key, tc.value)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, o.Getenv(tc.key))
+			t.Cleanup(func() { o.Unsetenv(tc.key) })
+		})
+	}
 }
 
 func Test_Os_Stdout(t *testing.T) {
