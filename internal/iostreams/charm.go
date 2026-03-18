@@ -19,10 +19,12 @@ package iostreams
 
 import (
 	"context"
+	"errors"
 	"slices"
 
 	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
@@ -52,7 +54,9 @@ func buildInputForm(io *IOStreams, message string, cfg InputPromptConfig, input 
 func charmInputPrompt(io *IOStreams, _ context.Context, message string, cfg InputPromptConfig) (string, error) {
 	var input string
 	err := buildInputForm(io, message, cfg, &input).Run()
-	if err != nil {
+	if errors.Is(err, huh.ErrUserAborted) {
+		return "", slackerror.New(slackerror.ErrProcessInterrupted)
+	} else if err != nil {
 		return "", err
 	}
 	return input, nil
@@ -70,7 +74,9 @@ func buildConfirmForm(io *IOStreams, message string, choice *bool) *huh.Form {
 func charmConfirmPrompt(io *IOStreams, _ context.Context, message string, defaultValue bool) (bool, error) {
 	var choice = defaultValue
 	err := buildConfirmForm(io, message, &choice).Run()
-	if err != nil {
+	if errors.Is(err, huh.ErrUserAborted) {
+		return false, slackerror.New(slackerror.ErrProcessInterrupted)
+	} else if err != nil {
 		return false, err
 	}
 	return choice, nil
@@ -102,7 +108,9 @@ func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectProm
 func charmSelectPrompt(io *IOStreams, _ context.Context, msg string, options []string, cfg SelectPromptConfig) (SelectPromptResponse, error) {
 	var selected string
 	err := buildSelectForm(io, msg, options, cfg, &selected).Run()
-	if err != nil {
+	if errors.Is(err, huh.ErrUserAborted) {
+		return SelectPromptResponse{}, slackerror.New(slackerror.ErrProcessInterrupted)
+	} else if err != nil {
 		return SelectPromptResponse{}, err
 	}
 
@@ -127,7 +135,9 @@ func buildPasswordForm(io *IOStreams, message string, cfg PasswordPromptConfig, 
 func charmPasswordPrompt(io *IOStreams, _ context.Context, message string, cfg PasswordPromptConfig) (PasswordPromptResponse, error) {
 	var input string
 	err := buildPasswordForm(io, message, cfg, &input).Run()
-	if err != nil {
+	if errors.Is(err, huh.ErrUserAborted) {
+		return PasswordPromptResponse{}, slackerror.New(slackerror.ErrProcessInterrupted)
+	} else if err != nil {
 		return PasswordPromptResponse{}, err
 	}
 	return PasswordPromptResponse{Prompt: true, Value: input}, nil
@@ -152,7 +162,9 @@ func buildMultiSelectForm(io *IOStreams, message string, options []string, selec
 func charmMultiSelectPrompt(io *IOStreams, _ context.Context, message string, options []string) ([]string, error) {
 	var selected []string
 	err := buildMultiSelectForm(io, message, options, &selected).Run()
-	if err != nil {
+	if errors.Is(err, huh.ErrUserAborted) {
+		return []string{}, slackerror.New(slackerror.ErrProcessInterrupted)
+	} else if err != nil {
 		return []string{}, err
 	}
 	return selected, nil
