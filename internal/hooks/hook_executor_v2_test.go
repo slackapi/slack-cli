@@ -55,8 +55,8 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Env: map[string]string{
-					"batman": "robin",
-					"yin":    "yang",
+					"BATMAN": "robin hood",
+					"YIN":    "yang",
 				},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
@@ -68,8 +68,8 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.Equal(t, `{"message": "hello world"}`, response)
 				require.Equal(t, nil, err)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `batman="robin"`)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `yin="yang"`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `BATMAN=robin hood`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `YIN=yang`)
 			},
 		},
 		"successful execution with payload > 64kb": {
@@ -89,8 +89,8 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.Equal(t, sixtyFourKBString, response)
 				require.Equal(t, nil, err)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `batman="robin"`)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `yin="yang"`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `batman=robin`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `yin=yang`)
 			},
 		},
 		"successful execution with payload > 512kb": {
