@@ -14,19 +14,29 @@
 
 package iostreams
 
-// Charm-based prompt implementations using the huh library
-// These are used when the "charm" experiment is enabled
+// Charm-based prompt implementations using the huh library.
+// These are used when the "huh" experiment is enabled.
 
 import (
 	"context"
 	"slices"
 
 	huh "charm.land/huh/v2"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
+// newForm wraps a field in a huh form, applying the Slack theme when the lipgloss experiment is enabled.
+func newForm(io *IOStreams, field huh.Field) *huh.Form {
+	form := huh.NewForm(huh.NewGroup(field))
+	if io != nil && io.config.WithExperimentOn(experiment.Lipgloss) {
+		form = form.WithTheme(style.ThemeSlack())
+	}
+	return form
+}
+
 // buildInputForm constructs a huh form for text input prompts.
-func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.Form {
+func buildInputForm(io *IOStreams, message string, cfg InputPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
 		Prompt(style.Chevron() + " ").
@@ -35,13 +45,13 @@ func buildInputForm(message string, cfg InputPromptConfig, input *string) *huh.F
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))
 	}
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
+	return newForm(io, field)
 }
 
 // charmInputPrompt prompts for text input using a charm huh form
-func charmInputPrompt(_ *IOStreams, _ context.Context, message string, cfg InputPromptConfig) (string, error) {
+func charmInputPrompt(io *IOStreams, _ context.Context, message string, cfg InputPromptConfig) (string, error) {
 	var input string
-	err := buildInputForm(message, cfg, &input).Run()
+	err := buildInputForm(io, message, cfg, &input).Run()
 	if err != nil {
 		return "", err
 	}
@@ -49,17 +59,17 @@ func charmInputPrompt(_ *IOStreams, _ context.Context, message string, cfg Input
 }
 
 // buildConfirmForm constructs a huh form for yes/no confirmation prompts.
-func buildConfirmForm(message string, choice *bool) *huh.Form {
+func buildConfirmForm(io *IOStreams, message string, choice *bool) *huh.Form {
 	field := huh.NewConfirm().
 		Title(message).
 		Value(choice)
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
+	return newForm(io, field)
 }
 
 // charmConfirmPrompt prompts for a yes/no confirmation using a charm huh form
-func charmConfirmPrompt(_ *IOStreams, _ context.Context, message string, defaultValue bool) (bool, error) {
+func charmConfirmPrompt(io *IOStreams, _ context.Context, message string, defaultValue bool) (bool, error) {
 	var choice = defaultValue
-	err := buildConfirmForm(message, &choice).Run()
+	err := buildConfirmForm(io, message, &choice).Run()
 	if err != nil {
 		return false, err
 	}
@@ -67,7 +77,7 @@ func charmConfirmPrompt(_ *IOStreams, _ context.Context, message string, default
 }
 
 // buildSelectForm constructs a huh form for single-selection prompts.
-func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selected *string) *huh.Form {
+func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectPromptConfig, selected *string) *huh.Form {
 	var opts []huh.Option[string]
 	for _, opt := range options {
 		key := opt
@@ -85,13 +95,13 @@ func buildSelectForm(msg string, options []string, cfg SelectPromptConfig, selec
 		Options(opts...).
 		Value(selected)
 
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
+	return newForm(io, field)
 }
 
 // charmSelectPrompt prompts the user to select one option using a charm huh form
-func charmSelectPrompt(_ *IOStreams, _ context.Context, msg string, options []string, cfg SelectPromptConfig) (SelectPromptResponse, error) {
+func charmSelectPrompt(io *IOStreams, _ context.Context, msg string, options []string, cfg SelectPromptConfig) (SelectPromptResponse, error) {
 	var selected string
-	err := buildSelectForm(msg, options, cfg, &selected).Run()
+	err := buildSelectForm(io, msg, options, cfg, &selected).Run()
 	if err != nil {
 		return SelectPromptResponse{}, err
 	}
@@ -101,7 +111,7 @@ func charmSelectPrompt(_ *IOStreams, _ context.Context, msg string, options []st
 }
 
 // buildPasswordForm constructs a huh form for password (hidden input) prompts.
-func buildPasswordForm(message string, cfg PasswordPromptConfig, input *string) *huh.Form {
+func buildPasswordForm(io *IOStreams, message string, cfg PasswordPromptConfig, input *string) *huh.Form {
 	field := huh.NewInput().
 		Title(message).
 		Prompt(style.Chevron() + " ").
@@ -110,13 +120,13 @@ func buildPasswordForm(message string, cfg PasswordPromptConfig, input *string) 
 	if cfg.Required {
 		field.Validate(huh.ValidateMinLength(1))
 	}
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
+	return newForm(io, field)
 }
 
 // charmPasswordPrompt prompts for a password (hidden input) using a charm huh form
-func charmPasswordPrompt(_ *IOStreams, _ context.Context, message string, cfg PasswordPromptConfig) (PasswordPromptResponse, error) {
+func charmPasswordPrompt(io *IOStreams, _ context.Context, message string, cfg PasswordPromptConfig) (PasswordPromptResponse, error) {
 	var input string
-	err := buildPasswordForm(message, cfg, &input).Run()
+	err := buildPasswordForm(io, message, cfg, &input).Run()
 	if err != nil {
 		return PasswordPromptResponse{}, err
 	}
@@ -124,7 +134,7 @@ func charmPasswordPrompt(_ *IOStreams, _ context.Context, message string, cfg Pa
 }
 
 // buildMultiSelectForm constructs a huh form for multiple-selection prompts.
-func buildMultiSelectForm(message string, options []string, selected *[]string) *huh.Form {
+func buildMultiSelectForm(io *IOStreams, message string, options []string, selected *[]string) *huh.Form {
 	var opts []huh.Option[string]
 	for _, opt := range options {
 		opts = append(opts, huh.NewOption(opt, opt))
@@ -135,13 +145,13 @@ func buildMultiSelectForm(message string, options []string, selected *[]string) 
 		Options(opts...).
 		Value(selected)
 
-	return huh.NewForm(huh.NewGroup(field)).WithTheme(style.ThemeSlack())
+	return newForm(io, field)
 }
 
 // charmMultiSelectPrompt prompts the user to select multiple options using a charm huh form
-func charmMultiSelectPrompt(_ *IOStreams, _ context.Context, message string, options []string) ([]string, error) {
+func charmMultiSelectPrompt(io *IOStreams, _ context.Context, message string, options []string) ([]string, error) {
 	var selected []string
-	err := buildMultiSelectForm(message, options, &selected).Run()
+	err := buildMultiSelectForm(io, message, options, &selected).Run()
 	if err != nil {
 		return []string{}, err
 	}

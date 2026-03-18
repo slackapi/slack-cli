@@ -89,7 +89,7 @@ func (io *IOStreams) PrintInfo(ctx context.Context, shouldTrace bool, format str
 		span, _ := opentracing.StartSpanFromContext(ctx, "printInfo", opentracing.Tag{Key: "printInfo", Value: message})
 		defer span.Finish()
 	}
-	if style.IsCharmEnabled() {
+	if style.IsLipglossEnabled() {
 		io.Stdout.Println(message)
 	} else {
 		io.Stdout.Println(style.Styler().Reset(message))

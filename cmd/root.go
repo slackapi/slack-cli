@@ -300,7 +300,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
-	style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
+	style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
 	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
 	clients.Config.Version = clients.CLIVersion
 
