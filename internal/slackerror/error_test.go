@@ -265,6 +265,86 @@ func Test_Error(t *testing.T) {
 	}
 }
 
+func Test_Error_AppendMessage(t *testing.T) {
+	tests := map[string]struct {
+		initialMsg  string
+		msgToAppend string
+		expected    string
+	}{
+		"previously empty error message": {
+			initialMsg:  "",
+			msgToAppend: "hello world",
+			expected:    "hello world",
+		},
+		"previously non-empty messages": {
+			initialMsg:  "hello",
+			msgToAppend: "world",
+			expected:    "hello\nworld",
+		},
+		"appending an empty string": {
+			initialMsg:  "hello world",
+			msgToAppend: "",
+			expected:    "hello world",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := New("").WithMessage("%s", tc.initialMsg).AppendMessage(tc.msgToAppend)
+			require.Equal(t, tc.expected, err.Message)
+		})
+	}
+}
+
+func Test_Is(t *testing.T) {
+	tests := map[string]struct {
+		err       error
+		errorCode string
+		expected  bool
+	}{
+		"returns true when error contains the code": {
+			err:       New(ErrAccessDenied),
+			errorCode: ErrAccessDenied,
+			expected:  true,
+		},
+		"returns false when error does not contain the code": {
+			err:       New("some other error"),
+			errorCode: ErrAccessDenied,
+			expected:  false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := Is(tc.err, tc.errorCode)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func Test_IsErrorType(t *testing.T) {
+	tests := map[string]struct {
+		err      error
+		code     string
+		expected bool
+	}{
+		"matching error type returns true": {
+			err:      New(ErrAuthToken),
+			code:     ErrAuthToken,
+			expected: true,
+		},
+		"non-matching error type returns false": {
+			err:      errors.New("plain error"),
+			code:     ErrAuthToken,
+			expected: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := IsErrorType(tc.err, tc.code)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
 func Test_recursiveUnwrap(t *testing.T) {
 	err1 := Error{Code: "error1"}
 	err2 := Error{Code: "error2", Cause: &err1}
@@ -490,6 +570,66 @@ func Test_WithRootCause(t *testing.T) {
 			require.Contains(t, err.Error(), rootCauseErr.Message)
 			for _, d := range rootCauseErr.Details {
 				require.Contains(t, tc.err.Details, d) // see to it that all the details in rootCause were carried over
+			}
+		})
+	}
+}
+
+func Test_Wrap(t *testing.T) {
+	tests := map[string]struct {
+		cause   error
+		message string
+	}{
+		"wraps a known error": {
+			cause:   New("inner error"),
+			message: ErrAccessDenied,
+		},
+		"wraps an unknown error": {
+			cause:   errors.New("some standard error"),
+			message: "outer message",
+		},
+		"wraps with nil cause": {
+			cause:   nil,
+			message: "no cause",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := Wrap(tc.cause, tc.message)
+			require.NotNil(t, err)
+			require.Equal(t, tc.cause, err.Cause)
+		})
+	}
+}
+
+func Test_Wrapf(t *testing.T) {
+	tests := map[string]struct {
+		err      error
+		format   string
+		args     []any
+		expected bool
+	}{
+		"wraps non-nil error with formatted message": {
+			err:      errors.New("root cause"),
+			format:   "failed to %s: %d",
+			args:     []any{"deploy", 42},
+			expected: true,
+		},
+		"returns nil for nil error": {
+			err:      nil,
+			format:   "should not appear",
+			expected: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := Wrapf(tc.err, tc.format, tc.args...)
+			if tc.expected {
+				require.NotNil(t, result)
+				slackErr := result.(*Error)
+				require.Equal(t, tc.err, slackErr.Cause)
+			} else {
+				require.Nil(t, result)
 			}
 		})
 	}
