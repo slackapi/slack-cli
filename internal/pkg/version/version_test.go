@@ -28,7 +28,7 @@ func TestVersion(t *testing.T) {
 }
 
 // Test overriding the Version with an environment variable
-func TestGet(t *testing.T) {
+func Test_Get(t *testing.T) {
 	tests := map[string]struct {
 		version  string
 		expected string
@@ -60,7 +60,7 @@ func TestGet(t *testing.T) {
 	}
 }
 
-func TestRaw(t *testing.T) {
+func Test_Raw(t *testing.T) {
 	tests := map[string]struct {
 		version  string
 		expected string
