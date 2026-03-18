@@ -26,7 +26,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -63,7 +62,7 @@ type SystemConfigManager interface {
 
 // SystemConfig contains the system-level config file
 type SystemConfig struct {
-	Experiments         []experiment.Experiment `json:"experiments,omitempty"`
+	Experiments         map[string]bool         `json:"experiments,omitempty"`
 	LastUpdateCheckedAt time.Time               `json:"last_update_checked_at,omitempty"`
 	Surveys             map[string]SurveyConfig `json:"surveys,omitempty"`
 	SystemID            string                  `json:"system_id,omitempty"`
@@ -133,7 +132,11 @@ func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
 		return &config, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of system-level config file").
 			WithRootCause(err).
-			WithRemediation("Check that %s is valid JSON", style.HomePath(path))
+			WithRemediation(
+				"Check that %s is valid JSON. %s",
+				style.HomePath(path),
+				experimentsFormatHint,
+			)
 	}
 
 	if config.Surveys == nil {

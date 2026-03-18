@@ -63,7 +63,7 @@ type Config struct {
 
 	// Feature experiments
 	ExperimentsFlag []string
-	experiments     []experiment.Experiment
+	experiments     map[experiment.Experiment]bool
 
 	// Eventually this will also load the global and project slack config files
 	DomainAuthTokens string
