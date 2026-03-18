@@ -244,10 +244,10 @@ func TestStyleFlags(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ToggleStyles(tc.charmEnabled)
-			ToggleCharm(tc.charmEnabled)
+			ToggleLipgloss(tc.charmEnabled)
 			defer func() {
 				ToggleStyles(false)
-				ToggleCharm(false)
+				ToggleLipgloss(false)
 			}()
 			actual := StyleFlags(tc.input)
 			assert.Equal(t, tc.expectedFunc(), actual)
@@ -358,10 +358,10 @@ func Test_ExampleTemplatef(t *testing.T) {
 func Test_ExampleTemplatef_Charm(t *testing.T) {
 	defer func() {
 		ToggleStyles(false)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 	}()
 	ToggleStyles(true)
-	ToggleCharm(true)
+	ToggleLipgloss(true)
 
 	template := []string{
 		"# Create a new project from a selected template",

@@ -33,8 +33,8 @@ var isColorShown = isStyleEnabled
 // isLinkShown specifies if hyperlinks should be formatted
 var isLinkShown = isStyleEnabled
 
-// isCharmEnabled specifies if lipgloss/charm styling should be used instead of aurora
-var isCharmEnabled = false
+// isLipglossEnabled specifies if lipgloss styling should be used instead of aurora
+var isLipglossEnabled = false
 
 // RemoveANSI uses regex to strip ANSI colour codes
 //
@@ -66,14 +66,14 @@ func ToggleStyles(active bool) {
 	isLinkShown = active
 }
 
-// ToggleCharm enables lipgloss-based styling when set to true
-func ToggleCharm(active bool) {
-	isCharmEnabled = active
+// ToggleLipgloss enables lipgloss-based styling when set to true
+func ToggleLipgloss(active bool) {
+	isLipglossEnabled = active
 }
 
-// IsCharmEnabled reports whether lipgloss/charm styling is active
-func IsCharmEnabled() bool {
-	return isCharmEnabled
+// IsLipglossEnabled reports whether lipgloss styling is active
+func IsLipglossEnabled() bool {
+	return isLipglossEnabled
 }
 
 // render applies a lipgloss style to text, returning plain text when colors are disabled.
@@ -127,7 +127,7 @@ Color styles
 
 // Secondary dims the displayed text
 func Secondary(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacySecondary(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackDescriptionText), text)
@@ -135,7 +135,7 @@ func Secondary(text string) string {
 
 // CommandText emphasizes command text
 func CommandText(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyCommandText(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackBlue).Bold(true), text)
@@ -143,42 +143,42 @@ func CommandText(text string) string {
 
 // LinkText underlines and formats the provided path
 func LinkText(path string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyLinkText(path)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackPool).Underline(true), path)
 }
 
 func Selector(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacySelector(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackGreen).Bold(true), text)
 }
 
 func Error(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyError(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackRed).Bold(true), text)
 }
 
 func Warning(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyWarning(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackYellow).Bold(true), text)
 }
 
 func Header(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyHeader(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackAubergine).Bold(true), strings.ToUpper(text))
 }
 
 func Input(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyInput(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackBlue), text)
@@ -186,7 +186,7 @@ func Input(text string) string {
 
 // Green applies green color to text without bold
 func Green(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyGreen(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackGreen), text)
@@ -194,7 +194,7 @@ func Green(text string) string {
 
 // Red applies red color to text without bold
 func Red(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyRed(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackRedDark), text)
@@ -202,7 +202,7 @@ func Red(text string) string {
 
 // Yellow applies yellow color to text without bold
 func Yellow(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyYellow(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackYellow), text)
@@ -210,7 +210,7 @@ func Yellow(text string) string {
 
 // Gray applies a subdued gray color to text
 func Gray(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyGray(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackLegalGray), text)
@@ -222,7 +222,7 @@ Text styles
 
 // Bright is a strong bold version of the text
 func Bright(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyBright(text)
 	}
 	return render(lipgloss.NewStyle().Bold(true), text)
@@ -230,7 +230,7 @@ func Bright(text string) string {
 
 // Bold brightly emboldens the provided text
 func Bold(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyBold(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackOptionText).Bold(true), text)
@@ -238,7 +238,7 @@ func Bold(text string) string {
 
 // Darken adds a bold gray shade to text
 func Darken(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyDarken(text)
 	}
 	return render(lipgloss.NewStyle().Foreground(slackPlaceholderText).Bold(true), text)
@@ -249,7 +249,7 @@ func Faint(text string) string {
 	if !isColorShown {
 		return text
 	}
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyFaint(text)
 	}
 	return lipgloss.NewStyle().Faint(true).Render(text)
@@ -257,7 +257,7 @@ func Faint(text string) string {
 
 // Highlight adds emphasis to text
 func Highlight(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyHighlight(text)
 	}
 	return render(lipgloss.NewStyle().Bold(true), text)
@@ -265,7 +265,7 @@ func Highlight(text string) string {
 
 // Underline underscores the given text
 func Underline(text string) string {
-	if !isCharmEnabled {
+	if !isLipglossEnabled {
 		return legacyUnderline(text)
 	}
 	return render(lipgloss.NewStyle().Underline(true), text)
@@ -285,7 +285,7 @@ func Pluralize(singular string, plural string, count int) string {
 // DEPRECATED: Legacy aurora styling
 //
 // Delete this entire section, the aurora import, and the ANSI color constants
-// when the charm experiment is permanently enabled.
+// when the lipgloss experiment is permanently enabled.
 // ════════════════════════════════════════════════════════════════════════════════
 
 const (
