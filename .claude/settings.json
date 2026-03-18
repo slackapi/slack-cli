@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Bash(go build:*)",
       "Bash(go mod tidy:*)",
+      "Bash(go test:*)",
       "Bash(gofmt:*)",
       "Bash(gh issue view:*)",
       "Bash(gh label list:*)",
