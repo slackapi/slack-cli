@@ -28,6 +28,62 @@ func TestVersion(t *testing.T) {
 }
 
 // Test overriding the Version with an environment variable
+func Test_Get(t *testing.T) {
+	tests := map[string]struct {
+		version  string
+		expected string
+	}{
+		"adds v prefix when missing": {
+			version:  "1.2.3",
+			expected: "v1.2.3",
+		},
+		"keeps v prefix when present": {
+			version:  "v1.2.3",
+			expected: "v1.2.3",
+		},
+		"handles empty string": {
+			version:  "",
+			expected: "",
+		},
+		"handles version with pre-release": {
+			version:  "1.0.0-beta",
+			expected: "v1.0.0-beta",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			original := Version
+			defer func() { Version = original }()
+			Version = tc.version
+			assert.Equal(t, tc.expected, Get())
+		})
+	}
+}
+
+func Test_Raw(t *testing.T) {
+	tests := map[string]struct {
+		version  string
+		expected string
+	}{
+		"returns version unchanged with v prefix": {
+			version:  "v1.2.3",
+			expected: "v1.2.3",
+		},
+		"returns version unchanged without v prefix": {
+			version:  "1.2.3",
+			expected: "1.2.3",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			original := Version
+			defer func() { Version = original }()
+			Version = tc.version
+			assert.Equal(t, tc.expected, Raw())
+		})
+	}
+}
+
 func Test_EnvTestVersion(t *testing.T) {
 	// Setup
 	var _EnvTestVersion = os.Getenv(EnvTestVersion)
