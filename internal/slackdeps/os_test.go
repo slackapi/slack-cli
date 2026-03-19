@@ -15,6 +15,7 @@
 package slackdeps
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -80,4 +81,163 @@ func Test_Os_SetExecutionDir(t *testing.T) {
 			require.Equal(t, tc.expectedExecutionDirPathAbs, actualExecutionDirPathAbs)
 		})
 	}
+}
+
+func Test_Os_Getenv(t *testing.T) {
+	tests := map[string]struct {
+		key      string
+		value    string
+		expected string
+	}{
+		"returns set env var": {
+			key:      "SLACK_TEST_OS_GETENV",
+			value:    "hello",
+			expected: "hello",
+		},
+		"returns empty for unset env var": {
+			key:      "SLACK_TEST_OS_GETENV_UNSET",
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := NewOs()
+			if tc.value != "" {
+				t.Setenv(tc.key, tc.value)
+			}
+			require.Equal(t, tc.expected, o.Getenv(tc.key))
+		})
+	}
+}
+
+func Test_Os_Getwd(t *testing.T) {
+	o := NewOs()
+	dir, err := o.Getwd()
+	require.NoError(t, err)
+	require.NotEmpty(t, dir)
+}
+
+func Test_Os_Glob(t *testing.T) {
+	o := NewOs()
+	// Create a temp file to glob for
+	tmpDir := t.TempDir()
+	f, err := os.CreateTemp(tmpDir, "glob_test_*.txt")
+	require.NoError(t, err)
+	f.Close()
+
+	matches, err := o.Glob(tmpDir + "/*.txt")
+	require.NoError(t, err)
+	require.NotEmpty(t, matches)
+}
+
+func Test_Os_IsNotExist(t *testing.T) {
+	tests := map[string]struct {
+		err      error
+		expected bool
+	}{
+		"returns true for os.ErrNotExist": {
+			err:      os.ErrNotExist,
+			expected: true,
+		},
+		"returns false for other errors": {
+			err:      os.ErrPermission,
+			expected: false,
+		},
+		"returns false for nil": {
+			err:      nil,
+			expected: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := NewOs()
+			require.Equal(t, tc.expected, o.IsNotExist(tc.err))
+		})
+	}
+}
+
+func Test_Os_LookupEnv(t *testing.T) {
+	tests := map[string]struct {
+		key             string
+		value           string
+		setValue        bool
+		expectedValue   string
+		expectedPresent bool
+	}{
+		"returns value and true for set env var": {
+			key:             "SLACK_TEST_OS_LOOKUPENV",
+			value:           "present",
+			setValue:        true,
+			expectedValue:   "present",
+			expectedPresent: true,
+		},
+		"returns empty and false for unset env var": {
+			key:             "SLACK_TEST_OS_LOOKUPENV_UNSET",
+			setValue:        false,
+			expectedValue:   "",
+			expectedPresent: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := NewOs()
+			if tc.setValue {
+				t.Setenv(tc.key, tc.value)
+			}
+			val, present := o.LookupEnv(tc.key)
+			require.Equal(t, tc.expectedValue, val)
+			require.Equal(t, tc.expectedPresent, present)
+		})
+	}
+}
+
+func Test_Os_Setenv(t *testing.T) {
+	tests := map[string]struct {
+		key          string
+		value        string
+		initialValue string
+		expected     string
+	}{
+		"sets a new env var": {
+			key:      "SLACK_TEST_OS_SETENV_NEW",
+			value:    "hello",
+			expected: "hello",
+		},
+		"overwrites an existing env var": {
+			key:          "SLACK_TEST_OS_SETENV_OVERWRITE",
+			value:        "updated",
+			initialValue: "original",
+			expected:     "updated",
+		},
+		"sets an empty value": {
+			key:      "SLACK_TEST_OS_SETENV_EMPTY",
+			value:    "",
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			o := NewOs()
+			if tc.initialValue != "" {
+				t.Setenv(tc.key, tc.initialValue)
+			}
+			err := o.Setenv(tc.key, tc.value)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, o.Getenv(tc.key))
+			t.Cleanup(func() { _ = o.Unsetenv(tc.key) })
+		})
+	}
+}
+
+func Test_Os_Stdout(t *testing.T) {
+	o := NewOs()
+	stdout := o.Stdout()
+	require.NotNil(t, stdout)
+}
+
+func Test_Os_UserHomeDir(t *testing.T) {
+	o := NewOs()
+	home, err := o.UserHomeDir()
+	require.NoError(t, err)
+	require.NotEmpty(t, home)
 }

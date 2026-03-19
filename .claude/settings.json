@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Bash(go build:*)",
       "Bash(go mod tidy:*)",
+      "Bash(go test:*)",
       "Bash(gofmt:*)",
       "Bash(gh issue view:*)",
       "Bash(gh label list:*)",
@@ -28,5 +30,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.slack.dev)"
     ]
+  },
+  "enabledPlugins": {
+    "gopls-lsp@claude-plugins-official": true
   }
 }
