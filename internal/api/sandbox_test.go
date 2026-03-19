@@ -84,11 +84,11 @@ func TestClient_ListSandboxes_Ok(t *testing.T) {
 	sandboxes, err := c.ListSandboxes(ctx, "token", "")
 	require.NoError(t, err)
 	require.Len(t, sandboxes, 2)
-	require.Equal(t, "T1", sandboxes[0].SandboxTeamID)
-	require.Equal(t, "Sandbox 1", sandboxes[0].SandboxName)
-	require.Equal(t, "sb1", sandboxes[0].SandboxDomain)
+	require.Equal(t, "T1", sandboxes[0].TeamID)
+	require.Equal(t, "Sandbox 1", sandboxes[0].Name)
+	require.Equal(t, "sb1", sandboxes[0].Domain)
 	require.Equal(t, "active", sandboxes[0].Status)
-	require.Equal(t, "T2", sandboxes[1].SandboxTeamID)
+	require.Equal(t, "T2", sandboxes[1].TeamID)
 }
 
 func TestClient_ListSandboxes_Empty(t *testing.T) {

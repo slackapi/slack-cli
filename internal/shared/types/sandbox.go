@@ -18,8 +18,8 @@ package types
 type Sandbox struct {
 	DateArchived  int64  `json:"date_archived"`
 	DateCreated   int64  `json:"date_created"`
-	SandboxDomain string `json:"sandbox_domain"`
-	SandboxName   string `json:"sandbox_name"`
-	SandboxTeamID string `json:"sandbox_team_id"`
+	Domain     string `json:"sandbox_domain"`
+	Name       string `json:"sandbox_name"`
+	TeamID     string `json:"sandbox_team_id"`
 	Status        string `json:"status"`
 }

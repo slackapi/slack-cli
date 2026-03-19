@@ -58,9 +58,9 @@ func TestListCommand(t *testing.T) {
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				sandboxes := []types.Sandbox{
 					{
-						SandboxTeamID: "T123",
-						SandboxName:   "my-sandbox",
-						SandboxDomain: "my-sandbox",
+						TeamID: "T123",
+						Name:   "my-sandbox",
+						Domain: "my-sandbox",
 						Status:        "active",
 						DateCreated:   1700000000,
 						DateArchived:  0,
@@ -87,9 +87,9 @@ func TestListCommand(t *testing.T) {
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				sandboxes := []types.Sandbox{
 					{
-						SandboxTeamID: "T456",
-						SandboxName:   "old-sandbox",
-						SandboxDomain: "old-sandbox",
+						TeamID: "T456",
+						Name:   "old-sandbox",
+						Domain: "old-sandbox",
 						Status:        "archived",
 						DateCreated:   1700000000,
 						DateArchived:  1710000000,

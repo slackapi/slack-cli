@@ -110,10 +110,10 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 
 	timeFormat := "2006-01-02" // We only support the granularity of the day for now, rather than a more precise datetime
 	for _, s := range sandboxes {
-		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.SandboxName), s.SandboxTeamID)
+		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.Name), s.TeamID)
 
-		if s.SandboxDomain != "" {
-			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
+		if s.Domain != "" {
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.Domain)))
 		}
 
 		if s.Status != "" {

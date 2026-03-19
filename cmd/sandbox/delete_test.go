@@ -71,9 +71,9 @@ func TestDeleteCommand(t *testing.T) {
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(nil)
 				sandboxes := []types.Sandbox{
 					{
-						SandboxTeamID: "T456",
-						SandboxName:   "other-sandbox",
-						SandboxDomain: "other-sandbox",
+						TeamID:   "T456",
+						Name:     "other-sandbox",
+						Domain:   "other-sandbox",
 						Status:        "active",
 						DateCreated:   1700000000,
 						DateArchived:  0,
