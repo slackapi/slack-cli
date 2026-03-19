@@ -116,6 +116,8 @@ func Emoji(alias string) string {
 		padding = " "
 	case "wastebasket":
 		padding = " "
+	case "beach_with_umbrella":
+		padding = " "
 	}
 
 	return emoji.Sprint(":"+alias+":") + padding
