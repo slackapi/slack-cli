@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -32,7 +33,7 @@ type createFlags struct {
 	password    string
 	locale      string
 	owningOrgID string
-	template    string
+	templateID  int
 	eventCode   string
 	archiveTTL  string // TTL duration, e.g. 1d, 2h
 	archiveDate string // explicit date yyyy-mm-dd
@@ -63,7 +64,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain (e.g., pizzaknifefight). If not provided, derived from org name")
 	cmd.Flags().StringVar(&createCmdFlags.password, "password", "", "Password used to log into the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.locale, "locale", "", "Locale (eg. en-us, languageCode-countryCode)")
-	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template ID for pre-defined data to preload")
+	cmd.Flags().IntVar(&createCmdFlags.templateID, "template", 0, "Template ID for pre-defined data to preload")
 	cmd.Flags().StringVar(&createCmdFlags.eventCode, "event-code", "", "Event code for the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.archiveTTL, "archive-ttl", "", "Time-to-live duration; sandbox will be archived at end of day after this period (e.g., 2h, 1d, 7d)")
 	cmd.Flags().StringVar(&createCmdFlags.archiveDate, "archive-date", "", "Explicit archive date in yyyy-mm-dd format. Cannot be used with --archive")
@@ -91,7 +92,11 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 
 	domain := createCmdFlags.domain
 	if domain == "" {
-		domain = domainFromName(createCmdFlags.name)
+		var err error
+		domain, err = domainFromName(createCmdFlags.name)
+		if err != nil {
+			return err
+		}
 	}
 
 	if createCmdFlags.archiveTTL != "" && createCmdFlags.archiveDate != "" {
@@ -119,7 +124,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		createCmdFlags.password,
 		createCmdFlags.locale,
 		createCmdFlags.owningOrgID,
-		createCmdFlags.template,
+		createCmdFlags.templateID,
 		createCmdFlags.eventCode,
 		archiveEpochDatetime,
 	)
@@ -171,30 +176,22 @@ func getEpochFromDate(dateStr string) (int64, error) {
 }
 
 // domainFromName derives domain-safe text from the name of the sandbox (lowercase, alphanumeric + hyphens).
-func domainFromName(name string) string {
-	var b []byte
+func domainFromName(name string) (string, error) {
+	name = strings.ToLower(name)
+	name = strings.ReplaceAll(name, " ", "-")
+	name = strings.ReplaceAll(name, "_", "-")
+	var domain []byte
 	for _, r := range name {
-		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
-			b = append(b, byte(r))
-		} else if r >= 'A' && r <= 'Z' {
-			b = append(b, byte(r+32))
-		} else if r == ' ' || r == '-' || r == '_' {
-			if len(b) > 0 && b[len(b)-1] != '-' {
-				b = append(b, '-')
-			}
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '-' {
+			domain = append(domain, byte(r))
 		}
 	}
-	// Trim leading/trailing hyphens
-	for len(b) > 0 && b[0] == '-' {
-		b = b[1:]
+	domain = []byte(strings.Trim(string(domain), "-"))
+	if len(domain) == 0 {
+		return "", slackerror.New(slackerror.ErrInvalidArguments).
+			WithMessage("Provide a valid domain name with the --domain flag")
 	}
-	for len(b) > 0 && b[len(b)-1] == '-' {
-		b = b[:len(b)-1]
-	}
-	if len(b) == 0 {
-		return "sandbox"
-	}
-	return string(b)
+	return string(domain), nil
 }
 
 func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, teamID, url string) {

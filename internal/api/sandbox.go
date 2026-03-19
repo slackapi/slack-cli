@@ -26,55 +26,16 @@ import (
 )
 
 const (
-	sandboxListMethod   = "developer.sandbox.list"
 	sandboxCreateMethod = "enterprise.signup.createDevOrg"
 	sandboxDeleteMethod = "developer.sandbox.delete"
+	sandboxListMethod   = "developer.sandbox.list"
 )
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
-	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
-	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID, template, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error)
+	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
-}
-
-type listSandboxesResponse struct {
-	extendedBaseResponse
-	Sandboxes []types.Sandbox `json:"sandboxes"`
-}
-
-// ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
-func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListSandboxes")
-	defer span.Finish()
-
-	values := url.Values{}
-	values.Add("token", token)
-	if status != "" {
-		values.Add("status", status)
-	}
-
-	b, err := c.postForm(ctx, sandboxListMethod, values)
-	if err != nil {
-		return nil, errHTTPRequestFailed.WithRootCause(err)
-	}
-
-	resp := listSandboxesResponse{}
-	err = goutils.JSONUnmarshal(b, &resp)
-	if err != nil {
-		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxListMethod)
-	}
-
-	if !resp.Ok {
-		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxListMethod)
-	}
-
-	if resp.Sandboxes == nil {
-		return []types.Sandbox{}, nil
-	}
-
-	return resp.Sandboxes, nil
+	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
 }
 
 type createSandboxResponse struct {
@@ -84,8 +45,13 @@ type createSandboxResponse struct {
 	URL    string `json:"url"`
 }
 
+type listSandboxesResponse struct {
+	extendedBaseResponse
+	Sandboxes []types.Sandbox `json:"sandboxes"`
+}
+
 // CreateSandbox creates a new developer sandbox
-func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID, template, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error) {
+func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateSandbox")
 	defer span.Finish()
@@ -101,8 +67,8 @@ func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, passwor
 	if owningOrgID != "" {
 		values.Add("owning_org_id", owningOrgID)
 	}
-	if template != "" {
-		values.Add("template", template)
+	if templateID != 0 {
+		values.Add("template_id", strconv.Itoa(templateID))
 	}
 	if eventCode != "" {
 		values.Add("event_code", eventCode)
@@ -155,4 +121,38 @@ func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) err
 	}
 
 	return nil
+}
+
+// ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
+func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListSandboxes")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	if status != "" {
+		values.Add("status", status)
+	}
+
+	b, err := c.postForm(ctx, sandboxListMethod, values)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := listSandboxesResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxListMethod)
+	}
+
+	if !resp.Ok {
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxListMethod)
+	}
+
+	if resp.Sandboxes == nil {
+		return []types.Sandbox{}, nil
+	}
+
+	return resp.Sandboxes, nil
 }
