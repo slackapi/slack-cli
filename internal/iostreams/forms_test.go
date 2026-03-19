@@ -33,7 +33,7 @@ func key(r rune) tea.KeyPressMsg {
 	return tea.KeyPressMsg{Code: r, Text: string(r)}
 }
 
-func TestCharmInput(t *testing.T) {
+func TestInputForm(t *testing.T) {
 	t.Run("renders the title", func(t *testing.T) {
 		var input string
 		f := buildInputForm(nil, "Enter your name", InputPromptConfig{}, &input)
@@ -93,7 +93,7 @@ func TestCharmInput(t *testing.T) {
 	})
 }
 
-func TestCharmConfirm(t *testing.T) {
+func TestConfirmForm(t *testing.T) {
 	t.Run("renders the title and buttons", func(t *testing.T) {
 		choice := false
 		f := buildConfirmForm(nil, "Are you sure?", &choice)
@@ -128,7 +128,7 @@ func TestCharmConfirm(t *testing.T) {
 	})
 }
 
-func TestCharmSelect(t *testing.T) {
+func TestSelectForm(t *testing.T) {
 	t.Run("renders the title and options", func(t *testing.T) {
 		var selected string
 		options := []string{"Foo", "Bar", "Baz"}
@@ -210,7 +210,7 @@ func TestCharmSelect(t *testing.T) {
 	})
 }
 
-func TestCharmPassword(t *testing.T) {
+func TestPasswordForm(t *testing.T) {
 	t.Run("renders the title", func(t *testing.T) {
 		var input string
 		f := buildPasswordForm(nil, "Enter password", PasswordPromptConfig{}, &input)
@@ -259,7 +259,7 @@ func TestCharmPassword(t *testing.T) {
 	})
 }
 
-func TestCharmMultiSelect(t *testing.T) {
+func TestMultiSelectForm(t *testing.T) {
 	t.Run("renders the title and options", func(t *testing.T) {
 		var selected []string
 		options := []string{"Foo", "Bar", "Baz"}
@@ -305,7 +305,7 @@ func TestCharmMultiSelect(t *testing.T) {
 	})
 }
 
-func TestCharmFormsUseSlackTheme(t *testing.T) {
+func TestFormsUseSlackTheme(t *testing.T) {
 	fsMock := slackdeps.NewFsMock()
 	osMock := slackdeps.NewOsMock()
 	osMock.AddDefaultMocks()
@@ -364,7 +364,7 @@ func TestCharmFormsUseSlackTheme(t *testing.T) {
 	})
 }
 
-func TestCharmFormsWithoutLipgloss(t *testing.T) {
+func TestFormsWithoutLipgloss(t *testing.T) {
 	t.Run("multi-select uses default prefix without lipgloss", func(t *testing.T) {
 		var selected []string
 		f := buildMultiSelectForm(nil, "Pick", []string{"A", "B"}, &selected)
