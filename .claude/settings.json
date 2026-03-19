@@ -14,7 +14,6 @@
       "Bash(git fetch:*)",
       "Bash(git grep:*)",
       "Bash(git log:*)",
-      "Bash(git mv:*)",
       "Bash(git status:*)",
       "Bash(go build:*)",
       "Bash(go mod graph:*)",
