@@ -1,10 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(go build:*)",
-      "Bash(go mod tidy:*)",
-      "Bash(go test:*)",
-      "Bash(gofmt:*)",
       "Bash(gh issue view:*)",
       "Bash(gh label list:*)",
       "Bash(gh pr checks:*)",
@@ -18,17 +14,21 @@
       "Bash(git grep:*)",
       "Bash(git log:*)",
       "Bash(git status:*)",
+      "Bash(go build:*)",
       "Bash(go mod graph:*)",
       "Bash(go mod tidy:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(go test:*)",
+      "Bash(gofmt:*)",
       "Bash(grep:*)",
       "Bash(ls:*)",
-      "Bash(make build:*)",
       "Bash(make build-ci:*)",
+      "Bash(make build:*)",
       "Bash(make lint:*)",
       "Bash(make test:*)",
       "Bash(tree:*)",
-      "WebFetch(domain:github.com)",
-      "WebFetch(domain:docs.slack.dev)"
+      "WebFetch(domain:docs.slack.dev)",
+      "WebFetch(domain:github.com)"
     ]
   },
   "enabledPlugins": {
