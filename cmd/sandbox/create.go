@@ -177,7 +177,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 func getEpochFromTTL(ttl string) (int64, error) {
 	lower := strings.TrimSpace(strings.ToLower(ttl))
 	if lower == "" {
-		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+		return 0, slackerror.New(slackerror.ErrInvalidSandboxArchiveTTL)
 	}
 
 	var target time.Time
@@ -187,23 +187,23 @@ func getEpochFromTTL(ttl string) (int64, error) {
 	case strings.HasSuffix(lower, "d"):
 		n, err := strconv.Atoi(strings.TrimSuffix(lower, "d"))
 		if err != nil || n < 1 {
-			return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+			return 0, slackerror.New(slackerror.ErrInvalidSandboxArchiveTTL)
 		}
 		target = now.AddDate(0, 0, n)
 	case strings.HasSuffix(lower, "w"):
 		n, err := strconv.Atoi(strings.TrimSuffix(lower, "w"))
 		if err != nil || n < 1 {
-			return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+			return 0, slackerror.New(slackerror.ErrInvalidSandboxArchiveTTL)
 		}
 		target = now.AddDate(0, 0, n*7)
 	case strings.HasSuffix(lower, "mo"):
 		n, err := strconv.Atoi(strings.TrimSuffix(lower, "mo"))
 		if err != nil || n < 1 {
-			return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+			return 0, slackerror.New(slackerror.ErrInvalidSandboxArchiveTTL)
 		}
 		target = now.AddDate(0, n, 0)
 	default:
-		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+		return 0, slackerror.New(slackerror.ErrInvalidSandboxArchiveTTL)
 	}
 
 	return target.Unix(), nil
@@ -260,7 +260,7 @@ func getTemplateID(template string) (int, error) {
 	if id, err := strconv.Atoi(key); err == nil {
 		return id, nil
 	}
-	return 0, slackerror.New(slackerror.ErrInvalidTemplateID).
+	return 0, slackerror.New(slackerror.ErrInvalidSandboxTemplateID).
 		WithMessage("Invalid template: %q", template)
 }
 

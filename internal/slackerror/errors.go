@@ -161,7 +161,7 @@ const (
 	ErrInvalidTriggerEventType                       = "invalid_trigger_event_type"
 	ErrInvalidTriggerInputs                          = "invalid_trigger_inputs"
 	ErrInvalidTriggerType                            = "invalid_trigger_type"
-	ErrInvalidTemplateID                             = "invalid_template_id"
+	ErrInvalidSandboxTemplateID                      = "invalid_template_id"
 	ErrInvalidUserID                                 = "invalid_user_id"
 	ErrInvalidWebhookConfig                          = "invalid_webhook_config"
 	ErrInvalidWebhookSchemaRef                       = "invalid_webhook_schema_ref"
@@ -272,7 +272,7 @@ const (
 	ErrSandboxDomainTaken                            = "domain_taken"
 	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit"
 	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id"
-	ErrInvalidArchiveTTL                             = "invalid_archive_ttl"
+	ErrInvalidSandboxArchiveTTL                      = "invalid_archive_ttl"
 )
 
 var ErrorCodeMap = map[string]Error{
@@ -1048,8 +1048,8 @@ Otherwise start your app for local development with: %s`,
 		Message: "The provided trigger type is not recognized",
 	},
 
-	ErrInvalidTemplateID: {
-		Code:    ErrInvalidTemplateID,
+	ErrInvalidSandboxTemplateID: {
+		Code:    ErrInvalidSandboxTemplateID,
 		Message: "The provided sandbox template value is invalid",
 	},
 
@@ -1641,8 +1641,8 @@ Otherwise start your app for local development with: %s`,
 		Remediation: fmt.Sprintf("List your sandboxes with the %s command to find the ID", style.Commandf("sandbox list", false)),
 	},
 
-	ErrInvalidArchiveTTL: {
-		Code:        ErrInvalidArchiveTTL,
+	ErrInvalidSandboxArchiveTTL: {
+		Code:        ErrInvalidSandboxArchiveTTL,
 		Message:     "Invalid TTL",
 		Remediation: "Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo",
 	},
