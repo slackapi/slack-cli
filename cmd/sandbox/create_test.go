@@ -378,86 +378,286 @@ func TestCreateCommand(t *testing.T) {
 	})
 }
 
+func setupCreateMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, name, domain, password string, archiveEpoch interface{}, partner bool) {
+	t.Helper()
+	testToken := "xoxb-test-token"
+	cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
+	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
+	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+	cm.API.On("CreateSandbox", mock.Anything, testToken, name, domain, password, "", "", 0, "", archiveEpoch, partner).
+		Return("T222", "https://"+domain+".slack.com", nil)
+	cm.AddDefaultMocks()
+	cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
+	cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+}
+
+func setupCreateAuthOnly(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+	t.Helper()
+	testToken := "xoxb-test-token"
+	cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
+	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
+	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+	cm.AddDefaultMocks()
+	cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
+	cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+}
+
 func Test_getEpochFromTTL(t *testing.T) {
-	tests := []struct {
-		name    string
-		ttl     string
-		wantErr bool
-	}{
-		{"1d", "1d", false},
-		{"7d", "7d", false},
-		{"1w", "1w", false},
-		{"2w", "2w", false},
-		{"1mo", "1mo", false},
-		{"6mo", "6mo", false},
-		{"hours rejected", "12h", true},
-		{"7mo exceeds max", "7mo", true},
-		{"invalid", "invalid", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getEpochFromTTL(tt.ttl)
-			if tt.wantErr {
-				assert.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
-			assert.Greater(t, got, int64(0), "archive date should be in the future")
-		})
-	}
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"1d": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "1d",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "ttl-box", "ttl-box", "pass", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "ttl-box", "ttl-box", "pass", "", "", 0, "", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+		},
+		"7d": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "7d",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "ttl-box", "ttl-box", "pass", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "ttl-box", "ttl-box", "pass", "", "", 0, "", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+		},
+		"1w": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "1w",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "ttl-box", "ttl-box", "pass", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "ttl-box", "ttl-box", "pass", "", "", 0, "", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+		},
+		"2w": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "2w",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "ttl-box", "ttl-box", "pass", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "ttl-box", "ttl-box", "pass", "", "", 0, "", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+		},
+		"1mo": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "1mo",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "ttl-box", "ttl-box", "pass", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "ttl-box", "ttl-box", "pass", "", "", 0, "", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+		},
+		"6mo": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "6mo",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "ttl-box", "ttl-box", "pass", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "ttl-box", "ttl-box", "pass", "", "", 0, "", mock.MatchedBy(func(x int64) bool { return x > 0 }), false)
+			},
+		},
+		"hours rejected": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "12h",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateAuthOnly(t, ctx, cm)
+			},
+			ExpectedErrorStrings: []string{"Invalid TTL"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"7mo exceeds max": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "7mo",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateAuthOnly(t, ctx, cm)
+			},
+			ExpectedErrorStrings: []string{"Invalid TTL"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"invalid": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "ttl-box",
+				"--domain", "ttl-box",
+				"--password", "pass",
+				"--archive-ttl", "invalid",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateAuthOnly(t, ctx, cm)
+			},
+			ExpectedErrorStrings: []string{"Invalid TTL"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCreateCommand(cf)
+	})
 }
 
 func Test_getEpochFromDate(t *testing.T) {
 	validDate := time.Now().UTC().Add(7 * 24 * time.Hour).Truncate(24 * time.Hour)
 	validDateStr := validDate.Format("2006-01-02")
+	validEpoch := validDate.Unix()
 
-	tests := []struct {
-		name       string
-		dateStr    string
-		want       int64
-		wantErr    bool
-		errContain string
-	}{
-		{"valid", validDateStr, validDate.Unix(), false, ""},
-		{"invalid format", "12-31-2025", 0, true, "invalid"},
-		{"invalid date", "not-a-date", 0, true, "invalid"},
-		{"date in past", "2020-01-01", 0, true, "Archive date must be in the future"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dateStr := tt.dateStr
-			got, err := getEpochFromDate(dateStr)
-			if tt.wantErr {
-				assert.Error(t, err)
-				if tt.errContain != "" {
-					assert.ErrorContains(t, err, tt.errContain)
-				}
-				return
-			}
-			assert.NoError(t, err)
-			assert.Equal(t, tt.want, got)
-		})
-	}
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"valid": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "date-box",
+				"--domain", "date-box",
+				"--password", "pass",
+				"--archive-date", validDateStr,
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "date-box", "date-box", "pass", validEpoch, false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "date-box", "date-box", "pass", "", "", 0, "", validEpoch, false)
+			},
+		},
+		"invalid format": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "date-box",
+				"--domain", "date-box",
+				"--password", "pass",
+				"--archive-date", "12-31-2025",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateAuthOnly(t, ctx, cm)
+			},
+			ExpectedErrorStrings: []string{"Invalid archive date"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"invalid date": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "date-box",
+				"--domain", "date-box",
+				"--password", "pass",
+				"--archive-date", "not-a-date",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateAuthOnly(t, ctx, cm)
+			},
+			ExpectedErrorStrings: []string{"Invalid archive date"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"date in past": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--name", "date-box",
+				"--domain", "date-box",
+				"--password", "pass",
+				"--archive-date", "2020-01-01",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateAuthOnly(t, ctx, cm)
+			},
+			ExpectedErrorStrings: []string{"Archive date must be in the future"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCreateCommand(cf)
+	})
 }
 
 func Test_getTemplateID(t *testing.T) {
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		in      string
 		want    int
 		wantErr bool
 	}{
-		{"empty string", "", 0, false},
-		{"default", "default", 1, false},
-		{"empty", "empty", 0, false},
-		{"default case insensitive", "Default", 1, false},
-		{"default case insensitive uppercase", "DEFAULT", 1, false},
-		{"empty case insensitive", "Empty", 0, false},
-		{"empty case insensitive uppercase", "EMPTY", 0, false},
-		{"invalid", "invalid", 0, true},
+		"empty string":                    {"", 0, false},
+		"default":                         {"default", 1, false},
+		"empty":                           {"empty", 0, false},
+		"default case insensitive":        {"Default", 1, false},
+		"default case insensitive uppercase": {"DEFAULT", 1, false},
+		"empty case insensitive":          {"Empty", 0, false},
+		"empty case insensitive uppercase": {"EMPTY", 0, false},
+		"invalid":                         {"invalid", 0, true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			got, err := getTemplateID(tt.in)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -470,21 +670,20 @@ func Test_getTemplateID(t *testing.T) {
 }
 
 func Test_domainFromName(t *testing.T) {
-	tests := []struct {
-		name    string
+	tests := map[string]struct {
 		in      string
 		want    string
 		wantErr bool
 	}{
-		{"simple", "test-box", "test-box", false},
-		{"spaces", "My Test Box", "my-test-box", false},
-		{"uppercase", "MyBox", "mybox", false},
-		{"mixed", "Hello_World 123", "hello-world-123", false},
-		{"leading trailing", "-test-", "test", false},
-		{"empty", "", "", true},
+		"simple":           {"test-box", "test-box", false},
+		"spaces":           {"My Test Box", "my-test-box", false},
+		"uppercase":        {"MyBox", "mybox", false},
+		"mixed":            {"Hello_World 123", "hello-world-123", false},
+		"leading trailing": {"-test-", "test", false},
+		"empty":            {"", "", true},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
 			got, err := domainFromName(tt.in)
 			if tt.wantErr {
 				assert.Error(t, err)
