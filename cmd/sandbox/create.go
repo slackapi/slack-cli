@@ -69,12 +69,12 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&createCmdFlags.name, "name", "", "Organization name for the new sandbox")
-	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain. If not provided, will be derived from org name")
+	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain. Derived from org name if not provided")
 	cmd.Flags().StringVar(&createCmdFlags.password, "password", "", "Password used to log into the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.locale, "locale", "", "Locale (eg. en-us, languageCode-countryCode)")
-	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template for pre-defined data to preload (default, empty)")
+	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template with sample data to apply to the sandbox (default, empty)")
 	cmd.Flags().StringVar(&createCmdFlags.eventCode, "event-code", "", "Event code for the sandbox")
-	cmd.Flags().StringVar(&createCmdFlags.archiveTTL, "archive-ttl", "", "Time-to-live duration; sandbox will be archived at end of day after this period (eg. 1d, 3w, 2mo). Cannot be used with --archive-date")
+	cmd.Flags().StringVar(&createCmdFlags.archiveTTL, "archive-ttl", "", "Time-to-live duration (eg. 1d, 3w, 2mo). Cannot be used with --archive-date")
 	cmd.Flags().StringVar(&createCmdFlags.archiveDate, "archive-date", "", "Explicit archive date in yyyy-mm-dd format. Cannot be used with --archive-ttl")
 	cmd.Flags().BoolVar(&createCmdFlags.partner, "partner", false, "Developers who are part of the Partner program can create partner sandboxes")
 
