@@ -48,9 +48,9 @@ New to the Developer Program? Sign up at
 		},
 	}
 
-	cmd.AddCommand(NewListCommand(clients))
 	cmd.AddCommand(NewCreateCommand(clients))
 	cmd.AddCommand(NewDeleteCommand(clients))
+	cmd.AddCommand(NewListCommand(clients))
 
 	return cmd
 }

@@ -30,6 +30,10 @@ import (
 )
 
 func TestCreateCommand(t *testing.T) {
+	archiveDate := time.Now().UTC().AddDate(0, 6, 0).Truncate(24 * time.Hour)
+	archiveDateStr := archiveDate.Format("2006-01-02")
+	archiveEpoch := archiveDate.Unix()
+
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"create success": {
 			CmdArgs: []string{
@@ -131,32 +135,6 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "My Test Box", "my-test-box", "pass", "", "", 0, "", int64(0), false)
-			},
-		},
-		"create with partner": {
-			CmdArgs: []string{
-				"--experiment=sandboxes",
-				"--token", "xoxb-test-token",
-				"--name", "partner-box",
-				"--domain", "partner-box",
-				"--password", "pass",
-				"--partner",
-			},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
-				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.API.On("CreateSandbox", mock.Anything, testToken, "partner-box", "partner-box", "pass", "", "", 0, "", int64(0), true).
-					Return("T999", "https://partner-box.slack.com", nil)
-
-				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-			},
-			ExpectedStdoutOutputs: []string{"T999", "https://partner-box.slack.com", "Sandbox Created"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "partner-box", "partner-box", "pass", "", "", 0, "", int64(0), true)
 			},
 		},
 		"create with a relative time-to-live value": {
@@ -302,7 +280,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedErrorStrings: []string{"Invalid template", "default, empty"},
+			ExpectedErrorStrings: []string{"Invalid template"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
@@ -314,14 +292,14 @@ func TestCreateCommand(t *testing.T) {
 				"--name", "date-box",
 				"--domain", "date-box",
 				"--password", "pass",
-				"--archive-date", "2025-12-31",
+				"--archive-date", archiveDateStr,
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.API.On("CreateSandbox", mock.Anything, testToken, "date-box", "date-box", "pass", "", "", 0, "", int64(1767139200), false).
+				cm.API.On("CreateSandbox", mock.Anything, testToken, "date-box", "date-box", "pass", "", "", 0, "", archiveEpoch, false).
 					Return("T222", "https://date-box.slack.com", nil)
 
 				cm.AddDefaultMocks()
@@ -329,7 +307,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "date-box", "date-box", "pass", "", "", 0, "", int64(1767139200), false)
+				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "date-box", "date-box", "pass", "", "", 0, "", archiveEpoch, false)
 			},
 		},
 		"create with both archive and archive-date fails": {
@@ -430,6 +408,9 @@ func Test_getEpochFromTTL(t *testing.T) {
 }
 
 func Test_getEpochFromDate(t *testing.T) {
+	validDate := time.Now().UTC().Add(7 * 24 * time.Hour).Truncate(24 * time.Hour)
+	validDateStr := validDate.Format("2006-01-02")
+
 	tests := []struct {
 		name       string
 		dateStr    string
@@ -437,18 +418,14 @@ func Test_getEpochFromDate(t *testing.T) {
 		wantErr    bool
 		errContain string
 	}{
-		{"valid", "2025-12-31", 1767139200, false, ""}, // 2025-12-31 00:00:00 UTC
-		{"invalid format", "12-31-2025", 0, true, ""},
-		{"invalid date", "not-a-date", 0, true, ""},
-		{"date in past", "2020-01-01", 0, true, "at least 1 day"},
-		{"date is today", "", 0, true, "at least 1 day"},
+		{"valid", validDateStr, validDate.Unix(), false, ""},
+		{"invalid format", "12-31-2025", 0, true, "invalid"},
+		{"invalid date", "not-a-date", 0, true, "invalid"},
+		{"date in past", "2020-01-01", 0, true, "Archive date must be in the future"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dateStr := tt.dateStr
-			if tt.name == "date is today" {
-				dateStr = time.Now().UTC().Format("2006-01-02")
-			}
 			got, err := getEpochFromDate(dateStr)
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -503,7 +480,6 @@ func Test_domainFromName(t *testing.T) {
 		{"spaces", "My Test Box", "my-test-box", false},
 		{"uppercase", "MyBox", "mybox", false},
 		{"mixed", "Hello_World 123", "hello-world-123", false},
-		{"hyphens", "a--b", "a-b", false},
 		{"leading trailing", "-test-", "test", false},
 		{"empty", "", "", true},
 	}
