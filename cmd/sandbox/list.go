@@ -92,7 +92,7 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 
 	section := style.TextSection{
 		Emoji: "beach_with_umbrella",
-		Text:  " Developer Sandboxes",
+		Text:  "Developer Sandboxes",
 	}
 
 	// Some users' logins may not include the scope needed to access the email address from the `users.info` method, so it may not be set

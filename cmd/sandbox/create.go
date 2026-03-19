@@ -256,7 +256,7 @@ func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, teamI
 	ctx := cmd.Context()
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "beach_with_umbrella",
-		Text:  " Sandbox Created",
+		Text:  "Sandbox Created",
 		Secondary: []string{
 			fmt.Sprintf("Team ID: %s", teamID),
 			fmt.Sprintf("URL: %s", url),
