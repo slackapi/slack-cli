@@ -430,7 +430,13 @@ func Test_externalAuthResultToString(t *testing.T) {
 					"provider_key": "google",
 				},
 			},
-			expectedResults: []string{"Auth completed", "U123", "T123", "A123", "google"},
+			expectedResults: []string{
+				"Auth completed",
+				"U123",
+				"T123",
+				"A123",
+				"google",
+			},
 		},
 		"failed auth result with error details": {
 			activity: api.Activity{
@@ -444,7 +450,12 @@ func Test_externalAuthResultToString(t *testing.T) {
 					"extra_message": "token expired",
 				},
 			},
-			expectedResults: []string{"Auth failed", "U123", "invalid_grant", "token expired"},
+			expectedResults: []string{
+				"Auth failed",
+				"U123",
+				"invalid_grant",
+				"token expired",
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -472,7 +483,13 @@ func Test_externalAuthStartedToString(t *testing.T) {
 					"provider_key": "google",
 				},
 			},
-			expectedResults: []string{"Auth start succeeded", "U123", "T123", "A123", "google"},
+			expectedResults: []string{
+				"Auth start succeeded",
+				"U123",
+				"T123",
+				"A123",
+				"google",
+			},
 		},
 		"failed auth start with error code": {
 			activity: api.Activity{
@@ -485,7 +502,11 @@ func Test_externalAuthStartedToString(t *testing.T) {
 					"code":         "auth_failed",
 				},
 			},
-			expectedResults: []string{"Auth start failed", "U123", "auth_failed"},
+			expectedResults: []string{
+				"Auth start failed",
+				"U123",
+				"auth_failed",
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -513,7 +534,13 @@ func Test_externalAuthTokenFetchResult(t *testing.T) {
 					"provider_key": "google",
 				},
 			},
-			expectedResults: []string{"Token fetch succeeded", "U123", "T123", "A123", "google"},
+			expectedResults: []string{
+				"Token fetch succeeded",
+				"U123",
+				"T123",
+				"A123",
+				"google",
+			},
 		},
 		"failed token fetch with error code": {
 			activity: api.Activity{
@@ -526,7 +553,11 @@ func Test_externalAuthTokenFetchResult(t *testing.T) {
 					"code":         "token_revoked",
 				},
 			},
-			expectedResults: []string{"Token fetch failed", "U123", "token_revoked"},
+			expectedResults: []string{
+				"Token fetch failed",
+				"U123",
+				"token_revoked",
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -587,7 +618,10 @@ func Test_functionExecutionResultToString(t *testing.T) {
 				},
 				Created: 1686939542000000,
 			},
-			expectedResults: []string{"Function 'my_function' (custom function) completed", "Trace=trace1"},
+			expectedResults: []string{
+				"Function 'my_function' (custom function) completed",
+				"Trace=trace1",
+			},
 		},
 		"failed function execution with error": {
 			activity: api.Activity{
@@ -601,7 +635,10 @@ func Test_functionExecutionResultToString(t *testing.T) {
 				},
 				Created: 1686939542000000,
 			},
-			expectedResults: []string{"Function 'my_function' (custom function) failed", "something went wrong"},
+			expectedResults: []string{
+				"Function 'my_function' (custom function) failed",
+				"something went wrong",
+			},
 		},
 		"fatal function execution": {
 			activity: api.Activity{
@@ -673,7 +710,10 @@ func Test_workflowBillingResultToString(t *testing.T) {
 				},
 				Created: 1686939542000000,
 			},
-			expectedResults: []string{"Workflow 'My Workflow'", "billing reason 'execution'"},
+			expectedResults: []string{
+				"Workflow 'My Workflow'",
+				"billing reason 'execution'",
+			},
 		},
 		"billing result without workflow name": {
 			activity: api.Activity{
@@ -683,7 +723,10 @@ func Test_workflowBillingResultToString(t *testing.T) {
 					"billing_reason":    "execution",
 				},
 			},
-			expectedResults: []string{"Workflow", "billing reason 'execution'"},
+			expectedResults: []string{
+				"Workflow",
+				"billing reason 'execution'",
+			},
 		},
 		"excluded from billing": {
 			activity: api.Activity{
@@ -693,7 +736,10 @@ func Test_workflowBillingResultToString(t *testing.T) {
 					"is_billing_result": false,
 				},
 			},
-			expectedResults: []string{"Workflow 'My Workflow'", "excluded from billing"},
+			expectedResults: []string{
+				"Workflow 'My Workflow'",
+				"excluded from billing",
+			},
 		},
 	}
 	for name, tc := range tests {
@@ -759,7 +805,10 @@ func Test_workflowExecutionResultToString(t *testing.T) {
 					"error":         "step failed",
 				},
 			},
-			expectedResults: []string{"Workflow 'My Workflow' failed", "step failed"},
+			expectedResults: []string{
+				"Workflow 'My Workflow' failed",
+				"step failed",
+			},
 		},
 		"fatal workflow execution": {
 			activity: api.Activity{
