@@ -15,12 +15,15 @@
 package iostreams
 
 import (
+	"context"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	huh "charm.land/huh/v2"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,7 +36,7 @@ func key(r rune) tea.KeyPressMsg {
 func TestCharmInput(t *testing.T) {
 	t.Run("renders the title", func(t *testing.T) {
 		var input string
-		f := buildInputForm("Enter your name", InputPromptConfig{}, &input)
+		f := buildInputForm(nil, "Enter your name", InputPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -42,7 +45,7 @@ func TestCharmInput(t *testing.T) {
 
 	t.Run("renders the chevron prompt", func(t *testing.T) {
 		var input string
-		f := buildInputForm("Name?", InputPromptConfig{}, &input)
+		f := buildInputForm(nil, "Name?", InputPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -51,7 +54,7 @@ func TestCharmInput(t *testing.T) {
 
 	t.Run("accepts typed input", func(t *testing.T) {
 		var input string
-		f := buildInputForm("Name?", InputPromptConfig{}, &input)
+		f := buildInputForm(nil, "Name?", InputPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		f.Update(key('H'))
@@ -64,7 +67,7 @@ func TestCharmInput(t *testing.T) {
 
 	t.Run("renders placeholder text", func(t *testing.T) {
 		var input string
-		f := buildInputForm("Name?", InputPromptConfig{Placeholder: "my-cool-app"}, &input)
+		f := buildInputForm(nil, "Name?", InputPromptConfig{Placeholder: "my-cool-app"}, &input)
 		f.Update(f.Init())
 
 		// In huh v2, the cursor overlays the first placeholder character,
@@ -77,7 +80,7 @@ func TestCharmInput(t *testing.T) {
 
 	t.Run("stores typed value", func(t *testing.T) {
 		var input string
-		f := buildInputForm("Name?", InputPromptConfig{}, &input)
+		f := buildInputForm(nil, "Name?", InputPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		f.Update(key('t'))
@@ -93,7 +96,7 @@ func TestCharmInput(t *testing.T) {
 func TestCharmConfirm(t *testing.T) {
 	t.Run("renders the title and buttons", func(t *testing.T) {
 		choice := false
-		f := buildConfirmForm("Are you sure?", &choice)
+		f := buildConfirmForm(nil, "Are you sure?", &choice)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -104,7 +107,7 @@ func TestCharmConfirm(t *testing.T) {
 
 	t.Run("default value is respected", func(t *testing.T) {
 		choice := true
-		f := buildConfirmForm("Continue?", &choice)
+		f := buildConfirmForm(nil, "Continue?", &choice)
 		f.Update(f.Init())
 
 		assert.True(t, choice)
@@ -112,7 +115,7 @@ func TestCharmConfirm(t *testing.T) {
 
 	t.Run("toggle changes value", func(t *testing.T) {
 		choice := false
-		f := buildConfirmForm("Continue?", &choice)
+		f := buildConfirmForm(nil, "Continue?", &choice)
 		f.Update(f.Init())
 
 		// Toggle to Yes
@@ -129,7 +132,7 @@ func TestCharmSelect(t *testing.T) {
 	t.Run("renders the title and options", func(t *testing.T) {
 		var selected string
 		options := []string{"Foo", "Bar", "Baz"}
-		f := buildSelectForm("Pick one", options, SelectPromptConfig{}, &selected)
+		f := buildSelectForm(nil, "Pick one", options, SelectPromptConfig{}, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -142,7 +145,7 @@ func TestCharmSelect(t *testing.T) {
 	t.Run("cursor starts on first option", func(t *testing.T) {
 		var selected string
 		options := []string{"Foo", "Bar"}
-		f := buildSelectForm("Pick one", options, SelectPromptConfig{}, &selected)
+		f := buildSelectForm(nil, "Pick one", options, SelectPromptConfig{}, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -152,7 +155,7 @@ func TestCharmSelect(t *testing.T) {
 	t.Run("cursor navigation moves selection", func(t *testing.T) {
 		var selected string
 		options := []string{"Foo", "Bar", "Baz"}
-		f := buildSelectForm("Pick one", options, SelectPromptConfig{}, &selected)
+		f := buildSelectForm(nil, "Pick one", options, SelectPromptConfig{}, &selected)
 		f.Update(f.Init())
 
 		m, _ := f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
@@ -164,7 +167,7 @@ func TestCharmSelect(t *testing.T) {
 	t.Run("submit selects the hovered option", func(t *testing.T) {
 		var selected string
 		options := []string{"Foo", "Bar", "Baz"}
-		f := buildSelectForm("Pick one", options, SelectPromptConfig{}, &selected)
+		f := buildSelectForm(nil, "Pick one", options, SelectPromptConfig{}, &selected)
 		f.Update(f.Init())
 
 		// Move down to Bar, then submit
@@ -185,7 +188,7 @@ func TestCharmSelect(t *testing.T) {
 				return ""
 			},
 		}
-		f := buildSelectForm("Choose", options, cfg, &selected)
+		f := buildSelectForm(nil, "Choose", options, cfg, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -196,7 +199,7 @@ func TestCharmSelect(t *testing.T) {
 		var selected string
 		options := []string{"A", "B", "C", "D", "E", "F", "G", "H"}
 		cfg := SelectPromptConfig{PageSize: 3}
-		f := buildSelectForm("Pick", options, cfg, &selected)
+		f := buildSelectForm(nil, "Pick", options, cfg, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -210,7 +213,7 @@ func TestCharmSelect(t *testing.T) {
 func TestCharmPassword(t *testing.T) {
 	t.Run("renders the title", func(t *testing.T) {
 		var input string
-		f := buildPasswordForm("Enter password", PasswordPromptConfig{}, &input)
+		f := buildPasswordForm(nil, "Enter password", PasswordPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -219,7 +222,7 @@ func TestCharmPassword(t *testing.T) {
 
 	t.Run("renders the chevron prompt", func(t *testing.T) {
 		var input string
-		f := buildPasswordForm("Enter password", PasswordPromptConfig{}, &input)
+		f := buildPasswordForm(nil, "Enter password", PasswordPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -228,7 +231,7 @@ func TestCharmPassword(t *testing.T) {
 
 	t.Run("typed characters are masked in view", func(t *testing.T) {
 		var input string
-		f := buildPasswordForm("Password", PasswordPromptConfig{}, &input)
+		f := buildPasswordForm(nil, "Password", PasswordPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		f.Update(key('s'))
@@ -244,7 +247,7 @@ func TestCharmPassword(t *testing.T) {
 
 	t.Run("stores typed value despite masking", func(t *testing.T) {
 		var input string
-		f := buildPasswordForm("Password", PasswordPromptConfig{}, &input)
+		f := buildPasswordForm(nil, "Password", PasswordPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		f.Update(key('a'))
@@ -260,7 +263,7 @@ func TestCharmMultiSelect(t *testing.T) {
 	t.Run("renders the title and options", func(t *testing.T) {
 		var selected []string
 		options := []string{"Foo", "Bar", "Baz"}
-		f := buildMultiSelectForm("Pick many", options, &selected)
+		f := buildMultiSelectForm(nil, "Pick many", options, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -273,7 +276,7 @@ func TestCharmMultiSelect(t *testing.T) {
 	t.Run("toggle selection with x key", func(t *testing.T) {
 		var selected []string
 		options := []string{"Foo", "Bar"}
-		f := buildMultiSelectForm("Pick", options, &selected)
+		f := buildMultiSelectForm(nil, "Pick", options, &selected)
 		f.Update(f.Init())
 
 		// Toggle first item
@@ -287,7 +290,7 @@ func TestCharmMultiSelect(t *testing.T) {
 	t.Run("submit returns toggled items", func(t *testing.T) {
 		var selected []string
 		options := []string{"Foo", "Bar", "Baz"}
-		f := buildMultiSelectForm("Pick", options, &selected)
+		f := buildMultiSelectForm(nil, "Pick", options, &selected)
 		f.Update(f.Init())
 
 		// Toggle Foo (first item)
@@ -303,9 +306,17 @@ func TestCharmMultiSelect(t *testing.T) {
 }
 
 func TestCharmFormsUseSlackTheme(t *testing.T) {
+	fsMock := slackdeps.NewFsMock()
+	osMock := slackdeps.NewOsMock()
+	osMock.AddDefaultMocks()
+	cfg := config.NewConfig(fsMock, osMock)
+	cfg.ExperimentsFlag = []string{"lipgloss"}
+	cfg.LoadExperiments(context.Background(), func(_ context.Context, _ string, _ ...any) {})
+	io := NewIOStreams(cfg, fsMock, osMock)
+
 	t.Run("input form uses Slack theme", func(t *testing.T) {
 		var input string
-		f := buildInputForm("Test", InputPromptConfig{}, &input)
+		f := buildInputForm(io, "Test", InputPromptConfig{}, &input)
 		f.Update(f.Init())
 
 		// The Slack theme applies a thick left border with bright aubergine color.
@@ -317,7 +328,7 @@ func TestCharmFormsUseSlackTheme(t *testing.T) {
 
 	t.Run("select form renders themed cursor", func(t *testing.T) {
 		var selected string
-		f := buildSelectForm("Pick", []string{"A", "B"}, SelectPromptConfig{}, &selected)
+		f := buildSelectForm(io, "Pick", []string{"A", "B"}, SelectPromptConfig{}, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -326,7 +337,7 @@ func TestCharmFormsUseSlackTheme(t *testing.T) {
 
 	t.Run("multi-select form renders themed prefixes", func(t *testing.T) {
 		var selected []string
-		f := buildMultiSelectForm("Pick", []string{"A", "B"}, &selected)
+		f := buildMultiSelectForm(io, "Pick", []string{"A", "B"}, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
@@ -340,15 +351,27 @@ func TestCharmFormsUseSlackTheme(t *testing.T) {
 		var b bool
 		var ss []string
 		forms := []*huh.Form{
-			buildInputForm("msg", InputPromptConfig{}, &s),
-			buildConfirmForm("msg", &b),
-			buildSelectForm("msg", []string{"a"}, SelectPromptConfig{}, &s),
-			buildPasswordForm("msg", PasswordPromptConfig{}, &s),
-			buildMultiSelectForm("msg", []string{"a"}, &ss),
+			buildInputForm(io, "msg", InputPromptConfig{}, &s),
+			buildConfirmForm(io, "msg", &b),
+			buildSelectForm(io, "msg", []string{"a"}, SelectPromptConfig{}, &s),
+			buildPasswordForm(io, "msg", PasswordPromptConfig{}, &s),
+			buildMultiSelectForm(io, "msg", []string{"a"}, &ss),
 		}
 		for _, f := range forms {
 			f.Update(f.Init())
 			assert.NotEmpty(t, f.View())
 		}
+	})
+}
+
+func TestCharmFormsWithoutLipgloss(t *testing.T) {
+	t.Run("multi-select uses default prefix without lipgloss", func(t *testing.T) {
+		var selected []string
+		f := buildMultiSelectForm(nil, "Pick", []string{"A", "B"}, &selected)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		// Without lipgloss the Slack theme is not applied, so "[ ]" should not appear
+		assert.NotContains(t, view, "[ ]")
 	})
 }

@@ -6,13 +6,16 @@ The Slack CLI has an experiment (`-e`) flag behind which we put features current
 
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
-- `charm`: shows beautiful prompts ([PR#348](https://github.com/slackapi/slack-cli/pull/348)).
+- `huh`: shows beautiful prompts.
+- `lipgloss`: shows pretty styles.
 - `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
+- `templates`: brings more agent templates to the `create` command.
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
 
+- **March 2026**: Split the `charm` experiment into more beautiful `huh` prompts and prettier `lipgloss` styles for ongoing change.
 - **March 2026**: Concluded the `bolt` and `bolt-install` experiments with full Bolt framework support now enabled by default in the Slack CLI. All Bolt project features including remote manifest management are now standard functionality. See the announcement [here](https://slack.dev/slackcli-supports-bolt-apps/).
 - **February 2026**: Added the `charm` experiment.
 - **December 2025**: Concluded the `read-only-collaborators` experiment with full support introduced to the Slack CLI. See the changelog announcement [here](https://docs.slack.dev/changelog/2025/12/04/slack-cli).

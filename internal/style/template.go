@@ -57,7 +57,7 @@ func getTemplateFuncs() template.FuncMap {
 			if len(experiments) == 0 {
 				return ExampleTemplatef("None")
 			}
-			if isCharmEnabled {
+			if isLipglossEnabled {
 				styled := make([]string, len(experiments))
 				for i, exp := range experiments {
 					styled[i] = "  " + Red(exp)
@@ -108,45 +108,45 @@ func getTemplateFuncs() template.FuncMap {
 		"trimTrailingWhitespaces": func(s string) string {
 			return strings.TrimRightFunc(s, unicode.IsSpace)
 		},
-		// Charm-only template functions — return plain text when charm is off
+		// Lipgloss-only template functions — return plain text when lipgloss is off
 		"ToDescription": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return Secondary(text)
 		},
 		"ToSecondary": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return Secondary(text)
 		},
 		"ToPrompt": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return Yellow(text)
 		},
 		"ToGroupName": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return Warning(text)
 		},
 		"ToAliasParent": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return Red(text)
 		},
 		"ToDarken": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return Darken(text)
 		},
 		"ToFlags": func(text string) string {
-			if !isCharmEnabled {
+			if !isLipglossEnabled {
 				return text
 			}
 			return StyleFlags(text)

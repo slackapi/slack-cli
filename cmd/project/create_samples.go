@@ -67,7 +67,7 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 	sortedRepos := sortRepos(filteredRepos)
 	selectOptions := make([]string, len(sortedRepos))
 	for i, r := range sortedRepos {
-		if !clients.Config.WithExperimentOn(experiment.Charm) {
+		if !clients.Config.WithExperimentOn(experiment.Huh) {
 			selectOptions[i] = fmt.Sprint(i+1, ". ", r.Name)
 		} else {
 			selectOptions[i] = r.Name
@@ -78,7 +78,7 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 	selection, err = clients.IO.SelectPrompt(ctx, "Select a sample to build upon:", selectOptions, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
 			desc := sortedRepos[index].Description
-			if !clients.Config.WithExperimentOn(experiment.Charm) {
+			if !clients.Config.WithExperimentOn(experiment.Huh) {
 				desc += "\n  https://github.com/" + sortedRepos[index].FullName
 			}
 			return desc

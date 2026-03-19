@@ -35,7 +35,7 @@ func HelpFunc(
 		if help, _ := clients.Config.Flags.GetBool("help"); help {
 			clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 		}
-		style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
+		style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
 		experiments := []string{}
 		for _, exp := range clients.Config.GetExperiments() {
 			if experiment.Includes(exp) {
@@ -68,7 +68,7 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 	}
 	cmd.Long = cmdLongF.String()
 	tmpl := legacyHelpTemplate
-	if style.IsCharmEnabled() {
+	if style.IsLipglossEnabled() {
 		tmpl = charmHelpTemplate
 	}
 	err = style.PrintTemplate(cmd.OutOrStdout(), tmpl, templateInfo{cmd, data})
@@ -121,7 +121,7 @@ const charmHelpTemplate string = `{{.Long | ToDescription}}
 // ════════════════════════════════════════════════════════════════════════════════
 // DEPRECATED: Legacy help template — aurora styling
 //
-// Delete this entire block when the charm experiment is permanently enabled.
+// Delete this entire block when the lipgloss experiment is permanently enabled.
 // ════════════════════════════════════════════════════════════════════════════════
 
 const legacyHelpTemplate string = `{{.Long}}
