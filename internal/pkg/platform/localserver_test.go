@@ -140,13 +140,14 @@ func Test_LocalServer_Start(t *testing.T) {
 				TeamID:         "justiceleague",
 			}
 			server := LocalServer{
-				clients,
-				"ABC123",
-				localContext,
-				clients.SDKConfig,
-				conn,
-				nil,
-				sync.Mutex{},
+				clients:            clients,
+				token:              "ABC123",
+				localHostedContext: localContext,
+				cliConfig:          clients.SDKConfig,
+				appPath:            "",
+				Connection:         conn,
+				delegateCmd:        nil,
+				delegateCmdMutex:   sync.Mutex{},
 			}
 			if tc.fakeDialer != nil {
 				orig := *WebsocketDialerDial
@@ -349,13 +350,14 @@ func Test_LocalServer_Listen(t *testing.T) {
 				TeamID:         "justiceleague",
 			}
 			server := LocalServer{
-				clients,
-				"ABC123",
-				localContext,
-				clients.SDKConfig,
-				conn,
-				nil,
-				sync.Mutex{},
+				clients:            clients,
+				token:              "ABC123",
+				localHostedContext: localContext,
+				cliConfig:          clients.SDKConfig,
+				appPath:            "",
+				Connection:         conn,
+				delegateCmd:        nil,
+				delegateCmdMutex:   sync.Mutex{},
 			}
 			tc.Test(t, ctx, clientsMock, &server, conn)
 		})

@@ -47,13 +47,14 @@ var runAppSelectPromptFunc = prompts.AppSelectPrompt
 
 func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "run",
+		Use:     "run [app-path]",
 		Aliases: []string{"dev", "start-dev"}, // Aliases a few proposed alternative names
 		Short:   "Start a local server to develop and run the app locally",
 		Long:    `Start a local server to develop and run the app locally while watching for file changes`,
+		Args:    cobra.MaximumNArgs(1),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "platform run", Meaning: "Start a local development server"},
-			{Command: "platform run --activity-level debug", Meaning: "Run a local development server with debug activity"},
+			{Command: "platform run ./src/app.py", Meaning: "Run a local development server with a custom app entry point"},
 			{Command: "platform run --cleanup", Meaning: "Run a local development server with cleanup"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -96,6 +97,16 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 	}
 	ctx := cmd.Context()
 
+	var appPath string
+	if len(args) > 0 {
+		appPath = args[0]
+		if _, err := clients.Fs.Stat(appPath); err != nil {
+			return slackerror.New(slackerror.ErrNotFound).
+				WithMessage("The app path %q could not be found", appPath).
+				WithRemediation("Check that the file exists and the path is correct")
+		}
+	}
+
 	// Get the workspace from the flag or prompt
 	selection, err := runAppSelectPromptFunc(ctx, clients, prompts.ShowLocalOnly, prompts.ShowAllApps)
 	if err != nil {
@@ -136,6 +147,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		Activity:            !runFlags.noActivity,
 		ActivityLevel:       runFlags.activityLevel,
 		App:                 selection.App,
+		AppPath:             appPath,
 		Auth:                selection.Auth,
 		Cleanup:             runFlags.cleanup,
 		ShowTriggers:        triggers.ShowTriggers(clients, runFlags.hideTriggers),
