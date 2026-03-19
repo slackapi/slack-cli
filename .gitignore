@@ -19,7 +19,10 @@ environments.yaml
 # macOS
 .DS_Store
 
-# For GoLand users
+# Git
+.worktrees/
+
+# Goland project files
 .idea/
 
 # goreleaser

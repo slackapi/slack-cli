@@ -231,7 +231,7 @@ func ExampleTemplatef(template string) string {
 	for _, cmd := range lines {
 		example := ""
 		if cmd != "" {
-			if isCharmEnabled {
+			if isLipglossEnabled {
 				example = fmt.Sprintf("  %s", styleExampleLine(cmd))
 			} else {
 				styled := reComment.ReplaceAllStringFunc(cmd, Secondary)
