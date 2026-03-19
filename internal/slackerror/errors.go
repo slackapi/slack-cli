@@ -270,6 +270,7 @@ const (
 	ErrWorkflowNotFound                              = "workflow_not_found"
 	ErrYaml                                          = "yaml_error"
 	ErrSandboxDomainTaken                            = "domain_taken"
+	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit"
 	ErrInvalidArchiveTTL                             = "invalid_archive_ttl"
 )
 
@@ -1626,6 +1627,11 @@ Otherwise start your app for local development with: %s`,
 	ErrSandboxDomainTaken: {
 		Code:    ErrSandboxDomainTaken,
 		Message: "This domain has been claimed by another sandbox",
+	},
+
+	ErrAtActiveSandboxLimit: {
+		Code:    ErrAtActiveSandboxLimit,
+		Message: "You've reached the maximum number of active sandboxes",
 	},
 
 	ErrInvalidArchiveTTL: {

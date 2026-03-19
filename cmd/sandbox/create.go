@@ -21,6 +21,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -98,13 +99,6 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	// If one's developer account is managed by multiple Production Slack teams, one of those team IDs must be provided in the command
 	cmd.Flags().StringVar(&createCmdFlags.owningOrgID, "owning-org-id", "", "Enterprise team ID that manages your developer account, if applicable")
 
-	if err := cmd.MarkFlagRequired("name"); err != nil {
-		panic(err)
-	}
-	if err := cmd.MarkFlagRequired("password"); err != nil {
-		panic(err)
-	}
-
 	return cmd
 }
 
@@ -116,10 +110,38 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
+	name := createCmdFlags.name
+	if name == "" {
+		name, err = clients.IO.InputPrompt(
+			ctx,
+			"Enter a name for the sandbox",
+			iostreams.InputPromptConfig{
+				Required: true,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	password := createCmdFlags.password
+	if password == "" {
+		password, err = clients.IO.InputPrompt(
+			ctx,
+			"Enter a password for the sandbox",
+			iostreams.InputPromptConfig{
+				Required: true,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	domain := createCmdFlags.domain
 	if domain == "" {
 		var err error
-		domain, err = domainFromName(createCmdFlags.name)
+		domain, err = domainFromName(name)
 		if err != nil {
 			return err
 		}
@@ -149,9 +171,9 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	}
 
 	teamID, sandboxURL, err := clients.API().CreateSandbox(ctx, auth.Token,
-		createCmdFlags.name,
+		name,
 		domain,
-		createCmdFlags.password,
+		password,
 		createCmdFlags.locale,
 		createCmdFlags.owningOrgID,
 		templateID,
@@ -170,7 +192,6 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 
 // getEpochFromTTL parses a time-to-live string (e.g., "1d", "2w", "3mo") and returns the Unix epoch
 // when the sandbox will be archived. Supports days (d), weeks (w), and months (mo).
-// Minimum is 1 day, maximum is 6 months.
 func getEpochFromTTL(ttl string) (int64, error) {
 	lower := strings.TrimSpace(strings.ToLower(ttl))
 	if lower == "" {
@@ -206,7 +227,7 @@ func getEpochFromTTL(ttl string) (int64, error) {
 	return target.Unix(), nil
 }
 
-// getEpochFromDate parses a date in yyyy-mm-dd format and returns the Unix epoch at start of that day (UTC).
+// getEpochFromDate parses a date in yyyy-mm-dd format and returns the Unix epoch at the start of that day (UTC)
 func getEpochFromDate(dateStr string) (int64, error) {
 	dateFormat := "2006-01-02"
 	t, err := time.ParseInLocation(dateFormat, dateStr, time.UTC)
