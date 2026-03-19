@@ -384,6 +384,238 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 	}
 }
 
+func Test_prettifyActivity_allEventTypes(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"DatastoreRequestResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.DatastoreRequestResult,
+				Payload: map[string]interface{}{
+					"request_type":   "get",
+					"datastore_name": "DS1",
+					"details":        "id: 123",
+				},
+			},
+			expectedResults: []string{"Datastore get succeeded"},
+		},
+		"ExternalAuthMissingFunction routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthMissingFunction,
+				Payload: map[string]interface{}{
+					"function_id": "fn1",
+				},
+			},
+			expectedResults: []string{"Step function 'fn1' is missing"},
+		},
+		"ExternalAuthMissingSelectedAuth routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthMissingSelectedAuth,
+				Payload: map[string]interface{}{
+					"code": "wf1",
+				},
+			},
+			expectedResults: []string{"Missing mapped token for workflow 'wf1'"},
+		},
+		"ExternalAuthResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"Auth completed"},
+		},
+		"ExternalAuthStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthStarted,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"Auth start succeeded"},
+		},
+		"ExternalAuthTokenFetchResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthTokenFetchResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"Token fetch succeeded"},
+		},
+		"FunctionDeployment routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionDeployment,
+				Payload: map[string]interface{}{
+					"action":  "deploye",
+					"user_id": "U1",
+					"team_id": "T1",
+				},
+				Created: 1686939542000000,
+			},
+			expectedResults: []string{"Application deployed"},
+		},
+		"FunctionExecutionOutput routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionExecutionOutput,
+				Payload: map[string]interface{}{
+					"log": "output here",
+				},
+			},
+			expectedResults: []string{"Function output:"},
+		},
+		"TriggerPayloadReceived routes correctly": {
+			activity: api.Activity{
+				EventType: types.TriggerPayloadReceived,
+				Payload: map[string]interface{}{
+					"log": "payload here",
+				},
+			},
+			expectedResults: []string{"Trigger payload:"},
+		},
+		"FunctionExecutionResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionExecutionResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"Function 'fn1' (custom function) completed"},
+		},
+		"FunctionExecutionStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionExecutionStarted,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"Function 'fn1' (custom function) started"},
+		},
+		"TriggerExecuted routes correctly": {
+			activity: api.Activity{
+				EventType: types.TriggerExecuted,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+				},
+			},
+			expectedResults: []string{"Trigger successfully started execution"},
+		},
+		"WorkflowBillingResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowBillingResult,
+				Payload: map[string]interface{}{
+					"workflow_name":     "wf1",
+					"is_billing_result": false,
+				},
+			},
+			expectedResults: []string{"excluded from billing"},
+		},
+		"WorkflowBotInvited routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowBotInvited,
+				Payload: map[string]interface{}{
+					"channel_id":  "C1",
+					"bot_user_id": "B1",
+				},
+			},
+			expectedResults: []string{"Channel C1 detected"},
+		},
+		"WorkflowCreatedFromTemplate routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowCreatedFromTemplate,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+					"template_id":   "tmpl1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' created from template 'tmpl1'"},
+		},
+		"WorkflowExecutionResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowExecutionResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' completed"},
+		},
+		"WorkflowExecutionStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowExecutionStarted,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' started"},
+		},
+		"WorkflowPublished routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowPublished,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' published"},
+		},
+		"WorkflowStepExecutionResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowStepExecutionResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+				},
+			},
+			expectedResults: []string{"Workflow step 'fn1' completed"},
+		},
+		"WorkflowStepStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowStepStarted,
+				Payload: map[string]interface{}{
+					"current_step": float64(1),
+					"total_steps":  float64(3),
+				},
+			},
+			expectedResults: []string{"Workflow step 1 of 3 started"},
+		},
+		"WorkflowUnpublished routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowUnpublished,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' unpublished"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := prettifyActivity(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
 func Test_datastoreRequestResultToString(t *testing.T) {
 	for name, tc := range map[string]struct {
 		activity        api.Activity
