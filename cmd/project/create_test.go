@@ -16,13 +16,9 @@ package project
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	tea "charm.land/bubbletea/v2"
-	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -180,6 +176,34 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since name was provided as arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
+			},
+		},
+		"creates a pydantic ai agent app with templates experiment": {
+			CmdArgs: []string{"my-pydantic-app"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.AddDefaultMocks()
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "templates")
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0}, nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil)
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-support-agent")
+				require.NoError(t, err)
+				template.SetSubdir("pydantic-ai")
+				expected := create.CreateArgs{
+					AppName:  "my-pydantic-app",
+					Template: template,
+					Subdir:   "pydantic-ai",
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 			},
 		},
 		"creates an app named agent when template flag is provided": {
@@ -559,68 +583,6 @@ func TestCreateCommand(t *testing.T) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
-		"creates a bolt application with charm dynamic form": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.IO.On("IsTTY").Unset()
-				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("InputPrompt", mock.Anything, "Name your app:", mock.Anything).
-					Return("my-charm-app", nil)
-				// Enable the charm experiment
-				cm.Config.ExperimentsFlag = []string{string(experiment.Charm)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-				// Override runForm to simulate form completion without a terminal
-				runForm = func(f *huh.Form) error {
-					doAllUpdates(f, f.Init())
-					// Select first category (Starter app) then first template (Bolt for JS)
-					_, cmd := f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-					doAllUpdates(f, cmd)
-					_, cmd = f.Update(tea.KeyPressMsg{Code: tea.KeyEnter})
-					doAllUpdates(f, cmd)
-					return nil
-				}
-				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
-				CreateFunc = createClientMock.Create
-			},
-			Teardown: func() {
-				runForm = func(f *huh.Form) error { return f.Run() }
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
-				require.NoError(t, err)
-				expected := create.CreateArgs{
-					AppName:  "my-charm-app",
-					Template: template,
-				}
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
-				// Verify that the survey-based SelectPrompt for category was NOT called
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
-			},
-		},
-		"charm dynamic form returns error": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.IO.On("IsTTY").Unset()
-				cm.IO.On("IsTTY").Return(true)
-				// Enable the charm experiment
-				cm.Config.ExperimentsFlag = []string{string(experiment.Charm)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-				// Override runForm to return an error
-				runForm = func(f *huh.Form) error {
-					return fmt.Errorf("user cancelled")
-				}
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			Teardown: func() {
-				runForm = func(f *huh.Form) error { return f.Run() }
-			},
-			ExpectedErrorStrings: []string{"user cancelled"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
 		"lists agent templates with agent --list flag": {
 			CmdArgs: []string{"agent", "--list"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -629,6 +591,60 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{
 				"AI Agent apps",
+				"slack-samples/bolt-js-assistant-template",
+				"slack-samples/bolt-python-assistant-template",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				output := cm.GetCombinedOutput()
+				assert.NotContains(t, output, "Getting started")
+				assert.NotContains(t, output, "Automation apps")
+			},
+		},
+		"lists all templates with --list flag and templates experiment": {
+			CmdArgs: []string{"--list"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.AddDefaultMocks()
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "templates")
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedOutputs: []string{
+				"Getting started",
+				"slack-samples/bolt-js-starter-template",
+				"slack-samples/bolt-python-starter-template",
+				"Support agent",
+				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
+				"Custom agent",
+				"slack-samples/bolt-js-assistant-template",
+				"slack-samples/bolt-python-assistant-template",
+				"Automation apps",
+				"slack-samples/bolt-js-custom-function-template",
+				"slack-samples/bolt-python-custom-function-template",
+				"slack-samples/deno-starter-template",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"lists agent templates with agent --list flag and templates experiment": {
+			CmdArgs: []string{"agent", "--list"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.AddDefaultMocks()
+				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "templates")
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedOutputs: []string{
+				"Support agent",
+				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
+				"Custom agent",
 				"slack-samples/bolt-js-assistant-template",
 				"slack-samples/bolt-python-assistant-template",
 			},

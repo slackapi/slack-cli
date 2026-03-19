@@ -22,7 +22,6 @@ import (
 	"strings"
 	"syscall"
 
-	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -148,10 +147,6 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	var clients *shared.ClientFactory
 	// updateNotification will check for an update in the background and print a message after the command runs
 	var updateNotification *update.UpdateNotification
-
-	// Override huh's default user abort error with a Slack CLI error so that
-	// cancelled prompts are handled consistently as process interruptions.
-	huh.ErrUserAborted = slackerror.New(slackerror.ErrProcessInterrupted)
 
 	clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
 	rootCmd := NewRootCommand(clients, updateNotification)
@@ -300,7 +295,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
-	style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
+	style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
 	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
 	clients.Config.Version = clients.CLIVersion
 

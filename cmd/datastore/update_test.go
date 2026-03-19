@@ -195,8 +195,8 @@ func TestUpdateCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task_id':", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("8888")
-				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{})
+				}).Return("8888", nil)
+				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{}, nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
@@ -223,14 +223,14 @@ func TestUpdateCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task_id':", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("0000")
-				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{"status", "task"})
+				}).Return("0000", nil)
+				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{"status", "task"}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'status':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("")
+				}).Return("", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("")
+				}).Return("", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
@@ -259,11 +259,11 @@ func TestUpdateCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task_id':", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("1234")
-				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{"status"})
+				}).Return("1234", nil)
+				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{"status"}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'status':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("getting closer")
+				}).Return("getting closer", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
@@ -291,14 +291,14 @@ func TestUpdateCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task_id':", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("9999")
-				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{"task", "status"})
+				}).Return("9999", nil)
+				clientsMock.IO.On("MultiSelectPrompt", mock.Anything, "Select fields to update", mock.Anything).Return([]string{"task", "status"}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("relax")
+				}).Return("relax", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'status':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("always")
+				}).Return("always", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]

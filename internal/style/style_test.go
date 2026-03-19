@@ -58,6 +58,36 @@ func TestRemoveANSI(t *testing.T) {
 	}
 }
 
+func TestRemoveEmoji(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"plain text is unchanged": {
+			input:    "A simple description",
+			expected: "A simple description",
+		},
+		"emoji flags are removed": {
+			input:    "A translation bot 🇨🇳 🇮🇹 🇹🇭 🇫🇷",
+			expected: "A translation bot",
+		},
+		"mixed emoji and text": {
+			input:    "Hello 🌍 world 🚀 test",
+			expected: "Hello world test",
+		},
+		"empty string": {
+			input:    "",
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := RemoveEmoji(tc.input)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
 func TestToggleStyles(t *testing.T) {
 	defer func() {
 		ToggleStyles(false)
@@ -118,18 +148,18 @@ func TestPluralize(t *testing.T) {
 	}
 }
 
-func TestToggleCharm(t *testing.T) {
+func TestToggleLipgloss(t *testing.T) {
 	tests := map[string]struct {
 		initial  bool
 		toggle   bool
 		expected bool
 	}{
-		"enables charm styling": {
+		"enables lipgloss styling": {
 			initial:  false,
 			toggle:   true,
 			expected: true,
 		},
-		"disables charm styling": {
+		"disables lipgloss styling": {
 			initial:  true,
 			toggle:   false,
 			expected: false,
@@ -137,10 +167,10 @@ func TestToggleCharm(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			isCharmEnabled = tc.initial
-			defer func() { isCharmEnabled = false }()
-			ToggleCharm(tc.toggle)
-			assert.Equal(t, tc.expected, isCharmEnabled)
+			isLipglossEnabled = tc.initial
+			defer func() { isLipglossEnabled = false }()
+			ToggleLipgloss(tc.toggle)
+			assert.Equal(t, tc.expected, isLipglossEnabled)
 		})
 	}
 }
@@ -151,28 +181,28 @@ func testStyleFunc(t *testing.T, name string, fn func(string) string) {
 	t.Helper()
 	defer func() {
 		ToggleStyles(false)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 	}()
 
 	input := "hello"
 
 	t.Run(name+" returns plain text when colors are off", func(t *testing.T) {
 		ToggleStyles(false)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 		result := fn(input)
 		assert.Equal(t, input, RemoveANSI(result))
 	})
 
 	t.Run(name+" returns styled text with legacy aurora", func(t *testing.T) {
 		ToggleStyles(true)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 		result := fn(input)
 		assert.Contains(t, RemoveANSI(result), input)
 	})
 
 	t.Run(name+" returns styled text with charm lipgloss", func(t *testing.T) {
 		ToggleStyles(true)
-		ToggleCharm(true)
+		ToggleLipgloss(true)
 		result := fn(input)
 		assert.Contains(t, RemoveANSI(result), input)
 	})
@@ -203,19 +233,19 @@ func TestTextStyleFunctions(t *testing.T) {
 func TestHeader(t *testing.T) {
 	defer func() {
 		ToggleStyles(false)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 	}()
 
 	t.Run("uppercases text", func(t *testing.T) {
 		ToggleStyles(true)
-		ToggleCharm(true)
+		ToggleLipgloss(true)
 		result := Header("commands")
 		assert.Contains(t, RemoveANSI(result), "COMMANDS")
 	})
 
 	t.Run("uppercases text with legacy", func(t *testing.T) {
 		ToggleStyles(true)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 		result := Header("commands")
 		assert.Contains(t, RemoveANSI(result), "COMMANDS")
 	})
@@ -224,7 +254,7 @@ func TestHeader(t *testing.T) {
 func TestFaint(t *testing.T) {
 	defer func() {
 		ToggleStyles(false)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 	}()
 
 	t.Run("returns plain text when colors are off", func(t *testing.T) {
@@ -235,7 +265,7 @@ func TestFaint(t *testing.T) {
 
 	t.Run("returns styled text with legacy", func(t *testing.T) {
 		ToggleStyles(true)
-		ToggleCharm(false)
+		ToggleLipgloss(false)
 		result := Faint("hello")
 		assert.Contains(t, result, "hello")
 		assert.NotEqual(t, "hello", result)
@@ -243,7 +273,7 @@ func TestFaint(t *testing.T) {
 
 	t.Run("returns styled text with charm", func(t *testing.T) {
 		ToggleStyles(true)
-		ToggleCharm(true)
+		ToggleLipgloss(true)
 		result := Faint("hello")
 		assert.Contains(t, RemoveANSI(result), "hello")
 	})

@@ -245,7 +245,7 @@ func TestQueryCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter an expression", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("")
+				}).Return("", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
@@ -269,7 +269,7 @@ func TestQueryCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter an expression", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("#task_id < :num AND #task_id <> :zero AND #notes = :progress")
+				}).Return("#task_id < :num AND #task_id <> :zero AND #notes = :progress", nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an attribute for '#notes'", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("attributes"),
 				})).Return(iostreams.SelectPromptResponse{
@@ -286,13 +286,13 @@ func TestQueryCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for ':num'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("3")
+				}).Return("3", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for ':zero'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("0")
+				}).Return("0", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for ':progress'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("wip")
+				}).Return("wip", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
@@ -464,4 +464,56 @@ func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsTo
 		}
 	}
 	return data, nil
+}
+
+func Test_getExpressionPatterns(t *testing.T) {
+	tests := map[string]struct {
+		expression string
+		wantAttrs  int
+		wantVals   int
+	}{
+		"expression with attributes and values": {
+			expression: "#name = :name AND #status = :status",
+			wantAttrs:  2,
+			wantVals:   2,
+		},
+		"empty expression": {
+			expression: "",
+			wantAttrs:  0,
+			wantVals:   0,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			attrs, vals := getExpressionPatterns(tc.expression)
+			assert.Len(t, attrs, tc.wantAttrs)
+			assert.Len(t, vals, tc.wantVals)
+		})
+	}
+}
+
+func Test_mapAttributeFlag(t *testing.T) {
+	tests := map[string]struct {
+		flag    string
+		wantErr bool
+	}{
+		"valid JSON": {
+			flag: `{"#name":"name"}`,
+		},
+		"invalid JSON": {
+			flag:    `not json`,
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := mapAttributeFlag(tc.flag)
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+			}
+		})
+	}
 }

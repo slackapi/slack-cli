@@ -21,6 +21,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -64,14 +65,26 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 	}
 
 	sortedRepos := sortRepos(filteredRepos)
-	selectOptions := createSelectOptions(sortedRepos)
+	selectOptions := make([]string, len(sortedRepos))
+	for i, r := range sortedRepos {
+		if !clients.Config.WithExperimentOn(experiment.Huh) {
+			selectOptions[i] = fmt.Sprint(i+1, ". ", r.Name)
+		} else {
+			selectOptions[i] = r.Name
+		}
+	}
 
 	var selectedTemplate string
 	selection, err = clients.IO.SelectPrompt(ctx, "Select a sample to build upon:", selectOptions, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
-			return sortedRepos[index].Description + "\n  https://github.com/" + sortedRepos[index].FullName
+			desc := sortedRepos[index].Description
+			if !clients.Config.WithExperimentOn(experiment.Huh) {
+				desc += "\n  https://github.com/" + sortedRepos[index].FullName
+			}
+			return desc
 		},
 		Flag:     clients.Config.Flags.Lookup("template"),
+		Help:     fmt.Sprintf("Guided tutorials can be found at %s", style.LinkText("https://docs.slack.dev/samples")),
 		PageSize: 4, // Supports standard terminal height (24 rows)
 		Required: true,
 		Template: embedPromptSamplesTmpl,
@@ -126,19 +139,4 @@ func sortRepos(sampleRepos []create.GithubRepo) []create.GithubRepo {
 		return sortedRepos[i].StargazersCount > sortedRepos[j].StargazersCount
 	})
 	return sortedRepos
-}
-
-// createSelectOptions takes in a list of repositories
-// and returns an array of strings, each value being
-// equal to the repository name (ie, deno-starter-template)
-// and prepended with a number for a prompt visual aid
-func createSelectOptions(filteredRepos []create.GithubRepo) []string {
-	// Create a slice of repository names to use as
-	// the primary item selection in the prompt
-	selectOptions := make([]string, 0)
-	for i, f := range filteredRepos {
-		selectOption := fmt.Sprint(i+1, ". ", f.Name)
-		selectOptions = append(selectOptions, selectOption)
-	}
-	return selectOptions
 }

@@ -14,12 +14,18 @@
 
 package style
 
-// Slack brand theme for charmbracelet/huh prompts.
+// Slack brand theme for prompt styling.
 // Uses official Slack brand colors defined in colors.go.
 
 import (
+	"fmt"
+	"runtime"
+
 	huh "charm.land/huh/v2"
 	lipgloss "charm.land/lipgloss/v2"
+
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/AlecAivazis/survey/v2/core"
 )
 
 // ThemeSlack returns a huh Theme styled with Slack brand colors.
@@ -49,7 +55,7 @@ func themeSlack(isDark bool) *huh.Styles {
 	// Select styles
 	t.Focused.SelectSelector = lipgloss.NewStyle().
 		Foreground(slackBlue).
-		SetString("❱ ")
+		SetString(Chevron() + " ")
 	t.Focused.Option = lipgloss.NewStyle().
 		Foreground(slackOptionText)
 	t.Focused.NextIndicator = lipgloss.NewStyle().
@@ -64,7 +70,7 @@ func themeSlack(isDark bool) *huh.Styles {
 	// Multi-select styles
 	t.Focused.MultiSelectSelector = lipgloss.NewStyle().
 		Foreground(slackYellow).
-		SetString("❱ ")
+		SetString(Chevron() + " ")
 	t.Focused.SelectedOption = lipgloss.NewStyle().
 		Foreground(slackGreen)
 	t.Focused.SelectedPrefix = lipgloss.NewStyle().
@@ -108,4 +114,32 @@ func themeSlack(isDark bool) *huh.Styles {
 	t.Blurred.PrevIndicator = lipgloss.NewStyle()
 
 	return t
+}
+
+// Chevron returns the select chevron character for the current platform.
+// Unfortunately "❱" does not display on Windows Powershell.
+// Limit "❱" to non-Windows until support is known for other operating systems.
+func Chevron() string {
+	if !isStyleEnabled || runtime.GOOS == "windows" {
+		return ">"
+	}
+	return "❱"
+}
+
+// SurveyIcons returns customizations to the appearance of survey prompts.
+func SurveyIcons() survey.AskOpt {
+	if !isStyleEnabled {
+		core.DisableColor = true
+	}
+
+	cursor := Chevron()
+
+	return survey.WithIcons(func(icons *survey.IconSet) {
+		icons.SelectFocus.Text = cursor
+		icons.SelectFocus.Format = fmt.Sprintf("%d+b", blue)
+		icons.MarkedOption.Format = fmt.Sprintf("%d+b", blue)
+
+		icons.Question.Text = "?"
+		icons.Question.Format = fmt.Sprintf("%d+hb", gray)
+	})
 }
