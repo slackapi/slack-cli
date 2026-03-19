@@ -270,6 +270,7 @@ const (
 	ErrWorkflowNotFound                              = "workflow_not_found"
 	ErrYaml                                          = "yaml_error"
 	ErrSandboxDomainTaken                            = "domain_taken"
+	ErrInvalidArchiveTTL                            = "invalid_archive_ttl"
 )
 
 var ErrorCodeMap = map[string]Error{
@@ -1625,5 +1626,11 @@ Otherwise start your app for local development with: %s`,
 	ErrSandboxDomainTaken: {
 		Code:    ErrSandboxDomainTaken,
 		Message: "This domain has been claimed by another sandbox",
+	},
+
+	ErrInvalidArchiveTTL: {
+		Code:        ErrInvalidArchiveTTL,
+		Message:     "Invalid TTL",
+		Remediation: "Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo",
 	},
 }

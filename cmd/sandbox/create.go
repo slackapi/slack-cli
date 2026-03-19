@@ -35,7 +35,7 @@ type createFlags struct {
 	owningOrgID string
 	template    string
 	eventCode   string
-	archiveTTL  string // TTL duration, e.g. 1d, 2h
+	archiveTTL  string // TTL duration, e.g. 1d, 2w, 3mo
 	archiveDate string // explicit date yyyy-mm-dd
 	partner     bool
 }
@@ -91,8 +91,8 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&createCmdFlags.locale, "locale", "", "Locale (eg. en-us, languageCode-countryCode)")
 	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template for pre-defined data to preload (default, empty)")
 	cmd.Flags().StringVar(&createCmdFlags.eventCode, "event-code", "", "Event code for the sandbox")
-	cmd.Flags().StringVar(&createCmdFlags.archiveTTL, "archive-ttl", "", "Time-to-live duration; sandbox will be archived at end of day after this period (e.g., 2h, 1d, 7d)")
-	cmd.Flags().StringVar(&createCmdFlags.archiveDate, "archive-date", "", "Explicit archive date in yyyy-mm-dd format. Cannot be used with --archive")
+	cmd.Flags().StringVar(&createCmdFlags.archiveTTL, "archive-ttl", "", "Time-to-live duration; sandbox will be archived at end of day after this period (eg. 1d, 3w, 2mo). Cannot be used with --archive-date")
+	cmd.Flags().StringVar(&createCmdFlags.archiveDate, "archive-date", "", "Explicit archive date in yyyy-mm-dd format. Cannot be used with --archive-ttl")
 	cmd.Flags().BoolVar(&createCmdFlags.partner, "partner", false, "Developers who are part of the Partner program can create partner sandboxes")
 
 	// If one's developer account is managed by multiple Production Slack teams, one of those team IDs must be provided in the command
@@ -127,8 +127,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 
 	if createCmdFlags.archiveTTL != "" && createCmdFlags.archiveDate != "" {
 		return slackerror.New(slackerror.ErrInvalidArguments).
-			WithMessage("Cannot use both --archive-ttl and --archive-date").
-			WithRemediation("Use only one: --archive-ttl for TTL (e.g., 3d) or --archive-date for a specific date (yyyy-mm-dd)")
+			WithMessage("Cannot use both --archive-ttl and --archive-date")
 	}
 
 	archiveEpochDatetime := int64(0)
@@ -169,30 +168,51 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	return nil
 }
 
-// getEpochFromTTL parses a time-to-live string (e.g., "24h", "1d", "7d") and returns the Unix epoch
-// when the sandbox will be archived. Supports Go duration format (h, m, s) and "Nd" for days.
-// The value cannot exceed 6 months.
+// getEpochFromTTL parses a time-to-live string (e.g., "1d", "2w", "3mo") and returns the Unix epoch
+// when the sandbox will be archived. Supports days (d), weeks (w), and months (mo).
+// Minimum is 1 day, maximum is 6 months.
 func getEpochFromTTL(ttl string) (int64, error) {
-	var d time.Duration
-	if strings.HasSuffix(strings.ToLower(ttl), "d") {
-		numStr := strings.TrimSuffix(strings.ToLower(ttl), "d")
-		n, err := strconv.Atoi(numStr)
-		if err != nil {
-			return 0, slackerror.New(slackerror.ErrInvalidArguments).
-				WithMessage("Invalid TTL: %q", ttl).
-				WithRemediation("Use a duration like 2h, 1d, or 7d")
-		}
-		d = time.Duration(n) * 24 * time.Hour
-	} else {
-		var err error
-		d, err = time.ParseDuration(ttl)
-		if err != nil {
-			return 0, slackerror.New(slackerror.ErrInvalidArguments).
-				WithMessage("Invalid TTL: %q", ttl).
-				WithRemediation("Use a duration like 2h, 1d, or 7d")
-		}
+	lower := strings.TrimSpace(strings.ToLower(ttl))
+	if lower == "" {
+		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
 	}
-	return time.Now().Add(d).Unix(), nil
+
+	var target time.Time
+	now := time.Now()
+
+	switch {
+	case strings.HasSuffix(lower, "d"):
+		n, err := strconv.Atoi(strings.TrimSuffix(lower, "d"))
+		if err != nil || n < 1 {
+			return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+		}
+		target = now.AddDate(0, 0, n)
+	case strings.HasSuffix(lower, "w"):
+		n, err := strconv.Atoi(strings.TrimSuffix(lower, "w"))
+		if err != nil || n < 1 {
+			return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+		}
+		target = now.AddDate(0, 0, n*7)
+	case strings.HasSuffix(lower, "mo"):
+		n, err := strconv.Atoi(strings.TrimSuffix(lower, "mo"))
+		if err != nil || n < 1 {
+			return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+		}
+		target = now.AddDate(0, n, 0)
+	default:
+		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+	}
+
+	maxAllowed := now.AddDate(0, 6, 0)
+	minAllowed := now.AddDate(0, 0, 1)
+	if target.Before(minAllowed) {
+		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+	}
+	if target.After(maxAllowed) {
+		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
+	}
+
+	return target.Unix(), nil
 }
 
 // getEpochFromDate parses a date in yyyy-mm-dd format and returns the Unix epoch at start of that day (UTC).
@@ -202,7 +222,13 @@ func getEpochFromDate(dateStr string) (int64, error) {
 	if err != nil {
 		return 0, slackerror.New(slackerror.ErrInvalidArguments).
 			WithMessage("Invalid archive date: %q", dateStr).
-			WithRemediation("Use yyyy-mm-dd format (e.g., 2025-12-31)")
+			WithRemediation("Use yyyy-mm-dd format")
+	}
+	now := time.Now().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	if t.Before(today) {
+		return 0, slackerror.New(slackerror.ErrInvalidArguments).
+			WithMessage("Archive date must be in the future")
 	}
 	return t.Unix(), nil
 }

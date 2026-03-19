@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -165,7 +166,7 @@ func TestCreateCommand(t *testing.T) {
 				"--name", "tmp-box",
 				"--domain", "tmp-box",
 				"--password", "pass",
-				"--archive-ttl", "24h",
+				"--archive-ttl", "1d",
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
@@ -405,9 +406,14 @@ func Test_getEpochFromTTL(t *testing.T) {
 		ttl     string
 		wantErr bool
 	}{
-		{"24h", "24h", false},
 		{"1d", "1d", false},
 		{"7d", "7d", false},
+		{"1w", "1w", false},
+		{"2w", "2w", false},
+		{"1mo", "1mo", false},
+		{"6mo", "6mo", false},
+		{"hours rejected", "12h", true},
+		{"7mo exceeds max", "7mo", true},
 		{"invalid", "invalid", true},
 	}
 	for _, tt := range tests {
@@ -425,20 +431,30 @@ func Test_getEpochFromTTL(t *testing.T) {
 
 func Test_getEpochFromDate(t *testing.T) {
 	tests := []struct {
-		name    string
-		dateStr string
-		want    int64
-		wantErr bool
+		name       string
+		dateStr    string
+		want       int64
+		wantErr    bool
+		errContain string
 	}{
-		{"valid", "2025-12-31", 1767139200, false}, // 2025-12-31 00:00:00 UTC
-		{"invalid format", "12-31-2025", 0, true},
-		{"invalid date", "not-a-date", 0, true},
+		{"valid", "2025-12-31", 1767139200, false, ""}, // 2025-12-31 00:00:00 UTC
+		{"invalid format", "12-31-2025", 0, true, ""},
+		{"invalid date", "not-a-date", 0, true, ""},
+		{"date in past", "2020-01-01", 0, true, "at least 1 day"},
+		{"date is today", "", 0, true, "at least 1 day"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getEpochFromDate(tt.dateStr)
+			dateStr := tt.dateStr
+			if tt.name == "date is today" {
+				dateStr = time.Now().UTC().Format("2006-01-02")
+			}
+			got, err := getEpochFromDate(dateStr)
 			if tt.wantErr {
 				assert.Error(t, err)
+				if tt.errContain != "" {
+					assert.ErrorContains(t, err, tt.errContain)
+				}
 				return
 			}
 			assert.NoError(t, err)
