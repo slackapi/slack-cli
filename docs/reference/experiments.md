@@ -9,6 +9,7 @@ The following is a list of currently available experiments. We'll remove experim
 - `huh`: shows beautiful prompts.
 - `lipgloss`: shows pretty styles.
 - `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
+- `templates`: brings more agent templates to the `create` command.
 
 ## Experiments changelog
 

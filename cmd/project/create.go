@@ -47,6 +47,7 @@ type promptObject struct {
 	Title       string // "Reverse string"
 	Repository  string // "slack-samples/reverse-string"
 	Description string // "A function that reverses a given string"
+	Subdir      string // "agents/hello-world" - subdirectory within the repository
 }
 
 const viewMoreSamples = "slack-cli#view-more-samples"
@@ -158,11 +159,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}
 	}
 
+	subdir := createSubdirFlag
+	if subdir == "" {
+		subdir = template.GetSubdir()
+	}
 	createArgs := create.CreateArgs{
 		AppName:   appNameArg,
 		Template:  template,
 		GitBranch: createGitBranchFlag,
-		Subdir:    createSubdirFlag,
+		Subdir:    subdir,
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
