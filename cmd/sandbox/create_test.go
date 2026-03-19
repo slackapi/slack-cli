@@ -647,14 +647,14 @@ func Test_getTemplateID(t *testing.T) {
 		want    int
 		wantErr bool
 	}{
-		"empty string":                    {"", 0, false},
-		"default":                         {"default", 1, false},
-		"empty":                           {"empty", 0, false},
-		"default case insensitive":        {"Default", 1, false},
+		"empty string":                       {"", 0, false},
+		"default":                            {"default", 1, false},
+		"empty":                              {"empty", 0, false},
+		"default case insensitive":           {"Default", 1, false},
 		"default case insensitive uppercase": {"DEFAULT", 1, false},
-		"empty case insensitive":          {"Empty", 0, false},
-		"empty case insensitive uppercase": {"EMPTY", 0, false},
-		"invalid":                         {"invalid", 0, true},
+		"empty case insensitive":             {"Empty", 0, false},
+		"empty case insensitive uppercase":   {"EMPTY", 0, false},
+		"invalid":                            {"invalid", 0, true},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {

@@ -270,7 +270,7 @@ const (
 	ErrWorkflowNotFound                              = "workflow_not_found"
 	ErrYaml                                          = "yaml_error"
 	ErrSandboxDomainTaken                            = "domain_taken"
-	ErrInvalidArchiveTTL                            = "invalid_archive_ttl"
+	ErrInvalidArchiveTTL                             = "invalid_archive_ttl"
 )
 
 var ErrorCodeMap = map[string]Error{
