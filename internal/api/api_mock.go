@@ -220,8 +220,8 @@ func (m *APIMock) ListSandboxes(ctx context.Context, token string, filter string
 	return args.Get(0).([]types.Sandbox), args.Error(1)
 }
 
-func (m *APIMock) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID, template, eventCode string, archiveDate int64) (string, string, error) {
-	args := m.Called(ctx, token, name, domain, password, locale, owningOrgID, template, eventCode, archiveDate)
+func (m *APIMock) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (string, string, error) {
+	args := m.Called(ctx, token, name, domain, password, locale, owningOrgID, templateID, eventCode, archiveDate, isPartner)
 	return args.String(0), args.String(1), args.Error(2)
 }
 

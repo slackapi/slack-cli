@@ -161,6 +161,7 @@ const (
 	ErrInvalidTriggerEventType                       = "invalid_trigger_event_type"
 	ErrInvalidTriggerInputs                          = "invalid_trigger_inputs"
 	ErrInvalidTriggerType                            = "invalid_trigger_type"
+	ErrInvalidTemplateID                             = "invalid_template_id"
 	ErrInvalidUserID                                 = "invalid_user_id"
 	ErrInvalidWebhookConfig                          = "invalid_webhook_config"
 	ErrInvalidWebhookSchemaRef                       = "invalid_webhook_schema_ref"
@@ -1042,6 +1043,11 @@ Otherwise start your app for local development with: %s`,
 	ErrInvalidTriggerType: {
 		Code:    ErrInvalidTriggerType,
 		Message: "The provided trigger type is not recognized",
+	},
+
+	ErrInvalidTemplateID: {
+		Code:    ErrInvalidTemplateID,
+		Message: "The provided sandbox template value is invalid",
 	},
 
 	ErrInvalidUserID: {

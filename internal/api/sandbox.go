@@ -33,7 +33,7 @@ const (
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
-	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error)
+	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
 }
@@ -51,7 +51,7 @@ type listSandboxesResponse struct {
 }
 
 // CreateSandbox creates a new developer sandbox
-func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64) (teamID, sandboxURL string, err error) {
+func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (teamID, sandboxURL string, err error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateSandbox")
 	defer span.Finish()
@@ -75,6 +75,9 @@ func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, passwor
 	}
 	if archiveDate > 0 {
 		values.Add("archive_date", strconv.FormatInt(archiveDate, 10))
+	}
+	if isPartner {
+		values.Add("is_partner", "true")
 	}
 
 	b, err := c.postForm(ctx, sandboxCreateMethod, values)

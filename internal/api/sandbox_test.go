@@ -29,7 +29,7 @@ func TestClient_CreateSandbox_Ok(t *testing.T) {
 		Response:       `{"ok":true,"team_id":"T123","user_id":"U123","url":"https://my-sandbox.slack.com"}`,
 	})
 	defer teardown()
-	teamID, sandboxURL, err := c.CreateSandbox(ctx, "token", "My Sandbox", "my-sandbox", "secret", "", "", 0, "", 0)
+	teamID, sandboxURL, err := c.CreateSandbox(ctx, "token", "My Sandbox", "my-sandbox", "secret", "", "", 0, "", 0, false)
 	require.NoError(t, err)
 	require.Equal(t, "T123", teamID)
 	require.Equal(t, "https://my-sandbox.slack.com", sandboxURL)
@@ -42,7 +42,7 @@ func TestClient_CreateSandbox_WithOptionalParams(t *testing.T) {
 		Response:       `{"ok":true,"team_id":"T456","user_id":"U456","url":"https://other-sandbox.slack.com"}`,
 	})
 	defer teardown()
-	teamID, sandboxURL, err := c.CreateSandbox(ctx, "token", "My Sandbox", "my-sandbox", "secret", "en-US", "O123", 1, "EVENT123", 1234567890)
+	teamID, sandboxURL, err := c.CreateSandbox(ctx, "token", "My Sandbox", "my-sandbox", "secret", "en-US", "O123", 1, "EVENT123", 1234567890, false)
 	require.NoError(t, err)
 	require.Equal(t, "T456", teamID)
 	require.Equal(t, "https://other-sandbox.slack.com", sandboxURL)
@@ -51,7 +51,7 @@ func TestClient_CreateSandbox_WithOptionalParams(t *testing.T) {
 func TestClient_CreateSandbox_CommonErrors(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, sandboxCreateMethod, func(c *Client) error {
-		_, _, err := c.CreateSandbox(ctx, "token", "name", "domain", "password", "", "", 0, "", 0)
+		_, _, err := c.CreateSandbox(ctx, "token", "name", "domain", "password", "", "", 0, "", 0, false)
 		return err
 	})
 }

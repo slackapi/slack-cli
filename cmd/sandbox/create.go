@@ -33,13 +33,38 @@ type createFlags struct {
 	password    string
 	locale      string
 	owningOrgID string
-	templateID  int
+	template    string
 	eventCode   string
 	archiveTTL  string // TTL duration, e.g. 1d, 2h
 	archiveDate string // explicit date yyyy-mm-dd
+	partner     bool
 }
 
 var createCmdFlags createFlags
+
+// templateNameToID maps user-friendly template names to integer IDs
+var templateNameToID = map[string]int{
+	"default": 1, // The default template
+	"empty":   0, // The sandbox will be empty if the template param is not set
+}
+
+// getTemplateID converts a template string to an integer ID
+func getTemplateID(template string) (int, error) {
+	if template == "" {
+		return 0, nil
+	}
+	key := strings.ToLower(strings.TrimSpace(template))
+	// If the provided string is present in the map, return the ID
+	if id, ok := templateNameToID[key]; ok {
+		return id, nil
+	}
+	// We also accept an integer passed directly via the flag
+	if id, err := strconv.Atoi(key); err == nil {
+		return id, nil
+	}
+	return 0, slackerror.New(slackerror.ErrInvalidTemplateID).
+		WithMessage("Invalid template: %q", template)
+}
 
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -61,13 +86,14 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&createCmdFlags.name, "name", "", "Organization name for the new sandbox")
-	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain (e.g., pizzaknifefight). If not provided, derived from org name")
+	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain. If not provided, will be derived from org name")
 	cmd.Flags().StringVar(&createCmdFlags.password, "password", "", "Password used to log into the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.locale, "locale", "", "Locale (eg. en-us, languageCode-countryCode)")
-	cmd.Flags().IntVar(&createCmdFlags.templateID, "template", 0, "Template ID for pre-defined data to preload")
+	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template for pre-defined data to preload (default, empty)")
 	cmd.Flags().StringVar(&createCmdFlags.eventCode, "event-code", "", "Event code for the sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.archiveTTL, "archive-ttl", "", "Time-to-live duration; sandbox will be archived at end of day after this period (e.g., 2h, 1d, 7d)")
 	cmd.Flags().StringVar(&createCmdFlags.archiveDate, "archive-date", "", "Explicit archive date in yyyy-mm-dd format. Cannot be used with --archive")
+	cmd.Flags().BoolVar(&createCmdFlags.partner, "partner", false, "Developers who are part of the Partner program can create partner sandboxes")
 
 	// If one's developer account is managed by multiple Production Slack teams, one of those team IDs must be provided in the command
 	cmd.Flags().StringVar(&createCmdFlags.owningOrgID, "owning-org-id", "", "Enterprise team ID that manages your developer account, if applicable")
@@ -118,15 +144,21 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
+	templateID, err := getTemplateID(createCmdFlags.template)
+	if err != nil {
+		return err
+	}
+
 	teamID, sandboxURL, err := clients.API().CreateSandbox(ctx, auth.Token,
 		createCmdFlags.name,
 		domain,
 		createCmdFlags.password,
 		createCmdFlags.locale,
 		createCmdFlags.owningOrgID,
-		createCmdFlags.templateID,
+		templateID,
 		createCmdFlags.eventCode,
 		archiveEpochDatetime,
+		createCmdFlags.partner,
 	)
 	if err != nil {
 		return err

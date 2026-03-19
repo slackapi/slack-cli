@@ -49,7 +49,7 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"Sandbox deleted", "T123", "No sandboxes found"},
+			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "No sandboxes found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Auth.AssertCalled(t, "AuthWithToken", mock.Anything, "xoxb-test-token")
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
@@ -86,7 +86,7 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"Sandbox deleted", "T123", "other-sandbox", "T456"},
+			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "other-sandbox", "T456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
@@ -135,7 +135,7 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"Sandbox deleted", "E0123456"},
+			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "E0123456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false)
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "E0123456")

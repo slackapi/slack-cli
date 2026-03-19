@@ -99,7 +99,7 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "white_check_mark",
-		Text:  "Sandbox deleted",
+		Text:  "Sandbox Deleted",
 		Secondary: []string{
 			"Sandbox " + deleteCmdFlags.sandboxID + " has been permanently deleted",
 		},
