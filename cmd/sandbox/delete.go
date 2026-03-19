@@ -51,10 +51,6 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&deleteCmdFlags.sandboxID, "sandbox-id", "", "Sandbox team ID to delete")
 	cmd.Flags().BoolVar(&deleteCmdFlags.force, "force", false, "Skip confirmation prompt")
 
-	if err := cmd.MarkFlagRequired("sandbox-id"); err != nil {
-		panic(err)
-	}
-
 	return cmd
 }
 
@@ -66,13 +62,27 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
+	sandboxID := deleteCmdFlags.sandboxID
+	if sandboxID == "" {
+		sandboxID, err = clients.IO.InputPrompt(
+			ctx,
+			"Enter the ID of the sandbox",
+			iostreams.InputPromptConfig{
+				Required: true,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+
 	skipConfirm := deleteCmdFlags.force
 	if !skipConfirm {
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "warning",
 			Text:  style.Bold(" Danger zone"),
 			Secondary: []string{
-				fmt.Sprintf("Sandbox (%s) and all of its data will be permanently deleted", deleteCmdFlags.sandboxID),
+				fmt.Sprintf("Sandbox (%s) and all of its data will be permanently deleted", sandboxID),
 				"This cannot be undone",
 			},
 		}))
@@ -93,7 +103,7 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
-	if err := clients.API().DeleteSandbox(ctx, auth.Token, deleteCmdFlags.sandboxID); err != nil {
+	if err := clients.API().DeleteSandbox(ctx, auth.Token, sandboxID); err != nil {
 		return err
 	}
 
@@ -101,7 +111,7 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		Emoji: "white_check_mark",
 		Text:  "Sandbox Deleted",
 		Secondary: []string{
-			"Sandbox " + deleteCmdFlags.sandboxID + " has been permanently deleted",
+			"Sandbox " + sandboxID + " has been permanently deleted",
 		},
 	}))
 

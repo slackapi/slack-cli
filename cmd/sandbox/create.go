@@ -49,24 +49,6 @@ var templateNameToID = map[string]int{
 	"empty":   0, // The sandbox will be empty if the template param is not set
 }
 
-// getTemplateID converts a template string to an integer ID
-func getTemplateID(template string) (int, error) {
-	if template == "" {
-		return 0, nil
-	}
-	key := strings.ToLower(strings.TrimSpace(template))
-	// If the provided string is present in the map, return the ID
-	if id, ok := templateNameToID[key]; ok {
-		return id, nil
-	}
-	// We also accept an integer passed directly via the flag
-	if id, err := strconv.Atoi(key); err == nil {
-		return id, nil
-	}
-	return 0, slackerror.New(slackerror.ErrInvalidTemplateID).
-		WithMessage("Invalid template: %q", template)
-}
-
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [flags]",
@@ -262,6 +244,24 @@ func domainFromName(name string) (string, error) {
 			WithMessage("Provide a valid domain name with the --domain flag")
 	}
 	return string(domain), nil
+}
+
+// getTemplateID converts a template string to an integer ID
+func getTemplateID(template string) (int, error) {
+	if template == "" {
+		return 0, nil
+	}
+	key := strings.ToLower(strings.TrimSpace(template))
+	// If the provided string is present in the map, return the ID
+	if id, ok := templateNameToID[key]; ok {
+		return id, nil
+	}
+	// We also accept an integer passed directly via the flag
+	if id, err := strconv.Atoi(key); err == nil {
+		return id, nil
+	}
+	return 0, slackerror.New(slackerror.ErrInvalidTemplateID).
+		WithMessage("Invalid template: %q", template)
 }
 
 func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, teamID, url string) {

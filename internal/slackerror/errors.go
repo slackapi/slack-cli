@@ -271,6 +271,7 @@ const (
 	ErrYaml                                          = "yaml_error"
 	ErrSandboxDomainTaken                            = "domain_taken"
 	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit"
+	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id"
 	ErrInvalidArchiveTTL                             = "invalid_archive_ttl"
 )
 
@@ -1632,6 +1633,12 @@ Otherwise start your app for local development with: %s`,
 	ErrAtActiveSandboxLimit: {
 		Code:    ErrAtActiveSandboxLimit,
 		Message: "You've reached the maximum number of active sandboxes",
+	},
+
+	ErrInvalidSandboxTeamID: {
+		Code:        ErrInvalidSandboxTeamID,
+		Message:     "The provided sandbox team ID is invalid",
+		Remediation: fmt.Sprintf("List your sandboxes with the %s command to find the ID", style.Commandf("sandbox list", false)),
 	},
 
 	ErrInvalidArchiveTTL: {
