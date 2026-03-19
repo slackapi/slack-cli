@@ -16,10 +16,10 @@ package types
 
 // Sandbox represents a Slack Developer Sandbox
 type Sandbox struct {
-	DateArchived  int64  `json:"date_archived"`
-	DateCreated   int64  `json:"date_created"`
-	Domain     string `json:"sandbox_domain"`
-	Name       string `json:"sandbox_name"`
-	TeamID     string `json:"sandbox_team_id"`
-	Status        string `json:"status"`
+	DateArchived int64  `json:"date_archived"`
+	DateCreated  int64  `json:"date_created"`
+	Domain       string `json:"sandbox_domain"`
+	Name         string `json:"sandbox_name"`
+	TeamID       string `json:"sandbox_team_id"`
+	Status       string `json:"status"`
 }
