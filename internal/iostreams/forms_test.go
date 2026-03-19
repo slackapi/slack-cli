@@ -228,7 +228,7 @@ func TestSelectForm(t *testing.T) {
 		assert.Contains(t, view, " — First letter")
 	})
 
-	t.Run("descriptions use plain separator without lipgloss", func(t *testing.T) {
+	t.Run("descriptions use em-dash separator without lipgloss", func(t *testing.T) {
 		var selected string
 		options := []string{"Alpha", "Beta"}
 		selectCfg := SelectPromptConfig{
@@ -243,7 +243,7 @@ func TestSelectForm(t *testing.T) {
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
-		assert.Contains(t, view, "Alpha - First letter")
+		assert.Contains(t, view, "Alpha — First letter")
 	})
 
 	t.Run("page size sets field height", func(t *testing.T) {
