@@ -14,7 +14,7 @@
 
 package iostreams
 
-// Prompt type definitions shared between survey and charm implementations.
+// Prompts handle flag values and interactive forms for gathering user input.
 
 import (
 	"context"
@@ -194,7 +194,7 @@ func errInteractivityFlags(cfg PromptConfig) error {
 // the message
 func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
 	if io.config.WithExperimentOn(experiment.Huh) {
-		return charmConfirmPrompt(io, ctx, message, defaultValue)
+		return confirmForm(io, ctx, message, defaultValue)
 	}
 	return surveyConfirmPrompt(io, ctx, message, defaultValue)
 }
@@ -203,7 +203,7 @@ func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultV
 // optionally be made required
 func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
 	if io.config.WithExperimentOn(experiment.Huh) {
-		return charmInputPrompt(io, ctx, message, cfg)
+		return inputForm(io, ctx, message, cfg)
 	}
 	return surveyInputPrompt(io, ctx, message, cfg)
 }
@@ -212,7 +212,7 @@ func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputP
 // returns the selected values
 func (io *IOStreams) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
 	if io.config.WithExperimentOn(experiment.Huh) {
-		return charmMultiSelectPrompt(io, ctx, message, options)
+		return multiSelectForm(io, ctx, message, options)
 	}
 	return surveyMultiSelectPrompt(io, ctx, message, options)
 }
@@ -230,7 +230,7 @@ func (io *IOStreams) PasswordPrompt(ctx context.Context, message string, cfg Pas
 	}
 
 	if io.config.WithExperimentOn(experiment.Huh) {
-		return charmPasswordPrompt(io, ctx, message, cfg)
+		return passwordForm(io, ctx, message, cfg)
 	}
 	return surveyPasswordPrompt(io, ctx, message, cfg)
 }
@@ -258,7 +258,7 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 	}
 
 	if io.config.WithExperimentOn(experiment.Huh) {
-		return charmSelectPrompt(io, ctx, msg, options, cfg)
+		return selectForm(io, ctx, msg, options, cfg)
 	}
 	return surveySelectPrompt(io, ctx, msg, options, cfg)
 }
