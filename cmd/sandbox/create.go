@@ -203,15 +203,6 @@ func getEpochFromTTL(ttl string) (int64, error) {
 		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
 	}
 
-	maxAllowed := now.AddDate(0, 6, 0)
-	minAllowed := now.AddDate(0, 0, 1)
-	if target.Before(minAllowed) {
-		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
-	}
-	if target.After(maxAllowed) {
-		return 0, slackerror.New(slackerror.ErrInvalidArchiveTTL)
-	}
-
 	return target.Unix(), nil
 }
 

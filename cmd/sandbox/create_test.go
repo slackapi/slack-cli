@@ -523,23 +523,6 @@ func Test_getEpochFromTTL(t *testing.T) {
 				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
-		"7mo exceeds max": {
-			CmdArgs: []string{
-				"--experiment=sandboxes",
-				"--token", "xoxb-test-token",
-				"--name", "ttl-box",
-				"--domain", "ttl-box",
-				"--password", "pass",
-				"--archive-ttl", "7mo",
-			},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupCreateAuthOnly(t, ctx, cm)
-			},
-			ExpectedErrorStrings: []string{"Invalid TTL"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
 		"invalid": {
 			CmdArgs: []string{
 				"--experiment=sandboxes",
