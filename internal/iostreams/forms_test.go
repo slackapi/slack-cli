@@ -334,8 +334,8 @@ func TestMultiSelectForm(t *testing.T) {
 		m, _ := f.Update(key('x'))
 		view := ansi.Strip(m.View())
 
-		// After toggle, the first item should show as selected (checkmark)
-		assert.Contains(t, view, "✓")
+		// After toggle, the first item should show as selected
+		assert.Contains(t, view, "[x]")
 	})
 
 	t.Run("submit returns toggled items", func(t *testing.T) {
