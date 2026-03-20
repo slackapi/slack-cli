@@ -48,6 +48,34 @@ func Test_RawJSON_UnmarshalJSON(t *testing.T) {
 	}
 }
 
+func Test_RawJSON_MarshalJSON(t *testing.T) {
+	tests := map[string]struct {
+		rawJSON  RawJSON
+		expected string
+	}{
+		"marshals JSONData when present": {
+			rawJSON: func() RawJSON {
+				raw := json.RawMessage(`{"name":"foo"}`)
+				return RawJSON{JSONData: &raw}
+			}(),
+			expected: `{"name":"foo"}`,
+		},
+		"marshals from Data when JSONData is nil": {
+			rawJSON: RawJSON{Data: &yaml.MapSlice{
+				{Key: "name", Value: "bar"},
+			}},
+			expected: `{"name":"bar"}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := tc.rawJSON.MarshalJSON()
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, string(result))
+		})
+	}
+}
+
 func Test_RawJSON_UnmarshalYAML(t *testing.T) {
 	rawJSON := RawJSON{Data: &yaml.MapSlice{
 		{Key: "name", Value: "foo"},
