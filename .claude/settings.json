@@ -27,10 +27,13 @@
       "Bash(make build:*)",
       "Bash(make lint:*)",
       "Bash(make test:*)",
+      "Bash(mkdir:*)",
       "Bash(tree:*)",
+      "Bash(vhs:*)",
       "WebFetch(domain:docs.slack.dev)",
       "WebFetch(domain:github.com)"
-    ]
+    ],
+    "deny": ["Bash(vhs publish:*)"]
   },
   "enabledPlugins": {
     "gopls-lsp@claude-plugins-official": true
