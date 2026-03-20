@@ -84,8 +84,9 @@ type TeamApps struct {
 // if the installed workspace is left
 var appTransferDisclaimer = style.TextSection{
 	Emoji: "bell",
-	Text:  "If you leave this team, you can no longer manage the installed apps",
+	Text:  "App Create",
 	Secondary: []string{
+		"If you leave this team, you can no longer manage the installed apps",
 		"Installed apps will belong to the team if you leave the workspace",
 	},
 }
