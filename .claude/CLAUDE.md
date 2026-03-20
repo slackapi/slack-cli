@@ -189,6 +189,10 @@ When deprecating features, commands, or flags:
 3. **Public functionality**: Add comment `// DEPRECATED(semver:major): <description and migration path>`
 4. **Internal functionality**: Add comment `// DEPRECATED: <description>`
 
+## Style Guide
+
+See [`.github/STYLE_GUIDE.md`](../.github/STYLE_GUIDE.md) for conventions on command inputs and outputs.
+
 ## Important Configuration Files
 
 - `.golangci.yml` - Linter configuration with custom initialisms (CLI, API, SDK, etc.) and staticcheck rules
