@@ -229,7 +229,13 @@ dependencies = ["pytest==8.3.2"]`,
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
 			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			os.AddDefaultMocks()
+			cfg := config.NewConfig(fs, os)
+			ios := iostreams.NewIOStreamsMock(cfg, fs, os)
+			ios.AddDefaultMocks()
 			projectDirPath := "/path/to/project"
 
 			// Create pyproject.toml
@@ -240,7 +246,7 @@ dependencies = ["pytest==8.3.2"]`,
 			require.NoError(t, err)
 
 			// Test
-			output, err := installPyProjectToml(fs, projectDirPath)
+			output, err := installPyProjectToml(ctx, ios, fs, projectDirPath)
 
 			// Assertions
 			if tc.expectedError {
@@ -249,7 +255,9 @@ dependencies = ["pytest==8.3.2"]`,
 				require.NoError(t, err)
 			}
 
-			require.Contains(t, output, tc.expectedOutput)
+			if tc.expectedOutput != "" {
+				require.Contains(t, output, tc.expectedOutput)
+			}
 
 			// Verify file content contains expected strings
 			content, err := afero.ReadFile(fs, pyprojectPath)
@@ -527,29 +535,29 @@ dependencies = [
 			expectedOutputs: []string{"Updated requirements.txt"},
 			expectedError:   false,
 		},
-		"Error when pyproject.toml has no dependencies array": {
+		"Warning when pyproject.toml has no dependencies array": {
 			existingFiles: map[string]string{
 				"pyproject.toml": `[project]
 name = "my-app"`,
 			},
-			expectedOutputs: []string{"Error updating pyproject.toml: pyproject.toml missing dependencies array"},
-			expectedError:   true,
+			expectedOutputs: []string{"Skipped updating pyproject.toml because dependencies missing"},
+			expectedError:   false,
 		},
-		"Error when pyproject.toml has no [project] section": {
+		"Warning when pyproject.toml has no [project] section": {
 			existingFiles: map[string]string{
 				"pyproject.toml": `[tool.black]
 line-length = 88`,
 			},
-			expectedOutputs: []string{"Error updating pyproject.toml: pyproject.toml missing project section"},
-			expectedError:   true,
+			expectedOutputs: []string{"Skipped updating pyproject.toml because project section missing"},
+			expectedError:   false,
 		},
-		"Error when pyproject.toml is invalid TOML": {
+		"Warning when pyproject.toml is invalid TOML": {
 			existingFiles: map[string]string{
 				"pyproject.toml": `[project
 name = "broken`,
 			},
-			expectedOutputs: []string{"Error parsing pyproject.toml"},
-			expectedError:   true,
+			expectedOutputs: []string{"Skipped updating pyproject.toml because invalid TOML"},
+			expectedError:   false,
 		},
 	}
 	for name, tc := range tests {

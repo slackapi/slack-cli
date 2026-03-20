@@ -21,7 +21,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -238,32 +237,62 @@ func TestTracef(t *testing.T) {
 	}
 }
 
-func TestSurveyIcons(t *testing.T) {
-	tests := map[string]struct {
-		styleEnabled bool
-	}{
-		"styles are not enabled": {
-			styleEnabled: false,
-		},
-		"styles are enabled": {
-			styleEnabled: true,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			core.DisableColor = false
-			isStyleEnabled = tc.styleEnabled
-
-			_ = SurveyIcons()
-			assert.NotEqual(t, tc.styleEnabled, core.DisableColor)
-		})
-	}
-}
-
 /*
 * Example commands
  */
+
+func TestStyleFlags(t *testing.T) {
+	tests := map[string]struct {
+		charmEnabled bool
+		input        string
+		expectedFunc func() string
+	}{
+		"short and long flag with type and description": {
+			charmEnabled: true,
+			input:        "  -s, --long string   Description text",
+			expectedFunc: func() string { return Yellow("  -s, --long string   ") + Secondary("Description text") },
+		},
+		"long-only flag with description": {
+			charmEnabled: true,
+			input:        "      --verbose       Enable verbose output",
+			expectedFunc: func() string { return Yellow("      --verbose       ") + Secondary("Enable verbose output") },
+		},
+		"plain text without flag pattern returned unchanged": {
+			charmEnabled: true,
+			input:        "some plain text",
+			expectedFunc: func() string { return "some plain text" },
+		},
+		"empty string returned unchanged": {
+			charmEnabled: true,
+			input:        "",
+			expectedFunc: func() string { return "" },
+		},
+		"multiline flag output": {
+			charmEnabled: true,
+			input:        "  -a, --all           Show all\n      --verbose       Enable verbose",
+			expectedFunc: func() string {
+				return Yellow("  -a, --all           ") + Secondary("Show all") + "\n" + Yellow("      --verbose       ") + Secondary("Enable verbose")
+			},
+		},
+		"charm disabled returns input unchanged": {
+			charmEnabled: false,
+			input:        "  -s, --long string   Description text",
+			expectedFunc: func() string { return "  -s, --long string   Description text" },
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ToggleStyles(tc.charmEnabled)
+			ToggleLipgloss(tc.charmEnabled)
+			defer func() {
+				ToggleStyles(false)
+				ToggleLipgloss(false)
+			}()
+			actual := StyleFlags(tc.input)
+			assert.Equal(t, tc.expectedFunc(), actual)
+		})
+	}
+}
 
 func Test_ExampleCommandsf(t *testing.T) {
 	tests := map[string]struct {
@@ -364,6 +393,30 @@ func Test_ExampleTemplatef(t *testing.T) {
 			assert.Equal(t, strings.Join(tc.expected, "\n"), actual)
 		})
 	}
+}
+
+func Test_ExampleTemplatef_Charm(t *testing.T) {
+	defer func() {
+		ToggleStyles(false)
+		ToggleLipgloss(false)
+	}()
+	ToggleStyles(true)
+	ToggleLipgloss(true)
+
+	template := []string{
+		"# Create a new project from a selected template",
+		"$ slack create",
+		"",
+		"$ slack create my-project -t sample/repo-url  # Create a named project",
+	}
+	expected := []string{
+		fmt.Sprintf("  %s", Secondary("# Create a new project from a selected template")),
+		fmt.Sprintf("  %s%s", Yellow("$ "), CommandText("slack create")),
+		"",
+		fmt.Sprintf("  %s%s%s", Yellow("$ "), CommandText("slack create my-project -t sample/repo-url"), Secondary("  # Create a named project")),
+	}
+	actual := ExampleTemplatef(strings.Join(template, "\n"))
+	assert.Equal(t, strings.Join(expected, "\n"), actual)
 }
 
 func TestMapf(t *testing.T) {

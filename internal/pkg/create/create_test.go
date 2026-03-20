@@ -366,6 +366,7 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		experiments            []string
 		runtime                string
 		manifestSource         config.ManifestSource
+		expectedManifestSource config.ManifestSource
 		existingFiles          map[string]string
 		expectedOutputs        []string
 		unexpectedOutputs      []string
@@ -418,24 +419,38 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 		},
 		"When no manifest source, default to project (local)": {
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "project" (local)`,
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
-		"When manifest source is provided, should set it": {
-			manifestSource: config.ManifestSourceRemote,
+		"When remote manifest source is provided, should use it": {
+			manifestSource:         config.ManifestSourceRemote,
+			expectedManifestSource: config.ManifestSourceRemote,
+			existingFiles: map[string]string{
+				".slack/hooks.json": "{}",
+			},
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "app settings" (remote)`,
+				`Updated app manifest source to "app settings" (remote)`,
+			},
+		},
+		"When local manifest source is provided, should use it": {
+			manifestSource:         config.ManifestSourceLocal,
+			expectedManifestSource: config.ManifestSourceLocal,
+			existingFiles: map[string]string{
+				".slack/hooks.json": "{}",
+			},
+			expectedOutputs: []string{
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
 		"When Deno project, should set manifest source to project (local)": {
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "project" (local)`,
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
-		"When non-Deno project, should set manifest source to app settings (remote)": {
+		"When non-Deno project, should set manifest source to project (local)": {
 			runtime: "node",
 			expectedOutputs: []string{
-				`Updated config.json manifest source to "app settings" (remote)`,
+				`Updated app manifest source to "project" (local)`,
 			},
 		},
 	}
@@ -490,8 +505,15 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				}
 			}
 
+			// Set manifest source
+			if tc.manifestSource != "" {
+				if err := config.SetManifestSource(ctx, clientsMock.Fs, clientsMock.Os, tc.manifestSource); err != nil {
+					require.FailNow(t, fmt.Sprintf("Failed to set the manifest source in the memory-based file system: %s", err))
+				}
+			}
+
 			// Run the test
-			outputs := InstallProjectDependencies(ctx, clients, projectDirPath, tc.manifestSource)
+			outputs := InstallProjectDependencies(ctx, clients, projectDirPath)
 
 			// Assertions
 			for _, expectedOutput := range tc.expectedOutputs {
@@ -502,6 +524,13 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			}
 			for _, expectedVerboseOutput := range tc.expectedVerboseOutputs {
 				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, expectedVerboseOutput, tc.expectedVerboseArgs)
+			}
+			if tc.expectedManifestSource != "" {
+				actualManifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+				if err != nil {
+					require.FailNow(t, fmt.Sprintf("Failed to get the manifest source: %s", err))
+				}
+				assert.Equal(t, tc.expectedManifestSource, actualManifestSource)
 			}
 			assert.NotEmpty(t, clients.Config.ProjectID, "config.project_id")
 			// output := clientsMock.GetCombinedOutput()

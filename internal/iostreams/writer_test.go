@@ -199,6 +199,24 @@ func Test_FilteredWriter(t *testing.T) {
 	}
 }
 
+func Test_IOStreams_WriteErr(t *testing.T) {
+	fsMock := slackdeps.NewFsMock()
+	osMock := slackdeps.NewOsMock()
+	cfg := config.NewConfig(fsMock, osMock)
+	io := NewIOStreams(cfg, fsMock, osMock)
+	w := io.WriteErr()
+	require.NotNil(t, w)
+}
+
+func Test_IOStreams_WriteOut(t *testing.T) {
+	fsMock := slackdeps.NewFsMock()
+	osMock := slackdeps.NewOsMock()
+	cfg := config.NewConfig(fsMock, osMock)
+	io := NewIOStreams(cfg, fsMock, osMock)
+	w := io.WriteOut()
+	require.NotNil(t, w)
+}
+
 func Test_WriteIndent(t *testing.T) {
 	tests := map[string]struct {
 		input    string

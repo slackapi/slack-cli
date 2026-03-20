@@ -23,9 +23,6 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/AlecAivazis/survey/v2/core"
 )
 
 const LocalRunNameTag = "(local)"
@@ -184,30 +181,6 @@ func HomePath(filepath string) string {
 	return filepath
 }
 
-// SurveyIcons returns customizations to the appearance of prompts
-func SurveyIcons() survey.AskOpt {
-	if !isStyleEnabled {
-		core.DisableColor = true
-	}
-
-	cursor := ">"
-	// Unfortunately "❱" does not display on Windows Powershell
-	// Limit "❱" to macOS until support is known for other operating systems
-	if isStyleEnabled && runtime.GOOS == "darwin" {
-		cursor = "❱"
-	}
-
-	// Customize the appearance of each survey prompt
-	return survey.WithIcons(func(icons *survey.IconSet) {
-		icons.SelectFocus.Text = cursor
-		icons.SelectFocus.Format = fmt.Sprintf("%d+b", blue)
-		icons.MarkedOption.Format = fmt.Sprintf("%d+b", blue)
-
-		icons.Question.Text = "?"
-		icons.Question.Format = fmt.Sprintf("%d+hb", gray)
-	})
-}
-
 // ExampleCommand contains a command with a descriptive meaning
 type ExampleCommand struct {
 	// Command is the command to be run, not including the process name
@@ -258,7 +231,7 @@ func ExampleTemplatef(template string) string {
 	for _, cmd := range lines {
 		example := ""
 		if cmd != "" {
-			if isCharmEnabled {
+			if isLipglossEnabled {
 				example = fmt.Sprintf("  %s", styleExampleLine(cmd))
 			} else {
 				styled := reComment.ReplaceAllStringFunc(cmd, Secondary)

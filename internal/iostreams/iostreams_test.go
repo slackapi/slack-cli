@@ -97,7 +97,7 @@ func Test_IOStreams_IsTTY(t *testing.T) {
 	}
 }
 
-func Test_SetCmdIO(t *testing.T) {
+func Test_IOStreams_SetCmdIO(t *testing.T) {
 	fsMock := slackdeps.NewFsMock()
 	osMock := slackdeps.NewOsMock()
 	cfg := config.NewConfig(fsMock, osMock)
