@@ -23,6 +23,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_Template_GetSubdir(t *testing.T) {
+	t.Run("default is empty string", func(t *testing.T) {
+		tmpl := Template{}
+		assert.Equal(t, "", tmpl.GetSubdir())
+	})
+	t.Run("returns value set by SetSubdir", func(t *testing.T) {
+		tmpl := Template{}
+		tmpl.SetSubdir("subpath")
+		assert.Equal(t, "subpath", tmpl.GetSubdir())
+	})
+}
+
+func Test_Template_SetSubdir(t *testing.T) {
+	tmpl := Template{}
+	tmpl.SetSubdir("custom/dir")
+	assert.Equal(t, "custom/dir", tmpl.GetSubdir())
+}
+
 func TestTemplate_ResolveTemplateURL(t *testing.T) {
 	tests := map[string]struct {
 		url              string
