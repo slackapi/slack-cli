@@ -148,7 +148,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// updateNotification will check for an update in the background and print a message after the command runs
 	var updateNotification *update.UpdateNotification
 
-	clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
+	clients = shared.NewClientFactory()
 	rootCmd := NewRootCommand(clients, updateNotification)
 
 	// Support `--version` by setting root command's `Version` and custom template.
@@ -265,7 +265,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init clients that use flags
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.CLIVersion)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, version.Raw())
 
 	// Init System ID
 	if systemID, err := clients.Config.SystemConfig.InitSystemID(ctx); err != nil {
@@ -297,7 +297,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 	style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
 	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
-	clients.Config.Version = clients.CLIVersion
+	clients.Config.Version = version.Raw()
 
 	// The domain auths (token->domain) shouldn't change for the execution of the CLI so preload them into config!
 	clients.Config.DomainAuthTokens = clients.Auth().MapAuthTokensToDomains(ctx)
