@@ -273,6 +273,10 @@ func Underline(text string) string {
 	return render(lipgloss.NewStyle().Underline(true), text)
 }
 
+func Separator() string {
+	return " — "
+}
+
 /*
 Lexical
 */
