@@ -45,7 +45,6 @@ type ClientFactory struct {
 	API          func() api.APIInterface
 	AppClient    func() *app.Client
 	Auth         func() auth.AuthInterface
-	CLIVersion   string
 	Config       *config.Config
 	EventTracker tracking.TrackingManager
 	HookExecutor hooks.HookExecutor
@@ -91,13 +90,6 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	clients.AppClient = clients.defaultAppClientFunc
 	clients.Auth = clients.defaultAuthFunc
 	clients.Browser = clients.defaultBrowserFunc
-
-	// TODO: Temporary hack to get around circular dependency in internal/api/client.go since that imports version
-	// Follows pattern demonstrated by the GitHub CLI here https://github.com/cli/cli/blob/5a46c1cab601a3394caa8de85adb14f909b811e9/pkg/cmd/factory/default.go#L29
-	// Used by the APIClient for its userAgent
-	// Currently needed because trying to get the version of the CLI from internal/version would cause a circular dependency
-	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CLIVersion is retained for future code refactor purpose and serve SetVersion function
-	clients.CLIVersion = ""
 
 	// Custom values set by functional options
 	// Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
@@ -320,12 +312,6 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 // DebugMode is an example of defining a functional options helper
 func DebugMode(c *ClientFactory) {
 	c.Config.DebugEnabled = true
-}
-
-// SetVersion is a functional option that sets the Cli version that the API Client references
-// Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
-func SetVersion(version string) func(c *ClientFactory) {
-	return func(c *ClientFactory) { c.CLIVersion = version }
 }
 
 // getDevHostname returns the hostname of the given URL if it is dev or a numbered dev instance
