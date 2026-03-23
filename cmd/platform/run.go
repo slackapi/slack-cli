@@ -47,7 +47,7 @@ var runAppSelectPromptFunc = prompts.AppSelectPrompt
 
 func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "run [app-path]",
+		Use:     "run [app-file-path]",
 		Aliases: []string{"dev", "start-dev"}, // Aliases a few proposed alternative names
 		Short:   "Start a local server to develop and run the app locally",
 		Long:    `Start a local server to develop and run the app locally while watching for file changes`,
@@ -102,7 +102,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		appPath = args[0]
 		if _, err := clients.Fs.Stat(appPath); err != nil {
 			return slackerror.New(slackerror.ErrNotFound).
-				WithMessage("The app path %q could not be found", appPath).
+				WithMessage("The app file path %q could not be found", appPath).
 				WithRemediation("Check that the file exists and the path is correct")
 		}
 	}
@@ -147,7 +147,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		Activity:            !runFlags.noActivity,
 		ActivityLevel:       runFlags.activityLevel,
 		App:                 selection.App,
-		AppPath:             appPath,
+		AppFilePath:             appFilePath,
 		Auth:                selection.Auth,
 		Cleanup:             runFlags.cleanup,
 		ShowTriggers:        triggers.ShowTriggers(clients, runFlags.hideTriggers),
