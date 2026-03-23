@@ -188,7 +188,7 @@ func TestRunCommand_Flags(t *testing.T) {
 			},
 			expectedErr: slackerror.New(slackerror.ErrProcessInterrupted),
 		},
-		"Positional arg sets AppPath": {
+		"Positional arg sets AppFilePath": {
 			setup: func(cm *shared.ClientsMock) {
 				_ = afero.WriteFile(cm.Fs, "./src/app.py", []byte(""), 0644)
 			},
@@ -201,20 +201,20 @@ func TestRunCommand_Flags(t *testing.T) {
 				Activity:      true,
 				ActivityLevel: "info",
 				App:           types.NewApp(),
-				AppPath:       "./src/app.py",
+				AppFilePath:   "./src/app.py",
 				Auth:          types.SlackAuth{},
 				Cleanup:       false,
 				ShowTriggers:  true,
 			},
 		},
-		"Error if app path does not exist": {
+		"Error if app file path does not exist": {
 			cmdArgs: []string{"./nonexistent/app.py"},
 			selectedAppAuth: prompts.SelectedApp{
 				App:  types.NewApp(),
 				Auth: types.SlackAuth{},
 			},
 			expectedErr: slackerror.New(slackerror.ErrNotFound).
-				WithMessage("The app path %q could not be found", "./nonexistent/app.py").
+				WithMessage("The app file path %q could not be found", "./nonexistent/app.py").
 				WithRemediation("Check that the file exists and the path is correct"),
 		},
 		"Error if no apps are available when using a remote manifest source": {

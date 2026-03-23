@@ -97,12 +97,12 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 	}
 	ctx := cmd.Context()
 
-	var appPath string
+	var appFilePath string
 	if len(args) > 0 {
-		appPath = args[0]
-		if _, err := clients.Fs.Stat(appPath); err != nil {
+		appFilePath = args[0]
+		if _, err := clients.Fs.Stat(appFilePath); err != nil {
 			return slackerror.New(slackerror.ErrNotFound).
-				WithMessage("The app file path %q could not be found", appPath).
+				WithMessage("The app file path %q could not be found", appFilePath).
 				WithRemediation("Check that the file exists and the path is correct")
 		}
 	}
@@ -147,7 +147,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		Activity:            !runFlags.noActivity,
 		ActivityLevel:       runFlags.activityLevel,
 		App:                 selection.App,
-		AppFilePath:             appFilePath,
+		AppFilePath:         appFilePath,
 		Auth:                selection.Auth,
 		Cleanup:             runFlags.cleanup,
 		ShowTriggers:        triggers.ShowTriggers(clients, runFlags.hideTriggers),

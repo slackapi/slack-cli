@@ -81,7 +81,7 @@ type LocalServer struct {
 	token              string
 	localHostedContext LocalHostedContext
 	cliConfig          hooks.SDKCLIConfig
-	appPath            string
+	appFilePath        string
 	Connection         WebSocketConnection
 	delegateCmd        hooks.ShellCommand // track running delegated process
 	delegateCmdMutex   sync.Mutex         // protect concurrent access
@@ -284,9 +284,9 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 		"SLACK_CLI_XAPP": r.token,
 		"SLACK_CLI_XOXB": r.localHostedContext.BotAccessToken,
 	}
-	if r.appPath != "" {
-		env["SLACK_APP_PATH"] = r.appPath
-		env["SLACK_CLI_CUSTOM_FILE_PATH"] = r.appPath
+	if r.appFilePath != "" {
+		env["SLACK_APP_PATH"] = r.appFilePath
+		env["SLACK_CLI_CUSTOM_FILE_PATH"] = r.appFilePath
 	}
 	var sdkManagedConnectionStartHookOpts = hooks.HookExecOpts{
 		Env:  env,
