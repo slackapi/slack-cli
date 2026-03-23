@@ -36,6 +36,7 @@ type RunArgs struct {
 	Activity            bool
 	ActivityLevel       string
 	App                 types.App
+	AppFilePath         string
 	Auth                types.SlackAuth
 	Cleanup             bool
 	ShowTriggers        bool
@@ -126,6 +127,7 @@ func Run(ctx context.Context, clients *shared.ClientFactory, runArgs RunArgs) (t
 		token:              localInstallResult.APIAccessTokens.AppLevel,
 		localHostedContext: localHostedContext,
 		cliConfig:          cliConfig,
+		appFilePath:        runArgs.AppFilePath,
 		Connection:         nil,
 	}
 
