@@ -49,7 +49,7 @@ func main() {
 
 	// Set context values
 	sessionID := uuid.New().String()
-	cliVersion := version.Get()
+	cliVersion := version.Raw()
 	ctx = slackcontext.SetSessionID(ctx, sessionID)
 	ctx = slackcontext.SetVersion(ctx, cliVersion)
 
@@ -84,7 +84,7 @@ func recoveryFunc() {
 
 		var ctx = context.Background()
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())
-		ctx = slackcontext.SetVersion(ctx, version.Get())
+		ctx = slackcontext.SetVersion(ctx, version.Raw())
 
 		// set host for logging
 		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
