@@ -301,7 +301,7 @@ func Test_SlackContext_Version(t *testing.T) {
 		ctx := t.Context()
 		actualVersion, actualError := Version(ctx)
 		require.Equal(t, version.Raw(), actualVersion)
-		require.ErrorContains(t, actualError, "falling back to version.Raw()")
+		require.ErrorContains(t, actualError, "falling back to the build version")
 	})
 }
 

@@ -178,7 +178,7 @@ func Version(ctx context.Context) (string, error) {
 	var v, ok = ctx.Value(contextKeyVersion).(string)
 	if !ok || v == "" {
 		return version.Raw(), slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for Version could not be found in context, falling back to version.Raw()")
+			WithMessage("The value for version could not be found in context, falling back to the build version")
 	}
 	return v, nil
 }
