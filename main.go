@@ -84,9 +84,10 @@ func recoveryFunc() {
 
 		var ctx = context.Background()
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())
+		ctx = slackcontext.SetVersion(ctx, version.Get())
 
 		// set host for logging
-		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, version.Raw())
+		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
 		clients.IO.PrintError(ctx, "Recovered from panic: %s\n%s", r, string(debug.Stack()))
 		os.Exit(int(iostreams.ExitError))
 	}
