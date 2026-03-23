@@ -57,7 +57,9 @@ func processExecOpts(opts HookExecOpts) ([]string, []string, []string, error) {
 	// To avoid removing any environment variables that are set in the current environment, we first set the cmd.Env to the current environment.
 	// before adding any new environment variables.
 	var cmdEnvVars = os.Environ()
-	cmdEnvVars = append(cmdEnvVars, goutils.MapToStringSlice(opts.Env, "")...)
+	for name, value := range opts.Env {
+		cmdEnvVars = append(cmdEnvVars, name+"="+value)
+	}
 
 	return cmdArgs, cmdArgVars, cmdEnvVars, nil
 }
