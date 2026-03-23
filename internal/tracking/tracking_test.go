@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -129,7 +130,7 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 		},
 		"should strip 'v' prefix from version string": {
 			setup: func(cfg *config.Config) {
-				cfg.Version = "v4.2.0"
+				version.Version = "v4.2.0"
 			},
 			assertOnRequest: func(t *testing.T, req *http.Request) {
 				payload, err := io.ReadAll(req.Body)

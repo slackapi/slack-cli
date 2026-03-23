@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/version"
 )
 
 // Constants
@@ -79,7 +80,7 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 		"Command":               goutils.RedactPII(strings.Join(os.Args[0:], " ")),
 		"SessionID":             sessionID,
 		"Slack-CLI-TraceID":     traceID,
-		"Slack-CLI Version":     io.config.Version,
+		"Slack-CLI Version":     version.Raw(),
 		"Operating System (OS)": runtime.GOOS,
 		"System ID":             io.config.SystemID,
 		"Project ID":            io.config.ProjectID,

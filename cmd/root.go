@@ -296,9 +296,6 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 	style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
-	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
-	clients.Config.Version = version.Raw()
-
 	// The domain auths (token->domain) shouldn't change for the execution of the CLI so preload them into config!
 	clients.Config.DomainAuthTokens = clients.Auth().MapAuthTokensToDomains(ctx)
 

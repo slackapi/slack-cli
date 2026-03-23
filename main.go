@@ -81,13 +81,12 @@ func recoveryFunc() {
 	// in the event of a panic, log panic
 	if r := recover(); r != nil {
 		var clients = shared.NewClientFactory()
-		clients.Config.Version = version.Raw()
 
 		var ctx = context.Background()
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())
 
 		// set host for logging
-		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, version.Raw())
 		clients.IO.PrintError(ctx, "Recovered from panic: %s\n%s", r, string(debug.Stack()))
 		os.Exit(int(iostreams.ExitError))
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/version"
 )
 
 // Delete will delete the app for this teamDomain both remotely (API) and locally (project)
@@ -81,7 +82,7 @@ func getAuthSession(ctx context.Context, clients *shared.ClientFactory, auth typ
 	// get an auth without updating the default auth. It's less important for the Login command that terminals afterward,
 	// because on start up, the root command resolves the auth's current APIHost.
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
-	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, version.Raw())
 
 	authSession, err := clients.API().ValidateSession(ctx, token)
 	if err != nil {

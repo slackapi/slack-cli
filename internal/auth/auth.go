@@ -35,6 +35,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/afero"
 )
 
@@ -399,7 +400,7 @@ func (c *Client) SetSelectedAuth(ctx context.Context, auth types.SlackAuth, conf
 	// Often set after standard selections but custom authentication must set this
 	// unless the command is exiting right after, like 'login'.
 	config.APIHostResolved = c.ResolveAPIHost(ctx, config.APIHostFlag, &auth)
-	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved, config.Version)
+	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved, version.Raw())
 
 	// Set environment variables for app development configurations and processes.
 	if _, ok := os.LookupEnv("SLACK_API_URL"); !ok {
