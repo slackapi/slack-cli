@@ -294,6 +294,7 @@ Certain things are common during development and require a few commands.
   - [Bumping the Golang version](#bumping-the-golang-version)
   - [Bumping Go packages versions](#bumping-go-package-versions)
   - [Bumping Goreleaser versions](#bumping-goreleaser-versions)
+- [Designing](#designing)
 - [Deprecating features and flags](#deprecating-features-and-flags)
 - [Allowlist configuration](#allowlist-configuration)
 
@@ -632,6 +633,11 @@ updates in the following files on occasion:
 
 Testing in our CI setup uses changes to these files when creating test builds.
 
+### Designing
+
+Conventions for how commands handle inputs and format outputs are documented in
+the [style guide][style-guide].
+
 ### Deprecating features and flags
 
 Many good things come to an end. This can sometimes include commands and flags.
@@ -926,6 +932,7 @@ When in doubt, find the other maintainers and ask.
 [practical-go]: https://dave.cheney.net/practical-go/presentations/qcon-china.html
 [scripts]: ../scripts
 [semver]: https://semver.org/
+[style-guide]: ./STYLE_GUIDE.md
 [sync]: https://github.com/slackapi/slack-cli/blob/main/.github/workflows/sync-docs-from-cli-repo.yml
 [vscode]: https://github.com/slackapi/slack-cli/blob/main/.vscode/settings.json
 [wf-dependencies]: ./workflows/dependencies.yml

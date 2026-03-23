@@ -95,8 +95,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	// TODO: Temporary hack to get around circular dependency in internal/api/client.go since that imports version
 	// Follows pattern demonstrated by the GitHub CLI here https://github.com/cli/cli/blob/5a46c1cab601a3394caa8de85adb14f909b811e9/pkg/cmd/factory/default.go#L29
 	// Used by the APIClient for its userAgent
-	// Currently needed because trying to get the version of the CLI from pkg/version/version.go would cause a circular dependency
-	// We can get rid of this once we refactor the code relationship between pkg/ and internal/
+	// Currently needed because trying to get the version of the CLI from internal/version would cause a circular dependency
 	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CLIVersion is retained for future code refactor purpose and serve SetVersion function
 	clients.CLIVersion = ""
 

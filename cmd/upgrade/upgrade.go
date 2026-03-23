@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/internal/update"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
 )
 

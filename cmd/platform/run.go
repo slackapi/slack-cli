@@ -125,7 +125,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		}
 	}
 
-	runFlags.orgGrantWorkspaceID, err = prompts.ValidateGetOrgWorkspaceGrant(ctx, clients, &selection, runFlags.orgGrantWorkspaceID, false /* top prompt option should be 'all workspaces' */)
+	runFlags.orgGrantWorkspaceID, err = prompts.ValidateGetOrgWorkspaceGrant(ctx, clients, &selection, runFlags.orgGrantWorkspaceID, true /* top prompt option should be 'all workspaces' */)
 	if err != nil {
 		return err
 	}
