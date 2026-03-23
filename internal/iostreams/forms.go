@@ -34,6 +34,8 @@ func newForm(io *IOStreams, field huh.Field) *huh.Form {
 	form := huh.NewForm(huh.NewGroup(field))
 	if io != nil && io.config.WithExperimentOn(experiment.Lipgloss) {
 		form = form.WithTheme(style.ThemeSlack())
+	} else {
+		form = form.WithTheme(style.ThemeSurvey())
 	}
 	return form
 }
@@ -90,7 +92,7 @@ func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectProm
 		key := opt
 		if cfg.Description != nil {
 			if desc := style.RemoveEmoji(cfg.Description(opt, len(opts))); desc != "" {
-				key = opt + " - " + desc
+				key = style.Bright(opt) + " — " + style.Secondary(desc)
 			}
 		}
 		opts = append(opts, huh.NewOption(key, opt))
