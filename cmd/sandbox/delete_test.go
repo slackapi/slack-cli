@@ -27,15 +27,21 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestListCommand(t *testing.T) {
+func TestDeleteCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"empty list": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+		"delete success": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--sandbox-id", "T123",
+				"--force",
+			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(nil)
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
@@ -43,24 +49,31 @@ func TestListCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"No sandboxes found"},
+			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "No sandboxes found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Auth.AssertCalled(t, "AuthWithToken", mock.Anything, "xoxb-test-token")
+				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
-		"with active sandboxes": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+		"delete with remaining sandboxes": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--sandbox-id", "T123",
+				"--force",
+			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(nil)
 				sandboxes := []types.Sandbox{
 					{
-						TeamID:       "T123",
-						Name:         "my-sandbox",
-						Domain:       "my-sandbox",
+						TeamID:       "T456",
+						Name:         "other-sandbox",
+						Domain:       "other-sandbox",
 						Status:       "active",
 						DateCreated:  1700000000,
 						DateArchived: 0,
@@ -73,86 +86,98 @@ func TestListCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com", "Status: ACTIVE"},
+			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "other-sandbox", "T456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
-		"with archived sandbox": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+		"deletion cancelled": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--sandbox-id", "T123",
+			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				sandboxes := []types.Sandbox{
-					{
-						TeamID:       "T456",
-						Name:         "old-sandbox",
-						Domain:       "old-sandbox",
-						Status:       "archived",
-						DateCreated:  1700000000,
-						DateArchived: 1710000000,
-					},
-				}
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(false, nil)
+
+				cm.AddDefaultMocks()
+				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+			},
+			ExpectedStdoutOutputs: []string{"Deletion cancelled"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false)
+				cm.API.AssertNotCalled(t, "DeleteSandbox", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"delete confirmation proceeds": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--sandbox-id", "E0123456",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				testToken := "xoxb-test-token"
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(true, nil)
+				cm.API.On("DeleteSandbox", mock.Anything, testToken, "E0123456").Return(nil)
+				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"old-sandbox", "T456", "Status: ARCHIVED"},
+			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "E0123456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
+				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false)
+				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "E0123456")
 			},
 		},
-		"with status": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token", "--status", "active"},
+		"delete API error": {
+			CmdArgs: []string{
+				"--experiment=sandboxes",
+				"--token", "xoxb-test-token",
+				"--sandbox-id", "T123",
+				"--force",
+			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "active").Return([]types.Sandbox{}, nil)
-				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
-
-				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "active")
-			},
-		},
-		"list error": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
-				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").
-					Return([]types.Sandbox(nil), errors.New("api_error"))
+				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(errors.New("api_error"))
 
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"api_error"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
+			},
 		},
 		"experiment required": {
-			CmdArgs: []string{},
+			CmdArgs: []string{
+				"--sandbox-id", "T123",
+				"--force",
+			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
-				// Do NOT enable sandboxes experiment
 			},
 			ExpectedErrorStrings: []string{"sandbox"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "ListSandboxes", mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertNotCalled(t, "DeleteSandbox", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
-		return NewListCommand(cf)
+		return NewDeleteCommand(cf)
 	})
 }

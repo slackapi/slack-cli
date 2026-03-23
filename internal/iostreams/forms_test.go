@@ -195,6 +195,57 @@ func TestSelectForm(t *testing.T) {
 		assert.Contains(t, view, "First letter")
 	})
 
+	t.Run("descriptions use hyphen separator with lipgloss enabled", func(t *testing.T) {
+		style.ToggleLipgloss(true)
+		style.ToggleStyles(true)
+		t.Cleanup(func() {
+			style.ToggleLipgloss(false)
+			style.ToggleStyles(false)
+		})
+
+		fsMock := slackdeps.NewFsMock()
+		osMock := slackdeps.NewOsMock()
+		osMock.AddDefaultMocks()
+		cfg := config.NewConfig(fsMock, osMock)
+		cfg.ExperimentsFlag = []string{"lipgloss"}
+		cfg.LoadExperiments(context.Background(), func(_ context.Context, _ string, _ ...any) {})
+		io := NewIOStreams(cfg, fsMock, osMock)
+
+		var selected string
+		options := []string{"Alpha", "Beta"}
+		selectCfg := SelectPromptConfig{
+			Description: func(opt string, _ int) string {
+				if opt == "Alpha" {
+					return "First letter"
+				}
+				return ""
+			},
+		}
+		f := buildSelectForm(io, "Choose", options, selectCfg, &selected)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, " - First letter")
+	})
+
+	t.Run("descriptions use hyphen separator without lipgloss", func(t *testing.T) {
+		var selected string
+		options := []string{"Alpha", "Beta"}
+		selectCfg := SelectPromptConfig{
+			Description: func(opt string, _ int) string {
+				if opt == "Alpha" {
+					return "First letter"
+				}
+				return ""
+			},
+		}
+		f := buildSelectForm(nil, "Choose", options, selectCfg, &selected)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, "Alpha - First letter")
+	})
+
 	t.Run("page size sets field height", func(t *testing.T) {
 		var selected string
 		options := []string{"A", "B", "C", "D", "E", "F", "G", "H"}
@@ -283,8 +334,8 @@ func TestMultiSelectForm(t *testing.T) {
 		m, _ := f.Update(key('x'))
 		view := ansi.Strip(m.View())
 
-		// After toggle, the first item should show as selected (checkmark)
-		assert.Contains(t, view, "✓")
+		// After toggle, the first item should show as selected
+		assert.Contains(t, view, "[x]")
 	})
 
 	t.Run("submit returns toggled items", func(t *testing.T) {
@@ -364,14 +415,51 @@ func TestFormsUseSlackTheme(t *testing.T) {
 	})
 }
 
-func TestFormsWithoutLipgloss(t *testing.T) {
-	t.Run("multi-select uses default prefix without lipgloss", func(t *testing.T) {
+func TestFormsUseSurveyTheme(t *testing.T) {
+	t.Run("multi-select uses survey prefix without lipgloss", func(t *testing.T) {
 		var selected []string
 		f := buildMultiSelectForm(nil, "Pick", []string{"A", "B"}, &selected)
 		f.Update(f.Init())
 
 		view := ansi.Strip(f.View())
-		// Without lipgloss the Slack theme is not applied, so "[ ]" should not appear
-		assert.NotContains(t, view, "[ ]")
+		// ThemeSurvey uses "[ ] " as unselected prefix
+		assert.Contains(t, view, "[ ]")
+	})
+
+	t.Run("multi-select uses [x] for selected prefix", func(t *testing.T) {
+		var selected []string
+		f := buildMultiSelectForm(nil, "Pick", []string{"A", "B"}, &selected)
+		f.Update(f.Init())
+
+		// Toggle first item
+		m, _ := f.Update(key('x'))
+		view := ansi.Strip(m.View())
+		assert.Contains(t, view, "[x]")
+	})
+
+	t.Run("select form renders chevron cursor", func(t *testing.T) {
+		var selected string
+		f := buildSelectForm(nil, "Pick", []string{"A", "B"}, SelectPromptConfig{}, &selected)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, style.Chevron()+" A")
+	})
+
+	t.Run("all form builders apply ThemeSurvey without lipgloss", func(t *testing.T) {
+		var s string
+		var b bool
+		var ss []string
+		forms := []*huh.Form{
+			buildInputForm(nil, "msg", InputPromptConfig{}, &s),
+			buildConfirmForm(nil, "msg", &b),
+			buildSelectForm(nil, "msg", []string{"a"}, SelectPromptConfig{}, &s),
+			buildPasswordForm(nil, "msg", PasswordPromptConfig{}, &s),
+			buildMultiSelectForm(nil, "msg", []string{"a"}, &ss),
+		}
+		for _, f := range forms {
+			f.Update(f.Init())
+			assert.NotEmpty(t, f.View())
+		}
 	})
 }

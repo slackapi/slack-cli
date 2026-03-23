@@ -76,6 +76,46 @@ func TestThemeSlack(t *testing.T) {
 	}
 }
 
+func TestThemeSurvey(t *testing.T) {
+	theme := ThemeSurvey().Theme(false)
+	tests := map[string]struct {
+		rendered   string
+		expected   []string
+		unexpected []string
+	}{
+		"focused title renders text": {
+			rendered: theme.Focused.Title.Render("x"),
+			expected: []string{"x"},
+		},
+		"focused error message renders text": {
+			rendered: theme.Focused.ErrorMessage.Render("err"),
+			expected: []string{"err"},
+		},
+		"focused select selector renders chevron": {
+			rendered: theme.Focused.SelectSelector.Render(),
+			expected: []string{Chevron()},
+		},
+		"focused multi-select selected prefix has [x]": {
+			rendered: theme.Focused.SelectedPrefix.Render(),
+			expected: []string{"[x]"},
+		},
+		"focused multi-select unselected prefix has brackets": {
+			rendered: theme.Focused.UnselectedPrefix.Render(),
+			expected: []string{"[ ]"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			for _, exp := range tc.expected {
+				assert.Contains(t, tc.rendered, exp)
+			}
+			for _, unexp := range tc.unexpected {
+				assert.NotContains(t, tc.rendered, unexp)
+			}
+		})
+	}
+}
+
 func TestChevron(t *testing.T) {
 	tests := map[string]struct {
 		styleEnabled bool

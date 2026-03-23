@@ -116,6 +116,8 @@ func Emoji(alias string) string {
 		padding = " "
 	case "wastebasket":
 		padding = " "
+	case "beach_with_umbrella":
+		padding = " "
 	}
 
 	return emoji.Sprint(":"+alias+":") + padding
@@ -269,6 +271,10 @@ func Underline(text string) string {
 		return legacyUnderline(text)
 	}
 	return render(lipgloss.NewStyle().Underline(true), text)
+}
+
+func Separator() string {
+	return " - "
 }
 
 /*
