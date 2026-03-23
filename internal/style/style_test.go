@@ -58,6 +58,10 @@ func TestRemoveANSI(t *testing.T) {
 	}
 }
 
+func TestSeparator(t *testing.T) {
+	assert.Equal(t, " - ", Separator())
+}
+
 func TestRemoveEmoji(t *testing.T) {
 	tests := map[string]struct {
 		input    string

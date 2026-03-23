@@ -16,10 +16,12 @@ package api
 
 import (
 	"testing"
+	"time"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -210,4 +212,12 @@ func Test_APIClient_ActivityInvalidJSON(t *testing.T) {
 	})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), slackerror.ErrUnableToParseJSON)
+}
+
+func Test_Activity_CreatedPretty(t *testing.T) {
+	// Created is in microseconds
+	createdMicroseconds := int64(1700000000000000)
+	activity := Activity{Created: createdMicroseconds}
+	expected := time.Unix(createdMicroseconds/1000000, 0).Format("2006-01-02 15:04:05")
+	assert.Equal(t, expected, activity.CreatedPretty())
 }

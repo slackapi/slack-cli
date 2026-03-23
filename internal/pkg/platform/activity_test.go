@@ -384,6 +384,772 @@ func TestPlatformActivity_TriggerExecutedToString(t *testing.T) {
 	}
 }
 
+func Test_prettifyActivity_allEventTypes(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"DatastoreRequestResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.DatastoreRequestResult,
+				Payload: map[string]interface{}{
+					"request_type":   "get",
+					"datastore_name": "DS1",
+					"details":        "id: 123",
+				},
+			},
+			expectedResults: []string{"Datastore get succeeded"},
+		},
+		"ExternalAuthMissingFunction routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthMissingFunction,
+				Payload: map[string]interface{}{
+					"function_id": "fn1",
+				},
+			},
+			expectedResults: []string{"Step function 'fn1' is missing"},
+		},
+		"ExternalAuthMissingSelectedAuth routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthMissingSelectedAuth,
+				Payload: map[string]interface{}{
+					"code": "wf1",
+				},
+			},
+			expectedResults: []string{"Missing mapped token for workflow 'wf1'"},
+		},
+		"ExternalAuthResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"Auth completed"},
+		},
+		"ExternalAuthStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthStarted,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"Auth start succeeded"},
+		},
+		"ExternalAuthTokenFetchResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.ExternalAuthTokenFetchResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U1",
+					"team_id":      "T1",
+					"app_id":       "A1",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{"Token fetch succeeded"},
+		},
+		"FunctionDeployment routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionDeployment,
+				Payload: map[string]interface{}{
+					"action":  "deploye",
+					"user_id": "U1",
+					"team_id": "T1",
+				},
+				Created: 1686939542000000,
+			},
+			expectedResults: []string{"Application deployed"},
+		},
+		"FunctionExecutionOutput routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionExecutionOutput,
+				Payload: map[string]interface{}{
+					"log": "output here",
+				},
+			},
+			expectedResults: []string{"Function output:"},
+		},
+		"TriggerPayloadReceived routes correctly": {
+			activity: api.Activity{
+				EventType: types.TriggerPayloadReceived,
+				Payload: map[string]interface{}{
+					"log": "payload here",
+				},
+			},
+			expectedResults: []string{"Trigger payload:"},
+		},
+		"FunctionExecutionResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionExecutionResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"Function 'fn1' (custom function) completed"},
+		},
+		"FunctionExecutionStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.FunctionExecutionStarted,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+					"function_type": "custom",
+				},
+			},
+			expectedResults: []string{"Function 'fn1' (custom function) started"},
+		},
+		"TriggerExecuted routes correctly": {
+			activity: api.Activity{
+				EventType: types.TriggerExecuted,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+				},
+			},
+			expectedResults: []string{"Trigger successfully started execution"},
+		},
+		"WorkflowBillingResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowBillingResult,
+				Payload: map[string]interface{}{
+					"workflow_name":     "wf1",
+					"is_billing_result": false,
+				},
+			},
+			expectedResults: []string{"excluded from billing"},
+		},
+		"WorkflowBotInvited routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowBotInvited,
+				Payload: map[string]interface{}{
+					"channel_id":  "C1",
+					"bot_user_id": "B1",
+				},
+			},
+			expectedResults: []string{"Channel C1 detected"},
+		},
+		"WorkflowCreatedFromTemplate routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowCreatedFromTemplate,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+					"template_id":   "tmpl1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' created from template 'tmpl1'"},
+		},
+		"WorkflowExecutionResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowExecutionResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' completed"},
+		},
+		"WorkflowExecutionStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowExecutionStarted,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' started"},
+		},
+		"WorkflowPublished routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowPublished,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' published"},
+		},
+		"WorkflowStepExecutionResult routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowStepExecutionResult,
+				Level:     types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "fn1",
+				},
+			},
+			expectedResults: []string{"Workflow step 'fn1' completed"},
+		},
+		"WorkflowStepStarted routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowStepStarted,
+				Payload: map[string]interface{}{
+					"current_step": float64(1),
+					"total_steps":  float64(3),
+				},
+			},
+			expectedResults: []string{"Workflow step 1 of 3 started"},
+		},
+		"WorkflowUnpublished routes correctly": {
+			activity: api.Activity{
+				EventType: types.WorkflowUnpublished,
+				Payload: map[string]interface{}{
+					"workflow_name": "wf1",
+				},
+			},
+			expectedResults: []string{"Workflow 'wf1' unpublished"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := prettifyActivity(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_externalAuthMissingFunctionToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.ERROR,
+		ComponentID: "comp1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"function_id": "my_func",
+		},
+		Created: 1686939542000000,
+	}
+	result := externalAuthMissingFunctionToString(activity)
+	assert.Contains(t, result, "Step function 'my_func' is missing")
+	assert.Contains(t, result, "comp1")
+	assert.Contains(t, result, "Trace=trace1")
+}
+
+func Test_externalAuthMissingSelectedAuthToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.ERROR,
+		ComponentID: "comp1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"code": "wf_abc",
+		},
+		Created: 1686939542000000,
+	}
+	result := externalAuthMissingSelectedAuthToString(activity)
+	assert.Contains(t, result, "Missing mapped token for workflow 'wf_abc'")
+	assert.Contains(t, result, "Trace=trace1")
+}
+
+func Test_externalAuthResultToString(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"completed auth result": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U123",
+					"team_id":      "T123",
+					"app_id":       "A123",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{
+				"Auth completed",
+				"U123",
+				"T123",
+				"A123",
+				"google",
+			},
+		},
+		"failed auth result with error details": {
+			activity: api.Activity{
+				Level: types.ERROR,
+				Payload: map[string]interface{}{
+					"user_id":       "U123",
+					"team_id":       "T123",
+					"app_id":        "A123",
+					"provider_key":  "google",
+					"code":          "invalid_grant",
+					"extra_message": "token expired",
+				},
+			},
+			expectedResults: []string{
+				"Auth failed",
+				"U123",
+				"invalid_grant",
+				"token expired",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := externalAuthResultToString(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_externalAuthStartedToString(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"succeeded auth start": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U123",
+					"team_id":      "T123",
+					"app_id":       "A123",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{
+				"Auth start succeeded",
+				"U123",
+				"T123",
+				"A123",
+				"google",
+			},
+		},
+		"failed auth start with error code": {
+			activity: api.Activity{
+				Level: types.ERROR,
+				Payload: map[string]interface{}{
+					"user_id":      "U123",
+					"team_id":      "T123",
+					"app_id":       "A123",
+					"provider_key": "google",
+					"code":         "auth_failed",
+				},
+			},
+			expectedResults: []string{
+				"Auth start failed",
+				"U123",
+				"auth_failed",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := externalAuthStartedToString(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_externalAuthTokenFetchResult(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"succeeded token fetch": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"user_id":      "U123",
+					"team_id":      "T123",
+					"app_id":       "A123",
+					"provider_key": "google",
+				},
+			},
+			expectedResults: []string{
+				"Token fetch succeeded",
+				"U123",
+				"T123",
+				"A123",
+				"google",
+			},
+		},
+		"failed token fetch with error code": {
+			activity: api.Activity{
+				Level: types.ERROR,
+				Payload: map[string]interface{}{
+					"user_id":      "U123",
+					"team_id":      "T123",
+					"app_id":       "A123",
+					"provider_key": "google",
+					"code":         "token_revoked",
+				},
+			},
+			expectedResults: []string{
+				"Token fetch failed",
+				"U123",
+				"token_revoked",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := externalAuthTokenFetchResult(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_functionDeploymentToString(t *testing.T) {
+	activity := api.Activity{
+		Level: types.INFO,
+		Payload: map[string]interface{}{
+			"action":  "deploye",
+			"user_id": "U123",
+			"team_id": "T123",
+		},
+		Created: 1686939542000000,
+	}
+	result := functionDeploymentToString(activity)
+	assert.Contains(t, result, "Application deployed")
+	assert.Contains(t, result, "U123")
+	assert.Contains(t, result, "T123")
+}
+
+func Test_functionExecutionOutputToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.INFO,
+		ComponentID: "fn1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"log": "hello world",
+		},
+		Created: 1686939542000000,
+	}
+	result := functionExecutionOutputToString(activity)
+	assert.Contains(t, result, "Function output:")
+	assert.Contains(t, result, "hello world")
+	assert.Contains(t, result, "Trace=trace1")
+}
+
+func Test_functionExecutionResultToString(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"completed function execution": {
+			activity: api.Activity{
+				Level:       types.INFO,
+				ComponentID: "fn1",
+				TraceID:     "trace1",
+				Payload: map[string]interface{}{
+					"function_name": "my_function",
+					"function_type": "custom",
+				},
+				Created: 1686939542000000,
+			},
+			expectedResults: []string{
+				"Function 'my_function' (custom function) completed",
+				"Trace=trace1",
+			},
+		},
+		"failed function execution with error": {
+			activity: api.Activity{
+				Level:       types.ERROR,
+				ComponentID: "fn1",
+				TraceID:     "trace1",
+				Payload: map[string]interface{}{
+					"function_name": "my_function",
+					"function_type": "custom",
+					"error":         "something went wrong",
+				},
+				Created: 1686939542000000,
+			},
+			expectedResults: []string{
+				"Function 'my_function' (custom function) failed",
+				"something went wrong",
+			},
+		},
+		"fatal function execution": {
+			activity: api.Activity{
+				Level: types.FATAL,
+				Payload: map[string]interface{}{
+					"function_name": "my_function",
+					"function_type": "builtin",
+				},
+			},
+			expectedResults: []string{"Function 'my_function' (builtin function) failed"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := functionExecutionResultToString(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_functionExecutionStartedToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.INFO,
+		ComponentID: "fn1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"function_name": "my_function",
+			"function_type": "custom",
+		},
+		Created: 1686939542000000,
+	}
+	result := functionExecutionStartedToString(activity)
+	assert.Contains(t, result, "Function 'my_function' (custom function) started")
+	assert.Contains(t, result, "Trace=trace1")
+}
+
+func Test_triggerPayloadReceivedOutputToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.INFO,
+		ComponentID: "trigger1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"log": "payload data here",
+		},
+		Created: 1686939542000000,
+	}
+	result := triggerPayloadReceivedOutputToString(activity)
+	assert.Contains(t, result, "Trigger payload:")
+	assert.Contains(t, result, "payload data here")
+	assert.Contains(t, result, "Trace=trace1")
+}
+
+func Test_workflowBillingResultToString(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"billing result with workflow name": {
+			activity: api.Activity{
+				Level:       types.INFO,
+				ComponentID: "wf1",
+				TraceID:     "trace1",
+				Payload: map[string]interface{}{
+					"workflow_name":     "My Workflow",
+					"is_billing_result": true,
+					"billing_reason":    "execution",
+				},
+				Created: 1686939542000000,
+			},
+			expectedResults: []string{
+				"Workflow 'My Workflow'",
+				"billing reason 'execution'",
+			},
+		},
+		"billing result without workflow name": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"is_billing_result": true,
+					"billing_reason":    "execution",
+				},
+			},
+			expectedResults: []string{
+				"Workflow",
+				"billing reason 'execution'",
+			},
+		},
+		"excluded from billing": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"workflow_name":     "My Workflow",
+					"is_billing_result": false,
+				},
+			},
+			expectedResults: []string{
+				"Workflow 'My Workflow'",
+				"excluded from billing",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := workflowBillingResultToString(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_workflowBotInvitedToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.INFO,
+		ComponentID: "wf1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"channel_id":  "C123",
+			"bot_user_id": "B123",
+		},
+		Created: 1686939542000000,
+	}
+	result := workflowBotInvitedToString(activity)
+	assert.Contains(t, result, "Channel C123 detected")
+	assert.Contains(t, result, "Bot user B123 automatically invited")
+}
+
+func Test_workflowCreatedFromTemplateToString(t *testing.T) {
+	activity := api.Activity{
+		Level:       types.INFO,
+		ComponentID: "wf1",
+		TraceID:     "trace1",
+		Payload: map[string]interface{}{
+			"workflow_name": "My Workflow",
+			"template_id":   "tmpl_123",
+		},
+		Created: 1686939542000000,
+	}
+	result := workflowCreatedFromTemplateToString(activity)
+	assert.Contains(t, result, "Workflow 'My Workflow' created from template 'tmpl_123'")
+}
+
+func Test_workflowExecutionResultToString(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"completed workflow execution": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"workflow_name": "My Workflow",
+				},
+			},
+			expectedResults: []string{"Workflow 'My Workflow' completed"},
+		},
+		"failed workflow execution with error": {
+			activity: api.Activity{
+				Level: types.ERROR,
+				Payload: map[string]interface{}{
+					"workflow_name": "My Workflow",
+					"error":         "step failed",
+				},
+			},
+			expectedResults: []string{
+				"Workflow 'My Workflow' failed",
+				"step failed",
+			},
+		},
+		"fatal workflow execution": {
+			activity: api.Activity{
+				Level: types.FATAL,
+				Payload: map[string]interface{}{
+					"workflow_name": "My Workflow",
+				},
+			},
+			expectedResults: []string{"Workflow 'My Workflow' failed"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := workflowExecutionResultToString(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_workflowExecutionStartedToString(t *testing.T) {
+	activity := api.Activity{
+		Level: types.INFO,
+		Payload: map[string]interface{}{
+			"workflow_name": "My Workflow",
+		},
+	}
+	result := workflowExecutionStartedToString(activity)
+	assert.Contains(t, result, "Workflow 'My Workflow' started")
+}
+
+func Test_workflowPublishedToString(t *testing.T) {
+	activity := api.Activity{
+		Level: types.INFO,
+		Payload: map[string]interface{}{
+			"workflow_name": "My Workflow",
+		},
+	}
+	result := workflowPublishedToString(activity)
+	assert.Contains(t, result, "Workflow 'My Workflow' published")
+}
+
+func Test_workflowStepExecutionResultToString(t *testing.T) {
+	tests := map[string]struct {
+		activity        api.Activity
+		expectedResults []string
+	}{
+		"completed step": {
+			activity: api.Activity{
+				Level: types.INFO,
+				Payload: map[string]interface{}{
+					"function_name": "send_message",
+				},
+			},
+			expectedResults: []string{"Workflow step 'send_message' completed"},
+		},
+		"failed step": {
+			activity: api.Activity{
+				Level: types.ERROR,
+				Payload: map[string]interface{}{
+					"function_name": "send_message",
+				},
+			},
+			expectedResults: []string{"Workflow step 'send_message' failed"},
+		},
+		"fatal step": {
+			activity: api.Activity{
+				Level: types.FATAL,
+				Payload: map[string]interface{}{
+					"function_name": "send_message",
+				},
+			},
+			expectedResults: []string{"Workflow step 'send_message' failed"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := workflowStepExecutionResultToString(tc.activity)
+			for _, expected := range tc.expectedResults {
+				assert.Contains(t, result, expected)
+			}
+		})
+	}
+}
+
+func Test_workflowStepStartedToString(t *testing.T) {
+	activity := api.Activity{
+		Level: types.INFO,
+		Payload: map[string]interface{}{
+			"current_step": float64(2),
+			"total_steps":  float64(5),
+		},
+	}
+	result := workflowStepStartedToString(activity)
+	assert.Contains(t, result, "Workflow step 2 of 5 started")
+}
+
+func Test_workflowUnpublishedToString(t *testing.T) {
+	activity := api.Activity{
+		Level: types.INFO,
+		Payload: map[string]interface{}{
+			"workflow_name": "My Workflow",
+		},
+	}
+	result := workflowUnpublishedToString(activity)
+	assert.Contains(t, result, "Workflow 'My Workflow' unpublished")
+}
+
 func Test_datastoreRequestResultToString(t *testing.T) {
 	for name, tc := range map[string]struct {
 		activity        api.Activity

@@ -26,10 +26,10 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/ioutils"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/tracer"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/uber/jaeger-client-go"
 )
 
@@ -80,7 +80,8 @@ func main() {
 func recoveryFunc() {
 	// in the event of a panic, log panic
 	if r := recover(); r != nil {
-		var clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
+		var clients = shared.NewClientFactory()
+		clients.Config.Version = version.Raw()
 
 		var ctx = context.Background()
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())

@@ -15,12 +15,21 @@
 package api
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func Test_TriggerCreateOrUpdateError_Error(t *testing.T) {
+	err := &TriggerCreateOrUpdateError{
+		Err: fmt.Errorf("something went wrong"),
+	}
+	assert.Equal(t, "something went wrong", err.Error())
+}
 
 func TestClient_WorkflowsTriggerCreate(t *testing.T) {
 	var inputs = make(map[string]*Input)
