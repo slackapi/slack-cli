@@ -274,7 +274,7 @@ func Underline(text string) string {
 }
 
 func Separator() string {
-	return " — "
+	return " - "
 }
 
 /*
