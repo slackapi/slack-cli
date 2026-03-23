@@ -80,7 +80,8 @@ func main() {
 func recoveryFunc() {
 	// in the event of a panic, log panic
 	if r := recover(); r != nil {
-		var clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
+		var clients = shared.NewClientFactory()
+		clients.Config.Version = version.Raw()
 
 		var ctx = context.Background()
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())
