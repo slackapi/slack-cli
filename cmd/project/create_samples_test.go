@@ -128,7 +128,12 @@ func TestSamples_PromptSampleSelection(t *testing.T) {
 				iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("template"),
 				}),
-			).Return(tc.mockSelection, nil)
+			).Run(func(args mock.Arguments) {
+				cfg := args.Get(3).(iostreams.SelectPromptConfig)
+				if cfg.Description != nil {
+					cfg.Description("", 0)
+				}
+			}).Return(tc.mockSelection, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Execute test
