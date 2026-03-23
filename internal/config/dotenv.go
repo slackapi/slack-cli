@@ -18,7 +18,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/afero"
 )
 

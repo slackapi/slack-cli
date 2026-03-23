@@ -171,7 +171,7 @@ Versions use semantic versioning with git tags (format: `v*.*.*`).
 Version is generated dynamically using `git describe` and injected at build time:
 
 ```bash
-LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=`git describe --tags --match 'v*.*.*'`'
+LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/version.Version=`git describe --tags --match 'v*.*.*'`'
 ```
 
 **Versioning Rules**:
@@ -188,6 +188,10 @@ When deprecating features, commands, or flags:
 2. **Flags**: Print deprecation warning on use, hide with `.Hidden` attribute
 3. **Public functionality**: Add comment `// DEPRECATED(semver:major): <description and migration path>`
 4. **Internal functionality**: Add comment `// DEPRECATED: <description>`
+
+## Style Guide
+
+See [`.github/STYLE_GUIDE.md`](../.github/STYLE_GUIDE.md) for conventions on command inputs and outputs.
 
 ## Important Configuration Files
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # Common variables
-LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=`git describe --tags --match 'v*.*.*'`'
+LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/version.Version=`git describe --tags --match 'v*.*.*'`'
 BUILD_VERSION = `git describe --tags --match 'v*.*.*' | sed 's/v//'`
 RELEASE_VERSION := $(shell git describe --tags --match 'v*.*.*')
 testdir ?= ...
