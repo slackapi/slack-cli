@@ -126,6 +126,54 @@ func Chevron() string {
 	return "❱"
 }
 
+// ThemeSurvey returns a huh Theme that matches the legacy survey prompt styling.
+// Applied when experiment.Huh is on but experiment.Lipgloss is off.
+func ThemeSurvey() huh.Theme {
+	return huh.ThemeFunc(themeSurvey)
+}
+
+// themeSurvey builds huh styles matching the survey library's appearance.
+func themeSurvey(isDark bool) *huh.Styles {
+	t := huh.ThemeBase(isDark)
+
+	ansiBlue := lipgloss.ANSIColor(blue)
+	ansiGray := lipgloss.ANSIColor(gray)
+	ansiGreen := lipgloss.ANSIColor(green)
+	ansiRed := lipgloss.ANSIColor(red)
+
+	t.Focused.Title = lipgloss.NewStyle().
+		Foreground(ansiGray).
+		Bold(true)
+	t.Focused.ErrorIndicator = lipgloss.NewStyle().
+		Foreground(ansiRed).
+		SetString(" *")
+	t.Focused.ErrorMessage = lipgloss.NewStyle().
+		Foreground(ansiRed)
+
+	// Select styles
+	t.Focused.SelectSelector = lipgloss.NewStyle().
+		Foreground(ansiBlue).
+		Bold(true).
+		SetString(Chevron() + " ")
+	t.Focused.SelectedOption = lipgloss.NewStyle().
+		Foreground(ansiBlue).
+		Bold(true)
+
+	// Multi-select styles
+	t.Focused.MultiSelectSelector = lipgloss.NewStyle().
+		Foreground(ansiBlue).
+		Bold(true).
+		SetString(Chevron() + " ")
+	t.Focused.SelectedPrefix = lipgloss.NewStyle().
+		Foreground(ansiGreen).
+		SetString("[x] ")
+	t.Focused.UnselectedPrefix = lipgloss.NewStyle().
+		Bold(true).
+		SetString("[ ] ")
+
+	return t
+}
+
 // SurveyIcons returns customizations to the appearance of survey prompts.
 func SurveyIcons() survey.AskOpt {
 	if !isStyleEnabled {
