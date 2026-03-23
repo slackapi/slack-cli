@@ -30,7 +30,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/radovskyb/watcher"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
@@ -307,7 +306,9 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	// To avoid removing any environment variables that are set in the current environment, we first set the cmd.Env to the current environment.
 	// before adding any new environment variables.
 	var cmdEnvVars = os.Environ()
-	cmdEnvVars = append(cmdEnvVars, goutils.MapToStringSlice(sdkManagedConnectionStartHookOpts.Env, "")...)
+	for name, value := range sdkManagedConnectionStartHookOpts.Env {
+		cmdEnvVars = append(cmdEnvVars, name+"="+value)
+	}
 	cmd := sdkManagedConnectionStartHookOpts.Exec.Command(cmdEnvVars, os.Stdout, os.Stderr, nil, cmdArgs[0], cmdArgVars...)
 
 	// Store command reference for lifecycle management

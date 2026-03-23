@@ -92,7 +92,7 @@ func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectProm
 		key := opt
 		if cfg.Description != nil {
 			if desc := style.RemoveEmoji(cfg.Description(opt, len(opts))); desc != "" {
-				key = style.Bright(opt) + " — " + style.Secondary(desc)
+				key = style.Bright(opt) + style.Separator() + style.Secondary(desc)
 			}
 		}
 		opts = append(opts, huh.NewOption(key, opt))
