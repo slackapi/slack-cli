@@ -17,7 +17,6 @@ package app
 import (
 	"context"
 
-	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
@@ -164,6 +163,7 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 
 			if !isProductionApp {
 				selection.App.IsDev = true
+				clients.Config.SetAppEnvManifestVariables(selection.App.TeamDomain, selection.App.IsDev)
 			}
 		}
 	}
@@ -177,8 +177,6 @@ func RunAddCommand(ctx context.Context, clients *shared.ClientFactory, selection
 	if err != nil {
 		return ctx, "", types.App{}, err
 	}
-
-	clients.Config.ManifestEnv = app.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.App.TeamDomain, selection.App.IsDev)
 
 	// Install dev app or prod app to a workspace
 	installedApp, installState, err := appInstall(ctx, clients, selection, orgGrantWorkspaceID)

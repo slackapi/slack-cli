@@ -19,7 +19,6 @@ import (
 
 	"github.com/slackapi/slack-cli/cmd/help"
 	"github.com/slackapi/slack-cli/cmd/triggers"
-	internalapp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/pkg/platform"
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -140,8 +139,6 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-
-	clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.Auth.TeamDomain, selection.App.IsDev)
 
 	runArgs := platform.RunArgs{
 		Activity:            !runFlags.noActivity,

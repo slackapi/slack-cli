@@ -18,13 +18,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/api"
-	internalapp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
@@ -101,8 +101,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	token := selection.Auth.Token
 	ctx = config.SetContextToken(ctx, token)
 	app := selection.App
-
-	clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.App.TeamDomain, selection.App.IsDev)
 
 	if selection.App.IsNew() || selection.App.AppID == "" {
 		_ctx, installState, _app, err := workspaceInstallAppFunc(ctx, clients, &selection, createFlags.orgGrantWorkspaceID)
@@ -315,10 +313,7 @@ func triggerRequestViaHook(ctx context.Context, clients *shared.ClientFactory, p
 	hookExecOpts := hooks.HookExecOpts{
 		Hook: clients.SDKConfig.Hooks.GetTrigger,
 		Args: map[string]string{"source": path},
-		Env:  map[string]string{},
-	}
-	for name, val := range clients.Config.ManifestEnv {
-		hookExecOpts.Env[name] = val
+		Env:  maps.Clone(clients.Config.ManifestEnv),
 	}
 	triggerDefAsStr, err := clients.HookExecutor.Execute(
 		ctx,

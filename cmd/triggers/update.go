@@ -20,7 +20,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
-	internalapp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -86,8 +85,6 @@ func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	token := selection.Auth.Token
 	ctx = config.SetContextToken(ctx, token)
 	app := selection.App
-
-	clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.App.TeamDomain, selection.App.IsDev)
 
 	if err = cmdutil.AppExists(app, selection.Auth); err != nil {
 		return err

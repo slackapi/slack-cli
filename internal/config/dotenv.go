@@ -32,6 +32,20 @@ func (c *Config) GetDotEnvFileVariables() (map[string]string, error) {
 	return godotenv.UnmarshalBytes(file)
 }
 
+// SetAppEnvManifestVariables sets environment variables related to the manifest
+// of the selected app.
+func (c *Config) SetAppEnvManifestVariables(teamDomain string, isDev bool) {
+	if c.ManifestEnv == nil {
+		c.ManifestEnv = map[string]string{}
+	}
+	c.ManifestEnv["SLACK_WORKSPACE"] = teamDomain
+	if isDev {
+		c.ManifestEnv["SLACK_ENV"] = "local"
+	} else {
+		c.ManifestEnv["SLACK_ENV"] = "deployed"
+	}
+}
+
 // LoadEnvironmentVariables sets flags based on their environment variable value
 //
 // Note: Values are not loaded from the .env file. Use: `GetDotEnvFileVariables`

@@ -22,6 +22,61 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_DotEnv_SetAppEnvManifestVariables(t *testing.T) {
+	tests := map[string]struct {
+		teamDomain string
+		isDev      bool
+		initialEnv map[string]string
+		expected   map[string]string
+	}{
+		"sets built-in vars for deployed app": {
+			teamDomain: "bigspeck",
+			isDev:      false,
+			expected: map[string]string{
+				"SLACK_WORKSPACE": "bigspeck",
+				"SLACK_ENV":       "deployed",
+			},
+		},
+		"sets built-in vars for local app": {
+			teamDomain: "sandbox",
+			isDev:      true,
+			expected: map[string]string{
+				"SLACK_WORKSPACE": "sandbox",
+				"SLACK_ENV":       "local",
+			},
+		},
+		"handles nil ManifestEnv": {
+			teamDomain: "team",
+			isDev:      true,
+			initialEnv: nil,
+			expected: map[string]string{
+				"SLACK_WORKSPACE": "team",
+				"SLACK_ENV":       "local",
+			},
+		},
+		"preserves existing ManifestEnv values": {
+			teamDomain: "team",
+			isDev:      false,
+			initialEnv: map[string]string{"SLACK_APP_ID": "A1234"},
+			expected: map[string]string{
+				"SLACK_APP_ID":    "A1234",
+				"SLACK_WORKSPACE": "team",
+				"SLACK_ENV":       "deployed",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			config := NewConfig(fs, os)
+			config.ManifestEnv = tc.initialEnv
+			config.SetAppEnvManifestVariables(tc.teamDomain, tc.isDev)
+			assert.Equal(t, tc.expected, config.ManifestEnv)
+		})
+	}
+}
+
 func Test_DotEnv_GetDotEnvFileVariables(t *testing.T) {
 	tests := map[string]struct {
 		globalVariableName  string

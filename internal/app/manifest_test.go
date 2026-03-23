@@ -29,44 +29,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_AppManifest_SetManifestEnvTeamVars(t *testing.T) {
-	tests := map[string]struct {
-		teamDomain string
-		isDev      bool
-		manifest   map[string]string
-		expected   map[string]string
-	}{
-		"workspace and prod environment is set": {
-			teamDomain: "bigspeck",
-			isDev:      false,
-			manifest:   nil,
-			expected: map[string]string{
-				"SLACK_WORKSPACE": "bigspeck",
-				"SLACK_ENV":       "deployed",
-			},
-		},
-		"workspace and local environment is set": {
-			teamDomain: "sandbox",
-			isDev:      true,
-			manifest:   map[string]string{"SLACK_APP_ID": "A1234"},
-			expected: map[string]string{
-				"SLACK_APP_ID":    "A1234",
-				"SLACK_WORKSPACE": "sandbox",
-				"SLACK_ENV":       "local",
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			teamManifest := SetManifestEnvTeamVars(tc.manifest, tc.teamDomain, tc.isDev)
-			require.Equal(t, len(tc.expected), len(teamManifest))
-			for key, val := range tc.expected {
-				require.Equal(t, val, teamManifest[key])
-			}
-		})
-	}
-}
-
 func Test_AppManifest_GetManifestLocal(t *testing.T) {
 	tests := map[string]struct {
 		mockManifestInfo string

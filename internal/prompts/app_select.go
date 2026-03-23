@@ -416,6 +416,7 @@ func AppSelectPrompt(
 			return
 		}
 		clients.Auth().SetSelectedAuth(ctx, selected.Auth, clients.Config, clients.Os)
+		clients.Config.SetAppEnvManifestVariables(selected.App.TeamDomain, selected.App.IsDev)
 		if selected.App.IsNew() {
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(appTransferDisclaimer))
 		}

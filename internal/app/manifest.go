@@ -17,6 +17,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"maps"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -36,23 +37,6 @@ type ManifestClient struct {
 type ManifestClientInterface interface {
 	GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error)
 	GetManifestRemote(ctx context.Context, token string, appID string) (types.SlackYaml, error)
-}
-
-// SetManifestEnvTeamVars sets environment variables that may affect app manifest values
-func SetManifestEnvTeamVars(manifestEnv map[string]string, appTeamDomain string, isDev bool) map[string]string {
-	localOrDeployed := "deployed"
-	if isDev {
-		localOrDeployed = "local"
-	}
-
-	if manifestEnv == nil {
-		manifestEnv = map[string]string{}
-	}
-
-	manifestEnv["SLACK_WORKSPACE"] = appTeamDomain
-	manifestEnv["SLACK_ENV"] = localOrDeployed
-
-	return manifestEnv
 }
 
 // NewManifestClient returns a new, empty instance of the ManifestClient
@@ -86,10 +70,7 @@ func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.S
 		},
 		Hook: sdkConfig.Hooks.GetManifest,
 	}
-
-	for name, val := range c.Env {
-		manifestHookOpts.Env[name] = val
-	}
+	maps.Copy(manifestHookOpts.Env, c.Env)
 
 	slackManifestInfo, err := hookExecutor.Execute(ctx, manifestHookOpts)
 	if err != nil {

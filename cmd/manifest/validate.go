@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/manifest"
@@ -74,8 +73,6 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 			} else {
 				token = selection.Auth.Token
 			}
-
-			clients.Config.ManifestEnv = app.SetManifestEnvTeamVars(clients.Config.ManifestEnv, selection.App.TeamDomain, selection.App.IsDev)
 
 			isValid, warn, err := manifestValidateFunc(ctx, clients, selection.App, token)
 			if err != nil {
