@@ -171,7 +171,7 @@ Versions use semantic versioning with git tags (format: `v*.*.*`).
 Version is generated dynamically using `git describe` and injected at build time:
 
 ```bash
-LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/pkg/version.Version=`git describe --tags --match 'v*.*.*'`'
+LDFLAGS=-X 'github.com/slackapi/slack-cli/internal/version.Version=`git describe --tags --match 'v*.*.*'`'
 ```
 
 **Versioning Rules**:
