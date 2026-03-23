@@ -60,7 +60,8 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Env: map[string]string{
-					"BATMAN": "robin hood",
+					"BATMAN": "robin",
+					"WHOAMI": "lumpy space princess",
 					"YIN":    "yang",
 				},
 				Exec: &MockExec{
@@ -74,7 +75,8 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 				response, err := executor.Execute(ctx, opts)
 				require.Equal(t, "test output", response)
 				require.Equal(t, nil, err)
-				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `BATMAN=robin hood`)
+				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `BATMAN=robin`)
+				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `WHOAMI=lumpy space princess`)
 				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `YIN=yang`)
 			},
 		},
