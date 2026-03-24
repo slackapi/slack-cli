@@ -25,6 +25,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 )
 
 // HookExecutorMessageBoundaryProtocol uses a protocol between the CLI and the SDK where diagnostic info
@@ -32,6 +33,7 @@ import (
 // message boundary. Only one message payload can be received.
 type HookExecutorMessageBoundaryProtocol struct {
 	IO iostreams.IOStreamer
+	Fs afero.Fs
 }
 
 // generateBoundary is a function for creating boundaries that can be mocked
@@ -39,7 +41,7 @@ var generateBoundary = generateMD5FromRandomString
 
 // Execute processes the data received by the SDK.
 func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts HookExecOpts) (string, error) {
-	cmdArgs, cmdArgVars, cmdEnvVars, err := processExecOpts(opts)
+	cmdArgs, cmdArgVars, cmdEnvVars, err := processExecOpts(ctx, opts, e.Fs, e.IO)
 	if err != nil {
 		return "", err
 	}

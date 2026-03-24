@@ -181,6 +181,7 @@ func deployHook(ctx context.Context, clients *shared.ClientFactory) error {
 	// so we instantiate the default here.
 	shell := hooks.HookExecutorDefaultProtocol{
 		IO: clients.IO,
+		Fs: clients.Fs,
 	}
 	if _, err := shell.Execute(ctx, hookExecOpts); err != nil {
 		return err

@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -78,6 +79,31 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `BATMAN=robin`)
 				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `WHOAMI=lumpy space princess`)
 				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `YIN=yang`)
+			},
+		},
+		"dotenv vars are loaded": {
+			opts: HookExecOpts{
+				Hook: HookScript{Name: "happypath", Command: "echo {}"},
+				Env: map[string]string{
+					"OPTS_VAR": "from_opts",
+				},
+				Exec: &MockExec{
+					mockCommand: &MockCommand{
+						MockStdout: []byte("test output"),
+						Err:        nil,
+					},
+				},
+			},
+			handler: func(t *testing.T, ctx context.Context, executor HookExecutor, opts HookExecOpts) {
+				// Write a .env file to the mock filesystem
+				e := executor.(*HookExecutorDefaultProtocol)
+				_ = afero.WriteFile(e.Fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0644)
+
+				response, err := executor.Execute(ctx, opts)
+				require.Equal(t, "test output", response)
+				require.NoError(t, err)
+				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `DOTENV_VAR=from_dotenv`)
+				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `OPTS_VAR=from_opts`)
 			},
 		},
 		"failed execution": {
@@ -156,6 +182,7 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 			ios.AddDefaultMocks()
 			hookExecutor := &HookExecutorDefaultProtocol{
 				IO: ios,
+				Fs: afero.NewMemMapFs(),
 			}
 			if tc.handler != nil {
 				tc.handler(t, ctx, hookExecutor, tc.opts)
