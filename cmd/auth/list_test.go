@@ -53,6 +53,30 @@ func TestListCommand(t *testing.T) {
 				"U67890",
 			},
 		},
+		"multiple authorized accounts": {
+			auths: []types.SlackAuth{
+				{
+					TeamDomain:  "alpha-workspace",
+					TeamID:      "T11111",
+					UserID:      "U11111",
+					LastUpdated: time.Date(2025, 1, 10, 8, 0, 0, 0, time.UTC),
+				},
+				{
+					TeamDomain:  "beta-workspace",
+					TeamID:      "T22222",
+					UserID:      "U22222",
+					LastUpdated: time.Date(2025, 2, 20, 16, 0, 0, 0, time.UTC),
+				},
+			},
+			expected: []string{
+				"alpha-workspace",
+				"T11111",
+				"U11111",
+				"beta-workspace",
+				"T22222",
+				"U22222",
+			},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
