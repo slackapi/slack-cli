@@ -38,4 +38,6 @@ func TestAuthCommand(t *testing.T) {
 
 	err := cmd.ExecuteContext(ctx)
 	assert.NoError(t, err)
+	// Verify the auth command delegates to the list command; detailed list output testing is in TestListCommand
+	assert.Contains(t, clientsMock.GetCombinedOutput(), "logged in")
 }
