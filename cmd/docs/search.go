@@ -56,12 +56,12 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:  "Search the Slack developer docs and return results in browser or JSON format",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Search docs and open results in browser",
+				Meaning: "Search docs and return JSON results",
 				Command: "docs search \"Block Kit\"",
 			},
 			{
-				Meaning: "Search docs and return JSON results",
-				Command: "docs search \"webhooks\" --output=json",
+				Meaning: "Search docs and open results in browser",
+				Command: "docs search \"webhooks\" --output=browser",
 			},
 			{
 				Meaning: "Search docs with limited JSON results",

@@ -32,7 +32,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "docs",
 		Short: "Open Slack developer docs",
-		Long:  "Open the Slack developer docs in your browser, with optional search functionality",
+		Long:  "Open the Slack developer docs in your browser or search them using the search subcommand",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Open Slack developer docs homepage",
@@ -40,11 +40,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			},
 			{
 				Meaning: "Search Slack developer docs for Block Kit",
-				Command: "docs --search \"Block Kit\"",
+				Command: "docs search \"Block Kit\"",
 			},
 			{
-				Meaning: "Open Slack docs search page",
-				Command: "docs --search",
+				Meaning: "Search docs and open results in browser",
+				Command: "docs search \"Block Kit\" --output=browser",
 			},
 		}),
 		Args: cobra.ArbitraryArgs, // Allow any arguments
