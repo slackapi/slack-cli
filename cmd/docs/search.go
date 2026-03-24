@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -28,26 +29,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var searchOutputFlag string
-var searchLimitFlag int
+const docsSearchAPIURL = "https://docs-slack-d-search-api-duu9zr.herokuapp.com/api/search"
 
-// response from the Slack docs search API
+type searchConfig struct {
+	output string
+	limit  int
+}
+
 type DocsSearchResponse struct {
 	TotalResults int                `json:"total_results"`
 	Results      []DocsSearchResult `json:"results"`
 	Limit        int                `json:"limit"`
 }
 
-// single search result
 type DocsSearchResult struct {
 	URL   string `json:"url"`
 	Title string `json:"title"`
 }
 
 func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
+	cfg := &searchConfig{}
+
 	cmd := &cobra.Command{
 		Use:   "search <query>",
-		Short: "Search Slack developer docs (experimental)",
+		Short: "Search Slack developer docs",
 		Long:  "Search the Slack developer docs and return results in browser or JSON format",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -65,27 +70,25 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDocsSearchCommand(clients, cmd, args, http.DefaultClient)
+			return runDocsSearchCommand(clients, cmd, args, cfg, http.DefaultClient)
 		},
 	}
 
-	cmd.Flags().StringVar(&searchOutputFlag, "output", "json", "output format: browser, json")
-	cmd.Flags().IntVar(&searchLimitFlag, "limit", 20, "maximum number of search results to return (only applies with --output=json)")
+	cmd.Flags().StringVar(&cfg.output, "output", "json", "output format: browser, json")
+	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of search results to return (only applies with --output=json)")
 
 	return cmd
 }
 
-// handles the docs search subcommand
-func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string, httpClient *http.Client) error {
+func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string, cfg *searchConfig, httpClient *http.Client) error {
 	ctx := cmd.Context()
 
 	query := strings.Join(args, " ")
 
-	if searchOutputFlag == "json" {
-		return fetchAndOutputSearchResults(ctx, clients, query, searchLimitFlag, httpClient)
+	if cfg.output == "json" {
+		return fetchAndOutputSearchResults(ctx, clients, query, cfg.limit, httpClient)
 	}
 
-	// Browser output - open search results in browser
 	encodedQuery := url.QueryEscape(query)
 	docsURL := fmt.Sprintf("https://docs.slack.dev/search/?q=%s", encodedQuery)
 
@@ -103,12 +106,9 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 	return nil
 }
 
-// fetches search results from the docs API and outputs as JSON
 func fetchAndOutputSearchResults(ctx context.Context, clients *shared.ClientFactory, query string, limit int, httpClient *http.Client) error {
-	// Build API URL with limit parameter
-	apiURL := fmt.Sprintf("https://docs-slack-d-search-api-duu9zr.herokuapp.com/api/search?q=%s&limit=%d", url.QueryEscape(query), limit)
+	apiURL := fmt.Sprintf("%s?q=%s&limit=%d", docsSearchAPIURL, url.QueryEscape(query), limit)
 
-	// Make HTTP request
 	resp, err := httpClient.Get(apiURL)
 	if err != nil {
 		return fmt.Errorf("failed to fetch search results: %w", err)
@@ -119,21 +119,17 @@ func fetchAndOutputSearchResults(ctx context.Context, clients *shared.ClientFact
 		return fmt.Errorf("API returned status %d", resp.StatusCode)
 	}
 
-	// Parse JSON response
 	var searchResponse DocsSearchResponse
 	if err := json.NewDecoder(resp.Body).Decode(&searchResponse); err != nil {
 		return fmt.Errorf("failed to parse search results: %w", err)
 	}
 
-	// Output as JSON
-	output, err := json.MarshalIndent(searchResponse, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal JSON output: %w", err)
+	encoder := json.NewEncoder(os.Stdout)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(searchResponse); err != nil {
+		return fmt.Errorf("failed to output search results: %w", err)
 	}
 
-	fmt.Println(string(output))
-
-	// Trace the successful API call
 	clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
 
 	return nil

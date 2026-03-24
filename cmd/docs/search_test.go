@@ -49,8 +49,23 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 	}, nil
 }
 
-// setupJSONOutputTest creates a mock client and clients factory for JSON output tests.
-func setupJSONOutputTest(t *testing.T, response string, status int) (*http.Client, *shared.ClientFactory, *mockRoundTripper) {
+func setupJSONOutputTest(t *testing.T, response string, status int) (*http.Client, *shared.ClientFactory) {
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	mockTransport := &mockRoundTripper{
+		response: response,
+		status:   status,
+	}
+	mockClient := &http.Client{
+		Transport: mockTransport,
+	}
+
+	return mockClient, clients
+}
+
+func setupJSONOutputTestWithCapture(t *testing.T, response string, status int) (*http.Client, *shared.ClientFactory, *mockRoundTripper) {
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -68,26 +83,23 @@ func setupJSONOutputTest(t *testing.T, response string, status int) (*http.Clien
 
 // JSON Output Tests
 
-// Test_Docs_SearchCommand_JSONOutput_APIError verifies that HTTP errors from the API
-// (e.g., 404 Not Found) are properly caught and returned as errors.
+// Verifies that HTTP errors from the API are properly caught and returned as errors.
 func Test_Docs_SearchCommand_JSONOutput_APIError(t *testing.T) {
-	mockClient, clients, _ := setupJSONOutputTest(t, `{"error": "not found"}`, http.StatusNotFound)
+	mockClient, clients := setupJSONOutputTest(t, `{"error": "not found"}`, http.StatusNotFound)
 	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "nonexistent", 20, mockClient)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "API returned status 404")
 }
 
-// Test_Docs_SearchCommand_JSONOutput_InvalidJSON verifies that malformed JSON responses
-// from the API are caught during parsing and returned as errors.
+// Verifies that malformed JSON responses are caught during parsing and returned as errors.
 func Test_Docs_SearchCommand_JSONOutput_InvalidJSON(t *testing.T) {
-	mockClient, clients, _ := setupJSONOutputTest(t, `{invalid json}`, http.StatusOK)
+	mockClient, clients := setupJSONOutputTest(t, `{invalid json}`, http.StatusOK)
 	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "test", 20, mockClient)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to parse search results")
 }
 
-// Test_Docs_SearchCommand_JSONOutput_EmptyResults verifies that valid JSON responses with no results
-// are correctly parsed and output without errors.
+// Verifies that valid JSON responses with no results are correctly parsed and output without errors.
 func Test_Docs_SearchCommand_JSONOutput_EmptyResults(t *testing.T) {
 	mockResponse := `{
 		"total_results": 0,
@@ -95,13 +107,12 @@ func Test_Docs_SearchCommand_JSONOutput_EmptyResults(t *testing.T) {
 		"results": []
 	}`
 
-	mockClient, clients, _ := setupJSONOutputTest(t, mockResponse, http.StatusOK)
+	mockClient, clients := setupJSONOutputTest(t, mockResponse, http.StatusOK)
 	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "nonexistent query", 20, mockClient)
 	require.NoError(t, err)
 }
 
-// Test_Docs_SearchCommand_JSONOutput_QueryFormats tests JSON output with various query formats
-// to ensure proper URL encoding, API parameter handling, and response parsing.
+// Verifies that various query formats are properly URL encoded and API parameters are correctly passed.
 func Test_Docs_SearchCommand_JSONOutput_QueryFormats(t *testing.T) {
 	mockResponse := `{
 		"total_results": 2,
@@ -147,7 +158,7 @@ func Test_Docs_SearchCommand_JSONOutput_QueryFormats(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockClient, clients, mockTransport := setupJSONOutputTest(t, mockResponse, http.StatusOK)
+			mockClient, clients, mockTransport := setupJSONOutputTestWithCapture(t, mockResponse, http.StatusOK)
 			err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, tc.query, tc.limit, mockClient)
 			require.NoError(t, err)
 			assert.Contains(t, mockTransport.capturedURL, "q="+tc.expected)
@@ -158,8 +169,7 @@ func Test_Docs_SearchCommand_JSONOutput_QueryFormats(t *testing.T) {
 
 // Browser Output Tests
 
-// Test_Docs_SearchCommand_BrowserOutput tests the browser output mode with various query formats
-// to ensure proper URL encoding and command execution.
+// Verifies that browser output mode correctly handles various query formats and opens the correct URLs.
 func Test_Docs_SearchCommand_BrowserOutput(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"opens browser with search query using space syntax": {
