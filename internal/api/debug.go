@@ -42,6 +42,8 @@ func (c *Client) printRequest(ctx context.Context, req *http.Request, skipDebugL
 	var output string
 	// HTTP Request
 	outputLines = append(outputLines, fmt.Sprintf("HTTP Request: %v %v %v", req.Method, req.URL, req.Proto))
+	// HTTP User-Agent
+	outputLines = append(outputLines, fmt.Sprintf("HTTP Request User-Agent: %s", req.Header.Get("User-Agent")))
 	// HTTP Body
 	outputLines = append(outputLines, fmt.Sprintf("HTTP Request Body:\n%s", reqBody))
 	output = strings.Join(outputLines, "\n")

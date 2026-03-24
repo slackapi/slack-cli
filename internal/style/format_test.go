@@ -17,8 +17,10 @@ package style
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -48,6 +50,43 @@ func TestGetKeyLength(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.expected, getKeyLength(tc.keys))
+		})
+	}
+}
+
+func Test_Mapf(t *testing.T) {
+	ToggleStyles(false)
+	defer ToggleStyles(false)
+	tests := map[string]struct {
+		input    map[string]string
+		validate func(t *testing.T, result string)
+	}{
+		"empty map returns empty string": {
+			input: map[string]string{},
+			validate: func(t *testing.T, result string) {
+				assert.Equal(t, "", result)
+			},
+		},
+		"single entry formats correctly": {
+			input: map[string]string{"Name": "my-app"},
+			validate: func(t *testing.T, result string) {
+				assert.Contains(t, result, "Name")
+				assert.Contains(t, result, "my-app")
+			},
+		},
+		"multiple entries contain all key-value pairs": {
+			input: map[string]string{"ID": "A123", "Name": "my-app"},
+			validate: func(t *testing.T, result string) {
+				assert.Contains(t, result, "ID")
+				assert.Contains(t, result, "A123")
+				assert.Contains(t, result, "Name")
+				assert.Contains(t, result, "my-app")
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tc.validate(t, Mapf(tc.input))
 		})
 	}
 }
@@ -158,6 +197,38 @@ func TestCommandf(t *testing.T) {
 	}
 }
 
+func TestCommandf_WithColor(t *testing.T) {
+	tests := map[string]struct {
+		command   string
+		isPrimary bool
+	}{
+		"primary command with color does not use backticks": {
+			command:   "deploy",
+			isPrimary: true,
+		},
+		"secondary command with color does not use backticks": {
+			command:   "deploy",
+			isPrimary: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			processTemp := os.Args[0]
+			os.Args[0] = "slack"
+			globalColorShown := isColorShown
+			isColorShown = true
+			defer func() {
+				os.Args[0] = processTemp
+				isColorShown = globalColorShown
+			}()
+
+			formatted := Commandf(tc.command, tc.isPrimary)
+			assert.NotContains(t, formatted, "`")
+			assert.Contains(t, formatted, tc.command)
+		})
+	}
+}
+
 func TestIndent(t *testing.T) {
 	text := "a few spaces are expected at the start of this line, but no other changes"
 	indented := Indent(text)
@@ -251,6 +322,50 @@ func TestStyleFlags(t *testing.T) {
 			}()
 			actual := StyleFlags(tc.input)
 			assert.Equal(t, tc.expectedFunc(), actual)
+		})
+	}
+}
+
+func Test_HomePath(t *testing.T) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		t.Skip("unable to determine home directory")
+	}
+	isWindows := runtime.GOOS == "windows"
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"path under home directory gets tilde": {
+			input: homeDir + "/Documents/project",
+			expected: func() string {
+				if isWindows {
+					return homeDir + "/Documents/project"
+				}
+				return "~/Documents/project"
+			}(),
+		},
+		"path not under home directory is unchanged": {
+			input:    "/tmp/something",
+			expected: "/tmp/something",
+		},
+		"empty string returns empty string": {
+			input:    "",
+			expected: "",
+		},
+		"home directory itself gets tilde": {
+			input: homeDir,
+			expected: func() string {
+				if isWindows {
+					return homeDir
+				}
+				return "~"
+			}(),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, HomePath(tc.input))
 		})
 	}
 }
@@ -405,6 +520,76 @@ func TestLocalRunDisplayNamePlain(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actualAppName := LocalRunDisplayName(tc.mockAppName)
 			assert.Equal(t, tc.expectedAppName, actualAppName)
+		})
+	}
+}
+
+func Test_TeamSelectLabel(t *testing.T) {
+	ToggleStyles(false)
+	defer ToggleStyles(false)
+	result := TeamSelectLabel("workspace", "T12345")
+	assert.Contains(t, result, "workspace")
+	assert.Contains(t, result, "T12345")
+}
+
+func Test_TimeAgo(t *testing.T) {
+	now := int(time.Now().Unix())
+	tests := map[string]struct {
+		datetime     int
+		containsUnit string
+		containsDir  string
+	}{
+		"seconds ago": {
+			datetime:     now - 30,
+			containsUnit: "second",
+			containsDir:  "ago",
+		},
+		"1 minute ago": {
+			datetime:     now - 90,
+			containsUnit: "minute",
+			containsDir:  "ago",
+		},
+		"minutes ago": {
+			datetime:     now - 300,
+			containsUnit: "minute",
+			containsDir:  "ago",
+		},
+		"hours ago": {
+			datetime:     now - 7200,
+			containsUnit: "hour",
+			containsDir:  "ago",
+		},
+		"days ago": {
+			datetime:     now - 172800,
+			containsUnit: "day",
+			containsDir:  "ago",
+		},
+		"weeks ago": {
+			datetime:     now - 1209600,
+			containsUnit: "week",
+			containsDir:  "ago",
+		},
+		"months ago": {
+			datetime:     now - 5184000,
+			containsUnit: "month",
+			containsDir:  "ago",
+		},
+		"years ago": {
+			datetime:     now - 63072000,
+			containsUnit: "year",
+			containsDir:  "ago",
+		},
+		"future timestamp shows until": {
+			datetime:     now + 172800,
+			containsUnit: "day",
+			containsDir:  "until",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := TimeAgo(tc.datetime)
+			assert.Contains(t, result, tc.containsUnit)
+			assert.Contains(t, result, tc.containsDir)
 		})
 	}
 }

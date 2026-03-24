@@ -30,7 +30,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/radovskyb/watcher"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
@@ -82,6 +81,7 @@ type LocalServer struct {
 	token              string
 	localHostedContext LocalHostedContext
 	cliConfig          hooks.SDKCLIConfig
+	appFilePath        string
 	Connection         WebSocketConnection
 	delegateCmd        hooks.ShellCommand // track running delegated process
 	delegateCmdMutex   sync.Mutex         // protect concurrent access
@@ -280,11 +280,16 @@ func (r *LocalServer) stopDelegateProcess(ctx context.Context) {
 // connection for running app locally to script hook start
 func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	// Set up hook execution options
+	env := map[string]string{
+		"SLACK_CLI_XAPP": r.token,
+		"SLACK_CLI_XOXB": r.localHostedContext.BotAccessToken,
+	}
+	if r.appFilePath != "" {
+		env["SLACK_APP_PATH"] = r.appFilePath
+		env["SLACK_CLI_CUSTOM_FILE_PATH"] = r.appFilePath
+	}
 	var sdkManagedConnectionStartHookOpts = hooks.HookExecOpts{
-		Env: map[string]string{
-			"SLACK_CLI_XAPP": r.token,
-			"SLACK_CLI_XOXB": r.localHostedContext.BotAccessToken,
-		},
+		Env:  env,
 		Exec: hooks.ShellExec{},
 		Hook: r.clients.SDKConfig.Hooks.Start,
 	}
@@ -307,7 +312,9 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	// To avoid removing any environment variables that are set in the current environment, we first set the cmd.Env to the current environment.
 	// before adding any new environment variables.
 	var cmdEnvVars = os.Environ()
-	cmdEnvVars = append(cmdEnvVars, goutils.MapToStringSlice(sdkManagedConnectionStartHookOpts.Env, "")...)
+	for name, value := range sdkManagedConnectionStartHookOpts.Env {
+		cmdEnvVars = append(cmdEnvVars, name+"="+value)
+	}
 	cmd := sdkManagedConnectionStartHookOpts.Exec.Command(cmdEnvVars, os.Stdout, os.Stderr, nil, cmdArgs[0], cmdArgVars...)
 
 	// Store command reference for lifecycle management

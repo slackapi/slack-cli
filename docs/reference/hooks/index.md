@@ -216,7 +216,7 @@ The application's app-level token and bot access token will be provided as envir
 
 All Bolt SDKs leverage this `start` hook operating mode.
 
-A custom start path can be set with the `SLACK_CLI_CUSTOM_FILE_PATH` variable.
+A custom start path can be provided as a positional argument to the `run` command (e.g., `slack run ./src/app.py`), which sets both the `SLACK_APP_PATH` and `SLACK_CLI_CUSTOM_FILE_PATH` environment variables for the hook process.
 
 ##### Output
 
