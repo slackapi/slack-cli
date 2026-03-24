@@ -37,10 +37,14 @@ type mockRoundTripper struct {
 	response    string
 	status      int
 	capturedURL string
+	returnError bool
 }
 
 // RoundTrip executes a mocked HTTP request and returns a controlled response.
 func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if m.returnError {
+		return nil, fmt.Errorf("mock network error")
+	}
 	m.capturedURL = req.URL.String()
 	return &http.Response{
 		StatusCode: m.status,
@@ -82,6 +86,29 @@ func setupJSONOutputTestWithCapture(t *testing.T, response string, status int) (
 }
 
 // JSON Output Tests
+
+// Verifies that HTTP request errors are properly caught and returned as errors.
+func Test_Docs_SearchCommand_JSONOutput_HTTPError(t *testing.T) {
+	ctx := slackcontext.MockContext(context.Background())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	// Create a mock transport that returns an error
+	mockTransport := &mockRoundTripper{
+		response: "",
+		status:   0,
+	}
+	mockTransport.returnError = true
+
+	mockClient := &http.Client{
+		Transport: mockTransport,
+	}
+
+	err := fetchAndOutputSearchResults(ctx, clients, "test", 20, mockClient)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to fetch search results")
+}
 
 // Verifies that HTTP errors from the API are properly caught and returned as errors.
 func Test_Docs_SearchCommand_JSONOutput_APIError(t *testing.T) {
