@@ -47,12 +47,18 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 				Command: "docs --search",
 			},
 		}),
+		Args: cobra.ArbitraryArgs, // Allow any arguments
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDocsCommand(clients, cmd, args)
 		},
+		// Disable automatic suggestions for unknown commands
+		DisableSuggestions: true,
 	}
 
-	cmd.Flags().BoolVar(&searchMode, "search", false, "open Slack docs search page or search with query")
+	cmd.Flags().BoolVar(&searchMode, "search", false, "[DEPRECATED] open Slack docs search page or search with query (use 'docs search' subcommand instead)")
+
+	// Add the experimental search subcommand
+	cmd.AddCommand(NewSearchCommand(clients))
 
 	return cmd
 }
@@ -74,6 +80,7 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	}
 
 	if cmd.Flags().Changed("search") {
+		clients.IO.PrintWarning(ctx, "The `--search` flag is deprecated. Use 'docs search' subcommand instead.")
 		if len(args) > 0 {
 			// --search "query" (space-separated) - join all args as the query
 			query := strings.Join(args, " ")
