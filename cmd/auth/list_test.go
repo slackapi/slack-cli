@@ -15,8 +15,8 @@
 package auth
 
 import (
-	"context"
 	"testing"
+	"time"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -26,37 +26,77 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// Setup a mock for the List package
-type ListPkgMock struct {
-	mock.Mock
-}
-
-func (m *ListPkgMock) List(ctx context.Context, clients *shared.ClientFactory) ([]types.SlackAuth, error) {
-	m.Called()
-	return []types.SlackAuth{}, nil
-}
-
 func TestListCommand(t *testing.T) {
-	// Create mocks
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-
-	// Create clients that is mocked for testing
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	// Create the command
-	cmd := NewListCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	listPkgMock := new(ListPkgMock)
-	listFunc = listPkgMock.List
-
-	listPkgMock.On("List").Return([]types.SlackAuth{}, nil)
-	err := cmd.ExecuteContext(ctx)
-	if err != nil {
-		assert.Fail(t, "cmd.Execute had unexpected error")
+	tests := map[string]struct {
+		auths    []types.SlackAuth
+		expected []string
+	}{
+		"no authorized accounts": {
+			auths: []types.SlackAuth{},
+			expected: []string{
+				"You are not logged in to any Slack accounts",
+				"login",
+			},
+		},
+		"a single authorized account": {
+			auths: []types.SlackAuth{
+				{
+					TeamDomain:  "test-workspace",
+					TeamID:      "T12345",
+					UserID:      "U67890",
+					LastUpdated: time.Date(2025, 1, 15, 10, 30, 0, 0, time.UTC),
+				},
+			},
+			expected: []string{
+				"test-workspace",
+				"T12345",
+				"U67890",
+			},
+		},
+		"multiple authorized accounts": {
+			auths: []types.SlackAuth{
+				{
+					TeamDomain:  "alpha-workspace",
+					TeamID:      "T11111",
+					UserID:      "U11111",
+					LastUpdated: time.Date(2025, 1, 10, 8, 0, 0, 0, time.UTC),
+				},
+				{
+					TeamDomain:  "beta-workspace",
+					TeamID:      "T22222",
+					UserID:      "U22222",
+					LastUpdated: time.Date(2025, 2, 20, 16, 0, 0, 0, time.UTC),
+				},
+			},
+			expected: []string{
+				"alpha-workspace",
+				"T11111",
+				"U11111",
+				"beta-workspace",
+				"T22222",
+				"U22222",
+			},
+		},
 	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Auth.On("Auths", mock.Anything).Return(tc.auths, nil)
+			clientsMock.AddDefaultMocks()
 
-	listPkgMock.AssertCalled(t, "List")
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			cmd := NewListCommand(clients)
+			testutil.MockCmdIO(clients.IO, cmd)
+
+			err := cmd.ExecuteContext(ctx)
+			assert.NoError(t, err)
+
+			output := clientsMock.GetCombinedOutput()
+			for _, expected := range tc.expected {
+				assert.Contains(t, output, expected)
+			}
+		})
+	}
 }
