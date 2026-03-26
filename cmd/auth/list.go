@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/pkg/auth"
+	authpkg "github.com/slackapi/slack-cli/internal/pkg/auth"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
@@ -27,10 +27,6 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
-
-// Create handle to the function for testing
-// TODO - Stopgap until we learn the correct way to structure our code for testing.
-var listFunc = auth.List
 
 // NewListCommand creates the Cobra command for listing authorized accounts
 func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -51,7 +47,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 // runListCommand will execute the list command
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	userAuthList, err := listFunc(ctx, clients)
+	userAuthList, err := authpkg.List(ctx, clients)
 	if err != nil {
 		return err
 	}
