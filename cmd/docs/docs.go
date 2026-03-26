@@ -62,7 +62,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		DisableSuggestions: true,
 	}
 
-	cmd.Flags().BoolVar(&searchMode, "search", false, "[DEPRECATED] open Slack docs search page or search with query (use 'docs search' subcommand instead)")
+	cmd.Flags().BoolVar(&searchMode, "search", false, "open Slack docs search page or search with query")
 
 	// Add the search subcommand
 	cmd.AddCommand(NewSearchCommand(clients))
