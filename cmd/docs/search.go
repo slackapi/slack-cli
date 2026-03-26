@@ -18,33 +18,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
-	"os"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
-
-const docsSearchAPIURL = "https://docs-slack-d-search-api-duu9zr.herokuapp.com/api/search"
 
 type searchConfig struct {
 	output string
 	limit  int
 }
 
-type DocsSearchResponse struct {
-	TotalResults int                `json:"total_results"`
-	Results      []DocsSearchResult `json:"results"`
-	Limit        int                `json:"limit"`
-}
-
-type DocsSearchResult struct {
-	URL   string `json:"url"`
-	Title string `json:"title"`
+func makeAbsoluteURL(relativeURL string) string {
+	if strings.HasPrefix(relativeURL, "http") {
+		return relativeURL
+	}
+	return docsURL + relativeURL
 }
 
 func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -53,10 +45,10 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search <query>",
 		Short: "Search Slack developer docs",
-		Long:  "Search the Slack developer docs and return results in browser or JSON format",
+		Long:  "Search the Slack developer docs and return results in text, JSON, or browser format",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Search docs and return JSON results",
+				Meaning: "Search docs and return text results",
 				Command: "docs search \"Block Kit\"",
 			},
 			{
@@ -70,64 +62,80 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDocsSearchCommand(clients, cmd, args, cfg, http.DefaultClient)
+			return runDocsSearchCommand(clients, cmd, args, cfg)
 		},
 	}
 
-	cmd.Flags().StringVar(&cfg.output, "output", "json", "output format: browser, json")
-	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of search results to return (only applies with --output=json)")
+	cmd.Flags().StringVar(&cfg.output, "output", "text", "output format: text, json, browser")
+	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of search results to return (only applies with --output=json and --output=text)")
 
 	return cmd
 }
 
-func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string, cfg *searchConfig, httpClient *http.Client) error {
+func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string, cfg *searchConfig) error {
 	ctx := cmd.Context()
 
 	query := strings.Join(args, " ")
 
-	if cfg.output == "json" {
-		return fetchAndOutputSearchResults(ctx, clients, query, cfg.limit, httpClient)
+	switch cfg.output {
+	case "json":
+		return fetchAndOutputSearchResults(ctx, clients, query, cfg.limit)
+	case "text":
+		return fetchAndOutputTextResults(ctx, clients, query, cfg.limit)
+	case "browser":
+		docsSearchURL := buildDocsSearchURL(query)
+
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "books",
+			Text:  "Docs Search",
+			Secondary: []string{
+				docsSearchURL,
+			},
+		}))
+
+		clients.Browser().OpenURL(docsSearchURL)
+		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
+
+		return nil
+	default:
+		return slackerror.New(slackerror.ErrInvalidFlag).WithMessage(
+			"Invalid output format: %s", cfg.output,
+		).WithRemediation(
+			"Use one of: text, json, browser",
+		)
+	}
+}
+
+func fetchAndOutputSearchResults(ctx context.Context, clients *shared.ClientFactory, query string, limit int) error {
+	searchResponse, err := clients.API().DocsSearch(ctx, query, limit)
+	if err != nil {
+		return err
 	}
 
-	encodedQuery := url.QueryEscape(query)
-	docsURL := fmt.Sprintf("https://docs.slack.dev/search/?q=%s", encodedQuery)
+	for i := range searchResponse.Results {
+		searchResponse.Results[i].URL = makeAbsoluteURL(searchResponse.Results[i].URL)
+	}
 
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "books",
-		Text:  "Docs Search",
-		Secondary: []string{
-			docsURL,
-		},
-	}))
+	encoder := json.NewEncoder(clients.IO.WriteOut())
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(searchResponse); err != nil {
+		return slackerror.New(slackerror.ErrUnableToParseJSON).WithRootCause(err)
+	}
 
-	clients.Browser().OpenURL(docsURL)
 	clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
 
 	return nil
 }
 
-func fetchAndOutputSearchResults(ctx context.Context, clients *shared.ClientFactory, query string, limit int, httpClient *http.Client) error {
-	apiURL := fmt.Sprintf("%s?q=%s&limit=%d", docsSearchAPIURL, url.QueryEscape(query), limit)
-
-	resp, err := httpClient.Get(apiURL)
+func fetchAndOutputTextResults(ctx context.Context, clients *shared.ClientFactory, query string, limit int) error {
+	searchResponse, err := clients.API().DocsSearch(ctx, query, limit)
 	if err != nil {
-		return fmt.Errorf("failed to fetch search results: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("API returned status %d", resp.StatusCode)
+		return err
 	}
 
-	var searchResponse DocsSearchResponse
-	if err := json.NewDecoder(resp.Body).Decode(&searchResponse); err != nil {
-		return fmt.Errorf("failed to parse search results: %w", err)
-	}
-
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(searchResponse); err != nil {
-		return fmt.Errorf("failed to output search results: %w", err)
+	for _, result := range searchResponse.Results {
+		absoluteURL := makeAbsoluteURL(result.URL)
+		fmt.Fprintf(clients.IO.WriteOut(), "%s\n%s\n\n", result.Title, absoluteURL)
 	}
 
 	clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)

@@ -26,7 +26,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const docsURL = "https://docs.slack.dev"
+
 var searchMode bool
+
+func buildDocsSearchURL(query string) string {
+	encodedQuery := url.QueryEscape(query)
+	return fmt.Sprintf("%s/search/?q=%s", docsURL, encodedQuery)
+}
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -67,7 +74,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	var docsURL string
+	var finalURL string
 	var sectionText string
 
 	// Validate: if there are arguments, --search flag must be used
@@ -80,21 +87,19 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	}
 
 	if cmd.Flags().Changed("search") {
-		clients.IO.PrintWarning(ctx, "The `--search` flag is deprecated. Use 'docs search' subcommand instead.")
 		if len(args) > 0 {
 			// --search "query" (space-separated) - join all args as the query
 			query := strings.Join(args, " ")
-			encodedQuery := url.QueryEscape(query)
-			docsURL = fmt.Sprintf("https://docs.slack.dev/search/?q=%s", encodedQuery)
+			finalURL = buildDocsSearchURL(query)
 			sectionText = "Docs Search"
 		} else {
 			// --search (no argument) - open search page
-			docsURL = "https://docs.slack.dev/search/"
+			finalURL = fmt.Sprintf("%s/search/", docsURL)
 			sectionText = "Docs Search"
 		}
 	} else {
 		// No search flag: default homepage
-		docsURL = "https://docs.slack.dev"
+		finalURL = docsURL
 		sectionText = "Docs Open"
 	}
 
@@ -102,11 +107,11 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 		Emoji: "books",
 		Text:  sectionText,
 		Secondary: []string{
-			docsURL,
+			finalURL,
 		},
 	}))
 
-	clients.Browser().OpenURL(docsURL)
+	clients.Browser().OpenURL(finalURL)
 
 	if cmd.Flags().Changed("search") {
 		traceValue := ""

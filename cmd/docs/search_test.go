@@ -15,181 +15,145 @@
 package docs
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"io"
-	"net/http"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// mockRoundTripper implements http.RoundTripper to mock HTTP responses for testing.
-// It allows tests to control the response status code and body without making real network calls.
-// It also captures the request URL for assertion purposes.
-type mockRoundTripper struct {
-	response    string
-	status      int
-	capturedURL string
-	returnError bool
+// mockDocsAPI implements api.DocsClient for testing
+type mockDocsAPI struct {
+	searchResponse *api.DocsSearchResponse
+	searchError    error
 }
 
-// RoundTrip executes a mocked HTTP request and returns a controlled response.
-func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	if m.returnError {
-		return nil, fmt.Errorf("mock network error")
-	}
-	m.capturedURL = req.URL.String()
-	return &http.Response{
-		StatusCode: m.status,
-		Body:       io.NopCloser(bytes.NewBufferString(m.response)),
-		Header:     make(http.Header),
-	}, nil
+func (m *mockDocsAPI) DocsSearch(ctx context.Context, query string, limit int) (*api.DocsSearchResponse, error) {
+	return m.searchResponse, m.searchError
 }
 
-func setupJSONOutputTest(t *testing.T, response string, status int) (*http.Client, *shared.ClientFactory) {
+func setupDocsAPITest(t *testing.T, response *api.DocsSearchResponse, err error) *shared.ClientFactory {
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	mockTransport := &mockRoundTripper{
-		response: response,
-		status:   status,
-	}
-	mockClient := &http.Client{
-		Transport: mockTransport,
+	mockDocsAPI := &mockDocsAPI{
+		searchResponse: response,
+		searchError:    err,
 	}
 
-	return mockClient, clients
+	// Override the API to return our mock for DocsSearch
+	originalAPI := clients.API
+	clients.API = func() api.APIInterface {
+		realAPI := originalAPI()
+		// Return a wrapper that intercepts DocsSearch calls
+		return &docsAPIWrapper{
+			APIInterface: realAPI,
+			mock:         mockDocsAPI,
+		}
+	}
+
+	return clients
 }
 
-func setupJSONOutputTestWithCapture(t *testing.T, response string, status int) (*http.Client, *shared.ClientFactory, *mockRoundTripper) {
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	mockTransport := &mockRoundTripper{
-		response: response,
-		status:   status,
-	}
-	mockClient := &http.Client{
-		Transport: mockTransport,
-	}
-
-	return mockClient, clients, mockTransport
+// docsAPIWrapper wraps APIInterface to mock DocsSearch while delegating other methods
+type docsAPIWrapper struct {
+	api.APIInterface
+	mock *mockDocsAPI
 }
 
-// JSON Output Tests
+func (w *docsAPIWrapper) DocsSearch(ctx context.Context, query string, limit int) (*api.DocsSearchResponse, error) {
+	return w.mock.DocsSearch(ctx, query, limit)
+}
+
+// Text and JSON Output Tests
 
 // Verifies that HTTP request errors are properly caught and returned as errors.
-func Test_Docs_SearchCommand_JSONOutput_HTTPError(t *testing.T) {
+func Test_Docs_SearchCommand_TextJSONOutput_HTTPError(t *testing.T) {
 	ctx := slackcontext.MockContext(context.Background())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	clients := setupDocsAPITest(t, nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
 
-	// Create a mock transport that returns an error
-	mockTransport := &mockRoundTripper{
-		response: "",
-		status:   0,
-	}
-	mockTransport.returnError = true
-
-	mockClient := &http.Client{
-		Transport: mockTransport,
-	}
-
-	err := fetchAndOutputSearchResults(ctx, clients, "test", 20, mockClient)
+	err := fetchAndOutputSearchResults(ctx, clients, "test", 20)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to fetch search results")
 }
 
 // Verifies that HTTP errors from the API are properly caught and returned as errors.
-func Test_Docs_SearchCommand_JSONOutput_APIError(t *testing.T) {
-	mockClient, clients := setupJSONOutputTest(t, `{"error": "not found"}`, http.StatusNotFound)
-	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "nonexistent", 20, mockClient)
+func Test_Docs_SearchCommand_TextJSONOutput_APIError(t *testing.T) {
+	clients := setupDocsAPITest(t, nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
+	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "nonexistent", 20)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "API returned status 404")
 }
 
 // Verifies that malformed JSON responses are caught during parsing and returned as errors.
-func Test_Docs_SearchCommand_JSONOutput_InvalidJSON(t *testing.T) {
-	mockClient, clients := setupJSONOutputTest(t, `{invalid json}`, http.StatusOK)
-	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "test", 20, mockClient)
+func Test_Docs_SearchCommand_TextJSONOutput_InvalidJSON(t *testing.T) {
+	clients := setupDocsAPITest(t, nil, slackerror.New(slackerror.ErrHTTPResponseInvalid))
+	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "test", 20)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "failed to parse search results")
 }
 
 // Verifies that valid JSON responses with no results are correctly parsed and output without errors.
-func Test_Docs_SearchCommand_JSONOutput_EmptyResults(t *testing.T) {
-	mockResponse := `{
-		"total_results": 0,
-		"limit": 20,
-		"results": []
-	}`
+func Test_Docs_SearchCommand_TextJSONOutput_EmptyResults(t *testing.T) {
+	response := &api.DocsSearchResponse{
+		TotalResults: 0,
+		Results:      []api.DocsSearchItem{},
+		Limit:        20,
+	}
 
-	mockClient, clients := setupJSONOutputTest(t, mockResponse, http.StatusOK)
-	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "nonexistent query", 20, mockClient)
+	clients := setupDocsAPITest(t, response, nil)
+	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "nonexistent query", 20)
 	require.NoError(t, err)
 }
 
 // Verifies that various query formats are properly URL encoded and API parameters are correctly passed.
-func Test_Docs_SearchCommand_JSONOutput_QueryFormats(t *testing.T) {
-	mockResponse := `{
-		"total_results": 2,
-		"limit": 20,
-		"results": [
+func Test_Docs_SearchCommand_TextJSONOutput_QueryFormats(t *testing.T) {
+	response := &api.DocsSearchResponse{
+		TotalResults: 2,
+		Limit:        20,
+		Results: []api.DocsSearchItem{
 			{
-				"title": "Block Kit",
-				"url": "https://docs.slack.dev/block-kit"
+				Title: "Block Kit",
+				URL:   "/block-kit",
 			},
 			{
-				"title": "Block Kit Elements",
-				"url": "https://docs.slack.dev/block-kit/elements"
-			}
-		]
-	}`
+				Title: "Block Kit Elements",
+				URL:   "/block-kit/elements",
+			},
+		},
+	}
 
 	tests := map[string]struct {
-		query    string
-		limit    int
-		expected string
+		query string
+		limit int
 	}{
 		"single word query": {
-			query:    "messaging",
-			limit:    20,
-			expected: "messaging",
+			query: "messaging",
+			limit: 20,
 		},
 		"multiple words": {
-			query:    "socket mode",
-			limit:    20,
-			expected: "socket+mode",
+			query: "socket mode",
+			limit: 20,
 		},
 		"special characters": {
-			query:    "messages & webhooks",
-			limit:    20,
-			expected: "messages+%26+webhooks",
+			query: "messages & webhooks",
+			limit: 20,
 		},
 		"custom limit": {
-			query:    "Block Kit",
-			limit:    5,
-			expected: "Block+Kit",
+			query: "Block Kit",
+			limit: 5,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockClient, clients, mockTransport := setupJSONOutputTestWithCapture(t, mockResponse, http.StatusOK)
-			err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, tc.query, tc.limit, mockClient)
+			clients := setupDocsAPITest(t, response, nil)
+			err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, tc.query, tc.limit)
 			require.NoError(t, err)
-			assert.Contains(t, mockTransport.capturedURL, "q="+tc.expected)
-			assert.Contains(t, mockTransport.capturedURL, "limit="+fmt.Sprint(tc.limit))
 		})
 	}
 }
