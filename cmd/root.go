@@ -125,14 +125,14 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			})
 
 			// Check for an CLI update in the background while the command runs
-			updateNotification = update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
+			updateNotification = update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
 			updateNotification.CheckForUpdateInBackground(ctx, false)
 			return nil
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: since commands are moving to `*E` cobra lifecycle methods, this method may not be invoked if those earlier lifecycle methods return an error. Maybe move this to the cleanup() method below? but maybe this is OK, no need to prompt users to update if they encounter an error?
 			// when the command is `slack update`
-			return updateNotification.PrintAndPromptUpdates(cmd, version.Get())
+			return updateNotification.PrintAndPromptUpdates(cmd, version.Raw())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -153,7 +153,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 
 	// Support `--version` by setting root command's `Version` and custom template.
 	// Add a newline to `SetVersionTemplate` to display correctly on terminals.
-	rootCmd.Version = version.Get()
+	rootCmd.Version = version.Raw()
 	rootCmd.SetVersionTemplate(versioncmd.Template() + "\n")
 
 	// Add subcommands (each subcommand may add their own child subcommands)
