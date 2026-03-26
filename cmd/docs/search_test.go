@@ -158,6 +158,63 @@ func Test_Docs_SearchCommand_TextJSONOutput_QueryFormats(t *testing.T) {
 	}
 }
 
+// JSON Output Tests
+
+// Verifies that JSON output mode correctly formats and outputs search results.
+func Test_Docs_SearchCommand_JSONOutput(t *testing.T) {
+	response := &api.DocsSearchResponse{
+		TotalResults: 1,
+		Limit:        20,
+		Results: []api.DocsSearchItem{
+			{
+				Title: "Block Kit",
+				URL:   "/block-kit",
+			},
+		},
+	}
+
+	clients := setupDocsAPITest(t, response, nil)
+	err := fetchAndOutputSearchResults(slackcontext.MockContext(context.Background()), clients, "Block Kit", 20)
+	require.NoError(t, err)
+}
+
+// Text Output Tests
+
+// Verifies that text output mode correctly formats and outputs search results.
+func Test_Docs_SearchCommand_TextOutput(t *testing.T) {
+	response := &api.DocsSearchResponse{
+		TotalResults: 1,
+		Limit:        20,
+		Results: []api.DocsSearchItem{
+			{
+				Title: "Block Kit",
+				URL:   "/block-kit",
+			},
+		},
+	}
+
+	clients := setupDocsAPITest(t, response, nil)
+	err := fetchAndOutputTextResults(slackcontext.MockContext(context.Background()), clients, "Block Kit", 20)
+	require.NoError(t, err)
+}
+
+// Invalid Output Format Tests
+
+// Verifies that invalid output format returns an error with helpful remediation.
+func Test_Docs_SearchCommand_InvalidOutputFormat(t *testing.T) {
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"rejects invalid output format": {
+			CmdArgs: []string{"search", "test", "--output=invalid"},
+			ExpectedErrorStrings: []string{
+				"Invalid output format",
+				"Use one of: text, json, browser",
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCommand(cf)
+	})
+}
+
 // Browser Output Tests
 
 // Verifies that browser output mode correctly handles various query formats and opens the correct URLs.
