@@ -35,6 +35,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -309,7 +310,7 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	var cmdArgVars = cmdArgs[1:] // omit the first item because that is the command name
 
 	// Load .env file variables
-	dotEnv, err := hooks.LoadDotEnv(r.clients.Fs)
+	dotEnv, err := slackdotenv.Read(r.clients.Fs)
 	if err != nil {
 		r.clients.IO.PrintDebug(ctx, "Warning: failed to parse .env file: %s", err)
 	}

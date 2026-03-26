@@ -19,30 +19,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/spf13/afero"
 )
 
 type HookExecutor interface {
 	Execute(ctx context.Context, opts HookExecOpts) (response string, err error)
-}
-
-// LoadDotEnv reads and parses a .env file from the working directory using the
-// provided filesystem. It returns nil if the file does not exist.
-func LoadDotEnv(fs afero.Fs) (map[string]string, error) {
-	if fs == nil {
-		return nil, nil
-	}
-	file, err := afero.ReadFile(fs, ".env")
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return godotenv.UnmarshalBytes(file)
 }
 
 func GetHookExecutor(ios iostreams.IOStreamer, fs afero.Fs, cfg SDKCLIConfig) HookExecutor {
@@ -74,7 +58,7 @@ func processExecOpts(ctx context.Context, opts HookExecOpts, fs afero.Fs, io ios
 	cmdArgVars = append(cmdArgVars, goutils.MapToStringSlice(opts.Args, "--")...)
 
 	// Load .env file variables
-	dotEnv, err := LoadDotEnv(fs)
+	dotEnv, err := slackdotenv.Read(fs)
 	if err != nil {
 		io.PrintDebug(ctx, "Warning: failed to parse .env file: %s", err)
 	}
