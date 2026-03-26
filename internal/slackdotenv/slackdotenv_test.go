@@ -73,6 +73,12 @@ func Test_Read(t *testing.T) {
 			writeDotenv: true,
 			expected:    map[string]string{"URL": "https://example.com?foo=bar&baz=qux"},
 		},
+		"strips inline comments": {
+			fs:          afero.NewMemMapFs(),
+			dotenv:      "FOO=bar # this is a comment\n",
+			writeDotenv: true,
+			expected:    map[string]string{"FOO": "bar"},
+		},
 		"handles empty values": {
 			fs:          afero.NewMemMapFs(),
 			dotenv:      "EMPTY=\n",
