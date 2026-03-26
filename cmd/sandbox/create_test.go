@@ -46,7 +46,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "test-box", "test-box", "mypass", "", "", 0, "", int64(0), false).
 					Return("T123", "https://test-box.slack.com", nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
@@ -73,7 +73,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "My Test Box", "my-test-box", "pass", "", "", 0, "", int64(0), false).
 					Return("T789", "https://my-test-box.slack.com", nil)
 
@@ -98,7 +98,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "tmp-box", "tmp-box", "pass", "", "", 0, "", mock.MatchedBy(func(v int64) bool { return v > 0 }), false).
 					Return("T111", "https://tmp-box.slack.com", nil)
 
@@ -122,7 +122,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "err-box", "err-box", "pass", "", "", 0, "", int64(0), false).
 					Return("", "", errors.New("api_error"))
 
@@ -145,7 +145,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "tpl-box", "tpl-box", "pass", "", "", 1, "", int64(0), false).
 					Return("T333", "https://tpl-box.slack.com", nil)
 
@@ -171,7 +171,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "partner-box", "partner-box", "pass", "", "", 0, "", int64(0), true).
 					Return("T555", "https://partner-box.slack.com", nil)
 
@@ -197,7 +197,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
@@ -221,7 +221,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "date-box", "date-box", "pass", "", "", 0, "", archiveEpoch, false).
 					Return("T222", "https://date-box.slack.com", nil)
 
@@ -247,7 +247,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
@@ -271,7 +271,7 @@ func TestCreateCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 
 				cm.AddDefaultMocks()
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
@@ -306,7 +306,7 @@ func setupCreateMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock,
 	testToken := "xoxb-test-token"
 	cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 	cm.API.On("CreateSandbox", mock.Anything, testToken, name, domain, password, "", "", 0, "", archiveEpoch, partner).
 		Return("T222", "https://"+domain+".slack.com", nil)
 	cm.AddDefaultMocks()
@@ -319,7 +319,7 @@ func setupCreateAuthOnly(t *testing.T, ctx context.Context, cm *shared.ClientsMo
 	testToken := "xoxb-test-token"
 	cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 	cm.AddDefaultMocks()
 	cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 	cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
@@ -494,7 +494,7 @@ func Test_getTemplateID(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "tpl-box", "tpl-box", "pass", "", "", 1, "", int64(0), false).
 					Return("T333", "https://tpl-box.slack.com", nil)
 				cm.AddDefaultMocks()
@@ -519,7 +519,7 @@ func Test_getTemplateID(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "tpl-box", "tpl-box", "pass", "", "", 1, "", int64(0), false).
 					Return("T333", "https://tpl-box.slack.com", nil)
 				cm.AddDefaultMocks()

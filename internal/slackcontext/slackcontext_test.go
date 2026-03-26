@@ -22,6 +22,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/tracer"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/stretchr/testify/require"
 )
 
@@ -288,28 +289,20 @@ func Test_SlackContext_SetSystemID(t *testing.T) {
 }
 
 func Test_SlackContext_Version(t *testing.T) {
-	tests := map[string]struct {
-		expectedVersion string
-		expectedError   error
-	}{
-		"returns Version when it exists": {
-			expectedVersion: "v1.2.3",
-			expectedError:   nil,
-		},
-		"returns error when Version not found": {
-			expectedVersion: "",
-			expectedError:   slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Version could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyVersion, tc.expectedVersion)
-			actualVersion, actualError := Version(ctx)
-			require.Equal(t, tc.expectedVersion, actualVersion)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
+	t.Run("returns Version when it exists", func(t *testing.T) {
+		ctx := t.Context()
+		ctx = context.WithValue(ctx, contextKeyVersion, "v1.2.3")
+		actualVersion, actualError := Version(ctx)
+		require.Equal(t, "v1.2.3", actualVersion)
+		require.NoError(t, actualError)
+	})
+
+	t.Run("falls back to version.Raw() when Version not found", func(t *testing.T) {
+		ctx := t.Context()
+		actualVersion, actualError := Version(ctx)
+		require.Equal(t, version.Raw(), actualVersion)
+		require.ErrorContains(t, actualError, "falling back to the build version")
+	})
 }
 
 func Test_SlackContext_SetVersion(t *testing.T) {

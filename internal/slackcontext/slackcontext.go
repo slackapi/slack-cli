@@ -31,6 +31,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/version"
 )
 
 // contextKey is an unexported type to avoid context key collisions.
@@ -170,15 +171,16 @@ func SetSystemID(ctx context.Context, systemID string) context.Context {
 	return ctx
 }
 
-// Version returns the CLI version associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no version could be found.
+// Version returns the CLI version associated with `ctx`. If the version is not
+// found in the context, it falls back to version.Raw() and returns an error to
+// signal that the context was not properly initialized.
 func Version(ctx context.Context) (string, error) {
-	var version, ok = ctx.Value(contextKeyVersion).(string)
-	if !ok || version == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for Version could not be found")
+	var v, ok = ctx.Value(contextKeyVersion).(string)
+	if !ok || v == "" {
+		return version.Raw(), slackerror.New(slackerror.ErrContextValueNotFound).
+			WithMessage("The value for version could not be found in context, falling back to the build version")
 	}
-	return version, nil
+	return v, nil
 }
 
 // SetVersion adds the slack-cli version to Golang context for trace logging
