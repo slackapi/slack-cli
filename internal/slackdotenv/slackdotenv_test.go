@@ -83,7 +83,7 @@ func Test_Read(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			if tc.writeDotenv && tc.fs != nil {
-				_ = afero.WriteFile(tc.fs, ".env", []byte(tc.dotenv), 0644)
+				_ = afero.WriteFile(tc.fs, ".env", []byte(tc.dotenv), 0600)
 			}
 			result, err := Read(tc.fs)
 			if tc.expectErr {

@@ -97,7 +97,7 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 			handler: func(t *testing.T, ctx context.Context, executor HookExecutor, opts HookExecOpts) {
 				// Write a .env file to the mock filesystem
 				e := executor.(*HookExecutorDefaultProtocol)
-				_ = afero.WriteFile(e.Fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0644)
+				_ = afero.WriteFile(e.Fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0600)
 
 				response, err := executor.Execute(ctx, opts)
 				require.Equal(t, "test output", response)
