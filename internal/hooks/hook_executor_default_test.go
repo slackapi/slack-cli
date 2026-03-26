@@ -81,7 +81,7 @@ func Test_Hook_Execute_Default_Protocol(t *testing.T) {
 				require.Contains(t, opts.Exec.(*MockExec).mockCommand.Env, `YIN=yang`)
 			},
 		},
-		"dotenv vars are loaded": {
+		"dotenv vars and hook vars are loaded into the environment": {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Env: map[string]string{
