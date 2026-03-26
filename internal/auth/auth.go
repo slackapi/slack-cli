@@ -33,6 +33,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
@@ -79,8 +80,8 @@ type AuthInterface interface {
 
 	// ResolveAPIHost returns the API Host based on the API Host Flag, Dev Flag, Project Config, and Stored Auth API Host.
 	ResolveAPIHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string
-	// ResolveLogstashHost returns the error log stash host based on API Host and CLI version
-	ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string
+	// ResolveLogstashHost returns the error log stash host based on API Host and CLI version from context
+	ResolveLogstashHost(ctx context.Context, apiHost string) string
 
 	// MapAuthTokensToDomains groups tokens by API host then delineates the host
 	MapAuthTokensToDomains(ctx context.Context) string
@@ -399,7 +400,7 @@ func (c *Client) SetSelectedAuth(ctx context.Context, auth types.SlackAuth, conf
 	// Often set after standard selections but custom authentication must set this
 	// unless the command is exiting right after, like 'login'.
 	config.APIHostResolved = c.ResolveAPIHost(ctx, config.APIHostFlag, &auth)
-	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved, config.Version)
+	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved)
 
 	// Set environment variables for app development configurations and processes.
 	if _, ok := os.LookupEnv("SLACK_API_URL"); !ok {
@@ -508,7 +509,11 @@ func (c *Client) ResolveAPIHost(ctx context.Context, apiHostFlag string, customA
 
 // TODO: how does this play together with ResolveAPIHost above?
 // ResolveLogstashHost returns the error log stash host based on API Host and CLI version
-func (c *Client) ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string {
+func (c *Client) ResolveLogstashHost(ctx context.Context, apiHost string) string {
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		c.io.PrintDebug(ctx, "Warning: %s", err.Error())
+	}
 	c.io.PrintDebug(ctx, "Resolving logstash host, %s, %s", apiHost, cliVersion)
 	if localBuildGitSHAInVersionRegex.Match([]byte(cliVersion)) {
 		return "https://dev.slackb.com/events/cli"

@@ -168,7 +168,11 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		// In this case, the root command was not initialized, so none of the bootup routine executed (flags weren't parsed, config not initialized, etc.).
 		return nil
 	}
-	versionString, _ := strings.CutPrefix(cfg.Version, "v")
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		ioStream.PrintDebug(ctx, "Warning: %s", err.Error())
+	}
+	versionString, _ := strings.CutPrefix(cliVersion, "v")
 	eventData := e.cleanSessionData(e.getSessionData())
 	sessionID, err := slackcontext.SessionID(ctx)
 	if err != nil {
