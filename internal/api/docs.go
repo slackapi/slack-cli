@@ -64,7 +64,7 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int) (*Docs
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errHTTPRequestFailed.WithMessage(fmt.Sprintf("API returned status %d", resp.StatusCode))
+		return nil, errHTTPRequestFailed.WithMessage("API returned status %d", resp.StatusCode)
 	}
 
 	var searchResponse DocsSearchResponse
