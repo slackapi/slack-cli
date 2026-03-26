@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package slackdotenv reads and parses .env files from a project directory.
+//
+// It provides a single entry point for loading environment variables defined in
+// a .env file so that multiple packages (commands, config, hooks) can share the
+// same parsing behavior.
 package slackdotenv
 
 import (
