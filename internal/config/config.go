@@ -59,7 +59,6 @@ type Config struct {
 	TeamFlag                string
 	TokenFlag               string
 	NoColor                 bool
-	Version                 string
 
 	// Feature experiments
 	ExperimentsFlag []string

@@ -894,7 +894,7 @@ func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *s
 
 	clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
-	clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
+	clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).
 		Return("logstash host")
 
 	manifestMock := &app.ManifestMockObject{}
