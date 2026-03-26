@@ -35,7 +35,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
-	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -309,39 +308,7 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	cmdArgs := strings.Fields(cmdStr)
 	var cmdArgVars = cmdArgs[1:] // omit the first item because that is the command name
 
-	// Load .env file variables
-	dotEnv, err := slackdotenv.Read(r.clients.Fs)
-	if err != nil {
-		r.clients.IO.PrintDebug(ctx, "Warning: failed to parse .env file: %s", err)
-	}
-	if len(dotEnv) > 0 {
-		keys := make([]string, 0, len(dotEnv))
-		for k := range dotEnv {
-			keys = append(keys, k)
-		}
-		r.clients.IO.PrintDebug(ctx, "Loaded variables from .env file: %s", strings.Join(keys, ", "))
-	}
-
-	// Whatever cmd.Env is set to will be the ONLY environment variables that the `cmd` will have access to when it runs.
-	//
-	// Order of precedence from lowest to highest:
-	// 1. Provided "opts.Env" variables
-	// 2. Saved ".env" file
-	// 3. Existing shell environment
-	//
-	// > Each entry is of the form "key=value".
-	// > ...
-	// > If Env contains duplicate environment keys, only the last value in the slice for each duplicate key is used.
-	//
-	// https://pkg.go.dev/os/exec#Cmd.Env
-	var cmdEnvVars []string
-	for k, v := range sdkManagedConnectionStartHookOpts.Env {
-		cmdEnvVars = append(cmdEnvVars, k+"="+v)
-	}
-	for k, v := range dotEnv {
-		cmdEnvVars = append(cmdEnvVars, k+"="+v)
-	}
-	cmdEnvVars = append(cmdEnvVars, os.Environ()...)
+	cmdEnvVars := sdkManagedConnectionStartHookOpts.ShellEnv(ctx, r.clients.Fs, r.clients.IO)
 	cmd := sdkManagedConnectionStartHookOpts.Exec.Command(cmdEnvVars, os.Stdout, os.Stderr, nil, cmdArgs[0], cmdArgVars...)
 
 	// Store command reference for lifecycle management

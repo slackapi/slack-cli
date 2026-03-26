@@ -15,12 +15,17 @@
 package hooks
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
+	"github.com/spf13/afero"
 )
 
 // ExecInterface is an interface for running shell commands in the OS
@@ -91,4 +96,42 @@ type HookExecOpts struct {
 	Stdout    io.Writer
 	Stderr    io.Writer
 	Exec      ExecInterface
+}
+
+// ShellEnv builds the environment variables for a hook command.
+func (opts HookExecOpts) ShellEnv(ctx context.Context, fs afero.Fs, io iostreams.IOStreamer) []string {
+	// Gather environment variables saved to the project ".env" file
+	dotEnv, err := slackdotenv.Read(fs)
+	if err != nil {
+		io.PrintDebug(ctx, "Warning: failed to parse .env file: %s", err)
+	}
+	if len(dotEnv) > 0 {
+		keys := make([]string, 0, len(dotEnv))
+		for k := range dotEnv {
+			keys = append(keys, k)
+		}
+		io.PrintDebug(ctx, "Loaded variables from .env file: %s", strings.Join(keys, ", "))
+	}
+
+	// Whatever cmd.Env is set to will be the ONLY environment variables that the `cmd` will have access to when it runs.
+	//
+	// Order of precedence from lowest to highest:
+	// 1. Provided "opts.Env" variables
+	// 2. Saved ".env" file
+	// 3. Existing shell environment
+	//
+	// > Each entry is of the form "key=value".
+	// > ...
+	// > If Env contains duplicate environment keys, only the last value in the slice for each duplicate key is used.
+	//
+	// https://pkg.go.dev/os/exec#Cmd.Env
+	var cmdEnvVars []string
+	for name, value := range opts.Env {
+		cmdEnvVars = append(cmdEnvVars, name+"="+value)
+	}
+	for k, v := range dotEnv {
+		cmdEnvVars = append(cmdEnvVars, k+"="+v)
+	}
+	cmdEnvVars = append(cmdEnvVars, os.Environ()...)
+	return cmdEnvVars
 }
