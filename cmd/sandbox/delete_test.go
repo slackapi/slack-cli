@@ -40,7 +40,7 @@ func TestDeleteCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(nil)
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
@@ -67,7 +67,7 @@ func TestDeleteCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(nil)
 				sandboxes := []types.Sandbox{
 					{
@@ -102,7 +102,7 @@ func TestDeleteCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(false, nil)
 
 				cm.AddDefaultMocks()
@@ -125,7 +125,7 @@ func TestDeleteCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(true, nil)
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "E0123456").Return(nil)
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
@@ -152,7 +152,7 @@ func TestDeleteCommand(t *testing.T) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(errors.New("api_error"))
 
 				cm.AddDefaultMocks()

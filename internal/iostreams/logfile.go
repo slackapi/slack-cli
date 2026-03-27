@@ -73,13 +73,18 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 		return err
 	}
 
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		log.Printf("Warning: %s", err.Error())
+	}
+
 	// Log the Slack-CLI version, User's OS, SessionID, TraceID
 	// But format data before writing them to the log file
 	formatAndWriteDataToLogFile(logger, map[string]string{
 		"Command":               goutils.RedactPII(strings.Join(os.Args[0:], " ")),
 		"SessionID":             sessionID,
 		"Slack-CLI-TraceID":     traceID,
-		"Slack-CLI Version":     io.config.Version,
+		"Slack-CLI Version":     cliVersion,
 		"Operating System (OS)": runtime.GOOS,
 		"System ID":             io.config.SystemID,
 		"Project ID":            io.config.ProjectID,
