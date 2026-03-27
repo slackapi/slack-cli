@@ -17,8 +17,10 @@ package slackdotenv
 import (
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_Read(t *testing.T) {
@@ -27,7 +29,7 @@ func Test_Read(t *testing.T) {
 		dotenv      string
 		writeDotenv bool
 		expected    map[string]string
-		expectErr   bool
+		expectErr   string
 	}{
 		"returns nil when fs is nil": {
 			fs:       nil,
@@ -85,6 +87,12 @@ func Test_Read(t *testing.T) {
 			writeDotenv: true,
 			expected:    map[string]string{"EMPTY": ""},
 		},
+		"returns parse error for invalid syntax": {
+			fs:          afero.NewMemMapFs(),
+			dotenv:      `KEY="unclosed`,
+			writeDotenv: true,
+			expectErr:   slackerror.ErrDotEnvFileParse,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -92,8 +100,10 @@ func Test_Read(t *testing.T) {
 				_ = afero.WriteFile(tc.fs, ".env", []byte(tc.dotenv), 0600)
 			}
 			result, err := Read(tc.fs)
-			if tc.expectErr {
-				assert.Error(t, err)
+			if tc.expectErr != "" {
+				var slackErr *slackerror.Error
+				require.ErrorAs(t, err, &slackErr)
+				assert.Equal(t, tc.expectErr, slackErr.Code)
 			} else {
 				assert.NoError(t, err)
 			}

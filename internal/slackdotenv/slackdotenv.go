@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 )
 
@@ -38,7 +39,13 @@ func Read(fs afero.Fs) (map[string]string, error) {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, slackerror.Wrap(err, slackerror.ErrDotEnvFileRead).
+			WithMessage("Failed to read the .env file: %s", err)
 	}
-	return godotenv.UnmarshalBytes(file)
+	vars, err := godotenv.UnmarshalBytes(file)
+	if err != nil {
+		return nil, slackerror.Wrap(err, slackerror.ErrDotEnvFileParse).
+			WithMessage("Failed to parse the .env file: %s", err)
+	}
+	return vars, nil
 }

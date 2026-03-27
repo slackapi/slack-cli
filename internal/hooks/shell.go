@@ -103,7 +103,7 @@ func (opts HookExecOpts) ShellEnv(ctx context.Context, fs afero.Fs, io iostreams
 	// Gather environment variables saved to the project ".env" file
 	dotEnv, err := slackdotenv.Read(fs)
 	if err != nil {
-		io.PrintDebug(ctx, "Warning: failed to parse .env file: %s", err)
+		io.PrintWarning(ctx, "%s", err)
 	}
 	if len(dotEnv) > 0 {
 		keys := make([]string, 0, len(dotEnv))
