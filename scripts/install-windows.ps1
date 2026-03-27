@@ -238,7 +238,8 @@ function next_step_message {
     try {
       $confirmed_alias | Out-Null
       Write-Host "`nYou're all set! Relaunch your terminal to ensure changes take effect."
-      Write-Host "   Then, authorize your CLI in your workspace with ``$confirmed_alias login``.`n"
+      Write-Host "   Then, authorize your CLI in your workspace with ``$confirmed_alias login``."
+      Write-Host "   > Create AI Agents in Slack with ``$confirmed_alias create agent``.`n"
     }
     catch {
       Write-Error "Slack CLI was not installed."
