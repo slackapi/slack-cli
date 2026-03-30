@@ -18,46 +18,8 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackdeps"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
-
-func Test_DotEnv_GetDotEnvFileVariables(t *testing.T) {
-	tests := map[string]struct {
-		globalVariableName  string
-		globalVariableValue string
-		localEnvFile        string
-		expectedValues      map[string]string
-	}{
-		"environment file variables are read": {
-			localEnvFile:   "SLACK_VARIABLE=12\n",
-			expectedValues: map[string]string{"SLACK_VARIABLE": "12"},
-		},
-		"variable casing is preserved on load": {
-			localEnvFile:   "secret_Token=Key123!\n",
-			expectedValues: map[string]string{"secret_Token": "Key123!"},
-		},
-		"global environment variables are ignored": {
-			globalVariableName:  "SLACK_VARIABLE",
-			globalVariableValue: "12",
-			expectedValues:      map[string]string{},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			fs := slackdeps.NewFsMock()
-			os := slackdeps.NewOsMock()
-			os.AddDefaultMocks()
-			os.Setenv(tc.globalVariableName, tc.globalVariableValue)
-			err := afero.WriteFile(fs, ".env", []byte(tc.localEnvFile), 0600)
-			assert.NoError(t, err)
-			config := NewConfig(fs, os)
-			variables, err := config.GetDotEnvFileVariables()
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedValues, variables)
-		})
-	}
-}
 
 func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 	tableTests := map[string]struct {

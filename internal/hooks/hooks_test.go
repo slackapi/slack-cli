@@ -20,85 +20,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
-	"github.com/spf13/afero"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func Test_Hooks_LoadDotEnv(t *testing.T) {
-	tests := map[string]struct {
-		fs          afero.Fs
-		dotenv      string
-		writeDotenv bool
-		expected    map[string]string
-		expectErr   bool
-	}{
-		"returns nil when fs is nil": {
-			fs:       nil,
-			expected: nil,
-		},
-		"returns nil when .env file does not exist": {
-			fs:       afero.NewMemMapFs(),
-			expected: nil,
-		},
-		"returns empty map for empty .env file": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      "",
-			writeDotenv: true,
-			expected:    map[string]string{},
-		},
-		"parses single variable": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      "FOO=bar\n",
-			writeDotenv: true,
-			expected:    map[string]string{"FOO": "bar"},
-		},
-		"parses multiple variables": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      "FOO=bar\nBAZ=qux\n",
-			writeDotenv: true,
-			expected:    map[string]string{"FOO": "bar", "BAZ": "qux"},
-		},
-		"parses quoted values": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      `TOKEN="my secret token"` + "\n",
-			writeDotenv: true,
-			expected:    map[string]string{"TOKEN": "my secret token"},
-		},
-		"skips comment lines": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      "# this is a comment\nFOO=bar\n",
-			writeDotenv: true,
-			expected:    map[string]string{"FOO": "bar"},
-		},
-		"handles values with equals signs": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      "URL=https://example.com?foo=bar&baz=qux\n",
-			writeDotenv: true,
-			expected:    map[string]string{"URL": "https://example.com?foo=bar&baz=qux"},
-		},
-		"handles empty values": {
-			fs:          afero.NewMemMapFs(),
-			dotenv:      "EMPTY=\n",
-			writeDotenv: true,
-			expected:    map[string]string{"EMPTY": ""},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			if tc.writeDotenv && tc.fs != nil {
-				_ = afero.WriteFile(tc.fs, ".env", []byte(tc.dotenv), 0644)
-			}
-			result, err := LoadDotEnv(tc.fs)
-			if tc.expectErr {
-				assert.Error(t, err)
-			} else {
-				assert.NoError(t, err)
-			}
-			assert.Equal(t, tc.expected, result)
-		})
-	}
-}
 
 func Test_Hooks_GetHookExecutor(t *testing.T) {
 	tests := map[string]struct {

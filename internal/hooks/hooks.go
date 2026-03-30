@@ -16,10 +16,8 @@ package hooks
 
 import (
 	"context"
-	"os"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/spf13/afero"
@@ -27,22 +25,6 @@ import (
 
 type HookExecutor interface {
 	Execute(ctx context.Context, opts HookExecOpts) (response string, err error)
-}
-
-// LoadDotEnv reads and parses a .env file from the working directory using the
-// provided filesystem. It returns nil if the file does not exist.
-func LoadDotEnv(fs afero.Fs) (map[string]string, error) {
-	if fs == nil {
-		return nil, nil
-	}
-	file, err := afero.ReadFile(fs, ".env")
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return godotenv.UnmarshalBytes(file)
 }
 
 func GetHookExecutor(ios iostreams.IOStreamer, fs afero.Fs, cfg SDKCLIConfig) HookExecutor {
@@ -73,39 +55,7 @@ func processExecOpts(ctx context.Context, opts HookExecOpts, fs afero.Fs, io ios
 	var cmdArgVars = cmdArgs[1:] // omit the first item because that is the command name
 	cmdArgVars = append(cmdArgVars, goutils.MapToStringSlice(opts.Args, "--")...)
 
-	// Load .env file variables
-	dotEnv, err := LoadDotEnv(fs)
-	if err != nil {
-		io.PrintDebug(ctx, "Warning: failed to parse .env file: %s", err)
-	}
-	if len(dotEnv) > 0 {
-		keys := make([]string, 0, len(dotEnv))
-		for k := range dotEnv {
-			keys = append(keys, k)
-		}
-		io.PrintDebug(ctx, "loaded variables from .env file: %s", strings.Join(keys, ", "))
-	}
-
-	// Whatever cmd.Env is set to will be the ONLY environment variables that the `cmd` will have access to when it runs.
-	//
-	// Order of precedence from lowest to highest:
-	// 1. Provided "opts.Env" variables
-	// 2. Saved ".env" file
-	// 3. Existing shell environment
-	//
-	// > Each entry is of the form "key=value".
-	// > ...
-	// > If Env contains duplicate environment keys, only the last value in the slice for each duplicate key is used.
-	//
-	// https://pkg.go.dev/os/exec#Cmd.Env
-	var cmdEnvVars []string
-	for name, value := range opts.Env {
-		cmdEnvVars = append(cmdEnvVars, name+"="+value)
-	}
-	for k, v := range dotEnv {
-		cmdEnvVars = append(cmdEnvVars, k+"="+v)
-	}
-	cmdEnvVars = append(cmdEnvVars, os.Environ()...)
+	cmdEnvVars := opts.ShellEnv(ctx, fs, io)
 
 	return cmdArgs, cmdArgVars, cmdEnvVars, nil
 }

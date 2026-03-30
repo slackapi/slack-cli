@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -102,10 +103,13 @@ func Run(ctx context.Context, clients *shared.ClientFactory, runArgs RunArgs) (t
 	}
 
 	// Gather environment variables from an environment file
-	variables, err := clients.Config.GetDotEnvFileVariables()
+	variables, err := slackdotenv.Read(clients.Fs)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrLocalAppRun).
 			WithMessage("Failed to read the local .env file")
+	}
+	if variables == nil {
+		variables = map[string]string{}
 	}
 
 	// Set SLACK_API_URL to the resolved host value found in the environment

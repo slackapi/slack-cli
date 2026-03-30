@@ -134,7 +134,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				)
 			},
 		},
-		"dotenv vars are loaded": {
+		"dotenv vars and hook vars are loaded into the environment": {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Env: map[string]string{
@@ -148,7 +148,7 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				},
 			},
 			setup: func(fs afero.Fs) {
-				_ = afero.WriteFile(fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0644)
+				_ = afero.WriteFile(fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0600)
 			},
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.NoError(t, err)

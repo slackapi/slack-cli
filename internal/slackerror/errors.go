@@ -97,6 +97,8 @@ const (
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
 	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
 	ErrDocsSearchFlagRequired                        = "docs_search_flag_required"
+	ErrDotEnvFileParse                               = "dotenv_file_parse_error"
+	ErrDotEnvFileRead                                = "dotenv_file_read_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
 	ErrFailedCreatingApp                             = "failed_creating_app"
@@ -690,6 +692,16 @@ Otherwise start your app for local development with: %s`,
 		Code:        ErrDocsSearchFlagRequired,
 		Message:     "Invalid docs command. Did you mean to search?",
 		Remediation: fmt.Sprintf("Use --search flag: %s", style.Commandf("docs --search \"<query>\"", false)),
+	},
+
+	ErrDotEnvFileParse: {
+		Code:    ErrDotEnvFileParse,
+		Message: "Failed to parse the .env file",
+	},
+
+	ErrDotEnvFileRead: {
+		Code:    ErrDotEnvFileRead,
+		Message: "Failed to read the .env file",
 	},
 
 	ErrEnterpriseNotFound: {

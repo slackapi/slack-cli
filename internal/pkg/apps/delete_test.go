@@ -81,7 +81,7 @@ func TestAppsDelete(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("api host")
-			clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("logstash host")
+			clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("logstash host")
 			clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
 				TeamName: &tc.auth.TeamDomain,
 				TeamID:   &tc.auth.TeamID,
