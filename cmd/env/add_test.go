@@ -205,57 +205,17 @@ func Test_Env_AddCommand(t *testing.T) {
 			},
 		},
 		"add a variable to the .env file for non-hosted app": {
-			CmdArgs: []string{"ENV_NAME", "ENV_VALUE"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddDotenvMocks(ctx, cm, cf)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "AddVariable")
-				cm.IO.AssertCalled(
-					t,
-					"PrintTrace",
-					mock.Anything,
-					slacktrace.EnvAddSuccess,
-					mock.Anything,
-				)
-			},
-		},
-		"add a variable preserving existing variables and comments in .env": {
 			CmdArgs: []string{"NEW_VAR", "new_value"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddDotenvMocks(ctx, cm, cf)
-				err := afero.WriteFile(cf.Fs, ".env", []byte("# Config\nEXISTING=value\n"), 0644)
+				err := afero.WriteFile(cf.Fs, ".env", []byte("# Config\nEXISTING=value\n"), 0600)
 				assert.NoError(t, err)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "AddVariable")
-			},
-		},
-		"overwrite an existing variable in .env file": {
-			CmdArgs: []string{"MY_VAR", "new_value"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddDotenvMocks(ctx, cm, cf)
-				err := afero.WriteFile(cf.Fs, ".env", []byte("MY_VAR=old_value\n"), 0644)
+				content, err := afero.ReadFile(cm.Fs, ".env")
 				assert.NoError(t, err)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "AddVariable")
-			},
-		},
-		"create .env file when it does not exist": {
-			CmdArgs: []string{"FIRST_VAR", "first_value"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddDotenvMocks(ctx, cm, cf)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "AddVariable")
-				cm.IO.AssertCalled(
-					t,
-					"PrintTrace",
-					mock.Anything,
-					slacktrace.EnvAddSuccess,
-					mock.Anything,
-				)
+				assert.Equal(t, "# Config\nEXISTING=value\nNEW_VAR=\"new_value\"\n", string(content))
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {

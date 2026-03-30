@@ -195,7 +195,7 @@ func Test_Set(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			fs := afero.NewMemMapFs()
 			if tc.writeExisting {
-				err := afero.WriteFile(fs, ".env", []byte(tc.existingEnv), 0644)
+				err := afero.WriteFile(fs, ".env", []byte(tc.existingEnv), 0600)
 				assert.NoError(t, err)
 			}
 			err := Set(fs, tc.name, tc.value)
