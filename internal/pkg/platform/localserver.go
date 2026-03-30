@@ -308,13 +308,7 @@ func (r *LocalServer) StartDelegate(ctx context.Context) error {
 	cmdArgs := strings.Fields(cmdStr)
 	var cmdArgVars = cmdArgs[1:] // omit the first item because that is the command name
 
-	// Whatever cmd.Env is set to will be the ONLY environment variables that the `cmd` will have access to when it runs.
-	// To avoid removing any environment variables that are set in the current environment, we first set the cmd.Env to the current environment.
-	// before adding any new environment variables.
-	var cmdEnvVars = os.Environ()
-	for name, value := range sdkManagedConnectionStartHookOpts.Env {
-		cmdEnvVars = append(cmdEnvVars, name+"="+value)
-	}
+	cmdEnvVars := sdkManagedConnectionStartHookOpts.ShellEnv(ctx, r.clients.Fs, r.clients.IO)
 	cmd := sdkManagedConnectionStartHookOpts.Exec.Command(cmdEnvVars, os.Stdout, os.Stderr, nil, cmdArgs[0], cmdArgVars...)
 
 	// Store command reference for lifecycle management

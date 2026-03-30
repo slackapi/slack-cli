@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,6 +42,7 @@ func mockBoundaryStringGenerator() string {
 func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 	tests := map[string]struct {
 		opts  HookExecOpts
+		setup func(afero.Fs)
 		check func(*testing.T, string, error, ExecInterface)
 	}{
 		"error if hook command unavailable": {
@@ -132,6 +134,29 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 				)
 			},
 		},
+		"dotenv vars and hook vars are loaded into the environment": {
+			opts: HookExecOpts{
+				Hook: HookScript{Name: "happypath", Command: "echo {}"},
+				Env: map[string]string{
+					"OPTS_VAR": "from_opts",
+				},
+				Exec: &MockExec{
+					mockCommand: &MockCommand{
+						MockStdout: []byte(mockBoundaryString + `{"ok": true}` + mockBoundaryString),
+						Err:        nil,
+					},
+				},
+			},
+			setup: func(fs afero.Fs) {
+				_ = afero.WriteFile(fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0600)
+			},
+			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
+				require.NoError(t, err)
+				require.Equal(t, `{"ok": true}`, response)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `DOTENV_VAR=from_dotenv`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `OPTS_VAR=from_opts`)
+			},
+		},
 		"fail to parse payload due to improper boundary strings": {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
@@ -176,8 +201,13 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			config := config.NewConfig(fs, os)
 			ios := iostreams.NewIOStreamsMock(config, fs, os)
 			ios.AddDefaultMocks()
+			memFs := afero.NewMemMapFs()
 			hookExecutor := &HookExecutorMessageBoundaryProtocol{
 				IO: ios,
+				Fs: memFs,
+			}
+			if tc.setup != nil {
+				tc.setup(memFs)
 			}
 			response, err := hookExecutor.Execute(ctx, tc.opts)
 			tc.check(t, response, err, tc.opts.Exec)

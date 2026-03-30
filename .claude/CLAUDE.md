@@ -164,6 +164,12 @@ for name, tc := range tests {
 }
 ```
 
+### Error Handling
+
+- Wrap errors returned across package boundaries with `slackerror.Wrap(err, slackerror.ErrCode)` so they carry a structured error code
+- Register new error codes in `internal/slackerror/errors.go`: add a constant and an entry in `ErrorCodeMap`
+- Error codes are alphabetically ordered in both the constants block and `ErrorCodeMap`
+
 ## Version Management
 
 Versions use semantic versioning with git tags (format: `v*.*.*`).
