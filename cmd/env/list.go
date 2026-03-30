@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -34,11 +35,13 @@ func NewEnvListCommand(clients *shared.ClientFactory) *cobra.Command {
 		Use:   "list [flags]",
 		Short: "List all environment variables for the app",
 		Long: strings.Join([]string{
-			"List all of the environment variables of an app deployed to Slack managed",
-			"infrastructure.",
+			"List environment variables available to the app at runtime.",
 			"",
-			"This command is supported for apps deployed to Slack managed infrastructure but",
-			"other apps can attempt to run the command with the --force flag.",
+			"Commands that run in the context of a project source environment variables from",
+			"the \".env\" file. This includes the \"run\" command.",
+			"",
+			"The \"deploy\" command gathers environment variables from the \".env\" file as well",
+			"unless the app is using ROSI features.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -58,17 +61,9 @@ func NewEnvListCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunEnvListCommandFunc determines if the command is supported for a project
-// and configures flags
-func preRunEnvListCommandFunc(ctx context.Context, clients *shared.ClientFactory) error {
-	err := cmdutil.IsValidProjectDirectory(clients)
-	if err != nil {
-		return err
-	}
-	if clients.Config.ForceFlag {
-		return nil
-	}
-	return cmdutil.IsSlackHostedProject(ctx, clients)
+// preRunEnvListCommandFunc determines if the command is run in a valid project
+func preRunEnvListCommandFunc(_ context.Context, clients *shared.ClientFactory) error {
+	return cmdutil.IsValidProjectDirectory(clients)
 }
 
 // runEnvListCommandFunc outputs environment variables for a selected app
@@ -81,20 +76,34 @@ func runEnvListCommandFunc(
 	selection, err := appSelectPromptFunc(
 		ctx,
 		clients,
-		prompts.ShowHostedOnly,
+		prompts.ShowAllEnvironments,
 		prompts.ShowInstalledAppsOnly,
 	)
 	if err != nil {
 		return err
 	}
 
-	variableNames, err := clients.API().ListVariables(
-		ctx,
-		selection.Auth.Token,
-		selection.App.AppID,
-	)
-	if err != nil {
-		return err
+	// Gather environment variables for either a ROSI app from the Slack API method
+	// or read from project files.
+	var variableNames []string
+	if !selection.App.IsDev && cmdutil.IsSlackHostedProject(ctx, clients) == nil {
+		variableNames, err = clients.API().ListVariables(
+			ctx,
+			selection.Auth.Token,
+			selection.App.AppID,
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		dotEnv, err := slackdotenv.Read(clients.Fs)
+		if err != nil {
+			return err
+		}
+		variableNames = make([]string, 0, len(dotEnv))
+		for k := range dotEnv {
+			variableNames = append(variableNames, k)
+		}
 	}
 
 	count := len(variableNames)
@@ -112,14 +121,15 @@ func runEnvListCommandFunc(
 		},
 	}))
 
-	if len(variableNames) <= 0 {
+	if count <= 0 {
 		return nil
 	}
+
 	sort.Strings(variableNames)
-	variableLabel := []string{}
+	variableLabels := make([]string, 0, count)
 	for _, v := range variableNames {
-		variableLabel = append(
-			variableLabel,
+		variableLabels = append(
+			variableLabels,
 			fmt.Sprintf("%s: %s", v, style.Secondary("***")),
 		)
 	}
@@ -127,7 +137,7 @@ func runEnvListCommandFunc(
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "evergreen_tree",
 		Text:      "App Environment",
-		Secondary: variableLabel,
+		Secondary: variableLabels,
 	}))
 
 	return nil
