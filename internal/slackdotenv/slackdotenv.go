@@ -106,8 +106,8 @@ func Set(fs afero.Fs, name string, value string) error {
 	oldMarshaledValue := strings.TrimPrefix(oldEntry, name+"=")
 
 	// Try each possible form of the old entry, longest (most specific) first.
-	// For multiline values, also try the double-quoted raw form since the file
-	// stores actual newlines while Marshal escapes them.
+	// The file can store multiline values with actual newlines, so also try
+	// the double-quoted raw form.
 	entries := []string{
 		"export " + name + "=" + oldMarshaledValue,
 		"export " + name + "=" + `"` + oldValue + `"`,
