@@ -81,7 +81,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 
 func Template() string {
 	processName := cmdutil.GetProcessName()
-	version := version.Get()
+	version := version.Raw()
 
 	return fmt.Sprintf(style.Secondary("Using %s %s"), processName, version)
 }
