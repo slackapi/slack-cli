@@ -22,9 +22,9 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -96,7 +96,7 @@ func runEnvListCommandFunc(
 			return err
 		}
 	} else {
-		dotEnv, err := hooks.LoadDotEnv(clients.Fs)
+		dotEnv, err := slackdotenv.Read(clients.Fs)
 		if err != nil {
 			return err
 		}
