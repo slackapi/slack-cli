@@ -27,8 +27,7 @@ func TestVersion(t *testing.T) {
 	assert.True(t, len(v) > 0, "some default value exists")
 }
 
-// Test overriding the Version with an environment variable
-func Test_Get(t *testing.T) {
+func Test_ensurePrefix(t *testing.T) {
 	tests := map[string]struct {
 		version  string
 		expected string
@@ -52,10 +51,7 @@ func Test_Get(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			original := Version
-			defer func() { Version = original }()
-			Version = tc.version
-			assert.Equal(t, tc.expected, Get())
+			assert.Equal(t, tc.expected, ensurePrefix(tc.version))
 		})
 	}
 }
