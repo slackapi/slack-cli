@@ -137,23 +137,27 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "evergreen_tree",
+			Text:  "App Environment",
+			Secondary: []string{
+				fmt.Sprintf("Successfully added \"%s\" as an app environment variable", variableName),
+			},
+		}))
 	} else {
 		err = slackdotenv.Set(clients.Fs, variableName, variableValue)
 		if err != nil {
 			return err
 		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "evergreen_tree",
+			Text:  "App Environment",
+			Secondary: []string{
+				fmt.Sprintf("Successfully added \"%s\" as a project environment variable", variableName),
+			},
+		}))
 	}
-
-	clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "evergreen_tree",
-		Text:  "App Environment",
-		Secondary: []string{
-			fmt.Sprintf(
-				"Successfully added \"%s\" as an environment variable",
-				variableName,
-			),
-		},
-	}))
 	return nil
 }
