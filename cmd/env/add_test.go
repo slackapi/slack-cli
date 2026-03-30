@@ -28,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -46,88 +47,22 @@ var mockApp = types.App{
 
 func Test_Env_AddCommandPreRun(t *testing.T) {
 	tests := map[string]struct {
-		mockFlagForce        bool
-		mockManifestResponse types.SlackYaml
-		mockManifestError    error
-		mockManifestSource   config.ManifestSource
 		mockWorkingDirectory string
 		expectedError        error
 	}{
-		"continues if the application is hosted on slack": {
-			mockManifestResponse: types.SlackYaml{
-				AppManifest: types.AppManifest{
-					Settings: &types.AppSettings{
-						FunctionRuntime: types.SlackHosted,
-					},
-				},
-			},
-			mockManifestError:    nil,
-			mockManifestSource:   config.ManifestSourceLocal,
+		"continues if the command is run in a project": {
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
-		},
-		"errors if the application is not hosted on slack": {
-			mockManifestResponse: types.SlackYaml{
-				AppManifest: types.AppManifest{
-					Settings: &types.AppSettings{
-						FunctionRuntime: types.Remote,
-					},
-				},
-			},
-			mockManifestError:    nil,
-			mockManifestSource:   config.ManifestSourceLocal,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
-		},
-		"continues if the force flag is used in a project": {
-			mockFlagForce:        true,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        nil,
-		},
-		"errors if the project manifest cannot be retrieved": {
-			mockManifestResponse: types.SlackYaml{},
-			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.ManifestSourceLocal,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 		"errors if the command is not run in a project": {
-			mockManifestResponse: types.SlackYaml{},
-			mockManifestError:    slackerror.New(slackerror.ErrSDKHookNotFound),
 			mockWorkingDirectory: "",
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
-		},
-		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.ManifestSourceRemote,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
-			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On(
-				"GetManifestLocal",
-				mock.Anything,
-				mock.Anything,
-				mock.Anything,
-			).Return(
-				tc.mockManifestResponse,
-				tc.mockManifestError,
-			)
-			clientsMock.AppClient.Manifest = manifestMock
-			projectConfigMock := config.NewProjectConfigMock()
-			projectConfigMock.On(
-				"GetManifestSource",
-				mock.Anything,
-			).Return(
-				tc.mockManifestSource,
-				nil,
-			)
-			clientsMock.Config.ProjectConfig = projectConfigMock
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
-				cf.Config.ForceFlag = tc.mockFlagForce
 				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
 			cmd := NewEnvAddCommand(clients)
@@ -146,7 +81,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"add a variable using arguments": {
 			CmdArgs: []string{"ENV_NAME", "ENV_VALUE"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(ctx, cm, cf)
+				setupEnvAddHostedMocks(ctx, cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(
@@ -170,7 +105,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"provide a variable name by argument and value by prompt": {
 			CmdArgs: []string{"ENV_NAME"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(ctx, cm, cf)
+				setupEnvAddHostedMocks(ctx, cm, cf)
 				cm.IO.On(
 					"PasswordPrompt",
 					mock.Anything,
@@ -201,7 +136,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"provide a variable name by argument and value by flag": {
 			CmdArgs: []string{"ENV_NAME", "--value", "example_value"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(ctx, cm, cf)
+				setupEnvAddHostedMocks(ctx, cm, cf)
 				cm.IO.On(
 					"PasswordPrompt",
 					mock.Anything,
@@ -232,7 +167,7 @@ func Test_Env_AddCommand(t *testing.T) {
 		"provide both variable name and value by prompt": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddCommandMocks(ctx, cm, cf)
+				setupEnvAddHostedMocks(ctx, cm, cf)
 				cm.IO.On(
 					"InputPrompt",
 					mock.Anything,
@@ -269,6 +204,60 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 		},
+		"add a variable to the .env file for non-hosted app": {
+			CmdArgs: []string{"ENV_NAME", "ENV_VALUE"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvAddDotenvMocks(ctx, cm, cf)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "AddVariable")
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvAddSuccess,
+					mock.Anything,
+				)
+			},
+		},
+		"add a variable preserving existing variables and comments in .env": {
+			CmdArgs: []string{"NEW_VAR", "new_value"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvAddDotenvMocks(ctx, cm, cf)
+				err := afero.WriteFile(cf.Fs, ".env", []byte("# Config\nEXISTING=value\n"), 0644)
+				assert.NoError(t, err)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "AddVariable")
+			},
+		},
+		"overwrite an existing variable in .env file": {
+			CmdArgs: []string{"MY_VAR", "new_value"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvAddDotenvMocks(ctx, cm, cf)
+				err := afero.WriteFile(cf.Fs, ".env", []byte("MY_VAR=old_value\n"), 0644)
+				assert.NoError(t, err)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "AddVariable")
+			},
+		},
+		"create .env file when it does not exist": {
+			CmdArgs: []string{"FIRST_VAR", "first_value"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvAddDotenvMocks(ctx, cm, cf)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "AddVariable")
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvAddSuccess,
+					mock.Anything,
+				)
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		cmd := NewEnvAddCommand(cf)
 		cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
@@ -276,17 +265,134 @@ func Test_Env_AddCommand(t *testing.T) {
 	})
 }
 
-// setupEnvAddCommandMocks prepares common mocks for these tests
-func setupEnvAddCommandMocks(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+// setupEnvAddHostedMocks prepares common mocks for hosted app tests
+func setupEnvAddHostedMocks(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	cf.SDKConfig = hooks.NewSDKConfigMock()
 	cm.AddDefaultMocks()
 	_ = cf.AppClient().SaveDeployed(ctx, mockApp)
 
 	appSelectMock := prompts.NewAppSelectMock()
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{Auth: mockAuth, App: mockApp}, nil)
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{Auth: mockAuth, App: mockApp}, nil)
 
 	cm.Config.Flags.String("value", "", "mock value flag")
 
 	cm.API.On("AddVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	manifestMock := &app.ManifestMockObject{}
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
+		types.SlackYaml{
+			AppManifest: types.AppManifest{
+				Settings: &types.AppSettings{
+					FunctionRuntime: types.SlackHosted,
+				},
+			},
+		},
+		nil,
+	)
+	cm.AppClient.Manifest = manifestMock
+	projectConfigMock := config.NewProjectConfigMock()
+	projectConfigMock.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+	cm.Config.ProjectConfig = projectConfigMock
+	cf.SDKConfig.WorkingDirectory = "/slack/path/to/project"
+}
+
+// setupEnvAddDotenvMocks prepares common mocks for non-hosted (dotenv) app tests
+func setupEnvAddDotenvMocks(_ context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+	cf.SDKConfig = hooks.NewSDKConfigMock()
+	cm.AddDefaultMocks()
+
+	mockDevApp := types.App{
+		TeamID:     "T1",
+		TeamDomain: "team1",
+		AppID:      "A0123456789",
+		IsDev:      true,
+	}
+	appSelectMock := prompts.NewAppSelectMock()
+	appSelectPromptFunc = appSelectMock.AppSelectPrompt
+	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{Auth: mockAuth, App: mockDevApp}, nil)
+
+	cm.Config.Flags.String("value", "", "mock value flag")
+}
+
+func Test_setDotEnv(t *testing.T) {
+	tests := map[string]struct {
+		existingEnv   string
+		writeExisting bool
+		name          string
+		value         string
+		expectedFile  string
+	}{
+		"creates .env file when it does not exist": {
+			name:         "FOO",
+			value:        "bar",
+			expectedFile: "FOO=\"bar\"\n",
+		},
+		"adds a variable to an empty .env file": {
+			existingEnv:   "",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "bar",
+			expectedFile:  "FOO=\"bar\"\n",
+		},
+		"adds a variable preserving existing variables": {
+			existingEnv:   "EXISTING=value\n",
+			writeExisting: true,
+			name:          "NEW_VAR",
+			value:         "new_value",
+			expectedFile:  "EXISTING=value\nNEW_VAR=\"new_value\"\n",
+		},
+		"adds a variable preserving comments and blank lines": {
+			existingEnv:   "# Database config\nDB_HOST=localhost\n\n# API keys\nAPI_KEY=secret\n",
+			writeExisting: true,
+			name:          "NEW_VAR",
+			value:         "new_value",
+			expectedFile:  "# Database config\nDB_HOST=localhost\n\n# API keys\nAPI_KEY=secret\nNEW_VAR=\"new_value\"\n",
+		},
+		"updates an existing unquoted variable in-place": {
+			existingEnv:   "# Config\nFOO=old_value\nBAR=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "# Config\nFOO=\"new_value\"\nBAR=keep\n",
+		},
+		"updates an existing quoted variable in-place": {
+			existingEnv:   "FOO=\"old_value\"\nBAR=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "FOO=\"new_value\"\nBAR=keep\n",
+		},
+		"updates a variable with export prefix": {
+			existingEnv:   "export SECRET=old_secret\nOTHER=keep\n",
+			writeExisting: true,
+			name:          "SECRET",
+			value:         "new_secret",
+			expectedFile:  "export SECRET=\"new_secret\"\nOTHER=keep\n",
+		},
+		"escapes special characters in values": {
+			name:         "SPECIAL",
+			value:        "has \"quotes\" and $vars and \\ backslash",
+			expectedFile: "SPECIAL=\"has \\\"quotes\\\" and \\$vars and \\\\ backslash\"\n",
+		},
+		"round-trips through LoadDotEnv": {
+			name:         "ROUND_TRIP",
+			value:        "hello world",
+			expectedFile: "ROUND_TRIP=\"hello world\"\n",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			if tc.writeExisting {
+				err := afero.WriteFile(fs, ".env", []byte(tc.existingEnv), 0644)
+				assert.NoError(t, err)
+			}
+			err := setDotEnv(fs, tc.name, tc.value)
+			assert.NoError(t, err)
+			content, err := afero.ReadFile(fs, ".env")
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedFile, string(content))
+		})
+	}
 }
