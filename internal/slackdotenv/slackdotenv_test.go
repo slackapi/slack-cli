@@ -111,3 +111,104 @@ func Test_Read(t *testing.T) {
 		})
 	}
 }
+
+func Test_Set(t *testing.T) {
+	tests := map[string]struct {
+		existingEnv   string
+		writeExisting bool
+		name          string
+		value         string
+		expectedFile  string
+		expectErr     string
+	}{
+		"creates .env file when it does not exist": {
+			name:         "FOO",
+			value:        "bar",
+			expectedFile: "FOO=\"bar\"\n",
+		},
+		"adds a variable to an empty .env file": {
+			existingEnv:   "",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "bar",
+			expectedFile:  "FOO=\"bar\"\n",
+		},
+		"adds a variable preserving existing variables": {
+			existingEnv:   "EXISTING=value\n",
+			writeExisting: true,
+			name:          "NEW_VAR",
+			value:         "new_value",
+			expectedFile:  "EXISTING=value\nNEW_VAR=\"new_value\"\n",
+		},
+		"adds a variable preserving comments and blank lines": {
+			existingEnv:   "# Database config\nDB_HOST=localhost\n\n# API keys\nAPI_KEY=secret\n",
+			writeExisting: true,
+			name:          "NEW_VAR",
+			value:         "new_value",
+			expectedFile:  "# Database config\nDB_HOST=localhost\n\n# API keys\nAPI_KEY=secret\nNEW_VAR=\"new_value\"\n",
+		},
+		"updates an existing unquoted variable in-place": {
+			existingEnv:   "# Config\nFOO=old_value\nBAR=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "# Config\nFOO=\"new_value\"\nBAR=keep\n",
+		},
+		"updates an existing quoted variable in-place": {
+			existingEnv:   "FOO=\"old_value\"\nBAR=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "FOO=\"new_value\"\nBAR=keep\n",
+		},
+		"updates a variable with export prefix": {
+			existingEnv:   "export SECRET=old_secret\nOTHER=keep\n",
+			writeExisting: true,
+			name:          "SECRET",
+			value:         "new_secret",
+			expectedFile:  "export SECRET=\"new_secret\"\nOTHER=keep\n",
+		},
+		"escapes special characters in values": {
+			name:         "SPECIAL",
+			value:        "has \"quotes\" and $vars and \\ backslash",
+			expectedFile: "SPECIAL=\"has \\\"quotes\\\" and \\$vars and \\\\ backslash\"\n",
+		},
+		"replaces a multiline value in-place": {
+			existingEnv:   "export DB_KEY=\"---START---\npassword\n---END---\"\nOTHER=keep\n",
+			writeExisting: true,
+			name:          "DB_KEY",
+			value:         "new_key",
+			expectedFile:  "export DB_KEY=\"new_key\"\nOTHER=keep\n",
+		},
+		"returns error for value that cannot round-trip": {
+			name:      "KEY",
+			value:     `idk\`,
+			expectErr: slackerror.ErrDotEnvVarMarshal,
+		},
+		"round-trips through Read": {
+			name:         "ROUND_TRIP",
+			value:        "hello world",
+			expectedFile: "ROUND_TRIP=\"hello world\"\n",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			if tc.writeExisting {
+				err := afero.WriteFile(fs, ".env", []byte(tc.existingEnv), 0644)
+				assert.NoError(t, err)
+			}
+			err := Set(fs, tc.name, tc.value)
+			if tc.expectErr != "" {
+				var slackErr *slackerror.Error
+				require.ErrorAs(t, err, &slackErr)
+				assert.Equal(t, tc.expectErr, slackErr.Code)
+				return
+			}
+			assert.NoError(t, err)
+			content, err := afero.ReadFile(fs, ".env")
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedFile, string(content))
+		})
+	}
+}

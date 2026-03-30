@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -27,7 +26,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -140,7 +138,7 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 			return err
 		}
 	} else {
-		err = setDotEnv(clients.Fs, variableName, variableValue)
+		err = slackdotenv.Set(clients.Fs, variableName, variableValue)
 		if err != nil {
 			return err
 		}
@@ -158,88 +156,4 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		},
 	}))
 	return nil
-}
-
-// setDotEnv sets a single environment variable in the .env file, preserving
-// comments, blank lines, and other formatting. If the key already exists its
-// value is replaced in-place. Otherwise the entry is appended. The file is
-// created if it does not exist.
-func setDotEnv(fs afero.Fs, name string, value string) error {
-	newEntry, err := godotenv.Marshal(map[string]string{name: value})
-	if err != nil {
-		return err
-	}
-
-	// Check for an existing .env file and parse it to detect existing keys.
-	existing, err := slackdotenv.Read(fs)
-	if err != nil {
-		return err
-	}
-
-	// If the file does not exist or the key is new, append the entry.
-	if existing == nil {
-		return afero.WriteFile(fs, ".env", []byte(newEntry+"\n"), 0644)
-	}
-
-	oldValue, found := existing[name]
-	if !found {
-		raw, err := afero.ReadFile(fs, ".env")
-		if err != nil {
-			return err
-		}
-		content := string(raw)
-		if len(content) > 0 && !strings.HasSuffix(content, "\n") {
-			content += "\n"
-		}
-		return afero.WriteFile(fs, ".env", []byte(content+newEntry+"\n"), 0644)
-	}
-
-	// The key exists — replace the old entry in the raw file content. Build
-	// possible representations of the old entry to find and replace in the raw
-	// bytes, since the file format may differ from what Marshal produces.
-	raw, err := afero.ReadFile(fs, ".env")
-	if err != nil {
-		return err
-	}
-
-	// Strip the "NAME=" prefix from the marshaled new entry to get just the
-	// value portion, then build the old entry alternatives using the same
-	// prefix variations the file might contain.
-	marshaledValue := strings.TrimPrefix(newEntry, name+"=")
-	oldMarshaledValue := marshaledValue
-	oldEntry, err := godotenv.Marshal(map[string]string{name: oldValue})
-	if err == nil {
-		oldMarshaledValue = strings.TrimPrefix(oldEntry, name+"=")
-	}
-
-	// Try each possible form of the old entry, longest (most specific) first.
-	entries := []string{
-		"export " + name + "=" + oldMarshaledValue,
-		"export " + name + "=" + oldValue,
-		"export " + name + "=" + "'" + oldValue + "'",
-		name + "=" + oldMarshaledValue,
-		name + "=" + oldValue,
-		name + "=" + "'" + oldValue + "'",
-	}
-
-	content := string(raw)
-	replaced := false
-	for _, entry := range entries {
-		if strings.Contains(content, entry) {
-			replacement := newEntry
-			if strings.HasPrefix(entry, "export ") {
-				replacement = "export " + newEntry
-			}
-			content = strings.Replace(content, entry, replacement, 1)
-			replaced = true
-			break
-		}
-	}
-	if !replaced {
-		if !strings.HasSuffix(content, "\n") {
-			content += "\n"
-		}
-		content += newEntry + "\n"
-	}
-	return afero.WriteFile(fs, ".env", []byte(content), 0644)
 }
