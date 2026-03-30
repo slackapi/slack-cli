@@ -16,7 +16,6 @@ package version
 
 import (
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -42,8 +41,9 @@ func getVersionFromEnv() string {
 }
 
 // ensurePrefix ensures that the version string has a "v" prefix.
+// Empty strings are returned as-is to avoid producing a bare "v".
 func ensurePrefix(v string) string {
-	if match, _ := regexp.MatchString(`^[^v]`, v); match {
+	if v != "" && !strings.HasPrefix(v, "v") {
 		return "v" + v
 	}
 	return v
