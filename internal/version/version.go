@@ -16,7 +16,6 @@ package version
 
 import (
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -33,6 +32,7 @@ func init() {
 	if envVersion := getVersionFromEnv(); envVersion != "" {
 		Version = envVersion
 	}
+	Version = ensurePrefix(Version)
 }
 
 // getVersionFromEnv will return the formatted version from EnvTestVersion otherwise "".
@@ -40,16 +40,16 @@ func getVersionFromEnv() string {
 	return strings.Trim(os.Getenv(EnvTestVersion), " ")
 }
 
-// Get the version and format it (e.g. `v1.0.0`)
-func Get() string {
-	version := Version
-	if match, _ := regexp.MatchString(`^[^v]`, version); match {
-		version = "v" + version
+// ensurePrefix ensures that the version string has a "v" prefix.
+// Empty strings are returned as-is to avoid producing a bare "v".
+func ensurePrefix(v string) string {
+	if v != "" && !strings.HasPrefix(v, "v") {
+		return "v" + v
 	}
-	return version
+	return v
 }
 
-// Raw returns the raw, unformatted version
+// Raw returns the version
 func Raw() string {
 	return Version
 }
