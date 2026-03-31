@@ -26,12 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_MimicInputPrompt(t *testing.T) {
-	result := MimicInputPrompt("Enter app name", "my-app")
-	assert.Contains(t, result, "Enter app name")
-	assert.Contains(t, result, "my-app")
-}
-
 func TestPromptConfigs(t *testing.T) {
 	mockFlag := &pflag.Flag{Name: "token"}
 	mockFlag2 := &pflag.Flag{Name: "team"}

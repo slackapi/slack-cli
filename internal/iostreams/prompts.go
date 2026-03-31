@@ -22,19 +22,8 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
-	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/pflag"
 )
-
-// MimicInputPrompt formats a message and value to appear as a prompted input
-func MimicInputPrompt(message string, value string) string {
-	return fmt.Sprintf(
-		"%s %s %s",
-		style.Darken("?"),
-		style.Highlight(message),
-		style.Input(value),
-	)
-}
 
 // PromptConfig contains general information about a prompt
 type PromptConfig interface {
