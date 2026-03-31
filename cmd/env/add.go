@@ -32,9 +32,9 @@ import (
 func NewEnvAddCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add <name> <value> [flags]",
-		Short: "Add an environment variable to the app",
+		Short: "Add an environment variable to the project",
 		Long: strings.Join([]string{
-			"Add an environment variable to the app.",
+			"Add an environment variable to the project.",
 			"",
 			"If a name or value is not provided, you will be prompted to provide these.",
 			"",
