@@ -21,6 +21,7 @@ package slackdotenv
 
 import (
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/joho/godotenv"
@@ -89,7 +90,7 @@ func Set(fs afero.Fs, name string, value string) error {
 	content := string(raw)
 
 	// If the key is new, append the entry.
-	oldValue, found := existing[name]
+	_, found := existing[name]
 	if !found {
 		if len(content) > 0 && !strings.HasSuffix(content, "\n") {
 			content += "\n"
@@ -97,41 +98,29 @@ func Set(fs afero.Fs, name string, value string) error {
 		return writeFile(fs, []byte(content+newEntry+"\n"))
 	}
 
-	// Marshal the old value to find its canonical form in the file.
-	oldEntry, err := godotenv.Marshal(map[string]string{name: oldValue})
-	if err != nil {
-		return slackerror.Wrap(err, slackerror.ErrDotEnvVarMarshal).
-			WithMessage("Failed to marshal the .env variable: %s", err)
-	}
-	oldMarshaledValue := strings.TrimPrefix(oldEntry, name+"=")
+	// Build a regex that matches any form of the existing entry, allowing
+	// optional spaces around the equals sign and optional export prefix.
+	// The value portion matches to the end of the line, handling quoted
+	// (single, double, backtick) and unquoted values, including multiline
+	// double-quoted values with embedded newlines.
+	re := regexp.MustCompile(
+		`(?m)(^[^\S\n]*export[^\S\n]+|^[^\S\n]*)` + regexp.QuoteMeta(name) + `[^\S\n]*=[^\S\n]*` +
+			`(?:` +
+			`"(?:[^"\\]|\\.)*"` + // double-quoted (with escapes)
+			`|'[^']*'` + // single-quoted
+			"|`[^`]*`" + // backtick-quoted
+			`|[^\n]*` + // unquoted to end of line
+			`)`,
+	)
 
-	// Try each possible form of the old entry, longest (most specific) first.
-	// The file can store multiline values with actual newlines, so also try
-	// the double-quoted raw form.
-	entries := []string{
-		"export " + name + "=" + oldMarshaledValue,
-		"export " + name + "=" + `"` + oldValue + `"`,
-		"export " + name + "=" + oldValue,
-		"export " + name + "=" + "'" + oldValue + "'",
-		name + "=" + oldMarshaledValue,
-		name + "=" + `"` + oldValue + `"`,
-		name + "=" + oldValue,
-		name + "=" + "'" + oldValue + "'",
-	}
-
-	replaced := false
-	for _, entry := range entries {
-		if strings.Contains(content, entry) {
-			if strings.HasPrefix(entry, "export ") {
-				content = strings.Replace(content, entry, "export "+newEntry, 1)
-			} else {
-				content = strings.Replace(content, entry, newEntry, 1)
-			}
-			replaced = true
-			break
+	loc := re.FindStringIndex(content)
+	if loc != nil {
+		prefix := ""
+		if strings.Contains(content[loc[0]:loc[1]], "export") {
+			prefix = "export "
 		}
-	}
-	if !replaced {
+		content = content[:loc[0]] + prefix + newEntry + content[loc[1]:]
+	} else {
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"
 		}
