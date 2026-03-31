@@ -16,32 +16,34 @@ package hooks
 
 import (
 	"context"
-	"os"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/spf13/afero"
 )
 
 type HookExecutor interface {
 	Execute(ctx context.Context, opts HookExecOpts) (response string, err error)
 }
 
-func GetHookExecutor(ios iostreams.IOStreamer, cfg SDKCLIConfig) HookExecutor {
+func GetHookExecutor(ios iostreams.IOStreamer, fs afero.Fs, cfg SDKCLIConfig) HookExecutor {
 	protocol := cfg.Config.SupportedProtocols.Preferred()
 	switch protocol {
 	case HookProtocolV2:
 		return &HookExecutorMessageBoundaryProtocol{
 			IO: ios,
+			Fs: fs,
 		}
 	default:
 		return &HookExecutorDefaultProtocol{
 			IO: ios,
+			Fs: fs,
 		}
 	}
 }
 
-func processExecOpts(opts HookExecOpts) ([]string, []string, []string, error) {
+func processExecOpts(ctx context.Context, opts HookExecOpts, fs afero.Fs, io iostreams.IOStreamer) ([]string, []string, []string, error) {
 	cmdStr, err := opts.Hook.Get()
 	if err != nil {
 		return []string{}, []string{}, []string{}, err
@@ -53,13 +55,7 @@ func processExecOpts(opts HookExecOpts) ([]string, []string, []string, error) {
 	var cmdArgVars = cmdArgs[1:] // omit the first item because that is the command name
 	cmdArgVars = append(cmdArgVars, goutils.MapToStringSlice(opts.Args, "--")...)
 
-	// Whatever cmd.Env is set to will be the ONLY environment variables that the `cmd` will have access to when it runs.
-	// To avoid removing any environment variables that are set in the current environment, we first set the cmd.Env to the current environment.
-	// before adding any new environment variables.
-	var cmdEnvVars = os.Environ()
-	for name, value := range opts.Env {
-		cmdEnvVars = append(cmdEnvVars, name+"="+value)
-	}
+	cmdEnvVars := opts.ShellEnv(ctx, fs, io)
 
 	return cmdArgs, cmdArgVars, cmdEnvVars, nil
 }

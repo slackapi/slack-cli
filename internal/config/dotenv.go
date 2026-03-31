@@ -17,24 +17,10 @@ package config
 import (
 	"strings"
 
-	"github.com/joho/godotenv"
 	"github.com/slackapi/slack-cli/internal/version"
-	"github.com/spf13/afero"
 )
 
-// GetDotEnvFileVariables collects only the variables in the .env file
-func (c *Config) GetDotEnvFileVariables() (map[string]string, error) {
-	variables := map[string]string{}
-	file, err := afero.ReadFile(c.fs, ".env")
-	if err != nil && !c.os.IsNotExist(err) {
-		return variables, err
-	}
-	return godotenv.UnmarshalBytes(file)
-}
-
 // LoadEnvironmentVariables sets flags based on their environment variable value
-//
-// Note: Values are not loaded from the .env file. Use: `GetDotEnvFileVariables`
 func (c *Config) LoadEnvironmentVariables() error {
 	// Skip when dependencies are not configured
 	if c.os == nil {

@@ -38,7 +38,7 @@ import (
 )
 
 func TestDoctorCommand(t *testing.T) {
-	expectedCLIVersion := version.Get()
+	expectedCLIVersion := version.Raw()
 	expectedCredentials := types.SlackAuth{
 		TeamDomain: "team123",
 		TeamID:     "T123",

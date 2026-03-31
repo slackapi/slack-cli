@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -33,88 +34,22 @@ import (
 
 func Test_Env_ListCommandPreRun(t *testing.T) {
 	tests := map[string]struct {
-		mockFlagForce        bool
-		mockManifestResponse types.SlackYaml
-		mockManifestError    error
-		mockManifestSource   config.ManifestSource
 		mockWorkingDirectory string
 		expectedError        error
 	}{
-		"continues if the application is hosted on slack": {
-			mockManifestResponse: types.SlackYaml{
-				AppManifest: types.AppManifest{
-					Settings: &types.AppSettings{
-						FunctionRuntime: types.SlackHosted,
-					},
-				},
-			},
-			mockManifestError:    nil,
-			mockManifestSource:   config.ManifestSourceLocal,
+		"continues if the command is run in a project": {
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
-		},
-		"errors if the application is not hosted on slack": {
-			mockManifestResponse: types.SlackYaml{
-				AppManifest: types.AppManifest{
-					Settings: &types.AppSettings{
-						FunctionRuntime: types.Remote,
-					},
-				},
-			},
-			mockManifestError:    nil,
-			mockManifestSource:   config.ManifestSourceLocal,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
-		},
-		"continues if the force flag is used in a project": {
-			mockFlagForce:        true,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        nil,
-		},
-		"errors if the project manifest cannot be retrieved": {
-			mockManifestResponse: types.SlackYaml{},
-			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.ManifestSourceLocal,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 		"errors if the command is not run in a project": {
-			mockManifestResponse: types.SlackYaml{},
-			mockManifestError:    slackerror.New(slackerror.ErrSDKHookNotFound),
 			mockWorkingDirectory: "",
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
-		},
-		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.ManifestSourceRemote,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
-			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On(
-				"GetManifestLocal",
-				mock.Anything,
-				mock.Anything,
-				mock.Anything,
-			).Return(
-				tc.mockManifestResponse,
-				tc.mockManifestError,
-			)
-			clientsMock.AppClient.Manifest = manifestMock
-			projectConfigMock := config.NewProjectConfigMock()
-			projectConfigMock.On(
-				"GetManifestSource",
-				mock.Anything,
-			).Return(
-				tc.mockManifestSource,
-				nil,
-			)
-			clientsMock.Config.ProjectConfig = projectConfigMock
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
-				cf.Config.ForceFlag = tc.mockFlagForce
 				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
 			cmd := NewEnvListCommand(clients)
@@ -129,9 +64,78 @@ func Test_Env_ListCommandPreRun(t *testing.T) {
 }
 
 func Test_Env_ListCommand(t *testing.T) {
+	mockAppSelect := func() {
+		appSelectMock := prompts.NewAppSelectMock()
+		appSelectPromptFunc = appSelectMock.AppSelectPrompt
+		appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
+	}
+
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"list variables using arguments": {
+		"lists variables from the .env file": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				mockAppSelect()
+				err := afero.WriteFile(cf.Fs, ".env", []byte("SECRET_KEY=abc123\nAPI_TOKEN=xyz789\n"), 0644)
+				assert.NoError(t, err)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvListCount,
+					[]string{
+						"2",
+					},
+				)
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvListVariables,
+					[]string{
+						"API_TOKEN",
+						"SECRET_KEY",
+					},
+				)
+			},
+		},
+		"lists no variables when the .env file does not exist": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				mockAppSelect()
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvListCount,
+					[]string{
+						"0",
+					},
+				)
+			},
+		},
+		"lists no variables when the .env file is empty": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				mockAppSelect()
+				err := afero.WriteFile(cf.Fs, ".env", []byte(""), 0644)
+				assert.NoError(t, err)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvListCount,
+					[]string{
+						"0",
+					},
+				)
+			},
+		},
+		"lists hosted variables using the API": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				mockAppSelect()
 				cm.API.On(
 					"ListVariables",
 					mock.Anything,
@@ -145,9 +149,22 @@ func Test_Env_ListCommand(t *testing.T) {
 					},
 					nil,
 				)
-				appSelectMock := prompts.NewAppSelectMock()
-				appSelectPromptFunc = appSelectMock.AppSelectPrompt
-				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{}, nil)
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
+					types.SlackYaml{
+						AppManifest: types.AppManifest{
+							Settings: &types.AppSettings{
+								FunctionRuntime: types.SlackHosted,
+							},
+						},
+					},
+					nil,
+				)
+				cm.AppClient.Manifest = manifestMock
+				projectConfigMock := config.NewProjectConfigMock()
+				projectConfigMock.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+				cm.Config.ProjectConfig = projectConfigMock
+				cf.SDKConfig.WorkingDirectory = "/slack/path/to/project"
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(

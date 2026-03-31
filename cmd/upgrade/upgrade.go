@@ -55,7 +55,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 // When there are updates, the function will *not* print a message because the root command handles printing update notifications.
 func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-	updateNotification := update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
+	updateNotification := update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
 
 	// TODO(@mbrooks) This update check is happening at the same time as the root command's `CheckForUpdateInBackground`.
 	//                The difference between the two is that this update check is forced while the root command runs every 24 hours.

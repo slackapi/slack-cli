@@ -125,14 +125,14 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			})
 
 			// Check for an CLI update in the background while the command runs
-			updateNotification = update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
+			updateNotification = update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
 			updateNotification.CheckForUpdateInBackground(ctx, false)
 			return nil
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: since commands are moving to `*E` cobra lifecycle methods, this method may not be invoked if those earlier lifecycle methods return an error. Maybe move this to the cleanup() method below? but maybe this is OK, no need to prompt users to update if they encounter an error?
 			// when the command is `slack update`
-			return updateNotification.PrintAndPromptUpdates(cmd, version.Get())
+			return updateNotification.PrintAndPromptUpdates(cmd, version.Raw())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
@@ -153,7 +153,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 
 	// Support `--version` by setting root command's `Version` and custom template.
 	// Add a newline to `SetVersionTemplate` to display correctly on terminals.
-	rootCmd.Version = version.Get()
+	rootCmd.Version = version.Raw()
 	rootCmd.SetVersionTemplate(versioncmd.Template() + "\n")
 
 	// Add subcommands (each subcommand may add their own child subcommands)
@@ -265,7 +265,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init clients that use flags
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, version.Raw())
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
 
 	// Init System ID
 	if systemID, err := clients.Config.SystemConfig.InitSystemID(ctx); err != nil {
@@ -296,8 +296,6 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 	style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
-	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
-	clients.Config.Version = version.Raw()
 
 	// The domain auths (token->domain) shouldn't change for the execution of the CLI so preload them into config!
 	clients.Config.DomainAuthTokens = clients.Auth().MapAuthTokensToDomains(ctx)
