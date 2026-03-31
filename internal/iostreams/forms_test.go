@@ -415,6 +415,54 @@ func TestFormsUseSlackTheme(t *testing.T) {
 	})
 }
 
+func TestFormsAccessible(t *testing.T) {
+	fsMock := slackdeps.NewFsMock()
+	osMock := slackdeps.NewOsMock()
+	osMock.AddDefaultMocks()
+	cfg := config.NewConfig(fsMock, osMock)
+	cfg.Accessible = true
+	io := NewIOStreams(cfg, fsMock, osMock)
+
+	t.Run("select form accepts valid numbered input", func(t *testing.T) {
+		var selected string
+		f := buildSelectForm(io, "Pick one", []string{"A", "B", "C"}, SelectPromptConfig{}, &selected)
+
+		var out strings.Builder
+		err := f.WithOutput(&out).WithInput(strings.NewReader("2\n")).Run()
+
+		assert.NoError(t, err)
+		assert.Equal(t, "B", selected)
+		assert.Contains(t, out.String(), "1. A")
+		assert.Contains(t, out.String(), "2. B")
+		assert.Contains(t, out.String(), "3. C")
+		assert.Contains(t, out.String(), "Enter a number between 1 and 3")
+	})
+
+	t.Run("confirm form accepts yes/no input", func(t *testing.T) {
+		var choice bool
+		f := buildConfirmForm(io, "Continue?", &choice)
+
+		var out strings.Builder
+		err := f.WithOutput(&out).WithInput(strings.NewReader("y\n")).Run()
+
+		assert.NoError(t, err)
+		assert.True(t, choice)
+		assert.Contains(t, out.String(), "Continue?")
+	})
+
+	t.Run("input form accepts text input", func(t *testing.T) {
+		var input string
+		f := buildInputForm(io, "Name?", InputPromptConfig{}, &input)
+
+		var out strings.Builder
+		err := f.WithOutput(&out).WithInput(strings.NewReader("my-app\n")).Run()
+
+		assert.NoError(t, err)
+		assert.Equal(t, "my-app", input)
+		assert.Contains(t, out.String(), "Name?")
+	})
+}
+
 func TestFormsUseSurveyTheme(t *testing.T) {
 	t.Run("multi-select uses survey prefix without lipgloss", func(t *testing.T) {
 		var selected []string

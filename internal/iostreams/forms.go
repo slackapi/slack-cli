@@ -37,6 +37,9 @@ func newForm(io *IOStreams, field huh.Field) *huh.Form {
 	} else {
 		form = form.WithTheme(style.ThemeSurvey())
 	}
+	if io != nil && io.config.Accessible {
+		form = form.WithAccessible(true)
+	}
 	return form
 }
 
