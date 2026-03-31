@@ -32,7 +32,9 @@ import (
 // newForm wraps a field in an interactive form with optional Slack theming.
 func newForm(io *IOStreams, field huh.Field) *huh.Form {
 	form := huh.NewForm(huh.NewGroup(field))
-	if io != nil && io.config.WithExperimentOn(experiment.Lipgloss) {
+	if io != nil && io.config.NoColor {
+		form = form.WithTheme(style.ThemePlain()).WithAccessible(true)
+	} else if io != nil && io.config.WithExperimentOn(experiment.Lipgloss) {
 		form = form.WithTheme(style.ThemeSlack())
 	} else {
 		form = form.WithTheme(style.ThemeSurvey())

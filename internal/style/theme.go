@@ -122,6 +122,36 @@ func Chevron() string {
 	return "❱"
 }
 
+// ThemePlain returns a huh Theme with no colors or formatting.
+func ThemePlain() huh.Theme {
+	return huh.ThemeFunc(func(_ bool) *huh.Styles {
+		t := huh.ThemeBase(false)
+		t.Focused.Title = lipgloss.NewStyle()
+		t.Focused.Description = lipgloss.NewStyle()
+		t.Focused.ErrorIndicator = lipgloss.NewStyle().SetString(" *")
+		t.Focused.ErrorMessage = lipgloss.NewStyle()
+		t.Focused.SelectSelector = lipgloss.NewStyle().SetString("> ")
+		t.Focused.Option = lipgloss.NewStyle()
+		t.Focused.MultiSelectSelector = lipgloss.NewStyle().SetString("> ")
+		t.Focused.SelectedOption = lipgloss.NewStyle()
+		t.Focused.SelectedPrefix = lipgloss.NewStyle().SetString("[x] ")
+		t.Focused.UnselectedOption = lipgloss.NewStyle()
+		t.Focused.UnselectedPrefix = lipgloss.NewStyle().SetString("[ ] ")
+		t.Focused.FocusedButton = lipgloss.NewStyle().Padding(0, 2).MarginRight(1)
+		t.Focused.BlurredButton = lipgloss.NewStyle().Padding(0, 2).MarginRight(1)
+		t.Focused.TextInput.Cursor = lipgloss.NewStyle()
+		t.Focused.TextInput.Prompt = lipgloss.NewStyle()
+		t.Focused.TextInput.Placeholder = lipgloss.NewStyle()
+		t.Focused.TextInput.Text = lipgloss.NewStyle()
+		t.Focused.Base = lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.ThickBorder()).BorderLeft(true)
+		t.Blurred = t.Focused
+		t.Blurred.Base = t.Focused.Base.BorderStyle(lipgloss.HiddenBorder())
+		t.Blurred.SelectSelector = lipgloss.NewStyle().SetString("  ")
+		t.Blurred.MultiSelectSelector = lipgloss.NewStyle().SetString("  ")
+		return t
+	})
+}
+
 // ThemeSurvey returns a huh Theme that matches the legacy survey prompt styling.
 // Applied when experiment.Lipgloss is off.
 func ThemeSurvey() huh.Theme {

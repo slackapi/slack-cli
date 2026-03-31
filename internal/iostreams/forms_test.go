@@ -415,6 +415,36 @@ func TestFormsUseSlackTheme(t *testing.T) {
 	})
 }
 
+func TestFormsNoColor(t *testing.T) {
+	fsMock := slackdeps.NewFsMock()
+	osMock := slackdeps.NewOsMock()
+	osMock.AddDefaultMocks()
+	cfg := config.NewConfig(fsMock, osMock)
+	cfg.NoColor = true
+	io := NewIOStreams(cfg, fsMock, osMock)
+
+	t.Run("all form builders apply plain theme and render with no-color", func(t *testing.T) {
+		var s string
+		var b bool
+		var ss []string
+		forms := []*huh.Form{
+			buildInputForm(io, "msg", InputPromptConfig{}, &s),
+			buildConfirmForm(io, "msg", &b),
+			buildSelectForm(io, "msg", []string{"a", "b"}, SelectPromptConfig{}, &s),
+			buildPasswordForm(io, "msg", PasswordPromptConfig{}, &s),
+			buildMultiSelectForm(io, "msg", []string{"a", "b"}, &ss),
+		}
+		for _, f := range forms {
+			f.Update(f.Init())
+			view := f.View()
+			assert.NotEmpty(t, view)
+			// Title line should have no ANSI codes (plain theme applied)
+			title := strings.Split(view, "\n")[0]
+			assert.Equal(t, ansi.Strip(title), title, "title should have no ANSI codes")
+		}
+	})
+}
+
 func TestFormsUseSurveyTheme(t *testing.T) {
 	t.Run("multi-select uses survey prefix without lipgloss", func(t *testing.T) {
 		var selected []string
