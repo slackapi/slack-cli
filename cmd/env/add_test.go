@@ -204,6 +204,41 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 		},
+		"add a numeric variable using prompts to the .env file": {
+			CmdArgs: []string{},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvAddDotenvMocks(ctx, cm, cf)
+				cm.IO.On(
+					"InputPrompt",
+					mock.Anything,
+					"Variable name",
+					mock.Anything,
+				).Return(
+					"PORT",
+					nil,
+				)
+				cm.IO.On(
+					"PasswordPrompt",
+					mock.Anything,
+					"Variable value",
+					iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
+						Flag: cm.Config.Flags.Lookup("value"),
+					}),
+				).Return(
+					iostreams.PasswordPromptResponse{
+						Prompt: true,
+						Value:  "3000",
+					},
+					nil,
+				)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "AddVariable")
+				content, err := afero.ReadFile(cm.Fs, ".env")
+				assert.NoError(t, err)
+				assert.Equal(t, "PORT=3000\n", string(content))
+			},
+		},
 		"add a variable to the .env file for non-hosted app": {
 			CmdArgs: []string{"NEW_VAR", "new_value"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
