@@ -148,7 +148,7 @@ func Test_DocsSearch_QueryEncoding(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify URL encoding
-	assert.Contains(t, mockTransport.capturedURL, "q=messages+%26+webhooks")
+	assert.Contains(t, mockTransport.capturedURL, "query=messages+%26+webhooks")
 	assert.Contains(t, mockTransport.capturedURL, "limit=5")
 }
 

@@ -47,7 +47,7 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int) (*Docs
 	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsSearch")
 	defer span.Finish()
 
-	endpoint := fmt.Sprintf("api/search?q=%s&limit=%d", url.QueryEscape(query), limit)
+	endpoint := fmt.Sprintf("api/v1/search?query=%s&limit=%d", url.QueryEscape(query), limit)
 	sURL := docsSearchAPIURL + "/" + endpoint
 
 	span.SetTag("request_url", sURL)
