@@ -63,7 +63,8 @@ function check_slack_binary_exist() {
         Write-Host "Halting the install to avoid accidentally overwriting it."
 
         Write-Host "`nTry using an alias when installing to avoid name conflicts:"
-        Write-Host "`nirm https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -Alias your-preferred-alias | iex"
+        Write-Host "`nInvoke-WebRequest -Uri https://downloads.slack-edge.com/slack-cli/install-windows.ps1 -OutFile 'install-windows.ps1'"
+        Write-Host ".\install-windows.ps1 -Alias your-preferred-alias"
         throw
       }
     }
