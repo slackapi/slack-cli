@@ -140,7 +140,7 @@ func Test_Set(t *testing.T) {
 			value:         "new_value",
 			expectedFile:  "EXISTING=value\nNEW_VAR=\"new_value\"\n",
 		},
-		"adds a variable preserving comments and blank lines": {
+		"adds a variable preserving newline comments and blank lines": {
 			existingEnv:   "# Database config\nDB_HOST=localhost\n\n# API keys\nAPI_KEY=secret\n",
 			writeExisting: true,
 			name:          "NEW_VAR",
