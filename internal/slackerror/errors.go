@@ -99,6 +99,8 @@ const (
 	ErrDocsSearchFlagRequired                        = "docs_search_flag_required"
 	ErrDotEnvFileParse                               = "dotenv_file_parse_error"
 	ErrDotEnvFileRead                                = "dotenv_file_read_error"
+	ErrDotEnvFileWrite                               = "dotenv_file_write_error"
+	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
 	ErrFailedCreatingApp                             = "failed_creating_app"
@@ -702,6 +704,16 @@ Otherwise start your app for local development with: %s`,
 	ErrDotEnvFileRead: {
 		Code:    ErrDotEnvFileRead,
 		Message: "Failed to read the .env file",
+	},
+
+	ErrDotEnvFileWrite: {
+		Code:    ErrDotEnvFileWrite,
+		Message: "Failed to write the .env file",
+	},
+
+	ErrDotEnvVarMarshal: {
+		Code:    ErrDotEnvVarMarshal,
+		Message: "Failed to marshal the .env variable",
 	},
 
 	ErrEnterpriseNotFound: {

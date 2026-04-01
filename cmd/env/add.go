@@ -23,22 +23,27 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
 func NewEnvAddCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add <name> <value> [flags]",
-		Short: "Add an environment variable to the app",
+		Use:   "add <name> [value] [flags]",
+		Short: "Add an environment variable to the project",
 		Long: strings.Join([]string{
-			"Add an environment variable to an app deployed to Slack managed infrastructure.",
+			"Add an environment variable to the project.",
 			"",
 			"If a name or value is not provided, you will be prompted to provide these.",
 			"",
-			"This command is supported for apps deployed to Slack managed infrastructure but",
-			"other apps can attempt to run the command with the --force flag.",
+			"Commands that run in the context of a project source environment variables from",
+			`the ".env" file. This includes the "run" command.`,
+			"",
+			`The "deploy" command gathers environment variables from the ".env" file as well`,
+			"unless the app is using ROSI features.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -69,18 +74,11 @@ func NewEnvAddCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunEnvAddCommandFunc determines if the command is supported for a project
+// preRunEnvAddCommandFunc determines if the command is run in a valid project
 // and configures flags
 func preRunEnvAddCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	clients.Config.SetFlags(cmd)
-	err := cmdutil.IsValidProjectDirectory(clients)
-	if err != nil {
-		return err
-	}
-	if clients.Config.ForceFlag {
-		return nil
-	}
-	return cmdutil.IsSlackHostedProject(ctx, clients)
+	return cmdutil.IsValidProjectDirectory(clients)
 }
 
 // runEnvAddCommandFunc sets an app environment variable to given values
@@ -88,7 +86,7 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 	ctx := cmd.Context()
 
 	// Get the workspace from the flag or prompt
-	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly)
+	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
 		return err
 	}
@@ -127,27 +125,47 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		variableValue = args[1]
 	}
 
-	err = clients.API().AddVariable(
-		ctx,
-		selection.Auth.Token,
-		selection.App.AppID,
-		variableName,
-		variableValue,
-	)
-	if err != nil {
-		return err
+	// Add the environment variable using either the Slack API method or the
+	// project ".env" file depending on the app hosting.
+	if !selection.App.IsDev && cmdutil.IsSlackHostedProject(ctx, clients) == nil {
+		err = clients.API().AddVariable(
+			ctx,
+			selection.Auth.Token,
+			selection.App.AppID,
+			variableName,
+			variableValue,
+		)
+		if err != nil {
+			return err
+		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "evergreen_tree",
+			Text:  "App Environment",
+			Secondary: []string{
+				fmt.Sprintf("Successfully added \"%s\" as an app environment variable", variableName),
+			},
+		}))
+	} else {
+		exists, err := afero.Exists(clients.Fs, ".env")
+		if err != nil {
+			return err
+		}
+		err = slackdotenv.Set(clients.Fs, variableName, variableValue)
+		if err != nil {
+			return err
+		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+		var details []string
+		if !exists {
+			details = append(details, "Created a project .env file that shouldn't be added to version control")
+		}
+		details = append(details, fmt.Sprintf("Successfully added \"%s\" as a project environment variable", variableName))
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji:     "evergreen_tree",
+			Text:      "App Environment",
+			Secondary: details,
+		}))
 	}
-
-	clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "evergreen_tree",
-		Text:  "App Environment",
-		Secondary: []string{
-			fmt.Sprintf(
-				"Successfully added \"%s\" as an environment variable",
-				variableName,
-			),
-		},
-	}))
 	return nil
 }
