@@ -204,7 +204,7 @@ func Test_Env_AddCommand(t *testing.T) {
 				)
 			},
 		},
-		"add a variable to the .env file for remote runtime": {
+		"add a numeric variable to the .env file for remote runtime": {
 			CmdArgs: []string{"PORT", "3000"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupEnvAddDotenvMocks(ctx, cm, cf)
