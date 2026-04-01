@@ -15,6 +15,7 @@
 package env
 
 import (
+	"context"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -71,4 +72,17 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.AddCommand(NewEnvRemoveCommand(clients))
 
 	return cmd
+}
+
+// isHostedRuntime returns true if the local manifest is for an app that uses
+// the Deno Slack SDK function runtime.
+//
+// It defaults to false when the manifest cannot be fetched, which directs the
+// command to use the project ".env" file. Otherwise the API is used.
+func isHostedRuntime(ctx context.Context, clients *shared.ClientFactory) bool {
+	manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+	if err != nil {
+		return false
+	}
+	return manifest.IsFunctionRuntimeSlackHosted() || manifest.IsFunctionRuntimeLocal()
 }

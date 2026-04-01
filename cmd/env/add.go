@@ -85,44 +85,49 @@ func preRunEnvAddCommandFunc(ctx context.Context, clients *shared.ClientFactory,
 func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	// Get the workspace from the flag or prompt
-	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
-	if err != nil {
-		return err
+	// Hosted apps require selecting an app before gathering variable inputs.
+	hosted := isHostedRuntime(ctx, clients)
+	var selection prompts.SelectedApp
+	if hosted {
+		s, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
+		if err != nil {
+			return err
+		}
+		selection = s
 	}
 
 	// Get the variable name from the args or prompt
-	var variableName string
+	variableName := ""
 	if len(args) < 1 {
-		variableName, err = clients.IO.InputPrompt(ctx, "Variable name", iostreams.InputPromptConfig{
+		name, err := clients.IO.InputPrompt(ctx, "Variable name", iostreams.InputPromptConfig{
 			Required: false,
 		})
 		if err != nil {
 			return err
 		}
+		variableName = name
 	} else {
 		variableName = args[0]
 	}
 
 	// Get the variable value from the args or prompt
-	var variableValue string
+	variableValue := ""
 	if len(args) < 2 {
 		response, err := clients.IO.PasswordPrompt(ctx, "Variable value", iostreams.PasswordPromptConfig{
 			Flag: clients.Config.Flags.Lookup("value"),
 		})
 		if err != nil {
 			return err
-		} else {
-			variableValue = response.Value
 		}
+		variableValue = response.Value
 	} else {
 		variableValue = args[1]
 	}
 
 	// Add the environment variable using either the Slack API method or the
 	// project ".env" file depending on the app hosting.
-	if !selection.App.IsDev && cmdutil.IsSlackHostedProject(ctx, clients) == nil {
-		err = clients.API().AddVariable(
+	if hosted && !selection.App.IsDev {
+		err := clients.API().AddVariable(
 			ctx,
 			selection.Auth.Token,
 			selection.App.AppID,
