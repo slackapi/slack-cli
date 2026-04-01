@@ -109,17 +109,22 @@ func Set(fs afero.Fs, name string, value string) error {
 			`"(?:[^"\\]|\\.)*"` + // double-quoted (with escapes)
 			`|'[^']*'` + // single-quoted
 			"|`[^`]*`" + // backtick-quoted
-			`|[^\n]*` + // unquoted to end of line
-			`)`,
+			`|(?:[^\s\n#]|\S#)*` + // unquoted: stop before inline comment (space + #)
+			`)` +
+			`([^\S\n]+#[^\n]*)?`, // optional inline comment
 	)
 
-	loc := re.FindStringIndex(content)
-	if loc != nil {
+	match := re.FindStringSubmatchIndex(content)
+	if match != nil {
 		prefix := ""
-		if strings.Contains(content[loc[0]:loc[1]], "export") {
+		if strings.Contains(content[match[0]:match[1]], "export") {
 			prefix = "export "
 		}
-		content = content[:loc[0]] + prefix + newEntry + content[loc[1]:]
+		comment := ""
+		if match[4] >= 0 {
+			comment = content[match[4]:match[5]]
+		}
+		content = content[:match[0]] + prefix + newEntry + comment + content[match[1]:]
 	} else {
 		if !strings.HasSuffix(content, "\n") {
 			content += "\n"

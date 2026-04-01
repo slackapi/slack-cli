@@ -253,6 +253,27 @@ func Test_Set(t *testing.T) {
 			value:         "new_value",
 			expectedFile:  "BEFORE=keep\nexport FOO=\"new_value\"\nAFTER=keep\n",
 		},
+		"preserves inline comment on unquoted value": {
+			existingEnv:   "BEFORE=keep\nFOO=old_value # important note\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "BEFORE=keep\nFOO=\"new_value\" # important note\nAFTER=keep\n",
+		},
+		"preserves inline comment on quoted value": {
+			existingEnv:   "BEFORE=keep\nFOO=\"old_value\" # important note\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "BEFORE=keep\nFOO=\"new_value\" # important note\nAFTER=keep\n",
+		},
+		"preserves inline comment on export variable": {
+			existingEnv:   "BEFORE=keep\nexport FOO=old_value # important note\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			value:         "new_value",
+			expectedFile:  "BEFORE=keep\nexport FOO=\"new_value\" # important note\nAFTER=keep\n",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
