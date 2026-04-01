@@ -73,20 +73,27 @@ func runEnvListCommandFunc(
 ) error {
 	ctx := cmd.Context()
 
-	selection, err := appSelectPromptFunc(
-		ctx,
-		clients,
-		prompts.ShowAllEnvironments,
-		prompts.ShowInstalledAppsOnly,
-	)
-	if err != nil {
-		return err
+	// Hosted apps require selecting an app before gathering variables.
+	hosted := isHostedRuntime(ctx, clients)
+	var selection prompts.SelectedApp
+	if hosted {
+		var err error
+		selection, err = appSelectPromptFunc(
+			ctx,
+			clients,
+			prompts.ShowAllEnvironments,
+			prompts.ShowInstalledAppsOnly,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
-	// Gather environment variables for either a ROSI app from the Slack API method
+	// Gather environment variables from the Slack API for deployed hosted apps
 	// or read from project files.
 	var variableNames []string
-	if !selection.App.IsDev && cmdutil.IsSlackHostedProject(ctx, clients) == nil {
+	if hosted && !selection.App.IsDev {
+		var err error
 		variableNames, err = clients.API().ListVariables(
 			ctx,
 			selection.Auth.Token,

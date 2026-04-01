@@ -297,15 +297,24 @@ func setupEnvAddDotenvMocks(_ context.Context, cm *shared.ClientsMock, cf *share
 	cf.SDKConfig = hooks.NewSDKConfigMock()
 	cm.AddDefaultMocks()
 
-	mockDevApp := types.App{
-		TeamID:     "T1",
-		TeamDomain: "team1",
-		AppID:      "A0123456789",
-		IsDev:      true,
-	}
-	appSelectMock := prompts.NewAppSelectMock()
-	appSelectPromptFunc = appSelectMock.AppSelectPrompt
-	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{Auth: mockAuth, App: mockDevApp}, nil)
+	// Configure manifest to return a non-hosted runtime so app selection is
+	// skipped and environment variables are read from the .env file.
+	manifestMock := &app.ManifestMockObject{}
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
+		types.SlackYaml{
+			AppManifest: types.AppManifest{
+				Settings: &types.AppSettings{
+					FunctionRuntime: types.Remote,
+				},
+			},
+		},
+		nil,
+	)
+	cm.AppClient.Manifest = manifestMock
+	projectConfigMock := config.NewProjectConfigMock()
+	projectConfigMock.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+	cm.Config.ProjectConfig = projectConfigMock
+	cf.SDKConfig.WorkingDirectory = "/slack/path/to/project"
 
 	cm.Config.Flags.String("value", "", "mock value flag")
 }
