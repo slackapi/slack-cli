@@ -65,7 +65,7 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
-			cmd := NewEnvAddCommand(clients)
+			cmd := NewEnvSetCommand(clients)
 			err := cmd.PreRunE(cmd, nil)
 			if tc.expectedError != nil {
 				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackerror.ToSlackError(err).Code)
@@ -258,7 +258,7 @@ func Test_Env_AddCommand(t *testing.T) {
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
-		cmd := NewEnvAddCommand(cf)
+		cmd := NewEnvSetCommand(cf)
 		cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
 		return cmd
 	})

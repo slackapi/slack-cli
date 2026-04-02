@@ -118,7 +118,7 @@ func Test_Env_RemoveCommandPreRun(t *testing.T) {
 				cf.Config.ForceFlag = tc.mockFlagForce
 				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
-			cmd := NewEnvRemoveCommand(clients)
+			cmd := NewEnvUnsetCommand(clients)
 			err := cmd.PreRunE(cmd, nil)
 			if tc.expectedError != nil {
 				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackerror.ToSlackError(err).Code)
@@ -270,7 +270,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
-		cmd := NewEnvRemoveCommand(cf)
+		cmd := NewEnvUnsetCommand(cf)
 		cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
 		return cmd
 	})

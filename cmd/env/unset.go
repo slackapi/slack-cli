@@ -28,12 +28,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewEnvRemoveCommand(clients *shared.ClientFactory) *cobra.Command {
+func NewEnvUnsetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove <name> [flags]",
-		Short: "Remove an environment variable from the app",
+		Use:     "unset <name> [flags]",
+		Aliases: []string{"remove"},
+		Short:   "Unset an environment variable from the app",
 		Long: strings.Join([]string{
-			"Remove an environment variable from an app deployed to Slack managed",
+			"Unset an environment variable from an app deployed to Slack managed",
 			"infrastructure.",
 			"",
 			"If no variable name is provided, you will be prompted to select one.",
@@ -43,21 +44,21 @@ func NewEnvRemoveCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Select an environment variable to remove",
-				Command: "env remove",
+				Meaning: "Select an environment variable to unset",
+				Command: "env unset",
 			},
 			{
-				Meaning: "Remove an environment variable",
-				Command: "env remove MAGIC_PASSWORD",
+				Meaning: "Unset an environment variable",
+				Command: "env unset MAGIC_PASSWORD",
 			},
 		}),
 		Args: cobra.MaximumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			return preRunEnvRemoveCommandFunc(ctx, clients, cmd)
+			return preRunEnvUnsetCommandFunc(ctx, clients, cmd)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runEnvRemoveCommandFunc(clients, cmd, args)
+			return runEnvUnsetCommandFunc(clients, cmd, args)
 		},
 	}
 
@@ -66,9 +67,9 @@ func NewEnvRemoveCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunEnvRemoveCommandFunc determines if the command is supported for a project
+// preRunEnvUnsetCommandFunc determines if the command is supported for a project
 // and configures flags
-func preRunEnvRemoveCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
+func preRunEnvUnsetCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	clients.Config.SetFlags(cmd)
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
@@ -80,8 +81,8 @@ func preRunEnvRemoveCommandFunc(ctx context.Context, clients *shared.ClientFacto
 	return cmdutil.IsSlackHostedProject(ctx, clients)
 }
 
-// runEnvRemoveCommandFunc removes an environment variable from an app
-func runEnvRemoveCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
+// runEnvUnsetCommandFunc removes an environment variable from an app
+func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	var ctx = cmd.Context()
 
 	// Get the workspace from the flag or prompt
