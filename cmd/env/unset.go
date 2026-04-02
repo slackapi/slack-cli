@@ -30,7 +30,7 @@ import (
 
 func NewEnvUnsetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "unset <name> [flags]",
+		Use:     "unset [name] [flags]",
 		Aliases: []string{"remove"},
 		Short:   "Unset an environment variable from the app",
 		Long: strings.Join([]string{

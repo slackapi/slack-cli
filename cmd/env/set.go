@@ -32,7 +32,7 @@ import (
 
 func NewEnvSetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "set <name> [value] [flags]",
+		Use:     "set [name] [value] [flags]",
 		Aliases: []string{"add"},
 		Short:   "Set an environment variable for the project",
 		Long: strings.Join([]string{
