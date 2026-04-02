@@ -84,6 +84,7 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	clients.IO = iostreams.NewIOStreams(clients.Config, clients.Fs, clients.Os)
 	clients.HookExecutor = &hooks.HookExecutorDefaultProtocol{
 		IO: clients.IO,
+		Fs: clients.Fs,
 	}
 	clients.EventTracker = tracking.NewEventTracker()
 	clients.API = clients.defaultAPIFunc
@@ -237,7 +238,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 	// TODO: this is a side-effect-y way of signaling to the rest of the codebase "we are in an app project directory now"
 	c.SDKConfig.WorkingDirectory = dirPath
 
-	c.HookExecutor = hooks.GetHookExecutor(c.IO, c.SDKConfig)
+	c.HookExecutor = hooks.GetHookExecutor(c.IO, c.Fs, c.SDKConfig)
 
 	return err
 }
@@ -277,6 +278,7 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 		}
 		defaultExecutor := hooks.HookExecutorDefaultProtocol{
 			IO: c.IO,
+			Fs: c.Fs,
 		}
 		if SDKHooksResponse, err = defaultExecutor.Execute(ctx, hookExecOpts); err != nil {
 			return err

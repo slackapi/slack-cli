@@ -279,7 +279,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = sdkConfigMock
-				clients.HookExecutor = hooks.GetHookExecutor(clientsMock.IO, sdkConfigMock)
+				clients.HookExecutor = hooks.GetHookExecutor(clientsMock.IO, clients.Fs, sdkConfigMock)
 			})
 			cmd := NewDeployCommand(clients)
 			cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }

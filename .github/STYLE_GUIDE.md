@@ -5,7 +5,9 @@ A current suggestion for how Slack CLI inputs are handled and outputs are format
 - **Input**
   - [Prompts are Flags with Forms](#prompts-are-flags-with-forms)
 - **Output**
-  - [Format Sections with Command Details](#format-sections-with-command-details)
+  - [Help Arguments use Opinionated Brackets](#help-arguments-use-opinionated-brackets)
+  - [Help Descriptions find Complete Sentences](#help-descriptions-find-complete-sentences)
+  - [Section Formats with Command Headings](#section-formats-with-command-headings)
 
 ## Input
 
@@ -23,7 +25,44 @@ A flag option should exist for each prompt with a form fallback. Either default 
 
 Results of a command go toward informing current happenings and suggesting next steps.
 
-### Format Sections with Command Details
+### Help Arguments use Opinionated Brackets
+
+The square brackets surrounding command arguments hint that these are optional:
+
+```
+USAGE
+  $ slack env add [name] [value] [flags]
+```
+
+The angled brackets around arguments hint that these are required:
+
+```
+USAGE
+  $ slack <command>
+```
+
+Optional and required arguments can be mixed-and-matched:
+
+```
+USAGE
+  $ slack <command> [args] [flags]
+```
+
+These examples have meaningful argument placeholders and sometimes forms as fallback.
+
+### Help Descriptions find Complete Sentences
+
+The output of extended help descriptions should be complete sentences:
+
+```txt
+$ slack docs search --help
+Search the Slack developer docs and return results in text, JSON, or browser
+format.
+```
+
+This example uses punctuation and breaks lines at or before the 80 character count.
+
+### Section Formats with Command Headings
 
 A command often prints information and details about the process happenings. We format this as a section:
 
