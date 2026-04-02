@@ -25,7 +25,7 @@ import (
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "app",
-		Aliases: []string{"app", "apps", "team", "teams"},
+		Aliases: []string{"app", "apps"},
 		Short:   "Install, uninstall, and list teams with the app installed",
 		Long:    "Install, uninstall, and list teams with the app installed",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
