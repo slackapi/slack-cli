@@ -6,7 +6,7 @@ A current suggestion for how Slack CLI inputs are handled and outputs are format
   - [Prompts are Flags with Forms](#prompts-are-flags-with-forms)
 - **Output**
   - [Command Descriptions find Complete Sentences](#command-descriptions-find-complete-sentences)
-  - [Format Sections with Command Details](#format-sections-with-command-details)
+  - [Section Formats with Command Headings](#section-formats-with-command-headings)
 
 ## Input
 
@@ -36,7 +36,7 @@ format.
 
 This example uses punctuation and breaks lines at or before the 80 character count.
 
-### Format Sections with Command Details
+### Section Formats with Command Headings
 
 A command often prints information and details about the process happenings. We format this as a section:
 
