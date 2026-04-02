@@ -17,12 +17,14 @@ package env
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -32,15 +34,17 @@ func NewEnvUnsetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "unset [name] [flags]",
 		Aliases: []string{"remove"},
-		Short:   "Unset an environment variable from the app",
+		Short:   "Unset an environment variable from the project",
 		Long: strings.Join([]string{
-			"Unset an environment variable from an app deployed to Slack managed",
-			"infrastructure.",
+			"Unset an environment variable from the project.",
 			"",
 			"If no variable name is provided, you will be prompted to select one.",
 			"",
-			"This command is supported for apps deployed to Slack managed infrastructure but",
-			"other apps can attempt to run the command with the --force flag.",
+			"Commands that run in the context of a project source environment variables from",
+			`the ".env" file. This includes the "run" command.`,
+			"",
+			`The "deploy" command gathers environment variables from the ".env" file as well`,
+			"unless the app is using ROSI features.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -67,35 +71,33 @@ func NewEnvUnsetCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunEnvUnsetCommandFunc determines if the command is supported for a project
+// preRunEnvUnsetCommandFunc determines if the command is run in a valid project
 // and configures flags
 func preRunEnvUnsetCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	clients.Config.SetFlags(cmd)
-	err := cmdutil.IsValidProjectDirectory(clients)
-	if err != nil {
-		return err
-	}
-	if clients.Config.ForceFlag {
-		return nil
-	}
-	return cmdutil.IsSlackHostedProject(ctx, clients)
+	return cmdutil.IsValidProjectDirectory(clients)
 }
 
 // runEnvUnsetCommandFunc removes an environment variable from an app
 func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
-	var ctx = cmd.Context()
+	ctx := cmd.Context()
 
-	// Get the workspace from the flag or prompt
-	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAppsOnly)
-	if err != nil {
-		return err
+	// Hosted apps require selecting an app before gathering variable inputs.
+	hosted := isHostedRuntime(ctx, clients)
+	var selection prompts.SelectedApp
+	if hosted {
+		s, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
+		if err != nil {
+			return err
+		}
+		selection = s
 	}
 
-	// Get the variable name from the flags, args, or select from the environment
+	// Get the variable name from args, or prompt from the appropriate source.
 	var variableName string
 	if len(args) > 0 {
 		variableName = args[0]
-	} else {
+	} else if hosted && !selection.App.IsDev {
 		variables, err := clients.API().ListVariables(
 			ctx,
 			selection.Auth.Token,
@@ -115,7 +117,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 			}))
 			return nil
 		}
-		selection, err := clients.IO.SelectPrompt(
+		selected, err := clients.IO.SelectPrompt(
 			ctx,
 			"Select a variable to remove",
 			variables,
@@ -126,32 +128,77 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		)
 		if err != nil {
 			return err
-		} else {
-			variableName = selection.Option
 		}
+		variableName = selected.Option
+	} else {
+		dotEnv, err := slackdotenv.Read(clients.Fs)
+		if err != nil {
+			return err
+		}
+		if len(dotEnv) <= 0 {
+			clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
+			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+				Emoji: "evergreen_tree",
+				Text:  "App Environment",
+				Secondary: []string{
+					"The project has no environment variables to remove",
+				},
+			}))
+			return nil
+		}
+		variables := make([]string, 0, len(dotEnv))
+		for k := range dotEnv {
+			variables = append(variables, k)
+		}
+		sort.Strings(variables)
+		selected, err := clients.IO.SelectPrompt(
+			ctx,
+			"Select a variable to remove",
+			variables,
+			iostreams.SelectPromptConfig{
+				Flag:     clients.Config.Flags.Lookup("name"),
+				Required: true,
+			},
+		)
+		if err != nil {
+			return err
+		}
+		variableName = selected.Option
 	}
 
-	err = clients.API().RemoveVariable(
-		ctx,
-		selection.Auth.Token,
-		selection.App.AppID,
-		variableName,
-	)
-	if err != nil {
-		return err
+	// Remove the environment variable using either the Slack API method or the
+	// project ".env" file depending on the app hosting.
+	if hosted && !selection.App.IsDev {
+		err := clients.API().RemoveVariable(
+			ctx,
+			selection.Auth.Token,
+			selection.App.AppID,
+			variableName,
+		)
+		if err != nil {
+			return err
+		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "evergreen_tree",
+			Text:  "App Environment",
+			Secondary: []string{
+				fmt.Sprintf("Successfully removed \"%s\" as an app environment variable", variableName),
+			},
+		}))
+	} else {
+		err := slackdotenv.Unset(clients.Fs, variableName)
+		if err != nil {
+			return err
+		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "evergreen_tree",
+			Text:  "App Environment",
+			Secondary: []string{
+				fmt.Sprintf("Successfully removed \"%s\" as a project environment variable", variableName),
+			},
+		}))
 	}
-
-	clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "evergreen_tree",
-		Text:  "App Environment",
-		Secondary: []string{
-			fmt.Sprintf(
-				"Successfully removed \"%s\" from the app's environment variables",
-				variableName,
-			),
-		},
-	}))
-
 	return nil
 }
