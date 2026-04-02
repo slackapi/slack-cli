@@ -24,7 +24,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-const docsSearchAPIURL = "https://docs-slack-d-search-api-duu9zr.herokuapp.com"
+var docsBaseURL = "https://docs-slack-d-search-api-duu9zr.herokuapp.com"
+
+const docsSearchMethod = "api/v1/search"
 
 type DocsClient interface {
 	DocsSearch(ctx context.Context, query string, limit int) (*DocsSearchResponse, error)
@@ -47,8 +49,8 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int) (*Docs
 	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsSearch")
 	defer span.Finish()
 
-	endpoint := fmt.Sprintf("api/v1/search?query=%s&limit=%d", url.QueryEscape(query), limit)
-	sURL := docsSearchAPIURL + "/" + endpoint
+	endpoint := fmt.Sprintf("%s?query=%s&limit=%d", docsSearchMethod, url.QueryEscape(query), limit)
+	sURL := docsBaseURL + "/" + endpoint
 
 	span.SetTag("request_url", sURL)
 
