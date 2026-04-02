@@ -5,6 +5,7 @@ A current suggestion for how Slack CLI inputs are handled and outputs are format
 - **Input**
   - [Prompts are Flags with Forms](#prompts-are-flags-with-forms)
 - **Output**
+  - [Help Arguments use Opinionated Brackets](#help-arguments-use-opinionated-brackets)
   - [Help Descriptions find Complete Sentences](#help-descriptions-find-complete-sentences)
   - [Section Formats with Command Headings](#section-formats-with-command-headings)
 
@@ -23,6 +24,31 @@ A flag option should exist for each prompt with a form fallback. Either default 
 ## Output
 
 Results of a command go toward informing current happenings and suggesting next steps.
+
+### Help Arguments use Opinionated Brackets
+
+The square brackets surrounding command arguments hint that these are optional:
+
+```
+USAGE
+  $ slack env add [name] [value] [flags]
+```
+
+The angled brackets around arguments hint that these are required:
+
+```
+USAGE
+  $ slack <command>
+```
+
+Optional and required arguments can be mixed-and-matched:
+
+```
+USAGE
+  $ slack <command> [args] [flags]
+```
+
+These examples have meaningful argument placeholders and sometimes forms as fallback.
 
 ### Help Descriptions find Complete Sentences
 
