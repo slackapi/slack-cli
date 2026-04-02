@@ -5,7 +5,7 @@ A current suggestion for how Slack CLI inputs are handled and outputs are format
 - **Input**
   - [Prompts are Flags with Forms](#prompts-are-flags-with-forms)
 - **Output**
-  - [Command Descriptions find Complete Sentances](#command-descriptions-find-complete-sentences)
+  - [Command Descriptions find Complete Sentences](#command-descriptions-find-complete-sentences)
   - [Format Sections with Command Details](#format-sections-with-command-details)
 
 ## Input
