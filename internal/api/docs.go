@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 )
 
 var docsBaseURL = "https://docs-slack-d-search-api-duu9zr.herokuapp.com"
@@ -50,27 +52,33 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int) (*Docs
 	defer span.Finish()
 
 	endpoint := fmt.Sprintf("%s?query=%s&limit=%d", docsSearchMethod, url.QueryEscape(query), limit)
-	sURL := docsBaseURL + "/" + endpoint
+	sURL, err := url.Parse(docsBaseURL + "/" + endpoint)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
 
 	span.SetTag("request_url", sURL)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", sURL, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", sURL.String(), nil)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
-	resp, err := c.httpClient.Do(req)
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS))
+
+	c.printRequest(ctx, req, false)
+
+	respBytes, err := c.DoWithRetry(ctx, req, span, false, sURL)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, errHTTPRequestFailed.WithMessage("API returned status %d", resp.StatusCode)
 	}
 
 	var searchResponse DocsSearchResponse
-	if err := json.NewDecoder(resp.Body).Decode(&searchResponse); err != nil {
+	if err := json.Unmarshal(respBytes, &searchResponse); err != nil {
 		return nil, errHTTPResponseInvalid.WithRootCause(err)
 	}
 
