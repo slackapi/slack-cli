@@ -40,7 +40,12 @@ jobs:
           version: latest
           args: --timeout=5m
       - name: Unit Tests
+        if: runner.os == 'Linux'
         run: make test
+      - name: Unit Tests
+        if: runner.os != 'Linux'
+        run: go test -v ./... -race -covermode=atomic -coverprofile=coverage.out
+        shell: bash
       - name: Install Tests
         if: runner.os != 'Windows'
         run: make test-install
