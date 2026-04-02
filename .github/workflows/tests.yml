@@ -14,9 +14,16 @@ on:
 jobs:
   lint-test:
     name: Lints and Tests
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -27,6 +34,7 @@ jobs:
         with:
           go-version: "1.26.1"
       - name: Lint
+        if: runner.os == 'Linux'
         uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
         with:
           version: latest
@@ -34,8 +42,10 @@ jobs:
       - name: Unit Tests
         run: make test
       - name: Install Tests
+        if: runner.os != 'Windows'
         run: make test-install
       - name: Upload coverage to Codecov
+        if: runner.os == 'Linux'
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
