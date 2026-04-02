@@ -110,7 +110,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 				Emoji: "books",
 				Text:  fmt.Sprintf("Docs Search: %s", query),
 				Secondary: []string{
-					fmt.Sprintf("Found zero results"),
+					"Found zero results",
 				},
 			}))
 			clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
@@ -119,9 +119,9 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "books",
-			Text:  fmt.Sprintf("Docs Search: %s", query),
+			Text:  "Docs Search",
 			Secondary: []string{
-				fmt.Sprintf("Found %d result%s. Displaying first %d", searchResponse.TotalResults, style.Pluralize("", "s", searchResponse.TotalResults), len(searchResponse.Results)),
+				fmt.Sprintf("Displaying first %d of %d results for \"%s\"", len(searchResponse.Results), searchResponse.TotalResults, query),
 			},
 		}))
 
