@@ -6,6 +6,7 @@ A current suggestion for how Slack CLI inputs are handled and outputs are format
   - [Prompts are Flags with Forms](#prompts-are-flags-with-forms)
 - **Output**
   - [Help Arguments use Opinionated Brackets](#help-arguments-use-opinionated-brackets)
+  - [Help Descriptions find Complete Sentences](#help-descriptions-find-complete-sentences)
   - [Section Formats with Command Headings](#section-formats-with-command-headings)
 
 ## Input
@@ -34,6 +35,18 @@ USAGE
 ```
 
 This example has meaningful arguments and forms as fallback. Angle brackets would surround required values.
+
+### Help Descriptions find Complete Sentences
+
+The output of extended help descriptions should be complete sentences:
+
+```txt
+$ slack docs search --help
+Search the Slack developer docs and return results in text, JSON, or browser
+format.
+```
+
+This example uses punctuation and breaks lines at or before the 80 character count.
 
 ### Section Formats with Command Headings
 
