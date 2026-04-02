@@ -169,7 +169,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					t,
 					"PrintTrace",
 					mock.Anything,
-					slacktrace.EnvRemoveSuccess,
+					slacktrace.EnvUnsetSuccess,
 					mock.Anything,
 				)
 			},
@@ -261,7 +261,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 					t,
 					"PrintTrace",
 					mock.Anything,
-					slacktrace.EnvRemoveSuccess,
+					slacktrace.EnvUnsetSuccess,
 					mock.Anything,
 				)
 			},

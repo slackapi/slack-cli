@@ -105,7 +105,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 			return err
 		}
 		if len(variables) <= 0 {
-			clients.IO.PrintTrace(ctx, slacktrace.EnvRemoveSuccess)
+			clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "evergreen_tree",
 				Text:  "App Environment",
@@ -141,7 +141,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		return err
 	}
 
-	clients.IO.PrintTrace(ctx, slacktrace.EnvRemoveSuccess)
+	clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "evergreen_tree",
 		Text:  "App Environment",

@@ -97,7 +97,7 @@ func Test_Env_AddCommand(t *testing.T) {
 					t,
 					"PrintTrace",
 					mock.Anything,
-					slacktrace.EnvAddSuccess,
+					slacktrace.EnvSetSuccess,
 					mock.Anything,
 				)
 			},

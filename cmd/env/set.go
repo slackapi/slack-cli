@@ -138,7 +138,7 @@ func runEnvSetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
-		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+		clients.IO.PrintTrace(ctx, slacktrace.EnvSetSuccess)
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "evergreen_tree",
 			Text:  "App Environment",
@@ -155,7 +155,7 @@ func runEnvSetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
-		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+		clients.IO.PrintTrace(ctx, slacktrace.EnvSetSuccess)
 		var details []string
 		if !exists {
 			details = append(details, "Created a project .env file that shouldn't be added to version control")
