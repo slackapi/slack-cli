@@ -15,7 +15,6 @@
 package docs
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -45,7 +44,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search [query]",
 		Short: "Search Slack developer docs",
-		Long:  strings.Join([]string{
+		Long: strings.Join([]string{
 			"Search the Slack developer docs and return results in text, JSON, or browser",
 			"format.",
 		}, "\n"),
@@ -82,9 +81,62 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 	switch cfg.output {
 	case "json":
-		return fetchAndOutputSearchResults(ctx, clients, query, cfg.limit)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit)
+		if err != nil {
+			return err
+		}
+
+		for i := range searchResponse.Results {
+			searchResponse.Results[i].URL = makeAbsoluteURL(searchResponse.Results[i].URL)
+		}
+
+		encoder := json.NewEncoder(clients.IO.WriteOut())
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(searchResponse); err != nil {
+			return slackerror.New(slackerror.ErrUnableToParseJSON).WithRootCause(err)
+		}
+
+		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
+
+		return nil
 	case "text":
-		return fetchAndOutputTextResults(ctx, clients, query, cfg.limit)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit)
+		if err != nil {
+			return err
+		}
+
+		if len(searchResponse.Results) == 0 {
+			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+				Emoji: "books",
+				Text:  fmt.Sprintf("Docs Search: %s", query),
+				Secondary: []string{
+					fmt.Sprintf("Found zero results"),
+				},
+			}))
+			clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
+			return nil
+		}
+
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji: "books",
+			Text:  fmt.Sprintf("Docs Search: %s", query),
+			Secondary: []string{
+				fmt.Sprintf("Found %d result%s. Displaying first %d", searchResponse.TotalResults, style.Pluralize("", "s", searchResponse.TotalResults), len(searchResponse.Results)),
+			},
+		}))
+
+		for _, result := range searchResponse.Results {
+			absoluteURL := makeAbsoluteURL(result.URL)
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+				Emoji:     "book",
+				Text:      result.Title,
+				Secondary: []string{absoluteURL},
+			}))
+		}
+
+		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
+
+		return nil
 	case "browser":
 		docsSearchURL := buildDocsSearchURL(query)
 
@@ -107,45 +159,4 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 			"Use one of: text, json, browser",
 		)
 	}
-}
-
-func fetchAndOutputSearchResults(ctx context.Context, clients *shared.ClientFactory, query string, limit int) error {
-	searchResponse, err := clients.API().DocsSearch(ctx, query, limit)
-	if err != nil {
-		return err
-	}
-
-	for i := range searchResponse.Results {
-		searchResponse.Results[i].URL = makeAbsoluteURL(searchResponse.Results[i].URL)
-	}
-
-	encoder := json.NewEncoder(clients.IO.WriteOut())
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(searchResponse); err != nil {
-		return slackerror.New(slackerror.ErrUnableToParseJSON).WithRootCause(err)
-	}
-
-	clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
-
-	return nil
-}
-
-func fetchAndOutputTextResults(ctx context.Context, clients *shared.ClientFactory, query string, limit int) error {
-	searchResponse, err := clients.API().DocsSearch(ctx, query, limit)
-	if err != nil {
-		return err
-	}
-
-	for _, result := range searchResponse.Results {
-		absoluteURL := makeAbsoluteURL(result.URL)
-		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
-			Emoji:     "books",
-			Text:      result.Title,
-			Secondary: []string{absoluteURL},
-		}))
-	}
-
-	clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
-
-	return nil
 }
