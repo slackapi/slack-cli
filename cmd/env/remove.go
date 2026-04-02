@@ -40,9 +40,9 @@ func NewEnvRemoveCommand(clients *shared.ClientFactory) *cobra.Command {
 			"If no variable name is provided, you will be prompted to select one.",
 			"",
 			"Commands that run in the context of a project source environment variables from",
-			"the \".env\" file. This includes the \"run\" command.",
+			`the ".env" file. This includes the "run" command.`,
 			"",
-			"The \"deploy\" command gathers environment variables from the \".env\" file as well",
+			`The "deploy" command gathers environment variables from the ".env" file as well`,
 			"unless the app is using ROSI features.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
