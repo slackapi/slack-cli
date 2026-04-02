@@ -107,7 +107,7 @@ func runEnvRemoveCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, 
 			clients.IO.PrintTrace(ctx, slacktrace.EnvRemoveSuccess)
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "evergreen_tree",
-				Text:  "App Environment",
+				Text:  "Environment Remove",
 				Secondary: []string{
 					"The app has no environment variables to remove",
 				},
@@ -143,7 +143,7 @@ func runEnvRemoveCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, 
 	clients.IO.PrintTrace(ctx, slacktrace.EnvRemoveSuccess)
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "evergreen_tree",
-		Text:  "App Environment",
+		Text:  "Environment Remove",
 		Secondary: []string{
 			fmt.Sprintf(
 				"Successfully removed \"%s\" from the app's environment variables",

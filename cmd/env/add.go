@@ -126,6 +126,7 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 	// Add the environment variable using either the Slack API method or the
 	// project ".env" file depending on the app hosting.
+	var details []string
 	if hosted && !selection.App.IsDev {
 		err := clients.API().AddVariable(
 			ctx,
@@ -137,14 +138,7 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
-		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-			Emoji: "evergreen_tree",
-			Text:  "App Environment",
-			Secondary: []string{
-				fmt.Sprintf("Successfully added \"%s\" as an app environment variable", variableName),
-			},
-		}))
+		details = append(details, fmt.Sprintf("Successfully added \"%s\" as an app environment variable", variableName))
 	} else {
 		exists, err := afero.Exists(clients.Fs, ".env")
 		if err != nil {
@@ -154,17 +148,17 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
-		clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
-		var details []string
 		if !exists {
 			details = append(details, "Created a project .env file that shouldn't be added to version control")
 		}
 		details = append(details, fmt.Sprintf("Successfully added \"%s\" as a project environment variable", variableName))
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-			Emoji:     "evergreen_tree",
-			Text:      "App Environment",
-			Secondary: details,
-		}))
 	}
+
+	clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		Emoji:     "evergreen_tree",
+		Text:      "Environment Add",
+		Secondary: details,
+	}))
 	return nil
 }
