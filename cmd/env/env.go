@@ -37,7 +37,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Aliases: []string{"var", "vars", "variable", "variables"},
 		Short:   "Set, unset, or list environment variables",
 		Long: strings.Join([]string{
-			"Set, unset, or list environment variables for the app.",
+			"Set, unset, or list environment variables for the project.",
 			"",
 			"Commands that run in the context of a project source environment variables from",
 			"the \".env\" file. This includes the \"run\" command.",
