@@ -27,14 +27,28 @@ Results of a command go toward informing current happenings and suggesting next 
 
 ### Help Arguments use Opinionated Brackets
 
-The brackets surrounding command arguments hint that these are optional:
+The square brackets surrounding command arguments hint that these are optional:
 
 ```
 USAGE
   $ slack env add [name] [value] [flags]
 ```
 
-This example has meaningful arguments and forms as fallback. Angle brackets would surround required values.
+The angled brackets around arguments hint that these are required:
+
+```
+USAGE
+  $ slack <command>
+```
+
+Optional and required arguments can be mixed-and-matched:
+
+```
+USAGE
+  $ slack <command> [args] [flags]
+```
+
+These examples have meaningful argument placeholders and sometimes forms as fallback.
 
 ### Help Descriptions find Complete Sentences
 
