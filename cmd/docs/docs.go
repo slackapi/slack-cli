@@ -81,7 +81,7 @@ func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []st
 	if len(args) > 0 && !cmd.Flags().Changed("search") {
 		query := strings.Join(args, " ")
 		return slackerror.New(slackerror.ErrDocsSearchFlagRequired).WithMessage(
-			"Did you mean to search?",
+			"Invalid docs command. Did you mean to search?",
 		).WithRemediation(
 			"Use search subcommand: %s",
 			style.Commandf(fmt.Sprintf("docs search \"%s\"", query), false),
