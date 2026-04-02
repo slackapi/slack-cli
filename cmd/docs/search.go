@@ -43,9 +43,12 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 	cfg := &searchConfig{}
 
 	cmd := &cobra.Command{
-		Use:   "search <query>",
+		Use:   "search [query]",
 		Short: "Search Slack developer docs",
-		Long:  "Search the Slack developer docs and return results in text, JSON, or browser format",
+		Long:  strings.Join([]string{
+			"Search the Slack developer docs and return results in text, JSON, or browser",
+			"format.",
+		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Search docs and return text results",
@@ -67,7 +70,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&cfg.output, "output", "text", "output format: text, json, browser")
-	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of search results to return (only applies with --output=json and --output=text)")
+	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of text or json search results to return")
 
 	return cmd
 }
@@ -135,7 +138,11 @@ func fetchAndOutputTextResults(ctx context.Context, clients *shared.ClientFactor
 
 	for _, result := range searchResponse.Results {
 		absoluteURL := makeAbsoluteURL(result.URL)
-		fmt.Fprintf(clients.IO.WriteOut(), "%s\n%s\n\n", result.Title, absoluteURL)
+		clients.IO.PrintInfo(ctx, false, style.Sectionf(style.TextSection{
+			Emoji:     "books",
+			Text:      result.Title,
+			Secondary: []string{absoluteURL},
+		}))
 	}
 
 	clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
