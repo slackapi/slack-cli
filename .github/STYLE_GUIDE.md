@@ -5,6 +5,7 @@ A current suggestion for how Slack CLI inputs are handled and outputs are format
 - **Input**
   - [Prompts are Flags with Forms](#prompts-are-flags-with-forms)
 - **Output**
+  - [Command Descriptions find Complete Sentances](#command-descriptions-find-complete-sentences)
   - [Format Sections with Command Details](#format-sections-with-command-details)
 
 ## Input
@@ -22,6 +23,18 @@ A flag option should exist for each prompt with a form fallback. Either default 
 ## Output
 
 Results of a command go toward informing current happenings and suggesting next steps.
+
+### Command Descriptions find Complete Sentences
+
+The output of extended command descriptions should be complete sentences:
+
+```
+$ slack docs search --help
+Search the Slack developer docs and return results in text, JSON, or browser
+format.
+```
+
+This example uses punctuation and breaks lines at or before the 80 character count.
 
 ### Format Sections with Command Details
 
