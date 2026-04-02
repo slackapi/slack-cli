@@ -108,9 +108,9 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if len(searchResponse.Results) == 0 {
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "books",
-				Text:  fmt.Sprintf("Docs Search: %s", query),
+				Text:  "Docs Search",
 				Secondary: []string{
-					"Found zero results",
+					fmt.Sprintf("Found zero results for \"%s\"", query),
 				},
 			}))
 			clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
