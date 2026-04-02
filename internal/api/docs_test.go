@@ -33,9 +33,10 @@ func Test_Client_DocsSearch(t *testing.T) {
 		expectedErrorContains string
 	}{
 		"returns search results": {
-			query:    "test",
-			limit:    20,
-			response: `{"total_results":2,"limit":20,"results":[{"title":"Block Kit","url":"/block-kit"},{"title":"Block Kit Elements","url":"/block-kit/elements"}]}`,
+			query:               "Block Kit",
+			limit:               20,
+			response:            `{"total_results":2,"limit":20,"results":[{"title":"Block Kit","url":"/block-kit"},{"title":"Block Kit Elements","url":"/block-kit/elements"}]}`,
+			expectedQuerystring: "query=Block+Kit&limit=20",
 			expectedResponse: &DocsSearchResponse{
 				TotalResults: 2,
 				Limit:        20,
