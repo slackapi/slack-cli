@@ -28,7 +28,7 @@ Results of a command go toward informing current happenings and suggesting next 
 
 The output of extended help descriptions should be complete sentences:
 
-```
+```txt
 $ slack docs search --help
 Search the Slack developer docs and return results in text, JSON, or browser
 format.
