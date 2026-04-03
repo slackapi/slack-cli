@@ -45,30 +45,47 @@ type DocsSearchItem struct {
 	Title string `json:"title"`
 }
 
+func buildDocsSearchURL(baseURL, query string, limit int) (string, error) {
+	endpoint := fmt.Sprintf("%s?query=%s&limit=%d", docsSearchMethod, url.QueryEscape(query), limit)
+	sURL, err := url.Parse(baseURL + "/" + endpoint)
+	if err != nil {
+		return "", err
+	}
+	return sURL.String(), nil
+}
+
+func buildDocsSearchRequest(ctx context.Context, urlStr, cliVersion string) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("User-Agent", fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS))
+	return req, nil
+}
+
 // DocsSearch searches the Slack developer docs API
 func (c *Client) DocsSearch(ctx context.Context, query string, limit int) (*DocsSearchResponse, error) {
 	var span opentracing.Span
 	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsSearch")
 	defer span.Finish()
 
-	endpoint := fmt.Sprintf("%s?query=%s&limit=%d", docsSearchMethod, url.QueryEscape(query), limit)
-	sURL, err := url.Parse(docsBaseURL + "/" + endpoint)
+	urlStr, err := buildDocsSearchURL(docsBaseURL, query, limit)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
+	sURL, _ := url.Parse(urlStr)
 	span.SetTag("request_url", sURL)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", sURL.String(), nil)
-	if err != nil {
-		return nil, errHTTPRequestFailed.WithRootCause(err)
-	}
 
 	cliVersion, err := slackcontext.Version(ctx)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("User-Agent", fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS))
+
+	req, err := buildDocsSearchRequest(ctx, urlStr, cliVersion)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
 
 	c.printRequest(ctx, req, false)
 

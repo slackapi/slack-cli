@@ -15,12 +15,89 @@
 package api
 
 import (
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/require"
 )
+
+func Test_buildDocsSearchURL(t *testing.T) {
+	tests := map[string]struct {
+		baseURL               string
+		query                 string
+		limit                 int
+		expectedURL           string
+		expectedErrorContains string
+	}{
+		"builds valid URL": {
+			baseURL:     "https://docs.slack.dev",
+			query:       "Block Kit",
+			limit:       20,
+			expectedURL: "https://docs.slack.dev/api/v1/search?query=Block+Kit&limit=20",
+		},
+		"encodes special characters": {
+			baseURL:     "https://docs.slack.dev",
+			query:       "messages & webhooks",
+			limit:       5,
+			expectedURL: "https://docs.slack.dev/api/v1/search?query=messages+%26+webhooks&limit=5",
+		},
+		"returns error for invalid base URL": {
+			baseURL:               "ht!tp://invalid",
+			query:                 "test",
+			limit:                 20,
+			expectedErrorContains: "invalid",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			url, err := buildDocsSearchURL(tc.baseURL, tc.query, tc.limit)
+
+			if tc.expectedErrorContains != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedErrorContains)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedURL, url)
+			}
+		})
+	}
+}
+
+func Test_buildDocsSearchRequest(t *testing.T) {
+	tests := map[string]struct {
+		url                   string
+		cliVersion            string
+		expectedErrorContains string
+	}{
+		"builds valid request": {
+			url:        "https://docs.slack.dev/api/v1/search?query=test&limit=20",
+			cliVersion: "1.0.0",
+		},
+		"returns error for invalid URL": {
+			url:                   "ht!tp://invalid",
+			cliVersion:            "1.0.0",
+			expectedErrorContains: "invalid",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := context.Background()
+			req, err := buildDocsSearchRequest(ctx, tc.url, tc.cliVersion)
+
+			if tc.expectedErrorContains != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedErrorContains)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, req)
+				require.Equal(t, "GET", req.Method)
+				require.Contains(t, req.Header.Get("User-Agent"), "slack-cli/1.0.0")
+			}
+		})
+	}
+}
 
 func Test_Client_DocsSearch(t *testing.T) {
 	tests := map[string]struct {
