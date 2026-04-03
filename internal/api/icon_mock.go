@@ -21,6 +21,11 @@ import (
 )
 
 func (m *APIMock) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
-	args := m.Called(ctx, fs, token, iconFilePath)
+	args := m.Called(ctx, fs, token, appID, iconFilePath)
+	return args.Get(0).(IconResult), args.Error(1)
+}
+
+func (m *APIMock) IconSet(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
+	args := m.Called(ctx, fs, token, appID, iconFilePath)
 	return args.Get(0).(IconResult), args.Error(1)
 }

@@ -66,6 +66,30 @@ func TestClient_IconErrorWrongFile(t *testing.T) {
 	require.Contains(t, err.Error(), "unknown format")
 }
 
+func TestClient_IconSetSuccess(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	fs := afero.NewMemMapFs()
+
+	myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{100, 100}})
+
+	for x := range 100 {
+		for y := range 100 {
+			c := color.RGBA{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)), 255}
+			myimage.Set(x, y, c)
+		}
+	}
+	myfile, _ := fs.Create(imgFile)
+	err := png.Encode(myfile, myimage)
+	require.NoError(t, err)
+	c, teardown := NewFakeClient(t, FakeClientParams{
+		ExpectedMethod: AppIconSetMethod,
+		Response:       `{"ok":true}`,
+	})
+	defer teardown()
+	_, err = c.IconSet(ctx, fs, "token", "12345", imgFile)
+	require.NoError(t, err)
+}
+
 func TestClient_IconSuccess(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()

@@ -39,6 +39,9 @@ const (
 	// Sandboxes experiment lets users who have joined the Slack Developer Program use the CLI to manage their sandboxes.
 	Sandboxes Experiment = "sandboxes"
 
+	// SetIcon experiment enables icon upload for non-hosted apps.
+	SetIcon Experiment = "set-icon"
+
 	// Templates experiment brings more agent templates to the create command.
 	Templates Experiment = "templates"
 )
@@ -49,6 +52,7 @@ var AllExperiments = []Experiment{
 	Lipgloss,
 	Placeholder,
 	Sandboxes,
+	SetIcon,
 	Templates,
 }
 
