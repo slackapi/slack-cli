@@ -11,13 +11,15 @@ The Slack CLI provides some features, and customization of said features, to str
 
 The Slack CLI automatically watches your app files and restarts the server when they change. It also watches `manifest.json` and reinstalls the app when the manifest changes.
 
-For Bolt for Python projects, the Slack CLI watches all `.py` files in the root directory (See [`python-slack-hooks/get_hooks.py`](https://github.com/slackapi/python-slack-hooks/blob/main/slack_cli_hooks/hooks/get_hooks.py)). For Bolt for JavaScript projects, the Slack CLI watches all `.js` files in the root directory (See [`@slack/cli-hooks`](https://github.com/slackapi/node-slack-sdk/tree/main/packages/cli-hooks)). These defaults are provided by the respective framework's `get-hooks` implementation:
+For Bolt for Python projects, the Slack CLI watches all `.py` files in the root directory (See [`python-slack-hooks/get_hooks.py`](https://github.com/slackapi/python-slack-hooks/blob/main/slack_cli_hooks/hooks/get_hooks.py)). 
 
-For detailed configuration options, see the [hooks reference](/tools/slack-cli/reference/hooks#watch-configurations).
+For Bolt for JavaScript projects, the Slack CLI watches all `.js` files in the root directory (See [`@slack/cli-hooks`](https://github.com/slackapi/node-slack-sdk/tree/main/packages/cli-hooks)).
+
+View the [hooks reference](/tools/slack-cli/reference/hooks#watch-configurations) for detailed configuration options.
 
 ### Customizing watch paths
 
-You can override the default watch paths in `.slack/hooks.json` if needed. 
+You can override the default watch paths in `.slack/hooks.json` if so desired. 
 
 For example, if you're building an agent you'll likely want to include your system prompt and tool definitions:
 
