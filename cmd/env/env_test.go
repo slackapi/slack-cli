@@ -32,9 +32,9 @@ func Test_Env_Command(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"shows the help page without commands or arguments or flags": {
 			ExpectedStdoutOutputs: []string{
-				"Add an environment variable",
+				"Set an environment variable",
 				"List all environment variables",
-				"Remove an environment variable",
+				"Unset an environment variable",
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
