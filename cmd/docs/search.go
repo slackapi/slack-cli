@@ -17,6 +17,7 @@ package docs
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -25,6 +26,11 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
+
+func buildDocsSearchURL(query string) string {
+	encodedQuery := url.QueryEscape(query)
+	return fmt.Sprintf("%s/search/?q=%s", docsURL, encodedQuery)
+}
 
 type searchConfig struct {
 	output string

@@ -16,7 +16,6 @@ package docs
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -29,11 +28,6 @@ import (
 const docsURL = "https://docs.slack.dev"
 
 var searchMode bool
-
-func buildDocsSearchURL(query string) string {
-	encodedQuery := url.QueryEscape(query)
-	return fmt.Sprintf("%s/search/?q=%s", docsURL, encodedQuery)
-}
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
