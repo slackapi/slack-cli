@@ -34,18 +34,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-var mockAuth = types.SlackAuth{
-	TeamID: "T1",
-	Token:  "12345",
-}
-
-var mockApp = types.App{
-	TeamID:     "T1",
-	TeamDomain: "team1",
-	AppID:      "A0123456789",
-}
-
-func Test_Env_AddCommandPreRun(t *testing.T) {
+func Test_Env_RemoveCommandPreRun(t *testing.T) {
 	tests := map[string]struct {
 		mockWorkingDirectory string
 		expectedError        error
@@ -65,7 +54,7 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
 				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
-			cmd := NewEnvAddCommand(clients)
+			cmd := NewEnvUnsetCommand(clients)
 			err := cmd.PreRunE(cmd, nil)
 			if tc.expectedError != nil {
 				assert.Equal(t, slackerror.ToSlackError(tc.expectedError).Code, slackerror.ToSlackError(err).Code)
@@ -76,118 +65,79 @@ func Test_Env_AddCommandPreRun(t *testing.T) {
 	}
 }
 
-func Test_Env_AddCommand(t *testing.T) {
+func Test_Env_RemoveCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"add a variable using arguments": {
-			CmdArgs: []string{"ENV_NAME", "ENV_VALUE"},
+		"exit without errors when .env has no variables to remove": {
+			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddHostedMocks(ctx, cm, cf)
+				setupEnvRemoveDotenvMocks(ctx, cm, cf)
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+				cm.AppClient.Manifest = manifestMock
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "RemoveVariable")
+			},
+			ExpectedStdoutOutputs: []string{
+				"The project has no environment variables to remove",
+			},
+		},
+		"exit without errors when hosted app has zero variables": {
+			CmdArgs: []string{},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvRemoveHostedMocks(ctx, cm, cf)
+				cm.API.ExpectedCalls = nil
+				cm.API.On("ListVariables", mock.Anything, mock.Anything, mock.Anything).Return([]string{}, nil)
+				cm.API.On("RemoveVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "RemoveVariable")
+			},
+			ExpectedStdoutOutputs: []string{
+				"The app has no environment variables to remove",
+			},
+		},
+		"remove a hosted variable using arguments": {
+			CmdArgs: []string{"ENV_NAME"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupEnvRemoveHostedMocks(ctx, cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(
 					t,
-					"AddVariable",
+					"RemoveVariable",
 					mock.Anything,
 					mock.Anything,
 					mockApp.AppID,
 					"ENV_NAME",
-					"ENV_VALUE",
 				)
 				cm.IO.AssertCalled(
 					t,
 					"PrintTrace",
 					mock.Anything,
-					slacktrace.EnvAddSuccess,
+					slacktrace.EnvUnsetSuccess,
 					mock.Anything,
 				)
 			},
 		},
-		"provide a variable name by argument and value by prompt": {
-			CmdArgs: []string{"ENV_NAME"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddHostedMocks(ctx, cm, cf)
-				cm.IO.On(
-					"PasswordPrompt",
-					mock.Anything,
-					"Variable value",
-					iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
-						Flag: cm.Config.Flags.Lookup("value"),
-					}),
-				).Return(
-					iostreams.PasswordPromptResponse{
-						Prompt: true,
-						Value:  "secret_key_1234",
-					},
-					nil,
-				)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(
-					t,
-					"AddVariable",
-					mock.Anything,
-					mock.Anything,
-					mockApp.AppID,
-					"ENV_NAME",
-					"secret_key_1234",
-				)
-			},
-		},
-		"provide a variable name by argument and value by flag": {
-			CmdArgs: []string{"ENV_NAME", "--value", "example_value"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddHostedMocks(ctx, cm, cf)
-				cm.IO.On(
-					"PasswordPrompt",
-					mock.Anything,
-					"Variable value",
-					iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
-						Flag: cm.Config.Flags.Lookup("value"),
-					}),
-				).Return(
-					iostreams.PasswordPromptResponse{
-						Flag:  true,
-						Value: "example_value",
-					},
-					nil,
-				)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(
-					t,
-					"AddVariable",
-					mock.Anything,
-					mock.Anything,
-					mockApp.AppID,
-					"ENV_NAME",
-					"example_value",
-				)
-			},
-		},
-		"provide both variable name and value by prompt": {
+		"remove a hosted variable using prompt": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddHostedMocks(ctx, cm, cf)
+				setupEnvRemoveHostedMocks(ctx, cm, cf)
 				cm.IO.On(
-					"InputPrompt",
+					"SelectPrompt",
 					mock.Anything,
-					"Variable name",
+					"Select a variable to remove",
 					mock.Anything,
-				).Return(
-					"some_name",
-					nil,
-				)
-				cm.IO.On(
-					"PasswordPrompt",
-					mock.Anything,
-					"Variable value",
-					iostreams.MatchPromptConfig(iostreams.PasswordPromptConfig{
-						Flag: cm.Config.Flags.Lookup("value"),
+					iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+						Flag:     cm.Config.Flags.Lookup("name"),
+						Required: true,
 					}),
 				).Return(
-					iostreams.PasswordPromptResponse{
+					iostreams.SelectPromptResponse{
 						Prompt: true,
-						Value:  "example_value",
+						Option: "SELECTED_ENV_VAR",
+						Index:  0,
 					},
 					nil,
 				)
@@ -195,77 +145,110 @@ func Test_Env_AddCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(
 					t,
-					"AddVariable",
+					"RemoveVariable",
 					mock.Anything,
 					mock.Anything,
 					mockApp.AppID,
-					"some_name",
-					"example_value",
+					"SELECTED_ENV_VAR",
 				)
 			},
 		},
-		"add a numeric variable to the .env file for remote runtime": {
-			CmdArgs: []string{"PORT", "3000"},
+		"remove a variable from the .env file for remote runtime": {
+			CmdArgs: []string{"SECRET"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddDotenvMocks(ctx, cm, cf)
+				setupEnvRemoveDotenvMocks(ctx, cm, cf)
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
 					types.SlackYaml{AppManifest: types.AppManifest{Settings: &types.AppSettings{FunctionRuntime: types.Remote}}},
 					nil,
 				)
 				cm.AppClient.Manifest = manifestMock
+				err := afero.WriteFile(cf.Fs, ".env", []byte("SECRET=abc\nOTHER=keep\n"), 0600)
+				assert.NoError(t, err)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "AddVariable")
+				cm.API.AssertNotCalled(t, "RemoveVariable")
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.EnvUnsetSuccess,
+					mock.Anything,
+				)
 				content, err := afero.ReadFile(cm.Fs, ".env")
 				assert.NoError(t, err)
-				assert.Equal(t, "PORT=3000\n", string(content))
+				assert.Equal(t, "OTHER=keep\n", string(content))
+			},
+			ExpectedStdoutOutputs: []string{
+				"Successfully removed \"SECRET\" as a project environment variable",
 			},
 		},
-		"add a variable to the .env file when no runtime is set": {
-			CmdArgs: []string{"NEW_VAR", "new_value"},
+		"remove a variable from the .env file using prompt": {
+			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddDotenvMocks(ctx, cm, cf)
+				setupEnvRemoveDotenvMocks(ctx, cm, cf)
 				manifestMock := &app.ManifestMockObject{}
-				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
+					types.SlackYaml{AppManifest: types.AppManifest{Settings: &types.AppSettings{FunctionRuntime: types.Remote}}},
+					nil,
+				)
 				cm.AppClient.Manifest = manifestMock
-				err := afero.WriteFile(cf.Fs, ".env", []byte("# Config\nEXISTING=value\n"), 0600)
+				err := afero.WriteFile(cf.Fs, ".env", []byte("ALPHA=one\nBETA=two\n"), 0600)
 				assert.NoError(t, err)
+				cm.IO.On(
+					"SelectPrompt",
+					mock.Anything,
+					"Select a variable to remove",
+					mock.Anything,
+					iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
+						Flag:     cm.Config.Flags.Lookup("name"),
+						Required: true,
+					}),
+				).Return(
+					iostreams.SelectPromptResponse{
+						Prompt: true,
+						Option: "ALPHA",
+						Index:  0,
+					},
+					nil,
+				)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "AddVariable")
+				cm.API.AssertNotCalled(t, "RemoveVariable")
 				content, err := afero.ReadFile(cm.Fs, ".env")
 				assert.NoError(t, err)
-				assert.Equal(t, "# Config\nEXISTING=value\n"+`NEW_VAR="new_value"`+"\n", string(content))
+				assert.Equal(t, "BETA=two\n", string(content))
 			},
 		},
-		"add a variable to the .env file when manifest fetch errors": {
-			CmdArgs: []string{"API_KEY", "sk-1234"},
+		"remove a variable from the .env file when manifest fetch errors": {
+			CmdArgs: []string{"SECRET"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupEnvAddDotenvMocks(ctx, cm, cf)
+				setupEnvRemoveDotenvMocks(ctx, cm, cf)
 				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
 					types.SlackYaml{},
 					slackerror.New(slackerror.ErrSDKHookNotFound),
 				)
 				cm.AppClient.Manifest = manifestMock
+				err := afero.WriteFile(cf.Fs, ".env", []byte("SECRET=abc\nOTHER=keep\n"), 0600)
+				assert.NoError(t, err)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "AddVariable")
+				cm.API.AssertNotCalled(t, "RemoveVariable")
 				content, err := afero.ReadFile(cm.Fs, ".env")
 				assert.NoError(t, err)
-				assert.Equal(t, `API_KEY="sk-1234"`+"\n", string(content))
+				assert.Equal(t, "OTHER=keep\n", string(content))
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
-		cmd := NewEnvAddCommand(cf)
+		cmd := NewEnvUnsetCommand(cf)
 		cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }
 		return cmd
 	})
 }
 
-// setupEnvAddHostedMocks prepares common mocks for hosted app tests
-func setupEnvAddHostedMocks(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+// setupEnvRemoveHostedMocks prepares common mocks for hosted app tests
+func setupEnvRemoveHostedMocks(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	cf.SDKConfig = hooks.NewSDKConfigMock()
 	cm.AddDefaultMocks()
 	_ = cf.AppClient().SaveDeployed(ctx, mockApp)
@@ -274,9 +257,10 @@ func setupEnvAddHostedMocks(ctx context.Context, cm *shared.ClientsMock, cf *sha
 	appSelectPromptFunc = appSelectMock.AppSelectPrompt
 	appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly).Return(prompts.SelectedApp{Auth: mockAuth, App: mockApp}, nil)
 
-	cm.Config.Flags.String("value", "", "mock value flag")
+	cm.Config.Flags.String("name", "", "mock name flag")
 
-	cm.API.On("AddVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	cm.API.On("ListVariables", mock.Anything, mock.Anything, mock.Anything).Return([]string{"example"}, nil)
+	cm.API.On("RemoveVariable", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
@@ -296,11 +280,11 @@ func setupEnvAddHostedMocks(ctx context.Context, cm *shared.ClientsMock, cf *sha
 	cf.SDKConfig.WorkingDirectory = "/slack/path/to/project"
 }
 
-// setupEnvAddDotenvMocks prepares common mocks for non-hosted (dotenv) app tests.
+// setupEnvRemoveDotenvMocks prepares common mocks for non-hosted (dotenv) app tests.
 // Callers must set their own manifest mock on cm.AppClient.Manifest.
-func setupEnvAddDotenvMocks(_ context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+func setupEnvRemoveDotenvMocks(_ context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	cf.SDKConfig = hooks.NewSDKConfigMock()
 	cm.AddDefaultMocks()
 
-	cm.Config.Flags.String("value", "", "mock value flag")
+	cm.Config.Flags.String("name", "", "mock name flag")
 }
