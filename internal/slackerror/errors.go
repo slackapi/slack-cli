@@ -693,7 +693,7 @@ Otherwise start your app for local development with: %s`,
 	ErrDocsSearchFlagRequired: {
 		Code:        ErrDocsSearchFlagRequired,
 		Message:     "Invalid docs command. Did you mean to search?",
-		Remediation: fmt.Sprintf("Use --search flag: %s", style.Commandf("docs --search \"<query>\"", false)),
+		Remediation: fmt.Sprintf("Use search subcommand: %s", style.Commandf("docs search \"<query>\"", false)),
 	},
 
 	ErrDotEnvFileParse: {
