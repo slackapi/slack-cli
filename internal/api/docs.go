@@ -26,7 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 )
 
-var docsBaseURL = "https://docs-slack-d-search-api-duu9zr.herokuapp.com"
+var docsBaseURL = "https://docs.slack.dev"
 
 const docsSearchMethod = "api/v1/search"
 
