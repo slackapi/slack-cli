@@ -82,6 +82,24 @@ func Test_Docs_SearchCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
 			},
 		},
+		"returns JSON results with absolute URLs": {
+			CmdArgs: []string{"search", "test", "--output=json"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsSearch", mock.Anything, "test", 20).Return(&api.DocsSearchResponse{
+					TotalResults: 1,
+					Limit:        20,
+					Results: []api.DocsSearchItem{
+						{Title: "Test", URL: "https://docs.slack.dev/test"},
+					},
+				}, nil)
+			},
+			ExpectedStdoutOutputs: []string{
+				`"url": "https://docs.slack.dev/test"`,
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
+			},
+		},
 		"returns empty results": {
 			CmdArgs: []string{"search", "nonexistent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -97,6 +115,13 @@ func Test_Docs_SearchCommand(t *testing.T) {
 		},
 		"returns error on API failure": {
 			CmdArgs: []string{"search", "test"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsSearch", mock.Anything, "test", 20).Return(nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrHTTPRequestFailed},
+		},
+		"returns error on API failure for JSON output": {
+			CmdArgs: []string{"search", "test", "--output=json"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("DocsSearch", mock.Anything, "test", 20).Return(nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
 			},
