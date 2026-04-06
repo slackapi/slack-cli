@@ -66,6 +66,54 @@ func TestClient_IconErrorWrongFile(t *testing.T) {
 	require.Contains(t, err.Error(), "unknown format")
 }
 
+func TestClient_IconSetErrorIfMissingArgs(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	fs := afero.NewMemMapFs()
+	c, teardown := NewFakeClient(t, FakeClientParams{
+		ExpectedMethod: AppIconSetMethod,
+	})
+	defer teardown()
+	_, err := c.IconSet(ctx, fs, "token", "", "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "missing required args")
+}
+
+func TestClient_IconSetErrorNoFile(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	fs := afero.NewMemMapFs()
+	c, teardown := NewFakeClient(t, FakeClientParams{
+		ExpectedMethod: AppIconSetMethod,
+	})
+	defer teardown()
+	_, err := c.IconSet(ctx, fs, "token", "12345", imgFile)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "file does not exist")
+}
+
+func TestClient_IconSetErrorResponse(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	fs := afero.NewMemMapFs()
+
+	myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{100, 100}})
+	for x := range 100 {
+		for y := range 100 {
+			c := color.RGBA{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)), 255}
+			myimage.Set(x, y, c)
+		}
+	}
+	myfile, _ := fs.Create(imgFile)
+	err := png.Encode(myfile, myimage)
+	require.NoError(t, err)
+	c, teardown := NewFakeClient(t, FakeClientParams{
+		ExpectedMethod: AppIconSetMethod,
+		Response:       `{"ok":false,"error":"invalid_app"}`,
+	})
+	defer teardown()
+	_, err = c.IconSet(ctx, fs, "token", "12345", imgFile)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid_app")
+}
+
 func TestClient_IconSetSuccess(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
