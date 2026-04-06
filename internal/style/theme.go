@@ -137,7 +137,7 @@ func ThemePlain() huh.Theme {
 		t.Focused.SelectedPrefix = lipgloss.NewStyle().SetString("[x] ")
 		t.Focused.UnselectedOption = lipgloss.NewStyle()
 		t.Focused.UnselectedPrefix = lipgloss.NewStyle().SetString("[ ] ")
-		t.Focused.FocusedButton = lipgloss.NewStyle().Padding(0, 2).MarginRight(1)
+		t.Focused.FocusedButton = lipgloss.NewStyle().Padding(0, 2).MarginRight(1).Bold(true).Underline(true)
 		t.Focused.BlurredButton = lipgloss.NewStyle().Padding(0, 2).MarginRight(1)
 		t.Focused.TextInput.Cursor = lipgloss.NewStyle()
 		t.Focused.TextInput.Prompt = lipgloss.NewStyle()
