@@ -94,8 +94,8 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\w)*client_id(?:\=s*))(?P<values>(([\w\s.-]*)))`),
 		// Escape variables for 3p auth add client secrets
 		regexp.MustCompile(`(?P<keys>(?:\w)*secret(?:\ s*))(?P<values>(([\w\s.-]*)))`),
-		// Escape variables for env and it's alias for add/remove command
-		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
+		// Escape variables for env and its aliases for set/unset/add/remove commands
+		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (set|unset|add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
 		// Add more regex here
 	}
 	// regexListWithQuotes will find sensitive data within quotes and later we escape with "..."

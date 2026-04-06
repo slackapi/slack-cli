@@ -321,6 +321,12 @@ func (manifest *AppManifest) FunctionRuntime() FunctionRuntime {
 	return manifest.Settings.FunctionRuntime
 }
 
+// IsFunctionRuntimeLocal returns true when the function runtime setting
+// is local
+func (manifest *AppManifest) IsFunctionRuntimeLocal() bool {
+	return manifest.Settings != nil && manifest.Settings.FunctionRuntime == LocallyRun
+}
+
 // IsFunctionRuntimeSlackHosted returns true when the function runtime setting
 // is slack hosted
 func (manifest *AppManifest) IsFunctionRuntimeSlackHosted() bool {

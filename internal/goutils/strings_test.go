@@ -292,6 +292,14 @@ func Test_RedactPII(t *testing.T) {
 			text:     `slack var remove topsecret 123`,
 			expected: `slack var remove ...`,
 		},
+		"Escape from `Command` for var set": {
+			text:     `slack var set topsecret 123`,
+			expected: `slack var set ...`,
+		},
+		"Escape from `Command` for var unset": {
+			text:     `slack var unset topsecret 123`,
+			expected: `slack var unset ...`,
+		},
 		"Escape from `Command` for env add": {
 			text:     `slack env add topsecret 123`,
 			expected: `slack env add ...`,
@@ -299,6 +307,14 @@ func Test_RedactPII(t *testing.T) {
 		"Escape from `Command` for env remove": {
 			text:     `slack env remove topsecret 123`,
 			expected: `slack env remove ...`,
+		},
+		"Escape from `Command` for env set": {
+			text:     `slack env set topsecret 123`,
+			expected: `slack env set ...`,
+		},
+		"Escape from `Command` for env unset": {
+			text:     `slack env unset topsecret 123`,
+			expected: `slack env unset ...`,
 		},
 		"Escape from `Command` for vars add": {
 			text:     `slack vars add topsecret 123`,
@@ -308,6 +324,14 @@ func Test_RedactPII(t *testing.T) {
 			text:     `slack vars remove topsecret 123`,
 			expected: `slack vars remove ...`,
 		},
+		"Escape from `Command` for vars set": {
+			text:     `slack vars set topsecret 123`,
+			expected: `slack vars set ...`,
+		},
+		"Escape from `Command` for vars unset": {
+			text:     `slack vars unset topsecret 123`,
+			expected: `slack vars unset ...`,
+		},
 		"Escape from `Command` for variables add": {
 			text:     `slack variables add topsecret 123`,
 			expected: `slack variables add ...`,
@@ -315,6 +339,14 @@ func Test_RedactPII(t *testing.T) {
 		"Escape from `Command` for variables remove": {
 			text:     `slack variables remove topsecret 123`,
 			expected: `slack variables remove ...`,
+		},
+		"Escape from `Command` for variables set": {
+			text:     `slack variables set topsecret 123`,
+			expected: `slack variables set ...`,
+		},
+		"Escape from `Command` for variables unset": {
+			text:     `slack variables unset topsecret 123`,
+			expected: `slack variables unset ...`,
 		},
 	}
 	for name, tc := range tests {

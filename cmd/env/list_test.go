@@ -19,7 +19,6 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/app"
-	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -71,9 +70,14 @@ func Test_Env_ListCommand(t *testing.T) {
 	}
 
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"lists variables from the .env file": {
+		"lists variables from the .env file for remote runtime": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				mockAppSelect()
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
+					types.SlackYaml{AppManifest: types.AppManifest{Settings: &types.AppSettings{FunctionRuntime: types.Remote}}},
+					nil,
+				)
+				cm.AppClient.Manifest = manifestMock
 				err := afero.WriteFile(cf.Fs, ".env", []byte("SECRET_KEY=abc123\nAPI_TOKEN=xyz789\n"), 0644)
 				assert.NoError(t, err)
 			},
@@ -101,7 +105,9 @@ func Test_Env_ListCommand(t *testing.T) {
 		},
 		"lists no variables when the .env file does not exist": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				mockAppSelect()
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{}, nil)
+				cm.AppClient.Manifest = manifestMock
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(
@@ -117,7 +123,12 @@ func Test_Env_ListCommand(t *testing.T) {
 		},
 		"lists no variables when the .env file is empty": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				mockAppSelect()
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(
+					types.SlackYaml{},
+					slackerror.New(slackerror.ErrSDKHookNotFound),
+				)
+				cm.AppClient.Manifest = manifestMock
 				err := afero.WriteFile(cf.Fs, ".env", []byte(""), 0644)
 				assert.NoError(t, err)
 			},
@@ -161,9 +172,6 @@ func Test_Env_ListCommand(t *testing.T) {
 					nil,
 				)
 				cm.AppClient.Manifest = manifestMock
-				projectConfigMock := config.NewProjectConfigMock()
-				projectConfigMock.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
-				cm.Config.ProjectConfig = projectConfigMock
 				cf.SDKConfig.WorkingDirectory = "/slack/path/to/project"
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
