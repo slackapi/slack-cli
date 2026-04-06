@@ -247,6 +247,11 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		clients.Config.SystemConfig.SetCustomConfigDirPath(clients.Config.ConfigDirFlag)
 	}
 
+	// Accessible mode implies no-color
+	if clients.Config.Accessible {
+		clients.Config.NoColor = true
+	}
+
 	// Init color and formatting
 	style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
 	style.ToggleSpinner(clients.IO.IsTTY() && !clients.Config.NoColor && !clients.Config.DebugEnabled)
