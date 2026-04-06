@@ -30,9 +30,6 @@ type Experiment string
 // e.g. --experiment=first-toggle,second-toggle
 
 const (
-	// Huh experiment shows beautiful prompts.
-	Huh Experiment = "huh"
-
 	// Lipgloss experiment shows pretty styles.
 	Lipgloss Experiment = "lipgloss"
 
@@ -49,7 +46,6 @@ const (
 // AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
 var AllExperiments = []Experiment{
-	Huh,
 	Lipgloss,
 	Placeholder,
 	Sandboxes,

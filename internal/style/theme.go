@@ -18,14 +18,10 @@ package style
 // Uses official Slack brand colors defined in colors.go.
 
 import (
-	"fmt"
 	"runtime"
 
 	huh "charm.land/huh/v2"
 	lipgloss "charm.land/lipgloss/v2"
-
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/AlecAivazis/survey/v2/core"
 )
 
 // ThemeSlack returns a huh Theme styled with Slack brand colors.
@@ -157,7 +153,7 @@ func ThemePlain() huh.Theme {
 }
 
 // ThemeSurvey returns a huh Theme that matches the legacy survey prompt styling.
-// Applied when experiment.Huh is on but experiment.Lipgloss is off.
+// Applied when experiment.Lipgloss is off.
 func ThemeSurvey() huh.Theme {
 	return huh.ThemeFunc(themeSurvey)
 }
@@ -202,22 +198,4 @@ func themeSurvey(isDark bool) *huh.Styles {
 		SetString("[ ] ")
 
 	return t
-}
-
-// SurveyIcons returns customizations to the appearance of survey prompts.
-func SurveyIcons() survey.AskOpt {
-	if !isStyleEnabled {
-		core.DisableColor = true
-	}
-
-	cursor := Chevron()
-
-	return survey.WithIcons(func(icons *survey.IconSet) {
-		icons.SelectFocus.Text = cursor
-		icons.SelectFocus.Format = fmt.Sprintf("%d+b", blue)
-		icons.MarkedOption.Format = fmt.Sprintf("%d+b", blue)
-
-		icons.Question.Text = "?"
-		icons.Question.Format = fmt.Sprintf("%d+hb", gray)
-	})
 }

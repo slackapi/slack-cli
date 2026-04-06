@@ -15,6 +15,7 @@
 package env
 
 import (
+	"context"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -34,28 +35,30 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "env <subcommand>",
 		Aliases: []string{"var", "vars", "variable", "variables"},
-		Short:   "Add, remove, or list environment variables",
+		Short:   "Set, unset, or list environment variables",
 		Long: strings.Join([]string{
-			"Add, remove, or list environment variables for apps deployed to Slack managed",
-			"infrastructure.",
+			"Set, unset, or list environment variables for the project.",
 			"",
-			"This command is supported for apps deployed to Slack managed infrastructure but",
-			"other apps can attempt to run the command with the --force flag.",
+			"Commands that run in the context of a project source environment variables from",
+			"the \".env\" file. This includes the \"run\" command.",
+			"",
+			"The \"deploy\" command gathers environment variables from the \".env\" file as well",
+			"unless the app is using ROSI features.",
 			"",
 			`Explore more: {{LinkText "https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli"}}`,
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Add an environment variable",
-				Command: "env add MAGIC_PASSWORD abracadbra",
+				Meaning: "Set an environment variable",
+				Command: "env set MAGIC_PASSWORD abracadbra",
 			},
 			{
 				Meaning: "List all environment variables",
 				Command: "env list",
 			},
 			{
-				Meaning: "Remove an environment variable",
-				Command: "env remove MAGIC_PASSWORD",
+				Meaning: "Unset an environment variable",
+				Command: "env unset MAGIC_PASSWORD",
 			},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -64,9 +67,22 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	// Add child commands
-	cmd.AddCommand(NewEnvAddCommand(clients))
+	cmd.AddCommand(NewEnvSetCommand(clients))
 	cmd.AddCommand(NewEnvListCommand(clients))
-	cmd.AddCommand(NewEnvRemoveCommand(clients))
+	cmd.AddCommand(NewEnvUnsetCommand(clients))
 
 	return cmd
+}
+
+// isHostedRuntime returns true if the local manifest is for an app that uses
+// the Deno Slack SDK function runtime.
+//
+// It defaults to false when the manifest cannot be fetched, which directs the
+// command to use the project ".env" file. Otherwise the API is used.
+func isHostedRuntime(ctx context.Context, clients *shared.ClientFactory) bool {
+	manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+	if err != nil {
+		return false
+	}
+	return manifest.IsFunctionRuntimeSlackHosted() || manifest.IsFunctionRuntimeLocal()
 }
