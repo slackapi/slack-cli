@@ -127,7 +127,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				cm.IO.On(
 					"SelectPrompt",
 					mock.Anything,
-					"Select a variable to remove",
+					"Select a variable to unset",
 					mock.Anything,
 					iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 						Flag:     cm.Config.Flags.Lookup("name"),
@@ -180,7 +180,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				assert.Equal(t, "OTHER=keep\n", string(content))
 			},
 			ExpectedStdoutOutputs: []string{
-				"Successfully removed \"SECRET\" as a project environment variable",
+				"Successfully unset \"SECRET\" as a project environment variable",
 			},
 		},
 		"remove a variable from the .env file using prompt": {
@@ -198,7 +198,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				cm.IO.On(
 					"SelectPrompt",
 					mock.Anything,
-					"Select a variable to remove",
+					"Select a variable to unset",
 					mock.Anything,
 					iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 						Flag:     cm.Config.Flags.Lookup("name"),

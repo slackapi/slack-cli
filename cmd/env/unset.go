@@ -110,7 +110,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 			clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "evergreen_tree",
-				Text:  "App Environment",
+				Text:  "Environment Unset",
 				Secondary: []string{
 					"The app has no environment variables to remove",
 				},
@@ -119,7 +119,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		}
 		selected, err := clients.IO.SelectPrompt(
 			ctx,
-			"Select a variable to remove",
+			"Select a variable to unset",
 			variables,
 			iostreams.SelectPromptConfig{
 				Flag:     clients.Config.Flags.Lookup("name"),
@@ -139,7 +139,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 			clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "evergreen_tree",
-				Text:  "App Environment",
+				Text:  "Environment Unset",
 				Secondary: []string{
 					"The project has no environment variables to remove",
 				},
@@ -153,7 +153,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		sort.Strings(variables)
 		selected, err := clients.IO.SelectPrompt(
 			ctx,
-			"Select a variable to remove",
+			"Select a variable to unset",
 			variables,
 			iostreams.SelectPromptConfig{
 				Flag:     clients.Config.Flags.Lookup("name"),
@@ -181,9 +181,9 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "evergreen_tree",
-			Text:  "App Environment",
+			Text:  "Environment Unset",
 			Secondary: []string{
-				fmt.Sprintf("Successfully removed \"%s\" as an app environment variable", variableName),
+				fmt.Sprintf("Successfully unset \"%s\" as an app environment variable", variableName),
 			},
 		}))
 	} else {
@@ -194,9 +194,9 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		clients.IO.PrintTrace(ctx, slacktrace.EnvUnsetSuccess)
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "evergreen_tree",
-			Text:  "App Environment",
+			Text:  "Environment Unset",
 			Secondary: []string{
-				fmt.Sprintf("Successfully removed \"%s\" as a project environment variable", variableName),
+				fmt.Sprintf("Successfully unset \"%s\" as a project environment variable", variableName),
 			},
 		}))
 	}
