@@ -36,7 +36,7 @@ import (
 const (
 	appIconMethod = "apps.hosted.icon"
 	// AppIconSetMethod is the API method for setting app icons for non-hosted apps.
-	AppIconSetMethod = "apps.icon.set"
+	appIconSetMethod = "apps.icon.set"
 )
 
 // IconResult details to be saved
@@ -48,7 +48,8 @@ type iconResponse struct {
 	IconResult
 }
 
-// Icon updates a Slack App's icon
+// Icon updates a hosted Slack app icon
+// DEPRECATED: Prefer "IconSet" instead
 func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
 	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconMethod, "file")
 }

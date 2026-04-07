@@ -660,7 +660,7 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 
 	// var iconResp apiclient.IconResult
 	var err error
-	_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
+	_, err = clients.API().SetIcon(ctx, clients.Fs, token, appID, iconPath)
 	if err != nil {
 		// TODO: separate the icon upload into a different function because if an error is returned
 		// the new app_id might be ignored and next time we'll create another app.
