@@ -460,6 +460,8 @@ func TestFormsAccessible(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "my-app", input)
 		assert.Contains(t, out.String(), "Name?")
+	})
+}
 
 func TestFormsNoColor(t *testing.T) {
 	t.Run("forms use plain theme with no-color", func(t *testing.T) {
