@@ -231,6 +231,7 @@ next_step_message() {
                 esac
         fi
         echo -e "🔐 Next, authorize your CLI in your workspace with \`$(bold "$SLACK_CLI_NAME login")\`"
+        echo -e "🤖 Create AI Agents in Slack with \`$(bold "$SLACK_CLI_NAME create agent")\`"
         sleep 0.2
 }
 
