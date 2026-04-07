@@ -148,6 +148,12 @@ func ThemePlain() huh.Theme {
 		t.Blurred.Base = t.Focused.Base.BorderStyle(lipgloss.HiddenBorder())
 		t.Blurred.SelectSelector = lipgloss.NewStyle().SetString("  ")
 		t.Blurred.MultiSelectSelector = lipgloss.NewStyle().SetString("  ")
+		t.Help.ShortKey = lipgloss.NewStyle()
+		t.Help.ShortDesc = lipgloss.NewStyle()
+		t.Help.ShortSeparator = lipgloss.NewStyle()
+		t.Help.FullKey = lipgloss.NewStyle()
+		t.Help.FullDesc = lipgloss.NewStyle()
+		t.Help.FullSeparator = lipgloss.NewStyle()
 		return t
 	})
 }
