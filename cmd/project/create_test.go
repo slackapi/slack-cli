@@ -46,7 +46,7 @@ func TestCreateCommand(t *testing.T) {
 		"creates a bolt application from prompts": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -54,7 +54,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -83,7 +83,7 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"--template", "slack-samples/deno-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -91,7 +91,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -129,7 +129,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -152,7 +152,7 @@ func TestCreateCommand(t *testing.T) {
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
@@ -168,7 +168,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -189,7 +189,7 @@ func TestCreateCommand(t *testing.T) {
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since name was provided as arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -197,11 +197,11 @@ func TestCreateCommand(t *testing.T) {
 		"creates a pydantic ai agent app": {
 			CmdArgs: []string{"my-pydantic-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0}, nil)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil)
 				createClientMock = new(CreateClientMock)
 				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
@@ -222,7 +222,7 @@ func TestCreateCommand(t *testing.T) {
 		"creates an app named agent when template flag is provided": {
 			CmdArgs: []string{"agent", "--template", "slack-samples/bolt-js-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -230,7 +230,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -258,7 +258,7 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"--name", "agent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Should prompt for category since agent shortcut is NOT triggered
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -266,7 +266,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -287,7 +287,7 @@ func TestCreateCommand(t *testing.T) {
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt WAS called (shortcut was not triggered)
-				cm.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since --name flag was provided
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -304,7 +304,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -325,13 +325,13 @@ func TestCreateCommand(t *testing.T) {
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (shortcut was triggered)
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 			},
 		},
 		"name flag overrides positional app name argument": {
 			CmdArgs: []string{"my-project", "--name", "my-name"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -339,7 +339,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -375,7 +375,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -396,7 +396,7 @@ func TestCreateCommand(t *testing.T) {
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (agent shortcut was triggered)
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since --name flag was provided
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -404,7 +404,7 @@ func TestCreateCommand(t *testing.T) {
 		"name prompt includes placeholder with generated name": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -412,7 +412,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -436,7 +436,7 @@ func TestCreateCommand(t *testing.T) {
 		"user accepts default name from prompt": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -444,7 +444,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -471,7 +471,7 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"--template", "slack-samples/bolt-js-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// IsTTY defaults to false via AddDefaultMocks, simulating piped output
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -479,7 +479,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -503,7 +503,7 @@ func TestCreateCommand(t *testing.T) {
 		"positional arg skips name prompt": {
 			CmdArgs: []string{"my-project"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -511,7 +511,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -549,7 +549,7 @@ func TestCreateCommand(t *testing.T) {
 		"passes subdir flag to create function": {
 			CmdArgs: []string{"--template", "slack-samples/bolt-js-starter-template", "--subdir", "apps/my-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -557,7 +557,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,

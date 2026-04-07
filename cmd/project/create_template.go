@@ -144,7 +144,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 		}
 	} else {
 		// Prompt for the category
-		promptForCategory := "Select an app:"
+		promptForCategory := "Select a category:"
 		optionsForCategory := getSelectionOptionsForCategory(clients)
 		titlesForCategory := make([]string, len(optionsForCategory))
 		for i, m := range optionsForCategory {
@@ -196,7 +196,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	}
 
 	// Prompt for the example template
-	prompt := "Select a language:"
+	prompt := "Select a framework:"
 	if categoryID == "slack-cli#ai-apps" {
 		prompt = "Select a template:"
 	}
@@ -229,7 +229,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	for i, opt := range examples {
 		choices[i] = opt.Title
 	}
-	choice, err := clients.IO.SelectPrompt(ctx, "Select a language:", choices, iostreams.SelectPromptConfig{
+	choice, err := clients.IO.SelectPrompt(ctx, "Select a framework:", choices, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
 			return examples[index].Description
 		},
