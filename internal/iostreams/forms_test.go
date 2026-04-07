@@ -460,6 +460,45 @@ func TestFormsAccessible(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "my-app", input)
 		assert.Contains(t, out.String(), "Name?")
+
+func TestFormsNoColor(t *testing.T) {
+	t.Run("forms use plain theme with no-color", func(t *testing.T) {
+		fsMock := slackdeps.NewFsMock()
+		osMock := slackdeps.NewOsMock()
+		osMock.AddDefaultMocks()
+		cfg := config.NewConfig(fsMock, osMock)
+		cfg.NoColor = true
+		io := NewIOStreams(cfg, fsMock, osMock)
+
+		var selected string
+		f := buildSelectForm(io, "Pick", []string{"A", "B"}, SelectPromptConfig{}, &selected)
+		f.Update(f.Init())
+
+		view := f.View()
+		// Title and option lines should have no ANSI codes
+		for _, line := range strings.Split(view, "\n")[:3] {
+			assert.Equal(t, ansi.Strip(line), line, "content line should have no ANSI codes")
+		}
+	})
+
+	t.Run("no-color takes priority over lipgloss experiment", func(t *testing.T) {
+		fsMock := slackdeps.NewFsMock()
+		osMock := slackdeps.NewOsMock()
+		osMock.AddDefaultMocks()
+		cfg := config.NewConfig(fsMock, osMock)
+		cfg.NoColor = true
+		cfg.ExperimentsFlag = []string{"lipgloss"}
+		cfg.LoadExperiments(context.Background(), func(_ context.Context, _ string, _ ...any) {})
+		io := NewIOStreams(cfg, fsMock, osMock)
+
+		var selected string
+		f := buildSelectForm(io, "Pick", []string{"A", "B"}, SelectPromptConfig{}, &selected)
+		f.Update(f.Init())
+
+		view := f.View()
+		for _, line := range strings.Split(view, "\n")[:3] {
+			assert.Equal(t, ansi.Strip(line), line, "content line should have no ANSI codes even with lipgloss experiment on")
+		}
 	})
 }
 

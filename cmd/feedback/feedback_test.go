@@ -263,17 +263,6 @@ func TestShowSurveyMessages(t *testing.T) {
 
 func Test_Feedback_FeedbackCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
-		"supports deprecated --name platform-improvements": {
-			CmdArgs: []string{"--name", "platform-improvements"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupFeedbackCommandMocks(t, ctx, cm, cf)
-			},
-			ExpectedOutputs: []string{
-				"feedback@slack.com",
-				"https://docs.slack.dev/developer-support",
-			},
-		},
 		"supports --name slack-cli": {
 			CmdArgs: []string{"--name", "slack-cli"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
