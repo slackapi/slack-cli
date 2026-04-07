@@ -33,9 +33,9 @@ import (
 func NewEnvListCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [flags]",
-		Short: "List all environment variables for the app",
+		Short: "List all environment variables of the project",
 		Long: strings.Join([]string{
-			"List environment variables available to the app at runtime.",
+			"List the environment variables available to the project.",
 			"",
 			"Commands that run in the context of a project source environment variables from",
 			`the ".env" file. This includes the "run" command.`,

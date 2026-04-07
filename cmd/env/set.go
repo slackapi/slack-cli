@@ -30,12 +30,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewEnvAddCommand(clients *shared.ClientFactory) *cobra.Command {
+func NewEnvSetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add <name> [value] [flags]",
-		Short: "Add an environment variable to the project",
+		Use:     "set [name] [value] [flags]",
+		Aliases: []string{"add"},
+		Short:   "Set an environment variable for the project",
 		Long: strings.Join([]string{
-			"Add an environment variable to the project.",
+			"Set an environment variable for the project.",
 			"",
 			"If a name or value is not provided, you will be prompted to provide these.",
 			"",
@@ -48,24 +49,24 @@ func NewEnvAddCommand(clients *shared.ClientFactory) *cobra.Command {
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Prompt for an environment variable",
-				Command: "env add",
+				Command: "env set",
 			},
 			{
-				Meaning: "Add an environment variable",
-				Command: "env add MAGIC_PASSWORD abracadbra",
+				Meaning: "Set an environment variable",
+				Command: "env set MAGIC_PASSWORD abracadbra",
 			},
 			{
 				Meaning: "Prompt for an environment variable value",
-				Command: "env add SECRET_PASSWORD",
+				Command: "env set SECRET_PASSWORD",
 			},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			return preRunEnvAddCommandFunc(ctx, clients, cmd)
+			return preRunEnvSetCommandFunc(ctx, clients, cmd)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runEnvAddCommandFunc(clients, cmd, args)
+			return runEnvSetCommandFunc(clients, cmd, args)
 		},
 	}
 
@@ -74,15 +75,15 @@ func NewEnvAddCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunEnvAddCommandFunc determines if the command is run in a valid project
+// preRunEnvSetCommandFunc determines if the command is run in a valid project
 // and configures flags
-func preRunEnvAddCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
+func preRunEnvSetCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	clients.Config.SetFlags(cmd)
 	return cmdutil.IsValidProjectDirectory(clients)
 }
 
-// runEnvAddCommandFunc sets an app environment variable to given values
-func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
+// runEnvSetCommandFunc sets an app environment variable to given values
+func runEnvSetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
 	// Hosted apps require selecting an app before gathering variable inputs.
@@ -154,10 +155,10 @@ func runEnvAddCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		details = append(details, fmt.Sprintf("Successfully added \"%s\" as a project environment variable", variableName))
 	}
 
-	clients.IO.PrintTrace(ctx, slacktrace.EnvAddSuccess)
+	clients.IO.PrintTrace(ctx, slacktrace.EnvSetSuccess)
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "evergreen_tree",
-		Text:      "Environment Add",
+		Text:      "Environment Set",
 		Secondary: details,
 	}))
 	return nil

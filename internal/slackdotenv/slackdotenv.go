@@ -98,22 +98,7 @@ func Set(fs afero.Fs, name string, value string) error {
 		return writeFile(fs, []byte(content+newEntry+"\n"))
 	}
 
-	// Build a regex that matches any form of the existing entry, allowing
-	// optional spaces around the equals sign and optional export prefix.
-	// The value portion matches to the end of the line, handling quoted
-	// (single, double, backtick) and unquoted values, including multiline
-	// double-quoted values with embedded newlines.
-	re := regexp.MustCompile(
-		`(?m)(^[^\S\n]*export[^\S\n]+|^[^\S\n]*)` + regexp.QuoteMeta(name) + `[^\S\n]*=[^\S\n]*` +
-			`(?:` +
-			`"(?:[^"\\]|\\.)*"` + // double-quoted (with escapes)
-			`|'[^']*'` + // single-quoted
-			"|`[^`]*`" + // backtick-quoted
-			`|(?:[^\s\n#]|\S#)*` + // unquoted: stop before inline comment (space + #)
-			`)` +
-			`([^\S\n]+#[^\n]*)?`, // optional inline comment
-	)
-
+	re := entryPattern(name)
 	match := re.FindStringSubmatchIndex(content)
 	if match != nil {
 		prefix := ""
@@ -132,6 +117,64 @@ func Set(fs afero.Fs, name string, value string) error {
 		content += newEntry + "\n"
 	}
 	return writeFile(fs, []byte(content))
+}
+
+// Unset removes a single environment variable from the .env file, preserving
+// comments, blank lines, and other formatting. If the file does not exist or
+// the key is not found, no action is taken.
+func Unset(fs afero.Fs, name string) error {
+	// Check for an existing .env file and parse it to detect existing keys.
+	existing, err := Read(fs)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return nil
+	}
+
+	_, found := existing[name]
+	if !found {
+		return nil
+	}
+
+	// Read the raw file content to find and remove the entry.
+	raw, err := afero.ReadFile(fs, ".env")
+	if err != nil {
+		return slackerror.Wrap(err, slackerror.ErrDotEnvFileRead).
+			WithMessage("Failed to read the .env file: %s", err)
+	}
+	content := string(raw)
+
+	re := entryPattern(name)
+	match := re.FindStringIndex(content)
+	if match != nil {
+		// Remove the matched entry and its trailing newline if present.
+		end := match[1]
+		if end < len(content) && content[end] == '\n' {
+			end++
+		}
+		content = content[:match[0]] + content[end:]
+		return writeFile(fs, []byte(content))
+	}
+
+	return nil
+}
+
+// entryPattern builds a regex that matches a .env entry for the given variable
+// name. It handles optional export prefix, leading whitespace, spaces around
+// the equals sign, quoted (double, single, backtick) and unquoted values
+// including multiline double-quoted values, and optional inline comments.
+func entryPattern(name string) *regexp.Regexp {
+	return regexp.MustCompile(
+		`(?m)(^[^\S\n]*export[^\S\n]+|^[^\S\n]*)` + regexp.QuoteMeta(name) + `[^\S\n]*=[^\S\n]*` +
+			`(?:` +
+			`"(?:[^"\\]|\\.)*"` + // double-quoted (with escapes)
+			`|'[^']*'` + // single-quoted
+			"|`[^`]*`" + // backtick-quoted
+			`|(?:[^\s\n#]|\S#)*` + // unquoted: stop before inline comment (space + #)
+			`)` +
+			`([^\S\n]+#[^\n]*)?`, // optional inline comment
+	)
 }
 
 // writeFile writes data to the .env file, wrapping any error with a structured
