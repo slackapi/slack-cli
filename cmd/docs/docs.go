@@ -53,9 +53,6 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	// Add the search subcommand
 	cmd.AddCommand(NewSearchCommand(clients))
 
-	// Catch removed --search flag
-	cmd.Flags().BoolP("search", "", false, "DEPRECATED: use 'docs search' subcommand instead")
-
 	return cmd
 }
 
