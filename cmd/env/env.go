@@ -35,9 +35,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "env <subcommand>",
 		Aliases: []string{"var", "vars", "variable", "variables"},
-		Short:   "Add, remove, or list environment variables",
+		Short:   "Set, unset, or list environment variables",
 		Long: strings.Join([]string{
-			"Add, remove, or list environment variables for the app.",
+			"Set, unset, or list environment variables for the project.",
 			"",
 			"Commands that run in the context of a project source environment variables from",
 			"the \".env\" file. This includes the \"run\" command.",
@@ -49,16 +49,16 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Add an environment variable",
-				Command: "env add MAGIC_PASSWORD abracadbra",
+				Meaning: "Set an environment variable",
+				Command: "env set MAGIC_PASSWORD abracadbra",
 			},
 			{
 				Meaning: "List all environment variables",
 				Command: "env list",
 			},
 			{
-				Meaning: "Remove an environment variable",
-				Command: "env remove MAGIC_PASSWORD",
+				Meaning: "Unset an environment variable",
+				Command: "env unset MAGIC_PASSWORD",
 			},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -67,9 +67,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	// Add child commands
-	cmd.AddCommand(NewEnvAddCommand(clients))
+	cmd.AddCommand(NewEnvSetCommand(clients))
 	cmd.AddCommand(NewEnvListCommand(clients))
-	cmd.AddCommand(NewEnvRemoveCommand(clients))
+	cmd.AddCommand(NewEnvUnsetCommand(clients))
 
 	return cmd
 }

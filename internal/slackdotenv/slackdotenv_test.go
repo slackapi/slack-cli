@@ -15,6 +15,7 @@
 package slackdotenv
 
 import (
+	"os"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -290,6 +291,153 @@ func Test_Set(t *testing.T) {
 				return
 			}
 			assert.NoError(t, err)
+			content, err := afero.ReadFile(fs, ".env")
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedFile, string(content))
+		})
+	}
+}
+
+func Test_Unset(t *testing.T) {
+	tests := map[string]struct {
+		existingEnv   string
+		writeExisting bool
+		name          string
+		expectedFile  string
+	}{
+		"no-op when .env file does not exist": {
+			name:         "FOO",
+			expectedFile: "",
+		},
+		"no-op when key does not exist": {
+			existingEnv:   "OTHER=value\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "OTHER=value\n",
+		},
+		"removes a simple key-value pair": {
+			existingEnv:   "FOO=bar\nBAZ=qux\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BAZ=qux\n",
+		},
+		"removes a quoted value": {
+			existingEnv:   "TOKEN=\"my secret\"\nOTHER=keep\n",
+			writeExisting: true,
+			name:          "TOKEN",
+			expectedFile:  "OTHER=keep\n",
+		},
+		"removes a key with export prefix": {
+			existingEnv:   "export SECRET=mysecret\nOTHER=keep\n",
+			writeExisting: true,
+			name:          "SECRET",
+			expectedFile:  "OTHER=keep\n",
+		},
+		"preserves comments and blank lines": {
+			existingEnv:   "# Config\nFOO=bar\n\n# Keys\nAPI_KEY=secret\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "# Config\n\n# Keys\nAPI_KEY=secret\n",
+		},
+		"removes the only variable": {
+			existingEnv:   "FOO=bar\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "",
+		},
+		"removes a multiline value": {
+			existingEnv:   "export DB_KEY=\"---START---\npassword\n---END---\"\nOTHER=keep\n",
+			writeExisting: true,
+			name:          "DB_KEY",
+			expectedFile:  "OTHER=keep\n",
+		},
+		"removes a variable with spaces around equals": {
+			existingEnv:   "BEFORE=keep\nFOO = bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes a variable with space before equals": {
+			existingEnv:   "BEFORE=keep\nFOO =bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes a variable with space after equals": {
+			existingEnv:   "BEFORE=keep\nFOO= bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes an empty value": {
+			existingEnv:   "BEFORE=keep\nFOO=\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes an empty value with spaces": {
+			existingEnv:   "BEFORE=keep\nFOO = \nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes export variable with spaces around equals": {
+			existingEnv:   "BEFORE=keep\nexport FOO = bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes a variable with leading spaces": {
+			existingEnv:   "BEFORE=keep\n  FOO=bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes a variable with leading tab": {
+			existingEnv:   "BEFORE=keep\n\tFOO=bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes export variable with leading spaces": {
+			existingEnv:   "BEFORE=keep\n  export FOO=bar\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes a variable with inline comment": {
+			existingEnv:   "BEFORE=keep\nFOO=bar # important note\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes a quoted variable with inline comment": {
+			existingEnv:   "BEFORE=keep\nFOO=\"bar\" # important note\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+		"removes an export variable with inline comment": {
+			existingEnv:   "BEFORE=keep\nexport FOO=bar # important note\nAFTER=keep\n",
+			writeExisting: true,
+			name:          "FOO",
+			expectedFile:  "BEFORE=keep\nAFTER=keep\n",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			if tc.writeExisting {
+				err := afero.WriteFile(fs, ".env", []byte(tc.existingEnv), 0600)
+				assert.NoError(t, err)
+			}
+			err := Unset(fs, tc.name)
+			assert.NoError(t, err)
+			if !tc.writeExisting {
+				_, err := fs.Stat(".env")
+				assert.True(t, os.IsNotExist(err))
+				return
+			}
 			content, err := afero.ReadFile(fs, ".env")
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedFile, string(content))
