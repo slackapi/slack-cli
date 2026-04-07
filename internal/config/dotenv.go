@@ -27,6 +27,12 @@ func (c *Config) LoadEnvironmentVariables() error {
 		return nil
 	}
 
+	// Load accessible mode from environment variables
+	var accessible = strings.TrimSpace(c.os.Getenv(slackAccessibleEnv))
+	if accessible != "" && accessible != "false" && accessible != "0" {
+		c.Accessible = true
+	}
+
 	// Load slackTestTraceFlag from environment variables
 	var testTrace = strings.TrimSpace(c.os.Getenv(slackTestTraceEnv))
 	if testTrace != "" && testTrace != "false" && testTrace != "0" {

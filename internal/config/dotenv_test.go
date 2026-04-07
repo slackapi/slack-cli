@@ -167,6 +167,41 @@ func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 				assert.Equal(t, "", cfg.ConfigDirFlag)
 			},
 		},
+		"ACCESSIBLE=true should set Accessible to true": {
+			envName:  "ACCESSIBLE",
+			envValue: "true",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, true, cfg.Accessible)
+			},
+		},
+		"ACCESSIBLE=1 should set Accessible to true": {
+			envName:  "ACCESSIBLE",
+			envValue: "1",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, true, cfg.Accessible)
+			},
+		},
+		"ACCESSIBLE=false should set Accessible to false": {
+			envName:  "ACCESSIBLE",
+			envValue: "false",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, false, cfg.Accessible)
+			},
+		},
+		"ACCESSIBLE=0 should set Accessible to false": {
+			envName:  "ACCESSIBLE",
+			envValue: "0",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, false, cfg.Accessible)
+			},
+		},
+		"empty ACCESSIBLE should set Accessible to false": {
+			envName:  "ACCESSIBLE",
+			envValue: "",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, false, cfg.Accessible)
+			},
+		},
 	}
 
 	for name, tc := range tableTests {

@@ -25,6 +25,7 @@ import (
 const slackAutoRequestAAAEnv = "SLACK_AUTO_REQUEST_AAA"
 const slackConfigDirEnv = "SLACK_CONFIG_DIR"
 const slackDisableTelemetryEnv = "SLACK_DISABLE_TELEMETRY"
+const slackAccessibleEnv = "ACCESSIBLE"
 const slackTestTraceEnv = "SLACK_TEST_TRACE"
 
 type Config struct {
