@@ -438,6 +438,18 @@ func TestFormsAccessible(t *testing.T) {
 		assert.Contains(t, out.String(), "Enter a number between 1 and 3")
 	})
 
+	t.Run("select form shows default hint in accessible mode", func(t *testing.T) {
+		var selected string
+		f := buildSelectForm(io, "Pick one", []string{"Alpha", "Beta"}, SelectPromptConfig{}, &selected)
+
+		var out strings.Builder
+		err := f.WithOutput(&out).WithInput(strings.NewReader("\n")).Run()
+
+		assert.NoError(t, err)
+		assert.Equal(t, "Alpha", selected)
+		assert.Contains(t, out.String(), `Pick one (press Enter for "Alpha")`)
+	})
+
 	t.Run("confirm form accepts yes/no input", func(t *testing.T) {
 		var choice bool
 		f := buildConfirmForm(io, "Continue?", &choice)
@@ -460,6 +472,18 @@ func TestFormsAccessible(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "my-app", input)
 		assert.Contains(t, out.String(), "Name?")
+	})
+
+	t.Run("input form shows default placeholder in accessible mode", func(t *testing.T) {
+		var input string
+		f := buildInputForm(io, "Name your app:", InputPromptConfig{Placeholder: "cool-app-123"}, &input)
+
+		var out strings.Builder
+		err := f.WithOutput(&out).WithInput(strings.NewReader("\n")).Run()
+
+		assert.NoError(t, err)
+		assert.Equal(t, "", input)
+		assert.Contains(t, out.String(), "Name your app: (default: cool-app-123)")
 	})
 }
 
