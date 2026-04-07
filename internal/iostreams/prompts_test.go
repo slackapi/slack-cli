@@ -273,6 +273,97 @@ func TestPasswordPrompt(t *testing.T) {
 	}
 }
 
+func TestConfirmPrompt(t *testing.T) {
+	tests := map[string]struct {
+		expectedError string
+	}{
+		"error if non-TTY": {
+			expectedError: slackerror.ErrPrompt,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.On("Stdout").Return(&slackdeps.FileMock{FileInfo: &slackdeps.FileInfoNamedPipe{}})
+			cfg := config.NewConfig(fsMock, osMock)
+			io := NewIOStreams(cfg, fsMock, osMock)
+
+			_, err := io.ConfirmPrompt(ctx, "Continue?", false)
+
+			assert.Error(t, err)
+			assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+		})
+	}
+}
+
+func TestInputPrompt(t *testing.T) {
+	tests := map[string]struct {
+		required      bool
+		expectedError string
+		expectedValue string
+	}{
+		"error if non-TTY and required": {
+			required:      true,
+			expectedError: slackerror.ErrPrompt,
+		},
+		"no error if non-TTY and optional": {
+			required:      false,
+			expectedValue: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.On("Stdout").Return(&slackdeps.FileMock{FileInfo: &slackdeps.FileInfoNamedPipe{}})
+			cfg := config.NewConfig(fsMock, osMock)
+			io := NewIOStreams(cfg, fsMock, osMock)
+
+			value, err := io.InputPrompt(ctx, "Enter name", InputPromptConfig{
+				Required: tc.required,
+			})
+
+			if err != nil {
+				assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedValue, value)
+			}
+		})
+	}
+}
+
+func TestMultiSelectPrompt(t *testing.T) {
+	tests := map[string]struct {
+		expectedError string
+	}{
+		"error if non-TTY": {
+			expectedError: slackerror.ErrPrompt,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.On("Stdout").Return(&slackdeps.FileMock{FileInfo: &slackdeps.FileInfoNamedPipe{}})
+			cfg := config.NewConfig(fsMock, osMock)
+			io := NewIOStreams(cfg, fsMock, osMock)
+
+			_, err := io.MultiSelectPrompt(ctx, "Pick items", []string{"a", "b"})
+
+			assert.Error(t, err)
+			assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+		})
+	}
+}
+
 func TestSelectPrompt(t *testing.T) {
 	tests := map[string]struct {
 		flagValue     string
