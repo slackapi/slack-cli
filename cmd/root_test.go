@@ -195,15 +195,6 @@ func TestVersionFlags(t *testing.T) {
 	assert.True(t, testutil.ContainsSemVer(output), `-v should output the version number but yielded "%s"`, output)
 }
 
-func Test_AccessibleImpliesNoColor(t *testing.T) {
-	cfg := &config.Config{Accessible: true}
-	// Simulate the logic from PersistentPreRunE
-	if cfg.Accessible {
-		cfg.NoColor = true
-	}
-	assert.True(t, cfg.NoColor, "--accessible should imply --no-color")
-}
-
 func Test_NewSuggestion(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 
