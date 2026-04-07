@@ -16,7 +16,6 @@ package docs
 
 import (
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -63,15 +62,6 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 // runDocsCommand opens Slack developer docs in the browser
 func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-
-	if cmd.Flags().Changed("search") {
-		return slackerror.New("docs_search_flag_removed").WithMessage(
-			"The --search flag has been removed.",
-		).WithRemediation(
-			"Use the search subcommand instead: %s",
-			style.Commandf("docs search \"<query>\"", false),
-		)
-	}
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "books",

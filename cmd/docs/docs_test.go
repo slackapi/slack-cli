@@ -44,10 +44,6 @@ func Test_Docs_DocsCommand(t *testing.T) {
 			CmdArgs:              []string{"Block Kit"},
 			ExpectedErrorStrings: []string{"unknown command"},
 		},
-		"rejects deprecated --search flag": {
-			CmdArgs:              []string{"--search"},
-			ExpectedErrorStrings: []string{"The --search flag has been removed"},
-		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCommand(cf)
 	})
