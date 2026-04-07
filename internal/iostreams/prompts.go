@@ -192,18 +192,30 @@ func errInteractivityFlags(cfg PromptConfig) error {
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
 // the message
 func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
+	if !io.IsTTY() {
+		return false, errInteractivityFlags(ConfirmPromptConfig{})
+	}
 	return confirmForm(io, ctx, message, defaultValue)
 }
 
 // InputPrompt prompts the user for a string value for the message, which can
 // optionally be made required
 func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
+	if !io.IsTTY() {
+		if cfg.IsRequired() {
+			return "", errInteractivityFlags(cfg)
+		}
+		return "", nil
+	}
 	return inputForm(io, ctx, message, cfg)
 }
 
 // MultiSelectPrompt prompts the user to select multiple values in a list and
 // returns the selected values
 func (io *IOStreams) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
+	if !io.IsTTY() {
+		return nil, errInteractivityFlags(MultiSelectPromptConfig{})
+	}
 	return multiSelectForm(io, ctx, message, options)
 }
 
