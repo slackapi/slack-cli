@@ -70,7 +70,7 @@ func TestClient_IconSetErrorIfMissingArgs(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: AppIconSetMethod,
+		ExpectedMethod: appIconSetMethod,
 	})
 	defer teardown()
 	_, err := c.IconSet(ctx, fs, "token", "", "")
@@ -82,7 +82,7 @@ func TestClient_IconSetErrorNoFile(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	fs := afero.NewMemMapFs()
 	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: AppIconSetMethod,
+		ExpectedMethod: appIconSetMethod,
 	})
 	defer teardown()
 	_, err := c.IconSet(ctx, fs, "token", "12345", imgFile)
@@ -105,7 +105,7 @@ func TestClient_IconSetErrorResponse(t *testing.T) {
 	err := png.Encode(myfile, myimage)
 	require.NoError(t, err)
 	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: AppIconSetMethod,
+		ExpectedMethod: appIconSetMethod,
 		Response:       `{"ok":false,"error":"invalid_app"}`,
 	})
 	defer teardown()
@@ -130,7 +130,7 @@ func TestClient_IconSetSuccess(t *testing.T) {
 	err := png.Encode(myfile, myimage)
 	require.NoError(t, err)
 	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: AppIconSetMethod,
+		ExpectedMethod: appIconSetMethod,
 		Response:       `{"ok":true}`,
 	})
 	defer teardown()
