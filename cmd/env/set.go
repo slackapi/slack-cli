@@ -139,7 +139,7 @@ func runEnvSetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if err != nil {
 			return err
 		}
-		details = append(details, fmt.Sprintf("Successfully added \"%s\" as an app environment variable", variableName))
+		details = append(details, fmt.Sprintf("Successfully set \"%s\" as an app environment variable", variableName))
 	} else {
 		exists, err := afero.Exists(clients.Fs, ".env")
 		if err != nil {
@@ -152,7 +152,7 @@ func runEnvSetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		if !exists {
 			details = append(details, "Created a project .env file that shouldn't be added to version control")
 		}
-		details = append(details, fmt.Sprintf("Successfully added \"%s\" as a project environment variable", variableName))
+		details = append(details, fmt.Sprintf("Successfully set \"%s\" as a project environment variable", variableName))
 	}
 
 	clients.IO.PrintTrace(ctx, slacktrace.EnvSetSuccess)

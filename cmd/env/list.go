@@ -118,7 +118,7 @@ func runEnvListCommandFunc(
 
 	details := []string{
 		fmt.Sprintf(
-			"There %s %d %s stored in this environment",
+			"There %s %d %s set in this environment",
 			style.Pluralize("is", "are", count),
 			count,
 			style.Pluralize("variable", "variables", count),

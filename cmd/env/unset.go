@@ -119,7 +119,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		}
 		selected, err := clients.IO.SelectPrompt(
 			ctx,
-			"Select a variable to remove",
+			"Select a variable to unset",
 			variables,
 			iostreams.SelectPromptConfig{
 				Flag:     clients.Config.Flags.Lookup("name"),
@@ -153,7 +153,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 		sort.Strings(variables)
 		selected, err := clients.IO.SelectPrompt(
 			ctx,
-			"Select a variable to remove",
+			"Select a variable to unset",
 			variables,
 			iostreams.SelectPromptConfig{
 				Flag:     clients.Config.Flags.Lookup("name"),
@@ -183,7 +183,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 			Emoji: "evergreen_tree",
 			Text:  "Environment Unset",
 			Secondary: []string{
-				fmt.Sprintf("Successfully removed \"%s\" as an app environment variable", variableName),
+				fmt.Sprintf("Successfully unset \"%s\" as an app environment variable", variableName),
 			},
 		}))
 	} else {
@@ -196,7 +196,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 			Emoji: "evergreen_tree",
 			Text:  "Environment Unset",
 			Secondary: []string{
-				fmt.Sprintf("Successfully removed \"%s\" as a project environment variable", variableName),
+				fmt.Sprintf("Successfully unset \"%s\" as a project environment variable", variableName),
 			},
 		}))
 	}
