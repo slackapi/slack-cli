@@ -15,19 +15,13 @@
 package docs
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
 
 const docsURL = "https://docs.slack.dev"
-
-var searchMode bool
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -48,76 +42,37 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 				Command: "docs search \"Block Kit\" --output=browser",
 			},
 		}),
-		Args: cobra.ArbitraryArgs, // Allow any arguments
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runDocsCommand(clients, cmd, args)
+			return runDocsCommand(clients, cmd)
 		},
 		// Disable automatic suggestions for unknown commands
 		DisableSuggestions: true,
 	}
 
-	cmd.Flags().BoolVar(&searchMode, "search", false, "open Slack docs search page or search with query")
-
 	// Add the search subcommand
 	cmd.AddCommand(NewSearchCommand(clients))
+
+	// Catch removed --search flag
+	cmd.Flags().BoolP("search", "", false, "DEPRECATED: use 'docs search' subcommand instead")
 
 	return cmd
 }
 
 // runDocsCommand opens Slack developer docs in the browser
-func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
+func runDocsCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-
-	var finalURL string
-	var sectionText string
-
-	// Validate: if there are arguments, search subcommand must be used
-	if len(args) > 0 && !cmd.Flags().Changed("search") {
-		query := strings.Join(args, " ")
-		return slackerror.New(slackerror.ErrDocsSearchFlagRequired).WithMessage(
-			"Invalid docs command. Did you mean to search?",
-		).WithRemediation(
-			"Use search subcommand: %s",
-			style.Commandf(fmt.Sprintf("docs search \"%s\"", query), false),
-		)
-	}
-
-	if cmd.Flags().Changed("search") {
-		if len(args) > 0 {
-			// --search "query" (space-separated) - join all args as the query
-			query := strings.Join(args, " ")
-			finalURL = buildDocsSearchURL(query)
-			sectionText = "Docs Search"
-		} else {
-			// --search (no argument) - open search page
-			finalURL = fmt.Sprintf("%s/search/", docsURL)
-			sectionText = "Docs Search"
-		}
-	} else {
-		// No search flag: default homepage
-		finalURL = docsURL
-		sectionText = "Docs Open"
-	}
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "books",
-		Text:  sectionText,
+		Text:  "Docs Open",
 		Secondary: []string{
-			finalURL,
+			docsURL,
 		},
 	}))
 
-	clients.Browser().OpenURL(finalURL)
-
-	if cmd.Flags().Changed("search") {
-		traceValue := ""
-		if len(args) > 0 {
-			traceValue = strings.Join(args, " ")
-		}
-		clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, traceValue)
-	} else {
-		clients.IO.PrintTrace(ctx, slacktrace.DocsSuccess)
-	}
+	clients.Browser().OpenURL(docsURL)
+	clients.IO.PrintTrace(ctx, slacktrace.DocsSuccess)
 
 	return nil
 }
