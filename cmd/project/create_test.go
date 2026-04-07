@@ -120,7 +120,15 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"agent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				// Should skip category prompt and go directly to language selection
+				// Should skip category prompt and go directly to template selection
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  1, // Select Custom Agent
+						},
+						nil,
+					)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
@@ -151,7 +159,15 @@ func TestCreateCommand(t *testing.T) {
 		"creates an agent app with app name using agent argument": {
 			CmdArgs: []string{"agent", "my-agent-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				// Should skip category prompt and go directly to language selection
+				// Should skip category prompt and go directly to template selection
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  1, // Select Custom Agent
+						},
+						nil,
+					)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
@@ -178,12 +194,9 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
-		"creates a pydantic ai agent app with templates experiment": {
+		"creates a pydantic ai agent app": {
 			CmdArgs: []string{"my-pydantic-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "templates")
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
@@ -283,6 +296,14 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"agent", "--name", "my-custom-name"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Should skip category prompt due to agent shortcut
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  1, // Select Custom Agent
+						},
+						nil,
+					)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
@@ -346,6 +367,14 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"agent", "my-project", "--name", "my-name"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Should skip category prompt due to agent shortcut
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  1, // Select Custom Agent
+						},
+						nil,
+					)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
@@ -569,49 +598,6 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{
 				"Getting started",
-				"AI Agent apps",
-				"Automation apps",
-				"slack-samples/bolt-js-starter-template",
-				"slack-samples/bolt-python-starter-template",
-				"slack-samples/bolt-js-assistant-template",
-				"slack-samples/bolt-python-assistant-template",
-				"slack-samples/bolt-js-custom-function-template",
-				"slack-samples/bolt-python-custom-function-template",
-				"slack-samples/deno-starter-template",
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"lists agent templates with agent --list flag": {
-			CmdArgs: []string{"agent", "--list"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedOutputs: []string{
-				"AI Agent apps",
-				"slack-samples/bolt-js-assistant-template",
-				"slack-samples/bolt-python-assistant-template",
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-				output := cm.GetCombinedOutput()
-				assert.NotContains(t, output, "Getting started")
-				assert.NotContains(t, output, "Automation apps")
-			},
-		},
-		"lists all templates with --list flag and templates experiment": {
-			CmdArgs: []string{"--list"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "templates")
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedOutputs: []string{
-				"Getting started",
 				"slack-samples/bolt-js-starter-template",
 				"slack-samples/bolt-python-starter-template",
 				"Support agent",
@@ -630,12 +616,9 @@ func TestCreateCommand(t *testing.T) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
-		"lists agent templates with agent --list flag and templates experiment": {
+		"lists agent templates with agent --list flag": {
 			CmdArgs: []string{"agent", "--list"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "templates")
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 				createClientMock = new(CreateClientMock)
 				CreateFunc = createClientMock.Create
 			},
