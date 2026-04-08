@@ -4,7 +4,7 @@ Open Slack developer docs
 
 ## Description
 
-Open the Slack developer docs in your browser, with optional search functionality
+Open the Slack developer docs in your browser or search them using the search subcommand
 
 ```
 slack docs [flags]
@@ -13,8 +13,7 @@ slack docs [flags]
 ## Flags
 
 ```
-  -h, --help     help for docs
-      --search   open Slack docs search page or search with query
+  -h, --help   help for docs
 ```
 
 ## Global flags
@@ -34,14 +33,18 @@ slack docs [flags]
 ## Examples
 
 ```
-$ slack docs                       # Open Slack developer docs homepage
+# Open Slack developer docs homepage
+$ slack docs
 
 # Search Slack developer docs for Block Kit
-$ slack docs --search "Block Kit"
-$ slack docs --search              # Open Slack docs search page
+$ slack docs search "Block Kit"
+
+# Search docs and open results in browser
+$ slack docs search "Block Kit" --output=browser
 ```
 
 ## See also
 
 * [slack](slack)	 - Slack command-line tool
+* [slack docs search](slack_docs_search)	 - Search Slack developer docs
 

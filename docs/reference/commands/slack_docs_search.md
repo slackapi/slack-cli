@@ -1,25 +1,22 @@
-# `slack env list`
+# `slack docs search`
 
-List all environment variables of the project
+Search Slack developer docs
 
 ## Description
 
-List the environment variables available to the project.
-
-Commands that run in the context of a project source environment variables from
-the ".env" file. This includes the "run" command.
-
-The "deploy" command gathers environment variables from the ".env" file as well
-unless the app is using ROSI features.
+Search the Slack developer docs and return results in text, JSON, or browser
+format.
 
 ```
-slack env list [flags]
+slack docs search [query] [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help   help for list
+  -h, --help            help for search
+      --limit int       maximum number of text or json search results to return (default 20)
+      --output string   output format: text, json, browser (default "text")
 ```
 
 ## Global flags
@@ -39,10 +36,17 @@ slack env list [flags]
 ## Examples
 
 ```
-$ slack env list  # List all environment variables
+# Search docs and return text results
+$ slack docs search "Block Kit"
+
+# Search docs and open results in browser
+$ slack docs search "webhooks" --output=browser
+
+# Search docs with limited JSON results
+$ slack docs search "api" --output=json --limit=5
 ```
 
 ## See also
 
-* [slack env](slack_env)	 - Set, unset, or list environment variables
+* [slack docs](slack_docs)	 - Open Slack developer docs
 
