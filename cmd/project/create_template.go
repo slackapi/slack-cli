@@ -49,8 +49,8 @@ func getSelectionOptions(categoryID string) []promptObject {
 				Repository: "slack-cli#ai-apps/support-agent",
 			},
 			{
-				Title:      fmt.Sprintf("Custom Agent %s", style.Secondary("Start from scratch")),
-				Repository: "slack-cli#ai-apps/custom-agent",
+				Title:      fmt.Sprintf("Starter Agent %s", style.Secondary("Start from scratch")),
+				Repository: "slack-cli#ai-apps/starter-agent",
 			},
 		},
 		"slack-cli#automation-apps": {
@@ -91,14 +91,14 @@ func getFrameworkOptions(template string) []promptObject {
 				Subdir:     "pydantic-ai",
 			},
 		},
-		"slack-cli#ai-apps/custom-agent": {
+		"slack-cli#ai-apps/starter-agent": {
 			{
 				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
-				Repository: "slack-samples/bolt-js-assistant-template",
+				Repository: "slack-samples/bolt-js-starter-agent",
 			},
 			{
 				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
-				Repository: "slack-samples/bolt-python-assistant-template",
+				Repository: "slack-samples/bolt-python-starter-agent",
 			},
 		},
 	}
@@ -301,13 +301,13 @@ func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryS
 	if categoryShortcut == "agent" {
 		categories = []categoryInfo{
 			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
-			{id: "slack-cli#ai-apps/custom-agent", name: "Custom agent"},
+			{id: "slack-cli#ai-apps/starter-agent", name: "Starter agent"},
 		}
 	} else {
 		categories = []categoryInfo{
 			{id: "slack-cli#getting-started", name: "Getting started"},
 			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
-			{id: "slack-cli#ai-apps/custom-agent", name: "Custom agent"},
+			{id: "slack-cli#ai-apps/starter-agent", name: "Starter agent"},
 			{id: "slack-cli#automation-apps", name: "Automation apps"},
 		}
 	}

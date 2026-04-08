@@ -125,7 +125,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Custom Agent
+							Index:  1, // Select Starter Agent
 						},
 						nil,
 					)
@@ -144,7 +144,7 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
 					AppName:  "my-agent",
@@ -164,7 +164,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Custom Agent
+							Index:  1, // Select Starter Agent
 						},
 						nil,
 					)
@@ -181,7 +181,7 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-starter-agent")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
 					AppName:  "my-agent-app",
@@ -300,7 +300,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Custom Agent
+							Index:  1, // Select Starter Agent
 						},
 						nil,
 					)
@@ -317,7 +317,7 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
 					AppName:  "my-custom-name", // --name flag overrides
@@ -371,7 +371,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Custom Agent
+							Index:  1, // Select Starter Agent
 						},
 						nil,
 					)
@@ -388,7 +388,7 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
 					AppName:  "my-name", // --name flag overrides "my-project" positional arg
@@ -604,9 +604,9 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
-				"Custom agent",
-				"slack-samples/bolt-js-assistant-template",
-				"slack-samples/bolt-python-assistant-template",
+				"Starter agent",
+				"slack-samples/bolt-js-starter-agent",
+				"slack-samples/bolt-python-starter-agent",
 				"Automation apps",
 				"slack-samples/bolt-js-custom-function-template",
 				"slack-samples/bolt-python-custom-function-template",
@@ -627,9 +627,9 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
-				"Custom agent",
-				"slack-samples/bolt-js-assistant-template",
-				"slack-samples/bolt-python-assistant-template",
+				"Starter agent",
+				"slack-samples/bolt-js-starter-agent",
+				"slack-samples/bolt-python-starter-agent",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
