@@ -222,6 +222,12 @@ Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure
 
 ---
 
+### at_active_sandbox_limit {#at_active_sandbox_limit}
+
+**Message**: You've reached the maximum number of active sandboxes
+
+---
+
 ### auth_prod_token_not_found {#auth_prod_token_not_found}
 
 **Message**: Couldn't find a valid auth token for the Slack API
@@ -498,17 +504,39 @@ Approval is pending review
 
 ---
 
-### docs_search_flag_required {#docs_search_flag_required}
-
-**Message**: Invalid docs command. Did you mean to search?
-
-**Remediation**: Use --search flag: `slack docs --search "<query>"`
-
----
-
 ### documentation_generation_failed {#documentation_generation_failed}
 
 **Message**: Failed to generate documentation
+
+---
+
+### domain_taken {#domain_taken}
+
+**Message**: This domain has been claimed by another sandbox
+
+---
+
+### dotenv_file_parse_error {#dotenv_file_parse_error}
+
+**Message**: Failed to parse the .env file
+
+---
+
+### dotenv_file_read_error {#dotenv_file_read_error}
+
+**Message**: Failed to read the .env file
+
+---
+
+### dotenv_file_write_error {#dotenv_file_write_error}
+
+**Message**: Failed to write the .env file
+
+---
+
+### dotenv_var_marshal_error {#dotenv_var_marshal_error}
+
+**Message**: Failed to marshal the .env variable
 
 ---
 
@@ -740,6 +768,14 @@ Or choose a specific app with `--app <app_id>`
 
 ---
 
+### invalid_archive_ttl {#invalid_archive_ttl}
+
+**Message**: Invalid TTL
+
+**Remediation**: Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo
+
+---
+
 ### invalid_args {#invalid_args}
 
 **Message**: Required arguments either were not provided or contain invalid values
@@ -880,6 +916,14 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### invalid_sandbox_team_id {#invalid_sandbox_team_id}
+
+**Message**: The provided sandbox team ID is invalid
+
+**Remediation**: List your sandboxes with the `slack sandbox list` command to find the ID
+
+---
+
 ### invalid_scopes {#invalid_scopes}
 
 **Message**: Some of the provided scopes do not exist
@@ -897,6 +941,12 @@ Read about manifest sourcing with the `slack manifest info --help` command
 **Message**: Current directory is not a Slack project
 
 **Remediation**: Change in to a Slack project directory. A Slack project always includes the Slack hooks file (`.slack/hooks.json`).
+
+---
+
+### invalid_template_id {#invalid_template_id}
+
+**Message**: The provided sandbox template value is invalid
 
 ---
 

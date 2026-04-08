@@ -50,7 +50,7 @@ $ slack docs    # Open Slack developer docs
 * [slack deploy](slack_deploy)	 - Deploy the app to the Slack Platform
 * [slack docs](slack_docs)	 - Open Slack developer docs
 * [slack doctor](slack_doctor)	 - Check and report on system and app information
-* [slack env](slack_env)	 - Add, remove, or list environment variables
+* [slack env](slack_env)	 - Set, unset, or list environment variables
 * [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
 * [slack feedback](slack_feedback)	 - Share feedback about your experience or project
 * [slack function](slack_function)	 - Manage the functions of an app

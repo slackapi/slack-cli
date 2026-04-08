@@ -7,7 +7,7 @@ Start a local server to develop and run the app locally
 Start a local server to develop and run the app locally while watching for file changes
 
 ```
-slack platform run [flags]
+slack platform run [app-file-path] [flags]
 ```
 
 ## Flags
@@ -39,11 +39,10 @@ slack platform run [flags]
 ## Examples
 
 ```
-# Start a local development server
-$ slack platform run
+$ slack platform run               # Start a local development server
 
-# Run a local development server with debug activity
-$ slack platform run --activity-level debug
+# Run a local development server with a custom app entry point
+$ slack platform run ./src/app.py
 
 # Run a local development server with cleanup
 $ slack platform run --cleanup
