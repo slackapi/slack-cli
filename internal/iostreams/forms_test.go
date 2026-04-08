@@ -447,7 +447,7 @@ func TestFormsAccessible(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "Alpha", selected)
-		assert.Contains(t, out.String(), `Pick one (press Enter for "Alpha")`)
+		assert.Contains(t, out.String(), "Pick one (press Enter for 1)")
 	})
 
 	t.Run("confirm form accepts yes/no input", func(t *testing.T) {
