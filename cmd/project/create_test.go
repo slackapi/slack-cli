@@ -133,7 +133,15 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  0, // Select Node.js template
+							Index:  0, // Select Node.js
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an adapter:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
 						},
 						nil,
 					)
@@ -146,9 +154,11 @@ func TestCreateCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
 					AppName:  "my-agent",
 					Template: template,
+					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
@@ -172,7 +182,15 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Python template
+							Index:  1, // Select Python
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an adapter:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
 						},
 						nil,
 					)
@@ -183,9 +201,11 @@ func TestCreateCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
 					AppName:  "my-agent-app",
 					Template: template,
+					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
@@ -202,7 +222,9 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0}, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil)
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Bolt for Python
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an adapter:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil) // Select Pydantic AI
 				createClientMock = new(CreateClientMock)
 				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
@@ -312,6 +334,14 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an adapter:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
+						},
+						nil,
+					)
 				createClientMock = new(CreateClientMock)
 				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
@@ -319,9 +349,11 @@ func TestCreateCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
 					AppName:  "my-custom-name", // --name flag overrides
 					Template: template,
+					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (shortcut was triggered)
@@ -383,6 +415,14 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an adapter:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
+						},
+						nil,
+					)
 				createClientMock = new(CreateClientMock)
 				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
 				CreateFunc = createClientMock.Create
@@ -390,9 +430,11 @@ func TestCreateCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
 					AppName:  "my-name", // --name flag overrides "my-project" positional arg
 					Template: template,
+					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (agent shortcut was triggered)
@@ -601,12 +643,17 @@ func TestCreateCommand(t *testing.T) {
 				"slack-samples/bolt-js-starter-template",
 				"slack-samples/bolt-python-starter-template",
 				"Support agent",
+				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Starter agent",
-				"slack-samples/bolt-js-starter-agent",
-				"slack-samples/bolt-python-starter-agent",
+				"slack-samples/bolt-js-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir pydantic-ai",
 				"Automation apps",
 				"slack-samples/bolt-js-custom-function-template",
 				"slack-samples/bolt-python-custom-function-template",
@@ -624,12 +671,17 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{
 				"Support agent",
+				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Starter agent",
-				"slack-samples/bolt-js-starter-agent",
-				"slack-samples/bolt-python-starter-agent",
+				"slack-samples/bolt-js-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir pydantic-ai",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
