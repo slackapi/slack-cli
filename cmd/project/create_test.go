@@ -125,7 +125,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Starter Agent
+							Index:  0, // Select Starter Agent
 						},
 						nil,
 					)
@@ -174,7 +174,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Starter Agent
+							Index:  0, // Select Starter Agent
 						},
 						nil,
 					)
@@ -220,7 +220,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0}, nil)
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Support Agent
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Bolt for Python
 				cm.IO.On("SelectPrompt", mock.Anything, "Select an adapter:", mock.Anything, mock.Anything).
@@ -322,7 +322,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Starter Agent
+							Index:  0, // Select Starter Agent
 						},
 						nil,
 					)
@@ -403,7 +403,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Starter Agent
+							Index:  0, // Select Starter Agent
 						},
 						nil,
 					)
@@ -642,18 +642,18 @@ func TestCreateCommand(t *testing.T) {
 				"Getting started",
 				"slack-samples/bolt-js-starter-template",
 				"slack-samples/bolt-python-starter-template",
-				"Support agent",
-				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
-				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
-				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
-				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
-				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Starter agent",
 				"slack-samples/bolt-js-starter-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-js-starter-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-starter-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-starter-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-starter-agent --subdir pydantic-ai",
+				"Support agent",
+				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Automation apps",
 				"slack-samples/bolt-js-custom-function-template",
 				"slack-samples/bolt-python-custom-function-template",
@@ -670,18 +670,18 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedOutputs: []string{
-				"Support agent",
-				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
-				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
-				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
-				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
-				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 				"Starter agent",
 				"slack-samples/bolt-js-starter-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-js-starter-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-starter-agent --subdir claude-agent-sdk",
 				"slack-samples/bolt-python-starter-agent --subdir openai-agents-sdk",
 				"slack-samples/bolt-python-starter-agent --subdir pydantic-ai",
+				"Support agent",
+				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)

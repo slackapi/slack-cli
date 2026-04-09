@@ -45,12 +45,12 @@ func getSelectionOptions(categoryID string) []promptObject {
 		},
 		"slack-cli#ai-apps": {
 			{
-				Title:      fmt.Sprintf("Support Agent %s", style.Secondary("Resolve IT support cases")),
-				Repository: "slack-cli#ai-apps/support-agent",
-			},
-			{
 				Title:      fmt.Sprintf("Starter Agent %s", style.Secondary("Start from scratch")),
 				Repository: "slack-cli#ai-apps/starter-agent",
+			},
+			{
+				Title:      fmt.Sprintf("Support Agent %s", style.Secondary("Resolve IT support cases")),
+				Repository: "slack-cli#ai-apps/support-agent",
 			},
 		},
 		"slack-cli#automation-apps": {
@@ -390,14 +390,14 @@ func listTemplates(ctx context.Context, clients *shared.ClientFactory, categoryS
 	var categories []categoryInfo
 	if categoryShortcut == "agent" {
 		categories = []categoryInfo{
-			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
 			{id: "slack-cli#ai-apps/starter-agent", name: "Starter agent"},
+			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
 		}
 	} else {
 		categories = []categoryInfo{
 			{id: "slack-cli#getting-started", name: "Getting started"},
-			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
 			{id: "slack-cli#ai-apps/starter-agent", name: "Starter agent"},
+			{id: "slack-cli#ai-apps/support-agent", name: "Support agent"},
 			{id: "slack-cli#automation-apps", name: "Automation apps"},
 		}
 	}
