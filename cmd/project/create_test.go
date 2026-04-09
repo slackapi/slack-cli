@@ -129,7 +129,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -178,7 +178,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -221,7 +221,7 @@ func TestCreateCommand(t *testing.T) {
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Support Agent
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Bolt for Python
 				cm.IO.On("SelectPrompt", mock.Anything, "Select an agent framework:", mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil) // Select Pydantic AI
@@ -326,7 +326,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -407,7 +407,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,

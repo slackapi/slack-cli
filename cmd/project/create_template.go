@@ -287,7 +287,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 	for i, opt := range frameworks {
 		frameworkChoices[i] = opt.Title
 	}
-	frameworkSelection, err := clients.IO.SelectPrompt(ctx, "Select a framework:", frameworkChoices, iostreams.SelectPromptConfig{
+	frameworkSelection, err := clients.IO.SelectPrompt(ctx, "Select a Bolt framework:", frameworkChoices, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
 			return frameworks[index].Description
 		},
