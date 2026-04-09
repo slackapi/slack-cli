@@ -308,7 +308,7 @@ func promptTemplateSelection(cmd *cobra.Command, clients *shared.ClientFactory, 
 		for i, opt := range adapters {
 			adapterChoices[i] = opt.Title
 		}
-		adapterSelection, err := clients.IO.SelectPrompt(ctx, "Select an adapter:", adapterChoices, iostreams.SelectPromptConfig{
+		adapterSelection, err := clients.IO.SelectPrompt(ctx, "Select an agent framework:", adapterChoices, iostreams.SelectPromptConfig{
 			Description: func(value string, index int) string {
 				return adapters[index].Description
 			},
