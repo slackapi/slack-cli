@@ -76,21 +76,21 @@ func getFrameworkOptions(template string) []promptObject {
 	frameworkPromptObjects := map[string][]promptObject{
 		"slack-cli#ai-apps/support-agent": {
 			{
-				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Support Agent")),
 				Repository: "slack-cli#ai-apps/support-agent/bolt-js",
 			},
 			{
-				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Support Agent")),
 				Repository: "slack-cli#ai-apps/support-agent/bolt-python",
 			},
 		},
 		"slack-cli#ai-apps/starter-agent": {
 			{
-				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Node.js")),
+				Title:      fmt.Sprintf("Bolt for JavaScript %s", style.Secondary("Starter Agent")),
 				Repository: "slack-cli#ai-apps/starter-agent/bolt-js",
 			},
 			{
-				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Python")),
+				Title:      fmt.Sprintf("Bolt for Python %s", style.Secondary("Starter Agent")),
 				Repository: "slack-cli#ai-apps/starter-agent/bolt-python",
 			},
 		},
@@ -103,58 +103,58 @@ func getAdapterOptions(framework string) []promptObject {
 	adapterPromptObjects := map[string][]promptObject{
 		"slack-cli#ai-apps/support-agent/bolt-js": {
 			{
-				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for JavaScript - Support Agent Template")),
+				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for JavaScript - Support Agent")),
 				Repository: "slack-samples/bolt-js-support-agent",
 				Subdir:     "claude-agent-sdk",
 			},
 			{
-				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for JavaScript - Support Agent Template")),
+				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for JavaScript - Support Agent")),
 				Repository: "slack-samples/bolt-js-support-agent",
 				Subdir:     "openai-agents-sdk",
 			},
 		},
 		"slack-cli#ai-apps/support-agent/bolt-python": {
 			{
-				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for Python - Support Agent Template")),
+				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for Python - Support Agent")),
 				Repository: "slack-samples/bolt-python-support-agent",
 				Subdir:     "claude-agent-sdk",
 			},
 			{
-				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for Python - Support Agent Template")),
+				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for Python - Support Agent")),
 				Repository: "slack-samples/bolt-python-support-agent",
 				Subdir:     "openai-agents-sdk",
 			},
 			{
-				Title:      fmt.Sprintf("Pydantic AI %s", style.Secondary("Bolt for Python - Support Agent Template")),
+				Title:      fmt.Sprintf("Pydantic AI %s", style.Secondary("Bolt for Python - Support Agent")),
 				Repository: "slack-samples/bolt-python-support-agent",
 				Subdir:     "pydantic-ai",
 			},
 		},
 		"slack-cli#ai-apps/starter-agent/bolt-js": {
 			{
-				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for JavaScript - Starter Agent Template")),
+				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for JavaScript - Starter Agent")),
 				Repository: "slack-samples/bolt-js-starter-agent",
 				Subdir:     "claude-agent-sdk",
 			},
 			{
-				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for JavaScript - Starter Agent Template")),
+				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for JavaScript - Starter Agent")),
 				Repository: "slack-samples/bolt-js-starter-agent",
 				Subdir:     "openai-agents-sdk",
 			},
 		},
 		"slack-cli#ai-apps/starter-agent/bolt-python": {
 			{
-				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for Python - Starter Agent Template")),
+				Title:      fmt.Sprintf("Claude Agent SDK %s", style.Secondary("Bolt for Python - Starter Agent")),
 				Repository: "slack-samples/bolt-python-starter-agent",
 				Subdir:     "claude-agent-sdk",
 			},
 			{
-				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for Python - Starter Agent Template")),
+				Title:      fmt.Sprintf("OpenAI Agents SDK %s", style.Secondary("Bolt for Python - Starter Agent")),
 				Repository: "slack-samples/bolt-python-starter-agent",
 				Subdir:     "openai-agents-sdk",
 			},
 			{
-				Title:      fmt.Sprintf("Pydantic AI %s", style.Secondary("Bolt for Python - Starter Agent Template")),
+				Title:      fmt.Sprintf("Pydantic AI %s", style.Secondary("Bolt for Python - Starter Agent")),
 				Repository: "slack-samples/bolt-python-starter-agent",
 				Subdir:     "pydantic-ai",
 			},
