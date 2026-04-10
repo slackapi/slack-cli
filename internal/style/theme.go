@@ -18,14 +18,10 @@ package style
 // Uses official Slack brand colors defined in colors.go.
 
 import (
-	"fmt"
 	"runtime"
 
 	huh "charm.land/huh/v2"
 	lipgloss "charm.land/lipgloss/v2"
-
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/AlecAivazis/survey/v2/core"
 )
 
 // ThemeSlack returns a huh Theme styled with Slack brand colors.
@@ -126,8 +122,44 @@ func Chevron() string {
 	return "❱"
 }
 
+// ThemePlain returns a huh Theme with no colors or formatting.
+func ThemePlain() huh.Theme {
+	return huh.ThemeFunc(func(_ bool) *huh.Styles {
+		t := huh.ThemeBase(false)
+		t.Focused.Title = lipgloss.NewStyle()
+		t.Focused.Description = lipgloss.NewStyle()
+		t.Focused.ErrorIndicator = lipgloss.NewStyle().SetString(" *")
+		t.Focused.ErrorMessage = lipgloss.NewStyle()
+		t.Focused.SelectSelector = lipgloss.NewStyle().SetString("> ")
+		t.Focused.Option = lipgloss.NewStyle()
+		t.Focused.MultiSelectSelector = lipgloss.NewStyle().SetString("> ")
+		t.Focused.SelectedOption = lipgloss.NewStyle()
+		t.Focused.SelectedPrefix = lipgloss.NewStyle().SetString("[x] ")
+		t.Focused.UnselectedOption = lipgloss.NewStyle()
+		t.Focused.UnselectedPrefix = lipgloss.NewStyle().SetString("[ ] ")
+		t.Focused.FocusedButton = lipgloss.NewStyle().SetString("  >").PaddingRight(3)
+		t.Focused.BlurredButton = lipgloss.NewStyle().SetString("   ").PaddingRight(3)
+		t.Focused.TextInput.Cursor = lipgloss.NewStyle()
+		t.Focused.TextInput.Prompt = lipgloss.NewStyle()
+		t.Focused.TextInput.Placeholder = lipgloss.NewStyle()
+		t.Focused.TextInput.Text = lipgloss.NewStyle()
+		t.Focused.Base = lipgloss.NewStyle().PaddingLeft(1).BorderStyle(lipgloss.ThickBorder()).BorderLeft(true)
+		t.Blurred = t.Focused
+		t.Blurred.Base = t.Focused.Base.BorderStyle(lipgloss.HiddenBorder())
+		t.Blurred.SelectSelector = lipgloss.NewStyle().SetString("  ")
+		t.Blurred.MultiSelectSelector = lipgloss.NewStyle().SetString("  ")
+		t.Help.ShortKey = lipgloss.NewStyle()
+		t.Help.ShortDesc = lipgloss.NewStyle()
+		t.Help.ShortSeparator = lipgloss.NewStyle()
+		t.Help.FullKey = lipgloss.NewStyle()
+		t.Help.FullDesc = lipgloss.NewStyle()
+		t.Help.FullSeparator = lipgloss.NewStyle()
+		return t
+	})
+}
+
 // ThemeSurvey returns a huh Theme that matches the legacy survey prompt styling.
-// Applied when experiment.Huh is on but experiment.Lipgloss is off.
+// Applied when experiment.Lipgloss is off.
 func ThemeSurvey() huh.Theme {
 	return huh.ThemeFunc(themeSurvey)
 }
@@ -172,22 +204,4 @@ func themeSurvey(isDark bool) *huh.Styles {
 		SetString("[ ] ")
 
 	return t
-}
-
-// SurveyIcons returns customizations to the appearance of survey prompts.
-func SurveyIcons() survey.AskOpt {
-	if !isStyleEnabled {
-		core.DisableColor = true
-	}
-
-	cursor := Chevron()
-
-	return survey.WithIcons(func(icons *survey.IconSet) {
-		icons.SelectFocus.Text = cursor
-		icons.SelectFocus.Format = fmt.Sprintf("%d+b", blue)
-		icons.MarkedOption.Format = fmt.Sprintf("%d+b", blue)
-
-		icons.Question.Text = "?"
-		icons.Question.Format = fmt.Sprintf("%d+hb", gray)
-	})
 }

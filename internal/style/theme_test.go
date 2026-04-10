@@ -18,7 +18,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/AlecAivazis/survey/v2/core"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -116,6 +115,40 @@ func TestThemeSurvey(t *testing.T) {
 	}
 }
 
+func TestThemePlain(t *testing.T) {
+	theme := ThemePlain().Theme(false)
+	tests := map[string]struct {
+		rendered string
+		expected string
+	}{
+		"title renders plain text": {
+			rendered: theme.Focused.Title.Render("x"),
+			expected: "x",
+		},
+		"error message renders plain text": {
+			rendered: theme.Focused.ErrorMessage.Render("err"),
+			expected: "err",
+		},
+		"select selector renders plain >": {
+			rendered: theme.Focused.SelectSelector.Render(),
+			expected: "> ",
+		},
+		"selected prefix renders [x]": {
+			rendered: theme.Focused.SelectedPrefix.Render(),
+			expected: "[x] ",
+		},
+		"unselected prefix renders [ ]": {
+			rendered: theme.Focused.UnselectedPrefix.Render(),
+			expected: "[ ] ",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.rendered)
+		})
+	}
+}
+
 func TestChevron(t *testing.T) {
 	tests := map[string]struct {
 		styleEnabled bool
@@ -143,29 +176,6 @@ func TestChevron(t *testing.T) {
 				isStyleEnabled = prev
 			}()
 			assert.Equal(t, tc.expected, Chevron())
-		})
-	}
-}
-
-func TestSurveyIcons(t *testing.T) {
-	tests := map[string]struct {
-		styleEnabled bool
-	}{
-		"styles are not enabled": {
-			styleEnabled: false,
-		},
-		"styles are enabled": {
-			styleEnabled: true,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			core.DisableColor = false
-			isStyleEnabled = tc.styleEnabled
-
-			_ = SurveyIcons()
-			assert.NotEqual(t, tc.styleEnabled, core.DisableColor)
 		})
 	}
 }

@@ -305,41 +305,49 @@ func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 	tests := map[string]struct {
 		settings        *AppSettings
 		expectedHosted  bool
+		expectedLocal   bool
 		expectedRuntime FunctionRuntime
 	}{
 		"undefined settings have no function runtime": {
 			settings:        nil,
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "",
 		},
 		"undefined function runtime has no function runtime": {
 			settings:        &AppSettings{},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "",
 		},
 		"setting the function runtime to slack is hosted": {
 			settings:        &AppSettings{FunctionRuntime: "slack"},
 			expectedHosted:  true,
+			expectedLocal:   false,
 			expectedRuntime: SlackHosted,
 		},
 		"setting the function runtime to remote is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "remote"},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: Remote,
 		},
-		"setting the function runtime to local is not hosted": {
+		"setting the function runtime to local is local": {
 			settings:        &AppSettings{FunctionRuntime: "local"},
 			expectedHosted:  false,
+			expectedLocal:   true,
 			expectedRuntime: LocallyRun,
 		},
 		"setting the function runtime to random is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "sparkling-butterflies"},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "sparkling-butterflies",
 		},
 		"setting the function runtime to padded string is possible": {
 			settings:        &AppSettings{FunctionRuntime: "    "},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "    ",
 		},
 	}
@@ -349,6 +357,7 @@ func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 				Settings: tc.settings,
 			}
 			assert.Equal(t, tc.expectedHosted, manifest.IsFunctionRuntimeSlackHosted())
+			assert.Equal(t, tc.expectedLocal, manifest.IsFunctionRuntimeLocal())
 			assert.Equal(t, tc.expectedRuntime, manifest.FunctionRuntime())
 			if tc.settings != nil {
 				assert.Equal(t, tc.expectedRuntime, manifest.Settings.FunctionRuntime)

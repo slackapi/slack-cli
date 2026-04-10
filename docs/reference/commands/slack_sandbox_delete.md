@@ -1,25 +1,21 @@
-# `slack env list`
+# `slack sandbox delete`
 
-List all environment variables of the project
+Delete a developer sandbox
 
 ## Description
 
-List the environment variables available to the project.
-
-Commands that run in the context of a project source environment variables from
-the ".env" file. This includes the "run" command.
-
-The "deploy" command gathers environment variables from the ".env" file as well
-unless the app is using ROSI features.
+Permanently delete a sandbox and all of its data
 
 ```
-slack env list [flags]
+slack sandbox delete [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help   help for list
+      --force               Skip confirmation prompt
+  -h, --help                help for delete
+      --sandbox-id string   Sandbox team ID to delete
 ```
 
 ## Global flags
@@ -28,7 +24,6 @@ slack env list [flags]
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
-  -f, --force                ignore warnings and continue executing command
       --no-color             remove styles and formatting from outputs
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
@@ -39,10 +34,11 @@ slack env list [flags]
 ## Examples
 
 ```
-$ slack env list  # List all environment variables
+# Delete a sandbox identified by its team ID
+$ slack sandbox delete --sandbox-id E0123456
 ```
 
 ## See also
 
-* [slack env](slack_env)	 - Set, unset, or list environment variables
+* [slack sandbox](slack_sandbox)	 - Manage developer sandboxes
 

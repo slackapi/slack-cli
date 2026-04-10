@@ -17,22 +17,90 @@ package env
 import (
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_Env_Command(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"shows the help page without commands or arguments or flags": {
 			ExpectedStdoutOutputs: []string{
-				"Add an environment variable",
+				"Set an environment variable",
 				"List all environment variables",
-				"Remove an environment variable",
+				"Unset an environment variable",
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
 		cmd := NewCommand(clients)
 		return cmd
 	})
+}
+
+func Test_isHostedRuntime(t *testing.T) {
+	tests := map[string]struct {
+		mockManifest types.SlackYaml
+		mockError    error
+		expected     bool
+	}{
+		"returns true for slack hosted runtime": {
+			mockManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					Settings: &types.AppSettings{
+						FunctionRuntime: types.SlackHosted,
+					},
+				},
+			},
+			expected: true,
+		},
+		"returns true for local runtime": {
+			mockManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					Settings: &types.AppSettings{
+						FunctionRuntime: types.LocallyRun,
+					},
+				},
+			},
+			expected: true,
+		},
+		"returns false for remote runtime": {
+			mockManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					Settings: &types.AppSettings{
+						FunctionRuntime: types.Remote,
+					},
+				},
+			},
+			expected: false,
+		},
+		"returns false for empty runtime": {
+			mockManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					Settings: &types.AppSettings{},
+				},
+			},
+			expected: false,
+		},
+		"returns false when manifest fetch fails": {
+			mockError: slackerror.New(slackerror.ErrSDKHookInvocationFailed),
+			expected:  false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			manifestMock := &app.ManifestMockObject{}
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, tc.mockError)
+			clientsMock.AppClient.Manifest = manifestMock
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			assert.Equal(t, tc.expected, isHostedRuntime(ctx, clients))
+		})
+	}
 }

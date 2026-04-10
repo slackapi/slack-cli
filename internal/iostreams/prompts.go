@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/pflag"
 )
@@ -193,28 +192,31 @@ func errInteractivityFlags(cfg PromptConfig) error {
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
 // the message
 func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
-	if io.config.WithExperimentOn(experiment.Huh) {
-		return confirmForm(io, ctx, message, defaultValue)
+	if !io.IsTTY() {
+		return false, errInteractivityFlags(ConfirmPromptConfig{})
 	}
-	return surveyConfirmPrompt(io, ctx, message, defaultValue)
+	return confirmForm(io, ctx, message, defaultValue)
 }
 
 // InputPrompt prompts the user for a string value for the message, which can
 // optionally be made required
 func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
-	if io.config.WithExperimentOn(experiment.Huh) {
-		return inputForm(io, ctx, message, cfg)
+	if !io.IsTTY() {
+		if cfg.IsRequired() {
+			return "", errInteractivityFlags(cfg)
+		}
+		return "", nil
 	}
-	return surveyInputPrompt(io, ctx, message, cfg)
+	return inputForm(io, ctx, message, cfg)
 }
 
 // MultiSelectPrompt prompts the user to select multiple values in a list and
 // returns the selected values
 func (io *IOStreams) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
-	if io.config.WithExperimentOn(experiment.Huh) {
-		return multiSelectForm(io, ctx, message, options)
+	if !io.IsTTY() {
+		return nil, errInteractivityFlags(MultiSelectPromptConfig{})
 	}
-	return surveyMultiSelectPrompt(io, ctx, message, options)
+	return multiSelectForm(io, ctx, message, options)
 }
 
 // PasswordPrompt prompts the user with a hidden text input for the message
@@ -229,10 +231,7 @@ func (io *IOStreams) PasswordPrompt(ctx context.Context, message string, cfg Pas
 		return PasswordPromptResponse{}, errInteractivityFlags(cfg)
 	}
 
-	if io.config.WithExperimentOn(experiment.Huh) {
-		return passwordForm(io, ctx, message, cfg)
-	}
-	return surveyPasswordPrompt(io, ctx, message, cfg)
+	return passwordForm(io, ctx, message, cfg)
 }
 
 // SelectPrompt prompts the user to make a selection and returns the choice
@@ -257,8 +256,5 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 		}
 	}
 
-	if io.config.WithExperimentOn(experiment.Huh) {
-		return selectForm(io, ctx, msg, options, cfg)
-	}
-	return surveySelectPrompt(io, ctx, msg, options, cfg)
+	return selectForm(io, ctx, msg, options, cfg)
 }

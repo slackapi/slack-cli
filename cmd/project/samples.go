@@ -28,8 +28,6 @@ import (
 )
 
 // Flags
-var samplesTemplateURLFlag string
-var samplesGitBranchFlag string
 var samplesListFlag bool
 var samplesLanguageFlag string
 
@@ -56,13 +54,6 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	// DEPRECATED(semver:major): Prefer the create command when repository details are known
-	cmd.Flags().StringVarP(&samplesGitBranchFlag, "branch", "b", "", "name of git branch to checkout")
-	cmd.Flag("branch").Hidden = true
-	// DEPRECATED(semver:major): Prefer the create command when repository details are known
-	cmd.Flags().StringVarP(&samplesTemplateURLFlag, "template", "t", "", "template URL for your app")
-	cmd.Flag("template").Hidden = true
-
 	cmd.Flags().StringVar(&samplesLanguageFlag, "language", "", "runtime for the app framework\n  ex: \"deno\", \"node\", \"python\"")
 	cmd.Flags().BoolVar(&samplesListFlag, "list", false, "prints samples without interactivity")
 
@@ -72,11 +63,6 @@ func NewSamplesCommand(clients *shared.ClientFactory) *cobra.Command {
 // runSamplesCommand prompts for a sample then clones with the create command
 func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-
-	// DEPRECATED(semver:major): Prefer the create command when repository details are known
-	if cmd.Flag("branch").Changed || cmd.Flag("template").Changed {
-		clients.IO.PrintWarning(ctx, "DEPRECATED: The `--branch` and `--template` flags are deprecated for the `samples` command; use the `create` command instead")
-	}
 
 	sampler := api.NewHTTPClient(api.HTTPClientOptions{
 		TotalTimeOut: 60 * time.Second,
@@ -100,16 +86,11 @@ func runSamplesCommand(clients *shared.ClientFactory, cmd *cobra.Command, args [
 	// Instantiate the `create` command to call it using programmatically set flags
 	createCmd := NewCreateCommand(clients)
 
-	// Prepare template and branch flags with selected or provided repo values
+	// Prepare the template flag with the selected repo value
 	if err := createCmd.Flag("template").Value.Set(selectedSample); err != nil {
 		return err
 	}
 	createCmd.Flag("template").Changed = true
-	if err := createCmd.Flag("branch").Value.Set(samplesGitBranchFlag); err != nil {
-		return err
-	}
-	createCmd.Flag("branch").Changed = cmd.Flag("branch").Changed
-
 	// If preferred directory name is passed in as an argument to the `create`
 	// command first, honor that preference and use it to create the project
 	createCmd.SetArgs(args)
