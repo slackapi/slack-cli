@@ -282,6 +282,13 @@ jobs:
             echo "export RELEASE_REF=${RELEASE_REF}" >> $BASH_ENV
             echo "export RELEASE_REF=${RELEASE_REF}" >> << parameters.artifact_dir >>/release_ref
       - run:
+          name: Copy install scripts to artifacts
+          command: |
+            cp ./scripts/install.sh << parameters.artifact_dir >>/install.sh
+            cp ./scripts/install-dev.sh << parameters.artifact_dir >>/install-dev.sh
+            cp ./scripts/install-windows.ps1 << parameters.artifact_dir >>/install-windows.ps1
+            cp ./scripts/install-windows-dev.ps1 << parameters.artifact_dir >>/install-windows-dev.ps1
+      - run:
           name: Delete non-signed archive
           command: |
             rm << parameters.artifact_dir >>/slack_*_macOS_*.tar.gz
@@ -588,6 +595,20 @@ workflows:
             - code-sign
           context: slack-cli-release
           release_ref: dev-build
+      - s3-upload:
+          name: dev-upload-to-s3-install-dev-sh
+          s3-target-path: slack-cli
+          file-name: "install-dev.sh"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          name: dev-upload-to-s3-install-windows-dev-ps1
+          s3-target-path: slack-cli
+          file-name: "install-windows-dev.ps1"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
       - e2e-test:
           name: e2e-test-unix
           manual_trigger_windows: false
@@ -710,6 +731,22 @@ workflows:
           name: upload-to-s3-for-autoupdate-targz
           s3-target-path: cli
           file-name: "slack_cli_[0-9]*.tar.gz"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-install-sh
+          s3-target-path: slack-cli
+          file-name: "install.sh"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          <<: *filters-tag-triggered-workflow-job
+          name: upload-to-s3-install-windows-ps1
+          s3-target-path: slack-cli
+          file-name: "install-windows.ps1"
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
