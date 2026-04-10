@@ -14,7 +14,6 @@ name: Delete stale pre-releases
 # Only pre-releases are considered. Production releases (v1.2.3) and
 # the long-running dev-build pre-release are never touched.
 on:
-  pull_request:
   push:
     branches:
       - main
@@ -73,12 +72,12 @@ jobs:
 
             # Branch is gone — delete the stale pre-release and its tag
             echo "  Branch no longer exists, deleting pre-release: $TAG"
-            # if gh release --repo="$REPO" delete "$TAG" -y --cleanup-tag; then
-            #   echo "  Successfully deleted $TAG"
-            #   DELETED=$((DELETED + 1))
-            # else
-            #   echo "  Failed to delete $TAG"
-            # fi
+            if gh release --repo="$REPO" delete "$TAG" -y --cleanup-tag; then
+              echo "  Successfully deleted $TAG"
+              DELETED=$((DELETED + 1))
+            else
+              echo "  Failed to delete $TAG"
+            fi
             sleep 1
           done
 
