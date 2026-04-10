@@ -1,26 +1,22 @@
-# `slack env remove`
+# `slack docs search`
 
-Remove an environment variable from the app
+Search Slack developer docs
 
 ## Description
 
-Remove an environment variable from an app deployed to Slack managed
-infrastructure.
-
-If no variable name is provided, you will be prompted to select one.
-
-This command is supported for apps deployed to Slack managed infrastructure but
-other apps can attempt to run the command with the --force flag.
+Search the Slack developer docs and return results in text, JSON, or browser
+format.
 
 ```
-slack env remove <name> [flags]
+slack docs search [query] [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help          help for remove
-      --name string   choose the environment variable name
+  -h, --help            help for search
+      --limit int       maximum number of text or json search results to return (default 20)
+      --output string   output format: text, json, browser (default "text")
 ```
 
 ## Global flags
@@ -40,12 +36,17 @@ slack env remove <name> [flags]
 ## Examples
 
 ```
-# Select an environment variable to remove
-$ slack env remove
-$ slack env remove MAGIC_PASSWORD  # Remove an environment variable
+# Search docs and return text results
+$ slack docs search "Block Kit"
+
+# Search docs and open results in browser
+$ slack docs search "webhooks" --output=browser
+
+# Search docs with limited JSON results
+$ slack docs search "api" --output=json --limit=5
 ```
 
 ## See also
 
-* [slack env](slack_env)	 - Add, remove, or list environment variables
+* [slack docs](slack_docs)	 - Open Slack developer docs
 

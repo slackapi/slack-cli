@@ -1,24 +1,27 @@
-# `slack env add`
+# `slack env set`
 
-Add an environment variable to the app
+Set an environment variable for the project
 
 ## Description
 
-Add an environment variable to an app deployed to Slack managed infrastructure.
+Set an environment variable for the project.
 
 If a name or value is not provided, you will be prompted to provide these.
 
-This command is supported for apps deployed to Slack managed infrastructure but
-other apps can attempt to run the command with the --force flag.
+Commands that run in the context of a project source environment variables from
+the ".env" file. This includes the "run" command.
+
+The "deploy" command gathers environment variables from the ".env" file as well
+unless the app is using ROSI features.
 
 ```
-slack env add <name> <value> [flags]
+slack env set [name] [value] [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help           help for add
+  -h, --help           help for set
       --value string   set the environment variable value
 ```
 
@@ -40,14 +43,14 @@ slack env add <name> <value> [flags]
 
 ```
 # Prompt for an environment variable
-$ slack env add
-$ slack env add MAGIC_PASSWORD abracadbra  # Add an environment variable
+$ slack env set
+$ slack env set MAGIC_PASSWORD abracadbra  # Set an environment variable
 
 # Prompt for an environment variable value
-$ slack env add SECRET_PASSWORD
+$ slack env set SECRET_PASSWORD
 ```
 
 ## See also
 
-* [slack env](slack_env)	 - Add, remove, or list environment variables
+* [slack env](slack_env)	 - Set, unset, or list environment variables
 

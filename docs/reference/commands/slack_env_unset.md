@@ -1,10 +1,12 @@
-# `slack env`
+# `slack env unset`
 
-Set, unset, or list environment variables
+Unset an environment variable from the project
 
 ## Description
 
-Set, unset, or list environment variables for the project.
+Unset an environment variable from the project.
+
+If no variable name is provided, you will be prompted to select one.
 
 Commands that run in the context of a project source environment variables from
 the ".env" file. This includes the "run" command.
@@ -12,16 +14,15 @@ the ".env" file. This includes the "run" command.
 The "deploy" command gathers environment variables from the ".env" file as well
 unless the app is using ROSI features.
 
-Explore more: [https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli)
-
 ```
-slack env <subcommand> [flags]
+slack env unset [name] [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help   help for env
+  -h, --help          help for unset
+      --name string   choose the environment variable name
 ```
 
 ## Global flags
@@ -41,17 +42,12 @@ slack env <subcommand> [flags]
 ## Examples
 
 ```
-$ slack env set MAGIC_PASSWORD abracadbra  # Set an environment variable
-
-# List all environment variables
-$ slack env list
-$ slack env unset MAGIC_PASSWORD           # Unset an environment variable
+# Select an environment variable to unset
+$ slack env unset
+$ slack env unset MAGIC_PASSWORD  # Unset an environment variable
 ```
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack env list](slack_env_list)	 - List all environment variables of the project
-* [slack env set](slack_env_set)	 - Set an environment variable for the project
-* [slack env unset](slack_env_unset)	 - Unset an environment variable from the project
+* [slack env](slack_env)	 - Set, unset, or list environment variables
 
