@@ -1,6 +1,6 @@
 ---
 sidebar_label: Developing locally
-slug: /tools/slack-cli/guides/slack-cli-local-development
+slug: /tools/slack-cli/guides/developing-locally
 ---
 
 # Developing locally using the Slack CLI
