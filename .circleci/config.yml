@@ -588,6 +588,20 @@ workflows:
             - code-sign
           context: slack-cli-release
           release_ref: dev-build
+      - s3-upload:
+          name: dev-upload-to-s3-dev-macos-linux
+          s3-target-path: slack-cli
+          file-name: "slack_cli_dev_*.tar.gz"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
+      - s3-upload:
+          name: dev-upload-to-s3-dev-windows
+          s3-target-path: slack-cli
+          file-name: "slack_cli_dev_windows_64-bit.zip"
+          requires:
+            - create-github-release-and-artifacts
+          context: slack-cli-release
       - e2e-test:
           name: e2e-test-unix
           manual_trigger_windows: false
