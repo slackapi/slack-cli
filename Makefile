@@ -84,6 +84,7 @@ tag:
 		exit 1; \
 	fi
 	@printf "$(FONT_BOLD)Updating Docs$(FONT_RESET)\n"
+	rm -rf ./docs/reference/commands ./docs/reference/errors.md
 	./bin/slack docgen ./docs/reference --skip-update
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_arm64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_arm64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
