@@ -9,6 +9,7 @@
       "Bash(gh pr status:*)",
       "Bash(gh pr update-branch:*)",
       "Bash(gh pr view:*)",
+      "Bash(gh release list:*)",
       "Bash(gh search code:*)",
       "Bash(git diff:*)",
       "Bash(git fetch:*)",

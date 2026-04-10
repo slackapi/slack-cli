@@ -1,0 +1,84 @@
+name: Delete stale pre-releases
+# This workflow deletes pre-releases whose source branch no longer exists.
+#
+# The CircleCI configuration builds CLI binaries when a PR is opened.
+# These are uploaded to the upstream project as GitHub (pre-)releases.
+#
+# The release tag matches one of the following patterns:
+#  - v1.2.3-example-branch-placeholder  # Branches on upstream
+#  - v1.2.3-pull-12-head                # Branches from forks
+#
+# Runs on push to main (catches merges) and on a daily schedule
+# (catches closed-without-merge PRs and any other missed cleanups).
+#
+# Only pre-releases are considered. Production releases (v1.2.3) and
+# the long-running dev-build pre-release are never touched.
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  delete-stale-pre-releases:
+    name: Delete stale pre-releases
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete pre-releases for branches that no longer exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          REPO="slackapi/slack-cli"
+          DELETED=0
+
+          # Gather all pre-release tag names
+          PRE_RELEASES=$(gh release list --repo="$REPO" --json="tagName,isPrerelease" --limit=100 --jq '.[] | select(.isPrerelease) | .tagName')
+
+          for TAG in $PRE_RELEASES; do
+            # Skip the long-running dev-build pre-release
+            if [ "$TAG" = "dev-build" ]; then
+              continue
+            fi
+
+            echo "Checking pre-release: $TAG"
+
+            # Extract branch name from the tag. Tags follow the pattern:
+            #   v1.2.3-branch-name         (standard PR builds)
+            #   v1.2.3-branch-name-feature  (feature builds)
+            # Strip the leading semver prefix to recover the branch name.
+            BRANCH=$(echo "$TAG" | sed 's/^v[0-9]*\.[0-9]*\.[0-9]*-//')
+
+            # Feature builds have a "-feature" suffix that is not part of the branch name
+            BRANCH_WITHOUT_FEATURE=$(echo "$BRANCH" | sed 's/-feature$//')
+
+            # Check if the branch still exists on the remote
+            BRANCH_EXISTS=false
+            for CANDIDATE in "$BRANCH" "$BRANCH_WITHOUT_FEATURE"; do
+              if gh api "repos/$REPO/branches/$CANDIDATE" --silent 2>/dev/null; then
+                BRANCH_EXISTS=true
+                break
+              fi
+            done
+
+            if [ "$BRANCH_EXISTS" = "true" ]; then
+              echo "  Branch still exists, skipping"
+              continue
+            fi
+
+            # Branch is gone — delete the stale pre-release and its tag
+            echo "  Branch no longer exists, deleting pre-release: $TAG"
+            if gh release --repo="$REPO" delete "$TAG" -y --cleanup-tag; then
+              echo "  Successfully deleted $TAG"
+              DELETED=$((DELETED + 1))
+            else
+              echo "  Failed to delete $TAG"
+            fi
+            sleep 1
+          done
+
+          echo "Deleted $DELETED stale pre-release(s)"
