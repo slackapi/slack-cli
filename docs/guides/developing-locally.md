@@ -5,7 +5,7 @@ slug: /tools/slack-cli/guides/developing-locally
 
 # Developing locally using the Slack CLI
 
-The Slack CLI provides some features, and customization of said features, to streamline developing apps locally. This guide details those features.
+The Slack CLI provides some features, and customization of said features, to streamline developing apps locally using `slack run`. This guide details those features.
 
 ## Configuring file watching and auto-restart
 
