@@ -42,4 +42,4 @@ A restart _clears application state_. This is usually desired! Just be aware of 
 
 ### Using a remote manifest
 
-By default, the Slack CLI uses your local manifest and reinstalls the app if it changes. If you manage your manifest in App Settings, however, you'll have `manifest.source` set to `remote` in `.slack/config.json` and will need to update the manifest manually.
+By default, the Slack CLI uses your local manifest and reinstalls the app if it changes. If you manage your manifest in App Settings, however, you'll have `manifest.source` set to `remote` in `.slack/config.json` and will need to update the manifest in App Settings.
