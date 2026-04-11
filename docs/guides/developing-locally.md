@@ -11,9 +11,9 @@ The Slack CLI provides some features, and customization of said features, to str
 
 The Slack CLI automatically watches your app files and restarts the server when they change. It also watches `manifest.json` and reinstalls the app when the manifest changes.
 
-For Bolt for Python projects, the Slack CLI watches all `.py` files in the root directory.
+For Bolt for Python projects, the Slack CLI watches all `.py` files from the root directory.
 
-For Bolt for JavaScript projects, the Slack CLI watches all `.js` files in the root directory.
+For Bolt for JavaScript projects, the Slack CLI watches all `.js` files from the root directory.
 
 View the [hooks reference](/tools/slack-cli/reference/hooks#watch-configurations) for detailed configuration options.
 
@@ -21,7 +21,7 @@ View the [hooks reference](/tools/slack-cli/reference/hooks#watch-configurations
 
 You can override the default watch paths in `.slack/hooks.json` if so desired. 
 
-For example, if you're working in TypeScript you'd want to only watch the `dist` build output directory:
+For example, if you want to watch for changes to JavaScript files in an `src` directory but not `scripts` use the following:
 
 ```json
 {
@@ -31,7 +31,7 @@ For example, if you're working in TypeScript you'd want to only watch the `dist`
         "paths": ["manifest.json"]
       },
       "app": {
-        "paths": ["dist/"]
+        "paths": ["src/"]
       }
     }
   }
@@ -42,4 +42,4 @@ A restart _clears application state_. This is usually desired! Just be aware of 
 
 ### Using a remote manifest
 
-By default, the Slack CLI uses your local manifest and reinstalls the app if it changes. If you've created your manifest in App Settings, however, you'll have `manifest.source` set to `remote` in `.slack/config.json` and will need to manually reinstall the app if you change the manifest. 
+By default, the Slack CLI uses your local manifest and reinstalls the app if it changes. If you manage your manifest in App Settings, however, you'll have `manifest.source` set to `remote` in `.slack/config.json` and will need to update the manifest manually.
