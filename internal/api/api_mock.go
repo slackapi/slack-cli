@@ -381,3 +381,13 @@ func (m *APIMock) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStream
 	args := m.Called(ctx, IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, autoAAARequest)
 	return args.Get(0).(DeveloperAppInstallResult), args.Get(1).(types.InstallState), args.Error(2)
 }
+
+// DocsClient
+
+func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int) (*DocsSearchResponse, error) {
+	args := m.Called(ctx, query, limit)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*DocsSearchResponse), args.Error(1)
+}
