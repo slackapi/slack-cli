@@ -43,7 +43,6 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 		iostreams.SelectPromptConfig{
 			Flags: []*pflag.Flag{
 				clients.Config.Flags.Lookup("language"),
-				clients.Config.Flags.Lookup("template"), // Skip filtering with a template
 			},
 			Required: false,
 		},
@@ -69,12 +68,10 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 		selectOptions[i] = r.Name
 	}
 
-	var selectedTemplate string
 	selection, err = clients.IO.SelectPrompt(ctx, "Select a sample to build upon:", selectOptions, iostreams.SelectPromptConfig{
 		Description: func(value string, index int) string {
 			return sortedRepos[index].Description
 		},
-		Flag:     clients.Config.Flags.Lookup("template"),
 		Help:     fmt.Sprintf("Guided tutorials can be found at %s", style.LinkText("https://docs.slack.dev/samples")),
 		PageSize: 4, // Supports standard terminal height (24 rows)
 		Required: true,
@@ -82,12 +79,8 @@ func promptSampleSelection(ctx context.Context, clients *shared.ClientFactory, s
 	})
 	if err != nil {
 		return "", err
-	} else if selection.Flag {
-		selectedTemplate = selection.Option
-	} else if selection.Prompt {
-		selectedTemplate = sortedRepos[selection.Index].FullName
 	}
-	return selectedTemplate, nil
+	return sortedRepos[selection.Index].FullName, nil
 }
 
 // filterRepos returns a list of samples matching the provided project type

@@ -25,10 +25,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSamplesCommand(t *testing.T) {
+	var capturedArgs createPkg.CreateArgs
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"creates a template from a trusted sample": {
 			CmdArgs: []string{"my-sample-app"},
@@ -63,7 +63,7 @@ func TestSamplesCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Option: "slack-samples/deno-starter-template",
@@ -72,6 +72,7 @@ func TestSamplesCommand(t *testing.T) {
 						nil,
 					)
 				CreateFunc = func(ctx context.Context, clients *shared.ClientFactory, createArgs createPkg.CreateArgs) (appDirPath string, err error) {
+					capturedArgs = createArgs
 					return createArgs.AppName, nil
 				}
 			},
@@ -79,22 +80,8 @@ func TestSamplesCommand(t *testing.T) {
 				"cd my-sample-app/",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				for _, call := range cm.IO.Calls {
-					switch call.Method {
-					case "SelectPrompt":
-						args := call.Arguments
-						opts := args.Get(3).(iostreams.SelectPromptConfig)
-						flag := opts.Flag
-						switch args.String(1) {
-						case "Select a sample to build upon:":
-							require.Equal(t, "template", flag.Name)
-							assert.Equal(t, "", flag.Value.String())
-						case "Select a template to build from:":
-							require.Equal(t, "template", flag.Name)
-							assert.Equal(t, "slack-samples/deno-starter-template", flag.Value.String())
-						}
-					}
-				}
+				assert.Equal(t, "my-sample-app", capturedArgs.AppName)
+				assert.Equal(t, "slack-samples/deno-starter-template", capturedArgs.Template.GetTemplatePath())
 			},
 		},
 		"lists available samples matching a language": {
