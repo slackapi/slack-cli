@@ -83,6 +83,8 @@ tag:
 		echo "Error: Release version should not begin with a version prefix."; \
 		exit 1; \
 	fi
+	@printf "$(FONT_BOLD)Creating Branch$(FONT_RESET)\n"
+	git checkout -b "chore-release-$(RELEASE_VERSION)"
 	@printf "$(FONT_BOLD)Updating Docs$(FONT_RESET)\n"
 	rm -rf ./docs/reference/commands ./docs/reference/errors.md
 	./bin/slack docgen ./docs/reference --skip-update
