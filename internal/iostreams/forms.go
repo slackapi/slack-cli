@@ -50,7 +50,7 @@ func newForm(io *IOStreams, field huh.Field) *huh.Form {
 func buildInputForm(io *IOStreams, message string, cfg InputPromptConfig, input *string) *huh.Form {
 	title := message
 	if io != nil && io.config.Accessible && cfg.Placeholder != "" {
-		title = fmt.Sprintf("%s (default: %s)", message, cfg.Placeholder)
+		title = fmt.Sprintf("%s (default: %s):", strings.TrimSuffix(message, ":"), cfg.Placeholder)
 	}
 	field := huh.NewInput().
 		Title(title).
