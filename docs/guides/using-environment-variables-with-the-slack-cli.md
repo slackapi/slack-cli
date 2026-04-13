@@ -14,7 +14,7 @@ You can store and use environment variables with your Slack app by using a colle
 
 There are three Slack CLI subcommands that can be used to modify environment variables:
 
-## `slack env set`
+### `slack env set`
 
 Use this to set an environment variable for the project. You can set the environment variable within the command, or run `slack env set` alone to go through an interactive interface.
 
@@ -22,7 +22,7 @@ Use this to set an environment variable for the project. You can set the environ
 slack env set MAGIC_PASSWORD abracadbra
 ```
 
-## `slack env unset`
+### `slack env unset`
 
 Use this to remove variables for the project. You can unset environment variables within the command, or run `slack env unset` alone to view all environment variables and select which one to unset. 
 
@@ -30,7 +30,7 @@ Use this to remove variables for the project. You can unset environment variable
 slack env unset MAGIC_PASSWORD
 ```
 
-## `slack env list`
+### `slack env list`
 
 Use this to view the variables set for this project
 
