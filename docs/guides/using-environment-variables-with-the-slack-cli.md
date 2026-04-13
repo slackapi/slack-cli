@@ -7,7 +7,7 @@ slug: /tools/slack-cli/guides/using-environment-variables-with-the-slack-cli
 
 You can store and use environment variables with your Slack app by using a collection of Slack CLI commands and features. You can even access some pre-set environment variables!
 
-:::note[See [this page](placeholder.com) instead for using environment variables with the Deno Slack SDK]
+:::note[You may be looking for the [_Using environment variables with the Deno Slack SDK_](/tools/deno-slack-sdk/guides/using-environment-variables) guide.]
 :::
    
 There are three Slack CLI subcommands that can be used to modify environment variables:
@@ -22,7 +22,7 @@ slack env set MAGIC_PASSWORD abracadbra
 
 ## `slack env unset`
 
-Use this to remove variables for the project. You can unset environment vairables within the command, or run `slack env unset` alone to view all environment variables and select which one to unset. 
+Use this to remove variables for the project. You can unset environment variables within the command, or run `slack env unset` alone to view all environment variables and select which one to unset. 
 
 ```
 slack env unset MAGIC_PASSWORD
@@ -48,4 +48,3 @@ There are a collection of environment variables set automatically by the Slack C
 | `SLACK_CLI_XOXB` | Built from the bot access token and passed to the `start` hook via environment map during `slack run`. | Used by Bolt frameworks for API calls. | ✅ Supported | ❌ Not used |
 | `SLACK_APP_PATH` | Set when a custom start path is provided via `slack run` | Used to run from a non-root directory. | ✅ Supported | ✅ Supported |
 | `SLACK_CLI_CUSTOM_FILE_PATH` | Set to the same value as `SLACK_APP_PATH` when a custom start path is provided via `slack run` | XXX | ✅ Supported | ✅ Supported |
-| `SLACK_API_URL` | Set during `slack run` and `slack deploy` to the resolved API host URL (e.g., `https://slack.com/api/`). Automatically set unless already defined in environment. | XXX | ✅ Supported | ✅ Supported |
