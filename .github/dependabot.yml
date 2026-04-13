@@ -10,8 +10,8 @@ updates:
     groups:
       charmbracelet:
         patterns:
-          - "github.com/charmbracelet/*"
           - "charm.land/*"
+          - "github.com/charmbracelet/*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
