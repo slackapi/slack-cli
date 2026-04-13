@@ -7,6 +7,10 @@ updates:
     labels:
       - "build"
       - "semver:patch"
+    groups:
+      charmbracelet:
+        patterns:
+          - "github.com/charmbracelet/*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
