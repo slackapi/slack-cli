@@ -11,6 +11,7 @@ updates:
       charmbracelet:
         patterns:
           - "github.com/charmbracelet/*"
+          - "charm.land/*"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
