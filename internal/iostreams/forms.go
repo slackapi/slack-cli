@@ -110,7 +110,7 @@ func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectProm
 
 	title := msg
 	if io != nil && io.config.Accessible && len(options) > 0 {
-		title = fmt.Sprintf("%s (press Enter for 1)", msg)
+		title = fmt.Sprintf("%s (press Enter for 1):", strings.TrimSuffix(msg, ":"))
 	}
 
 	field := huh.NewSelect[string]().
