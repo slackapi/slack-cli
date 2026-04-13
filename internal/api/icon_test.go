@@ -149,6 +149,27 @@ func TestClient_IconSet(t *testing.T) {
 			expectErr:   true,
 			errContains: "unknown format",
 		},
+		"returns error for non-image content with .png extension": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				err := afero.WriteFile(fs, "fake.png", []byte("this is not a png"), 0666)
+				require.NoError(t, err)
+			},
+			appID:       "12345",
+			filePath:    "fake.png",
+			expectErr:   true,
+			errContains: "unknown format",
+		},
+		"returns error for truncated PNG": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				// Valid PNG signature followed by incomplete IHDR chunk
+				truncatedPNG := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D}
+				err := afero.WriteFile(fs, "truncated.png", truncatedPNG, 0666)
+				require.NoError(t, err)
+			},
+			appID:     "12345",
+			filePath:  "truncated.png",
+			expectErr: true,
+		},
 		"returns error from API response": {
 			setupFs: func(t *testing.T, fs afero.Fs) {
 				createTestPNG(t, fs, imgFile)
@@ -162,6 +183,39 @@ func TestClient_IconSet(t *testing.T) {
 		"succeeds with valid PNG": {
 			setupFs: func(t *testing.T, fs afero.Fs) {
 				createTestPNG(t, fs, imgFile)
+			},
+			appID:    "12345",
+			filePath: imgFile,
+			response: `{"ok":true}`,
+		},
+		// cutter.Crop with Ratio mode floors a 1x1 image to 0x0, causing png.Encode to fail.
+		// May need a follow-up to add a minimum dimension check before cropping.
+		"returns error for 1x1 pixel image": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{1, 1}})
+				myimage.Set(0, 0, color.RGBA{255, 0, 0, 255})
+				myfile, err := fs.Create(imgFile)
+				require.NoError(t, err)
+				err = png.Encode(myfile, myimage)
+				require.NoError(t, err)
+			},
+			appID:     "12345",
+			filePath:  imgFile,
+			expectErr: true,
+		},
+		"succeeds with non-square image": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{2000, 100}})
+				for x := range 2000 {
+					for y := range 100 {
+						c := color.RGBA{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)), 255}
+						myimage.Set(x, y, c)
+					}
+				}
+				myfile, err := fs.Create(imgFile)
+				require.NoError(t, err)
+				err = png.Encode(myfile, myimage)
+				require.NoError(t, err)
 			},
 			appID:    "12345",
 			filePath: imgFile,
