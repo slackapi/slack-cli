@@ -12,7 +12,7 @@ You can store and use environment variables with your Slack app by using a colle
    
 ## Using the Slack CLI `env` commands
 
-There are three Slack CLI subcommands that can be used to modify environment variables:
+There are three Slack CLI subcommands that can be used to modify environment variables which are saved to the project's `.env` file. 
 
 ### `slack env set`
 
@@ -42,9 +42,9 @@ slack env list
 
 The Slack CLI provides an envelope of environment variables set automatically if these aren't available beforehand.
 
-| Variable | Origin | Use | Bolt frameworks | Deno Slack SDK |
-|----------|--------|-----|-----------------|-----------------|
-| `SLACK_APP_TOKEN` | Set after a successful app installation when using Socket Mode. | Authenticate with Slack API as the app. Required for Socket Mode connections and API calls. | ✅ Supported | ❌ Not used |
-| `SLACK_BOT_TOKEN` | Set after a successful app installation that requested bot scopes. | Authenticate with Slack API as the bot user. Used for making API calls on behalf of the app. | ✅ Supported | ❌ Not used |
-| `SLACK_APP_PATH` | Set when a custom start path is provided via `slack run` | Used to run from a non-root directory. | ✅ Supported | ✅ Supported |
-| `SLACK_CLI_CUSTOM_FILE_PATH` | Set to the same value as `SLACK_APP_PATH` when a custom start path is provided via `slack run` | Used to run from a non-root directory. | ✅ Supported | ✅ Supported |
+| Variable | Origin | Use |
+|----------|--------|-----|
+| `SLACK_APP_TOKEN` | Set after a successful app installation when using Socket Mode. | Authenticate with Slack API as the app. Required for Socket Mode connections and API calls.
+| `SLACK_BOT_TOKEN` | Set after a successful app installation that requested bot scopes. | Authenticate with Slack API as the bot user. Used for making API calls on behalf of the app. 
+| `SLACK_APP_PATH` | Set when a custom start path is provided via `slack run` | Used to run from a non-root directory.
+| `SLACK_CLI_CUSTOM_FILE_PATH` | Set to the same value as `SLACK_APP_PATH` when a custom start path is provided via `slack run` | Used to run from a non-root directory.
