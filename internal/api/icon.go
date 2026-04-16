@@ -51,16 +51,16 @@ type iconResponse struct {
 // Icon updates a hosted Slack app icon
 // DEPRECATED: Prefer "IconSet" instead
 func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
-	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconMethod, "file")
+	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconMethod)
 }
 
 // IconSet sets a Slack App's icon using the apps.icon.set API method.
 func (c *Client) IconSet(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
-	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconSetMethod, "file")
+	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconSetMethod)
 }
 
 // uploadIcon uploads an icon to the given API method.
-func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath, apiMethod, fileFieldName string) (IconResult, error) {
+func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath, apiMethod string) (IconResult, error) {
 	var (
 		iconBytes []byte
 		err       error
@@ -94,7 +94,7 @@ func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, icon
 
 	var part io.Writer
 	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, fileFieldName, iconStat.Name()))
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, iconStat.Name()))
 	h.Set("Content-Type", http.DetectContentType(iconBytes))
 	part, err = writer.CreatePart(h)
 	if err != nil {
