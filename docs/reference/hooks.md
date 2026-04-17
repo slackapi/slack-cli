@@ -2,21 +2,16 @@
 
 Communication between the CLI and the application SDK is managed by a project-level configuration file called `hooks.json`. This file is included in our app templates and defines script _hooks_.
 
-Hooks are small scripts that are _executed_ by the CLI and _implemented_ by the SDK. These commands perform actions on the project.
-
-The `hooks.json` file allows the CLI and SDK a standard way to communicate while remaining decoupled and abstracted. This interface is a key design of the Slack CLI: many application and project level tasks are delegated from the CLI to the SDK. This delegation, decoupling and abstraction allows for language-agnostic SDK implementations.
-
-## Core concepts {#core-concepts}
-
-### Hooks: How the CLI and the SDK communicate {#communication}
-
-Hooks are scripts that execute when a specific event happens or a Slack CLI command is invoked.
+Hooks are small scripts that are _executed_ by the CLI and _implemented_ by the SDK when a specific event happens or a Slack CLI command is invoked. These scripts perform actions on the project.
 
 A hook script may be triggered when:
+- generating the app manifest.
+- bundling function code before deployment to Slack infrastructure.
+- handling an application event during local development runs.
 
-- generating the app manifest
-- bundling function code before deployment to Slack infrastructure
-- handling an application event during local development runs
+## Hooks: How the CLI and the SDK communicate {#communication}
+
+The `hooks.json` file allows the CLI and SDK a standard way to communicate while remaining decoupled and abstracted. This interface is a key design of the Slack CLI: many application and project level tasks are delegated from the CLI to the SDK. This delegation, decoupling and abstraction allows for language-agnostic SDK implementations.
 
 When an event occurs, the CLI will execute a hook script by spawning a separate process, possibly passing a JSON object through `STDIN` and/or other parameters via command line flags to the hook script process, and waiting for a JSON response via the spawned process’ `STDOUT`. This system is heavily inspired by git hooks.
 
@@ -24,7 +19,7 @@ Since communication over hooks involves inter-process communication (one process
 
 Some hooks may return data as part of their functionality. The CLI will use the `STDOUT` and `STDERR` of the hook process to transmit its response. For details on how a hook process can shape its response, and delineate diagnostic data from response data, see the section on [protocol negotiation](#protocol).
 
-### Discover hook scripts and default configuration with `get-hooks` {#discover}
+## Discovering hook scripts and default configuration with `get-hooks` {#discover}
 
 In order for the CLI to reliably discover the hooks for the [Deno SDK](https://github.com/slackapi/deno-slack-sdk), [Bolt Frameworks](https://docs.slack.dev/tools/), and future community-driven SDKs, the CLI employs a service-discovery-like approach to querying the SDK for what functionality it supports.
 
@@ -34,7 +29,7 @@ App developers do not need to edit or change their `hooks.json` file when upgrad
 
 Refer to the [CLI-SDK JSON interface](#interface-format) section for other examples.
 
-### CLI-SDK protocol negotiation {#protocol}
+## CLI-SDK protocol negotiation {#protocol}
 
 As the needs of app developers evolve, so will the interface and the rules of communication between the CLI and the SDK. These rules are negotiated via the initial `get-hooks` handshake and are specified via the `protocol-version` field returned by the SDK.
 
@@ -45,7 +40,7 @@ At the time of writing, only two protocol versions are supported:
 
 If at any point protocol negotiation fails or does not adhere to the rules of communication, the CLI will fall back to using the default protocol.
 
-#### Working implementations of protocol negotiation
+### Working implementations of protocol negotiation
 
 - In the CLI:
   - [List of protocols supported by the CLI](https://github.com/slackapi/slack-cli/blob/d2349b6328820d2dcb01312abd4d8b3694f5137e/internal/hooks/protocol.go#L21-L22)
@@ -57,13 +52,13 @@ If at any point protocol negotiation fails or does not adhere to the rules of co
   - [node-slack-sdk’s implementation](https://github.com/slackapi/node-slack-sdk/blob/main/packages/cli-hooks/src/protocols.js)
   - [python-slack-sdk’s implementation](https://github.com/slackapi/python-slack-hooks/blob/main/slack_cli_hooks/protocol/__init__.py)
 
-### Ensuring backwards compatibility {#compatibility}
+## Ensuring backwards compatibility {#compatibility}
 
 A hook’s name space (CLI) and its associated script implementation (SDK) will change over time. This can break backwards compatibility and require App Developers to juggle different CLI versions and SDK versions in order to maintain compatibility. It’s a frustrating situation that can ruin the developer experience.
 
 An additive approach to hook names or configuration settings allows us to keep hooks backwards-compatible for as long as possible and allows for a smoother upgrade experience. This approach also allows for tools to provide generous timeframes for supporting old hooks vs. new ones, allowing for deprecation windows and gradual rollouts. For configuration settings, an additive approach is accomplished by adding new configuration values that are not Golang defaults (e.g. bool defaults to false).
 
-For example, the hook name `run-v2` may be the successor to the hook named `run`. The SDK can implement either hook and the CLI will trigger the latest version, possibly falling back to earlier versions of the hook where applicable. The CLI can also warn of impending removal of older hooks, providing hints to the developer when tooling behaviour changes.
+For example, the hook name `run-v2` may be the successor to the hook named `run`. The SDK can implement either hook and the CLI will trigger the latest version, possibly falling back to earlier versions of the hook where applicable. The CLI can also warn of impending removal of older hooks, providing hints to the developer when tooling behavior changes.
 
 ## Hook specification {#specification}
 
