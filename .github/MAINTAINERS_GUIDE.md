@@ -290,7 +290,6 @@ Certain things are common during development and require a few commands.
 - [Updating](#updating)
   - [Bumping the Golang version](#bumping-the-golang-version)
   - [Bumping Go packages versions](#bumping-go-package-versions)
-  - [Bumping Goreleaser versions](#bumping-goreleaser-versions)
 - [Designing](#designing)
 - [Deprecating features and flags](#deprecating-features-and-flags)
 - [Allowlist configuration](#allowlist-configuration)
