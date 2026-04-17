@@ -227,9 +227,6 @@ cmd/
 The release build artifacts from `make build-snapshot` that includes binaries
 and archives for all platforms.
 
-An installation of [`goreleaser`][goreleaser] is required and the latest version
-is recommended.
-
 ### `internal/`
 
 A safe place to store private packages used by commands and this program. Shared
@@ -623,15 +620,6 @@ tree of a transitive dependency, this command can be helpful:
 go mod graph | grep <module name>
 ```
 
-#### Bumping Goreleaser versions
-
-The [`goreleaser`][goreleaser] package we use to build release snapshots needs
-updates in the following files on occasion:
-
-- `.circleci/config.yml`
-- `.goreleaser.yml`
-
-Testing in our CI setup uses changes to these files when creating test builds.
 
 ### Designing
 
