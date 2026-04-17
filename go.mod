@@ -3,7 +3,7 @@ module github.com/slackapi/slack-cli
 go 1.26.2
 
 require (
-	charm.land/bubbletea/v2 v2.0.4
+	charm.land/bubbletea/v2 v2.0.6
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.3
 	github.com/briandowns/spinner v1.23.2
@@ -42,7 +42,7 @@ require (
 	github.com/catppuccin/go v0.3.0 // indirect
 	github.com/chainguard-dev/git-urls v1.0.2 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260413133134-73592393e1ad // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260416155717-489999b90468 // indirect
 	github.com/charmbracelet/x/exp/ordered v0.1.0 // indirect
 	github.com/charmbracelet/x/exp/strings v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
@@ -80,7 +80,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.18.0 // indirect
-	github.com/go-git/go-git/v5 v5.17.2
+	github.com/go-git/go-git/v5 v5.18.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kubescape/go-git-url v0.0.31
 	github.com/mattn/go-colorable v0.1.14 // indirect
