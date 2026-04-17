@@ -8,10 +8,12 @@ The following is a list of currently available experiments. We'll remove experim
 
 - `lipgloss`: shows pretty styles.
 - `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
+- `set-icon`: enables icon upload for non-hosted apps ([PR#469](https://github.com/slackapi/slack-cli/pull/469)).
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
+- **April 2026**: Added the `set-icon` experiment to enable icon upload for non-hosted apps.
 - **April 2026**: Concluded the `huh` experiment with full support now enabled by default in the Slack CLI. 
 - **March 2026**: Split the `charm` experiment into more beautiful `huh` prompts and prettier `lipgloss` styles for ongoing change.
 - **March 2026**: Concluded the `bolt` and `bolt-install` experiments with full Bolt framework support now enabled by default in the Slack CLI. All Bolt project features including remote manifest management are now standard functionality. See the announcement [here](https://slack.dev/slackcli-supports-bolt-apps/).
