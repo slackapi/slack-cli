@@ -226,7 +226,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		}
 	}
 	if iconPath != "" {
-		err = updateIcon(ctx, clients, iconPath, app.AppID, token)
+		err = updateIcon(ctx, clients, iconPath, app.AppID, token, manifest.IsFunctionRuntimeSlackHosted())
 		if err != nil {
 			clients.IO.PrintDebug(ctx, "icon error: %s", err)
 			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", err)))
@@ -651,7 +651,7 @@ func appendLocalToDisplayName(manifest *types.AppManifest) {
 }
 
 // updateIcon will upload the new icon to the Slack API
-func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, appID string, token string) error {
+func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, appID string, token string, isHosted bool) error {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "updateIcon")
 	defer span.Finish()
@@ -659,10 +659,12 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 	clients.IO.PrintDebug(ctx, "uploading icon")
 
 	var err error
-	if clients.Config.WithExperimentOn(experiment.SetIcon) {
+	if isHosted {
+		_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
+	} else if clients.Config.WithExperimentOn(experiment.SetIcon) {
 		_, err = clients.API().IconSet(ctx, clients.Fs, token, appID, iconPath)
 	} else {
-		_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
+		return nil
 	}
 	if err != nil {
 		// TODO: separate the icon upload into a different function because if an error is returned
