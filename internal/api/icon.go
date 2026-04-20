@@ -135,32 +135,24 @@ func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, icon
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	request.Header.Add("User-Agent", userAgent)
 
-	resp, err := c.httpClient.Do(request)
-	if err != nil {
-		return IconResult{}, err
-	}
-	defer resp.Body.Close()
+	c.io.PrintDebug(ctx, "HTTP Request: %v %v", request.Method, request.URL)
+	c.io.PrintDebug(ctx, "HTTP Request User-Agent: %s", request.Header.Get("User-Agent"))
+	c.io.PrintDebug(ctx, "HTTP Request Body: <binary image data, %d bytes>", body.Len())
 
-	span.SetTag("status_code", resp.StatusCode)
-
-	respBody, err := io.ReadAll(resp.Body)
+	respBytes, err := c.DoWithRetry(ctx, request, span, false, sURL)
 	if err != nil {
 		return IconResult{}, err
 	}
 
 	var result iconResponse
-	err = json.Unmarshal(respBody, &result)
+	err = json.Unmarshal(respBytes, &result)
 	if err != nil {
 		return IconResult{}, err
 	}
 
-	span.SetTag("ok", result.Ok)
-
 	if !result.Ok {
-		span.SetTag("error", result.Error)
 		return IconResult{}, fmt.Errorf("%s error: %s", sURL.String(), result.Error)
 	}
 
-	// return result
 	return IconResult{}, nil
 }
