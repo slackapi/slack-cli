@@ -135,7 +135,7 @@ func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, icon
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	request.Header.Add("User-Agent", userAgent)
 
-	c.io.PrintDebug(ctx, "HTTP Request: %v %v", request.Method, request.URL)
+	c.io.PrintDebug(ctx, "HTTP Request: %v %v %v", request.Method, request.URL, request.Proto)
 	c.io.PrintDebug(ctx, "HTTP Request User-Agent: %s", request.Header.Get("User-Agent"))
 	c.io.PrintDebug(ctx, "HTTP Request Body: <binary image data, %d bytes>", body.Len())
 
