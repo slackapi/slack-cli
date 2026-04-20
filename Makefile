@@ -52,7 +52,7 @@ coverage:
 # Run the linter
 .PHONY: lint
 lint:
-	golangci-lint run
+	go tool golangci-lint run
 
 # Build the CLI
 .PHONY: build

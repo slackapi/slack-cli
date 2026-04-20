@@ -121,10 +121,6 @@ jobs:
             - go-mod-v4-{{ checksum "go.sum" }}
       - retrieve-oidc-secrets
       - run:
-          name: Install Lint
-          command: |
-            curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
-      - run:
           name: Run Unit Tests
           command: |
             make test
