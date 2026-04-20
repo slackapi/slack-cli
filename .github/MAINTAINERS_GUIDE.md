@@ -159,9 +159,6 @@ cmd/
 The release build artifacts from `make build-snapshot` that includes binaries
 and archives for all platforms.
 
-An installation of [`goreleaser`][goreleaser] is required and the latest version
-is recommended.
-
 ### `internal/`
 
 A safe place to store private packages used by commands and this program. Shared
@@ -225,7 +222,6 @@ Certain things are common during development and require a few commands.
 - [Updating](#updating)
   - [Bumping the Golang version](#bumping-the-golang-version)
   - [Bumping Go packages versions](#bumping-go-package-versions)
-  - [Bumping Goreleaser versions](#bumping-goreleaser-versions)
 - [Designing](#designing)
 - [Deprecating features and flags](#deprecating-features-and-flags)
 - [Allowlist configuration](#allowlist-configuration)
@@ -555,15 +551,6 @@ tree of a transitive dependency, this command can be helpful:
 go mod graph | grep <module name>
 ```
 
-#### Bumping Goreleaser versions
-
-The [`goreleaser`][goreleaser] package we use to build release snapshots needs
-updates in the following files on occasion:
-
-- `.circleci/config.yml`
-- `.goreleaser.yml`
-
-Testing in our CI setup uses changes to these files when creating test builds.
 
 ### Designing
 

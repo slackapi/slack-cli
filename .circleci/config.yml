@@ -136,19 +136,6 @@ jobs:
           name: Run Build
           command: |
             make build-ci
-      - run:
-          name: Install Goreleaser
-          command: |
-            # Ensures the directory we need exist.
-            mkdir -p ~/bin
-            installPath=~/bin
-
-            dlURL="https://github.com/goreleaser/goreleaser/releases/download/v2.8.2/goreleaser_Linux_x86_64.tar.gz"
-            curl -sSL $dlURL | tar -xz -C ${installPath} goreleaser
-      - run:
-          name: Check GoReleaser is install success
-          command: |
-            goreleaser --version
       - export-build-version:
           release_ref: << parameters.release_ref >>
           sanitized: true
