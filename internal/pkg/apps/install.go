@@ -531,7 +531,6 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 			}
 		}
 		if iconPath != "" {
-			clients.IO.PrintDebug(ctx, "uploading icon")
 			_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
 			if iconErr != nil {
 				clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
@@ -655,8 +654,6 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "updateIcon")
 	defer span.Finish()
-
-	clients.IO.PrintDebug(ctx, "uploading icon")
 
 	var err error
 	if clients.Config.WithExperimentOn(experiment.SetIcon) {
