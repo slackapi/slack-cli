@@ -52,7 +52,7 @@ coverage:
 # Run the linter
 .PHONY: lint
 lint:
-	golangci-lint run
+	go tool golangci-lint run
 
 # Build the CLI
 .PHONY: build
@@ -71,7 +71,7 @@ build-ci: clean
 # Build the CLI as a release snapshot for all operating systems
 .PHONY: build-snapshot
 build-snapshot: clean
-	BUILD_VERSION="$(BUILD_VERSION)" LDFLAGS="$(LDFLAGS)" goreleaser --snapshot --clean --skip=publish --config .goreleaser.yml
+	BUILD_VERSION="$(BUILD_VERSION)" LDFLAGS="$(LDFLAGS)" go tool goreleaser --snapshot --clean --skip=publish --config .goreleaser.yml
 
 # Update documentation in a commit tagged as the release
 # Usage: `make tag RELEASE_VERSION=3.7.0-example`

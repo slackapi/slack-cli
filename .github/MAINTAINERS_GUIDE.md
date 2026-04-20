@@ -90,86 +90,18 @@ brew uninstall go
 
 Linters are used to help catch formatting strangeness and strange spellings.
 
-The CI runs linting via [golangci-lint][golangci-lint] and is configured in the
-`.golangci.yml` file.
-
-Install this tool to mimic CI environments and run linting with the `Makefile`:
+The CI runs linting with [golangci-lint][golangci-lint] and is installed in the
+project `go.mod` tools and separate `.golangci.yml` configuration file:
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+go tool golangci-lint run
 ```
-
-Confirm the installation worked right with:
-
-```sh
-golangci-lint --version
-```
-
-<details>
-<summary>Troubleshooting</summary>
-
-#### Error: command not found: golangci-lint
-
-If you receive the following error:
-
-```bash
-$ golangci-lint --version
-command not found: golangci-lint
-```
-
-You may need to update your `$PATH` environment variable with `$GOPATH/bin`:
-1. Open your terminal's configuration file (e.g. `~/.zshrc`):
-
-    ```bash
-    $ vim ~/.zshrc
-    ```
-
-2. Add the following:
-
-    ```bash
-    export PATH=$PATH:$(go env GOPATH)/bin
-    ```
-3. Open a new terminal session (tab) or source your configuration file (`source ~/.zshrc`).
-4. Run the following command:
-
-    ```bash
-    $ golangci-lint --version
-    ```
-</details>
 
 #### VSCode
 
 Settings are already defined in this project for using the VSCode editor with
 `golangci-lint` as the `go.lintTool`. Inspect [`.vscode/settings.json`][vscode]
 for more details.
-
-#### Troubleshooting
-
-Linting troubles can happen from unexpected formatting or a broken installation.
-Broken installations might be fixed by the below:
-
-<details>
-<summary>Matching versions that don't match</summary>
-
-The latest version of `golangci-lint` is used in testing and should be matched
-by the installation you have.
-
-Compare [the latest version][golangci-lint-release] to your current installation
-and try linting once more.
-
-</details>
-
-<details>
-<summary>Uninstalling a Homebrew installation</summary>
-
-Setting the correct version of `golangci-lint` can be difficult with Homebrew.
-If this is causing issues try uninstalling it with:
-
-```sh
-brew uninstall golangci-lint
-```
-
-</details>
 
 ### Makefile
 
@@ -226,9 +158,6 @@ cmd/
 
 The release build artifacts from `make build-snapshot` that includes binaries
 and archives for all platforms.
-
-An installation of [`goreleaser`][goreleaser] is required and the latest version
-is recommended.
 
 ### `internal/`
 
@@ -293,7 +222,6 @@ Certain things are common during development and require a few commands.
 - [Updating](#updating)
   - [Bumping the Golang version](#bumping-the-golang-version)
   - [Bumping Go packages versions](#bumping-go-package-versions)
-  - [Bumping Goreleaser versions](#bumping-goreleaser-versions)
 - [Designing](#designing)
 - [Deprecating features and flags](#deprecating-features-and-flags)
 - [Allowlist configuration](#allowlist-configuration)
@@ -623,15 +551,6 @@ tree of a transitive dependency, this command can be helpful:
 go mod graph | grep <module name>
 ```
 
-#### Bumping Goreleaser versions
-
-The [`goreleaser`][goreleaser] package we use to build release snapshots needs
-updates in the following files on occasion:
-
-- `.circleci/config.yml`
-- `.goreleaser.yml`
-
-Testing in our CI setup uses changes to these files when creating test builds.
 
 ### Designing
 
