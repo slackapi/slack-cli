@@ -656,10 +656,10 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 	defer span.Finish()
 
 	var err error
-	if isHosted {
-		_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
-	} else if clients.Config.WithExperimentOn(experiment.SetIcon) {
+	if clients.Config.WithExperimentOn(experiment.SetIcon) {
 		_, err = clients.API().IconSet(ctx, clients.Fs, token, appID, iconPath)
+	} else if isHosted {
+		_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
 	} else {
 		return nil
 	}
