@@ -218,10 +218,12 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		}
 	}
 
-	// upload icon, default to icon.png
+	// upload icon, default to assets/icon.png or icon.png
 	var iconPath = slackManifest.Icon
 	if iconPath == "" {
-		if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
+		if _, err := os.Stat("assets/icon.png"); !os.IsNotExist(err) {
+			iconPath = "assets/icon.png"
+		} else if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
 			iconPath = "icon.png"
 		}
 	}
@@ -526,7 +528,9 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	if clients.Config.WithExperimentOn(experiment.SetIcon) {
 		var iconPath = slackManifest.Icon
 		if iconPath == "" {
-			if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
+			if _, err := os.Stat("assets/icon.png"); !os.IsNotExist(err) {
+				iconPath = "assets/icon.png"
+			} else if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
 				iconPath = "icon.png"
 			}
 		}
