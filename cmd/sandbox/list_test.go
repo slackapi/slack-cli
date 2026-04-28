@@ -107,6 +107,35 @@ func TestListCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
+		"with partner sandbox": {
+			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				testToken := "xoxb-test-token"
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
+				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
+				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
+				sandboxes := []types.Sandbox{
+					{
+						TeamID:      "T789",
+						Name:        "partner-sandbox",
+						Domain:      "partner-sandbox",
+						Status:      "active",
+						DateCreated: 1700000000,
+						IsPartner:   true,
+					},
+				}
+				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
+				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
+
+				cm.AddDefaultMocks()
+				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
+				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+			},
+			ExpectedStdoutOutputs: []string{"partner-sandbox", "T789", "Type: Partner"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
+			},
+		},
 		"with status": {
 			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token", "--status", "active"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

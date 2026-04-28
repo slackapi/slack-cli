@@ -125,6 +125,12 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			}
 		}
 
+		sandboxType := "Regular"
+		if s.IsPartner {
+			sandboxType = "Partner"
+		}
+		clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Type: %s", sandboxType)))
+
 		if s.DateCreated > 0 {
 			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Created: %s", time.Unix(s.DateCreated, 0).Format(timeFormat))))
 		}
