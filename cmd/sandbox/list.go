@@ -16,7 +16,6 @@ package sandbox
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -109,14 +108,16 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 		return nil
 	}
 
-	hasPartner := slices.ContainsFunc(sandboxes, func(s types.Sandbox) bool { return s.IsPartner })
-
 	timeFormat := "2006-01-02" // We only support the granularity of the day for now, rather than a more precise datetime
 	for _, s := range sandboxes {
 		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.Name), s.TeamID)
 
 		if s.Domain != "" {
 			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.Domain)))
+		}
+
+		if s.IsPartner {
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: Partner"))
 		}
 
 		if s.Status != "" {
@@ -126,14 +127,6 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			} else {
 				clients.IO.PrintInfo(ctx, false, "    %s", style.Green(status))
 			}
-		}
-
-		if hasPartner {
-			sandboxType := "Regular"
-			if s.IsPartner {
-				sandboxType = "Partner"
-			}
-			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("Type: %s", sandboxType)))
 		}
 
 		if s.DateCreated > 0 {

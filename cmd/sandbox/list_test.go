@@ -140,7 +140,7 @@ func TestListCommand(t *testing.T) {
 				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
 				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
-			ExpectedStdoutOutputs: []string{"regular-sandbox", "Type: Regular", "partner-sandbox", "Type: Partner"},
+			ExpectedStdoutOutputs: []string{"regular-sandbox", "partner-sandbox", "Type: Partner"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
