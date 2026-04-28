@@ -17,18 +17,16 @@ package sandbox
 import (
 	"context"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
-	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "sandbox <subcommand> [flags] --experiment=sandboxes",
+		Use:   "sandbox <subcommand> [flags]",
 		Short: "Manage developer sandboxes",
 		Long: `Manage Slack developer sandboxes without leaving your terminal.
 Use the --team flag to select the authentication to use for these commands.
@@ -40,9 +38,6 @@ New to the Developer Program? Sign up at
 {{LinkText "https://api.slack.com/developer-program/join"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{}),
 		Aliases: []string{"sandboxes"},
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return requireSandboxExperiment(clients)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
@@ -53,15 +48,6 @@ New to the Developer Program? Sign up at
 	cmd.AddCommand(NewListCommand(clients))
 
 	return cmd
-}
-
-func requireSandboxExperiment(clients *shared.ClientFactory) error {
-	if !clients.Config.WithExperimentOn(experiment.Sandboxes) {
-		return slackerror.New(slackerror.ErrMissingExperiment).
-			WithMessage("%sThe sandbox management commands are under construction", style.Emoji("construction")).
-			WithRemediation("To try them out, just add the --experiment=sandboxes flag to your command!")
-	}
-	return nil
 }
 
 // getSandboxAuth returns the auth to be used for sandbox management.

@@ -19,7 +19,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -31,7 +30,6 @@ func TestDeleteCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"delete success": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--sandbox-id", "T123",
 				"--force",
@@ -46,8 +44,6 @@ func TestDeleteCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "No sandboxes found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -58,7 +54,6 @@ func TestDeleteCommand(t *testing.T) {
 		},
 		"delete with remaining sandboxes": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--sandbox-id", "T123",
 				"--force",
@@ -83,8 +78,6 @@ func TestDeleteCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "other-sandbox", "T456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -94,7 +87,6 @@ func TestDeleteCommand(t *testing.T) {
 		},
 		"deletion cancelled": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--sandbox-id", "T123",
 			},
@@ -106,8 +98,6 @@ func TestDeleteCommand(t *testing.T) {
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(false, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"Deletion cancelled"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -117,7 +107,6 @@ func TestDeleteCommand(t *testing.T) {
 		},
 		"delete confirmation proceeds": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--sandbox-id", "E0123456",
 			},
@@ -132,8 +121,6 @@ func TestDeleteCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "E0123456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -143,7 +130,6 @@ func TestDeleteCommand(t *testing.T) {
 		},
 		"delete API error": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--sandbox-id", "T123",
 				"--force",
@@ -156,25 +142,10 @@ func TestDeleteCommand(t *testing.T) {
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(errors.New("api_error"))
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"api_error"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
-			},
-		},
-		"experiment required": {
-			CmdArgs: []string{
-				"--sandbox-id", "T123",
-				"--force",
-			},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-			},
-			ExpectedErrorStrings: []string{"sandbox"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "DeleteSandbox", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {

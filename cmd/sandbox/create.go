@@ -60,9 +60,6 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "sandbox create --name test-box --password mypass --domain test-box --archive-date 2025-12-31", Meaning: "Create a sandbox that will be archived on a specific date"},
 		}),
 		Args: cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return requireSandboxExperiment(clients)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCreateCommand(cmd, clients)
 		},

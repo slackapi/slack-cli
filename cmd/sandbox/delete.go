@@ -40,9 +40,6 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "sandbox delete --sandbox-id E0123456", Meaning: "Delete a sandbox identified by its team ID"},
 		}),
 		Args: cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return requireSandboxExperiment(clients)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDeleteCommand(cmd, clients)
 		},

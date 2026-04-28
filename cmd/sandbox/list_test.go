@@ -19,7 +19,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -31,7 +30,7 @@ import (
 func TestListCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"empty list": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
@@ -41,8 +40,6 @@ func TestListCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"No sandboxes found"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -51,7 +48,7 @@ func TestListCommand(t *testing.T) {
 			},
 		},
 		"with active sandboxes": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
@@ -71,8 +68,6 @@ func TestListCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com", "Status: ACTIVE"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -81,7 +76,7 @@ func TestListCommand(t *testing.T) {
 			},
 		},
 		"with archived sandbox": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
@@ -101,8 +96,6 @@ func TestListCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"old-sandbox", "T456", "Status: ARCHIVED"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -137,8 +130,6 @@ func TestListCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"regular-sandbox", "partner-sandbox", "Type: Partner"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -146,7 +137,7 @@ func TestListCommand(t *testing.T) {
 			},
 		},
 		"with status": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token", "--status", "active"},
+			CmdArgs: []string{"--token", "xoxb-test-token", "--status", "active"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
@@ -156,15 +147,13 @@ func TestListCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "active")
 			},
 		},
 		"list error": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
@@ -174,21 +163,8 @@ func TestListCommand(t *testing.T) {
 					Return([]types.Sandbox(nil), errors.New("api_error"))
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"api_error"},
-		},
-		"experiment required": {
-			CmdArgs: []string{},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				// Do NOT enable sandboxes experiment
-			},
-			ExpectedErrorStrings: []string{"sandbox"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "ListSandboxes", mock.Anything, mock.Anything, mock.Anything)
-			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewListCommand(cf)
