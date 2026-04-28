@@ -659,6 +659,7 @@ func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, ap
 	if clients.Config.WithExperimentOn(experiment.SetIcon) {
 		_, err = clients.API().IconSet(ctx, clients.Fs, token, appID, iconPath)
 	} else if isHosted {
+		// DEPRECATED: Prefer IconSet once the SetIcon experiment concludes
 		_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
 	} else {
 		return nil
