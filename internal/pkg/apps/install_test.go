@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -1721,6 +1722,69 @@ func TestContinueDespiteWarning(t *testing.T) {
 			if !tc.expectsPrompt {
 				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
 			}
+		})
+	}
+}
+
+func Test_resolveIconPath(t *testing.T) {
+	tests := map[string]struct {
+		manifestIcon string
+		files        []string
+		expected     string
+	}{
+		"manifest icon set returns it directly": {
+			manifestIcon: "custom/my-icon.png",
+			expected:     "custom/my-icon.png",
+		},
+		"assets/icon.png found": {
+			files:    []string{"assets/icon.png"},
+			expected: "assets/icon.png",
+		},
+		"assets/icon.jpg found": {
+			files:    []string{"assets/icon.jpg"},
+			expected: "assets/icon.jpg",
+		},
+		"assets/icon.jpeg found": {
+			files:    []string{"assets/icon.jpeg"},
+			expected: "assets/icon.jpeg",
+		},
+		"assets/icon.gif found": {
+			files:    []string{"assets/icon.gif"},
+			expected: "assets/icon.gif",
+		},
+		"png wins over gif in assets": {
+			files:    []string{"assets/icon.png", "assets/icon.gif"},
+			expected: "assets/icon.png",
+		},
+		"jpg wins over gif in assets": {
+			files:    []string{"assets/icon.jpg", "assets/icon.gif"},
+			expected: "assets/icon.jpg",
+		},
+		"root icon.png found when no assets": {
+			files:    []string{"icon.png"},
+			expected: "icon.png",
+		},
+		"root icon.jpg found when no assets": {
+			files:    []string{"icon.jpg"},
+			expected: "icon.jpg",
+		},
+		"assets takes priority over root": {
+			files:    []string{"assets/icon.gif", "icon.png"},
+			expected: "assets/icon.gif",
+		},
+		"no icon files returns empty": {
+			files:    []string{},
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			for _, f := range tc.files {
+				require.NoError(t, afero.WriteFile(fs, f, []byte("img"), 0o644))
+			}
+			result := resolveIconPath(fs, tc.manifestIcon)
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }

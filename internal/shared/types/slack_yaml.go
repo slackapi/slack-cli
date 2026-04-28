@@ -27,15 +27,19 @@ type SlackYaml struct {
 	Hash        string
 }
 
+var supportedIconExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
+
 // hasValidIconPath returns false if icon path is provided but is not valid and true otherwise
 func (sy *SlackYaml) hasValidIconPath() bool {
-	// verify icon path is valid if exists
 	var wd, err = os.Getwd()
 	if err == nil {
-		if sy.Icon == "" { // icon was not provided.  Let's check if the default one exists
-			var defaultIconPath = "assets/icon.png"
-			if _, err := os.Stat(filepath.Join(wd, defaultIconPath)); !os.IsNotExist(err) {
-				sy.Icon = defaultIconPath
+		if sy.Icon == "" {
+			for _, ext := range supportedIconExtensions {
+				candidate := filepath.Join(wd, "assets", "icon"+ext)
+				if _, err := os.Stat(candidate); !os.IsNotExist(err) {
+					sy.Icon = filepath.Join("assets", "icon"+ext)
+					break
+				}
 			}
 		} else {
 			if _, err := os.Stat(filepath.Join(wd, sy.Icon)); os.IsNotExist(err) {

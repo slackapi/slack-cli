@@ -17,7 +17,7 @@ package apps
 import (
 	"context"
 	"fmt"
-	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -30,6 +30,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/spf13/afero"
 )
 
 // Constants for onlyCreateUpdateAppManifest parameter
@@ -39,6 +40,23 @@ const (
 )
 
 const additionalManifestInfoNotice = "App manifest contains some components that may require additional information"
+
+var supportedIconExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
+
+func resolveIconPath(fs afero.Fs, manifestIcon string) string {
+	if manifestIcon != "" {
+		return manifestIcon
+	}
+	for _, dir := range []string{"assets", "."} {
+		for _, ext := range supportedIconExtensions {
+			candidate := filepath.Join(dir, "icon"+ext)
+			if _, err := fs.Stat(candidate); err == nil {
+				return candidate
+			}
+		}
+	}
+	return ""
+}
 
 // Install installs the app to a team
 func Install(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, onlyCreateUpdateAppManifest bool, app types.App, orgGrantWorkspaceID string) (types.App, types.InstallState, error) {
@@ -218,15 +236,8 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		}
 	}
 
-	// upload icon, default to assets/icon.png or icon.png
-	var iconPath = slackManifest.Icon
-	if iconPath == "" {
-		if _, err := os.Stat("assets/icon.png"); !os.IsNotExist(err) {
-			iconPath = "assets/icon.png"
-		} else if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
-			iconPath = "icon.png"
-		}
-	}
+	// upload icon, default to assets/icon.{png,jpg,jpeg,gif} or icon.{png,jpg,jpeg,gif}
+	iconPath := resolveIconPath(clients.Fs, slackManifest.Icon)
 	if iconPath != "" {
 		err = updateIcon(ctx, clients, iconPath, app.AppID, token)
 		if err != nil {
@@ -526,14 +537,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 
 	// upload icon for non-hosted apps (gated behind set-icon experiment)
 	if clients.Config.WithExperimentOn(experiment.SetIcon) {
-		var iconPath = slackManifest.Icon
-		if iconPath == "" {
-			if _, err := os.Stat("assets/icon.png"); !os.IsNotExist(err) {
-				iconPath = "assets/icon.png"
-			} else if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
-				iconPath = "icon.png"
-			}
-		}
+		iconPath := resolveIconPath(clients.Fs, slackManifest.Icon)
 		if iconPath != "" {
 			_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
 			if iconErr != nil {

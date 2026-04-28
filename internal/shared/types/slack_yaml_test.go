@@ -50,6 +50,31 @@ func Test_SlackYaml_hasValidIconPath(t *testing.T) {
 			},
 			expected: true,
 		},
+		"no icon with default assets/icon.jpg present returns true": {
+			icon: "",
+			setup: func(t *testing.T, dir string) {
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, "assets"), 0o755))
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "assets", "icon.jpg"), []byte("img"), 0o644))
+			},
+			expected: true,
+		},
+		"no icon with default assets/icon.gif present returns true": {
+			icon: "",
+			setup: func(t *testing.T, dir string) {
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, "assets"), 0o755))
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "assets", "icon.gif"), []byte("img"), 0o644))
+			},
+			expected: true,
+		},
+		"png takes priority over jpg in assets": {
+			icon: "",
+			setup: func(t *testing.T, dir string) {
+				require.NoError(t, os.MkdirAll(filepath.Join(dir, "assets"), 0o755))
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "assets", "icon.png"), []byte("img"), 0o644))
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "assets", "icon.jpg"), []byte("img"), 0o644))
+			},
+			expected: true,
+		},
 		"no icon and no default returns true": {
 			icon:     "",
 			setup:    func(t *testing.T, dir string) {},
