@@ -83,5 +83,5 @@ There are more details about processes and workflow in the
 [commits]: https://www.conventionalcommits.org/en/v1.0.0/
 [conduct]: https://slackhq.github.io/code-of-conduct
 [empathy]: https://slack.engineering/on-empathy-pull-requests-979e4257d158#.awxtvmb2z
-[issues]: /issues/new
+[issues]: https://github.com/slackapi/slack-cli/issues/new/choose
 [maintainers]: ./MAINTAINERS_GUIDE.md
