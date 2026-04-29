@@ -57,7 +57,7 @@ Thanks for stopping by! You're awesome :sunglasses:
 [dev]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
 [enhancements]: https://github.com/slackapi/slack-cli/pulls
 [install]: https://docs.slack.dev/tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux
-[issues]: https://github.com/slackapi/slack-cli/issues/new?template=04_bug.md
+[issues]: https://github.com/slackapi/slack-cli/issues/new?template=01-bug.yml
 [maintainers]: .github/MAINTAINERS_GUIDE.md
 [releases]: https://github.com/slackapi/slack-cli/releases
-[suggestions]: https://github.com/slackapi/slack-cli/issues/new?template=02_enhancement.md
+[suggestions]: https://github.com/slackapi/slack-cli/issues/new?template=02-feature.yml
