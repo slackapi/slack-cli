@@ -100,6 +100,7 @@ const (
 	ErrDotEnvFileRead                                = "dotenv_file_read_error"
 	ErrDotEnvFileWrite                               = "dotenv_file_write_error"
 	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
+	ErrDomainLong                                    = "domain_long"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
 	ErrFailedCreatingApp                             = "failed_creating_app"
@@ -707,6 +708,11 @@ Otherwise start your app for local development with: %s`,
 	ErrDotEnvVarMarshal: {
 		Code:    ErrDotEnvVarMarshal,
 		Message: "Failed to marshal the .env variable",
+	},
+
+	ErrDomainLong: {
+		Code:    ErrDomainLong,
+		Message: "Sandbox name or domain is too long",
 	},
 
 	ErrEnterpriseNotFound: {

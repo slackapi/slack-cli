@@ -45,8 +45,16 @@ var createCmdFlags createFlags
 
 // templateNameToID maps user-friendly template names to integer IDs
 var templateNameToID = map[string]int{
-	"default": 1, // The default template
 	"empty":   0, // The sandbox will be empty if the template param is not set
+	"default": 1, // The default template
+
+	// Additional partner sandbox template options
+	"finance":                2,
+	"hr":                     3,
+	"it-incident-management": 4,
+	"customer-support":       5,
+	"sales":                  6,
+	"marketing":              7,
 }
 
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
