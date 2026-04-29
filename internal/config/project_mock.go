@@ -30,7 +30,18 @@ func NewProjectConfigMock() *ProjectConfigMock {
 }
 
 func (m *ProjectConfigMock) AddDefaultMocks() {
+	m.On("GetIconPath", mock.Anything).Return("", nil)
 	m.On("GetManifestSource", mock.Anything).Return(ManifestSourceLocal, nil)
+}
+
+func (m *ProjectConfigMock) GetIconPath(ctx context.Context) (string, error) {
+	args := m.Called(ctx)
+	return args.String(0), args.Error(1)
+}
+
+func (m *ProjectConfigMock) SetIconPath(ctx context.Context, iconPath string) error {
+	args := m.Called(ctx, iconPath)
+	return args.Error(0)
 }
 
 func (m *ProjectConfigMock) InitProjectID(ctx context.Context, overwriteExistingProjectID bool) (string, error) {

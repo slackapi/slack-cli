@@ -47,6 +47,8 @@ var dotGitignoreFileData []byte
 
 // ProjectConfigManager is the interface for interacting with the project config
 type ProjectConfigManager interface {
+	GetIconPath(ctx context.Context) (string, error)
+	SetIconPath(ctx context.Context, iconPath string) error
 	InitProjectID(ctx context.Context, overwriteExistingProjectID bool) (string, error)
 	GetProjectID(ctx context.Context) (string, error)
 	SetProjectID(ctx context.Context, projectID string) (string, error)
@@ -60,6 +62,7 @@ type ProjectConfigManager interface {
 // ProjectConfig is the project-level config file
 type ProjectConfig struct {
 	Experiments map[string]bool         `json:"experiments,omitempty"`
+	Icon        string                  `json:"icon,omitempty"`
 	Manifest    *ManifestConfig         `json:"manifest,omitempty"`
 	ProjectID   string                  `json:"project_id,omitempty"`
 	Surveys     map[string]SurveyConfig `json:"surveys,omitempty"`
@@ -79,6 +82,37 @@ func NewProjectConfig(fs afero.Fs, os types.Os) *ProjectConfig {
 	}
 
 	return projectConfig
+}
+
+// GetIconPath reads the icon path from the project-level config file
+func (c *ProjectConfig) GetIconPath(ctx context.Context) (string, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "GetIconPath")
+	defer span.Finish()
+
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimSpace(projectConfig.Icon), nil
+}
+
+// SetIconPath sets the icon path in the project-level config file
+func (c *ProjectConfig) SetIconPath(ctx context.Context, iconPath string) error {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "SetIconPath")
+	defer span.Finish()
+
+	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
+	if err != nil {
+		return err
+	}
+
+	projectConfig.Icon = iconPath
+
+	_, err = WriteProjectConfigFile(ctx, c.fs, c.os, projectConfig)
+	return err
 }
 
 // InitProjectID will set the project_id in the project-level config when it's unset
