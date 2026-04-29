@@ -168,15 +168,15 @@ func getAdapterOptions(framework string) []promptObject {
 func getSelectionOptionsForCategory(clients *shared.ClientFactory) []promptObject {
 	return []promptObject{
 		{
-			Title:      fmt.Sprintf("Starter app %s", style.Secondary("Getting started Slack app")),
+			Title:      fmt.Sprintf("Starter App %s", style.Secondary("Getting started Slack app")),
 			Repository: "slack-cli#getting-started",
 		},
 		{
-			Title:      fmt.Sprintf("AI Agent app %s", style.Secondary("Slack agents and assistants")),
+			Title:      fmt.Sprintf("AI Agent App %s", style.Secondary("Slack agents and assistants")),
 			Repository: "slack-cli#ai-apps",
 		},
 		{
-			Title:      fmt.Sprintf("Automation app %s", style.Secondary("Custom steps and workflows")),
+			Title:      fmt.Sprintf("Automation App %s", style.Secondary("Custom steps and workflows")),
 			Repository: "slack-cli#automation-apps",
 		},
 		{
