@@ -110,6 +110,7 @@ type AppSettings struct {
 	FunctionRuntime        FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
 	TokenRotationEnabled   *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
 	SiwsLinks              *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
+	IsMCPEnabled           *bool                       `json:"is_mcp_enabled,omitempty" yaml:"is_mcp_enabled,omitempty"`
 }
 
 type WorkflowStep struct {
