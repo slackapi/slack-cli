@@ -96,9 +96,11 @@ const (
 	ErrDenoNotFound                                  = "deno_not_found"
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
 	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
+	ErrDotEnvFileAlreadyExists                       = "dotenv_file_already_exists"
 	ErrDotEnvFileParse                               = "dotenv_file_parse_error"
 	ErrDotEnvFileRead                                = "dotenv_file_read_error"
 	ErrDotEnvFileWrite                               = "dotenv_file_write_error"
+	ErrDotEnvPlaceholderNotFound                     = "dotenv_placeholder_not_found"
 	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
@@ -689,6 +691,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "Failed to generate documentation",
 	},
 
+	ErrDotEnvFileAlreadyExists: {
+		Code:    ErrDotEnvFileAlreadyExists,
+		Message: "A .env file already exists",
+	},
+
 	ErrDotEnvFileParse: {
 		Code:    ErrDotEnvFileParse,
 		Message: "Failed to parse the .env file",
@@ -702,6 +709,11 @@ Otherwise start your app for local development with: %s`,
 	ErrDotEnvFileWrite: {
 		Code:    ErrDotEnvFileWrite,
 		Message: "Failed to write the .env file",
+	},
+
+	ErrDotEnvPlaceholderNotFound: {
+		Code:    ErrDotEnvPlaceholderNotFound,
+		Message: "No template placeholder was found for environment variables",
 	},
 
 	ErrDotEnvVarMarshal: {
