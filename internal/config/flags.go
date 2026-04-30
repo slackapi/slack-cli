@@ -37,6 +37,7 @@ func (c *Config) InitializeGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&c.DeprecatedDevFlag, "dev", "d", false, "use dev apis")                                                // Can be removed after v0.25.0
 	cmd.PersistentFlags().StringVarP(&c.DeprecatedWorkspaceFlag, "workspace", "", "", "select workspace or organization by domain name or team ID")
 	cmd.PersistentFlags().StringSliceVarP(&c.ExperimentsFlag, "experiment", "e", nil, "use the experiment(s) in the command")
+	cmd.PersistentFlags().BoolVarP(&c.Accessible, "accessible", "", false, "use accessible prompts for screen readers")
 	cmd.PersistentFlags().BoolVarP(&c.ForceFlag, "force", "f", false, "ignore warnings and continue executing command")
 	cmd.PersistentFlags().BoolVarP(&c.NoColor, "no-color", "", false, "remove styles and formatting from outputs")
 	cmd.PersistentFlags().BoolVarP(&c.SkipUpdateFlag, "skip-update", "s", false, "skip checking for latest version of CLI")

@@ -21,6 +21,7 @@ package iostreams
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
 
 	huh "charm.land/huh/v2"
@@ -39,13 +40,20 @@ func newForm(io *IOStreams, field huh.Field) *huh.Form {
 	} else {
 		form = form.WithTheme(style.ThemeSurvey())
 	}
+	if io != nil && io.config.Accessible {
+		form = form.WithAccessible(true)
+	}
 	return form
 }
 
 // buildInputForm constructs an interactive form for text input prompts.
 func buildInputForm(io *IOStreams, message string, cfg InputPromptConfig, input *string) *huh.Form {
+	title := message
+	if io != nil && io.config.Accessible && cfg.Placeholder != "" {
+		title = fmt.Sprintf("%s (default: %s):", strings.TrimSuffix(message, ":"), cfg.Placeholder)
+	}
 	field := huh.NewInput().
-		Title(message).
+		Title(title).
 		Prompt(style.Chevron() + " ").
 		Placeholder(cfg.Placeholder).
 		Value(input)
@@ -100,8 +108,13 @@ func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectProm
 		opts = append(opts, huh.NewOption(key, opt))
 	}
 
+	title := msg
+	if io != nil && io.config.Accessible && len(options) > 0 {
+		title = fmt.Sprintf("%s (press Enter for 1):", strings.TrimSuffix(msg, ":"))
+	}
+
 	field := huh.NewSelect[string]().
-		Title(msg).
+		Title(title).
 		Description(cfg.Help).
 		Options(opts...).
 		Value(selected)
