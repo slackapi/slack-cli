@@ -45,9 +45,6 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "sandbox list", Meaning: "List developer sandboxes"},
 			{Command: "sandbox list --status active", Meaning: "List active sandboxes only"},
 		}),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return requireSandboxExperiment(clients)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runListCommand(cmd, clients)
 		},

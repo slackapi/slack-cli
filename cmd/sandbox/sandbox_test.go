@@ -17,7 +17,6 @@ package sandbox
 import (
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -28,9 +27,6 @@ func TestSandboxCommand(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
-
-	clientsMock.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-	clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	cmd := NewCommand(clients)

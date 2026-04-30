@@ -20,7 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/test/testutil"
@@ -36,7 +35,6 @@ func TestCreateCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"create success": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "test-box",
 				"--domain", "test-box",
@@ -52,8 +50,6 @@ func TestCreateCommand(t *testing.T) {
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"T123", "https://test-box.slack.com", "Sandbox Created"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -63,7 +59,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with derived domain": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "My Test Box",
 				"--domain", "my-test-box",
@@ -78,8 +73,6 @@ func TestCreateCommand(t *testing.T) {
 					Return("T789", "https://my-test-box.slack.com", nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "My Test Box", "my-test-box", "pass", "", "", 0, "", int64(0), false)
@@ -87,7 +80,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with a relative time-to-live value": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tmp-box",
 				"--domain", "tmp-box",
@@ -103,8 +95,6 @@ func TestCreateCommand(t *testing.T) {
 					Return("T111", "https://tmp-box.slack.com", nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "tmp-box", "tmp-box", "pass", "", "", 0, "", mock.MatchedBy(func(v int64) bool { return v > 0 }), false)
@@ -112,7 +102,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create API error": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "err-box",
 				"--domain", "err-box",
@@ -127,14 +116,11 @@ func TestCreateCommand(t *testing.T) {
 					Return("", "", errors.New("api_error"))
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"api_error"},
 		},
 		"create with 'default' template": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tpl-box",
 				"--domain", "tpl-box",
@@ -150,8 +136,6 @@ func TestCreateCommand(t *testing.T) {
 					Return("T333", "https://tpl-box.slack.com", nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"T333", "https://tpl-box.slack.com", "Sandbox Created"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -160,7 +144,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with partner flag": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "partner-box",
 				"--domain", "partner-box",
@@ -176,8 +159,6 @@ func TestCreateCommand(t *testing.T) {
 					Return("T555", "https://partner-box.slack.com", nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"T555", "https://partner-box.slack.com", "Sandbox Created"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -186,7 +167,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with invalid template fails": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tmpl-box",
 				"--domain", "tmpl-box",
@@ -200,8 +180,6 @@ func TestCreateCommand(t *testing.T) {
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"Invalid template"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -210,7 +188,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with archive-date": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "date-box",
 				"--domain", "date-box",
@@ -226,8 +203,6 @@ func TestCreateCommand(t *testing.T) {
 					Return("T222", "https://date-box.slack.com", nil)
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "CreateSandbox", mock.Anything, "xoxb-test-token", "date-box", "date-box", "pass", "", "", 0, "", archiveEpoch, false)
@@ -235,7 +210,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with both archive and archive-date fails": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tmp-box",
 				"--domain", "tmp-box",
@@ -250,8 +224,6 @@ func TestCreateCommand(t *testing.T) {
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"Cannot use both --archive-ttl and --archive-date"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -260,7 +232,6 @@ func TestCreateCommand(t *testing.T) {
 		},
 		"create with invalid archive-ttl value fails": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tmp-box",
 				"--domain", "tmp-box",
@@ -274,24 +245,8 @@ func TestCreateCommand(t *testing.T) {
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedErrorStrings: []string{"Invalid TTL"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"experiment required": {
-			CmdArgs: []string{
-				"--name", "test-box",
-				"--domain", "test-box",
-				"--password", "pass",
-			},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-			},
-			ExpectedErrorStrings: []string{"sandbox"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
@@ -310,8 +265,6 @@ func setupCreateMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock,
 	cm.API.On("CreateSandbox", mock.Anything, testToken, name, domain, password, "", "", 0, "", archiveEpoch, partner).
 		Return("T222", "https://"+domain+".slack.com", nil)
 	cm.AddDefaultMocks()
-	cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-	cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 }
 
 func setupCreateAuthOnly(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -321,15 +274,12 @@ func setupCreateAuthOnly(t *testing.T, ctx context.Context, cm *shared.ClientsMo
 	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 	cm.AddDefaultMocks()
-	cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-	cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 }
 
 func Test_getEpochFromTTL(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"1d": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "ttl-box",
 				"--domain", "ttl-box",
@@ -346,7 +296,6 @@ func Test_getEpochFromTTL(t *testing.T) {
 		},
 		"1w": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "ttl-box",
 				"--domain", "ttl-box",
@@ -363,7 +312,6 @@ func Test_getEpochFromTTL(t *testing.T) {
 		},
 		"6mo": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "ttl-box",
 				"--domain", "ttl-box",
@@ -380,7 +328,6 @@ func Test_getEpochFromTTL(t *testing.T) {
 		},
 		"invalid": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "ttl-box",
 				"--domain", "ttl-box",
@@ -408,7 +355,6 @@ func Test_getEpochFromDate(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"valid": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "date-box",
 				"--domain", "date-box",
@@ -425,7 +371,6 @@ func Test_getEpochFromDate(t *testing.T) {
 		},
 		"invalid format": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "date-box",
 				"--domain", "date-box",
@@ -442,7 +387,6 @@ func Test_getEpochFromDate(t *testing.T) {
 		},
 		"invalid date": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "date-box",
 				"--domain", "date-box",
@@ -459,7 +403,6 @@ func Test_getEpochFromDate(t *testing.T) {
 		},
 		"date in past": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "date-box",
 				"--domain", "date-box",
@@ -483,7 +426,6 @@ func Test_getTemplateID(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"valid template name": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tpl-box",
 				"--domain", "tpl-box",
@@ -498,8 +440,6 @@ func Test_getTemplateID(t *testing.T) {
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "tpl-box", "tpl-box", "pass", "", "", 1, "", int64(0), false).
 					Return("T333", "https://tpl-box.slack.com", nil)
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Created"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -508,7 +448,6 @@ func Test_getTemplateID(t *testing.T) {
 		},
 		"integer value also accepted": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tpl-box",
 				"--domain", "tpl-box",
@@ -523,8 +462,6 @@ func Test_getTemplateID(t *testing.T) {
 				cm.API.On("CreateSandbox", mock.Anything, testToken, "tpl-box", "tpl-box", "pass", "", "", 1, "", int64(0), false).
 					Return("T333", "https://tpl-box.slack.com", nil)
 				cm.AddDefaultMocks()
-				cm.Config.ExperimentsFlag = []string{string(experiment.Sandboxes)}
-				cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Created"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -533,7 +470,6 @@ func Test_getTemplateID(t *testing.T) {
 		},
 		"invalid template name fails": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "tpl-box",
 				"--domain", "tpl-box",
@@ -557,7 +493,6 @@ func Test_domainFromName(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"handles invalid URL characters": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "-Hello_World 123-",
 				"--password", "pass",
@@ -572,7 +507,6 @@ func Test_domainFromName(t *testing.T) {
 		},
 		"empty": {
 			CmdArgs: []string{
-				"--experiment=sandboxes",
 				"--token", "xoxb-test-token",
 				"--name", "",
 				"--password", "pass",

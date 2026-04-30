@@ -26,9 +26,13 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
+type PromptTeamSlackAuthConfig struct {
+	HelpText string
+}
+
 // PromptTeamSlackAuth prompts the user to select a team that they're logged in to and returns the auth information.
 // If the user is only logged in to one team, we return it by default.
-func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, promptText string) (*types.SlackAuth, error) {
+func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
 
 	allAuths, err := clients.Auth().Auths(ctx)
 	if err != nil {
@@ -54,14 +58,19 @@ func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, pro
 		)
 	}
 
+	selectPromptConfig := iostreams.SelectPromptConfig{
+		Required: true,
+		Flag:     clients.Config.Flags.Lookup("team"),
+	}
+	if promptConfig != nil && promptConfig.HelpText != "" {
+		selectPromptConfig.Help = promptConfig.HelpText
+	}
+
 	selection, err := clients.IO.SelectPrompt(
 		ctx,
 		promptText,
 		teamLabels,
-		iostreams.SelectPromptConfig{
-			Required: true,
-			Flag:     clients.Config.Flags.Lookup("team"),
-		},
+		selectPromptConfig,
 	)
 	if err != nil {
 		return &types.SlackAuth{}, err
