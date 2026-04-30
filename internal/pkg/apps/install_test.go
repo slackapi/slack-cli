@@ -589,6 +589,8 @@ func TestInstall(t *testing.T) {
 			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifestAppRemote, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
+			mockProjectConfig.AddDefaultMocks()
+			mockProjectConfig.On("GetManifestSource", mock.Anything).Unset()
 			mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
 			mockProjectCache := cache.NewCacheMock()
 			mockProjectCache.On(
@@ -1411,6 +1413,8 @@ func TestInstallLocalApp(t *testing.T) {
 			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
+			mockProjectConfig.AddDefaultMocks()
+			mockProjectConfig.On("GetManifestSource", mock.Anything).Unset()
 			mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
 			mockProjectCache := cache.NewCacheMock()
 			mockProjectCache.On(

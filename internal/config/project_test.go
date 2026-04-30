@@ -139,6 +139,107 @@ func Test_ProjectConfig_InitProjectID(t *testing.T) {
 	})
 }
 
+func Test_ProjectConfig_GetIconPath(t *testing.T) {
+	t.Run("When not a project directory, should return an error", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fs := slackdeps.NewFsMock()
+		os := slackdeps.NewOsMock()
+		os.AddDefaultMocks()
+
+		projectConfig := NewProjectConfig(fs, os)
+		iconPath, err := projectConfig.GetIconPath(ctx)
+
+		require.Error(t, err)
+		require.Empty(t, iconPath)
+	})
+
+	t.Run("When icon is not set, should return empty string", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fs := slackdeps.NewFsMock()
+		os := slackdeps.NewOsMock()
+		os.AddDefaultMocks()
+		addProjectMocks(t, fs)
+
+		projectConfig := NewProjectConfig(fs, os)
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: "test-123"})
+		require.NoError(t, err)
+
+		iconPath, err := projectConfig.GetIconPath(ctx)
+
+		require.NoError(t, err)
+		require.Empty(t, iconPath)
+	})
+
+	t.Run("When icon is set, should return trimmed icon path", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fs := slackdeps.NewFsMock()
+		os := slackdeps.NewOsMock()
+		os.AddDefaultMocks()
+		addProjectMocks(t, fs)
+
+		projectConfig := NewProjectConfig(fs, os)
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{Icon: "  assets/icon.png  "})
+		require.NoError(t, err)
+
+		iconPath, err := projectConfig.GetIconPath(ctx)
+
+		require.NoError(t, err)
+		require.Equal(t, "assets/icon.png", iconPath)
+	})
+}
+
+func Test_ProjectConfig_SetIconPath(t *testing.T) {
+	t.Run("When not a project directory, should return an error", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fs := slackdeps.NewFsMock()
+		os := slackdeps.NewOsMock()
+		os.AddDefaultMocks()
+
+		projectConfig := NewProjectConfig(fs, os)
+		err := projectConfig.SetIconPath(ctx, "icon.png")
+
+		require.Error(t, err)
+	})
+
+	t.Run("When a project directory, should update the icon path", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fs := slackdeps.NewFsMock()
+		os := slackdeps.NewOsMock()
+		os.AddDefaultMocks()
+		addProjectMocks(t, fs)
+
+		projectConfig := NewProjectConfig(fs, os)
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: "test-123"})
+		require.NoError(t, err)
+
+		err = projectConfig.SetIconPath(ctx, "images/my-icon.png")
+		require.NoError(t, err)
+
+		iconPath, err := projectConfig.GetIconPath(ctx)
+		require.NoError(t, err)
+		require.Equal(t, "images/my-icon.png", iconPath)
+	})
+
+	t.Run("should preserve existing config fields", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fs := slackdeps.NewFsMock()
+		os := slackdeps.NewOsMock()
+		os.AddDefaultMocks()
+		addProjectMocks(t, fs)
+
+		projectConfig := NewProjectConfig(fs, os)
+		_, err := WriteProjectConfigFile(ctx, fs, os, ProjectConfig{ProjectID: "test-123"})
+		require.NoError(t, err)
+
+		err = projectConfig.SetIconPath(ctx, "icon.png")
+		require.NoError(t, err)
+
+		projectID, err := projectConfig.GetProjectID(ctx)
+		require.NoError(t, err)
+		require.Equal(t, "test-123", projectID)
+	})
+}
+
 func Test_ProjectConfig_GetProjectID(t *testing.T) {
 	t.Run("When not a project directory, should return an error", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
