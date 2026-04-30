@@ -29,6 +29,43 @@ import (
 	"github.com/spf13/afero"
 )
 
+// Init copies a template placeholder file (.env.sample or .env.example) to
+// .env. It returns an error if .env already exists, or if no placeholder file
+// is found.
+func Init(fs afero.Fs) (string, error) {
+	sampleFiles := []string{".env.sample", ".env.example"}
+
+	exists, err := afero.Exists(fs, ".env")
+	if err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrDotEnvFileRead).
+			WithMessage("Failed to read the .env file: %s", err)
+	}
+	if exists {
+		return "", slackerror.New(slackerror.ErrDotEnvFileAlreadyExists)
+	}
+
+	for _, name := range sampleFiles {
+		data, err := afero.ReadFile(fs, name)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return "", slackerror.Wrap(err, slackerror.ErrDotEnvFileRead).
+				WithMessage("Failed to read the %s file: %s", name, err)
+		}
+		if _, err := godotenv.UnmarshalBytes(data); err != nil {
+			return "", slackerror.Wrap(err, slackerror.ErrDotEnvFileParse).
+				WithMessage("Failed to parse the %s file", name)
+		}
+		if err := writeFile(fs, data); err != nil {
+			return "", err
+		}
+		return name, nil
+	}
+
+	return "", slackerror.New(slackerror.ErrDotEnvPlaceholderNotFound)
+}
+
 // Read parses a .env file from the working directory using the provided
 // filesystem. It returns nil if the filesystem is nil or the file does not
 // exist.

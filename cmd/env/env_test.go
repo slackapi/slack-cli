@@ -32,6 +32,7 @@ func Test_Env_Command(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"shows the help page without commands or arguments or flags": {
 			ExpectedStdoutOutputs: []string{
+				"Initialize environment variables from placeholders",
 				"Set an environment variable",
 				"List all environment variables",
 				"Unset an environment variable",

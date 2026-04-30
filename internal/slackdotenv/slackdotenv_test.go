@@ -24,6 +24,66 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_Init(t *testing.T) {
+	tests := map[string]struct {
+		files       map[string]string
+		expected    string
+		expectedEnv string
+		expectErr   string
+	}{
+		"copies .env.sample to .env": {
+			files:       map[string]string{".env.sample": "FOO=bar\n"},
+			expected:    ".env.sample",
+			expectedEnv: "FOO=bar\n",
+		},
+		"copies .env.example to .env": {
+			files:       map[string]string{".env.example": "BAZ=qux\n"},
+			expected:    ".env.example",
+			expectedEnv: "BAZ=qux\n",
+		},
+		"prefers .env.sample over .env.example": {
+			files: map[string]string{
+				".env.sample":  "FROM_SAMPLE=1\n",
+				".env.example": "FROM_EXAMPLE=1\n",
+			},
+			expected:    ".env.sample",
+			expectedEnv: "FROM_SAMPLE=1\n",
+		},
+		"returns error when .env already exists": {
+			files:     map[string]string{".env": "EXISTING=value\n"},
+			expectErr: slackerror.ErrDotEnvFileAlreadyExists,
+		},
+		"returns error when placeholder file cannot be parsed": {
+			files:     map[string]string{".env.sample": "INVALID LINE WITHOUT EQUALS\n"},
+			expectErr: slackerror.ErrDotEnvFileParse,
+		},
+		"returns error when no sample file exists": {
+			files:     map[string]string{},
+			expectErr: slackerror.ErrDotEnvPlaceholderNotFound,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fs := afero.NewMemMapFs()
+			for path, content := range tc.files {
+				err := afero.WriteFile(fs, path, []byte(content), 0600)
+				require.NoError(t, err)
+			}
+			source, err := Init(fs)
+			if tc.expectErr != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectErr, slackerror.ToSlackError(err).Code)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, source)
+			content, err := afero.ReadFile(fs, ".env")
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedEnv, string(content))
+		})
+	}
+}
+
 func Test_Read(t *testing.T) {
 	tests := map[string]struct {
 		fs          afero.Fs
@@ -285,9 +345,8 @@ func Test_Set(t *testing.T) {
 			}
 			err := Set(fs, tc.name, tc.value)
 			if tc.expectErr != "" {
-				var slackErr *slackerror.Error
-				require.ErrorAs(t, err, &slackErr)
-				assert.Equal(t, tc.expectErr, slackErr.Code)
+				require.Error(t, err)
+				assert.Equal(t, tc.expectErr, slackerror.ToSlackError(err).Code)
 				return
 			}
 			assert.NoError(t, err)
