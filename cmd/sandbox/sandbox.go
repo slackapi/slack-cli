@@ -63,9 +63,7 @@ func getSandboxAuth(ctx context.Context, clients *shared.ClientFactory) (*types.
 	}
 
 	// Prompt the user to select a team to use for authentication
-	// TODO(experiment:charm): Change this to prompt "help" message once charm is stable
-	clients.IO.PrintInfo(ctx, false, "%s", style.Secondary("Choose a Slack team where your email address matches your Slack developer account"))
-	auth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select a team for authentication")
+	auth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select a team for authentication", &prompts.PromptTeamSlackAuthConfig{HelpText: "Your email address on the selected team should match your Slack developer account"})
 	if err != nil {
 		return nil, err
 	}
