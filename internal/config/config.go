@@ -22,6 +22,7 @@ import (
 )
 
 // Environment Variable constants
+const slackAppIconPathEnv = "SLACK_CLI_APP_ICON_PATH"
 const slackAutoRequestAAAEnv = "SLACK_AUTO_REQUEST_AAA"
 const slackConfigDirEnv = "SLACK_CONFIG_DIR"
 const slackDisableTelemetryEnv = "SLACK_DISABLE_TELEMETRY"
@@ -41,6 +42,7 @@ type Config struct {
 	APIHostFlag             string
 	APIHostResolved         string
 	AppFlag                 string
+	AppIconPathFlag         string
 	AutoRequestAAAFlag      bool
 	ConfigDirFlag           string
 	DebugEnabled            bool
