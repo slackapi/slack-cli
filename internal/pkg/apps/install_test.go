@@ -16,12 +16,15 @@ package apps
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -1720,6 +1723,90 @@ func TestContinueDespiteWarning(t *testing.T) {
 			assert.Equal(t, tc.expectedResult, result)
 			if !tc.expectsPrompt {
 				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
+			}
+		})
+	}
+}
+
+func Test_updateIcon(t *testing.T) {
+	tests := map[string]struct {
+		isHosted      bool
+		experimentOn  bool
+		expectIconSet bool
+		expectIcon    bool
+		expectSkip    bool
+		mockError     error
+		expectedError bool
+	}{
+		"experiment on + hosted app uses IconSet": {
+			isHosted:      true,
+			experimentOn:  true,
+			expectIconSet: true,
+		},
+		"experiment on + non-hosted app uses IconSet": {
+			isHosted:      false,
+			experimentOn:  true,
+			expectIconSet: true,
+		},
+		"experiment off + hosted app uses Icon": {
+			isHosted:     true,
+			experimentOn: false,
+			expectIcon:   true,
+		},
+		"experiment off + non-hosted app skips upload": {
+			isHosted:     false,
+			experimentOn: false,
+			expectSkip:   true,
+		},
+		"returns error from IconSet": {
+			isHosted:      false,
+			experimentOn:  true,
+			expectIconSet: true,
+			mockError:     fmt.Errorf("api error"),
+			expectedError: true,
+		},
+		"returns error from Icon": {
+			isHosted:      true,
+			experimentOn:  false,
+			expectIcon:    true,
+			mockError:     fmt.Errorf("api error"),
+			expectedError: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+
+			if tc.experimentOn {
+				clientsMock.Config.ExperimentsFlag = []string{string(experiment.SetIcon)}
+				clientsMock.Config.LoadExperiments(ctx, func(_ context.Context, _ string, _ ...interface{}) {})
+			}
+
+			clientsMock.API.On("IconSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(api.IconResult{}, tc.mockError)
+			clientsMock.API.On("Icon", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(api.IconResult{}, tc.mockError)
+
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			err := updateIcon(ctx, clients, "icon.png", "A001", "xoxe-token", tc.isHosted)
+
+			if tc.expectedError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			if tc.expectIconSet {
+				clientsMock.API.AssertCalled(t, "IconSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "Icon")
+			} else if tc.expectIcon {
+				clientsMock.API.AssertCalled(t, "Icon", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "IconSet")
+			} else if tc.expectSkip {
+				clientsMock.API.AssertNotCalled(t, "Icon")
+				clientsMock.API.AssertNotCalled(t, "IconSet")
 			}
 		})
 	}
