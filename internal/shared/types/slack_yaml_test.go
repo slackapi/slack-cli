@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,7 +93,7 @@ func Test_SlackYaml_hasValidIconPath(t *testing.T) {
 			defer func() { require.NoError(t, os.Chdir(origDir)) }()
 
 			sy := &SlackYaml{Icon: tc.icon}
-			assert.Equal(t, tc.expected, sy.hasValidIconPath())
+			assert.Equal(t, tc.expected, sy.hasValidIconPath(afero.NewOsFs()))
 		})
 	}
 }
@@ -128,9 +129,9 @@ func Test_SlackYaml_Verify(t *testing.T) {
 
 			sy := &SlackYaml{Icon: tc.icon}
 			if tc.expectErr {
-				assert.Error(t, sy.Verify())
+				assert.Error(t, sy.Verify(afero.NewOsFs()))
 			} else {
-				assert.NoError(t, sy.Verify())
+				assert.NoError(t, sy.Verify(afero.NewOsFs()))
 			}
 		})
 	}
