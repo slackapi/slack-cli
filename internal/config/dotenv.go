@@ -46,7 +46,7 @@ func (c *Config) LoadEnvironmentVariables() error {
 	}
 
 	// Load app icon path from environment variables
-	var appIconPath = strings.TrimSpace(c.os.Getenv(slackAppIconPathEnv))
+	var appIconPath = strings.TrimSpace(c.os.Getenv(slackCLIAppIconPathEnv))
 	if appIconPath != "" {
 		c.AppIconPathFlag = appIconPath
 	}

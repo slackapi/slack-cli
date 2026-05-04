@@ -647,9 +647,12 @@ func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifes
 		}
 		clients.IO.PrintDebug(ctx, "SLACK_CLI_APP_ICON_PATH file not found: %s", envIconPath)
 		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from SLACK_CLI_APP_ICON_PATH not found: %s", envIconPath)))
+		return ""
 	}
 	if manifestIcon != "" {
-		return manifestIcon
+		if _, err := os.Stat(manifestIcon); !os.IsNotExist(err) {
+			return manifestIcon
+		}
 	}
 	if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
 		return "icon.png"

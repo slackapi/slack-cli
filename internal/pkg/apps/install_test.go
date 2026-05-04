@@ -1771,25 +1771,25 @@ func Test_resolveIconPath(t *testing.T) {
 			setupFiles: func(t *testing.T, dir string) {},
 			expected:   "",
 		},
-		"env var file not found falls back to manifest": {
+		"env var file not found returns empty": {
 			envIconPath:  "missing-icon.png",
 			manifestIcon: "manifest-icon.png",
 			setupFiles: func(t *testing.T, dir string) {
 				require.NoError(t, os.WriteFile(filepath.Join(dir, "manifest-icon.png"), []byte("img"), 0o644))
 			},
-			expected: "manifest-icon.png",
+			expected: "",
 		},
-		"env var file not found falls back to icon.png": {
-			envIconPath: "missing-icon.png",
+		"manifest icon file not found falls back to icon.png": {
+			manifestIcon: "missing-manifest-icon.png",
 			setupFiles: func(t *testing.T, dir string) {
 				require.NoError(t, os.WriteFile(filepath.Join(dir, "icon.png"), []byte("img"), 0o644))
 			},
 			expected: "icon.png",
 		},
-		"env var file not found and no fallback returns empty": {
-			envIconPath: "missing-icon.png",
-			setupFiles:  func(t *testing.T, dir string) {},
-			expected:    "",
+		"manifest icon file not found and no icon.png returns empty": {
+			manifestIcon: "missing-manifest-icon.png",
+			setupFiles:   func(t *testing.T, dir string) {},
+			expected:     "",
 		},
 	}
 	for name, tc := range tests {
