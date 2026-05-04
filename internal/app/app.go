@@ -19,12 +19,15 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"text/template"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/spf13/afero"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Client to access the app/project
@@ -46,18 +49,25 @@ func NewClient(
 	}
 }
 
+func kebabToTitleCase(s string) string {
+	return cases.Title(language.English).String(strings.ReplaceAll(s, "-", " "))
+}
+
 // UpdateDefaultProjectFiles should update any project specific files if any
 func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string) error {
+	displayName := kebabToTitleCase(appDirName)
+
 	// Files and their corresponding app name replacement functions
 	projectFiles := []struct {
 		filename string
 		replacer func([]byte, string) []byte
+		name     string
 	}{
-		{"manifest.json", regexReplaceAppNameInManifest},
-		{"manifest.js", regexReplaceAppNameInManifest},
-		{"manifest.ts", regexReplaceAppNameInManifest},
-		{"package.json", regexReplaceAppNameInPackageJSON},
-		{"pyproject.toml", regexReplaceAppNameInPyprojectToml},
+		{"manifest.json", regexReplaceAppNameInManifest, displayName},
+		{"manifest.js", regexReplaceAppNameInManifest, displayName},
+		{"manifest.ts", regexReplaceAppNameInManifest, displayName},
+		{"package.json", regexReplaceAppNameInPackageJSON, appDirName},
+		{"pyproject.toml", regexReplaceAppNameInPyprojectToml, appDirName},
 	}
 
 	for _, pf := range projectFiles {
@@ -67,7 +77,7 @@ func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string) e
 			continue
 		}
 
-		fileData = pf.replacer(fileData, appDirName)
+		fileData = pf.replacer(fileData, pf.name)
 		if err := afero.WriteFile(fs, filePath, fileData, 0644); err != nil {
 			return err
 		}

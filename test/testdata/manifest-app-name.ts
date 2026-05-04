@@ -12,7 +12,7 @@ export default {
     "major_version": 2
   },
   "display_information": {
-    "name": "vibrant-butterfly-1234"
+    "name": "Vibrant Butterfly 1234"
   },
   // This is a comment
   "features": {
@@ -22,7 +22,7 @@ export default {
       "messages_tab_read_only_enabled": false
     },
     "bot_user": {
-      "display_name": "vibrant-butterfly-1234"
+      "display_name": "Vibrant Butterfly 1234"
     }
   },
   "functions": {

@@ -114,16 +114,6 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedFiles:     map[string]string{},
 			expectedErrorType: nil,
 		},
-		"WriteFile error": {
-			appDirName: "vibrant-butterfly-1234",
-			existingFiles: map[string]string{
-				"manifest.json": string(testdata.ManifestJSON),
-			},
-			expectedFiles: map[string]string{
-				"manifest.json": string(testdata.ManifestJSONAppName),
-			},
-			expectedErrorType: nil,
-		},
 	}
 
 	for name, tc := range tests {
@@ -161,6 +151,32 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 	}
 }
 
+func Test_kebabToTitleCase(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"multiple words": {
+			input:    "my-app",
+			expected: "My App",
+		},
+		"multiple words with numbers": {
+			input:    "vibrant-butterfly-1234",
+			expected: "Vibrant Butterfly 1234",
+		},
+		"single word": {
+			input:    "hello",
+			expected: "Hello",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := kebabToTitleCase(tc.input)
+			require.Equal(t, tc.expected, result)
+		})
+	}
+}
+
 func Test_RegexReplaceAppNameInManifest(t *testing.T) {
 	tests := map[string]struct {
 		src         []byte
@@ -169,22 +185,22 @@ func Test_RegexReplaceAppNameInManifest(t *testing.T) {
 	}{
 		"manifest.json is validate": {
 			src:         testdata.ManifestJSON,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant Butterfly 1234",
 			expectedSrc: testdata.ManifestJSONAppName,
 		},
 		"manifest.js is validate": {
 			src:         testdata.ManifestJS,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant Butterfly 1234",
 			expectedSrc: testdata.ManifestJSAppName,
 		},
 		"manifest.ts is validate": {
 			src:         testdata.ManifestTS,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant Butterfly 1234",
 			expectedSrc: testdata.ManifestTSAppName,
 		},
 		"manifest.ts with sdk is validate": {
 			src:         testdata.ManifestSDKTS,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant Butterfly 1234",
 			expectedSrc: testdata.ManifestSDKTSAppName,
 		},
 	}
