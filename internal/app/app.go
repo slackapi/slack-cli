@@ -19,15 +19,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"text/template"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/spf13/afero"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 // Client to access the app/project
@@ -49,14 +46,8 @@ func NewClient(
 	}
 }
 
-func kebabToTitleCase(s string) string {
-	return cases.Title(language.English).String(strings.ReplaceAll(s, "-", " "))
-}
-
 // UpdateDefaultProjectFiles should update any project specific files if any
-func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string) error {
-	displayName := kebabToTitleCase(appDirName)
-
+func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string, displayName string) error {
 	// Files and their corresponding app name replacement functions
 	projectFiles := []struct {
 		filename string

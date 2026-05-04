@@ -28,12 +28,14 @@ import (
 func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 	tests := map[string]struct {
 		appDirName        string
+		displayName       string
 		existingFiles     map[string]string
 		expectedFiles     map[string]string
 		expectedErrorType error
 	}{
 		"manifest.json file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"manifest.json": string(testdata.ManifestJSON),
 			},
@@ -43,7 +45,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"manifest.js file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"manifest.js": string(testdata.ManifestJS),
 			},
@@ -53,7 +56,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"manifest.ts file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"manifest.ts": string(testdata.ManifestTS),
 			},
@@ -63,7 +67,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"Multiple manifest files exist": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"manifest.json": string(testdata.ManifestJSON),
 				"manifest.ts":   string(testdata.ManifestTS),
@@ -75,7 +80,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"package.json file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"package.json": string(testdata.PackageJSON),
 			},
@@ -85,7 +91,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"pyproject.toml file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"pyproject.toml": string(testdata.PyprojectTOML),
 			},
@@ -95,7 +102,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"Multiple project files exist": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant Butterfly 1234",
 			existingFiles: map[string]string{
 				"manifest.json":  string(testdata.ManifestJSON),
 				"package.json":   string(testdata.PackageJSON),
@@ -110,6 +118,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"No manifest files exist": {
 			appDirName:        "vibrant-butterfly-1234",
+			displayName:       "Vibrant Butterfly 1234",
 			existingFiles:     map[string]string{},
 			expectedFiles:     map[string]string{},
 			expectedErrorType: nil,
@@ -136,7 +145,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			}
 
 			// Run the tests
-			err := UpdateDefaultProjectFiles(fs, projectDirPath, tc.appDirName)
+			err := UpdateDefaultProjectFiles(fs, projectDirPath, tc.appDirName, tc.displayName)
 
 			// Assertions
 			require.IsType(t, err, tc.expectedErrorType)
@@ -147,32 +156,6 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, fileData, string(d))
 			}
-		})
-	}
-}
-
-func Test_kebabToTitleCase(t *testing.T) {
-	tests := map[string]struct {
-		input    string
-		expected string
-	}{
-		"multiple words": {
-			input:    "my-app",
-			expected: "My App",
-		},
-		"multiple words with numbers": {
-			input:    "vibrant-butterfly-1234",
-			expected: "Vibrant Butterfly 1234",
-		},
-		"single word": {
-			input:    "hello",
-			expected: "Hello",
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := kebabToTitleCase(tc.input)
-			require.Equal(t, tc.expected, result)
 		})
 	}
 }
