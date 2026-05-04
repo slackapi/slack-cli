@@ -239,8 +239,10 @@ type ManifestInteractivity struct {
 
 // ManifestScopes
 type ManifestScopes struct {
-	Bot  []string `json:"bot,omitempty" yaml:"bot,flow,omitempty"`
-	User []string `json:"user,omitempty" yaml:"user,flow,omitempty"`
+	Bot          []string `json:"bot,omitempty" yaml:"bot,flow,omitempty"`
+	BotOptional  []string `json:"bot_optional,omitempty" yaml:"bot_optional,flow,omitempty"`
+	User         []string `json:"user,omitempty" yaml:"user,flow,omitempty"`
+	UserOptional []string `json:"user_optional,omitempty" yaml:"user_optional,flow,omitempty"`
 }
 
 // ManifestShortcutsItem
