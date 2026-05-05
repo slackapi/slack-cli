@@ -1779,12 +1779,12 @@ func Test_resolveIconPath(t *testing.T) {
 			},
 			expected: "",
 		},
-		"manifest icon file not found falls back to icon.png": {
+		"manifest icon file not found returns empty with warning": {
 			manifestIcon: "missing-manifest-icon.png",
 			setupFiles: func(t *testing.T, dir string) {
 				require.NoError(t, os.WriteFile(filepath.Join(dir, "icon.png"), []byte("img"), 0o644))
 			},
-			expected: "icon.png",
+			expected: "",
 		},
 		"manifest icon file not found and no icon.png returns empty": {
 			manifestIcon: "missing-manifest-icon.png",
