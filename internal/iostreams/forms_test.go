@@ -483,7 +483,7 @@ func TestFormsAccessible(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "", input)
-		assert.Contains(t, out.String(), "Name your app: (default: cool-app-123)")
+		assert.Contains(t, out.String(), "Name your app (default: cool-app-123):")
 	})
 }
 
