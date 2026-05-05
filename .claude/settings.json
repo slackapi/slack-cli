@@ -29,6 +29,7 @@
       "Bash(make build:*)",
       "Bash(make lint:*)",
       "Bash(make test:*)",
+      "Bash(snyk:*)",
       "Bash(mkdir:*)",
       "Bash(tree:*)",
       "Bash(vhs:*)",
