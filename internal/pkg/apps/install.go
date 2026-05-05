@@ -653,6 +653,9 @@ func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifes
 		if _, err := os.Stat(manifestIcon); !os.IsNotExist(err) {
 			return manifestIcon
 		}
+		clients.IO.PrintDebug(ctx, "manifest icon file not found: %s", manifestIcon)
+		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from manifest not found: %s", manifestIcon)))
+		return ""
 	}
 	if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
 		return "icon.png"
