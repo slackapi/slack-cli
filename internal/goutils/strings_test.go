@@ -22,6 +22,12 @@ import (
 )
 
 func Test_HashString(t *testing.T) {
+	t.Run("produces a sha256 hex string", func(t *testing.T) {
+		hash, err := HashString("test")
+		require.NoError(t, err)
+		require.Len(t, hash, 64)
+	})
+
 	tests := map[string]struct {
 		text1    string
 		text2    string
