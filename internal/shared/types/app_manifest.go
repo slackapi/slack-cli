@@ -110,6 +110,7 @@ type AppSettings struct {
 	FunctionRuntime        FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
 	TokenRotationEnabled   *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
 	SiwsLinks              *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
+	IsMCPEnabled           *bool                       `json:"is_mcp_enabled,omitempty" yaml:"is_mcp_enabled,omitempty"`
 }
 
 type WorkflowStep struct {
@@ -238,8 +239,10 @@ type ManifestInteractivity struct {
 
 // ManifestScopes
 type ManifestScopes struct {
-	Bot  []string `json:"bot,omitempty" yaml:"bot,flow,omitempty"`
-	User []string `json:"user,omitempty" yaml:"user,flow,omitempty"`
+	Bot          []string `json:"bot,omitempty" yaml:"bot,flow,omitempty"`
+	BotOptional  []string `json:"bot_optional,omitempty" yaml:"bot_optional,flow,omitempty"`
+	User         []string `json:"user,omitempty" yaml:"user,flow,omitempty"`
+	UserOptional []string `json:"user_optional,omitempty" yaml:"user_optional,flow,omitempty"`
 }
 
 // ManifestShortcutsItem

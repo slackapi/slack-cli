@@ -35,6 +35,8 @@ import (
 
 const (
 	appIconMethod = "apps.hosted.icon"
+	// appIconSetMethod is the API method for setting app icons for non-hosted apps.
+	appIconSetMethod = "apps.icon.set"
 )
 
 // IconResult details to be saved
@@ -46,8 +48,19 @@ type iconResponse struct {
 	IconResult
 }
 
-// Icon updates a Slack App's icon
+// Icon updates a hosted Slack app icon
+// DEPRECATED: Prefer "IconSet" instead
 func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
+	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconMethod)
+}
+
+// IconSet sets a Slack App's icon using the apps.icon.set API method.
+func (c *Client) IconSet(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error) {
+	return c.uploadIcon(ctx, fs, token, appID, iconFilePath, appIconSetMethod)
+}
+
+// uploadIcon uploads an icon to the given API method.
+func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath, apiMethod string) (IconResult, error) {
 	var (
 		iconBytes []byte
 		err       error
@@ -81,7 +94,7 @@ func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePa
 
 	var part io.Writer
 	h := make(textproto.MIMEHeader)
-	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", iconStat.Name()))
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, iconStat.Name()))
 	h.Set("Content-Type", http.DetectContentType(iconBytes))
 	part, err = writer.CreatePart(h)
 	if err != nil {
@@ -101,7 +114,7 @@ func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePa
 	writer.Close()
 
 	var sURL *url.URL
-	sURL, err = url.Parse(c.host + "/api/" + appIconMethod)
+	sURL, err = url.Parse(c.host + "/api/" + apiMethod)
 	if err != nil {
 		return IconResult{}, err
 	}
@@ -122,32 +135,24 @@ func (c *Client) Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePa
 	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	request.Header.Add("User-Agent", userAgent)
 
-	resp, err := c.httpClient.Do(request)
-	if err != nil {
-		return IconResult{}, err
-	}
-	defer resp.Body.Close()
+	c.io.PrintDebug(ctx, "HTTP Request: %v %v %v", request.Method, request.URL, request.Proto)
+	c.io.PrintDebug(ctx, "HTTP Request User-Agent: %s", request.Header.Get("User-Agent"))
+	c.io.PrintDebug(ctx, "HTTP Request Body: <binary image data, %d bytes>", body.Len())
 
-	span.SetTag("status_code", resp.StatusCode)
-
-	respBody, err := io.ReadAll(resp.Body)
+	respBytes, err := c.DoWithRetry(ctx, request, span, false, sURL)
 	if err != nil {
 		return IconResult{}, err
 	}
 
 	var result iconResponse
-	err = json.Unmarshal(respBody, &result)
+	err = json.Unmarshal(respBytes, &result)
 	if err != nil {
 		return IconResult{}, err
 	}
 
-	span.SetTag("ok", result.Ok)
-
 	if !result.Ok {
-		span.SetTag("error", result.Error)
 		return IconResult{}, fmt.Errorf("%s error: %s", sURL.String(), result.Error)
 	}
 
-	// return result
 	return IconResult{}, nil
 }

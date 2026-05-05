@@ -59,6 +59,7 @@ type AppsClient interface {
 	GetPresignedS3PostParams(ctx context.Context, token string, appID string) (GenerateS3PresignedPostResult, error)
 	Host() string
 	Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error)
+	IconSet(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error)
 	RequestAppApproval(ctx context.Context, token string, appID string, teamID string, reason string, scopes string, outgoingDomains []string) (AppsApprovalsRequestsCreateResult, error)
 	SetHost(host string)
 	UninstallApp(ctx context.Context, token string, appID, teamID string) error

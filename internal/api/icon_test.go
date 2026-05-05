@@ -28,65 +28,221 @@ import (
 
 var imgFile = ".assets/icon.png"
 
-func TestClient_IconErrorIfMissingArgs(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	fs := afero.NewMemMapFs()
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appIconMethod,
-	})
-	defer teardown()
-	_, err := c.Icon(ctx, fs, "token", "", "")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "missing required args")
-}
-
-func TestClient_IconErrorNoFile(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	fs := afero.NewMemMapFs()
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appIconMethod,
-	})
-	defer teardown()
-	_, err := c.Icon(ctx, fs, "token", "12345", imgFile)
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "file does not exist")
-}
-
-func TestClient_IconErrorWrongFile(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	fs := afero.NewMemMapFs()
-	err := afero.WriteFile(fs, "test.txt", []byte("this is a text file"), 0666)
-	require.NoError(t, err)
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appIconMethod,
-	})
-	defer teardown()
-	_, err = c.Icon(ctx, fs, "token", "12345", "test.txt")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unknown format")
-}
-
-func TestClient_IconSuccess(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	fs := afero.NewMemMapFs()
-
+func createTestPNG(t *testing.T, fs afero.Fs, path string) {
+	t.Helper()
 	myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{100, 100}})
-
-	// This loop just fills the image with random data
 	for x := range 100 {
 		for y := range 100 {
 			c := color.RGBA{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)), 255}
 			myimage.Set(x, y, c)
 		}
 	}
-	myfile, _ := fs.Create(imgFile)
-	err := png.Encode(myfile, myimage)
+	myfile, err := fs.Create(path)
 	require.NoError(t, err)
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod: appIconMethod,
-		Response:       `{"ok":true}`,
-	})
-	defer teardown()
-	_, err = c.Icon(ctx, fs, "token", "12345", imgFile)
+	err = png.Encode(myfile, myimage)
 	require.NoError(t, err)
+}
+
+func TestClient_Icon(t *testing.T) {
+	tests := map[string]struct {
+		setupFs     func(t *testing.T, fs afero.Fs)
+		appID       string
+		filePath    string
+		response    string
+		expectErr   bool
+		errContains string
+	}{
+		"returns error when args are missing": {
+			appID:       "",
+			filePath:    "",
+			expectErr:   true,
+			errContains: "missing required args",
+		},
+		"returns error when file does not exist": {
+			appID:       "12345",
+			filePath:    imgFile,
+			expectErr:   true,
+			errContains: "file does not exist",
+		},
+		"returns error for non-image file": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				err := afero.WriteFile(fs, "test.txt", []byte("this is a text file"), 0666)
+				require.NoError(t, err)
+			},
+			appID:       "12345",
+			filePath:    "test.txt",
+			expectErr:   true,
+			errContains: "unknown format",
+		},
+		"succeeds with valid PNG": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				createTestPNG(t, fs, imgFile)
+			},
+			appID:    "12345",
+			filePath: imgFile,
+			response: `{"ok":true}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			fs := afero.NewMemMapFs()
+			if tc.setupFs != nil {
+				tc.setupFs(t, fs)
+			}
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appIconMethod,
+				Response:       tc.response,
+			})
+			defer teardown()
+			_, err := c.Icon(ctx, fs, "token", tc.appID, tc.filePath)
+			if tc.expectErr {
+				require.Error(t, err)
+				if tc.errContains != "" {
+					require.Contains(t, err.Error(), tc.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestClient_IconSet(t *testing.T) {
+	tests := map[string]struct {
+		setupFs     func(t *testing.T, fs afero.Fs)
+		appID       string
+		filePath    string
+		response    string
+		expectErr   bool
+		errContains string
+	}{
+		"returns error when args are missing": {
+			appID:       "",
+			filePath:    "",
+			expectErr:   true,
+			errContains: "missing required args",
+		},
+		"returns error when file does not exist": {
+			appID:       "12345",
+			filePath:    imgFile,
+			expectErr:   true,
+			errContains: "file does not exist",
+		},
+		"returns error for empty file": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				err := afero.WriteFile(fs, imgFile, []byte{}, 0666)
+				require.NoError(t, err)
+			},
+			appID:     "12345",
+			filePath:  imgFile,
+			expectErr: true,
+		},
+		"returns error for unsupported format": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				svgContent := []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="50"/></svg>`)
+				err := afero.WriteFile(fs, "icon.svg", svgContent, 0666)
+				require.NoError(t, err)
+			},
+			appID:       "12345",
+			filePath:    "icon.svg",
+			expectErr:   true,
+			errContains: "unknown format",
+		},
+		"returns error for non-image content with .png extension": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				err := afero.WriteFile(fs, "fake.png", []byte("this is not a png"), 0666)
+				require.NoError(t, err)
+			},
+			appID:       "12345",
+			filePath:    "fake.png",
+			expectErr:   true,
+			errContains: "unknown format",
+		},
+		"returns error for truncated PNG": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				// Valid PNG signature followed by incomplete IHDR chunk
+				truncatedPNG := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D}
+				err := afero.WriteFile(fs, "truncated.png", truncatedPNG, 0666)
+				require.NoError(t, err)
+			},
+			appID:     "12345",
+			filePath:  "truncated.png",
+			expectErr: true,
+		},
+		"returns error from API response": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				createTestPNG(t, fs, imgFile)
+			},
+			appID:       "12345",
+			filePath:    imgFile,
+			response:    `{"ok":false,"error":"invalid_app"}`,
+			expectErr:   true,
+			errContains: "invalid_app",
+		},
+		"succeeds with valid PNG": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				createTestPNG(t, fs, imgFile)
+			},
+			appID:    "12345",
+			filePath: imgFile,
+			response: `{"ok":true}`,
+		},
+		// cutter.Crop with Ratio mode floors a 1x1 image to 0x0, causing png.Encode to fail.
+		// May need a follow-up to add a minimum dimension check before cropping.
+		"returns error for 1x1 pixel image": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{1, 1}})
+				myimage.Set(0, 0, color.RGBA{255, 0, 0, 255})
+				myfile, err := fs.Create(imgFile)
+				require.NoError(t, err)
+				err = png.Encode(myfile, myimage)
+				require.NoError(t, err)
+			},
+			appID:     "12345",
+			filePath:  imgFile,
+			expectErr: true,
+		},
+		"succeeds with non-square image": {
+			setupFs: func(t *testing.T, fs afero.Fs) {
+				myimage := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{2000, 100}})
+				for x := range 2000 {
+					for y := range 100 {
+						c := color.RGBA{uint8(rand.Intn(255)), uint8(rand.Intn(255)), uint8(rand.Intn(255)), 255}
+						myimage.Set(x, y, c)
+					}
+				}
+				myfile, err := fs.Create(imgFile)
+				require.NoError(t, err)
+				err = png.Encode(myfile, myimage)
+				require.NoError(t, err)
+			},
+			appID:    "12345",
+			filePath: imgFile,
+			response: `{"ok":true}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			fs := afero.NewMemMapFs()
+			if tc.setupFs != nil {
+				tc.setupFs(t, fs)
+			}
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: appIconSetMethod,
+				Response:       tc.response,
+			})
+			defer teardown()
+			_, err := c.IconSet(ctx, fs, "token", tc.appID, tc.filePath)
+			if tc.expectErr {
+				require.Error(t, err)
+				if tc.errContains != "" {
+					require.Contains(t, err.Error(), tc.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }

@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Collect metadata
         id: metadata
-        uses: dependabot/fetch-metadata@ffa630c65fa7e0ecfa0625b5ceda64399aea1b36 # v3.0.0
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Milestone
@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: Gather credentials
         id: credentials
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         with:
           app-id: ${{ secrets.GH_APP_ID_RELEASER }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}

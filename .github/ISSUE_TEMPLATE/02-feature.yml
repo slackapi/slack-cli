@@ -1,0 +1,30 @@
+name: CLI Enhancement / Feature Request
+description: Submit an enhancement or feature request
+labels: ["untriaged"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the enhancement or feature you'd like
+      placeholder: |
+        Tell us about your idea! What would you like to see, and how would it help?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        By submitting this issue, you agree to follow our [Contributing Guidelines](https://github.com/slackapi/slack-cli/blob/main/.github/CONTRIBUTING.md) and [Code of Conduct](https://slackhq.github.io/code-of-conduct).

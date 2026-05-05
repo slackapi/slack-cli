@@ -263,6 +263,41 @@ func Test_AppManifest_AppSettings_SiwsLinks(t *testing.T) {
 	}
 }
 
+func Test_AppManifest_AppSettings_IsMCPEnabled(t *testing.T) {
+	truth := true
+	tests := map[string]struct {
+		settings         *AppSettings
+		expectedMCPValue *bool
+		expectedJSON     string
+	}{
+		"undefined setting has no value": {
+			settings:         &AppSettings{},
+			expectedMCPValue: nil,
+			expectedJSON:     `{}`,
+		},
+		"defined setting has a value": {
+			settings:         &AppSettings{IsMCPEnabled: &truth},
+			expectedMCPValue: &truth,
+			expectedJSON:     `{"is_mcp_enabled":true}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			manifest := AppManifest{
+				Settings: tc.settings,
+			}
+			if tc.settings != nil {
+				actualJSON, err := json.Marshal(tc.settings)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+				assert.Equal(t, tc.expectedMCPValue, manifest.Settings.IsMCPEnabled)
+			} else {
+				assert.Nil(t, manifest.Settings)
+			}
+		})
+	}
+}
+
 func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 	falsity := false
 	expectedIncomingWebhooks := IncomingWebhooks{
@@ -297,6 +332,62 @@ func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 			} else {
 				assert.Nil(t, manifest.Settings)
 			}
+		})
+	}
+}
+
+func Test_AppManifest_OAuthConfig_Scopes(t *testing.T) {
+	tests := map[string]struct {
+		oauthConfig  *OAuthConfig
+		expectedJSON string
+	}{
+		"undefined scopes are omitted": {
+			oauthConfig:  &OAuthConfig{},
+			expectedJSON: `{}`,
+		},
+		"empty scopes are included": {
+			oauthConfig:  &OAuthConfig{Scopes: &ManifestScopes{}},
+			expectedJSON: `{"scopes":{}}`,
+		},
+		"bot scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				Bot: []string{"chat:write", "channels:read"},
+			}},
+			expectedJSON: `{"scopes":{"bot":["chat:write","channels:read"]}}`,
+		},
+		"user scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				User: []string{"users:read"},
+			}},
+			expectedJSON: `{"scopes":{"user":["users:read"]}}`,
+		},
+		"bot optional scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				BotOptional: []string{"channels:history"},
+			}},
+			expectedJSON: `{"scopes":{"bot_optional":["channels:history"]}}`,
+		},
+		"user optional scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				UserOptional: []string{"users:read.email"},
+			}},
+			expectedJSON: `{"scopes":{"user_optional":["users:read.email"]}}`,
+		},
+		"all scope types are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				Bot:          []string{"chat:write"},
+				BotOptional:  []string{"channels:history"},
+				User:         []string{"users:read"},
+				UserOptional: []string{"users:read.email"},
+			}},
+			expectedJSON: `{"scopes":{"bot":["chat:write"],"bot_optional":["channels:history"],"user":["users:read"],"user_optional":["users:read.email"]}}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualJSON, err := json.Marshal(tc.oauthConfig)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedJSON, string(actualJSON))
 		})
 	}
 }

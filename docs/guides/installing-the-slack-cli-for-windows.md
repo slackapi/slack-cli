@@ -7,9 +7,23 @@ slug: /tools/slack-cli/guides/installing-the-slack-cli-for-windows
 
 The Slack CLI is a useful tool for building Slack apps. This is your one-stop shop for installing this tool.
 
-:::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
+<details>
+<summary>Prerequisite: installing PowerShell </summary>
 
-:::
+PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.
+
+Run the following command to install PowerShell 7 on your machine:
+
+```pwsh
+iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
+```
+
+The following articles may also be helpful should you run into any issues:
+
+- [Installing PowerShell on Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+- [How to install and update PowerShell 6](https://www.thomasmaurer.ch/2019/03/how-to-install-and-update-powershell-6/)
+
+</details>
 
 <Tabs groupId="installation">
 <TabItem value="Automated" label="Automated Installation">
@@ -109,16 +123,3 @@ Using slack v4.0.1
 
 </TabItem>
 </Tabs>
-
-## Installing PowerShell {#powershell}
-
-Run the following command to install PowerShell 7 on your machine:
-
-```pwsh
-iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
-```
-
-The following articles may also be helpful should you run into any issues:
-
-- [Installing PowerShell on Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
-- [How to install and update PowerShell 6](https://www.thomasmaurer.ch/2019/03/how-to-install-and-update-powershell-6/)

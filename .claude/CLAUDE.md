@@ -27,8 +27,8 @@ make coverage                                      # View test coverage report
 ### Linting
 
 ```bash
-make lint               # Run golangci-lint
-golangci-lint --version # Verify linter version
+make lint                      # Run golangci-lint
+go tool golangci-lint version  # Verify linter version
 ```
 
 ### Formatting
