@@ -59,7 +59,7 @@ type Config struct {
 	SlackTestTraceFlag      bool
 	TeamFlag                string
 	TokenFlag               string
-	Accessible              bool
+	AccessibleFlag              bool
 	NoColor                 bool
 
 	// Feature experiments
