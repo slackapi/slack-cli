@@ -15,6 +15,8 @@
 package hooks
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 	"strings"
@@ -215,11 +217,18 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 	}
 }
 
-func Test_Hook_Execute_V2_GenerateMD5FromRandomString(t *testing.T) {
-	randomString1 := generateMD5FromRandomString()
-	randomString2 := generateMD5FromRandomString()
+func Test_Hook_Execute_V2_GenerateRandomBoundary(t *testing.T) {
+	randomString1 := generateRandomBoundary()
+	randomString2 := generateRandomBoundary()
 
 	assert.NotEqual(t, randomString1, randomString2)
-	assert.GreaterOrEqual(t, len(randomString1), 10)
-	assert.GreaterOrEqual(t, len(randomString2), 10)
+	assert.Equal(t, 64, len(randomString1))
+	assert.Equal(t, 64, len(randomString2))
+}
+
+func Test_Hook_Execute_V2_GenerateRandomBoundary_UsesSHA256(t *testing.T) {
+	boundary := generateRandomBoundary()
+	_, err := hex.DecodeString(boundary)
+	assert.NoError(t, err)
+	assert.Equal(t, sha256.Size*2, len(boundary))
 }
