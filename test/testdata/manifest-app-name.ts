@@ -12,7 +12,7 @@ export default {
     "major_version": 2
   },
   "display_information": {
-    "name": "Vibrant Butterfly 1234"
+    "name": "Vibrant butterfly - 1234"
   },
   // This is a comment
   "features": {
