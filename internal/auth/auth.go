@@ -494,7 +494,7 @@ func (c *Client) ResolveAPIHost(ctx context.Context, apiHostFlag string, customA
 		c.io.PrintDebug(
 			ctx,
 			"You're using a custom apihost. Run %s to add it to your app's Run on Slack environment",
-			style.Commandf(fmt.Sprintf("var add SLACK_API_URL %s", apiHost), false),
+			style.Commandf(fmt.Sprintf("env set SLACK_API_URL %s", apiHost), false),
 		)
 	}
 

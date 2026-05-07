@@ -112,7 +112,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 				Emoji: "evergreen_tree",
 				Text:  "Environment Unset",
 				Secondary: []string{
-					"The app has no environment variables to remove",
+					"The app has no environment variables to unset",
 				},
 			}))
 			return nil
@@ -141,7 +141,7 @@ func runEnvUnsetCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, a
 				Emoji: "evergreen_tree",
 				Text:  "Environment Unset",
 				Secondary: []string{
-					"The project has no environment variables to remove",
+					"The project has no environment variables to unset",
 				},
 			}))
 			return nil
