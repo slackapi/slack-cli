@@ -39,6 +39,7 @@ type Config struct {
 	// Raw flags (for metrics)
 	RawFlags []string
 	// Command flags
+	AccessibleFlag          bool
 	APIHostFlag             string
 	APIHostResolved         string
 	AppFlag                 string
@@ -54,7 +55,6 @@ type Config struct {
 	RuntimeFlag             string
 	RuntimeName             string
 	RuntimeVersion          string
-	AccessibleFlag          bool
 	SkipUpdateFlag          bool
 	SlackDevFlag            bool
 	SlackTestTraceFlag      bool
