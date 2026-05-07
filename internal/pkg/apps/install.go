@@ -17,7 +17,6 @@ package apps
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/icon"
 	"github.com/slackapi/slack-cli/internal/pkg/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -639,10 +639,10 @@ func appendLocalToDisplayName(manifest *types.AppManifest) {
 }
 
 // resolveIconPath determines the icon file path using the priority chain:
-// SLACK_CLI_APP_ICON_PATH env var > manifest icon field > icon.png in project root
+// SLACK_CLI_APP_ICON_PATH env var > manifest icon field > assets/ and root fallback
 func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifestIcon string) string {
 	if envIconPath := clients.Config.AppIconPathFlag; envIconPath != "" {
-		if _, err := os.Stat(envIconPath); !os.IsNotExist(err) {
+		if _, err := clients.Fs.Stat(envIconPath); err == nil {
 			return envIconPath
 		}
 		clients.IO.PrintDebug(ctx, "SLACK_CLI_APP_ICON_PATH file not found: %s", envIconPath)
@@ -650,17 +650,14 @@ func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifes
 		return ""
 	}
 	if manifestIcon != "" {
-		if _, err := os.Stat(manifestIcon); !os.IsNotExist(err) {
+		if _, err := clients.Fs.Stat(manifestIcon); err == nil {
 			return manifestIcon
 		}
 		clients.IO.PrintDebug(ctx, "manifest icon file not found: %s", manifestIcon)
 		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from manifest not found: %s", manifestIcon)))
 		return ""
 	}
-	if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
-		return "icon.png"
-	}
-	return ""
+	return icon.ResolveIconPath(clients.Fs, "")
 }
 
 // updateIcon will upload the new icon to the Slack API

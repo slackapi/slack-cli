@@ -18,7 +18,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/slackapi/slack-cli/internal/icon"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 )
 
 type SlackYaml struct {
@@ -28,28 +30,24 @@ type SlackYaml struct {
 }
 
 // hasValidIconPath returns false if icon path is provided but is not valid and true otherwise
-func (sy *SlackYaml) hasValidIconPath() bool {
-	// verify icon path is valid if exists
-	var wd, err = os.Getwd()
-	if err == nil {
-		if sy.Icon == "" { // icon was not provided.  Let's check if the default one exists
-			var defaultIconPath = "assets/icon.png"
-			if _, err := os.Stat(filepath.Join(wd, defaultIconPath)); !os.IsNotExist(err) {
-				sy.Icon = defaultIconPath
-			}
-		} else {
-			if _, err := os.Stat(filepath.Join(wd, sy.Icon)); os.IsNotExist(err) {
-				return false
-			}
+func (sy *SlackYaml) hasValidIconPath(fs afero.Fs) bool {
+	wd, err := os.Getwd()
+	if err != nil {
+		return true
+	}
+	if sy.Icon == "" {
+		sy.Icon = icon.ResolveIconPath(afero.NewBasePathFs(fs, wd), "")
+	} else {
+		if _, err := fs.Stat(filepath.Join(wd, sy.Icon)); os.IsNotExist(err) {
+			return false
 		}
 	}
-
 	return true
 }
 
 // Verify checks that the app manifest meets some basic requirements
-func (sy *SlackYaml) Verify() error {
-	if !sy.hasValidIconPath() {
+func (sy *SlackYaml) Verify(fs afero.Fs) error {
+	if !sy.hasValidIconPath(fs) {
 		return slackerror.New("Please specify a valid icon path in app manifest")
 	}
 	return nil
