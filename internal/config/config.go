@@ -54,12 +54,12 @@ type Config struct {
 	RuntimeFlag             string
 	RuntimeName             string
 	RuntimeVersion          string
+	AccessibleFlag          bool
 	SkipUpdateFlag          bool
 	SlackDevFlag            bool
 	SlackTestTraceFlag      bool
 	TeamFlag                string
 	TokenFlag               string
-	AccessibleFlag              bool
 	NoColor                 bool
 
 	// Feature experiments

@@ -248,7 +248,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	}
 
 	// Accessible mode implies no-color
-	if clients.Config.Accessible {
+	if clients.Config.AccessibleFlag {
 		clients.Config.NoColor = true
 	}
 

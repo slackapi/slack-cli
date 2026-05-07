@@ -420,7 +420,7 @@ func TestFormsAccessible(t *testing.T) {
 	osMock := slackdeps.NewOsMock()
 	osMock.AddDefaultMocks()
 	cfg := config.NewConfig(fsMock, osMock)
-	cfg.Accessible = true
+	cfg.AccessibleFlag = true
 	io := NewIOStreams(cfg, fsMock, osMock)
 
 	t.Run("select form accepts valid numbered input", func(t *testing.T) {
