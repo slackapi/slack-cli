@@ -31,7 +31,7 @@ The square brackets surrounding command arguments hint that these are optional:
 
 ```
 USAGE
-  $ slack env add [name] [value] [flags]
+  $ slack env set [name] [value] [flags]
 ```
 
 The angled brackets around arguments hint that these are required:
