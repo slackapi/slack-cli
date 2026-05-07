@@ -35,7 +35,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 	}{
 		"manifest.json file exists": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.json": string(testdata.ManifestJSON),
 			},
@@ -46,7 +46,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"manifest.js file exists": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.js": string(testdata.ManifestJS),
 			},
@@ -57,7 +57,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"manifest.ts file exists": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.ts": string(testdata.ManifestTS),
 			},
@@ -68,7 +68,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"Multiple manifest files exist": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.json": string(testdata.ManifestJSON),
 				"manifest.ts":   string(testdata.ManifestTS),
@@ -81,7 +81,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"package.json file exists": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"package.json": string(testdata.PackageJSON),
 			},
@@ -92,7 +92,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"pyproject.toml file exists": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"pyproject.toml": string(testdata.PyprojectTOML),
 			},
@@ -103,7 +103,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"Multiple project files exist": {
 			appDirName:  "vibrant-butterfly-1234",
-			displayName: "Vibrant Butterfly 1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.json":  string(testdata.ManifestJSON),
 				"package.json":   string(testdata.PackageJSON),
@@ -168,22 +168,22 @@ func Test_RegexReplaceAppNameInManifest(t *testing.T) {
 	}{
 		"manifest.json is validate": {
 			src:         testdata.ManifestJSON,
-			appName:     "Vibrant Butterfly 1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestJSONAppName,
 		},
 		"manifest.js is validate": {
 			src:         testdata.ManifestJS,
-			appName:     "Vibrant Butterfly 1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestJSAppName,
 		},
 		"manifest.ts is validate": {
 			src:         testdata.ManifestTS,
-			appName:     "Vibrant Butterfly 1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestTSAppName,
 		},
 		"manifest.ts with sdk is validate": {
 			src:         testdata.ManifestSDKTS,
-			appName:     "Vibrant Butterfly 1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestSDKTSAppName,
 		},
 	}
