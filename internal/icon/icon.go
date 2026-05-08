@@ -20,13 +20,13 @@ import (
 	"github.com/spf13/afero"
 )
 
-
 func ResolveIconPath(fs afero.Fs, manifestIcon string) string {
 	if manifestIcon != "" {
 		return manifestIcon
 	}
+	supportedExtensions := []string{".png", ".jpg", ".jpeg", ".gif"}
 	for _, dir := range []string{"assets", "."} {
-		for _, ext := range SupportedExtensions {
+		for _, ext := range supportedExtensions {
 			candidate := filepath.Join(dir, "icon"+ext)
 			if _, err := fs.Stat(candidate); err == nil {
 				return candidate

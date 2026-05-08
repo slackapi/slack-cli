@@ -32,6 +32,11 @@ func Test_ResolveIconPath(t *testing.T) {
 			manifestIcon: "custom/my-icon.png",
 			expected:     "custom/my-icon.png",
 		},
+		"manifest icon preferred over magic icon files": {
+			manifestIcon: "custom/my-icon.png",
+			files:        []string{"assets/icon.png", "icon.png"},
+			expected:     "custom/my-icon.png",
+		},
 		"assets/icon.png found": {
 			files:    []string{"assets/icon.png"},
 			expected: "assets/icon.png",
