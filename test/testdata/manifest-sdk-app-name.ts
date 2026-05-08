@@ -11,7 +11,7 @@ const obj = {
 };
 
 export default Manifest({
-  "name": "vibrant-butterfly-1234",
+  "name": "Vibrant butterfly - 1234",
   "description": "Reverse a string",
   // "runtime_environment": "slack",
   "runtime": "deno1.x",

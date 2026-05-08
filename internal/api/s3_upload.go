@@ -17,8 +17,6 @@ package api
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -76,13 +74,6 @@ func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID strin
 		}
 	}
 
-	md5hash := md5.New()
-	if _, err := io.Copy(md5hash, archive); err != nil {
-		return fileName, err
-	}
-
-	md5s := base64.StdEncoding.EncodeToString(md5hash.Sum(nil))
-
 	var part io.Writer
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "file", fileName))
@@ -105,7 +96,6 @@ func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID strin
 		return fileName, err
 	}
 	request.Header.Add("Content-Type", writer.FormDataContentType())
-	request.Header.Add("Content-MD5", md5s)
 	cliVersion, err := slackcontext.Version(ctx)
 	if err != nil {
 		return fileName, err
