@@ -20,7 +20,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-var SupportedExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
 
 func ResolveIconPath(fs afero.Fs, manifestIcon string) string {
 	if manifestIcon != "" {
