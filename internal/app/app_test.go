@@ -16,12 +16,14 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/test/testdata"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -158,6 +160,21 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_App_UpdateDefaultProjectFiles_WriteFileError(t *testing.T) {
+	fs := slackdeps.NewFsMock()
+	projectDirPath := "/path/to/project-name"
+
+	err := fs.MkdirAll(projectDirPath, 0755)
+	require.NoError(t, err)
+	err = afero.WriteFile(fs, filepath.Join(projectDirPath, "manifest.json"), testdata.ManifestJSON, 0644)
+	require.NoError(t, err)
+
+	fs.On("OpenFile", mock.Anything, mock.Anything, mock.Anything).Return((*os.File)(nil), os.ErrPermission)
+
+	err = UpdateDefaultProjectFiles(fs, projectDirPath, "vibrant-butterfly-1234", "Vibrant butterfly - 1234")
+	require.ErrorIs(t, err, os.ErrPermission)
 }
 
 func Test_RegexReplaceAppNameInManifest(t *testing.T) {

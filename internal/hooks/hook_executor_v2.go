@@ -17,8 +17,8 @@ package hooks
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"math/big"
 	"strings"
@@ -37,7 +37,7 @@ type HookExecutorMessageBoundaryProtocol struct {
 }
 
 // generateBoundary is a function for creating boundaries that can be mocked
-var generateBoundary = generateMD5FromRandomString
+var generateBoundary = generateRandomBoundary
 
 // Execute processes the data received by the SDK.
 func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts HookExecOpts) (string, error) {
@@ -100,24 +100,25 @@ func (e *HookExecutorMessageBoundaryProtocol) Execute(ctx context.Context, opts 
 	return buffout.String(), nil
 }
 
-// generateMD5FromRandomString returns the MD5 hash of a randomized string.
+// generateRandomBoundary returns the SHA-256 hash of a randomized string for use
+// as a message boundary between the CLI and SDK.
 //
 // Reference: https://gist.github.com/dopey/c69559607800d2f2f90b1b1ed4e550fb
-func generateMD5FromRandomString() string {
+func generateRandomBoundary() string {
 	const alphanumericCharacters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 	const length = 10
 
-	randomBytes := make([]byte, 0)
+	randomBytes := make([]byte, 0, length)
 	for range length {
 		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(alphanumericCharacters))))
 		if err != nil {
-			return "3561f3a3c5576e2ce0dc0d1e268bb9b2" // Return default value to continue execution
+			// Return default value to continue execution
+			return "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2"
 		}
 		randomBytes = append(randomBytes, alphanumericCharacters[num.Int64()])
 	}
 
-	MD5Hash := md5.New()
-	s := MD5Hash.Sum(randomBytes)
-
-	return hex.EncodeToString(s)
+	hash := sha256.New()
+	hash.Write(randomBytes)
+	return hex.EncodeToString(hash.Sum(nil))
 }
