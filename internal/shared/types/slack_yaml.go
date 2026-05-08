@@ -30,7 +30,6 @@ type SlackYaml struct {
 }
 
 // hasValidIconPath returns false if icon path is provided but is not valid and true otherwise
-func (sy *SlackYaml) hasValidIconPath(fs afero.Fs) bool {
 	wd, err := os.Getwd()
 	if err != nil {
 		return true
