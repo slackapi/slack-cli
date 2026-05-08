@@ -45,7 +45,6 @@ type SlackYaml struct {
 }
 
 // Verify checks that the app manifest meets some basic requirements
-func (sy *SlackYaml) Verify(fs afero.Fs) error {
 	if !sy.hasValidIconPath(fs) {
 		return slackerror.New("Please specify a valid icon path in app manifest")
 	}
