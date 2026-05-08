@@ -48,8 +48,8 @@ func Test_ResolveIconPath(t *testing.T) {
 			files:    []string{"assets/icon.gif"},
 			expected: "assets/icon.gif",
 		},
-		"png wins over gif in assets": {
-			files:    []string{"assets/icon.png", "assets/icon.gif"},
+		"png wins over other extensions": {
+			files:    []string{"assets/icon.jpg", "assets/icon.jpeg", "assets/icon.gif", "assets/icon.png"},
 			expected: "assets/icon.png",
 		},
 		"jpg wins over gif in assets": {
