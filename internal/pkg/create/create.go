@@ -150,7 +150,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	}()
 
 	// Update default project files' app name, bot name, etc
-	if err := app.UpdateDefaultProjectFiles(clients.Fs, projectDirPath, appDirName); err != nil {
+	if err := app.UpdateDefaultProjectFiles(clients.Fs, projectDirPath, appDirName, createArgs.AppName); err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrProjectFileUpdate)
 	}
 
