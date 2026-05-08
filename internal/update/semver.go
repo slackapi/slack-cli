@@ -25,10 +25,12 @@ func SemVerGreaterThan(release string, current string) (bool, error) {
 	r := ensureVPrefix(release)
 	c := ensureVPrefix(current)
 	if !semver.IsValid(r) {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer)
+		return false, slackerror.New(slackerror.ErrInvalidSemVer).
+			WithMessage("Value %s is not a semantic version", release)
 	}
 	if !semver.IsValid(c) {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer)
+		return false, slackerror.New(slackerror.ErrInvalidSemVer).
+			WithMessage("Value %s is not a semantic version", current)
 	}
 	return semver.Compare(r, c) > 0, nil
 }
@@ -38,10 +40,12 @@ func SemVerLessThan(release string, current string) (bool, error) {
 	r := ensureVPrefix(release)
 	c := ensureVPrefix(current)
 	if !semver.IsValid(r) {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer)
+		return false, slackerror.New(slackerror.ErrInvalidSemVer).
+			WithMessage("Value %s is not a semantic version", release)
 	}
 	if !semver.IsValid(c) {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer)
+		return false, slackerror.New(slackerror.ErrInvalidSemVer).
+			WithMessage("Value %s is not a semantic version", current)
 	}
 	return semver.Compare(r, c) < 0, nil
 }
