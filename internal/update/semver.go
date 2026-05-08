@@ -15,32 +15,40 @@
 package update
 
 import (
-	"github.com/hashicorp/go-version"
+	"golang.org/x/mod/semver"
+
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 // SemVerGreaterThan returns true if release is greater than current
 func SemVerGreaterThan(release string, current string) (bool, error) {
-	releaseVersion, err := version.NewVersion(release)
-	if err != nil {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer).WithRootCause(err)
+	r := ensureVPrefix(release)
+	c := ensureVPrefix(current)
+	if !semver.IsValid(r) {
+		return false, slackerror.New(slackerror.ErrInvalidSemVer)
 	}
-	currentVersion, err := version.NewVersion(current)
-	if err != nil {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer).WithRootCause(err)
+	if !semver.IsValid(c) {
+		return false, slackerror.New(slackerror.ErrInvalidSemVer)
 	}
-	return releaseVersion.GreaterThan(currentVersion), nil
+	return semver.Compare(r, c) > 0, nil
 }
 
 // SemVerLessThan returns true if release is less than current
 func SemVerLessThan(release string, current string) (bool, error) {
-	releaseVersion, err := version.NewVersion(release)
-	if err != nil {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer).WithRootCause(err)
+	r := ensureVPrefix(release)
+	c := ensureVPrefix(current)
+	if !semver.IsValid(r) {
+		return false, slackerror.New(slackerror.ErrInvalidSemVer)
 	}
-	currentVersion, err := version.NewVersion(current)
-	if err != nil {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer).WithRootCause(err)
+	if !semver.IsValid(c) {
+		return false, slackerror.New(slackerror.ErrInvalidSemVer)
 	}
-	return releaseVersion.LessThan(currentVersion), nil
+	return semver.Compare(r, c) < 0, nil
+}
+
+func ensureVPrefix(v string) string {
+	if len(v) > 0 && v[0] != 'v' {
+		return "v" + v
+	}
+	return v
 }
