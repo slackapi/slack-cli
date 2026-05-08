@@ -485,6 +485,25 @@ func TestFormsAccessible(t *testing.T) {
 		assert.Equal(t, "", input)
 		assert.Contains(t, out.String(), "Name your app (default: cool-app-123):")
 	})
+
+	t.Run("password form appends colon in accessible mode", func(t *testing.T) {
+		var input string
+		f := buildPasswordForm(io, "Enter token", PasswordPromptConfig{}, &input)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, "Enter token:")
+	})
+
+	t.Run("password form preserves existing colon in accessible mode", func(t *testing.T) {
+		var input string
+		f := buildPasswordForm(io, "Enter token:", PasswordPromptConfig{}, &input)
+		f.Update(f.Init())
+
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, "Enter token:")
+		assert.NotContains(t, view, "Enter token::")
+	})
 }
 
 func TestFormsNoColor(t *testing.T) {
