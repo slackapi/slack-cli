@@ -30,23 +30,23 @@ func (c *Config) SetFlags(cmd *cobra.Command) {
 
 // InitializeGlobalFlags configures flags and creates links from cmd to config
 func (c *Config) InitializeGlobalFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&c.AccessibleFlag, "accessible", "", false, "use accessible prompts for screen readers")
 	cmd.PersistentFlags().StringVar(&c.APIHostFlag, "apihost", "", "Slack API host")
 	cmd.PersistentFlags().StringVarP(&c.AppFlag, "app", "a", "", "use a specific app ID or environment")
 	cmd.PersistentFlags().StringVarP(&c.ConfigDirFlag, "config-dir", "", "", "use a custom path for system config directory")
 	cmd.PersistentFlags().BoolVarP(&c.DeprecatedDevAppFlag, "local-run", "l", false, "use the local run app created by the `run` command") // deprecated
 	cmd.PersistentFlags().BoolVarP(&c.DeprecatedDevFlag, "dev", "d", false, "use dev apis")                                                // Can be removed after v0.25.0
-	cmd.PersistentFlags().StringVarP(&c.DeprecatedWorkspaceFlag, "workspace", "", "", "select workspace or organization by domain name or team ID")
 	cmd.PersistentFlags().StringSliceVarP(&c.ExperimentsFlag, "experiment", "e", nil, "use the experiment(s) in the command")
-	cmd.PersistentFlags().BoolVarP(&c.AccessibleFlag, "accessible", "", false, "use accessible prompts for screen readers")
 	cmd.PersistentFlags().BoolVarP(&c.ForceFlag, "force", "f", false, "ignore warnings and continue executing command")
 	cmd.PersistentFlags().BoolVarP(&c.NoColor, "no-color", "", false, "remove styles and formatting from outputs")
+	cmd.PersistentFlags().StringVarP(&c.RuntimeFlag, "runtime", "r", "", "the project's runtime language:\n  deno (default), deno1.1, deno1.x, etc")
 	cmd.PersistentFlags().BoolVarP(&c.SkipUpdateFlag, "skip-update", "s", false, "skip checking for latest version of CLI")
 	cmd.PersistentFlags().BoolVarP(&c.SlackDevFlag, "slackdev", "", false, "shorthand for --apihost=https://dev.slack.com")
-	cmd.PersistentFlags().StringVarP(&c.RuntimeFlag, "runtime", "r", "", "the project's runtime language:\n  deno (default), deno1.1, deno1.x, etc")
 	// TODO - next semver MAJOR can consider a new shorthand flag, right now -t and -T are used by other commands
 	cmd.PersistentFlags().StringVarP(&c.TeamFlag, "team", "w", "", "select workspace or organization by team name or ID")
 	cmd.PersistentFlags().StringVarP(&c.TokenFlag, "token", "", "", "set the access token associated with a team")
 	cmd.PersistentFlags().BoolVarP(&c.DebugEnabled, "verbose", "v", false, "print debug logging and additional info")
+	cmd.PersistentFlags().StringVarP(&c.DeprecatedWorkspaceFlag, "workspace", "", "", "select workspace or organization by domain name or team ID")
 
 	cmd.PersistentFlags().Lookup("apihost").Hidden = true
 	cmd.PersistentFlags().Lookup("dev").Hidden = true
