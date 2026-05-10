@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 
+	apicmd "github.com/slackapi/slack-cli/cmd/api"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -159,6 +160,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// Add subcommands (each subcommand may add their own child subcommands)
 	// Please keep these sorted
 	subCommands := []*cobra.Command{
+		apicmd.NewCommand(clients),
 		app.NewCommand(clients),
 		auth.NewCommand(clients),
 		collaborators.NewCommand(clients),
