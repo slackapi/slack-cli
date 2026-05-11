@@ -146,7 +146,21 @@ install_slack_cli() {
                         esac
                 fi
         elif [ "$(expr substr "$(uname -s)" 1 5)" == "Linux" ]; then
-                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_64-bit.tar.gz"
+                if version_lt "$SLACK_CLI_VERSION" "4.1.0"; then
+                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_64-bit.tar.gz"
+                else
+                        case "$(uname -m)" in
+                        x86_64)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_amd64.tar.gz"
+                                ;;
+                        aarch64 | arm64)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_arm64.tar.gz"
+                                ;;
+                        *)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_64-bit.tar.gz"
+                                ;;
+                        esac
+                fi
         else
                 echo "🛑 Error: This installer is only supported on Linux and macOS"
                 echo "🔖 Try using a different installation method:"
