@@ -647,7 +647,7 @@ workflows:
           <<: *filters-tag-triggered-workflow-job
           name: upload-to-s3-for-install-linux-feature-build
           s3-target-path: slack-cli
-          file-name: "slack_cli_*feature_linux_64-bit.tar.gz"
+          file-name: "slack_cli_*feature_linux_*.tar.gz"
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
