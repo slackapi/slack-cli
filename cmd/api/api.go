@@ -43,6 +43,7 @@ type cmdFlags struct {
 
 var flags cmdFlags
 
+// NewCommand returns a new Cobra command for calling Slack API methods
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api <method> [key=value ...] [flags]",
@@ -111,6 +112,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
+// runAPICommand resolves a token, builds the request body, and sends a raw HTTP request to the Slack API
 func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []string) error {
 	ctx := cmd.Context()
 	method := args[0]
@@ -130,6 +132,8 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	var bodyReader *strings.Reader
 	var contentType string
 
+	// When the token is placed in the request body (form-encoded), clear it so
+	// RawRequest does not also send it in the Authorization header.
 	switch {
 	case flags.json != "":
 		contentType = "application/json; charset=utf-8"
@@ -214,6 +218,7 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	return nil
 }
 
+// resolveToken determines the API token to use for the request
 func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, error) {
 	if clients.Config.TokenFlag != "" {
 		return clients.Config.TokenFlag, nil
@@ -242,6 +247,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 		WithRemediation("Provide a token with --token, --app, or set SLACK_BOT_TOKEN")
 }
 
+// installAndGetBotToken installs the selected app and returns its bot token
 func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, selected prompts.SelectedApp) (string, error) {
 	manifestSource, _ := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	var slackManifest types.SlackYaml
