@@ -116,10 +116,16 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}
 	}
 
-	// --name flag overrides any positional app name argument
-	// This allows users to name their app "agent" without triggering the AI Agent shortcut
+	// --name flag overrides the manifest display name but preserves any path
+	// from the positional argument. When no positional arg is given (e.g.
+	// "slack create --name APPPP"), the name flag also becomes the directory
+	// path since there's nothing else to derive it from.
+	displayNameOverride := ""
 	if nameFlagProvided {
-		appNameArg = createAppNameFlag
+		displayNameOverride = createAppNameFlag
+		if appNameArg == "" {
+			appNameArg = createAppNameFlag
+		}
 	}
 
 	// List templates and exit early if the --list flag is set
@@ -164,10 +170,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		subdir = template.GetSubdir()
 	}
 	createArgs := create.CreateArgs{
-		AppName:   appNameArg,
-		Template:  template,
-		GitBranch: createGitBranchFlag,
-		Subdir:    subdir,
+		AppName:     appNameArg,
+		DisplayName: displayNameOverride,
+		Template:    template,
+		GitBranch:   createGitBranchFlag,
+		Subdir:      subdir,
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 

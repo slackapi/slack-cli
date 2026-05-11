@@ -304,8 +304,9 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "agent",
-					Template: template,
+					AppName:     "agent",
+					DisplayName: "agent",
+					Template:    template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt WAS called (shortcut was not triggered)
@@ -351,9 +352,10 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-custom-name", // --name flag overrides
-					Template: template,
-					Subdir:   "claude-agent-sdk",
+					AppName:     "my-custom-name", // --name flag used as path when no positional arg
+					DisplayName: "my-custom-name",
+					Template:    template,
+					Subdir:      "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (shortcut was triggered)
@@ -387,8 +389,9 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-name", // --name flag overrides "my-project" positional arg
-					Template: template,
+					AppName:     "my-project", // positional arg preserved as path
+					DisplayName: "my-name",    // --name flag sets manifest display name
+					Template:    template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since --name flag was provided
@@ -432,9 +435,10 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-name", // --name flag overrides "my-project" positional arg
-					Template: template,
-					Subdir:   "claude-agent-sdk",
+					AppName:     "my-project", // positional arg preserved as path
+					DisplayName: "my-name",    // --name flag sets manifest display name
+					Template:    template,
+					Subdir:      "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (agent shortcut was triggered)

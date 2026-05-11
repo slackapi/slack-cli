@@ -50,10 +50,11 @@ var copyIgnoreFiles = []string{".DS_Store"}
 
 // CreateArgs are the arguments passed into the Create function
 type CreateArgs struct {
-	AppName   string
-	Template  Template
-	GitBranch string
-	Subdir    string
+	AppName     string
+	DisplayName string
+	Template    Template
+	GitBranch   string
+	Subdir      string
 }
 
 // Create will create a new Slack app on the file system and app manifest on the Slack API.
@@ -71,6 +72,11 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	appPath, displayName, err := parseAppPath(createArgs.AppName)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+	}
+
+	// --name flag overrides only the display name, preserving the path from the argument
+	if createArgs.DisplayName != "" {
+		displayName = createArgs.DisplayName
 	}
 
 	// Get the project's full directory path
