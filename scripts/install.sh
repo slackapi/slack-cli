@@ -165,7 +165,7 @@ install_slack_cli() {
         echo -e "\x1b[2m\n$slack_cli_url"
         curl -# -fLo "$slack_cli_install_dir/slack-cli.tar.gz" "$slack_cli_url"
         echo -e "\x1b[0m"
-        delay 0.2 "💾 Successfully downloaded Slack CLI v$LATEST_SLACK_CLI_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
+        delay 0.2 "💾 Successfully downloaded Slack CLI v$SLACK_CLI_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
 
         delay 0.3 "📦 Extracting the Slack CLI command binary to $(home_path "$slack_cli_bin_path")"
         tar -xf "$slack_cli_install_dir/slack-cli.tar.gz" -C "$slack_cli_install_dir"
