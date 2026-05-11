@@ -62,10 +62,10 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"Token resolution (in priority order):",
 			"  1. --token flag              Explicit token value",
-			"  2. --app / --team flags      Install app and use bot token (in project)",
+			"  2. --app flag                Install app and use bot token (in project)",
 			"  3. SLACK_BOT_TOKEN env var   Bot token (set during slack deploy)",
 			"  4. SLACK_USER_TOKEN env var  User token",
-			"  5. Interactive prompt        Select from stored workspaces (CLI tooling token)",
+			"  5. App prompt (in project)   Install app and use bot token",
 			"",
 			"See all methods at: https://docs.slack.dev/reference/methods",
 		}, "\n"),
@@ -237,12 +237,9 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 		return token, nil
 	}
 
-	clients.IO.PrintDebug(ctx, "Using CLI tooling token which has limited API scopes. Set SLACK_BOT_TOKEN or use --token for full access.")
-	auth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select a workspace")
-	if err != nil {
-		return "", err
-	}
-	return auth.Token, nil
+	return "", slackerror.New(slackerror.ErrNotAuthed).
+		WithMessage("no token found").
+		WithRemediation("Provide a token with --token, --app, or set SLACK_BOT_TOKEN")
 }
 
 func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, selected prompts.SelectedApp) (string, error) {

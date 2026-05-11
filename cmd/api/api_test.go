@@ -322,36 +322,6 @@ func Test_resolveToken_TokenFlag(t *testing.T) {
 	assert.Equal(t, "xoxb-direct-token", token)
 }
 
-func Test_resolveToken_TeamFlag(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
-	clientsMock.Config.TeamFlag = "T12345"
-	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-		{Token: "xoxb-team-token", TeamID: "T12345", TeamDomain: "myteam"},
-	}, nil)
-	clientsMock.Auth.On("SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
-	clientsMock.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(iostreams.SelectPromptResponse{Flag: true, Option: "T12345"}, nil)
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	token, err := resolveToken(ctx, clients)
-	assert.NoError(t, err)
-	assert.Equal(t, "xoxb-team-token", token)
-}
-
-func Test_resolveToken_SingleAuth(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
-	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{Token: "xoxb-only-token"}}, nil)
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	token, err := resolveToken(ctx, clients)
-	assert.NoError(t, err)
-	assert.Equal(t, "xoxb-only-token", token)
-}
-
 func Test_resolveToken_EnvBotToken(t *testing.T) {
 	t.Setenv("SLACK_BOT_TOKEN", "xoxb-env-bot-token")
 
@@ -376,34 +346,32 @@ func Test_resolveToken_EnvUserToken(t *testing.T) {
 	assert.Equal(t, "xoxp-env-user-token", token)
 }
 
-func Test_resolveToken_TeamOverridesEnv(t *testing.T) {
+func Test_resolveToken_AppOverridesEnv(t *testing.T) {
 	t.Setenv("SLACK_BOT_TOKEN", "xoxb-env-bot-token")
 
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.Os.AddDefaultMocks()
 	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
-	clientsMock.Config.TeamFlag = "T12345"
+	clientsMock.Config.AppFlag = "A111"
 
 	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-		{Token: "xoxp-tooling", TeamID: "T12345", TeamDomain: "myteam"},
+		{Token: "xoxp-tooling", TeamID: "T111", TeamDomain: "team-a"},
 	}, nil)
 	clientsMock.Auth.On("SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 
 	appClientMock := &app.AppClientMock{}
 	appClientMock.On("GetDeployedAll", mock.Anything).Return([]types.App{
-		{AppID: "A111", TeamID: "T12345", TeamDomain: "myteam"},
+		{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"},
 	}, "", nil)
 	appClientMock.On("GetLocalAll", mock.Anything).Return([]types.App{}, nil)
-	appClientMock.On("GetDeployed", mock.Anything, "T12345").Return(types.App{AppID: "A111", TeamID: "T12345", TeamDomain: "myteam"}, nil)
-	appClientMock.On("GetLocal", mock.Anything, "T12345").Return(types.App{}, nil)
+	appClientMock.On("GetDeployed", mock.Anything, "T111").Return(types.App{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"}, nil)
+	appClientMock.On("GetLocal", mock.Anything, "T111").Return(types.App{}, nil)
 	clientsMock.AppClient.AppClientInterface = appClientMock
 
-	clientsMock.API.On("GetAppStatus", mock.Anything, "xoxp-tooling", []string{"A111"}, "T12345").
+	clientsMock.API.On("GetAppStatus", mock.Anything, "xoxp-tooling", []string{"A111"}, "T111").
 		Return(internalapi.GetAppStatusResult{Apps: []internalapi.AppStatusResultAppInfo{{AppID: "A111", Installed: true}}}, nil)
 	clientsMock.API.On("ValidateSession", mock.Anything, mock.Anything).Return(internalapi.AuthSession{}, nil)
-	clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an app", mock.Anything, mock.Anything).
-		Return(iostreams.SelectPromptResponse{Index: 0, Prompt: true}, nil)
 
 	manifestMock := clientsMock.AppClient.Manifest.(*app.ManifestMockObject)
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
@@ -417,32 +385,14 @@ func Test_resolveToken_TeamOverridesEnv(t *testing.T) {
 			Bot      string `json:"bot,omitempty"`
 			AppLevel string `json:"app_level,omitempty"`
 			User     string `json:"user,omitempty"`
-		}{Bot: "xoxb-team-bot-token"}}, types.InstallSuccess, nil)
+		}{Bot: "xoxb-app-bot-token"}}, types.InstallSuccess, nil)
 
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	clients.SDKConfig.WorkingDirectory = "/fake/project"
 
 	token, err := resolveToken(ctx, clients)
 	assert.NoError(t, err)
-	assert.Equal(t, "xoxb-team-bot-token", token)
-}
-
-func Test_resolveToken_MultipleAuths_SelectsViaPrompt(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
-	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-		{Token: "xoxb-token-1", TeamDomain: "team-a", TeamID: "T111"},
-		{Token: "xoxb-token-2", TeamDomain: "team-b", TeamID: "T222"},
-	}, nil)
-	clientsMock.Auth.On("SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
-	clientsMock.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(iostreams.SelectPromptResponse{Index: 0, Prompt: true}, nil)
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	token, err := resolveToken(ctx, clients)
-	assert.NoError(t, err)
-	assert.Equal(t, "xoxb-token-1", token)
+	assert.Equal(t, "xoxb-app-bot-token", token)
 }
 
 func Test_resolveToken_AppFlag_ByID(t *testing.T) {
@@ -567,10 +517,9 @@ func Test_resolveToken_AppFlag_NotFound(t *testing.T) {
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 	clients.SDKConfig.WorkingDirectory = "/fake/project"
 
-	// AppSelectPrompt returns ErrAppNotFound for A999, resolveToken falls through to team prompt
-	token, err := resolveToken(ctx, clients)
-	assert.NoError(t, err)
-	assert.Equal(t, "xoxp-tooling", token)
+	_, err := resolveToken(ctx, clients)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no token found")
 }
 
 func Test_resolveToken_AppSelection(t *testing.T) {
@@ -622,28 +571,12 @@ func Test_resolveToken_AppSelection(t *testing.T) {
 	assert.Equal(t, "xoxb-app-bot-token", token)
 }
 
-func Test_resolveToken_AppSelection_FallsThrough(t *testing.T) {
+func Test_resolveToken_NoTokenFound(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
-	clientsMock.Os.AddDefaultMocks()
-	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
-
-	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-		{Token: "xoxp-tooling", TeamID: "T111", TeamDomain: "team-a"},
-	}, nil)
-
-	appClientMock := &app.AppClientMock{}
-	appClientMock.On("GetDeployedAll", mock.Anything).Return([]types.App{}, "", nil)
-	appClientMock.On("GetLocalAll", mock.Anything).Return([]types.App{}, nil)
-	appClientMock.On("GetDeployed", mock.Anything, "T111").Return(types.App{}, nil)
-	appClientMock.On("GetLocal", mock.Anything, "T111").Return(types.App{}, nil)
-	clientsMock.AppClient.AppClientInterface = appClientMock
-
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	clients.SDKConfig.WorkingDirectory = "/fake/project"
 
-	// No installed apps found, AppSelectPrompt returns ErrInstallationRequired, falls through to team prompt
-	token, err := resolveToken(ctx, clients)
-	assert.NoError(t, err)
-	assert.Equal(t, "xoxp-tooling", token)
+	_, err := resolveToken(ctx, clients)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no token found")
 }
