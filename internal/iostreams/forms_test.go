@@ -485,7 +485,6 @@ func TestFormsAccessible(t *testing.T) {
 		assert.Equal(t, "", input)
 		assert.Contains(t, out.String(), "Name your app (default: cool-app-123):")
 	})
-
 }
 
 func TestFormsNoColor(t *testing.T) {
