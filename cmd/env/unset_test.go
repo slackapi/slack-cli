@@ -79,7 +79,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "RemoveVariable")
 			},
 			ExpectedStdoutOutputs: []string{
-				"The project has no environment variables to remove",
+				"The project has no environment variables to unset",
 			},
 		},
 		"exit without errors when hosted app has zero variables": {
@@ -94,7 +94,7 @@ func Test_Env_RemoveCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "RemoveVariable")
 			},
 			ExpectedStdoutOutputs: []string{
-				"The app has no environment variables to remove",
+				"The app has no environment variables to unset",
 			},
 		},
 		"remove a hosted variable using arguments": {

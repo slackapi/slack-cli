@@ -21,7 +21,9 @@ package iostreams
 import (
 	"context"
 	"errors"
+	"fmt"
 	"slices"
+	"strings"
 
 	huh "charm.land/huh/v2"
 	"github.com/slackapi/slack-cli/internal/experiment"
@@ -39,13 +41,24 @@ func newForm(io *IOStreams, field huh.Field) *huh.Form {
 	} else {
 		form = form.WithTheme(style.ThemeSurvey())
 	}
+	if io != nil && io.config.AccessibleFlag {
+		form = form.WithAccessible(true)
+	}
 	return form
 }
 
 // buildInputForm constructs an interactive form for text input prompts.
 func buildInputForm(io *IOStreams, message string, cfg InputPromptConfig, input *string) *huh.Form {
+	title := message
+	if io != nil && io.config.AccessibleFlag {
+		if cfg.Placeholder != "" {
+			title = fmt.Sprintf("%s (default: %s):", strings.TrimSuffix(message, ":"), cfg.Placeholder)
+		} else if !strings.HasSuffix(message, ":") {
+			title = message + ":"
+		}
+	}
 	field := huh.NewInput().
-		Title(message).
+		Title(title).
 		Prompt(style.Chevron() + " ").
 		Placeholder(cfg.Placeholder).
 		Value(input)
@@ -100,8 +113,13 @@ func buildSelectForm(io *IOStreams, msg string, options []string, cfg SelectProm
 		opts = append(opts, huh.NewOption(key, opt))
 	}
 
+	title := msg
+	if io != nil && io.config.AccessibleFlag && len(options) > 0 {
+		title = fmt.Sprintf("%s (press Enter for 1):", strings.TrimSuffix(msg, ":"))
+	}
+
 	field := huh.NewSelect[string]().
-		Title(msg).
+		Title(title).
 		Description(cfg.Help).
 		Options(opts...).
 		Value(selected)
@@ -125,8 +143,12 @@ func selectForm(io *IOStreams, _ context.Context, msg string, options []string, 
 
 // buildPasswordForm constructs an interactive form for password (hidden input) prompts.
 func buildPasswordForm(io *IOStreams, message string, cfg PasswordPromptConfig, input *string) *huh.Form {
+	title := message
+	if io != nil && io.config.AccessibleFlag && !strings.HasSuffix(message, ":") {
+		title = message + ":"
+	}
 	field := huh.NewInput().
-		Title(message).
+		Title(title).
 		Prompt(style.Chevron() + " ").
 		EchoMode(huh.EchoModePassword).
 		Value(input)
