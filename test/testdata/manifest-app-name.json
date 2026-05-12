@@ -3,7 +3,7 @@
     "major_version": 2
   },
   "display_information": {
-    "name": "vibrant-butterfly-1234"
+    "name": "Vibrant butterfly - 1234"
   },
   "features": {
     "app_home": {
@@ -12,7 +12,7 @@
       "messages_tab_read_only_enabled": false
     },
     "bot_user": {
-      "display_name": "vibrant-butterfly-1234"
+      "display_name": "Vibrant butterfly - 1234"
     }
   },
   "functions": {

@@ -22,8 +22,9 @@ import (
 )
 
 // Environment Variable constants
-const slackCLIAppIconPathEnv = "SLACK_CLI_APP_ICON_PATH"
+const slackAccessibleEnv = "ACCESSIBLE"
 const slackAutoRequestAAAEnv = "SLACK_AUTO_REQUEST_AAA"
+const slackCLIAppIconPathEnv = "SLACK_CLI_APP_ICON_PATH"
 const slackConfigDirEnv = "SLACK_CONFIG_DIR"
 const slackDisableTelemetryEnv = "SLACK_DISABLE_TELEMETRY"
 const slackTestTraceEnv = "SLACK_TEST_TRACE"
@@ -39,6 +40,7 @@ type Config struct {
 	// Raw flags (for metrics)
 	RawFlags []string
 	// Command flags
+	AccessibleFlag          bool
 	APIHostFlag             string
 	APIHostResolved         string
 	AppFlag                 string
@@ -52,6 +54,7 @@ type Config struct {
 	DisableTelemetryFlag    bool
 	ForceFlag               bool
 	LogstashHostResolved    string
+	NoColor                 bool
 	RuntimeFlag             string
 	RuntimeName             string
 	RuntimeVersion          string
@@ -60,7 +63,6 @@ type Config struct {
 	SlackTestTraceFlag      bool
 	TeamFlag                string
 	TokenFlag               string
-	NoColor                 bool
 
 	// Feature experiments
 	ExperimentsFlag []string

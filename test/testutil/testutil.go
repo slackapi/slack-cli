@@ -17,9 +17,9 @@ package testutil
 import (
 	"regexp"
 
-	"github.com/hashicorp/go-version"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 )
 
 // package + .test for root command
@@ -27,9 +27,11 @@ var rootName string = "cmd.test"
 
 // ContainsSemVer checks if a string contains valid semver
 func ContainsSemVer(s string) bool {
-	matcher := regexp.MustCompile(version.SemverRegexpRaw)
-	match := matcher.MatchString(s)
-	return match
+	if semver.IsValid("v"+s) || semver.IsValid(s) {
+		return true
+	}
+	matcher := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+`)
+	return matcher.MatchString(s)
 }
 
 // Set the command's IOStream to the mocked IOStream

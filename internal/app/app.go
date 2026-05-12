@@ -47,17 +47,18 @@ func NewClient(
 }
 
 // UpdateDefaultProjectFiles should update any project specific files if any
-func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string) error {
+func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string, displayName string) error {
 	// Files and their corresponding app name replacement functions
 	projectFiles := []struct {
 		filename string
 		replacer func([]byte, string) []byte
+		name     string
 	}{
-		{"manifest.json", regexReplaceAppNameInManifest},
-		{"manifest.js", regexReplaceAppNameInManifest},
-		{"manifest.ts", regexReplaceAppNameInManifest},
-		{"package.json", regexReplaceAppNameInPackageJSON},
-		{"pyproject.toml", regexReplaceAppNameInPyprojectToml},
+		{"manifest.json", regexReplaceAppNameInManifest, displayName},
+		{"manifest.js", regexReplaceAppNameInManifest, displayName},
+		{"manifest.ts", regexReplaceAppNameInManifest, displayName},
+		{"package.json", regexReplaceAppNameInPackageJSON, appDirName},
+		{"pyproject.toml", regexReplaceAppNameInPyprojectToml, appDirName},
 	}
 
 	for _, pf := range projectFiles {
@@ -67,7 +68,7 @@ func UpdateDefaultProjectFiles(fs afero.Fs, dirPath string, appDirName string) e
 			continue
 		}
 
-		fileData = pf.replacer(fileData, appDirName)
+		fileData = pf.replacer(fileData, pf.name)
 		if err := afero.WriteFile(fs, filePath, fileData, 0644); err != nil {
 			return err
 		}
