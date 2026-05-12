@@ -120,7 +120,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	// from the positional argument. When no positional arg is given (e.g.
 	// "slack create --name APPPP"), the name flag also becomes the directory
 	// path since there's nothing else to derive it from.
-	displayNameOverride := ""
+	displayName := ""
 	if nameFlagProvided {
 		displayNameOverride = createAppNameFlag
 		if appNameArg == "" {
