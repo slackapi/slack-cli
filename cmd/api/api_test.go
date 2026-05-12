@@ -533,7 +533,7 @@ func Test_resolveToken_AppFlag_NotFound(t *testing.T) {
 
 	_, err := resolveToken(ctx, clients)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no token found")
+	assert.Contains(t, err.Error(), "app_not_found")
 }
 
 func Test_resolveToken_AppSelection(t *testing.T) {

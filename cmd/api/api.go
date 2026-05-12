@@ -227,7 +227,10 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 	if clients.Config.AppFlag != "" {
 		if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
 			selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
-			if err == nil && selected.App.AppID != "" {
+			if err != nil {
+				return "", err
+			}
+			if selected.App.AppID != "" {
 				token, err := installAndGetBotToken(ctx, clients, selected)
 				if err == nil && token != "" {
 					return token, nil
@@ -246,7 +249,10 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 
 	if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
 		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
-		if err == nil && selected.App.AppID != "" {
+		if err != nil {
+			return "", err
+		}
+		if selected.App.AppID != "" {
 			token, err := installAndGetBotToken(ctx, clients, selected)
 			if err == nil && token != "" {
 				return token, nil
