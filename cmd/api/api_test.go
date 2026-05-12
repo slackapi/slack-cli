@@ -20,6 +20,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	internalapi "github.com/slackapi/slack-cli/internal/api"
@@ -237,6 +238,39 @@ func Test_runAPICommand_IncludeHeaders(t *testing.T) {
 	assert.Contains(t, output, "HTTP 200")
 	assert.Contains(t, output, "X-Custom: test-value")
 	assert.Contains(t, output, `"ok":true`)
+}
+
+func Test_runAPICommand_IncludeHeadersSorted(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Zebra", "last")
+		w.Header().Set("X-Alpha", "first")
+		w.Header().Set("X-Middle", "middle")
+		fmt.Fprint(w, `{"ok":true}`)
+	}))
+	defer server.Close()
+
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clientsMock.Config.TokenFlag = "xoxb-test-token"
+	clientsMock.Config.APIHostResolved = server.URL
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	cmd := NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+
+	flags = cmdFlags{method: "POST", include: true}
+	cmd.SetArgs([]string{"auth.test"})
+	err := cmd.ExecuteContext(ctx)
+
+	assert.NoError(t, err)
+	output := clientsMock.GetStdoutOutput()
+	alphaIdx := strings.Index(output, "X-Alpha:")
+	middleIdx := strings.Index(output, "X-Middle:")
+	zebraIdx := strings.Index(output, "X-Zebra:")
+	assert.Greater(t, alphaIdx, -1)
+	assert.Greater(t, middleIdx, alphaIdx)
+	assert.Greater(t, zebraIdx, middleIdx)
 }
 
 func Test_runAPICommand_NonOKStatus(t *testing.T) {

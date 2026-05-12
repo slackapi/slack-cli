@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -192,8 +193,13 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 
 	if flags.include {
 		fmt.Fprintf(cmd.OutOrStdout(), "HTTP %d\n", resp.StatusCode)
-		for key, values := range resp.Header {
-			for _, v := range values {
+		keys := make([]string, 0, len(resp.Header))
+		for key := range resp.Header {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			for _, v := range resp.Header[key] {
 				fmt.Fprintf(cmd.OutOrStdout(), "%s: %s\n", key, v)
 			}
 		}
