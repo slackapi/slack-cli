@@ -72,7 +72,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-app",
+					AppPath:  "my-app",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -109,7 +109,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/deno-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-deno-app",
+					AppPath:  "my-deno-app",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -156,7 +156,7 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-agent",
+					AppPath:  "my-agent",
 					Template: template,
 					Subdir:   "claude-agent-sdk",
 				}
@@ -203,7 +203,7 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-agent-app",
+					AppPath:  "my-agent-app",
 					Template: template,
 					Subdir:   "claude-agent-sdk",
 				}
@@ -234,7 +234,7 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("pydantic-ai")
 				expected := create.CreateArgs{
-					AppName:  "my-pydantic-app",
+					AppPath:  "my-pydantic-app",
 					Template: template,
 					Subdir:   "pydantic-ai",
 				}
@@ -268,7 +268,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "agent",
+					AppPath:  "agent",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -304,8 +304,9 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "agent",
-					Template: template,
+					AppPath:     "agent",
+					DisplayName: "agent",
+					Template:    template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt WAS called (shortcut was not triggered)
@@ -351,9 +352,10 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-custom-name", // --name flag overrides
-					Template: template,
-					Subdir:   "claude-agent-sdk",
+					AppPath:     "my-custom-name", // --name flag used as path when no positional arg
+					DisplayName: "my-custom-name",
+					Template:    template,
+					Subdir:      "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (shortcut was triggered)
@@ -387,8 +389,9 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-name", // --name flag overrides "my-project" positional arg
-					Template: template,
+					AppPath:     "my-project", // positional arg preserved as path
+					DisplayName: "my-name",    // --name flag sets manifest display name
+					Template:    template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since --name flag was provided
@@ -432,9 +435,10 @@ func TestCreateCommand(t *testing.T) {
 				require.NoError(t, err)
 				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-name", // --name flag overrides "my-project" positional arg
-					Template: template,
-					Subdir:   "claude-agent-sdk",
+					AppPath:     "my-project", // positional arg preserved as path
+					DisplayName: "my-name",    // --name flag sets manifest display name
+					Template:    template,
+					Subdir:      "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (agent shortcut was triggered)
@@ -505,7 +509,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 				// When the user accepts the default (empty return), the generated name is used
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
-					return args.AppName != ""
+					return args.AppPath != ""
 				}))
 			},
 		},
@@ -538,7 +542,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 				// Should still call Create with a non-empty generated name
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
-					return args.AppName != ""
+					return args.AppPath != ""
 				}))
 			},
 		},
@@ -569,7 +573,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-project",
+					AppPath:  "my-project",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -615,7 +619,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
-					return args.AppName != "" && args.Template == template && args.Subdir == "apps/my-app"
+					return args.AppPath != "" && args.Template == template && args.Subdir == "apps/my-app"
 				}))
 			},
 		},
