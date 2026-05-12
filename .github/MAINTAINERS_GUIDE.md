@@ -293,24 +293,11 @@ results directly.
 
 #### Continuous integration tests
 
-All tests are run during PRs, merges to `main`, and on nightly builds of `main`
-by our continuous integration systems: GitHub Action and CircleCI workflows.
+All tests are run during PRs and merges to `main` by our continuous integration
+systems: GitHub Actions and CircleCI workflows.
 
 The module tests that are used can be found alongside the modules in `*_test.go`
 files and edited as needed.
-
-The end-to-end tests are located in the
-[slackapi/platform-devxp-test][platform-devxp-test] repo and can be adjusted to
-new requirements by a maintainer.
-
-By default the tests execute with the `dev-build` GitHub Release of this repo.
-Branches on this repo will also create a related GitHub Release, and end-to-end
-tests will use the branch-specific Slack CLI release to execute tests.
-
-The branch name can also be set by changing
-[the `e2e_target_branch`](https://github.com/slackapi/slack-cli/blob/24048e34b30a1f1bed46f9d937ff0b02a3cb76b7/.circleci/config.yml#L950)
-for the `build-lint-test-e2e-test` workflow in the `.circleci/config.yml` file,
-but take care not to merge this change into `main`!
 
 #### Test naming conventions
 
@@ -551,7 +538,6 @@ tree of a transitive dependency, this command can be helpful:
 go mod graph | grep <module name>
 ```
 
-
 ### Designing
 
 Conventions for how commands handle inputs and format outputs are documented in
@@ -624,7 +610,7 @@ The development build comes in 2 flavours:
 
 #### 1. Development build GitHub release
 
-A development build and recent changelog is generated each night from `main`
+A development build and recent changelog is generated on each merge to `main`
 with all of the latest changes. Builds are released with the `dev-build` tag and
 can be [reviewed from the releases][dev-release] page.
 
@@ -636,8 +622,9 @@ Each release page contains:
   version `v*.*.*` pattern
 - Assets for the macOS, Linux, and Windows binaries
 
-The development build and release automation is performed from the `deploy-dev`
-job in the [`.circleci/config.yml`][circleci] file.
+The development build and release automation is performed from the
+`dev-build-code-sign-deploy` workflow in the [`.circleci/config.yml`][circleci]
+file.
 
 #### 2. Development build install script
 
@@ -808,10 +795,8 @@ Steps to merge a pull request:
 1. Tests must pass on the pull request using the continuous integration suite
    - Tests for development APIs are optional, but we recommend investigating why
      it's failing before merging
-   - End-to-end tests for pull requests from forks can be [started][e2e] if:
-     - The `workflow` from the **main** branch is used
-     - The `branch` contains the pull request number as: `pull/123/head`
-     - The `status` is reported with the commit checks
+   - End-to-end tests start from the [platform-devxp-test][platform-devxp-test]
+     project with custom options
 2. Code is reviewed and approved by another maintainer
 3. Title is descriptive
    - This becomes part of the CHANGELOG, so please make sure it's meaningful to
@@ -832,7 +817,6 @@ When in doubt, find the other maintainers and ask.
 [commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
-[e2e]: https://github.com/slackapi/slack-cli/actions/workflows/e2e_tests.yml
 [effective-go]: https://golang.org/doc/effective_go
 [github-app-docs]: https://github.com/apps/slackapi
 [github-app-releaser]: https://github.com/apps/slack-cli-releaser
