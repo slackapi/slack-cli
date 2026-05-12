@@ -170,7 +170,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		subdir = template.GetSubdir()
 	}
 	createArgs := create.CreateArgs{
-		AppName:     appNameArg,
+		AppPath:     appPathArg,
 		DisplayName: displayNameOverride,
 		Template:    template,
 		GitBranch:   createGitBranchFlag,
