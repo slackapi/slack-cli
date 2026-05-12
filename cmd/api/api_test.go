@@ -346,6 +346,20 @@ func Test_resolveToken_EnvUserToken(t *testing.T) {
 	assert.Equal(t, "xoxp-env-user-token", token)
 }
 
+func Test_resolveToken_EnvOverridesAppPrompt(t *testing.T) {
+	t.Setenv("SLACK_BOT_TOKEN", "xoxb-env-bot-token")
+
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	clients.SDKConfig.WorkingDirectory = "/fake/project"
+
+	token, err := resolveToken(ctx, clients)
+	assert.NoError(t, err)
+	assert.Equal(t, "xoxb-env-bot-token", token)
+	clientsMock.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
 func Test_resolveToken_AppOverridesEnv(t *testing.T) {
 	t.Setenv("SLACK_BOT_TOKEN", "xoxb-env-bot-token")
 
