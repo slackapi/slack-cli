@@ -137,3 +137,28 @@ func Test_RawRequest_RetryOnTooManyRequests(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, `{"ok":true}`, string(resp.Body))
 }
+
+func Test_RawRequest_RetryOnServiceUnavailable(t *testing.T) {
+	attempts := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts == 1 {
+			w.Header().Set("Retry-After", "1")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		fmt.Fprint(w, `{"ok":true}`)
+	}))
+	defer server.Close()
+
+	ctx := slackcontext.MockContext(t.Context())
+	io := newTestIO()
+	client := NewClient(nil, server.URL, io)
+
+	resp, err := client.RawRequest(ctx, "POST", "auth.test", "token", nil, "", nil)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 2, attempts)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, `{"ok":true}`, string(resp.Body))
+}
