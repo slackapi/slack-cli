@@ -180,7 +180,7 @@ func getAppDirName(appName string) (string, error) {
 		return "", fmt.Errorf("app name is required")
 	}
 
-	// Normalize to kebab-case: lowercase, replace non-alphanumeric with dashes, collapse, and trim
+	// Normalize to a variation of kebab-case: replace non-alphanumeric with dashes, collapse, and trim
 	appName = strings.TrimSpace(appName)
 	appName = strings.ToLower(appName)
 	appName = nonAlphanumericRe.ReplaceAllString(appName, "-")
