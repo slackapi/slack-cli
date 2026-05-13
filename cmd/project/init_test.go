@@ -68,7 +68,7 @@ func Test_Project_InitCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert installing project dependencies
 				output := cm.GetCombinedOutput()
-				require.Contains(t, output, "Installed project dependencies")
+				require.Contains(t, output, "Project Dependencies")
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", ".gitignore"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", "hooks.json"))
