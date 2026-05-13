@@ -15,7 +15,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -43,173 +42,98 @@ func Test_NewCommand(t *testing.T) {
 	assert.Equal(t, "Call any Slack API method", cmd.Short)
 }
 
-func Test_runAPICommand_FormEncoded(t *testing.T) {
-	var receivedContentType string
-	var receivedBody string
-	var receivedMethod string
+func Test_runAPICommand_BodyFormats(t *testing.T) {
+	tests := map[string]struct {
+		flags          cmdFlags
+		args           []string
+		expectedMethod string
+		expectedCT     string
+		expectedAuth   string
+		bodyContains   []string
+		bodyEquals     string
+	}{
+		"form-encoded key=value params": {
+			flags:          cmdFlags{method: "POST"},
+			args:           []string{"chat.postMessage", "channel=C123", "text=hello"},
+			expectedMethod: "POST",
+			expectedCT:     "application/x-www-form-urlencoded",
+			bodyContains:   []string{"channel=C123", "text=hello", "token=xoxb-test-token"},
+		},
+		"JSON auto-detect from arg": {
+			flags:        cmdFlags{method: "POST"},
+			args:         []string{"chat.postMessage", `{"channel":"C123","text":"hello"}`},
+			expectedCT:   "application/json; charset=utf-8",
+			expectedAuth: "Bearer xoxb-test-token",
+			bodyEquals:   `{"channel":"C123","text":"hello"}`,
+		},
+		"JSON via --json flag": {
+			flags:        cmdFlags{method: "POST", json: `{"channel":"C123"}`},
+			args:         []string{"auth.test"},
+			expectedCT:   "application/json; charset=utf-8",
+			expectedAuth: "Bearer xoxb-test-token",
+			bodyEquals:   `{"channel":"C123"}`,
+		},
+		"form-encoded via --data flag": {
+			flags:        cmdFlags{method: "POST", data: "channel=C123&text=hello"},
+			args:         []string{"chat.postMessage"},
+			expectedCT:   "application/x-www-form-urlencoded",
+			bodyContains: []string{"channel=C123", "text=hello", "token=xoxb-test-token"},
+		},
+		"GET method": {
+			flags:          cmdFlags{method: "GET"},
+			args:           []string{"auth.test"},
+			expectedMethod: "GET",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var receivedMethod string
+			var receivedContentType string
+			var receivedAuth string
+			var receivedBody string
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedMethod = r.Method
-		receivedContentType = r.Header.Get("Content-Type")
-		body, _ := io.ReadAll(r.Body)
-		receivedBody = string(body)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, `{"ok":true}`)
-	}))
-	defer server.Close()
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				receivedMethod = r.Method
+				receivedContentType = r.Header.Get("Content-Type")
+				receivedAuth = r.Header.Get("Authorization")
+				body, _ := io.ReadAll(r.Body)
+				receivedBody = string(body)
+				fmt.Fprint(w, `{"ok":true}`)
+			}))
+			defer server.Close()
 
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clientsMock.Config.TokenFlag = "xoxb-test-token"
-	clientsMock.Config.APIHostResolved = server.URL
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.Config.TokenFlag = "xoxb-test-token"
+			clientsMock.Config.APIHostResolved = server.URL
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	cmd := NewCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
+			cmd := NewCommand(clients)
+			testutil.MockCmdIO(clients.IO, cmd)
 
-	flags = cmdFlags{method: "POST"}
-	cmd.SetArgs([]string{"chat.postMessage", "channel=C123", "text=hello"})
-	err := cmd.ExecuteContext(ctx)
+			flags = tc.flags
+			cmd.SetArgs(tc.args)
+			err := cmd.ExecuteContext(ctx)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "POST", receivedMethod)
-	assert.Equal(t, "application/x-www-form-urlencoded", receivedContentType)
-	assert.Contains(t, receivedBody, "channel=C123")
-	assert.Contains(t, receivedBody, "text=hello")
-	assert.Contains(t, receivedBody, "token=xoxb-test-token")
-}
-
-func Test_runAPICommand_JSONAutoDetect(t *testing.T) {
-	var receivedContentType string
-	var receivedBody string
-	var receivedAuth string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedContentType = r.Header.Get("Content-Type")
-		receivedAuth = r.Header.Get("Authorization")
-		body, _ := io.ReadAll(r.Body)
-		receivedBody = string(body)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, `{"ok":true}`)
-	}))
-	defer server.Close()
-
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clientsMock.Config.TokenFlag = "xoxb-test-token"
-	clientsMock.Config.APIHostResolved = server.URL
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	cmd := NewCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	flags = cmdFlags{method: "POST"}
-	cmd.SetArgs([]string{"chat.postMessage", `{"channel":"C123","text":"hello"}`})
-	err := cmd.ExecuteContext(ctx)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "application/json; charset=utf-8", receivedContentType)
-	assert.Equal(t, "Bearer xoxb-test-token", receivedAuth)
-
-	var bodyJSON map[string]string
-	err = json.Unmarshal([]byte(receivedBody), &bodyJSON)
-	assert.NoError(t, err)
-	assert.Equal(t, "C123", bodyJSON["channel"])
-	assert.Equal(t, "hello", bodyJSON["text"])
-}
-
-func Test_runAPICommand_JSONFlag(t *testing.T) {
-	var receivedContentType string
-	var receivedAuth string
-	var receivedBody string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedContentType = r.Header.Get("Content-Type")
-		receivedAuth = r.Header.Get("Authorization")
-		body, _ := io.ReadAll(r.Body)
-		receivedBody = string(body)
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprint(w, `{"ok":true}`)
-	}))
-	defer server.Close()
-
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clientsMock.Config.TokenFlag = "xoxb-test-token"
-	clientsMock.Config.APIHostResolved = server.URL
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	cmd := NewCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	flags = cmdFlags{method: "POST", json: `{"channel":"C123"}`}
-	cmd.SetArgs([]string{"auth.test"})
-	err := cmd.ExecuteContext(ctx)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "application/json; charset=utf-8", receivedContentType)
-	assert.Equal(t, "Bearer xoxb-test-token", receivedAuth)
-	assert.Equal(t, `{"channel":"C123"}`, receivedBody)
-}
-
-func Test_runAPICommand_DataFlag(t *testing.T) {
-	var receivedBody string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		receivedBody = string(body)
-		fmt.Fprint(w, `{"ok":true}`)
-	}))
-	defer server.Close()
-
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clientsMock.Config.TokenFlag = "xoxb-test-token"
-	clientsMock.Config.APIHostResolved = server.URL
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	cmd := NewCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	flags = cmdFlags{method: "POST", data: "channel=C123&text=hello"}
-	cmd.SetArgs([]string{"chat.postMessage"})
-	err := cmd.ExecuteContext(ctx)
-
-	assert.NoError(t, err)
-	assert.Contains(t, receivedBody, "channel=C123")
-	assert.Contains(t, receivedBody, "text=hello")
-	assert.Contains(t, receivedBody, "token=xoxb-test-token")
-}
-
-func Test_runAPICommand_GETMethod(t *testing.T) {
-	var receivedMethod string
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedMethod = r.Method
-		fmt.Fprint(w, `{"ok":true}`)
-	}))
-	defer server.Close()
-
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clientsMock.Config.TokenFlag = "xoxb-test-token"
-	clientsMock.Config.APIHostResolved = server.URL
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	cmd := NewCommand(clients)
-	testutil.MockCmdIO(clients.IO, cmd)
-
-	flags = cmdFlags{method: "GET"}
-	cmd.SetArgs([]string{"auth.test"})
-	err := cmd.ExecuteContext(ctx)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "GET", receivedMethod)
+			assert.NoError(t, err)
+			if tc.expectedMethod != "" {
+				assert.Equal(t, tc.expectedMethod, receivedMethod)
+			}
+			if tc.expectedCT != "" {
+				assert.Equal(t, tc.expectedCT, receivedContentType)
+			}
+			if tc.expectedAuth != "" {
+				assert.Equal(t, tc.expectedAuth, receivedAuth)
+			}
+			if tc.bodyEquals != "" {
+				assert.Equal(t, tc.bodyEquals, receivedBody)
+			}
+			for _, s := range tc.bodyContains {
+				assert.Contains(t, receivedBody, s)
+			}
+		})
+	}
 }
 
 func Test_runAPICommand_IncludeHeaders(t *testing.T) {
