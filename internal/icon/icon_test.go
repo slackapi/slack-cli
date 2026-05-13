@@ -24,19 +24,9 @@ import (
 
 func Test_ResolveIconPath(t *testing.T) {
 	tests := map[string]struct {
-		manifestIcon string
-		files        []string
-		expected     string
+		files    []string
+		expected string
 	}{
-		"manifest icon set returns it directly": {
-			manifestIcon: "custom/my-icon.png",
-			expected:     "custom/my-icon.png",
-		},
-		"manifest icon preferred over magic icon files": {
-			manifestIcon: "custom/my-icon.png",
-			files:        []string{"assets/icon.png", "icon.png"},
-			expected:     "custom/my-icon.png",
-		},
 		"assets/icon.png found": {
 			files:    []string{"assets/icon.png"},
 			expected: "assets/icon.png",
@@ -84,7 +74,7 @@ func Test_ResolveIconPath(t *testing.T) {
 			for _, f := range tc.files {
 				require.NoError(t, afero.WriteFile(fs, f, []byte("img"), 0o644))
 			}
-			result := ResolveIconPath(fs, tc.manifestIcon)
+			result := ResolveIconPath(fs)
 			assert.Equal(t, tc.expected, result)
 		})
 	}
