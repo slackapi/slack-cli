@@ -218,8 +218,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		}
 	}
 
-	// upload icon, default to assets/icon.{png,jpg,jpeg,gif} or icon.{png,jpg,jpeg,gif}
-	iconPath := icon.ResolveIconPath(clients.Fs, slackManifest.Icon)
+	iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
 	if iconPath != "" {
 		err = updateIcon(ctx, clients, iconPath, app.AppID, token, manifest.IsFunctionRuntimeSlackHosted())
 		if err != nil {
@@ -519,7 +518,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 
 	// upload icon for non-hosted apps (gated behind set-icon experiment)
 	if clients.Config.WithExperimentOn(experiment.SetIcon) {
-		iconPath := icon.ResolveIconPath(clients.Fs, slackManifest.Icon)
+		iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
 		if iconPath != "" {
 			_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
 			if iconErr != nil {
@@ -637,6 +636,28 @@ func appendLocalToDisplayName(manifest *types.AppManifest) {
 	if manifest.Features != nil {
 		manifest.Features.BotUser.DisplayName = style.LocalRunDisplayName(manifest.Features.BotUser.DisplayName)
 	}
+}
+
+// resolveIconPath determines the icon file path using the priority chain:
+// SLACK_CLI_APP_ICON_PATH env var > manifest icon field > assets/ and root fallback
+func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifestIcon string) string {
+	if envIconPath := clients.Config.AppIconPathFlag; envIconPath != "" {
+		if _, err := clients.Fs.Stat(envIconPath); err == nil {
+			return envIconPath
+		}
+		clients.IO.PrintDebug(ctx, "SLACK_CLI_APP_ICON_PATH file not found: %s", envIconPath)
+		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from SLACK_CLI_APP_ICON_PATH not found: %s", envIconPath)))
+		return ""
+	}
+	if manifestIcon != "" {
+		if _, err := clients.Fs.Stat(manifestIcon); err == nil {
+			return manifestIcon
+		}
+		clients.IO.PrintDebug(ctx, "manifest icon file not found: %s", manifestIcon)
+		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from manifest not found: %s", manifestIcon)))
+		return ""
+	}
+	return icon.ResolveIconPath(clients.Fs)
 }
 
 // updateIcon will upload the new icon to the Slack API

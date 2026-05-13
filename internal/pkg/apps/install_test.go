@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -1724,6 +1725,86 @@ func TestContinueDespiteWarning(t *testing.T) {
 			if !tc.expectsPrompt {
 				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
 			}
+		})
+	}
+}
+
+func Test_resolveIconPath(t *testing.T) {
+	tests := map[string]struct {
+		envIconPath  string
+		manifestIcon string
+		setupFiles   func(t *testing.T, fs afero.Fs)
+		expected     string
+	}{
+		"env var takes priority over manifest icon": {
+			envIconPath:  "env-icon.png",
+			manifestIcon: "manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "env-icon.png", []byte("img"), 0o644))
+				require.NoError(t, afero.WriteFile(fs, "manifest-icon.png", []byte("img"), 0o644))
+			},
+			expected: "env-icon.png",
+		},
+		"env var takes priority over fallback": {
+			envIconPath: "env-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "env-icon.png", []byte("img"), 0o644))
+				require.NoError(t, afero.WriteFile(fs, "assets/icon.png", []byte("img"), 0o644))
+			},
+			expected: "env-icon.png",
+		},
+		"manifest icon used when no env var": {
+			manifestIcon: "manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "manifest-icon.png", []byte("img"), 0o644))
+			},
+			expected: "manifest-icon.png",
+		},
+		"falls back to assets/icon.png when no env var or manifest": {
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "assets/icon.png", []byte("img"), 0o644))
+			},
+			expected: "assets/icon.png",
+		},
+		"falls back to icon.png in root when no assets": {
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "icon.png", []byte("img"), 0o644))
+			},
+			expected: "icon.png",
+		},
+		"returns empty when no icon found": {
+			setupFiles: func(t *testing.T, fs afero.Fs) {},
+			expected:   "",
+		},
+		"env var file not found returns empty": {
+			envIconPath:  "missing-icon.png",
+			manifestIcon: "manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "manifest-icon.png", []byte("img"), 0o644))
+			},
+			expected: "",
+		},
+		"manifest icon file not found returns empty with warning": {
+			manifestIcon: "missing-manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "assets/icon.png", []byte("img"), 0o644))
+			},
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.Config.AppIconPathFlag = tc.envIconPath
+			tc.setupFiles(t, clientsMock.Fs)
+			output := &bytes.Buffer{}
+			clientsMock.IO.Stdout.SetOutput(output)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			result := resolveIconPath(ctx, clients, tc.manifestIcon)
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }
