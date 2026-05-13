@@ -153,6 +153,10 @@ func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 			command:  "",
 			expected: false,
 		},
+		"api command": {
+			command:  "api",
+			expected: true,
+		},
 		"fingerprint command": {
 			command:  "_fingerprint",
 			expected: true,
