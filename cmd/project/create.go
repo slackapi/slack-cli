@@ -231,7 +231,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "clipboard",
-			Text:      "Next steps to begin development",
+			Text:      "Docs Help",
 			Secondary: secondaryOutput,
 		}))
 	}

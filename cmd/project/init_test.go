@@ -61,9 +61,9 @@ func Test_Project_InitCommand(t *testing.T) {
 				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(false, nil)
 			},
 			ExpectedStdoutOutputs: []string{
-				"Project Initialization",          // Assert section header
-				"App Link",                        // Assert section header
-				"Next steps to begin development", // Assert section header
+				"Project Initialization", // Assert section header
+				"App Link",               // Assert section header
+				"Docs Help",              // Assert section header
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert installing project dependencies
@@ -148,9 +148,9 @@ func Test_Project_InitCommand(t *testing.T) {
 				).Return(api.GetAppStatusResult{}, nil)
 			},
 			ExpectedStdoutOutputs: []string{
-				"Project Initialization",          // Assert section header
-				"App Link",                        // Assert section header
-				"Next steps to begin development", // Assert section header
+				"Project Initialization", // Assert section header
+				"App Link",               // Assert section header
+				"Docs Help",              // Assert section header
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert prompt to add existing apps was called
