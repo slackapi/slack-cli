@@ -63,7 +63,7 @@ func Test_Project_InitCommand(t *testing.T) {
 			ExpectedStdoutOutputs: []string{
 				"Project Initialization", // Assert section header
 				"App Link",               // Assert section header
-				"Docs Help",              // Assert section header
+				"Next Steps",             // Assert section header
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert installing project dependencies
@@ -150,7 +150,7 @@ func Test_Project_InitCommand(t *testing.T) {
 			ExpectedStdoutOutputs: []string{
 				"Project Initialization", // Assert section header
 				"App Link",               // Assert section header
-				"Docs Help",              // Assert section header
+				"Next Steps",             // Assert section header
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert prompt to add existing apps was called
