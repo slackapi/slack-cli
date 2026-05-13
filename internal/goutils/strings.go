@@ -15,7 +15,7 @@
 package goutils
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"net/url"
 	"os"
@@ -23,9 +23,9 @@ import (
 	"strings"
 )
 
-// HashString will compute a short sha1 identity for a text blob
+// HashString will compute a short sha256 identity for a text blob
 func HashString(s string) (string, error) {
-	var hash = sha1.New()
+	var hash = sha256.New()
 	_, err := hash.Write([]byte(s))
 	if err != nil {
 		return "", err

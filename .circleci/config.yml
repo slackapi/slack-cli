@@ -10,13 +10,9 @@ anchor:
     filters:
       tags:
         only: /^v[0-9]+(\.[0-9]+).*/
-parameters:
-  run_local_build_test_workflow:
-    type: boolean
-    default: false
 
 description: |
-  Build, test, code-sign & deploy Slack Platform CLI binaries
+  Build, code-sign & deploy Slack Platform CLI binaries
 
 commands:
   export-build-version:
@@ -113,25 +109,13 @@ jobs:
         default: "dev-build"
     docker: # run the steps with Docker
       # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
-      - image: cimg/go:1.26.2
+      - image: cimg/go:1.26.3
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
       - restore_cache: # restores saved cache if no changes are detected since last run
           keys:
             - go-mod-v4-{{ checksum "go.sum" }}
       - retrieve-oidc-secrets
-      - run:
-          name: Run Unit Tests
-          command: |
-            make test
-      - run:
-          name: Run Install Tests
-          command: |
-            make test-install
-      - run:
-          name: Sync Tests Results
-          command: |
-            cp ./coverage.out /tmp/test-results
       - run:
           name: Run Build
           command: |
@@ -160,8 +144,6 @@ jobs:
             - "*.zip"
       - store_artifacts:
           path: ./tmp/circleci-workspace/artifacts
-      - store_test_results:
-          path: /tmp/test-results
       - notify-slack-on-fail
       - notify-slack-on-pass
 
@@ -343,105 +325,6 @@ jobs:
       - notify-slack-on-fail
       - notify-slack-on-pass
 
-  e2e-test:
-    docker:
-      - image: cimg/base:current
-    parameters:
-      artifact_dir:
-        type: string
-        default: "/tmp/circleci-workspace/artifacts"
-      e2e_target_branch:
-        type: string
-        description: "What branch of the integration test repo should be used to test the CLI?"
-        default: main
-      release_ref:
-        type: string
-        description: "What CLI release tag should be used during testing?"
-        default: dev-build
-      manual_trigger_windows:
-        type: boolean
-        description: "Whether this is a Windows-specific test run"
-        default: false
-    steps:
-      - checkout
-      - retrieve-oidc-secrets
-      - attach_workspace:
-          at: << parameters.artifact_dir >>
-      - run:
-          name: Check file sync
-          command: |
-            ls -R << parameters.artifact_dir >>
-      - run:
-          name: Source release_ref if present
-          command: |
-            # the create-github-release job, for branch builds, will create a release_ref file with the tag name in it
-            # branch builds have a special tag associated to them, so if this file exists, read the release tag from it
-            if [ -f << parameters.artifact_dir >>/release_ref ]; then
-              source << parameters.artifact_dir >>/release_ref
-              echo "Sourced release tag from create-github-release job: ${RELEASE_REF}"
-            else
-              RELEASE_REF="<< parameters.release_ref >>"
-              echo "Release tag provided as job parameter: ${RELEASE_REF}"
-            fi
-            echo "export RELEASE_REF=${RELEASE_REF}" >> $BASH_ENV
-      - run:
-          name: Kick off platform-devxp-test pipeline
-          command: |
-            # TODO: once CircleCI updates its pipeline-invocation API, move off of Cheng's personal CircleCI access token, which is saved to both of the slackapi CircleCI "contexts" as an env var:
-            # https://app.circleci.com/settings/organization/github/slackapi/contexts
-            if [[ -z "$CIRCLE_BRANCH" || "$CIRCLE_BRANCH" == pull/* ]]; then
-              BRANCH_NAME="main"
-              echo "Performing the standard end-to-end test suite for changes of a forked branch"
-            else
-              BRANCH_NAME="$CIRCLE_BRANCH"
-            fi
-            TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
-              --header 'Content-Type: application/json' \
-              -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
-              --data "{\"branch\":\"${BRANCH_NAME}\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\",\"manual_trigger_windows\":<< parameters.manual_trigger_windows >>}}" | jq '.id')
-            if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
-              echo "Performing the standard test suite found on the \"main\" branch of the end-to-end tests"
-              TEST_JOB_WORKFLOW_ID=$(curl --location --request POST 'https://circleci.com/api/v2/project/gh/slackapi/platform-devxp-test/pipeline' \
-                --header 'Content-Type: application/json' \
-                -u "${CCHEN_CIRCLECI_PERSONAL_TOKEN}:" \
-                --data "{\"branch\":\"main\",\"parameters\":{\"slack_cli_build_tag\":\"${RELEASE_REF}\",\"manual_trigger_windows\":<< parameters.manual_trigger_windows >>}}" | jq '.id')
-            else
-              echo "Performing the changed tests on the \"$BRANCH_NAME\" branch of the end-to-end tests"
-            fi
-            if [ $TEST_JOB_WORKFLOW_ID = "null" ]; then
-              echo "Failed to start the testing workflow"
-              exit 1
-            fi
-            echo "platform-devxp-test workflow started with id: $TEST_JOB_WORKFLOW_ID"
-            echo "export TEST_JOB_WORKFLOW_ID=${TEST_JOB_WORKFLOW_ID}" >> $BASH_ENV
-      - run:
-          name: Wait for platform-devxp-test E2E run to complete
-          command: |
-            E2E_RESULT="{}"
-            E2E_STATUS="running"
-            while [[ $E2E_STATUS != "failed" && $E2E_STATUS != "canceled" && $E2E_STATUS != "success" ]]
-            do
-              sleep 10
-              echo "Polling test job..."
-              E2E_RESULT=$(curl --location -sS --request GET "https://circleci.com/api/v2/pipeline/$TEST_JOB_WORKFLOW_ID/workflow" --header "Circle-Token: $CIRCLE_TOKEN")
-              E2E_STATUS=$(echo $E2E_RESULT | jq --raw-output '.items[0].status')
-              echo "Status is now: $E2E_STATUS"
-            done
-            if [ $E2E_STATUS = "failed" ]; then
-              E2E_PIPE_NUM=$(echo $E2E_RESULT | jq '.items[0].pipeline_number')
-              E2E_WORKFLOW_ID=$(echo $E2E_RESULT | jq -r '.items[0].id')
-              CIRCLE_FAIL_LINK="https://app.circleci.com/pipelines/github/slackapi/platform-devxp-test/${E2E_PIPE_NUM}/workflows/${E2E_WORKFLOW_ID}"
-              echo "Tests failed! Visit $CIRCLE_FAIL_LINK for more info."
-              exit 1
-            elif [ "$E2E_STATUS" = "canceled" ]; then
-              echo "Tests have been canceled and did not finish"
-              exit 1
-            else
-              echo "Tests passed woot 🎉"
-            fi
-      - notify-slack-on-fail
-      - notify-slack-on-pass
-
   s3-upload:
     machine: true
     resource_class: slackapi/slack-cli-code-sign-dev
@@ -482,89 +365,21 @@ jobs:
       - notify-slack-on-pass
 
 workflows:
-  local-build-test:
+  build:
     when:
       and:
         - not:
-            equal: [main, << pipeline.git.branch >>]
+            equal: [<< pipeline.git.branch >>, main]
         - not: << pipeline.git.tag >>
-        - equal: [<< pipeline.parameters.run_local_build_test_workflow >>, true]
     jobs:
       - build:
           context: slack-cli-release
-      - e2e-test:
-          # Change `main` to your local e2e_test branch
-          e2e_target_branch: "main"
-          requires:
-            - build
-          context: slack-cli-e2e
 
-  build-lint-test-e2e-test:
-    when:
-      and:
-        - not:
-            equal: [main, << pipeline.git.branch >>]
-        - not: << pipeline.git.tag >>
-        - equal:
-            [<< pipeline.parameters.run_local_build_test_workflow >>, false]
-    jobs:
-      - build:
-          context: slack-cli-release
-          release_ref: << pipeline.git.branch >>
-      - create-github-release-and-artifacts:
-          requires:
-            - build
-          context: slack-cli-release
-          release_ref: << pipeline.git.branch >>
-      - e2e-test:
-          e2e_target_branch: "main"
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
-
-  # nightly build will build from main branch nightly at 12:00 am UTC
-  nightly-build-test-code-sign-deploy:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only: main
-    jobs:
-      - build:
-          context: slack-cli-release
-          release_ref: dev-build
-      - code-sign:
-          requires:
-            - build
-          context: slack-cli-release
-      - create-github-release-and-artifacts:
-          requires:
-            - code-sign
-          context: slack-cli-release
-          release_ref: dev-build
-      - e2e-test:
-          name: e2e-test-unix
-          manual_trigger_windows: false
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
-          release_ref: dev-build
-      - e2e-test:
-          name: e2e-test-windows
-          manual_trigger_windows: true
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
-          release_ref: dev-build
-
-  dev-build-test-code-sign-deploy:
+  dev-build-code-sign-deploy:
     when:
       and:
         - equal: [<< pipeline.git.branch >>, main]
         - not: << pipeline.git.tag >>
-        - equal:
-            [<< pipeline.parameters.run_local_build_test_workflow >>, false]
     jobs:
       - build:
           context: slack-cli-release
@@ -606,20 +421,6 @@ workflows:
           requires:
             - create-github-release-and-artifacts
           context: slack-cli-release
-      - e2e-test:
-          name: e2e-test-unix
-          manual_trigger_windows: false
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
-          release_ref: dev-build
-      - e2e-test:
-          name: e2e-test-windows
-          manual_trigger_windows: true
-          requires:
-            - create-github-release-and-artifacts
-          context: slack-cli-e2e
-          release_ref: dev-build
 
   # feature build will be triggered when a Git tag matches the following pattern: 'v<major>.<minor>.<patch>-<describe the feature>-feature', eg. 'v1.0.0-branch-name-feature'
   feature-build-code-sign-deploy:

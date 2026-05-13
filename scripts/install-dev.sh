@@ -166,7 +166,7 @@ install_slack_cli() {
         if [ "$SLACK_CLI_DEV_VERSION" == "dev" ]; then
                 delay 0.2 "💾 Successfully downloaded the latest build to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         else
-                delay 0.2 "💾 Successfully downloaded Slack CLI v$LATEST_SLACK_CLI_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
+                delay 0.2 "💾 Successfully downloaded Slack CLI v$SLACK_CLI_DEV_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         fi
 
         delay 0.3 "📦 Extracting the Slack CLI command binary to $(home_path "$slack_cli_bin_path")"
