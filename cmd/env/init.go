@@ -32,9 +32,9 @@ import (
 func NewEnvInitCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize environment variables from placeholders",
+		Short: "Initialize environment variables from a template file",
 		Long: strings.Join([]string{
-			`Initialize the project ".env" file by copying from a template placeholder file.`,
+			`Initialize the project ".env" file by copying from an ".env" template file.`,
 			"",
 			`Copies content from either the ".env.sample" or ".env.example" file to the`,
 			`project ".env" file if those project environment variables don't already exist.`,
@@ -43,7 +43,7 @@ func NewEnvInitCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Initialize environment variables from template placeholders",
+				Meaning: "Initialize environment variables from a template file",
 				Command: "env init",
 			},
 		}),
@@ -108,7 +108,7 @@ func runEnvInitCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command) er
 				Emoji: "evergreen_tree",
 				Text:  "Environment Initialize",
 				Secondary: []string{
-					`No template placeholder was found for environment variables in this project`,
+					`No ".env" template file was found for environment variables in this project`,
 					fmt.Sprintf("Set environment variables with %s", style.Commandf("env set", false)),
 				},
 			}))
@@ -123,7 +123,7 @@ func runEnvInitCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command) er
 		Emoji: "evergreen_tree",
 		Text:  "Environment Initialize",
 		Secondary: []string{
-			fmt.Sprintf(`Placeholders were copied from "%s" to a project ".env" file`, source),
+			fmt.Sprintf(`Environment variables were copied from "%s" to a project ".env" file`, source),
 			`This new ".env" file shouldn't be added to version control`,
 		},
 	}))

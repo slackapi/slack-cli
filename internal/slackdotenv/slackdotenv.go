@@ -29,9 +29,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-// Init copies a template placeholder file (.env.sample or .env.example) to
-// .env. It returns an error if .env already exists, or if no placeholder file
-// is found.
+// Init copies an .env template file (.env.sample or .env.example) to .env. It
+// returns an error if .env already exists, or if no template file is found.
 func Init(fs afero.Fs) (string, error) {
 	sampleFiles := []string{".env.sample", ".env.example"}
 

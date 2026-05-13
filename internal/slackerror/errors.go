@@ -713,7 +713,7 @@ Otherwise start your app for local development with: %s`,
 
 	ErrDotEnvPlaceholderNotFound: {
 		Code:    ErrDotEnvPlaceholderNotFound,
-		Message: "No template placeholder was found for environment variables",
+		Message: "No .env template file was found for environment variables",
 	},
 
 	ErrDotEnvVarMarshal: {

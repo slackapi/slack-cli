@@ -49,7 +49,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Initialize environment variables from template placeholders",
+				Meaning: "Initialize environment variables from a template file",
 				Command: "env init",
 			},
 			{
