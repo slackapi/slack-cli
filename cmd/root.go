@@ -80,6 +80,7 @@ var AliasMap = map[string]*AliasInfo{
 	"logout":    {CommandFactory: auth.NewLogoutCommand, CanonicalName: "auth logout", ParentName: "auth"},
 	"run":       {CommandFactory: platform.NewRunCommand, CanonicalName: "platform run", ParentName: "platform"},
 	"samples":   {CommandFactory: project.NewSamplesCommand, CanonicalName: "project samples", ParentName: "project"},
+	"sync":      {CommandFactory: manifest.NewSyncCommand, CanonicalName: "manifest sync", ParentName: "manifest"},
 	"uninstall": {CommandFactory: app.NewUninstallCommand, CanonicalName: "app uninstall", ParentName: "app"},
 }
 var processName = cmdutil.GetProcessName()

@@ -1,0 +1,151 @@
+package manifest
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/spf13/afero"
+)
+
+const manifestFileName = "manifest.json"
+
+// WriteBackResult describes what happened during write-back.
+type WriteBackResult struct {
+	Written  bool
+	FilePath string
+	Warning  string
+}
+
+// WriteManifestLocal writes the merged manifest back to the project's
+// manifest.json file, preserving the original file's key ordering by
+// using the same JSON structure.
+func WriteManifestLocal(fs afero.Fs, workingDir string, manifest types.AppManifest) (WriteBackResult, error) {
+	manifestPath := filepath.Join(workingDir, manifestFileName)
+
+	exists, err := afero.Exists(fs, manifestPath)
+	if err != nil {
+		return WriteBackResult{}, fmt.Errorf("failed to check manifest file: %w", err)
+	}
+	if !exists {
+		return WriteBackResult{
+			Warning: fmt.Sprintf("No %s found in project root — merged manifest was not written locally", manifestFileName),
+		}, nil
+	}
+
+	original, err := afero.ReadFile(fs, manifestPath)
+	if err != nil {
+		return WriteBackResult{}, fmt.Errorf("failed to read %s: %w", manifestFileName, err)
+	}
+
+	merged, err := marshalPreservingOrder(original, manifest)
+	if err != nil {
+		return WriteBackResult{}, fmt.Errorf("failed to serialize merged manifest: %w", err)
+	}
+
+	if err := afero.WriteFile(fs, manifestPath, merged, os.FileMode(0644)); err != nil {
+		return WriteBackResult{}, fmt.Errorf("failed to write %s: %w", manifestFileName, err)
+	}
+
+	return WriteBackResult{Written: true, FilePath: manifestPath}, nil
+}
+
+// marshalPreservingOrder serializes the manifest to JSON, preserving the key
+// order from the original file. It does this by unmarshaling the original into
+// an ordered structure, applying the new values, then re-serializing.
+func marshalPreservingOrder(original []byte, manifest types.AppManifest) ([]byte, error) {
+	var originalKeys []string
+	if err := extractTopLevelKeyOrder(original, &originalKeys); err != nil {
+		return marshalFresh(manifest)
+	}
+
+	newData, err := json.Marshal(manifest)
+	if err != nil {
+		return nil, err
+	}
+	var newMap map[string]json.RawMessage
+	if err := json.Unmarshal(newData, &newMap); err != nil {
+		return marshalFresh(manifest)
+	}
+
+	// Build output with original key order, then append any new keys
+	type kv struct {
+		Key   string
+		Value json.RawMessage
+	}
+	var ordered []kv
+	seen := make(map[string]bool)
+
+	for _, key := range originalKeys {
+		if val, exists := newMap[key]; exists {
+			ordered = append(ordered, kv{Key: key, Value: val})
+			seen[key] = true
+		}
+	}
+	for key, val := range newMap {
+		if !seen[key] {
+			ordered = append(ordered, kv{Key: key, Value: val})
+		}
+	}
+
+	// Manually build JSON with preserved order
+	buf := []byte("{\n")
+	for i, item := range ordered {
+		keyJSON, _ := json.Marshal(item.Key)
+		indented, _ := json.MarshalIndent(json.RawMessage(item.Value), "  ", "  ")
+		buf = fmt.Appendf(buf, "  %s: %s", keyJSON, indented)
+		if i < len(ordered)-1 {
+			buf = append(buf, ',')
+		}
+		buf = append(buf, '\n')
+	}
+	buf = append(buf, '}')
+	buf = append(buf, '\n')
+
+	return buf, nil
+}
+
+func extractTopLevelKeyOrder(data []byte, keys *[]string) error {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	// json.Unmarshal into map doesn't preserve order, so we need to parse tokens
+	dec := json.NewDecoder(bytes.NewReader(data))
+	// Read opening brace
+	t, err := dec.Token()
+	if err != nil {
+		return err
+	}
+	if delim, ok := t.(json.Delim); !ok || delim != '{' {
+		return fmt.Errorf("expected opening brace")
+	}
+	for dec.More() {
+		t, err := dec.Token()
+		if err != nil {
+			return err
+		}
+		key, ok := t.(string)
+		if !ok {
+			continue
+		}
+		*keys = append(*keys, key)
+		// Skip the value
+		var skip json.RawMessage
+		if err := dec.Decode(&skip); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func marshalFresh(manifest types.AppManifest) ([]byte, error) {
+	data, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return append(data, '\n'), nil
+}
