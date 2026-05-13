@@ -20,10 +20,7 @@ import (
 	"github.com/spf13/afero"
 )
 
-func ResolveIconPath(fs afero.Fs, manifestIcon string) string {
-	if manifestIcon != "" {
-		return manifestIcon
-	}
+func ResolveIconPath(fs afero.Fs) string {
 	supportedExtensions := []string{".png", ".jpg", ".jpeg", ".gif"}
 	for _, dir := range []string{"assets", "."} {
 		for _, ext := range supportedExtensions {
