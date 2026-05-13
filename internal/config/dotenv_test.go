@@ -153,6 +153,27 @@ func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 				assert.Equal(t, false, cfg.AutoRequestAAAFlag)
 			},
 		},
+		"SLACK_CLI_APP_ICON_PATH=/path/to/icon.png should set AppIconPathFlag": {
+			envName:  "SLACK_CLI_APP_ICON_PATH",
+			envValue: "/path/to/icon.png",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "/path/to/icon.png", cfg.AppIconPathFlag)
+			},
+		},
+		"SLACK_CLI_APP_ICON_PATH= should not set AppIconPathFlag": {
+			envName:  "SLACK_CLI_APP_ICON_PATH",
+			envValue: "",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "", cfg.AppIconPathFlag)
+			},
+		},
+		"SLACK_CLI_APP_ICON_PATH with whitespace should be trimmed": {
+			envName:  "SLACK_CLI_APP_ICON_PATH",
+			envValue: "  /path/to/icon.png  ",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "/path/to/icon.png", cfg.AppIconPathFlag)
+			},
+		},
 		"SLACK_CONFIG_DIR=/path/to/config should set the config dir": {
 			envName:  "SLACK_CONFIG_DIR",
 			envValue: "/path/to/config",

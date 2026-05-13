@@ -51,6 +51,12 @@ func (c *Config) LoadEnvironmentVariables() error {
 		c.ConfigDirFlag = configDir
 	}
 
+	// Load app icon path from environment variables
+	var appIconPath = strings.TrimSpace(c.os.Getenv(slackCLIAppIconPathEnv))
+	if appIconPath != "" {
+		c.AppIconPathFlag = appIconPath
+	}
+
 	// Disable telemetry if either disable-telemetry or test-version environment variables
 	var disableTelemetry = strings.TrimSpace(c.os.Getenv(slackDisableTelemetryEnv))
 	var testVersion = strings.TrimSpace(c.os.Getenv(version.EnvTestVersion))
