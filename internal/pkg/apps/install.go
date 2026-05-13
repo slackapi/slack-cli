@@ -657,7 +657,7 @@ func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifes
 		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from manifest not found: %s", manifestIcon)))
 		return ""
 	}
-	return icon.ResolveIconPath(clients.Fs, "")
+	return icon.ResolveIconPath(clients.Fs)
 }
 
 // updateIcon will upload the new icon to the Slack API
