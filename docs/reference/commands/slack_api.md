@@ -11,7 +11,7 @@ Parameters are passed as key=value pairs, a JSON body, or via flags.
 
 Body format is auto-detected from positional arguments:
   - Multiple key=value args: form-encoded (token in request body)
-  - Single arg starting with { or [: JSON (Bearer token in header)
+  - Single arg starting with \{ or \[: JSON (Bearer token in header)
   - No args: token sent in Authorization header
 
 Use --json to explicitly send a JSON body, or --data for a form-encoded body string.
