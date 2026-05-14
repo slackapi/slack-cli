@@ -207,6 +207,7 @@ Certain things are common during development and require a few commands.
 **Task outline:**
 
 - [Cloning the project](#cloning-the-project)
+  - [Git hooks](#git-hooks)
 - [Initializing the project](#initializing-the-project)
 - [Testing](#testing)
   - [Module and unit tests](#module-and-unit-tests)
@@ -232,6 +233,19 @@ Certain things are common during development and require a few commands.
 git clone https://github.com/slackapi/slack-cli.git
 cd slack-cli/
 ```
+
+#### Git hooks
+
+Opt-in Git hooks are available in the `.githooks/` directory. To enable them:
+
+```zsh
+git config core.hooksPath .githooks
+```
+
+The pre-commit hook will:
+
+- Block commits directly to the `main` branch
+- Run `go tool golangci-lint run` to lint before committing
 
 ### Initializing the project
 
