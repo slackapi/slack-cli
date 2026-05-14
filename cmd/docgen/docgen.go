@@ -276,5 +276,8 @@ func render(input string) (string, error) {
 	if err := tmpl.Execute(&buf, nil); err != nil {
 		return "", err
 	}
-	return buf.String(), nil
+	output := buf.String()
+	output = strings.ReplaceAll(output, "{", "\\{")
+	output = strings.ReplaceAll(output, "}", "\\}")
+	return output, nil
 }

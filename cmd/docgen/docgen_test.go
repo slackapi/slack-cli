@@ -171,3 +171,30 @@ func TestNewDocsCommand(t *testing.T) {
 		return NewCommand(clients)
 	})
 }
+
+func Test_render(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"escapes curly braces for MDX compatibility": {
+			input:    "Single arg starting with { or [: JSON",
+			expected: "Single arg starting with \\{ or [: JSON",
+		},
+		"escapes closing curly braces": {
+			input:    "view={...}",
+			expected: "view=\\{...\\}",
+		},
+		"leaves text without unexpected characters unchanged": {
+			input:    "No unexpected characters here",
+			expected: "No unexpected characters here",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := render(tc.input)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
