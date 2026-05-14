@@ -45,8 +45,16 @@ var createCmdFlags createFlags
 
 // templateNameToID maps user-friendly template names to integer IDs
 var templateNameToID = map[string]int{
-	"default": 1, // The default template
 	"empty":   0, // The sandbox will be empty if the template param is not set
+	"default": 1, // The default template
+
+	// Additional partner sandbox template options
+	"finance":                2,
+	"hr":                     3,
+	"it-incident-management": 4,
+	"customer-support":       5,
+	"sales":                  6,
+	"marketing":              7,
 }
 
 func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -60,9 +68,6 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "sandbox create --name test-box --password mypass --domain test-box --archive-date 2025-12-31", Meaning: "Create a sandbox that will be archived on a specific date"},
 		}),
 		Args: cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return requireSandboxExperiment(clients)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runCreateCommand(cmd, clients)
 		},

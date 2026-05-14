@@ -36,9 +36,6 @@ const (
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
 
-	// Sandboxes experiment lets users who have joined the Slack Developer Program use the CLI to manage their sandboxes.
-	Sandboxes Experiment = "sandboxes"
-
 	// SetIcon experiment enables icon upload for non-hosted apps.
 	SetIcon Experiment = "set-icon"
 )
@@ -48,7 +45,6 @@ const (
 var AllExperiments = []Experiment{
 	Lipgloss,
 	Placeholder,
-	Sandboxes,
 	SetIcon,
 }
 
