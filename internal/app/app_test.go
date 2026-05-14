@@ -16,24 +16,28 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/test/testdata"
 	"github.com/spf13/afero"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 	tests := map[string]struct {
 		appDirName        string
+		displayName       string
 		existingFiles     map[string]string
 		expectedFiles     map[string]string
 		expectedErrorType error
 	}{
 		"manifest.json file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.json": string(testdata.ManifestJSON),
 			},
@@ -43,7 +47,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"manifest.js file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.js": string(testdata.ManifestJS),
 			},
@@ -53,7 +58,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"manifest.ts file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.ts": string(testdata.ManifestTS),
 			},
@@ -63,7 +69,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"Multiple manifest files exist": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.json": string(testdata.ManifestJSON),
 				"manifest.ts":   string(testdata.ManifestTS),
@@ -75,7 +82,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"package.json file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"package.json": string(testdata.PackageJSON),
 			},
@@ -85,7 +93,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"pyproject.toml file exists": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"pyproject.toml": string(testdata.PyprojectTOML),
 			},
@@ -95,7 +104,8 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			expectedErrorType: nil,
 		},
 		"Multiple project files exist": {
-			appDirName: "vibrant-butterfly-1234",
+			appDirName:  "vibrant-butterfly-1234",
+			displayName: "Vibrant butterfly - 1234",
 			existingFiles: map[string]string{
 				"manifest.json":  string(testdata.ManifestJSON),
 				"package.json":   string(testdata.PackageJSON),
@@ -110,18 +120,9 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 		},
 		"No manifest files exist": {
 			appDirName:        "vibrant-butterfly-1234",
+			displayName:       "Vibrant Butterfly 1234",
 			existingFiles:     map[string]string{},
 			expectedFiles:     map[string]string{},
-			expectedErrorType: nil,
-		},
-		"WriteFile error": {
-			appDirName: "vibrant-butterfly-1234",
-			existingFiles: map[string]string{
-				"manifest.json": string(testdata.ManifestJSON),
-			},
-			expectedFiles: map[string]string{
-				"manifest.json": string(testdata.ManifestJSONAppName),
-			},
 			expectedErrorType: nil,
 		},
 	}
@@ -146,7 +147,7 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 			}
 
 			// Run the tests
-			err := UpdateDefaultProjectFiles(fs, projectDirPath, tc.appDirName)
+			err := UpdateDefaultProjectFiles(fs, projectDirPath, tc.appDirName, tc.displayName)
 
 			// Assertions
 			require.IsType(t, err, tc.expectedErrorType)
@@ -161,6 +162,21 @@ func Test_App_UpdateDefaultProjectFiles(t *testing.T) {
 	}
 }
 
+func Test_App_UpdateDefaultProjectFiles_WriteFileError(t *testing.T) {
+	fs := slackdeps.NewFsMock()
+	projectDirPath := "/path/to/project-name"
+
+	err := fs.MkdirAll(projectDirPath, 0755)
+	require.NoError(t, err)
+	err = afero.WriteFile(fs, filepath.Join(projectDirPath, "manifest.json"), testdata.ManifestJSON, 0644)
+	require.NoError(t, err)
+
+	fs.On("OpenFile", mock.Anything, mock.Anything, mock.Anything).Return((*os.File)(nil), os.ErrPermission)
+
+	err = UpdateDefaultProjectFiles(fs, projectDirPath, "vibrant-butterfly-1234", "Vibrant butterfly - 1234")
+	require.ErrorIs(t, err, os.ErrPermission)
+}
+
 func Test_RegexReplaceAppNameInManifest(t *testing.T) {
 	tests := map[string]struct {
 		src         []byte
@@ -169,22 +185,22 @@ func Test_RegexReplaceAppNameInManifest(t *testing.T) {
 	}{
 		"manifest.json is validate": {
 			src:         testdata.ManifestJSON,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestJSONAppName,
 		},
 		"manifest.js is validate": {
 			src:         testdata.ManifestJS,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestJSAppName,
 		},
 		"manifest.ts is validate": {
 			src:         testdata.ManifestTS,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestTSAppName,
 		},
 		"manifest.ts with sdk is validate": {
 			src:         testdata.ManifestSDKTS,
-			appName:     "vibrant-butterfly-1234",
+			appName:     "Vibrant butterfly - 1234",
 			expectedSrc: testdata.ManifestSDKTSAppName,
 		},
 	}

@@ -89,7 +89,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	ctx := cmd.Context()
 
 	// Get optional app name passed as an arg and check for category shortcuts
-	appNameArg := ""
+	appPathArg := ""
 	categoryShortcut := ""
 	templateFlagProvided := cmd.Flags().Changed("template")
 	nameFlagProvided := cmd.Flags().Changed("name")
@@ -105,21 +105,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 				categoryShortcut = "agent"
 				// Check if a second argument was provided as the app name
 				if len(args) > 1 {
-					appNameArg = args[1]
+					appPathArg = args[1]
 				}
 			} else {
 				// When --template is provided, "agent" is the app name
-				appNameArg = args[0]
+				appPathArg = args[0]
 			}
 		default:
-			appNameArg = args[0]
+			appPathArg = args[0]
 		}
-	}
-
-	// --name flag overrides any positional app name argument
-	// This allows users to name their app "agent" without triggering the AI Agent shortcut
-	if nameFlagProvided {
-		appNameArg = createAppNameFlag
 	}
 
 	// List templates and exit early if the --list flag is set
@@ -139,8 +133,20 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		return err
 	}
 
+	// --name flag overrides the manifest display name but preserves any path
+	// from the positional argument. When no positional arg is given (e.g.
+	// "slack create --name APPPP"), the name flag also becomes the directory
+	// path since there's nothing else to derive it from.
+	displayName := ""
+	if nameFlagProvided {
+		displayName = createAppNameFlag
+		if appPathArg == "" {
+			appPathArg = createAppNameFlag
+		}
+	}
+
 	// Prompt for app name if not provided via flag or argument
-	if appNameArg == "" {
+	if appPathArg == "" {
 		if clients.IO.IsTTY() {
 			defaultName := generateRandomAppName()
 			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{
@@ -150,12 +156,12 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 				return err
 			}
 			if name != "" {
-				appNameArg = name
+				appPathArg = name
 			} else {
-				appNameArg = defaultName
+				appPathArg = defaultName
 			}
 		} else {
-			appNameArg = generateRandomAppName()
+			appPathArg = generateRandomAppName()
 		}
 	}
 
@@ -164,10 +170,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		subdir = template.GetSubdir()
 	}
 	createArgs := create.CreateArgs{
-		AppName:   appNameArg,
-		Template:  template,
-		GitBranch: createGitBranchFlag,
-		Subdir:    subdir,
+		AppPath:     appPathArg,
+		DisplayName: displayName,
+		Template:    template,
+		GitBranch:   createGitBranchFlag,
+		Subdir:      subdir,
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
@@ -224,7 +231,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "clipboard",
-			Text:      "Next steps to begin development",
+			Text:      "Next Steps",
 			Secondary: secondaryOutput,
 		}))
 	}

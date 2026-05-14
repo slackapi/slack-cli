@@ -50,10 +50,11 @@ var copyIgnoreFiles = []string{".DS_Store"}
 
 // CreateArgs are the arguments passed into the Create function
 type CreateArgs struct {
-	AppName   string
-	Template  Template
-	GitBranch string
-	Subdir    string
+	AppPath     string
+	DisplayName string
+	Template    Template
+	GitBranch   string
+	Subdir      string
 }
 
 // Create will create a new Slack app on the file system and app manifest on the Slack API.
@@ -67,16 +68,21 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 		return "", slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 	}
 
-	// Get the app selection and accompanying app directory name (this may change when we find the unique directory name)
-	appDirName, err := getAppDirName(createArgs.AppName)
+	// Parse the app name input into a directory path and display name
+	appPath, displayName, err := parseAppPath(createArgs.AppPath)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 	}
 
+	// --name flag overrides only the display name, preserving the path from the argument
+	if createArgs.DisplayName != "" {
+		displayName = createArgs.DisplayName
+	}
+
 	// Get the project's full directory path
 	projectDirPath := ""
-	if filepath.IsLocal(appDirName) {
-		projectDirPath = filepath.Join(workingDirPath, appDirName)
+	if filepath.IsLocal(appPath) {
+		projectDirPath = filepath.Join(workingDirPath, appPath)
 		projectDirPath, err = getAvailableDir(ctx, projectDirPath)
 		if err != nil {
 			return "", slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
@@ -86,7 +92,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 			return "", slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 		}
 	} else {
-		projectDirPath = filepath.Join(appDirName)
+		projectDirPath = filepath.Join(appPath)
 		projectDirPath, err = getAvailableDir(ctx, projectDirPath)
 		if err != nil {
 			return "", slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
@@ -98,7 +104,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	}
 
 	// Update the app's directory name now that the unique directory is created
-	appDirName = filepath.Base(projectDirPath)
+	appDirName := filepath.Base(projectDirPath)
 
 	// Print a bunch of information about the progress of the command to traces
 	// and debugs and the standard output here
@@ -120,7 +126,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	)
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "open_file_folder",
-		Text:      "Created a new Slack project",
+		Text:      "Project Create",
 		Secondary: projectDetails,
 	}))
 
@@ -150,7 +156,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	}()
 
 	// Update default project files' app name, bot name, etc
-	if err := app.UpdateDefaultProjectFiles(clients.Fs, projectDirPath, appDirName); err != nil {
+	if err := app.UpdateDefaultProjectFiles(clients.Fs, projectDirPath, appDirName, displayName); err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrProjectFileUpdate)
 	}
 
@@ -174,7 +180,7 @@ func getAppDirName(appName string) (string, error) {
 		return "", fmt.Errorf("app name is required")
 	}
 
-	// Normalize to kebab-case: lowercase, replace non-alphanumeric with dashes, collapse, and trim
+	// Normalize to a variation of kebab-case: replace non-alphanumeric with dashes, collapse, and trim
 	appName = strings.TrimSpace(appName)
 	appName = strings.ToLower(appName)
 	appName = nonAlphanumericRe.ReplaceAllString(appName, "-")
@@ -190,6 +196,29 @@ func getAppDirName(appName string) (string, error) {
 		return "", fmt.Errorf("the app name you entered is reserved")
 	}
 	return appName, nil
+}
+
+// parseAppPath splits user input into a directory path (with kebab-cased basename)
+// and a display name (the raw basename preserving original casing/spacing).
+func parseAppPath(input string) (appPath string, displayName string, err error) {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return "", "", fmt.Errorf("app name is required")
+	}
+
+	input = filepath.Clean(input)
+	displayName = filepath.Base(input)
+	pathPrefix := filepath.Dir(input)
+
+	dirName, err := getAppDirName(displayName)
+	if err != nil {
+		return "", "", err
+	}
+
+	if pathPrefix == "." {
+		return dirName, displayName, nil
+	}
+	return filepath.Join(pathPrefix, dirName), displayName, nil
 }
 
 // getAvailableDir will return a unique directory path.
@@ -418,8 +447,8 @@ func InstallProjectDependencies(
 
 	// Start the spinner
 	spinnerText := fmt.Sprintf(
-		"Installing project dependencies %s",
-		style.Secondary("(this may take a few seconds)"),
+		"Project Dependencies %s",
+		style.Secondary("(installing... this may take a second)"),
 	)
 	spinner := style.NewSpinner(clients.IO.WriteErr())
 	spinner.Update(spinnerText, "").Start()
@@ -427,7 +456,7 @@ func InstallProjectDependencies(
 	// Stop the spinner when the function returns
 	defer func() {
 		spinnerText = style.Sectionf(style.TextSection{
-			Text:      "Installed project dependencies",
+			Text:      "Project Dependencies",
 			Secondary: outputs,
 		})
 		spinner.Update(spinnerText, "package").Stop()

@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 
+	apicmd "github.com/slackapi/slack-cli/cmd/api"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
@@ -159,6 +160,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// Add subcommands (each subcommand may add their own child subcommands)
 	// Please keep these sorted
 	subCommands := []*cobra.Command{
+		apicmd.NewCommand(clients),
 		app.NewCommand(clients),
 		auth.NewCommand(clients),
 		collaborators.NewCommand(clients),
@@ -245,6 +247,11 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	// Set custom system config directory
 	if clients.Config.ConfigDirFlag != "" {
 		clients.Config.SystemConfig.SetCustomConfigDirPath(clients.Config.ConfigDirFlag)
+	}
+
+	// Accessible mode implies no-color
+	if clients.Config.AccessibleFlag {
+		clients.Config.NoColor = true
 	}
 
 	// Init color and formatting

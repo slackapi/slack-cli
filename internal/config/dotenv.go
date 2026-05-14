@@ -27,6 +27,12 @@ func (c *Config) LoadEnvironmentVariables() error {
 		return nil
 	}
 
+	// Load accessible mode from environment variables
+	var accessible = strings.TrimSpace(c.os.Getenv(slackAccessibleEnv))
+	if accessible != "" && accessible != "false" && accessible != "0" {
+		c.AccessibleFlag = true
+	}
+
 	// Load slackTestTraceFlag from environment variables
 	var testTrace = strings.TrimSpace(c.os.Getenv(slackTestTraceEnv))
 	if testTrace != "" && testTrace != "false" && testTrace != "0" {
@@ -43,6 +49,12 @@ func (c *Config) LoadEnvironmentVariables() error {
 	var configDir = strings.TrimSpace(c.os.Getenv(slackConfigDirEnv))
 	if configDir != "" {
 		c.ConfigDirFlag = configDir
+	}
+
+	// Load app icon path from environment variables
+	var appIconPath = strings.TrimSpace(c.os.Getenv(slackCLIAppIconPathEnv))
+	if appIconPath != "" {
+		c.AppIconPathFlag = appIconPath
 	}
 
 	// Disable telemetry if either disable-telemetry or test-version environment variables

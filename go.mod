@@ -1,6 +1,6 @@
 module github.com/slackapi/slack-cli
 
-go 1.26.2
+go 1.26.3
 
 require (
 	charm.land/bubbletea/v2 v2.0.6
@@ -11,7 +11,6 @@ require (
 	github.com/cli/safeexec v1.0.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
-	github.com/hashicorp/go-version v1.9.0
 	github.com/joho/godotenv v1.5.1
 	github.com/kyokomi/emoji/v2 v2.2.13
 	github.com/logrusorgru/aurora/v4 v4.0.0
@@ -26,9 +25,9 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
-	golang.org/x/mod v0.35.0
-	golang.org/x/sys v0.43.0
-	golang.org/x/text v0.36.0
+	golang.org/x/mod v0.36.0
+	golang.org/x/sys v0.44.0
+	golang.org/x/text v0.37.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -303,12 +302,13 @@ require (
 	github.com/hashicorp/go-immutable-radix/v2 v2.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
+	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/in-toto/attestation v1.1.2 // indirect
-	github.com/in-toto/in-toto-golang v0.10.0 // indirect
+	github.com/in-toto/in-toto-golang v0.11.0 // indirect
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.2.0 // indirect
