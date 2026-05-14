@@ -20,7 +20,6 @@ slack trigger delete --trigger-id <id> [flags]
 ## Global flags
 
 ```
-      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command

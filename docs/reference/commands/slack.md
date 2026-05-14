@@ -15,7 +15,6 @@ slack <command> <subcommand> [flags]
 ## Flags
 
 ```
-      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -42,7 +41,6 @@ $ slack docs    # Open Slack developer docs
 ## See also
 
 * [slack activity](slack_activity)	 - Display the app activity logs from the Slack Platform
-* [slack api](slack_api)	 - Call any Slack API method
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 * [slack auth](slack_auth)	 - Add and remove local team authorizations
 * [slack collaborator](slack_collaborator)	 - Manage app collaborators

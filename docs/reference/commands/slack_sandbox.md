@@ -14,7 +14,7 @@ New to the Developer Program? Sign up at
 [https://api.slack.com/developer-program/join](https://api.slack.com/developer-program/join)
 
 ```
-slack sandbox <subcommand> [flags]
+slack sandbox <subcommand> [flags] --experiment=sandboxes
 ```
 
 ## Flags
@@ -26,7 +26,6 @@ slack sandbox <subcommand> [flags]
 ## Global flags
 
 ```
-      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
