@@ -1,19 +1,24 @@
-# `slack auth revoke`
+# `slack env init`
 
-Revoke an authentication token
+Initialize environment variables from a template file
 
 ## Description
 
-Revoke an authentication token
+Initialize the project ".env" file by copying from an ".env" template file.
+
+Copies content from either the ".env.sample" or ".env.example" file to the
+project ".env" file if those project environment variables don't already exist.
+
+Apps using ROSI features should set environment variables with `slack env set`.
 
 ```
-slack auth revoke [flags]
+slack env init [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help   help for revoke
+  -h, --help   help for init
 ```
 
 ## Global flags
@@ -34,10 +39,10 @@ slack auth revoke [flags]
 ## Examples
 
 ```
-$ slack auth revoke --token xoxp-1-4921830...  # Revoke a service token
+$ slack env init  # Initialize environment variables from a template file
 ```
 
 ## See also
 
-* [slack auth](slack_auth)	 - Add and remove local team authorizations
+* [slack env](slack_env)	 - Set, unset, or list environment variables
 
