@@ -55,7 +55,7 @@ const (
 	ErrAppNotHosted                                  = "app_not_hosted"
 	ErrAppRemove                                     = "app_remove_error"
 	ErrAppRenameApp                                  = "app_rename_app"
-	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit"
+	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit" // Slack API error code
 	ErrAuthProdTokenNotFound                         = "auth_prod_token_not_found"
 	ErrAuthTimeout                                   = "auth_timeout_error"
 	ErrAuthToken                                     = "auth_token_error"
@@ -153,7 +153,7 @@ const (
 	ErrInvalidResourceID                             = "invalid_resource_id"
 	ErrInvalidResourceType                           = "invalid_resource_type"
 	ErrInvalidS3Key                                  = "invalid_s3_key"
-	ErrInvalidSandboxArchiveTTL                      = "invalid_archive_ttl"
+	ErrInvalidSandboxArchiveTTL                      = "invalid_archive_ttl" // Slack API error code
 	ErrInvalidScopes                                 = "invalid_scopes"
 	ErrInvalidSemVer                                 = "invalid_semver"
 	ErrInvalidSlackProjectDirectory                  = "invalid_slack_project_directory"
@@ -167,7 +167,7 @@ const (
 	ErrInvalidTriggerInputs                          = "invalid_trigger_inputs"
 	ErrInvalidTriggerType                            = "invalid_trigger_type"
 	ErrInvalidSandboxTemplateID                      = "invalid_template_id"
-	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id"
+	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id" // Slack API error code
 	ErrInvalidUserID                                 = "invalid_user_id"
 	ErrInvalidWebhookConfig                          = "invalid_webhook_config"
 	ErrInvalidWebhookSchemaRef                       = "invalid_webhook_schema_ref"
@@ -221,8 +221,8 @@ const (
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
 	ErrRuntimeNotFound                               = "runtime_not_found"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
-	ErrSandboxDomainTaken                            = "domain_taken"
-	ErrSandboxDomainTooLong                          = "domain_long"
+	ErrSandboxDomainTaken                            = "domain_taken" // Slack API error code
+	ErrSandboxDomainTooLong                          = "domain_long"  // Slack API error code
 	ErrSDKConfigLoad                                 = "sdk_config_load_error"
 	ErrSDKHookInvocationFailed                       = "sdk_hook_invocation_failed"
 	ErrSDKHookNotFound                               = "sdk_hook_not_found"
