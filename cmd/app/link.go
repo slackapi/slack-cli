@@ -210,7 +210,7 @@ func LinkAppFooterSection(ctx context.Context, clients *shared.ClientFactory, ap
 
 // promptExistingApp gathers details to represent app information
 func promptExistingApp(ctx context.Context, clients *shared.ClientFactory) (types.App, *types.SlackAuth, error) {
-	slackAuth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select the existing app team")
+	slackAuth, err := prompts.PromptTeamSlackAuth(ctx, clients, "Select the existing app team", nil)
 	if err != nil {
 		return types.App{}, &types.SlackAuth{}, err
 	}
