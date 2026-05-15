@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -289,4 +290,29 @@ func testExecCmd(ctx context.Context, args []string) (string, error) {
 		return "", err
 	}
 	return clientsMock.GetCombinedOutput(), nil
+}
+
+func Test_CommandDescriptionsRenderForDocs(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	tmp, _ := os.MkdirTemp("", "")
+	_ = os.Chdir(tmp)
+	defer os.RemoveAll(tmp)
+
+	cmd, _ := Init(ctx)
+
+	unescapedBrace := regexp.MustCompile(`[^\\{]\{[^{]`)
+
+	var walk func(*cobra.Command)
+	walk = func(c *cobra.Command) {
+		if c.Long != "" {
+			t.Run(c.CommandPath(), func(t *testing.T) {
+				assert.NotRegexp(t, unescapedBrace, c.Long,
+					"description contains unescaped '{' which breaks the MDX docs site; escape as \\{")
+			})
+		}
+		for _, child := range c.Commands() {
+			walk(child)
+		}
+	}
+	walk(cmd)
 }
