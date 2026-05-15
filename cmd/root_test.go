@@ -300,6 +300,7 @@ func Test_CommandDescriptionsRenderForDocs(t *testing.T) {
 
 	cmd, _ := Init(ctx)
 
+	// Matches a lone { that is not escaped (\{) and not part of a Go template ({{)
 	unescapedBrace := regexp.MustCompile(`[^\\{]\{[^{]`)
 
 	var walk func(*cobra.Command)
