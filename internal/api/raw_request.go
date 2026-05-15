@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-
 	"time"
 
 	"github.com/opentracing/opentracing-go"
