@@ -20,10 +20,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"runtime"
+
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/useragent"
 )
 
 var docsBaseURL = "https://docs.slack.dev"
@@ -59,7 +60,7 @@ func buildDocsSearchRequest(ctx context.Context, urlStr, cliVersion string) (*ht
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("User-Agent", fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS))
+	req.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 	return req, nil
 }
 

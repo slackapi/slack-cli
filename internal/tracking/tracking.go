@@ -26,6 +26,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -194,6 +195,7 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		Timestamp: time.Now().UnixMilli(),
 		Data:      eventData,
 		Context: EventContext{
+			Agent:            detectAgentName(),
 			CLIVersion:       versionString,
 			Host:             ioutils.GetHostname(),
 			OS:               runtime.GOOS,
@@ -241,4 +243,11 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 	ioStream.PrintDebug(ctx, "FlushToLogstash response status code: %d, body: %s", response.StatusCode, string(b))
 
 	return nil
+}
+
+func detectAgentName() string {
+	if agent := useragent.Detect(); agent != nil {
+		return agent.Name
+	}
+	return ""
 }

@@ -22,11 +22,12 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
-	"runtime"
+
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/afero"
 )
 
@@ -100,8 +101,7 @@ func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID strin
 	if err != nil {
 		return fileName, err
 	}
-	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
-	request.Header.Add("User-Agent", userAgent)
+	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 
 	var s3span = opentracing.StartSpan("apiclient.UploadPackageToS3.FileUpload", opentracing.ChildOf(span.Context()))
 	s3span.SetTag("app", appID)
