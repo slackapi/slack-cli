@@ -25,7 +25,6 @@ import (
 	"net/textproto"
 	"net/url"
 
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/image"
 	"github.com/slackapi/slack-cli/internal/slackcontext"

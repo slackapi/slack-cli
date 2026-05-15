@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/textproto"
 
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"

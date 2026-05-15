@@ -26,13 +26,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/ioutils"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 )
 
 // TrackingManager is an interface for tracking metrics and events related to CLI activity
@@ -244,4 +244,3 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 
 	return nil
 }
-

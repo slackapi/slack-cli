@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"net/url"
 
-
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/useragent"
