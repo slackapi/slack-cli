@@ -17,6 +17,7 @@ package update
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -165,6 +166,26 @@ func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 			command:  "version",
 			expected: true,
 		},
+		"manifest command": {
+			command:  "manifest",
+			expected: true,
+		},
+		"manifest command with flags": {
+			command:  "manifest --source local",
+			expected: true,
+		},
+		"manifest info command": {
+			command:  "manifest info",
+			expected: true,
+		},
+		"manifest info command with flags": {
+			command:  "manifest info --source local",
+			expected: true,
+		},
+		"manifest validate command": {
+			command:  "manifest validate",
+			expected: false,
+		},
 		"auth command": {
 			command:  "auth",
 			expected: false,
@@ -172,7 +193,7 @@ func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			if tc.command != "" {
-				os.Args = []string{"placeholder", tc.command}
+				os.Args = append([]string{"placeholder"}, strings.Split(tc.command, " ")...)
 			} else {
 				os.Args = []string{"placeholder"}
 			}
