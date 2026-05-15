@@ -223,14 +223,27 @@ func (u *UpdateNotification) isCI() bool {
 
 // isIgnoredCommand returns true when the process is in the list of commands.
 func (u *UpdateNotification) isIgnoredCommand() bool {
-	ignoredCommands := []string{"_fingerprint", "api", "manifest info", "version"}
+	// "manifest" is included because it's an alias that runs "manifest info"
+	ignoredCommands := []string{"_fingerprint", "api", "manifest", "manifest info", "version"}
 	if len(os.Args) < 2 {
 		return false
 	}
 	commandStr := strings.Join(os.Args[1:], " ")
 	for _, ignored := range ignoredCommands {
-		if commandStr == ignored || strings.HasPrefix(commandStr, ignored+" ") {
+		if commandStr == ignored {
 			return true
+		}
+		// Match commands with additional flags (e.g. "manifest info --source local")
+		// but not subcommands (e.g. "manifest validate" should not match "manifest")
+		if strings.HasPrefix(commandStr, ignored+" ") {
+			rest := commandStr[len(ignored)+1:]
+			if strings.HasPrefix(rest, "-") {
+				return true
+			}
+			// Allow prefix match for multi-word commands (e.g. "manifest info --flag")
+			if strings.Contains(ignored, " ") {
+				return true
+			}
 		}
 	}
 	return false

@@ -166,8 +166,20 @@ func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 			command:  "version",
 			expected: true,
 		},
+		"manifest command": {
+			command:  "manifest",
+			expected: true,
+		},
+		"manifest command with flags": {
+			command:  "manifest --source local",
+			expected: true,
+		},
 		"manifest info command": {
 			command:  "manifest info",
+			expected: true,
+		},
+		"manifest info command with flags": {
+			command:  "manifest info --source local",
 			expected: true,
 		},
 		"manifest validate command": {
