@@ -61,7 +61,7 @@ func main() {
 	span.SetTag("slack_cli_sessionID", sessionID)
 	span.SetTag("hashed_hostname", ioutils.GetHostname())
 	span.SetTag("slack_cli_process", processName)
-	if agentName := detectAIAgentName(); agentName != "" {
+	if agentName := useragent.DetectName(); agentName != "" {
 		span.SetTag("ai_agent", agentName)
 	}
 	// system_id is set in root.go initConfig()
@@ -78,13 +78,6 @@ func main() {
 
 	rootCmd, clients := cmd.Init(ctx)
 	cmd.ExecuteContext(ctx, rootCmd, clients)
-}
-
-func detectAIAgentName() string {
-	if agent := useragent.Detect(); agent != nil {
-		return agent.Name
-	}
-	return ""
 }
 
 // TODO(slackcontext) Use closure to pass in the ctx, which includes the sessionID

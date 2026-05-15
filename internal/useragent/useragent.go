@@ -48,6 +48,13 @@ func Detect() *AIAgent {
 	}
 }
 
+func DetectName() string {
+	if agent := Detect(); agent != nil {
+		return agent.Name
+	}
+	return ""
+}
+
 func BuildUserAgent(cliVersion string) string {
 	ua := fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	if agent := Detect(); agent != nil {
