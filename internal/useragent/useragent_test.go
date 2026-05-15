@@ -27,82 +27,20 @@ func clearEnvVars(t *testing.T) {
 	}
 }
 
-func Test_UserAgent_Detect(t *testing.T) {
-	tests := map[string]struct {
-		envVars  map[string]string
-		expected *AIAgent
-	}{
-		"detects Claude Code": {
-			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "cli"},
-			expected: &AIAgent{Name: "claude-code", Entry: "cli"},
-		},
-		"detects Claude Code with vscode entrypoint": {
-			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "vscode"},
-			expected: &AIAgent{Name: "claude-code", Entry: "vscode"},
-		},
-		"detects Claude Code without entrypoint": {
-			envVars:  map[string]string{"CLAUDECODE": "1"},
-			expected: &AIAgent{Name: "claude-code", Entry: ""},
-		},
-		"detects Codex": {
-			envVars:  map[string]string{"CODEX_CI": "1"},
-			expected: &AIAgent{Name: "codex"},
-		},
-		"detects Gemini CLI": {
-			envVars:  map[string]string{"GEMINI_CLI": "1"},
-			expected: &AIAgent{Name: "gemini-cli"},
-		},
-		"detects Cline": {
-			envVars:  map[string]string{"CLINE_ACTIVE": "true"},
-			expected: &AIAgent{Name: "cline"},
-		},
-		"detects Cursor": {
-			envVars:  map[string]string{"CURSOR_AGENT": "1"},
-			expected: &AIAgent{Name: "cursor"},
-		},
-		"detects agent via AGENT env var": {
-			envVars:  map[string]string{"AGENT": "goose"},
-			expected: &AIAgent{Name: "goose"},
-		},
-		"detects unknown agent via AGENT env var": {
-			envVars:  map[string]string{"AGENT": "future-agent"},
-			expected: &AIAgent{Name: "future-agent"},
-		},
-		"returns nil when no agent detected": {
-			envVars:  map[string]string{},
-			expected: nil,
-		},
-		"CLAUDECODE takes priority over AGENT": {
-			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose"},
-			expected: &AIAgent{Name: "claude-code", Entry: ""},
-		},
-		"CODEX_CI takes priority over AGENT": {
-			envVars:  map[string]string{"CODEX_CI": "1", "AGENT": "goose"},
-			expected: &AIAgent{Name: "codex"},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			clearEnvVars(t)
-			for k, v := range tc.envVars {
-				t.Setenv(k, v)
-			}
-			result := Detect()
-			if tc.expected == nil {
-				assert.Nil(t, result)
-			} else {
-				assert.Equal(t, tc.expected, result)
-			}
-		})
-	}
-}
-
 func Test_UserAgent_BuildUserAgent(t *testing.T) {
 	tests := map[string]struct {
 		envVars  map[string]string
 		contains string
 		noAgent  bool
 	}{
+		"CLAUDECODE takes priority over AGENT": {
+			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose", "CLAUDE_CODE_ENTRYPOINT": "cli"},
+			contains: "AI-Agent (name=claude-code, entry=cli)",
+		},
+		"includes AI-Agent suffix for AGENT env var": {
+			envVars:  map[string]string{"AGENT": "goose"},
+			contains: "AI-Agent (name=goose)",
+		},
 		"includes AI-Agent suffix for Claude Code with entrypoint": {
 			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "cli"},
 			contains: "AI-Agent (name=claude-code, entry=cli)",
@@ -115,33 +53,25 @@ func Test_UserAgent_BuildUserAgent(t *testing.T) {
 			envVars:  map[string]string{"CLAUDECODE": "1"},
 			contains: "AI-Agent (name=claude-code)",
 		},
-		"includes AI-Agent suffix for Codex": {
-			envVars:  map[string]string{"CODEX_CI": "1"},
-			contains: "AI-Agent (name=codex)",
-		},
-		"includes AI-Agent suffix for Gemini CLI": {
-			envVars:  map[string]string{"GEMINI_CLI": "1"},
-			contains: "AI-Agent (name=gemini-cli)",
-		},
 		"includes AI-Agent suffix for Cline": {
 			envVars:  map[string]string{"CLINE_ACTIVE": "true"},
 			contains: "AI-Agent (name=cline)",
+		},
+		"includes AI-Agent suffix for Codex": {
+			envVars:  map[string]string{"CODEX_CI": "1"},
+			contains: "AI-Agent (name=codex)",
 		},
 		"includes AI-Agent suffix for Cursor": {
 			envVars:  map[string]string{"CURSOR_AGENT": "1"},
 			contains: "AI-Agent (name=cursor)",
 		},
-		"includes AI-Agent suffix for AGENT env var": {
-			envVars:  map[string]string{"AGENT": "goose"},
-			contains: "AI-Agent (name=goose)",
+		"includes AI-Agent suffix for Gemini CLI": {
+			envVars:  map[string]string{"GEMINI_CLI": "1"},
+			contains: "AI-Agent (name=gemini-cli)",
 		},
 		"includes AI-Agent suffix for unknown agent": {
 			envVars:  map[string]string{"AGENT": "future-agent"},
 			contains: "AI-Agent (name=future-agent)",
-		},
-		"CLAUDECODE takes priority over AGENT": {
-			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose", "CLAUDE_CODE_ENTRYPOINT": "cli"},
-			contains: "AI-Agent (name=claude-code, entry=cli)",
 		},
 		"no AI-Agent suffix when no agent detected": {
 			envVars: map[string]string{},
@@ -161,6 +91,76 @@ func Test_UserAgent_BuildUserAgent(t *testing.T) {
 			}
 			if tc.noAgent {
 				assert.NotContains(t, ua, "AI-Agent")
+			}
+		})
+	}
+}
+
+func Test_UserAgent_Detect(t *testing.T) {
+	tests := map[string]struct {
+		envVars  map[string]string
+		expected *AIAgent
+	}{
+		"CLAUDECODE takes priority over AGENT": {
+			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose"},
+			expected: &AIAgent{Name: "claude-code", Entry: ""},
+		},
+		"CODEX_CI takes priority over AGENT": {
+			envVars:  map[string]string{"CODEX_CI": "1", "AGENT": "goose"},
+			expected: &AIAgent{Name: "codex"},
+		},
+		"detects agent via AGENT env var": {
+			envVars:  map[string]string{"AGENT": "goose"},
+			expected: &AIAgent{Name: "goose"},
+		},
+		"detects Claude Code": {
+			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "cli"},
+			expected: &AIAgent{Name: "claude-code", Entry: "cli"},
+		},
+		"detects Claude Code with vscode entrypoint": {
+			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "vscode"},
+			expected: &AIAgent{Name: "claude-code", Entry: "vscode"},
+		},
+		"detects Claude Code without entrypoint": {
+			envVars:  map[string]string{"CLAUDECODE": "1"},
+			expected: &AIAgent{Name: "claude-code", Entry: ""},
+		},
+		"detects Cline": {
+			envVars:  map[string]string{"CLINE_ACTIVE": "true"},
+			expected: &AIAgent{Name: "cline"},
+		},
+		"detects Codex": {
+			envVars:  map[string]string{"CODEX_CI": "1"},
+			expected: &AIAgent{Name: "codex"},
+		},
+		"detects Cursor": {
+			envVars:  map[string]string{"CURSOR_AGENT": "1"},
+			expected: &AIAgent{Name: "cursor"},
+		},
+		"detects Gemini CLI": {
+			envVars:  map[string]string{"GEMINI_CLI": "1"},
+			expected: &AIAgent{Name: "gemini-cli"},
+		},
+		"detects unknown agent via AGENT env var": {
+			envVars:  map[string]string{"AGENT": "future-agent"},
+			expected: &AIAgent{Name: "future-agent"},
+		},
+		"returns nil when no agent detected": {
+			envVars:  map[string]string{},
+			expected: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			clearEnvVars(t)
+			for k, v := range tc.envVars {
+				t.Setenv(k, v)
+			}
+			result := Detect()
+			if tc.expected == nil {
+				assert.Nil(t, result)
+			} else {
+				assert.Equal(t, tc.expected, result)
 			}
 		})
 	}
