@@ -27,7 +27,7 @@ func clearEnvVars(t *testing.T) {
 	}
 }
 
-func Test_Detect(t *testing.T) {
+func Test_UserAgent_Detect(t *testing.T) {
 	tests := map[string]struct {
 		envVars  map[string]string
 		expected *AIAgent
@@ -97,7 +97,7 @@ func Test_Detect(t *testing.T) {
 	}
 }
 
-func Test_BuildUserAgent(t *testing.T) {
+func Test_UserAgent_BuildUserAgent(t *testing.T) {
 	tests := map[string]struct {
 		envVars  map[string]string
 		contains string
