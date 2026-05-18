@@ -9,7 +9,7 @@ on:
 jobs:
   lint-test:
     name: Lints and Tests
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
@@ -54,7 +54,7 @@ jobs:
   health-score:
     name: Health Score
     needs: lint-test
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     permissions:
       checks: write
       contents: read
