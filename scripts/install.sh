@@ -146,7 +146,7 @@ install_slack_cli() {
                         esac
                 fi
         elif [ "$(expr substr "$(uname -s)" 1 5)" == "Linux" ]; then
-                if version_lt "$SLACK_CLI_VERSION" "4.1.0"; then
+                if version_lt "$SLACK_CLI_VERSION" "4.2.0"; then
                         slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_VERSION}_linux_64-bit.tar.gz"
                 else
                         case "$(uname -m)" in
