@@ -97,7 +97,7 @@ jobs:
         run: |
           git config user.name "slack-cli-releaser[bot]"
           git config user.email "122933866+slack-cli-releaser[bot]@users.noreply.github.com"
-          make rc RELEASE_VERSION="$RELEASE_VERSION"
+          make tag RELEASE_VERSION="$RELEASE_VERSION"
           git push origin "HEAD:refs/heads/rc" --force
 
       - name: Create or update release PR
