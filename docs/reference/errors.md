@@ -510,9 +510,21 @@ Approval is pending review
 
 ---
 
+### domain_long {#domain_long}
+
+**Message**: Sandbox name or domain is too long
+
+---
+
 ### domain_taken {#domain_taken}
 
 **Message**: This domain has been claimed by another sandbox
+
+---
+
+### dotenv_file_already_exists {#dotenv_file_already_exists}
+
+**Message**: A .env file already exists
 
 ---
 
@@ -531,6 +543,12 @@ Approval is pending review
 ### dotenv_file_write_error {#dotenv_file_write_error}
 
 **Message**: Failed to write the .env file
+
+---
+
+### dotenv_placeholder_not_found {#dotenv_placeholder_not_found}
+
+**Message**: No .env template file was found for environment variables
 
 ---
 

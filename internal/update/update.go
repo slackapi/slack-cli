@@ -19,11 +19,11 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/cobra"
@@ -223,13 +223,30 @@ func (u *UpdateNotification) isCI() bool {
 
 // isIgnoredCommand returns true when the process is in the list of commands.
 func (u *UpdateNotification) isIgnoredCommand() bool {
-	ignoredCommands := []string{"_fingerprint", "version"}
-	osStr := os.Args[0:]
-	if len(osStr) < 2 {
+	// "manifest" is included because it's an alias that runs "manifest info"
+	ignoredCommands := []string{"_fingerprint", "api", "manifest", "manifest info", "version"}
+	if len(os.Args) < 2 {
 		return false
 	}
-	commandName := osStr[1]
-	return goutils.Contains(ignoredCommands, commandName, true)
+	commandStr := strings.Join(os.Args[1:], " ")
+	for _, ignored := range ignoredCommands {
+		if commandStr == ignored {
+			return true
+		}
+		// Match commands with additional flags (e.g. "manifest info --source local")
+		// but not subcommands (e.g. "manifest validate" should not match "manifest")
+		if strings.HasPrefix(commandStr, ignored+" ") {
+			rest := commandStr[len(ignored)+1:]
+			if strings.HasPrefix(rest, "-") {
+				return true
+			}
+			// Allow prefix match for multi-word commands (e.g. "manifest info --flag")
+			if strings.Contains(ignored, " ") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // isLastUpdateCheckedAtGreaterThan returns true when the time since the last update check is greater

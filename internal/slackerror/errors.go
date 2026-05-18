@@ -55,6 +55,7 @@ const (
 	ErrAppNotHosted                                  = "app_not_hosted"
 	ErrAppRemove                                     = "app_remove_error"
 	ErrAppRenameApp                                  = "app_rename_app"
+	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit" // Slack API error code
 	ErrAuthProdTokenNotFound                         = "auth_prod_token_not_found"
 	ErrAuthTimeout                                   = "auth_timeout_error"
 	ErrAuthToken                                     = "auth_token_error"
@@ -96,9 +97,11 @@ const (
 	ErrDenoNotFound                                  = "deno_not_found"
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
 	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
+	ErrDotEnvFileAlreadyExists                       = "dotenv_file_already_exists"
 	ErrDotEnvFileParse                               = "dotenv_file_parse_error"
 	ErrDotEnvFileRead                                = "dotenv_file_read_error"
 	ErrDotEnvFileWrite                               = "dotenv_file_write_error"
+	ErrDotEnvPlaceholderNotFound                     = "dotenv_placeholder_not_found"
 	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
@@ -152,6 +155,7 @@ const (
 	ErrInvalidResourceID                             = "invalid_resource_id"
 	ErrInvalidResourceType                           = "invalid_resource_type"
 	ErrInvalidS3Key                                  = "invalid_s3_key"
+	ErrInvalidSandboxArchiveTTL                      = "invalid_archive_ttl" // Slack API error code
 	ErrInvalidScopes                                 = "invalid_scopes"
 	ErrInvalidSemVer                                 = "invalid_semver"
 	ErrInvalidSlackProjectDirectory                  = "invalid_slack_project_directory"
@@ -165,6 +169,7 @@ const (
 	ErrInvalidTriggerInputs                          = "invalid_trigger_inputs"
 	ErrInvalidTriggerType                            = "invalid_trigger_type"
 	ErrInvalidSandboxTemplateID                      = "invalid_template_id"
+	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id" // Slack API error code
 	ErrInvalidUserID                                 = "invalid_user_id"
 	ErrInvalidWebhookConfig                          = "invalid_webhook_config"
 	ErrInvalidWebhookSchemaRef                       = "invalid_webhook_schema_ref"
@@ -218,6 +223,8 @@ const (
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
 	ErrRuntimeNotFound                               = "runtime_not_found"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
+	ErrSandboxDomainTaken                            = "domain_taken" // Slack API error code
+	ErrSandboxDomainTooLong                          = "domain_long"  // Slack API error code
 	ErrSDKConfigLoad                                 = "sdk_config_load_error"
 	ErrSDKHookInvocationFailed                       = "sdk_hook_invocation_failed"
 	ErrSDKHookNotFound                               = "sdk_hook_not_found"
@@ -272,10 +279,6 @@ const (
 	ErrUserRemovedFromTeam                           = "user_removed_from_team"
 	ErrWorkflowNotFound                              = "workflow_not_found"
 	ErrYaml                                          = "yaml_error"
-	ErrSandboxDomainTaken                            = "domain_taken"
-	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit"
-	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id"
-	ErrInvalidSandboxArchiveTTL                      = "invalid_archive_ttl"
 )
 
 var ErrorCodeMap = map[string]Error{
@@ -461,6 +464,11 @@ Otherwise start your app for local development with: %s`,
 	ErrAppRenameApp: {
 		Code:    ErrAppRenameApp,
 		Message: "Couldn't rename your app",
+	},
+
+	ErrAtActiveSandboxLimit: {
+		Code:    ErrAtActiveSandboxLimit,
+		Message: "You've reached the maximum number of active sandboxes",
 	},
 
 	ErrAuthProdTokenNotFound: {
@@ -689,6 +697,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "Failed to generate documentation",
 	},
 
+	ErrDotEnvFileAlreadyExists: {
+		Code:    ErrDotEnvFileAlreadyExists,
+		Message: "A .env file already exists",
+	},
+
 	ErrDotEnvFileParse: {
 		Code:    ErrDotEnvFileParse,
 		Message: "Failed to parse the .env file",
@@ -702,6 +715,11 @@ Otherwise start your app for local development with: %s`,
 	ErrDotEnvFileWrite: {
 		Code:    ErrDotEnvFileWrite,
 		Message: "Failed to write the .env file",
+	},
+
+	ErrDotEnvPlaceholderNotFound: {
+		Code:    ErrDotEnvPlaceholderNotFound,
+		Message: "No .env template file was found for environment variables",
 	},
 
 	ErrDotEnvVarMarshal: {
@@ -1000,6 +1018,12 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "Please reach out to feedback@slack.com if the problem persists.",
 	},
 
+	ErrInvalidSandboxArchiveTTL: {
+		Code:        ErrInvalidSandboxArchiveTTL,
+		Message:     "Invalid TTL",
+		Remediation: "Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo",
+	},
+
 	ErrInvalidScopes: {
 		Code:    ErrInvalidScopes,
 		Message: "Some of the provided scopes do not exist",
@@ -1068,6 +1092,12 @@ Otherwise start your app for local development with: %s`,
 	ErrInvalidSandboxTemplateID: {
 		Code:    ErrInvalidSandboxTemplateID,
 		Message: "The provided sandbox template value is invalid",
+	},
+
+	ErrInvalidSandboxTeamID: {
+		Code:        ErrInvalidSandboxTeamID,
+		Message:     "The provided sandbox team ID is invalid",
+		Remediation: fmt.Sprintf("List your sandboxes with the %s command to find the ID", style.Commandf("sandbox list", false)),
 	},
 
 	ErrInvalidUserID: {
@@ -1341,6 +1371,16 @@ Otherwise start your app for local development with: %s`,
 	ErrRuntimeNotSupported: {
 		Code:    ErrRuntimeNotSupported,
 		Message: "The SDK runtime is not supported by the CLI",
+	},
+
+	ErrSandboxDomainTaken: {
+		Code:    ErrSandboxDomainTaken,
+		Message: "This domain has been claimed by another sandbox",
+	},
+
+	ErrSandboxDomainTooLong: {
+		Code:    ErrSandboxDomainTooLong,
+		Message: "Sandbox name or domain is too long",
 	},
 
 	ErrSampleCreate: {
@@ -1640,27 +1680,5 @@ Otherwise start your app for local development with: %s`,
 	ErrYaml: {
 		Code:    ErrYaml,
 		Message: "An error occurred while parsing the app manifest YAML file",
-	},
-
-	ErrSandboxDomainTaken: {
-		Code:    ErrSandboxDomainTaken,
-		Message: "This domain has been claimed by another sandbox",
-	},
-
-	ErrAtActiveSandboxLimit: {
-		Code:    ErrAtActiveSandboxLimit,
-		Message: "You've reached the maximum number of active sandboxes",
-	},
-
-	ErrInvalidSandboxTeamID: {
-		Code:        ErrInvalidSandboxTeamID,
-		Message:     "The provided sandbox team ID is invalid",
-		Remediation: fmt.Sprintf("List your sandboxes with the %s command to find the ID", style.Commandf("sandbox list", false)),
-	},
-
-	ErrInvalidSandboxArchiveTTL: {
-		Code:        ErrInvalidSandboxArchiveTTL,
-		Message:     "Invalid TTL",
-		Remediation: "Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo",
 	},
 }

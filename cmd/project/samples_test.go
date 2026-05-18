@@ -73,14 +73,14 @@ func TestSamplesCommand(t *testing.T) {
 					)
 				CreateFunc = func(ctx context.Context, clients *shared.ClientFactory, createArgs createPkg.CreateArgs) (appDirPath string, err error) {
 					capturedArgs = createArgs
-					return createArgs.AppName, nil
+					return createArgs.AppPath, nil
 				}
 			},
 			ExpectedOutputs: []string{
 				"cd my-sample-app/",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				assert.Equal(t, "my-sample-app", capturedArgs.AppName)
+				assert.Equal(t, "my-sample-app", capturedArgs.AppPath)
 				assert.Equal(t, "slack-samples/deno-starter-template", capturedArgs.Template.GetTemplatePath())
 			},
 		},
