@@ -272,49 +272,34 @@ jobs:
               done
             fi
       - run:
-          name: "Update release description and upload assets to GitHub"
+          name: "Upload assets to GitHub release"
           command: |
-            # Replace double quotes with single quotes
             RELEASE_ID=$(curl -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" "https://api.github.com/repos/slackapi/slack-cli/releases/tags/$RELEASE_REF" | jq -r .id);
-            PRERELEASE="true";
-            TARGET="${CIRCLE_SHA1}";
-            if [ "<< parameters.production >>" != "false" ];
-            then
-              PRERELEASE="false";
-              TARGET="main";
-            fi
-            BODY="{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},"
 
             if [ "$RELEASE_ID" = "null" ]; then
-              BODY+="\"generate_release_notes\":true}"
-              echo "Creating a new GitHub release with: ${BODY}"
-              RELEASE_ID=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "${BODY}" | jq -r .id)
-              echo "... complete. RELEASE_ID=${RELEASE_ID}"
-            else
-              echo "Overwriting existing GitHub Release data; generating pre-release notes ..."
+              PRERELEASE="true"
+              TARGET="${CIRCLE_SHA1}"
+              if [ "<< parameters.production >>" != "false" ]; then
+                PRERELEASE="false"
+                TARGET="main"
+              fi
+              echo "Creating GitHub release for $RELEASE_REF..."
+              RELEASE_ID=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases -d "{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${TARGET}\",\"draft\":false,\"prerelease\":${PRERELEASE},\"generate_release_notes\":true}" | jq -r .id)
+            elif [ "<< parameters.production >>" = "false" ]; then
               LAST_SEMVER_TAG=$(git describe --tags --match 'v*.*.*' --abbrev=0 | cut -d"-" -f1)
-              # When generating release notes, setting the target tag_name property to an existing tag has GitHub ignore the target_commitish property
-              # So, set the tag name to the target commit to generate release notes from the last semver tag to the target commit
-              # See https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#generate-release-notes-content-for-a-release--parameters
-              # Note the following _does not change releases or tags_ - it only creates release notes, just like clicking "Generate Release Notes" on the GitHub Releases page.
-              CHANGELOG=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/slackapi/slack-cli/releases/generate-notes -d "{\"tag_name\":\"${TARGET}\",\"target_commitish\":\"${TARGET}\",\"previous_tag_name\":\"${LAST_SEMVER_TAG}\"}" | jq .body)
-              echo "Will use release notes: ${CHANGELOG}"
-              BODY+="\"body\":$CHANGELOG}"
-              echo "Updating existing GitHub pre-release ${RELEASE_ID} with ${BODY}"
-              curl -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases/$RELEASE_ID -d "${BODY}"
-              echo "... complete."
+              CHANGELOG=$(curl -L -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/slackapi/slack-cli/releases/generate-notes -d "{\"tag_name\":\"${CIRCLE_SHA1}\",\"target_commitish\":\"${CIRCLE_SHA1}\",\"previous_tag_name\":\"${LAST_SEMVER_TAG}\"}" | jq .body)
+              curl -X PATCH -H "Accept: application/vnd.github+json" -H "Authorization: token $GITHUB_RELEASE_TOKEN" https://api.github.com/repos/slackapi/slack-cli/releases/$RELEASE_ID -d "{\"tag_name\":\"${RELEASE_REF}\",\"name\":\"${RELEASE_REF}\",\"target_commitish\":\"${CIRCLE_SHA1}\",\"draft\":false,\"prerelease\":true,\"body\":$CHANGELOG}"
             fi
 
-            binaries=`find << parameters.artifact_dir >>/slack_* -maxdepth 1 -not -type d`
-            for binary in $binaries
-            do
+            binaries=$(find << parameters.artifact_dir >>/slack_* -maxdepth 1 -not -type d)
+            for binary in $binaries; do
               curl -X POST \
-              -H "Authorization: token $GITHUB_RELEASE_TOKEN" \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Content-Type: $(file -b --mime-type ${binary})" \
-              -H "Content-Length: $(wc -c <${binary} | xargs)" \
-              -T "${binary}" \
-              "https://uploads.github.com/repos/slackapi/slack-cli/releases/$RELEASE_ID/assets?name=$(basename ${binary})" | cat
+                -H "Authorization: token $GITHUB_RELEASE_TOKEN" \
+                -H "Accept: application/vnd.github.v3+json" \
+                -H "Content-Type: $(file -b --mime-type ${binary})" \
+                -H "Content-Length: $(wc -c <${binary} | xargs)" \
+                -T "${binary}" \
+                "https://uploads.github.com/repos/slackapi/slack-cli/releases/$RELEASE_ID/assets?name=$(basename ${binary})" | cat
             done
       - store_artifacts:
           path: << parameters.artifact_dir >>
