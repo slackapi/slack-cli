@@ -91,7 +91,7 @@ main() {
     linux_targz_file_path_latest_amd64="$DIST_DIR/slack_cli_latest_linux_amd64.tar.gz"
     linux_targz_file_path_latest_arm64="$DIST_DIR/slack_cli_latest_linux_arm64.tar.gz"
 
-    echo "-> Creating Linux 64-bit fallback (amd64 copy)"
+    echo "-> Creating Linux fallback tar.gz files"
     cp "$linux_targz_file_path_version_amd64" "$linux_targz_file_path_version_64bit"
     ls -l "$DIST_DIR"/*_"$VERSION"_linux*
 
