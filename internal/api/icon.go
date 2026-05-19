@@ -24,12 +24,12 @@ import (
 	"net/http"
 	"net/textproto"
 	"net/url"
-	"runtime"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/image"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/afero"
 )
 
@@ -132,8 +132,7 @@ func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, icon
 	if err != nil {
 		return IconResult{}, err
 	}
-	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
-	request.Header.Add("User-Agent", userAgent)
+	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 
 	c.io.PrintDebug(ctx, "HTTP Request: %v %v %v", request.Method, request.URL, request.Proto)
 	c.io.PrintDebug(ctx, "HTTP Request User-Agent: %s", request.Header.Get("User-Agent"))
