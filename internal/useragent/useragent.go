@@ -62,14 +62,14 @@ func DetectName() string {
 }
 
 // BuildUserAgent constructs the HTTP User-Agent header value for the CLI. If an
-// AI agent is detected, an "AI-Agent (name=..., entry=...)" suffix is appended.
+// AI agent is detected, an "AI-Agent (name: ..., entry: ...)" suffix is appended.
 func BuildUserAgent(cliVersion string) string {
 	ua := fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 	if agent := Detect(); agent != nil {
 		var parts []string
-		parts = append(parts, "name="+agent.Name)
+		parts = append(parts, "name: "+agent.Name)
 		if agent.Entry != "" {
-			parts = append(parts, "entry="+agent.Entry)
+			parts = append(parts, "entry: "+agent.Entry)
 		}
 		ua += " AI-Agent (" + strings.Join(parts, ", ") + ")"
 	}

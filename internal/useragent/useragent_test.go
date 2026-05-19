@@ -35,43 +35,43 @@ func Test_UserAgent_BuildUserAgent(t *testing.T) {
 	}{
 		"CLAUDECODE takes priority over AGENT": {
 			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose", "CLAUDE_CODE_ENTRYPOINT": "cli"},
-			contains: "AI-Agent (name=claude-code, entry=cli)",
+			contains: "AI-Agent (name: claude-code, entry: cli)",
 		},
 		"includes AI-Agent suffix for AGENT env var": {
 			envVars:  map[string]string{"AGENT": "goose"},
-			contains: "AI-Agent (name=goose)",
+			contains: "AI-Agent (name: goose)",
 		},
 		"includes AI-Agent suffix for Claude Code with entrypoint": {
 			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "cli"},
-			contains: "AI-Agent (name=claude-code, entry=cli)",
+			contains: "AI-Agent (name: claude-code, entry: cli)",
 		},
 		"includes AI-Agent suffix for Claude Code with vscode entrypoint": {
 			envVars:  map[string]string{"CLAUDECODE": "1", "CLAUDE_CODE_ENTRYPOINT": "vscode"},
-			contains: "AI-Agent (name=claude-code, entry=vscode)",
+			contains: "AI-Agent (name: claude-code, entry: vscode)",
 		},
 		"includes AI-Agent suffix for Claude Code without entrypoint": {
 			envVars:  map[string]string{"CLAUDECODE": "1"},
-			contains: "AI-Agent (name=claude-code)",
+			contains: "AI-Agent (name: claude-code)",
 		},
 		"includes AI-Agent suffix for Cline": {
 			envVars:  map[string]string{"CLINE_ACTIVE": "true"},
-			contains: "AI-Agent (name=cline)",
+			contains: "AI-Agent (name: cline)",
 		},
 		"includes AI-Agent suffix for Codex": {
 			envVars:  map[string]string{"CODEX_CI": "1"},
-			contains: "AI-Agent (name=codex)",
+			contains: "AI-Agent (name: codex)",
 		},
 		"includes AI-Agent suffix for Cursor": {
 			envVars:  map[string]string{"CURSOR_AGENT": "1"},
-			contains: "AI-Agent (name=cursor)",
+			contains: "AI-Agent (name: cursor)",
 		},
 		"includes AI-Agent suffix for Gemini CLI": {
 			envVars:  map[string]string{"GEMINI_CLI": "1"},
-			contains: "AI-Agent (name=gemini-cli)",
+			contains: "AI-Agent (name: gemini-cli)",
 		},
 		"includes AI-Agent suffix for unknown agent": {
 			envVars:  map[string]string{"AGENT": "future-agent"},
-			contains: "AI-Agent (name=future-agent)",
+			contains: "AI-Agent (name: future-agent)",
 		},
 		"no AI-Agent suffix when no agent detected": {
 			envVars: map[string]string{},
