@@ -207,6 +207,7 @@ See [`.github/STYLE_GUIDE.md`](../.github/STYLE_GUIDE.md) for conventions on com
 - `go.mod` - Go module dependencies and minimum Go version (see `go.mod` for current version)
 - `.circleci/config.yml` - CircleCI workflows for CI/CD pipeline
 - `.github/workflows/` - GitHub Actions for automated testing and releases
+- `.githooks/` - Opt-in Git hooks (enable with `git config core.hooksPath .githooks`)
 
 ## Commit Message Format
 
