@@ -96,7 +96,7 @@ func Test_UserAgent_BuildUserAgent(t *testing.T) {
 	}
 }
 
-func Test_UserAgent_Detect(t *testing.T) {
+func Test_UserAgent_GetAIAgent(t *testing.T) {
 	tests := map[string]struct {
 		envVars  map[string]string
 		expected *AIAgent
@@ -156,7 +156,7 @@ func Test_UserAgent_Detect(t *testing.T) {
 			for k, v := range tc.envVars {
 				t.Setenv(k, v)
 			}
-			result := Detect()
+			result := GetAIAgent()
 			if tc.expected == nil {
 				assert.Nil(t, result)
 			} else {

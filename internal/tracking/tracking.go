@@ -195,7 +195,7 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		Timestamp: time.Now().UnixMilli(),
 		Data:      eventData,
 		Context: EventContext{
-			AIAgent:          useragent.DetectName(),
+			AIAgent:          useragent.GetAIAgentName(),
 			CLIVersion:       versionString,
 			Host:             ioutils.GetHostname(),
 			OS:               runtime.GOOS,

@@ -27,10 +27,11 @@ type AIAgent struct {
 	Entry string
 }
 
-// Detect checks environment variables to determine if the CLI is being run by
-// an AI coding agent. Returns nil if no agent is detected. Detection priority:
-// CLAUDECODE > CODEX_CI > GEMINI_CLI > CLINE_ACTIVE > CURSOR_AGENT > AGENT.
-func Detect() *AIAgent {
+// GetAIAgent checks environment variables to determine if the CLI is being run
+// by an AI coding agent. Returns nil if no agent is detected. Detection
+// priority: CLAUDECODE > CODEX_CI > GEMINI_CLI > CLINE_ACTIVE > CURSOR_AGENT >
+// AGENT.
+func GetAIAgent() *AIAgent {
 	switch {
 	case os.Getenv("CLAUDECODE") == "1":
 		return &AIAgent{
@@ -52,11 +53,11 @@ func Detect() *AIAgent {
 	}
 }
 
-// DetectName returns the normalized name of the detected AI agent, or an empty
-// string if no agent is detected.
-func DetectName() string {
-	if agent := Detect(); agent != nil {
-		return agent.Name
+// GetAIAgentName returns the normalized name of the detected AI agent, or an
+// empty string if no agent is detected.
+func GetAIAgentName() string {
+	if aiAgent := GetAIAgent(); aiAgent != nil {
+		return aiAgent.Name
 	}
 	return ""
 }
@@ -72,11 +73,11 @@ func DetectName() string {
 //	slack-cli/2.38.1 (os: linux) AI-Agent (name: cursor)
 func BuildUserAgent(cliVersion string) string {
 	ua := fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
-	if agent := Detect(); agent != nil {
+	if aiAgent := GetAIAgent(); aiAgent != nil {
 		var parts []string
-		parts = append(parts, "name: "+agent.Name)
-		if agent.Entry != "" {
-			parts = append(parts, "entry: "+agent.Entry)
+		parts = append(parts, "name: "+aiAgent.Name)
+		if aiAgent.Entry != "" {
+			parts = append(parts, "entry: "+aiAgent.Entry)
 		}
 		ua += " AI-Agent (" + strings.Join(parts, ", ") + ")"
 	}

@@ -61,8 +61,8 @@ func main() {
 	span.SetTag("slack_cli_sessionID", sessionID)
 	span.SetTag("hashed_hostname", ioutils.GetHostname())
 	span.SetTag("slack_cli_process", processName)
-	if agentName := useragent.DetectName(); agentName != "" {
-		span.SetTag("ai_agent", agentName)
+	if aiAgentName := useragent.GetAIAgentName(); aiAgentName != "" {
+		span.SetTag("ai_agent", aiAgentName)
 	}
 	// system_id is set in root.go initConfig()
 	// project_id is set in root.go initConfig()
