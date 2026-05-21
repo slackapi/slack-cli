@@ -81,16 +81,30 @@ main() {
 
     echo "Creating Linux archives"
 
-    linux_targz_file_path_version="$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
-    linux_targz_file_path_dev="$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
-    linux_targz_file_path_latest="$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
+    linux_targz_file_path_version_64bit="$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    linux_targz_file_path_version_amd64="$DIST_DIR/slack_cli_${VERSION}_linux_amd64.tar.gz"
+    linux_targz_file_path_version_arm64="$DIST_DIR/slack_cli_${VERSION}_linux_arm64.tar.gz"
+    linux_targz_file_path_dev_64bit="$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
+    linux_targz_file_path_dev_amd64="$DIST_DIR/slack_cli_dev_linux_amd64.tar.gz"
+    linux_targz_file_path_dev_arm64="$DIST_DIR/slack_cli_dev_linux_arm64.tar.gz"
+    linux_targz_file_path_latest_64bit="$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
+    linux_targz_file_path_latest_amd64="$DIST_DIR/slack_cli_latest_linux_amd64.tar.gz"
+    linux_targz_file_path_latest_arm64="$DIST_DIR/slack_cli_latest_linux_arm64.tar.gz"
 
-    echo "-> Creating Linux development tar.gz file"
-    cp "$linux_targz_file_path_version" "$linux_targz_file_path_dev"
+    echo "-> Creating Linux fallback tar.gz files"
+    cp "$linux_targz_file_path_version_amd64" "$linux_targz_file_path_version_64bit"
+    ls -l "$DIST_DIR"/*_"$VERSION"_linux*
+
+    echo "-> Creating Linux development tar.gz files"
+    cp "$linux_targz_file_path_version_amd64" "$linux_targz_file_path_dev_64bit"
+    cp "$linux_targz_file_path_version_amd64" "$linux_targz_file_path_dev_amd64"
+    cp "$linux_targz_file_path_version_arm64" "$linux_targz_file_path_dev_arm64"
     ls -l "$DIST_DIR"/*dev_linux*
 
-    echo "-> Creating Linux production tar.gz file"
-    cp "$linux_targz_file_path_version" "$linux_targz_file_path_latest"
+    echo "-> Creating Linux latest tar.gz files"
+    cp "$linux_targz_file_path_version_amd64" "$linux_targz_file_path_latest_64bit"
+    cp "$linux_targz_file_path_version_amd64" "$linux_targz_file_path_latest_amd64"
+    cp "$linux_targz_file_path_version_arm64" "$linux_targz_file_path_latest_arm64"
     ls -l "$DIST_DIR"/*latest_linux*
 
     echo "Creating Windows archives"

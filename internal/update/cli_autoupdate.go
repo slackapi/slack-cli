@@ -263,7 +263,14 @@ func getUpdateFileName(version, operatingSys, architecture string) (filename str
 			filename = fmt.Sprintf("slack_cli_%s_macOS_64-bit.zip", version)
 		}
 	case "linux":
-		filename = fmt.Sprintf("slack_cli_%s_linux_64-bit.tar.gz", version)
+		switch architecture {
+		case "amd64":
+			filename = fmt.Sprintf("slack_cli_%s_linux_amd64.tar.gz", version)
+		case "arm64":
+			filename = fmt.Sprintf("slack_cli_%s_linux_arm64.tar.gz", version)
+		default:
+			filename = fmt.Sprintf("slack_cli_%s_linux_64-bit.tar.gz", version)
+		}
 	case "windows":
 		filename = fmt.Sprintf("slack_cli_%s_windows_64-bit.zip", version)
 	default:
