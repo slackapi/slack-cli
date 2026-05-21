@@ -63,6 +63,10 @@ Once a day, the Slack CLI checks for updates after running any command. When an 
 
 Update notifications can be disabled using a command-line flag or an environment variable. When running any command, you can append the `--skip-update` or `-s` flag. Alternatively, you can set the `SLACK_SKIP_UPDATE` environment variable and assign it any value.
 
+When the CLI runs in a non-interactive environment (no TTY) - for example, inside a CI/CD pipeline or when output is piped - the update check still runs but the auto-update confirmation prompt is skipped. Notification text may still appear in command output. To keep automation output clean, suppress the check entirely with `--skip-update` or `SLACK_SKIP_UPDATE`.
+
+Note: `--skip-update` and `SLACK_SKIP_UPDATE` are intentionally ignored when running `slack upgrade` directly, since that command's purpose is to check for updates.
+
 ## CI/CD authorization {#ci-cd}
 
 Setting up a CI/CD pipeline requires authorization using a service token. Service tokens are **long-lived, non-rotatable user tokens** &mdash; they won't expire, so they can be used to perform any Slack CLI action without the need to refresh tokens.
