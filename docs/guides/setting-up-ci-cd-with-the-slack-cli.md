@@ -60,7 +60,7 @@ In addition, you'll need to obtain a service token to authorize your CI/CD setup
 
 ### Disabling update checks {#disable-updates}
 
-In CI/CD pipelines, set `SLACK_SKIP_UPDATE=1` (or pass `--skip-update` on each command) to prevent the CLI from checking for new versions on every run. See [Version update notifications](/tools/slack-cli/guides/authorizing-the-slack-cli#version-updates) for details.
+In CI/CD pipelines, set a `SLACK_SKIP_UPDATE` environment variable to `1` (or pass `--skip-update` on each command) to prevent the CLI from checking for new versions on every run. See [Version update notifications](/tools/slack-cli/guides/authorizing-the-slack-cli#version-updates) for details.
 
 Once you've done those things, you're ready to get started! Let's walk through an example.
 
