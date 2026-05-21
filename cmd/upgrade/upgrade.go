@@ -40,6 +40,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"If there are any, then you will be prompted to upgrade",
 			"",
+			"In non-interactive environments (CI/CD, scripts, piped output),",
+			"update checks still run but the auto-update prompt is skipped.",
+			"To suppress update checks entirely on other commands, use",
+			"--skip-update or set SLACK_SKIP_UPDATE.",
+			"",
 			fmt.Sprintf(`The changelog can be found at {{LinkText "%s"}}`, changelogURL),
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
