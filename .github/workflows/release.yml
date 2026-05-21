@@ -128,9 +128,9 @@ jobs:
 
           if [ -n "$EXISTING_PR" ]; then
             gh pr edit "$EXISTING_PR" --remove-label "semver:patch" --remove-label "semver:minor" --remove-label "semver:major" 2>/dev/null || true
-            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --label "release" --label "semver:${SEMVER}"
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
             echo "Updated PR #$EXISTING_PR"
           else
-            gh pr create --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --label "release" --label "semver:${SEMVER}"
+            gh pr create --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
             echo "Created new release PR"
           fi
