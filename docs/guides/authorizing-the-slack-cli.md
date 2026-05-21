@@ -65,7 +65,8 @@ Update notifications can be disabled using a command-line flag or an environment
 
 When the CLI runs in a non-interactive environment, such as inside a CI/CD pipeline or when the output is piped, the update check runs without the auto-update confirmation prompt. The notification text may still appear in command output, however. You can suppress the check entirely with the `--skip-update` flag or `SLACK_SKIP_UPDATE` environment variable to keep the automation output clean.
 
-Note: `--skip-update` and `SLACK_SKIP_UPDATE` are intentionally ignored when running `slack upgrade` directly, since that command's purpose is to check for updates.
+:::info[The `--skip-update` flag and the `SLACK_SKIP_UPDATE` environment variable are intentionally ignored when running the `slack upgrade` command directly, since that command's purpose is to check for updates.
+:::
 
 ## CI/CD authorization {#ci-cd}
 
