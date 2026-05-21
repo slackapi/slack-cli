@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/tracer"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/uber/jaeger-client-go"
 )
@@ -60,6 +61,9 @@ func main() {
 	span.SetTag("slack_cli_sessionID", sessionID)
 	span.SetTag("hashed_hostname", ioutils.GetHostname())
 	span.SetTag("slack_cli_process", processName)
+	if aiAgentName := useragent.GetAIAgentName(); aiAgentName != "" {
+		span.SetTag("ai_agent", aiAgentName)
+	}
 	// system_id is set in root.go initConfig()
 	// project_id is set in root.go initConfig()
 
