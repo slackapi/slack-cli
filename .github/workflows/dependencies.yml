@@ -70,6 +70,7 @@ jobs:
           go mod tidy
           sed -i "s/cimg\/go:.*/cimg\/go:${VERSION#go}/" .circleci/config.yml
           sed -i "s/go-version: .*/go-version: \"${VERSION#go}\"/" .github/workflows/tests.yml
+          sed -i "s/golang:[0-9.]*-trixie/golang:${VERSION#go}-trixie/" docker/Dockerfile.node docker/Dockerfile.python
         env:
           VERSION: ${{ steps.version.outputs.latest }}
       - name: Open a change request
