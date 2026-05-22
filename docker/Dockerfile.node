@@ -28,12 +28,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -ldflags="-s -w -X 'github.com/slackapi/slack-cli/internal/version.Version=${VERSION}'" \
     -o /out/slack .
 
-FROM node:24-trixie
+FROM mcr.microsoft.com/devcontainers/javascript-node:24-trixie
 
-RUN apt-get update && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /out/slack /usr/local/bin/slack
+COPY --from=builder --chown=node:node /out/slack /home/node/.slack/bin/slack
+ENV PATH="/home/node/.slack/bin:${PATH}"
 
 LABEL org.opencontainers.image.title="Slack CLI (Node.js)"
 LABEL org.opencontainers.image.description="Slack Platform CLI development environment with Node.js"

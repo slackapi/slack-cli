@@ -1,12 +1,9 @@
-.git
-.circleci
-.github
-.claude
-bin/
-dist/
-demos/
-docs/
-test/
-coverage.out
-*.log
-.DS_Store
+# Ignore everything
+*
+
+# Allow only what the Go build needs
+!go.mod
+!go.sum
+!main.go
+!cmd/
+!internal/

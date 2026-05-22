@@ -28,14 +28,10 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} \
     go build -ldflags="-s -w -X 'github.com/slackapi/slack-cli/internal/version.Version=${VERSION}'" \
     -o /out/slack .
 
-FROM python:3.14-trixie
+FROM mcr.microsoft.com/devcontainers/python:3.14-trixie
 
-RUN apt-get update && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN useradd -m -s /bin/bash -u 1000 vscode
-
-COPY --from=builder /out/slack /usr/local/bin/slack
+COPY --from=builder --chown=vscode:vscode /out/slack /home/vscode/.slack/bin/slack
+ENV PATH="/home/vscode/.slack/bin:${PATH}"
 
 LABEL org.opencontainers.image.title="Slack CLI (Python)"
 LABEL org.opencontainers.image.description="Slack Platform CLI development environment with Python"
