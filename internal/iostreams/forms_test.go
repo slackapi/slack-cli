@@ -113,17 +113,17 @@ func TestConfirmForm(t *testing.T) {
 		assert.True(t, choice)
 	})
 
-	t.Run("toggle changes value", func(t *testing.T) {
+	t.Run("arrow keys change selection", func(t *testing.T) {
 		choice := false
 		f := buildConfirmForm(nil, "Continue?", &choice)
 		f.Update(f.Init())
 
-		// Toggle to Yes
-		f.Update(tea.KeyPressMsg{Code: tea.KeyLeft})
+		// Move up to Yes
+		f.Update(tea.KeyPressMsg{Code: tea.KeyUp})
 		assert.True(t, choice)
 
-		// Toggle back to No
-		f.Update(tea.KeyPressMsg{Code: tea.KeyRight})
+		// Move back down to No
+		f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		assert.False(t, choice)
 	})
 }
@@ -450,12 +450,12 @@ func TestFormsAccessible(t *testing.T) {
 		assert.Contains(t, out.String(), "Pick one (press Enter for 1)")
 	})
 
-	t.Run("confirm form accepts yes/no input", func(t *testing.T) {
+	t.Run("confirm form accepts numbered input", func(t *testing.T) {
 		var choice bool
 		f := buildConfirmForm(io, "Continue?", &choice)
 
 		var out strings.Builder
-		err := f.WithOutput(&out).WithInput(strings.NewReader("y\n")).Run()
+		err := f.WithOutput(&out).WithInput(strings.NewReader("1\n")).Run()
 
 		assert.NoError(t, err)
 		assert.True(t, choice)
