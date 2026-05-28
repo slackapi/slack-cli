@@ -85,8 +85,8 @@ func buildConfirmForm(io *IOStreams, message string, choice *bool) *huh.Form {
 	field := huh.NewSelect[bool]().
 		Title(message).
 		Options(
-			huh.NewOption("Yes", true),
 			huh.NewOption("No", false),
+			huh.NewOption("Yes", true),
 		).
 		Value(choice)
 	return newForm(io, field)

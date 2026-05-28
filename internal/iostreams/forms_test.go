@@ -118,12 +118,12 @@ func TestConfirmForm(t *testing.T) {
 		f := buildConfirmForm(nil, "Continue?", &choice)
 		f.Update(f.Init())
 
-		// Move up to Yes
-		f.Update(tea.KeyPressMsg{Code: tea.KeyUp})
+		// Move down to Yes
+		f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		assert.True(t, choice)
 
-		// Move back down to No
-		f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
+		// Move back up to No
+		f.Update(tea.KeyPressMsg{Code: tea.KeyUp})
 		assert.False(t, choice)
 	})
 }
@@ -455,7 +455,7 @@ func TestFormsAccessible(t *testing.T) {
 		f := buildConfirmForm(io, "Continue?", &choice)
 
 		var out strings.Builder
-		err := f.WithOutput(&out).WithInput(strings.NewReader("1\n")).Run()
+		err := f.WithOutput(&out).WithInput(strings.NewReader("2\n")).Run()
 
 		assert.NoError(t, err)
 		assert.True(t, choice)
