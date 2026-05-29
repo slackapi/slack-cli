@@ -455,7 +455,7 @@ func TestFormsAccessible(t *testing.T) {
 		f := buildConfirmForm(io, "Continue?", &choice)
 
 		var out strings.Builder
-		err := f.WithOutput(&out).WithInput(strings.NewReader("2\n")).Run()
+		err := f.WithOutput(&out).WithInput(strings.NewReader("1\n")).Run()
 
 		assert.NoError(t, err)
 		assert.True(t, choice)

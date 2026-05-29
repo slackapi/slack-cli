@@ -85,16 +85,16 @@ func buildConfirmForm(io *IOStreams, message string, choice *bool) *huh.Form {
 	field := huh.NewSelect[bool]().
 		Title(message).
 		Options(
-			huh.NewOption("No", false),
 			huh.NewOption("Yes", true),
+			huh.NewOption("No", false),
 		).
 		Value(choice)
 	return newForm(io, field)
 }
 
 // confirmForm interactively prompts for a yes/no confirmation.
-func confirmForm(io *IOStreams, _ context.Context, message string, defaultValue bool) (bool, error) {
-	var choice = defaultValue
+func confirmForm(io *IOStreams, _ context.Context, message string, _ bool) (bool, error) {
+	var choice = true
 	err := buildConfirmForm(io, message, &choice).Run()
 	if errors.Is(err, huh.ErrUserAborted) {
 		return false, slackerror.New(slackerror.ErrProcessInterrupted)
