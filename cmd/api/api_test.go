@@ -86,31 +86,31 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			args:           []string{"auth.test"},
 			expectedMethod: "GET",
 		},
-		"no-auth with key=value params": {
-			flags:           cmdFlags{method: "POST", noAuth: true},
+		"no token with key=value params": {
+			flags:           cmdFlags{method: "POST"},
 			args:            []string{"blocks.validate", "blocks=[...]"},
 			expectedCT:      "application/x-www-form-urlencoded",
 			assertNoAuth:    true,
 			bodyContains:    []string{"blocks="},
 			bodyNotContains: []string{"token="},
 		},
-		"no-auth with --data flag": {
-			flags:           cmdFlags{method: "POST", noAuth: true, data: "blocks=[...]"},
+		"no token with --data flag": {
+			flags:           cmdFlags{method: "POST", data: "blocks=[...]"},
 			args:            []string{"blocks.validate"},
 			expectedCT:      "application/x-www-form-urlencoded",
 			assertNoAuth:    true,
 			bodyEquals:      "blocks=[...]",
 			bodyNotContains: []string{"token="},
 		},
-		"no-auth with --json flag": {
-			flags:        cmdFlags{method: "POST", noAuth: true, json: `{"blocks":[]}`},
+		"no token with --json flag": {
+			flags:        cmdFlags{method: "POST", json: `{"blocks":[]}`},
 			args:         []string{"blocks.validate"},
 			expectedCT:   "application/json; charset=utf-8",
 			assertNoAuth: true,
 			bodyEquals:   `{"blocks":[]}`,
 		},
-		"no-auth with no params": {
-			flags:        cmdFlags{method: "POST", noAuth: true},
+		"no token with no params": {
+			flags:        cmdFlags{method: "POST"},
 			args:         []string{"api.test"},
 			expectedCT:   "application/x-www-form-urlencoded",
 			assertNoAuth: true,
@@ -137,7 +137,7 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			if !tc.flags.noAuth {
+			if !tc.assertNoAuth {
 				clientsMock.Config.TokenFlag = "xoxb-test-token"
 			}
 			clientsMock.Config.APIHostResolved = server.URL
@@ -592,9 +592,9 @@ func Test_resolveToken_NoTokenFound(t *testing.T) {
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	_, err := resolveToken(ctx, clients)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no token found")
+	token, err := resolveToken(ctx, clients)
+	assert.NoError(t, err)
+	assert.Empty(t, token)
 }
 
 func Test_runAPICommand_NoAuth_MutualExclusivity(t *testing.T) {

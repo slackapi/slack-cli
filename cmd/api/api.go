@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -68,8 +69,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"  2. --app flag                Install app and use bot token (in project)",
 			"  3. SLACK_BOT_TOKEN env var   Bot token (set during slack deploy)",
 			"  4. SLACK_USER_TOKEN env var  User token",
-			"  5. App prompt (in project)   Select installed app and use bot token",
+			"  5. App prompt (in project)   Select installed app or \"No app\"",
 			"",
+			"If no token is available, the request is sent without authentication.",
 			"Use --no-auth to skip authentication entirely and send the request without",
 			"a token.",
 			"",
@@ -273,8 +275,11 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 	}
 
 	if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
-		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
+		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly, prompts.WithNoAppOption())
 		if err != nil {
+			if errors.Is(err, prompts.ErrNoAppSelected) {
+				return "", nil
+			}
 			return "", err
 		}
 		if selected.App.AppID != "" {
@@ -285,9 +290,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 		}
 	}
 
-	return "", slackerror.New(slackerror.ErrNotAuthed).
-		WithMessage("no token found").
-		WithRemediation("Provide a token with --token, --app, or set SLACK_BOT_TOKEN")
+	return "", nil
 }
 
 // installAndGetBotToken installs the selected app and returns its bot token
