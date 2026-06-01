@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package project
+package apps
 
 import (
 	"context"
 	"encoding/json"
 	"path/filepath"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -26,8 +27,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-// resolveAuthForApp finds an authenticated workspace that has access to the given app ID.
-func resolveAuthForApp(ctx context.Context, clients *shared.ClientFactory, appID string) (types.SlackAuth, error) {
+// ResolveAuthForApp finds an authenticated workspace that has access to the given app ID.
+func ResolveAuthForApp(ctx context.Context, clients *shared.ClientFactory, appID string) (types.SlackAuth, error) {
 	if clients.Config.TokenFlag != "" {
 		auth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag)
 		if err != nil {
@@ -71,18 +72,50 @@ func resolveAuthForApp(ctx context.Context, clients *shared.ClientFactory, appID
 		WithRemediation("Run %s to sign in to the workspace that owns this app", style.Commandf("login", false))
 }
 
-// fetchRemoteManifest retrieves the app manifest from the platform via apps.manifest.export.
-func fetchRemoteManifest(ctx context.Context, clients *shared.ClientFactory, token string, appID string) (types.SlackYaml, error) {
+// LinkAppToProject saves the app to the project's apps JSON file.
+// The environment parameter decides local vs deployed: "local", "deployed", or
+// empty string to infer from the manifest runtime.
+func LinkAppToProject(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, appID string, manifest types.SlackYaml, environment string) error {
+	app := types.App{
+		AppID:        appID,
+		TeamID:       auth.TeamID,
+		TeamDomain:   auth.TeamDomain,
+		EnterpriseID: auth.EnterpriseID,
+	}
+
+	isDeployed := false
+	switch strings.ToLower(environment) {
+	case "deployed":
+		isDeployed = true
+	case "local":
+		isDeployed = false
+	case "":
+		isDeployed = manifest.IsFunctionRuntimeSlackHosted()
+	default:
+		return slackerror.New(slackerror.ErrMismatchedFlags).
+			WithRemediation("The --environment flag must be either 'local' or 'deployed'")
+	}
+
+	if !isDeployed {
+		app.IsDev = true
+		app.UserID = auth.UserID
+	}
+
+	return SaveAppToProject(ctx, clients, app)
+}
+
+// FetchRemoteManifest retrieves the app manifest from the platform via apps.manifest.export.
+func FetchRemoteManifest(ctx context.Context, clients *shared.ClientFactory, token string, appID string) (types.SlackYaml, error) {
 	manifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, token, appID)
 	if err != nil {
-		return types.SlackYaml{}, slackerror.New(slackerror.ErrInvalidManifest).
+		return types.SlackYaml{}, slackerror.Wrap(err, slackerror.ErrInvalidManifest).
 			WithMessage("Failed to fetch manifest for app %s", appID)
 	}
 	return manifest, nil
 }
 
-// writeManifestToProject writes the fetched manifest JSON to the project directory.
-func writeManifestToProject(fs afero.Fs, projectPath string, manifest types.SlackYaml) error {
+// WriteManifestToProject writes the fetched manifest JSON to the project directory.
+func WriteManifestToProject(fs afero.Fs, projectPath string, manifest types.SlackYaml) error {
 	manifestData, err := json.MarshalIndent(manifest.AppManifest, "", "  ")
 	if err != nil {
 		return slackerror.Wrap(err, slackerror.ErrProjectFileUpdate).
@@ -97,20 +130,28 @@ func writeManifestToProject(fs afero.Fs, projectPath string, manifest types.Slac
 	return nil
 }
 
-// linkAppToProject saves the app to the project's apps JSON file.
-// Defaults to local/dev unless the manifest explicitly uses a hosted runtime.
-func linkAppToProject(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, appID string, manifest types.SlackYaml) error {
-	app := types.App{
-		AppID:        appID,
-		TeamID:       auth.TeamID,
-		TeamDomain:   auth.TeamDomain,
-		EnterpriseID: auth.EnterpriseID,
+// SaveAppToProject writes the linked app to the project's apps JSON file,
+// checking for conflicts before saving unless --force is set.
+func SaveAppToProject(ctx context.Context, clients *shared.ClientFactory, app types.App) error {
+	deploy, err := clients.AppClient().GetDeployed(ctx, app.TeamID)
+	if err != nil {
+		return err
 	}
-
-	if manifest.IsFunctionRuntimeSlackHosted() {
-		return clients.AppClient().SaveDeployed(ctx, app)
+	local, err := clients.AppClient().GetLocal(ctx, app.TeamID)
+	if err != nil {
+		return err
 	}
-	app.IsDev = true
-	app.UserID = auth.UserID
-	return clients.AppClient().SaveLocal(ctx, app)
+	switch app.IsDev {
+	case true:
+		if clients.Config.ForceFlag || (local.IsNew() && deploy.AppID != app.AppID) {
+			return clients.AppClient().SaveLocal(ctx, app)
+		}
+	case false:
+		if clients.Config.ForceFlag || (deploy.IsNew() && local.AppID != app.AppID) {
+			return clients.AppClient().SaveDeployed(ctx, app)
+		}
+	}
+	return slackerror.New(slackerror.ErrAppFound).
+		WithMessage("A saved app was found and cannot be overwritten").
+		WithRemediation("Remove the app from this project or try again with %s", style.Bold("--force"))
 }
