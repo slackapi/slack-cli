@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -277,7 +276,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 	if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
 		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly, prompts.WithNoAppOption())
 		if err != nil {
-			if errors.Is(err, prompts.ErrNoAppSelected) {
+			if slackerror.Is(err, slackerror.ErrNoAppSelected) {
 				return "", nil
 			}
 			return "", err

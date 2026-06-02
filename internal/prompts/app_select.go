@@ -91,9 +91,6 @@ var appTransferDisclaimer = style.TextSection{
 	},
 }
 
-// ErrNoAppSelected is returned when the user selects "No app" in the prompt
-var ErrNoAppSelected = fmt.Errorf("no app selected")
-
 // AppSelectOption configures optional behavior of AppSelectPrompt
 type AppSelectOption func(*appSelectConfig)
 
@@ -648,7 +645,7 @@ func AppSelectPrompt(
 	creation := style.Secondary("Create a new app")
 	switch {
 	case selection.Prompt && options[selection.Index].label == noApp:
-		return SelectedApp{}, ErrNoAppSelected
+		return SelectedApp{}, slackerror.New(slackerror.ErrNoAppSelected)
 	case selection.Prompt && options[selection.Index].label != creation:
 		return options[selection.Index].app, nil
 	case selection.Prompt && options[selection.Index].label == creation:
