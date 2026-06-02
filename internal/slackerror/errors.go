@@ -355,8 +355,11 @@ var ErrorCodeMap = map[string]Error{
 			ErrorDetail{Message: "Deployment to Slack is currently supported for apps written with the Deno Slack SDK."},
 		},
 		Remediation: fmt.Sprintf(`Learn about building apps with the Deno Slack SDK:
+
 https://docs.slack.dev/tools/deno-slack-sdk
+
 If you are using a Bolt framework, add a deploy hook then run: %s
+
 Otherwise start your app for local development with: %s`,
 			style.Commandf("deploy", true),
 			style.Commandf("run", true),
