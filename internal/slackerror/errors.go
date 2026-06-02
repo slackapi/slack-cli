@@ -198,6 +198,7 @@ const (
 	ErrNotAuthed                                     = "not_authed"
 	ErrNotBearerToken                                = "not_bearer_token"
 	ErrNotFound                                      = "not_found"
+	ErrNoAppSelected                                 = "no_app_selected"
 	ErrNoFile                                        = "no_file"
 	ErrNoPendingRequest                              = "no_pending_request"
 	ErrNoPermission                                  = "no_permission"
@@ -1239,6 +1240,11 @@ Otherwise start your app for local development with: %s`,
 	ErrNotFound: {
 		Code:    ErrNotFound,
 		Message: "Couldn't find row",
+	},
+
+	ErrNoAppSelected: {
+		Code:    ErrNoAppSelected,
+		Message: "No app selected",
 	},
 
 	ErrNoFile: {

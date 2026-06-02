@@ -40,6 +40,7 @@ type cmdFlags struct {
 	data    string
 	headers []string
 	include bool
+	noAuth  bool
 }
 
 var flags cmdFlags
@@ -67,7 +68,11 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"  2. --app flag                Install app and use bot token (in project)",
 			"  3. SLACK_BOT_TOKEN env var   Bot token (set during slack deploy)",
 			"  4. SLACK_USER_TOKEN env var  User token",
-			"  5. App prompt (in project)   Select installed app and use bot token",
+			"  5. App prompt (in project)   Select installed app or \"No app\"",
+			"",
+			"If no token is available, the request is sent without authentication.",
+			"Use --no-auth to skip authentication entirely and send the request without",
+			"a token.",
 			"",
 			"See all methods at: https://docs.slack.dev/reference/methods",
 		}, "\n"),
@@ -90,6 +95,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "api users.info user=U0123456", Meaning: "Get user details"},
 			{Command: "api users.list", Meaning: "List workspace members"},
 			{Command: "api users.profile.get user=U0123456", Meaning: "Get a user's profile"},
+			{Command: `api blocks.validate --no-auth blocks='[{"type":"section","text":{"type":"mrkdwn","text":"Hello"}}]'`, Meaning: "Validate Block Kit blocks (no auth required)"},
 			{Command: "api views.open trigger_id=T0123456 view={...}", Meaning: "Open a modal view"},
 			{Command: "api views.update view_id=V0123456 view={...}", Meaning: "Update a modal view"},
 		}),
@@ -108,6 +114,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&flags.data, "data", "", "form-encoded request body string (e.g. \"key1=val1&key2=val2\")")
 	cmd.Flags().StringSliceVarP(&flags.headers, "header", "H", nil, "additional HTTP headers (format: \"Key: Value\")")
 	cmd.Flags().BoolVarP(&flags.include, "include", "i", false, "include HTTP status code and response headers in output")
+	cmd.Flags().BoolVar(&flags.noAuth, "no-auth", false, "skip authentication (send request without a token)")
 	cmd.MarkFlagsMutuallyExclusive("json", "data")
 
 	return cmd
@@ -119,9 +126,18 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	method := args[0]
 	params := args[1:]
 
-	token, err := resolveToken(ctx, clients)
-	if err != nil {
-		return err
+	if flags.noAuth && (clients.Config.TokenFlag != "" || clients.Config.AppFlag != "") {
+		return slackerror.New(slackerror.ErrMismatchedFlags).
+			WithMessage("--no-auth cannot be used with --token or --app")
+	}
+
+	var token = ""
+	if !flags.noAuth {
+		var err error
+		token, err = resolveToken(ctx, clients)
+		if err != nil {
+			return err
+		}
 	}
 
 	apiHost := clients.Config.APIHostResolved
@@ -142,7 +158,7 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	case flags.data != "":
 		contentType = "application/x-www-form-urlencoded"
 		formData := flags.data
-		if !strings.Contains(formData, "token=") {
+		if token != "" && !strings.Contains(formData, "token=") {
 			if formData != "" {
 				formData = formData + "&token=" + url.QueryEscape(token)
 			} else {
@@ -157,7 +173,9 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	case len(params) > 0:
 		contentType = "application/x-www-form-urlencoded"
 		values := url.Values{}
-		values.Set("token", token)
+		if token != "" {
+			values.Set("token", token)
+		}
 		for _, param := range params {
 			key, value, ok := strings.Cut(param, "=")
 			if !ok {
@@ -171,7 +189,9 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	default:
 		contentType = "application/x-www-form-urlencoded"
 		values := url.Values{}
-		values.Set("token", token)
+		if token != "" {
+			values.Set("token", token)
+		}
 		bodyReader = strings.NewReader(values.Encode())
 		token = ""
 	}
@@ -254,8 +274,11 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 	}
 
 	if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
-		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
+		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly, prompts.WithNoAppOption())
 		if err != nil {
+			if slackerror.Is(err, slackerror.ErrNoAppSelected) {
+				return "", nil
+			}
 			return "", err
 		}
 		if selected.App.AppID != "" {
@@ -266,9 +289,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 		}
 	}
 
-	return "", slackerror.New(slackerror.ErrNotAuthed).
-		WithMessage("no token found").
-		WithRemediation("Provide a token with --token, --app, or set SLACK_BOT_TOKEN")
+	return "", nil
 }
 
 // installAndGetBotToken installs the selected app and returns its bot token
