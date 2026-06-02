@@ -25,6 +25,7 @@ import (
 	apicmd "github.com/slackapi/slack-cli/cmd/api"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
+	"github.com/slackapi/slack-cli/cmd/blocks"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
 	"github.com/slackapi/slack-cli/cmd/datastore"
 	"github.com/slackapi/slack-cli/cmd/docgen"
@@ -164,6 +165,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		apicmd.NewCommand(clients),
 		app.NewCommand(clients),
 		auth.NewCommand(clients),
+		blocks.NewCommand(clients),
 		collaborators.NewCommand(clients),
 		datastore.NewCommand(clients),
 		docgen.NewCommand(clients),

@@ -60,6 +60,7 @@ const (
 	ErrAuthTimeout                                   = "auth_timeout_error"
 	ErrAuthToken                                     = "auth_token_error"
 	ErrAuthVerification                              = "auth_verification_error"
+	ErrBlocksPreview                                 = "blocks_preview_error"
 	ErrBotInviteRequired                             = "bot_invite_required" // Slack API error code
 	ErrCannotAbandonApp                              = "cannot_abandon_app"
 	ErrCannotAddOwner                                = "cannot_add_owner"
@@ -534,6 +535,11 @@ Otherwise start your app for local development with: %s`,
 	ErrAuthVerification: {
 		Code:    ErrAuthVerification,
 		Message: "Couldn't verify your authorization",
+	},
+
+	ErrBlocksPreview: {
+		Code:    ErrBlocksPreview,
+		Message: "An error occurred during blocks preview",
 	},
 
 	ErrBotInviteRequired: {
