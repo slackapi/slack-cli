@@ -108,7 +108,7 @@ func runDocGenCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		return slackerror.New(slackerror.ErrDocumentationGenerationFailed).WithRootCause(err)
 	}
 
-	// Generate errors reference
+	// Generate errors reference sorted alphabetically by error code
 	file, err := clients.Fs.Create(filepath.Join(docsDirPath, "errors.md"))
 	if err != nil {
 		return err
@@ -118,7 +118,14 @@ func runDocGenCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, slackerror.ErrorCodeMap)
+	sortedErrors := make([]slackerror.Error, 0, len(slackerror.ErrorCodeMap))
+	for _, e := range slackerror.ErrorCodeMap {
+		sortedErrors = append(sortedErrors, e)
+	}
+	slices.SortFunc(sortedErrors, func(a, b slackerror.Error) int {
+		return strings.Compare(a.Code, b.Code)
+	})
+	err = tmpl.Execute(file, sortedErrors)
 	if err != nil {
 		return err
 	}
