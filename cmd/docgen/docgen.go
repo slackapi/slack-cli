@@ -118,14 +118,14 @@ func runDocGenCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 	if err != nil {
 		return err
 	}
-	sortedErrors := make([]slackerror.Error, 0, len(slackerror.ErrorCodeMap))
+	errors := make([]slackerror.Error, 0, len(slackerror.ErrorCodeMap))
 	for _, e := range slackerror.ErrorCodeMap {
-		sortedErrors = append(sortedErrors, e)
+		errors = append(errors, e)
 	}
-	slices.SortFunc(sortedErrors, func(a, b slackerror.Error) int {
+	slices.SortFunc(errors, func(a, b slackerror.Error) int {
 		return strings.Compare(a.Code, b.Code)
 	})
-	err = tmpl.Execute(file, sortedErrors)
+	err = tmpl.Execute(file, errors)
 	if err != nil {
 		return err
 	}
