@@ -21,7 +21,11 @@ Token resolution (in priority order):
   2. --app flag                Install app and use bot token (in project)
   3. SLACK_BOT_TOKEN env var   Bot token (set during slack deploy)
   4. SLACK_USER_TOKEN env var  User token
-  5. App prompt (in project)   Select installed app and use bot token
+  5. App prompt (in project)   Select installed app or "No app"
+
+If no token is available, the request is sent without authentication.
+Use --no-auth to skip authentication entirely and send the request without
+a token.
 
 See all methods at: https://docs.slack.dev/reference/methods
 
@@ -38,6 +42,7 @@ slack api <method> [key=value ...] [flags]
   -i, --include          include HTTP status code and response headers in output
       --json string      JSON request body (uses Bearer token in Authorization header)
   -X, --method string    HTTP method for the request (default "POST")
+      --no-auth          skip authentication (send request without a token)
 ```
 
 ## Global flags
@@ -111,6 +116,9 @@ $ slack api users.list
 
 # Get a user's profile
 $ slack api users.profile.get user=U0123456
+
+# Validate Block Kit blocks (no auth required)
+$ slack api blocks.validate --no-auth blocks='[{"type":"section","text":{"type":"mrkdwn","text":"Hello"}}]'
 
 # Open a modal view
 $ slack api views.open trigger_id=T0123456 view={...}
