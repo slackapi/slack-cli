@@ -105,26 +105,36 @@ func TestConfirmForm(t *testing.T) {
 		assert.Contains(t, view, "No")
 	})
 
-	t.Run("default value is respected", func(t *testing.T) {
+	t.Run("default true starts on Yes", func(t *testing.T) {
 		choice := true
 		f := buildConfirmForm(nil, "Continue?", &choice)
 		f.Update(f.Init())
 
-		assert.True(t, choice)
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, style.Chevron()+" Yes")
 	})
 
-	t.Run("arrow keys change selection", func(t *testing.T) {
+	t.Run("default false starts on No", func(t *testing.T) {
 		choice := false
 		f := buildConfirmForm(nil, "Continue?", &choice)
 		f.Update(f.Init())
 
-		// Move down to Yes
-		f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
-		assert.True(t, choice)
+		view := ansi.Strip(f.View())
+		assert.Contains(t, view, style.Chevron()+" No")
+	})
 
-		// Move back up to No
-		f.Update(tea.KeyPressMsg{Code: tea.KeyUp})
+	t.Run("arrow keys change selection", func(t *testing.T) {
+		choice := true
+		f := buildConfirmForm(nil, "Continue?", &choice)
+		f.Update(f.Init())
+
+		// Move down to No
+		f.Update(tea.KeyPressMsg{Code: tea.KeyDown})
 		assert.False(t, choice)
+
+		// Move back up to Yes
+		f.Update(tea.KeyPressMsg{Code: tea.KeyUp})
+		assert.True(t, choice)
 	})
 }
 
