@@ -225,6 +225,8 @@ func (u *UpdateNotification) isCI() bool {
 func (u *UpdateNotification) isIgnoredCommand() bool {
 	// "manifest" is included because it's an alias that runs "manifest info"
 	ignoredCommands := []string{"_fingerprint", "api", "manifest", "manifest info", "version"}
+	// Commands that should skip update checks regardless of arguments
+	ignoredWithArgs := []string{"api"}
 	if len(os.Args) < 2 {
 		return false
 	}
@@ -244,6 +246,11 @@ func (u *UpdateNotification) isIgnoredCommand() bool {
 			if strings.Contains(ignored, " ") {
 				return true
 			}
+		}
+	}
+	for _, ignored := range ignoredWithArgs {
+		if strings.HasPrefix(commandStr, ignored+" ") || commandStr == ignored {
+			return true
 		}
 	}
 	return false
