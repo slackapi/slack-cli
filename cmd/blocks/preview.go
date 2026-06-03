@@ -47,6 +47,11 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 					WithMessage("Team ID is required").
 					WithRemediation("Provide a team ID with --team <team_id>")
 			}
+			if outputFlag == "" {
+				return slackerror.New(slackerror.ErrBlocksPreview).
+					WithMessage("Output file path is required").
+					WithRemediation("Provide an output path with --output <file_path>")
+			}
 
 			filePath, err := blocks.Preview(ctx, clients, teamID, args[0], outputFlag)
 			if err != nil {
@@ -58,7 +63,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&teamID, "team", "", "team ID for Block Kit Builder (required)")
-	cmd.Flags().StringVarP(&outputFlag, "output", "o", "", "file path to save the screenshot image (omit to print a data URI to stdout)")
+	cmd.Flags().StringVarP(&outputFlag, "output", "o", "", "file path to save the screenshot image (required)")
 
 	return cmd
 }

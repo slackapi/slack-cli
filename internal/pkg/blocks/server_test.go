@@ -279,63 +279,6 @@ func Test_Preview_Success(t *testing.T) {
 	assert.Equal(t, fakePNG, data)
 }
 
-func Test_Preview_DataURI(t *testing.T) {
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-	blocksJSON := `{"blocks":[{"type":"section","text":{"type":"mrkdwn","text":"Hello"}}]}`
-	teamID := "T0123456789"
-	fakePNG := []byte{0x89, 0x50, 0x4E, 0x47}
-
-	clientsMock.Browser.ExpectedCalls = nil
-	clientsMock.Browser.On("OpenURL", mock.Anything).Run(func(args mock.Arguments) {
-		openedURL := args.Get(0).(string)
-
-		go func() {
-			time.Sleep(50 * time.Millisecond)
-			portStr := extractWSPort(openedURL)
-			wsURL := fmt.Sprintf("ws://127.0.0.1:%s/", portStr)
-			conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
-			if err != nil {
-				return
-			}
-			defer conn.Close()
-
-			cp, _ := json.Marshal(connectedPayload{Version: "1.0.0"})
-			connMsg, _ := json.Marshal(wsMessage{Type: "CONNECTED", Payload: cp})
-			_ = conn.WriteMessage(websocket.TextMessage, connMsg)
-
-			_, _, _ = conn.ReadMessage()
-
-			bup, _ := json.Marshal(blocksUpdatedPayload{JSON: blocksJSON, Success: true})
-			updatedMsg, _ := json.Marshal(wsMessage{Type: "BLOCKS_UPDATED", Payload: bup})
-			_ = conn.WriteMessage(websocket.TextMessage, updatedMsg)
-
-			_, _, _ = conn.ReadMessage()
-
-			payload, _ := json.Marshal(screenshotPayload{
-				Image:  base64.StdEncoding.EncodeToString(fakePNG),
-				Width:  620,
-				Height: 400,
-			})
-			resp, _ := json.Marshal(wsMessage{Type: "SCREENSHOT", Payload: payload})
-			_ = conn.WriteMessage(websocket.TextMessage, resp)
-		}()
-	}).Return()
-
-	ctx := t.Context()
-	result, err := Preview(ctx, clients, teamID, blocksJSON, "")
-
-	assert.NoError(t, err)
-	assert.True(t, strings.HasPrefix(result, "data:image/png;base64,"))
-
-	encoded := strings.TrimPrefix(result, "data:image/png;base64,")
-	decoded, err := base64.StdEncoding.DecodeString(encoded)
-	assert.NoError(t, err)
-	assert.Equal(t, fakePNG, decoded)
-}
-
 func Test_Preview_ErrorResponse(t *testing.T) {
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()

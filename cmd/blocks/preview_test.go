@@ -106,30 +106,19 @@ func Test_PreviewCommand_OutputFlag(t *testing.T) {
 	assert.Contains(t, output, customOutput)
 }
 
-func Test_PreviewCommand_Success(t *testing.T) {
+func Test_PreviewCommand_MissingOutputFlag(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	blocksJSON := `{"blocks":[]}`
-	fakePNG := []byte{0x89, 0x50, 0x4E, 0x47}
-
-	clientsMock.Browser.ExpectedCalls = nil
-	clientsMock.Browser.On("OpenURL", mock.Anything).Run(func(args mock.Arguments) {
-		openedURL := args.Get(0).(string)
-		go simulateBlockKitBuilder(openedURL, blocksJSON, fakePNG)
-	}).Return()
-
 	cmd := NewCommand(clients)
-	cmd.SetArgs([]string{"preview", "--team", "T0123456789", blocksJSON})
+	cmd.SetArgs([]string{"preview", "--team", "T0123456789", `{"blocks":[]}`})
 	testutil.MockCmdIO(clients.IO, cmd)
 
 	err := cmd.ExecuteContext(ctx)
-	assert.NoError(t, err)
-
-	output := clientsMock.GetCombinedOutput()
-	assert.Contains(t, output, "data:image/png;base64,")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Output file path is required")
 }
 
 func simulateBlockKitBuilder(openedURL string, blocksJSON string, imageBytes []byte) {
