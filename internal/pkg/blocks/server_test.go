@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -38,6 +39,7 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 		port       int
 		blocksJSON string
 		expected   []string
+		wantErr    bool
 	}{
 		"constructs correct URL": {
 			teamID:     "T0123456789",
@@ -49,13 +51,69 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 				"%7B%22blocks%22:%5B%5D%7D",
 			},
 		},
+		"compacts whitespace from JSON": {
+			teamID:     "T0123456789",
+			port:       8080,
+			blocksJSON: "{\n  \"blocks\": []\n}",
+			expected: []string{
+				"ws_port=8080",
+				"%7B%22blocks%22:%5B%5D%7D",
+			},
+		},
+		"returns error for invalid JSON": {
+			teamID:     "T0123456789",
+			port:       8080,
+			blocksJSON: "{not json}",
+			wantErr:    true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := buildBlockKitBuilderURL(tc.teamID, tc.port, tc.blocksJSON)
+			result, err := buildBlockKitBuilderURL(tc.teamID, tc.port, tc.blocksJSON)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
 			for _, exp := range tc.expected {
 				assert.Contains(t, result, exp)
 			}
+		})
+	}
+}
+
+func Test_compactBlocksPayload(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+		wantErr  bool
+	}{
+		"already compact": {
+			input:    `{"blocks":[]}`,
+			expected: `{"blocks":[]}`,
+		},
+		"removes whitespace": {
+			input:    "{\n  \"blocks\": [\n    {\n      \"type\": \"section\"\n    }\n  ]\n}",
+			expected: `{"blocks":[{"type":"section"}]}`,
+		},
+		"invalid JSON returns error": {
+			input:   "{not valid",
+			wantErr: true,
+		},
+		"empty string returns error": {
+			input:   "",
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := compactBlocksPayload(tc.input)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }
@@ -73,7 +131,7 @@ func Test_Preview_ConnectionTimeout(t *testing.T) {
 	defer func() { connectionTimeout = originalTimeout }()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`)
+	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Timed out")
@@ -90,7 +148,7 @@ func Test_Preview_ContextCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	_, err := Preview(ctx, clients, "T0123456789", `{}`)
+	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
 	assert.Error(t, err)
 }
 
@@ -106,7 +164,7 @@ func Test_Preview_ListenError(t *testing.T) {
 	defer func() { netListen = originalListen }()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`)
+	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "bind failed")
@@ -180,12 +238,11 @@ func Test_Preview_Success(t *testing.T) {
 	}).Return()
 
 	ctx := t.Context()
-	filePath, err := Preview(ctx, clients, teamID, blocksJSON)
+	outputPath := filepath.Join(slackdeps.MockHomeDirectory, ".slack", "previews", "blocks-preview.png")
+	filePath, err := Preview(ctx, clients, teamID, blocksJSON, outputPath)
 
 	assert.NoError(t, err)
-	assert.Contains(t, filePath, "blocks-preview-")
-	assert.Contains(t, filePath, ".png")
-	assert.True(t, strings.HasPrefix(filePath, slackdeps.MockWorkingDirectory))
+	assert.Equal(t, outputPath, filePath)
 
 	data, err := afero.ReadFile(clients.Fs, filePath)
 	assert.NoError(t, err)
@@ -241,7 +298,7 @@ func Test_Preview_ErrorResponse(t *testing.T) {
 	}).Return()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`)
+	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Preview card element not found")
@@ -290,7 +347,7 @@ func Test_Preview_ResponseTimeout(t *testing.T) {
 	defer func() { responseTimeout = originalTimeout }()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`)
+	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Timed out waiting for screenshot")

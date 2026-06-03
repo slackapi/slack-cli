@@ -15,6 +15,7 @@
 package blocks
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -101,7 +102,7 @@ func readWSMessage(conn *websocket.Conn, timeout time.Duration) (wsMessage, erro
 	}
 }
 
-func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, blocksJSON string) (string, error) {
+func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, blocksJSON string, outputPath string) (string, error) {
 	listener, err := netListen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
@@ -126,7 +127,10 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	go func() { _ = server.Serve(listener) }()
 	defer func() { _ = server.Shutdown(context.Background()) }()
 
-	builderURL := buildBlockKitBuilderURL(teamID, port, blocksJSON)
+	builderURL, err := buildBlockKitBuilderURL(teamID, port, blocksJSON)
+	if err != nil {
+		return "", err
+	}
 	clients.IO.PrintDebug(ctx, "Opening Block Kit Builder: %s", builderURL)
 	clients.IO.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
 	clients.Browser().OpenURL(builderURL)
@@ -231,11 +235,9 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
 
-	wd, err := clients.Os.Getwd()
-	if err != nil {
+	if err := clients.Fs.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
-	outputPath := filepath.Join(wd, fmt.Sprintf("blocks-preview-%d.png", time.Now().Unix()))
 	if err := afero.WriteFile(clients.Fs, outputPath, imageBytes, 0644); err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
@@ -244,12 +246,24 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	return outputPath, nil
 }
 
-func buildBlockKitBuilderURL(teamID string, port int, blocksJSON string) string {
+func compactBlocksPayload(blocksJSON string) (string, error) {
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, []byte(blocksJSON)); err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocksJSON)
+	}
+	return buf.String(), nil
+}
+
+func buildBlockKitBuilderURL(teamID string, port int, blocksJSON string) (string, error) {
+	compacted, err := compactBlocksPayload(blocksJSON)
+	if err != nil {
+		return "", err
+	}
 	base := fmt.Sprintf(blockKitBuilderURLTemplate, teamID)
 	u, _ := url.Parse(base)
 	q := u.Query()
 	q.Set("ws_port", fmt.Sprintf("%d", port))
 	u.RawQuery = q.Encode()
-	u.Fragment = blocksJSON
-	return u.String()
+	u.Fragment = compacted
+	return u.String(), nil
 }

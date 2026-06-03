@@ -15,6 +15,8 @@
 package blocks
 
 import (
+	"path/filepath"
+
 	"github.com/slackapi/slack-cli/internal/pkg/blocks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -23,8 +25,10 @@ import (
 
 func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	var teamID string
+	var outputFlag string
 
 	cmd := &cobra.Command{
+		// TODO: accept blocks JSON from stdin pipe (e.g. echo '{"blocks":[...]}' | slack blocks preview --team T123)
 		Use:   "preview <blocks-json>",
 		Short: "Preview Block Kit blocks in the Block Kit Builder",
 		Args:  cobra.ExactArgs(1),
@@ -35,16 +39,29 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 					WithMessage("Team ID is required").
 					WithRemediation("Provide a team ID with --team <team_id>")
 			}
-			filePath, err := blocks.Preview(ctx, clients, teamID, args[0])
+
+			var outputPath string
+			if outputFlag != "" {
+				outputPath = outputFlag
+			} else {
+				configDir, err := clients.Config.SystemConfig.SlackConfigDir(ctx)
+				if err != nil {
+					return slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+				}
+				outputPath = filepath.Join(configDir, "previews", "blocks-preview.png")
+			}
+
+			filePath, err := blocks.Preview(ctx, clients, teamID, args[0], outputPath)
 			if err != nil {
 				return err
 			}
-			clients.IO.PrintInfo(ctx, false, "%s", filePath)
+			cmd.Println(filePath)
 			return nil
 		},
 	}
 
 	cmd.Flags().StringVar(&teamID, "team", "", "team ID for Block Kit Builder (required)")
+	cmd.Flags().StringVarP(&outputFlag, "output", "o", "", "file path to save the screenshot image")
 
 	return cmd
 }

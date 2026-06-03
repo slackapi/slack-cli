@@ -141,6 +141,7 @@ const (
 	ErrInvalidArgumentsCustomizableInputs            = "invalid_arguments_customizable_inputs"
 	ErrInvalidArguments                              = "invalid_arguments"
 	ErrInvalidAuth                                   = "invalid_auth"
+	ErrInvalidBlocksJSON                             = "invalid_blocks_json"
 	ErrInvalidChallenge                              = "invalid_challenge"
 	ErrInvalidChannelID                              = "invalid_channel_id"
 	ErrInvalidCursor                                 = "invalid_cursor"
@@ -941,6 +942,11 @@ Otherwise start your app for local development with: %s`,
 			"Your user account authorization may be expired or does not have permission to access the resource. Try to login to the same user account again using %s.",
 			style.Commandf("login", false),
 		),
+	},
+
+	ErrInvalidBlocksJSON: {
+		Code:    ErrInvalidBlocksJSON,
+		Message: "The provided blocks JSON is invalid",
 	},
 
 	ErrInvalidChallenge: {
