@@ -39,7 +39,6 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 		port       int
 		blocksJSON string
 		expected   []string
-		wantErr    bool
 	}{
 		"constructs correct URL": {
 			teamID:     "T0123456789",
@@ -51,99 +50,21 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 				"%7B%22blocks%22:%5B%5D%7D",
 			},
 		},
-		"compacts whitespace from JSON": {
+		"includes port in query string": {
 			teamID:     "T0123456789",
 			port:       8080,
-			blocksJSON: "{\n  \"blocks\": []\n}",
+			blocksJSON: `{"blocks":[{"type":"section"}]}`,
 			expected: []string{
 				"ws_port=8080",
-				"%7B%22blocks%22:%5B%5D%7D",
 			},
-		},
-		"returns error for invalid JSON": {
-			teamID:     "T0123456789",
-			port:       8080,
-			blocksJSON: "{not json}",
-			wantErr:    true,
-		},
-		"returns error for JSON missing blocks key": {
-			teamID:     "T0123456789",
-			port:       8080,
-			blocksJSON: `{"type":"section"}`,
-			wantErr:    true,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := buildBlockKitBuilderURL(tc.teamID, tc.port, tc.blocksJSON)
-			if tc.wantErr {
-				assert.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
+			result := buildBlockKitBuilderURL(tc.teamID, tc.port, tc.blocksJSON)
 			for _, exp := range tc.expected {
 				assert.Contains(t, result, exp)
 			}
-		})
-	}
-}
-
-func Test_compactBlocksPayload(t *testing.T) {
-	tests := map[string]struct {
-		input    string
-		expected string
-		wantErr  bool
-	}{
-		"already compact": {
-			input:    `{"blocks":[]}`,
-			expected: `{"blocks":[]}`,
-		},
-		"removes whitespace": {
-			input:    "{\n  \"blocks\": [\n    {\n      \"type\": \"section\"\n    }\n  ]\n}",
-			expected: `{"blocks":[{"type":"section"}]}`,
-		},
-		"invalid JSON returns error": {
-			input:   "{not valid",
-			wantErr: true,
-		},
-		"empty string returns error": {
-			input:   "",
-			wantErr: true,
-		},
-		"missing blocks key returns error": {
-			input:   `{"type":"section"}`,
-			wantErr: true,
-		},
-		"blocks field is not an array returns error": {
-			input:   `{"blocks":"hello"}`,
-			wantErr: true,
-		},
-		"blocks field is an object returns error": {
-			input:   `{"blocks":{}}`,
-			wantErr: true,
-		},
-		"blocks field is null returns error": {
-			input:   `{"blocks":null}`,
-			wantErr: true,
-		},
-		"top-level array returns error": {
-			input:   `[{"type":"section"}]`,
-			wantErr: true,
-		},
-		"extra fields alongside blocks is valid": {
-			input:    `{"blocks":[],"metadata":"x"}`,
-			expected: `{"blocks":[],"metadata":"x"}`,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result, err := compactBlocksPayload(tc.input)
-			if tc.wantErr {
-				assert.Error(t, err)
-				return
-			}
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expected, result)
 		})
 	}
 }
@@ -230,22 +151,8 @@ func Test_Preview_Success(t *testing.T) {
 			connMsg, _ := json.Marshal(wsMessage{Type: "CONNECTED", Payload: cp})
 			_ = conn.WriteMessage(websocket.TextMessage, connMsg)
 
-			// Read SET_BLOCKS
-			_, data, err := conn.ReadMessage()
-			if err != nil {
-				return
-			}
-			var setBlocks wsMessage
-			_ = json.Unmarshal(data, &setBlocks)
-			assert.Equal(t, "SET_BLOCKS", setBlocks.Type)
-
-			// Send BLOCKS_UPDATED
-			bup, _ := json.Marshal(blocksUpdatedPayload{JSON: blocksJSON, Success: true})
-			updatedMsg, _ := json.Marshal(wsMessage{Type: "BLOCKS_UPDATED", Payload: bup})
-			_ = conn.WriteMessage(websocket.TextMessage, updatedMsg)
-
 			// Read REQUEST_SCREENSHOT
-			_, data, err = conn.ReadMessage()
+			_, data, err := conn.ReadMessage()
 			if err != nil {
 				return
 			}
@@ -303,14 +210,6 @@ func Test_Preview_ErrorResponse(t *testing.T) {
 			connMsg, _ := json.Marshal(wsMessage{Type: "CONNECTED", Payload: cp})
 			_ = conn.WriteMessage(websocket.TextMessage, connMsg)
 
-			// Read SET_BLOCKS
-			_, _, _ = conn.ReadMessage()
-
-			// Send BLOCKS_UPDATED
-			bup, _ := json.Marshal(blocksUpdatedPayload{JSON: "{}", Success: true})
-			updatedMsg, _ := json.Marshal(wsMessage{Type: "BLOCKS_UPDATED", Payload: bup})
-			_ = conn.WriteMessage(websocket.TextMessage, updatedMsg)
-
 			// Read REQUEST_SCREENSHOT
 			_, _, _ = conn.ReadMessage()
 
@@ -357,14 +256,6 @@ func Test_Preview_ResponseTimeout(t *testing.T) {
 			cp, _ := json.Marshal(connectedPayload{Version: "1.0.0"})
 			connMsg, _ := json.Marshal(wsMessage{Type: "CONNECTED", Payload: cp})
 			_ = conn.WriteMessage(websocket.TextMessage, connMsg)
-
-			// Read SET_BLOCKS
-			_, _, _ = conn.ReadMessage()
-
-			// Send BLOCKS_UPDATED
-			bup, _ := json.Marshal(blocksUpdatedPayload{JSON: "{}", Success: true})
-			updatedMsg, _ := json.Marshal(wsMessage{Type: "BLOCKS_UPDATED", Payload: bup})
-			_ = conn.WriteMessage(websocket.TextMessage, updatedMsg)
 
 			// Read REQUEST_SCREENSHOT but never respond
 			_, _, _ = conn.ReadMessage()

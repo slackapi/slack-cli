@@ -49,19 +49,64 @@ func Test_NewPreviewCommand(t *testing.T) {
 	assert.Equal(t, "preview", cmd.Name())
 }
 
-func Test_PreviewCommand_MissingArg(t *testing.T) {
+func Test_PreviewCommand_MissingInput(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 	cmd := NewCommand(clients)
-	cmd.SetArgs([]string{"preview", "--team", "T0123456789"})
+	cmd.SetArgs([]string{"preview", "--team", "T0123456789", "--output", "/tmp/out.png"})
 	testutil.MockCmdIO(clients.IO, cmd)
 
 	err := cmd.ExecuteContext(ctx)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "accepts 1 arg(s)")
+	assert.Contains(t, err.Error(), "No blocks JSON provided")
+}
+
+func Test_PreviewCommand_InvalidJSON(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	clientsMock.IO.Stdin = strings.NewReader("{not valid json")
+
+	cmd := NewCommand(clients)
+	cmd.SetArgs([]string{"preview", "--team", "T0123456789", "--output", "/tmp/out.png"})
+	testutil.MockCmdIO(clients.IO, cmd)
+
+	err := cmd.ExecuteContext(ctx)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "looking for beginning of object key string")
+}
+
+func Test_PreviewCommand_Stdin(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	blocksJSON := `{"blocks":[]}`
+	fakePNG := []byte{0x89, 0x50, 0x4E, 0x47}
+	customOutput := "/tmp/stdin-preview.png"
+
+	clientsMock.IO.Stdin = strings.NewReader(blocksJSON)
+	clientsMock.Browser.ExpectedCalls = nil
+	clientsMock.Browser.On("OpenURL", mock.Anything).Run(func(args mock.Arguments) {
+		openedURL := args.Get(0).(string)
+		go simulateBlockKitBuilder(openedURL, blocksJSON, fakePNG)
+	}).Return()
+
+	cmd := NewCommand(clients)
+	cmd.SetArgs([]string{"preview", "--team", "T0123456789", "--output", customOutput})
+	testutil.MockCmdIO(clients.IO, cmd)
+
+	err := cmd.ExecuteContext(ctx)
+	assert.NoError(t, err)
+
+	output := clientsMock.GetCombinedOutput()
+	assert.Contains(t, output, customOutput)
 }
 
 func Test_PreviewCommand_MissingTeamFlag(t *testing.T) {
@@ -70,8 +115,10 @@ func Test_PreviewCommand_MissingTeamFlag(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+	clientsMock.IO.Stdin = strings.NewReader(`{"blocks":[]}`)
+
 	cmd := NewCommand(clients)
-	cmd.SetArgs([]string{"preview", `{"blocks":[]}`})
+	cmd.SetArgs([]string{"preview"})
 	testutil.MockCmdIO(clients.IO, cmd)
 
 	err := cmd.ExecuteContext(ctx)
@@ -89,6 +136,7 @@ func Test_PreviewCommand_OutputFlag(t *testing.T) {
 	fakePNG := []byte{0x89, 0x50, 0x4E, 0x47}
 	customOutput := "/tmp/my-preview.png"
 
+	clientsMock.IO.Stdin = strings.NewReader(blocksJSON)
 	clientsMock.Browser.ExpectedCalls = nil
 	clientsMock.Browser.On("OpenURL", mock.Anything).Run(func(args mock.Arguments) {
 		openedURL := args.Get(0).(string)
@@ -96,7 +144,7 @@ func Test_PreviewCommand_OutputFlag(t *testing.T) {
 	}).Return()
 
 	cmd := NewCommand(clients)
-	cmd.SetArgs([]string{"preview", "--team", "T0123456789", "--output", customOutput, blocksJSON})
+	cmd.SetArgs([]string{"preview", "--team", "T0123456789", "--output", customOutput})
 	testutil.MockCmdIO(clients.IO, cmd)
 
 	err := cmd.ExecuteContext(ctx)
@@ -112,8 +160,10 @@ func Test_PreviewCommand_MissingOutputFlag(t *testing.T) {
 	clientsMock.AddDefaultMocks()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
+	clientsMock.IO.Stdin = strings.NewReader(`{"blocks":[]}`)
+
 	cmd := NewCommand(clients)
-	cmd.SetArgs([]string{"preview", "--team", "T0123456789", `{"blocks":[]}`})
+	cmd.SetArgs([]string{"preview", "--team", "T0123456789"})
 	testutil.MockCmdIO(clients.IO, cmd)
 
 	err := cmd.ExecuteContext(ctx)
@@ -121,7 +171,90 @@ func Test_PreviewCommand_MissingOutputFlag(t *testing.T) {
 	assert.Contains(t, err.Error(), "Output file path is required")
 }
 
-func simulateBlockKitBuilder(openedURL string, blocksJSON string, imageBytes []byte) {
+func Test_compactJSON(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+		wantErr  bool
+	}{
+		"already compact": {
+			input:    `{"blocks":[]}`,
+			expected: `{"blocks":[]}`,
+		},
+		"removes whitespace": {
+			input:    "{\n  \"blocks\": [\n    {\n      \"type\": \"section\"\n    }\n  ]\n}",
+			expected: `{"blocks":[{"type":"section"}]}`,
+		},
+		"invalid JSON returns error": {
+			input:   "{not valid",
+			wantErr: true,
+		},
+		"empty string returns error": {
+			input:   "",
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := compactJSON(tc.input)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func Test_validateBlocksPayload(t *testing.T) {
+	tests := map[string]struct {
+		input   string
+		wantErr bool
+	}{
+		"valid blocks payload": {
+			input: `{"blocks":[]}`,
+		},
+		"valid with content": {
+			input: `{"blocks":[{"type":"section"}]}`,
+		},
+		"extra fields alongside blocks is valid": {
+			input: `{"blocks":[],"metadata":"x"}`,
+		},
+		"missing blocks key returns error": {
+			input:   `{"type":"section"}`,
+			wantErr: true,
+		},
+		"blocks field is not an array returns error": {
+			input:   `{"blocks":"hello"}`,
+			wantErr: true,
+		},
+		"blocks field is an object returns error": {
+			input:   `{"blocks":{}}`,
+			wantErr: true,
+		},
+		"blocks field is null returns error": {
+			input:   `{"blocks":null}`,
+			wantErr: true,
+		},
+		"top-level array returns error": {
+			input:   `[{"type":"section"}]`,
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := validateBlocksPayload(tc.input)
+			if tc.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func simulateBlockKitBuilder(openedURL string, _ string, imageBytes []byte) {
 	time.Sleep(50 * time.Millisecond)
 	portStr := extractWSPort(openedURL)
 	wsURL := fmt.Sprintf("ws://127.0.0.1:%s/", portStr)
@@ -136,18 +269,15 @@ func simulateBlockKitBuilder(openedURL string, blocksJSON string, imageBytes []b
 		Payload json.RawMessage `json:"payload"`
 	}
 
+	// Send CONNECTED
 	cp, _ := json.Marshal(map[string]string{"version": "1.0.0"})
 	connMsg, _ := json.Marshal(msg{Type: "CONNECTED", Payload: cp})
 	_ = conn.WriteMessage(websocket.TextMessage, connMsg)
 
+	// Read REQUEST_SCREENSHOT
 	_, _, _ = conn.ReadMessage()
 
-	bup, _ := json.Marshal(map[string]interface{}{"json": blocksJSON, "success": true})
-	updatedMsg, _ := json.Marshal(msg{Type: "BLOCKS_UPDATED", Payload: bup})
-	_ = conn.WriteMessage(websocket.TextMessage, updatedMsg)
-
-	_, _, _ = conn.ReadMessage()
-
+	// Send SCREENSHOT response
 	type screenshotPayload struct {
 		Image  string `json:"image"`
 		Width  int    `json:"width"`

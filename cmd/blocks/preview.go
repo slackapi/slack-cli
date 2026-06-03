@@ -15,6 +15,9 @@
 package blocks
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/pkg/blocks"
@@ -28,18 +31,19 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	var outputFlag string
 
 	cmd := &cobra.Command{
-		// TODO: accept blocks JSON from stdin pipe (e.g. echo '{"blocks":[...]}' | slack blocks preview --team T123)
-		Use:   "preview <blocks-json>",
+		Use:   "preview",
 		Short: "Preview Block Kit blocks in the Block Kit Builder",
 		Long: strings.Join([]string{
 			"Preview Block Kit blocks in the Block Kit Builder.",
 			"",
-			"The <blocks-json> argument must be a JSON object containing a top-level \"blocks\"",
+			"The blocks JSON must be a JSON object containing a top-level \"blocks\"",
 			"key whose value is an array of Block Kit block objects.",
 			"",
-			"Example: '{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]}'",
+			"Blocks JSON is read from stdin:",
+			"  cat blocks.json | slack blocks preview --team T123 --output preview.png",
+			"  echo '{\"blocks\":[...]}' | slack blocks preview --team T123 --output preview.png",
 		}, "\n"),
-		Args: cobra.ExactArgs(1),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			if teamID == "" {
@@ -53,7 +57,29 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 					WithRemediation("Provide an output path with --output <file_path>")
 			}
 
-			filePath, err := blocks.Preview(ctx, clients, teamID, args[0], outputFlag)
+			data, err := io.ReadAll(clients.IO.ReadIn())
+			if err != nil {
+				return slackerror.New(slackerror.ErrBlocksPreview).
+					WithMessage("Failed to read blocks JSON from stdin").
+					WithRemediation("Pipe blocks JSON via stdin:\n  cat blocks.json | slack blocks preview --team T123 --output preview.png")
+			}
+			blocksJSON := strings.TrimSpace(string(data))
+
+			if blocksJSON == "" {
+				return slackerror.New(slackerror.ErrBlocksPreview).
+					WithMessage("No blocks JSON provided").
+					WithRemediation("Pipe blocks JSON via stdin:\n  cat blocks.json | slack blocks preview --team T123 --output preview.png")
+			}
+
+			blocksJSON, err = compactJSON(blocksJSON)
+			if err != nil {
+				return err
+			}
+			if err := validateBlocksPayload(blocksJSON); err != nil {
+				return err
+			}
+
+			filePath, err := blocks.Preview(ctx, clients, teamID, blocksJSON, outputFlag)
 			if err != nil {
 				return err
 			}
@@ -66,4 +92,36 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVarP(&outputFlag, "output", "o", "", "file path to save the screenshot image (required)")
 
 	return cmd
+}
+
+func compactJSON(input string) (string, error) {
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, []byte(input)); err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocksJSON)
+	}
+	return buf.String(), nil
+}
+
+func validateBlocksPayload(blocksJSON string) error {
+	var parsed map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(blocksJSON), &parsed); err != nil {
+		return slackerror.New(slackerror.ErrInvalidBlocksJSON).
+			WithMessage("The blocks JSON must be a JSON object containing a \"blocks\" array").
+			WithRemediation("Provide a JSON object with a top-level \"blocks\" key, e.g. {\"blocks\": [...]}")
+	}
+
+	blocksRaw, ok := parsed["blocks"]
+	if !ok {
+		return slackerror.New(slackerror.ErrInvalidBlocksJSON).
+			WithMessage("The blocks JSON is missing the required \"blocks\" field").
+			WithRemediation("Provide a JSON object with a top-level \"blocks\" key, e.g. {\"blocks\": [...]}")
+	}
+
+	if len(blocksRaw) == 0 || blocksRaw[0] != '[' {
+		return slackerror.New(slackerror.ErrInvalidBlocksJSON).
+			WithMessage("The \"blocks\" field must be an array").
+			WithRemediation("Provide a JSON object where \"blocks\" is an array, e.g. {\"blocks\": [...]}")
+	}
+
+	return nil
 }

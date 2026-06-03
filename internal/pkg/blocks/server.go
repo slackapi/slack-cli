@@ -15,7 +15,6 @@
 package blocks
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -61,17 +60,6 @@ type errorPayload struct {
 
 type connectedPayload struct {
 	Version string `json:"version"`
-}
-
-type setBlocksPayload struct {
-	JSON    string `json:"json"`
-	Surface string `json:"surface,omitempty"`
-}
-
-type blocksUpdatedPayload struct {
-	JSON    string   `json:"json"`
-	Success bool     `json:"success"`
-	Errors  []string `json:"errors,omitempty"`
 }
 
 func readWSMessage(conn *websocket.Conn, timeout time.Duration) (wsMessage, error) {
@@ -127,10 +115,7 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	go func() { _ = server.Serve(listener) }()
 	defer func() { _ = server.Shutdown(context.Background()) }()
 
-	builderURL, err := buildBlockKitBuilderURL(teamID, port, blocksJSON)
-	if err != nil {
-		return "", err
-	}
+	builderURL := buildBlockKitBuilderURL(teamID, port, blocksJSON)
 	clients.IO.PrintDebug(ctx, "Opening Block Kit Builder: %s", builderURL)
 	clients.IO.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
 	clients.Browser().OpenURL(builderURL)
@@ -161,41 +146,6 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	if err := json.Unmarshal(connectedMsg.Payload, &cp); err == nil {
 		clients.IO.PrintDebug(ctx, "Block Kit Builder version: %s", cp.Version)
 	}
-
-	setBlocksMsg := wsMessage{Type: "SET_BLOCKS"}
-	setBlocksMsg.Payload, _ = json.Marshal(setBlocksPayload{JSON: blocksJSON})
-	setBlocksBytes, _ := json.Marshal(setBlocksMsg)
-	if err := conn.WriteMessage(websocket.TextMessage, setBlocksBytes); err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
-	}
-	clients.IO.PrintDebug(ctx, "Sent SET_BLOCKS")
-
-	updatedMsg, err := readWSMessage(conn, responseTimeout)
-	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
-	}
-	if updatedMsg.Type == "ERROR" {
-		var ep errorPayload
-		if err := json.Unmarshal(updatedMsg.Payload, &ep); err != nil {
-			return "", slackerror.New(slackerror.ErrBlocksPreview).
-				WithMessage("Block Kit Builder returned an error")
-		}
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
-			WithMessage("Block Kit Builder error: %s", ep.Message)
-	}
-	if updatedMsg.Type != "BLOCKS_UPDATED" {
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
-			WithMessage("Unexpected message type: %s", updatedMsg.Type)
-	}
-	var bup blocksUpdatedPayload
-	if err := json.Unmarshal(updatedMsg.Payload, &bup); err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
-	}
-	if !bup.Success {
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
-			WithMessage("Block Kit Builder failed to render blocks: %v", bup.Errors)
-	}
-	clients.IO.PrintDebug(ctx, "Blocks rendered successfully")
 
 	reqMsg := wsMessage{Type: "REQUEST_SCREENSHOT"}
 	reqBytes, _ := json.Marshal(reqMsg)
@@ -246,45 +196,12 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	return outputPath, nil
 }
 
-func compactBlocksPayload(blocksJSON string) (string, error) {
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, []byte(blocksJSON)); err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocksJSON)
-	}
-
-	var parsed map[string]json.RawMessage
-	if err := json.Unmarshal(buf.Bytes(), &parsed); err != nil {
-		return "", slackerror.New(slackerror.ErrInvalidBlocksJSON).
-			WithMessage("The blocks JSON must be a JSON object containing a \"blocks\" array").
-			WithRemediation("Provide a JSON object with a top-level \"blocks\" key, e.g. {\"blocks\": [...]}")
-	}
-
-	blocksRaw, ok := parsed["blocks"]
-	if !ok {
-		return "", slackerror.New(slackerror.ErrInvalidBlocksJSON).
-			WithMessage("The blocks JSON is missing the required \"blocks\" field").
-			WithRemediation("Provide a JSON object with a top-level \"blocks\" key, e.g. {\"blocks\": [...]}")
-	}
-
-	if len(blocksRaw) == 0 || blocksRaw[0] != '[' {
-		return "", slackerror.New(slackerror.ErrInvalidBlocksJSON).
-			WithMessage("The \"blocks\" field must be an array").
-			WithRemediation("Provide a JSON object where \"blocks\" is an array, e.g. {\"blocks\": [...]}")
-	}
-
-	return buf.String(), nil
-}
-
-func buildBlockKitBuilderURL(teamID string, port int, blocksJSON string) (string, error) {
-	compacted, err := compactBlocksPayload(blocksJSON)
-	if err != nil {
-		return "", err
-	}
+func buildBlockKitBuilderURL(teamID string, port int, blocksJSON string) string {
 	base := fmt.Sprintf(blockKitBuilderURLTemplate, teamID)
 	u, _ := url.Parse(base)
 	q := u.Query()
 	q.Set("ws_port", fmt.Sprintf("%d", port))
 	u.RawQuery = q.Encode()
-	u.Fragment = compacted
-	return u.String(), nil
+	u.Fragment = blocksJSON
+	return u.String()
 }
