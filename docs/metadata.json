@@ -1,0 +1,48 @@
+{
+    "slack-cli": {
+      "title": "Slack CLI",
+      "description": "CLI for creating, building, and deploying Slack apps.",
+      "releases": [
+        {
+          "version": "4.2.0",
+          "release_date": "2026-06-03"
+        }
+      ]
+    },
+    "deno-slack-sdk": {
+      "title": "Deno Slack SDK",
+      "releases": [
+        {
+          "version": "2.15.2",
+          "release_date": "2026-02-26"
+        }
+      ]
+    },
+    "deno-slack-api": {
+      "title": "Deno Slack API",
+      "releases": [
+        {
+          "version": "2.9.0",
+          "release_date": "2026-02-18"
+        }
+      ]
+    },
+    "deno-slack-hooks": {
+      "title": "deno-slack-hooks",
+      "releases": [
+        {
+          "version": "1.5.0",
+          "release_date": "2025-11-12"
+        }
+      ]
+    },
+    "deno-runtime": {
+      "title": "Deno Runtime",
+      "releases": [
+        {
+          "version": "2.5.3",
+          "release_date": "2025-10-09"
+        }
+      ]
+    }
+  }
