@@ -24,7 +24,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
 
       - name: Checkout repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: true
@@ -131,6 +131,6 @@ jobs:
             gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
             echo "Updated PR #$EXISTING_PR"
           else
-            gh pr create --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
+            gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
             echo "Created new release PR"
           fi
