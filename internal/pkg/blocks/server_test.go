@@ -66,6 +66,12 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 			blocksJSON: "{not json}",
 			wantErr:    true,
 		},
+		"returns error for JSON missing blocks key": {
+			teamID:     "T0123456789",
+			port:       8080,
+			blocksJSON: `{"type":"section"}`,
+			wantErr:    true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -104,6 +110,30 @@ func Test_compactBlocksPayload(t *testing.T) {
 			input:   "",
 			wantErr: true,
 		},
+		"missing blocks key returns error": {
+			input:   `{"type":"section"}`,
+			wantErr: true,
+		},
+		"blocks field is not an array returns error": {
+			input:   `{"blocks":"hello"}`,
+			wantErr: true,
+		},
+		"blocks field is an object returns error": {
+			input:   `{"blocks":{}}`,
+			wantErr: true,
+		},
+		"blocks field is null returns error": {
+			input:   `{"blocks":null}`,
+			wantErr: true,
+		},
+		"top-level array returns error": {
+			input:   `[{"type":"section"}]`,
+			wantErr: true,
+		},
+		"extra fields alongside blocks is valid": {
+			input:    `{"blocks":[],"metadata":"x"}`,
+			expected: `{"blocks":[],"metadata":"x"}`,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -131,7 +161,7 @@ func Test_Preview_ConnectionTimeout(t *testing.T) {
 	defer func() { connectionTimeout = originalTimeout }()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
+	_, err := Preview(ctx, clients, "T0123456789", `{"blocks":[]}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Timed out")
@@ -148,7 +178,7 @@ func Test_Preview_ContextCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
+	_, err := Preview(ctx, clients, "T0123456789", `{"blocks":[]}`, "/tmp/test.png")
 	assert.Error(t, err)
 }
 
@@ -164,7 +194,7 @@ func Test_Preview_ListenError(t *testing.T) {
 	defer func() { netListen = originalListen }()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
+	_, err := Preview(ctx, clients, "T0123456789", `{"blocks":[]}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "bind failed")
@@ -355,7 +385,7 @@ func Test_Preview_ErrorResponse(t *testing.T) {
 	}).Return()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
+	_, err := Preview(ctx, clients, "T0123456789", `{"blocks":[]}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Preview card element not found")
@@ -404,7 +434,7 @@ func Test_Preview_ResponseTimeout(t *testing.T) {
 	defer func() { responseTimeout = originalTimeout }()
 
 	ctx := t.Context()
-	_, err := Preview(ctx, clients, "T0123456789", `{}`, "/tmp/test.png")
+	_, err := Preview(ctx, clients, "T0123456789", `{"blocks":[]}`, "/tmp/test.png")
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Timed out waiting for screenshot")

@@ -257,6 +257,27 @@ func compactBlocksPayload(blocksJSON string) (string, error) {
 	if err := json.Compact(&buf, []byte(blocksJSON)); err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocksJSON)
 	}
+
+	var parsed map[string]json.RawMessage
+	if err := json.Unmarshal(buf.Bytes(), &parsed); err != nil {
+		return "", slackerror.New(slackerror.ErrInvalidBlocksJSON).
+			WithMessage("The blocks JSON must be a JSON object containing a \"blocks\" array").
+			WithRemediation("Provide a JSON object with a top-level \"blocks\" key, e.g. {\"blocks\": [...]}")
+	}
+
+	blocksRaw, ok := parsed["blocks"]
+	if !ok {
+		return "", slackerror.New(slackerror.ErrInvalidBlocksJSON).
+			WithMessage("The blocks JSON is missing the required \"blocks\" field").
+			WithRemediation("Provide a JSON object with a top-level \"blocks\" key, e.g. {\"blocks\": [...]}")
+	}
+
+	if len(blocksRaw) == 0 || blocksRaw[0] != '[' {
+		return "", slackerror.New(slackerror.ErrInvalidBlocksJSON).
+			WithMessage("The \"blocks\" field must be an array").
+			WithRemediation("Provide a JSON object where \"blocks\" is an array, e.g. {\"blocks\": [...]}")
+	}
+
 	return buf.String(), nil
 }
 

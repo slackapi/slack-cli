@@ -15,6 +15,8 @@
 package blocks
 
 import (
+	"strings"
+
 	"github.com/slackapi/slack-cli/internal/pkg/blocks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -29,7 +31,15 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 		// TODO: accept blocks JSON from stdin pipe (e.g. echo '{"blocks":[...]}' | slack blocks preview --team T123)
 		Use:   "preview <blocks-json>",
 		Short: "Preview Block Kit blocks in the Block Kit Builder",
-		Args:  cobra.ExactArgs(1),
+		Long: strings.Join([]string{
+			"Preview Block Kit blocks in the Block Kit Builder.",
+			"",
+			"The <blocks-json> argument must be a JSON object containing a top-level \"blocks\"",
+			"key whose value is an array of Block Kit block objects.",
+			"",
+			"Example: '{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Hello\"}}]}'",
+		}, "\n"),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			if teamID == "" {
