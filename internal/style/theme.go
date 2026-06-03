@@ -203,5 +203,18 @@ func themeSurvey(isDark bool) *huh.Styles {
 		Bold(true).
 		SetString("[ ] ")
 
+	// Confirm button styles.
+	// ThemeBase defaults (black-on-white / white-on-black) are hard to
+	// distinguish in many terminal themes.  Use blue+bold for the selected
+	// button and a subdued gray for the unselected one so the choice is
+	// immediately obvious regardless of terminal background.
+	t.Focused.FocusedButton = lipgloss.NewStyle().
+		Foreground(ansiBlue).
+		Bold(true).
+		Padding(0, 1)
+	t.Focused.BlurredButton = lipgloss.NewStyle().
+		Foreground(ansiGray).
+		Padding(0, 1)
+
 	return t
 }
