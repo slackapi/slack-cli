@@ -230,6 +230,12 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
 
+	if outputPath == "" {
+		dataURI := "data:image/png;base64," + sp.Image
+		clients.IO.PrintDebug(ctx, "Screenshot captured (%dx%d), returning as data URI", sp.Width, sp.Height)
+		return dataURI, nil
+	}
+
 	imageBytes, err := base64.StdEncoding.DecodeString(sp.Image)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)

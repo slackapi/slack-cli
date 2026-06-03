@@ -15,8 +15,6 @@
 package blocks
 
 import (
-	"path/filepath"
-
 	"github.com/slackapi/slack-cli/internal/pkg/blocks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -40,18 +38,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 					WithRemediation("Provide a team ID with --team <team_id>")
 			}
 
-			var outputPath string
-			if outputFlag != "" {
-				outputPath = outputFlag
-			} else {
-				configDir, err := clients.Config.SystemConfig.SlackConfigDir(ctx)
-				if err != nil {
-					return slackerror.Wrap(err, slackerror.ErrBlocksPreview)
-				}
-				outputPath = filepath.Join(configDir, "previews", "blocks-preview.png")
-			}
-
-			filePath, err := blocks.Preview(ctx, clients, teamID, args[0], outputPath)
+			filePath, err := blocks.Preview(ctx, clients, teamID, args[0], outputFlag)
 			if err != nil {
 				return err
 			}
@@ -61,7 +48,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&teamID, "team", "", "team ID for Block Kit Builder (required)")
-	cmd.Flags().StringVarP(&outputFlag, "output", "o", "", "file path to save the screenshot image")
+	cmd.Flags().StringVarP(&outputFlag, "output", "o", "", "file path to save the screenshot image (omit to print a data URI to stdout)")
 
 	return cmd
 }

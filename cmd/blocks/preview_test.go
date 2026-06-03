@@ -25,7 +25,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
-	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -130,8 +129,7 @@ func Test_PreviewCommand_Success(t *testing.T) {
 	assert.NoError(t, err)
 
 	output := clientsMock.GetCombinedOutput()
-	expectedPath := slackdeps.MockHomeDirectory + "/.slack/previews/blocks-preview.png"
-	assert.Contains(t, output, expectedPath)
+	assert.Contains(t, output, "data:image/png;base64,")
 }
 
 func simulateBlockKitBuilder(openedURL string, blocksJSON string, imageBytes []byte) {
