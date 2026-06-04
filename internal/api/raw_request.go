@@ -21,11 +21,11 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"runtime"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/uber/jaeger-client-go"
 )
 
@@ -67,7 +67,7 @@ func (c *Client) RawRequest(ctx context.Context, httpMethod, endpoint, token str
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("User-Agent", fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS))
+	request.Header.Set("User-Agent", useragent.BuildUserAgent(cliVersion))
 
 	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
 		request.Header.Set("x-b3-sampled", "0")

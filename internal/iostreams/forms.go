@@ -82,8 +82,12 @@ func inputForm(io *IOStreams, _ context.Context, message string, cfg InputPrompt
 
 // buildConfirmForm constructs an interactive form for yes/no confirmation prompts.
 func buildConfirmForm(io *IOStreams, message string, choice *bool) *huh.Form {
-	field := huh.NewConfirm().
+	field := huh.NewSelect[bool]().
 		Title(message).
+		Options(
+			huh.NewOption("Yes", true),
+			huh.NewOption("No", false),
+		).
 		Value(choice)
 	return newForm(io, field)
 }

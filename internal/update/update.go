@@ -223,8 +223,12 @@ func (u *UpdateNotification) isCI() bool {
 
 // isIgnoredCommand returns true when the process is in the list of commands.
 func (u *UpdateNotification) isIgnoredCommand() bool {
+	// Commands that skip update checks only when used alone or with flags
 	// "manifest" is included because it's an alias that runs "manifest info"
-	ignoredCommands := []string{"_fingerprint", "api", "manifest", "manifest info", "version"}
+	ignoredCommands := []string{"_fingerprint", "manifest", "manifest info", "version"}
+	// Commands that skip update checks regardless of any arguments
+	// "api" is a leaf command that accepts positional args, not subcommands
+	ignoredPrefixes := []string{"api"}
 	if len(os.Args) < 2 {
 		return false
 	}
@@ -244,6 +248,11 @@ func (u *UpdateNotification) isIgnoredCommand() bool {
 			if strings.Contains(ignored, " ") {
 				return true
 			}
+		}
+	}
+	for _, prefix := range ignoredPrefixes {
+		if commandStr == prefix || strings.HasPrefix(commandStr, prefix+" ") {
+			return true
 		}
 	}
 	return false

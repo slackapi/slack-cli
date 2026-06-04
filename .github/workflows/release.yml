@@ -1,0 +1,136 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  rc:
+    name: RC
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Gather credentials
+        id: credentials
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.GH_APP_ID_RELEASER }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+
+      - name: Checkout repo
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          ref: main
+          token: ${{ steps.credentials.outputs.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        with:
+          go-version-file: go.mod
+
+      - name: Decide next version
+        id: version
+        env:
+          GH_TOKEN: ${{ steps.credentials.outputs.token }}
+        run: |
+          # Get the latest release tag
+          LATEST_TAG=$(git describe --tags --match 'v*.*.*' --abbrev=0)
+
+          # Get PR numbers since latest tag
+          PR_NUMBERS=$(git log "${LATEST_TAG}..HEAD" --oneline | grep -oP '#\K[0-9]+' || true)
+
+          if [ -z "$PR_NUMBERS" ]; then
+            echo "No new PRs since $LATEST_TAG"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Search for highest semver label
+          SEMVER="patch"
+          for PR in $PR_NUMBERS; do
+            LABELS=$(gh pr view "$PR" --json labels --jq '.labels[].name' 2>/dev/null || true)
+            if echo "$LABELS" | grep -q "semver:major"; then
+              SEMVER="major"
+              break
+            elif echo "$LABELS" | grep -q "semver:minor"; then
+              SEMVER="minor"
+            fi
+          done
+
+          # Parse current version
+          VERSION="${LATEST_TAG#v}"
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+
+          # Compute next version
+          case "$SEMVER" in
+            major)
+              NEXT_VERSION="$((MAJOR + 1)).0.0"
+              ;;
+            minor)
+              NEXT_VERSION="${MAJOR}.$((MINOR + 1)).0"
+              ;;
+            patch)
+              NEXT_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+              ;;
+          esac
+
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          echo "next=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
+          echo "Bumping $LATEST_TAG to v$NEXT_VERSION"
+
+      - name: Generate release commit
+        if: steps.version.outputs.has_changes == 'true'
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.next }}
+        run: |
+          git config user.name "slack-cli-releaser[bot]"
+          git config user.email "122933866+slack-cli-releaser[bot]@users.noreply.github.com"
+          make rc RELEASE_VERSION="$RELEASE_VERSION"
+          git push origin "HEAD:refs/heads/rc" --force
+
+      - name: Create or update release PR
+        if: steps.version.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.credentials.outputs.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.next }}
+          SEMVER: ${{ steps.version.outputs.semver }}
+        run: |
+          PR_TITLE="chore: release slack-cli v${RELEASE_VERSION}"
+          PR_BODY=$(cat <<EOF
+          ### Summary
+
+          Release v${RELEASE_VERSION}. After merging, create a [GitHub Release](https://github.com/${{ github.repository }}/releases/new?tag=v${RELEASE_VERSION}&title=v${RELEASE_VERSION}) to tag and trigger the release pipeline.
+
+          ### Testing
+
+          Install the [dev-build](https://github.com/slackapi/slack-cli/releases/tag/dev-build) and verify changes.
+
+          ### Requirements
+
+          - [x] I've read and understood the [Contributing Guidelines](https://github.com/slackapi/slack-cli/blob/main/.github/CONTRIBUTING.md) and have done my best effort to follow them.
+          - [x] I've read and agree to the [Code of Conduct](https://slackhq.github.io/code-of-conduct).
+          EOF
+          )
+
+          # Check if a PR from rc already exists
+          EXISTING_PR=$(gh pr list --head rc --base main --json number --jq '.[0].number' 2>/dev/null || true)
+
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --remove-label "semver:patch" --remove-label "semver:minor" --remove-label "semver:major" 2>/dev/null || true
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
+            echo "Updated PR #$EXISTING_PR"
+          else
+            gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
+            echo "Created new release PR"
+          fi

@@ -32,6 +32,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/ioutils"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 )
 
 // TrackingManager is an interface for tracking metrics and events related to CLI activity
@@ -194,6 +195,7 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		Timestamp: time.Now().UnixMilli(),
 		Data:      eventData,
 		Context: EventContext{
+			AIAgent:          useragent.GetAIAgentName(),
 			CLIVersion:       versionString,
 			Host:             ioutils.GetHostname(),
 			OS:               runtime.GOOS,
