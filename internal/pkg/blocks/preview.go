@@ -19,8 +19,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"time"
@@ -35,12 +33,6 @@ import (
 
 var connectionTimeout = 30 * time.Second
 var responseTimeout = 30 * time.Second
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
-}
-
-var netListen = net.Listen
 
 type wsMessage struct {
 	Type    string          `json:"type"`
@@ -62,88 +54,13 @@ type connectedPayload struct {
 	Version string `json:"version"`
 }
 
-type webSocketServer struct {
-	server   *http.Server
-	Port     int
-	ConnChan <-chan *websocket.Conn
-	ErrChan  <-chan error
-}
-
-func newWebSocketServer() (*webSocketServer, error) {
-	listener, err := netListen("tcp", "127.0.0.1:0")
-	if err != nil {
-		return nil, err
-	}
-
-	port := listener.Addr().(*net.TCPAddr).Port
-
-	connChan := make(chan *websocket.Conn, 1)
-	errChan := make(chan error, 1)
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		conn, upgradeErr := upgrader.Upgrade(w, r, nil)
-		if upgradeErr != nil {
-			errChan <- upgradeErr
-			return
-		}
-		connChan <- conn
-	})
-
-	server := &http.Server{Handler: mux}
-	go func() { _ = server.Serve(listener) }()
-
-	return &webSocketServer{
-		server:   server,
-		Port:     port,
-		ConnChan: connChan,
-		ErrChan:  errChan,
-	}, nil
-}
-
-func (s *webSocketServer) Shutdown() {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	_ = s.server.Shutdown(ctx)
-}
-
-type webSocket struct {
-	conn *websocket.Conn
-}
-
-func (ws *webSocket) readMessage(timeout time.Duration) (wsMessage, error) {
-	_ = ws.conn.SetReadDeadline(time.Now().Add(timeout))
-	_, data, err := ws.conn.ReadMessage()
-	_ = ws.conn.SetReadDeadline(time.Time{})
-	if err != nil {
-		return wsMessage{}, err
-	}
-	var msg wsMessage
-	if err := json.Unmarshal(data, &msg); err != nil {
-		return wsMessage{}, fmt.Errorf("invalid message from Block Kit Builder: %w", err)
-	}
-	return msg, nil
-}
-
-func (ws *webSocket) writeMessage(msg wsMessage) error {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	return ws.conn.WriteMessage(websocket.TextMessage, data)
-}
-
-func (ws *webSocket) Close() error {
-	return ws.conn.Close()
-}
-
 func openInBrowser(ctx context.Context, io iostreams.IOStreamer, browser slackdeps.Browser, url string) {
 	io.PrintDebug(ctx, "Opening Block Kit Builder: %s", url)
 	io.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
 	browser.OpenURL(url)
 }
 
-func awaitConnection(ctx context.Context, connChan <-chan *websocket.Conn, errChan <-chan error) (*webSocket, error) {
+func awaitConnection(ctx context.Context, connChan <-chan *websocket.Conn, errChan <-chan error) (wsConn, error) {
 	select {
 	case conn := <-connChan:
 		return &webSocket{conn: conn}, nil
@@ -157,7 +74,7 @@ func awaitConnection(ctx context.Context, connChan <-chan *websocket.Conn, errCh
 	}
 }
 
-func handshake(ctx context.Context, io iostreams.IOStreamer, ws *webSocket) error {
+func handshake(ctx context.Context, io iostreams.IOStreamer, ws wsConn) error {
 	msg, err := ws.readMessage(responseTimeout)
 	if err != nil {
 		return err
@@ -173,7 +90,7 @@ func handshake(ctx context.Context, io iostreams.IOStreamer, ws *webSocket) erro
 	return nil
 }
 
-func requestScreenshot(ctx context.Context, io iostreams.IOStreamer, ws *webSocket) (screenshotPayload, error) {
+func requestScreenshot(ctx context.Context, io iostreams.IOStreamer, ws wsConn) (screenshotPayload, error) {
 	if err := ws.writeMessage(wsMessage{Type: "REQUEST_SCREENSHOT"}); err != nil {
 		return screenshotPayload{}, err
 	}
