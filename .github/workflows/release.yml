@@ -139,6 +139,6 @@ jobs:
             gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
             echo "Updated PR #$EXISTING_PR"
           else
-            gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
+            gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --label "release" --label "semver:${SEMVER}"
             echo "Created new release PR"
           fi
