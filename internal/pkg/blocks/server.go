@@ -26,7 +26,9 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 )
@@ -60,24 +62,17 @@ type connectedPayload struct {
 	Version string `json:"version"`
 }
 
-func readWSMessage(conn *websocket.Conn, timeout time.Duration) (wsMessage, error) {
-	_ = conn.SetReadDeadline(time.Now().Add(timeout))
-	_, data, err := conn.ReadMessage()
-	_ = conn.SetReadDeadline(time.Time{})
-	if err != nil {
-		return wsMessage{}, err
-	}
-	var msg wsMessage
-	if err := json.Unmarshal(data, &msg); err != nil {
-		return wsMessage{}, fmt.Errorf("invalid message from Block Kit Builder: %w", err)
-	}
-	return msg, nil
+type webSocketServer struct {
+	server   *http.Server
+	Port     int
+	ConnChan <-chan *websocket.Conn
+	ErrChan  <-chan error
 }
 
-func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, blocksJSON string, outputPath string) (string, error) {
+func newWebSocketServer() (*webSocketServer, error) {
 	listener, err := netListen("tcp", "127.0.0.1:0")
 	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+		return nil, err
 	}
 
 	port := listener.Addr().(*net.TCPAddr).Port
@@ -97,92 +92,169 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 
 	server := &http.Server{Handler: mux}
 	go func() { _ = server.Serve(listener) }()
-	defer func() {
-		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		_ = server.Shutdown(shutCtx)
-	}()
 
-	builderURL, err := buildBlockKitBuilderURL(clients.API().Host(), teamID, port, blocksJSON)
+	return &webSocketServer{
+		server:   server,
+		Port:     port,
+		ConnChan: connChan,
+		ErrChan:  errChan,
+	}, nil
+}
+
+func (s *webSocketServer) Shutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = s.server.Shutdown(ctx)
+}
+
+type webSocket struct {
+	conn *websocket.Conn
+}
+
+func (ws *webSocket) readMessage(timeout time.Duration) (wsMessage, error) {
+	_ = ws.conn.SetReadDeadline(time.Now().Add(timeout))
+	_, data, err := ws.conn.ReadMessage()
+	_ = ws.conn.SetReadDeadline(time.Time{})
 	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+		return wsMessage{}, err
 	}
-	clients.IO.PrintDebug(ctx, "Opening Block Kit Builder: %s", builderURL)
-	clients.IO.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
-	clients.Browser().OpenURL(builderURL)
+	var msg wsMessage
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return wsMessage{}, fmt.Errorf("invalid message from Block Kit Builder: %w", err)
+	}
+	return msg, nil
+}
 
-	var conn *websocket.Conn
+func (ws *webSocket) writeMessage(msg wsMessage) error {
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return ws.conn.WriteMessage(websocket.TextMessage, data)
+}
+
+func (ws *webSocket) Close() error {
+	return ws.conn.Close()
+}
+
+func openInBrowser(ctx context.Context, io iostreams.IOStreamer, browser slackdeps.Browser, url string) {
+	io.PrintDebug(ctx, "Opening Block Kit Builder: %s", url)
+	io.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
+	browser.OpenURL(url)
+}
+
+func awaitConnection(ctx context.Context, connChan <-chan *websocket.Conn, errChan <-chan error) (*webSocket, error) {
 	select {
-	case conn = <-connChan:
-		clients.IO.PrintInfo(ctx, false, "Block Kit Builder connected")
+	case conn := <-connChan:
+		return &webSocket{conn: conn}, nil
 	case err := <-errChan:
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+		return nil, err
 	case <-time.After(connectionTimeout):
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
+		return nil, slackerror.New(slackerror.ErrBlocksPreview).
 			WithMessage("Timed out waiting for Block Kit Builder to connect")
 	case <-ctx.Done():
-		return "", slackerror.Wrap(ctx.Err(), slackerror.ErrBlocksPreview)
+		return nil, ctx.Err()
 	}
-	defer conn.Close()
+}
 
-	connectedMsg, err := readWSMessage(conn, responseTimeout)
+func handshake(ctx context.Context, io iostreams.IOStreamer, ws *webSocket) error {
+	msg, err := ws.readMessage(responseTimeout)
 	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+		return err
 	}
-	if connectedMsg.Type != "CONNECTED" {
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
-			WithMessage("Unexpected message type: %s", connectedMsg.Type)
+	if msg.Type != "CONNECTED" {
+		return slackerror.New(slackerror.ErrBlocksPreview).
+			WithMessage("Unexpected message type: %s", msg.Type)
 	}
 	var cp connectedPayload
-	if err := json.Unmarshal(connectedMsg.Payload, &cp); err == nil {
-		clients.IO.PrintDebug(ctx, "Block Kit Builder version: %s", cp.Version)
+	if err := json.Unmarshal(msg.Payload, &cp); err == nil {
+		io.PrintDebug(ctx, "Block Kit Builder version: %s", cp.Version)
 	}
+	return nil
+}
 
-	reqMsg := wsMessage{Type: "REQUEST_SCREENSHOT"}
-	reqBytes, _ := json.Marshal(reqMsg)
-	if err := conn.WriteMessage(websocket.TextMessage, reqBytes); err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+func requestScreenshot(ctx context.Context, io iostreams.IOStreamer, ws *webSocket) (screenshotPayload, error) {
+	if err := ws.writeMessage(wsMessage{Type: "REQUEST_SCREENSHOT"}); err != nil {
+		return screenshotPayload{}, err
 	}
-	clients.IO.PrintDebug(ctx, "Sent REQUEST_SCREENSHOT")
+	io.PrintDebug(ctx, "Sent REQUEST_SCREENSHOT")
 
-	response, err := readWSMessage(conn, responseTimeout)
+	response, err := ws.readMessage(responseTimeout)
 	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+		return screenshotPayload{}, err
 	}
 
-	if response.Type == "ERROR" {
+	switch response.Type {
+	case "SCREENSHOT":
+		var sp screenshotPayload
+		if err := json.Unmarshal(response.Payload, &sp); err != nil {
+			return screenshotPayload{}, err
+		}
+		return sp, nil
+	case "ERROR":
 		var ep errorPayload
 		if err := json.Unmarshal(response.Payload, &ep); err != nil {
-			return "", slackerror.New(slackerror.ErrBlocksPreview).
+			return screenshotPayload{}, slackerror.New(slackerror.ErrBlocksPreview).
 				WithMessage("Block Kit Builder returned an error")
 		}
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
+		return screenshotPayload{}, slackerror.New(slackerror.ErrBlocksPreview).
 			WithMessage("Block Kit Builder error: %s", ep.Message)
-	}
-
-	if response.Type != "SCREENSHOT" {
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
+	default:
+		return screenshotPayload{}, slackerror.New(slackerror.ErrBlocksPreview).
 			WithMessage("Unexpected response type: %s", response.Type)
 	}
+}
 
-	var sp screenshotPayload
-	if err := json.Unmarshal(response.Payload, &sp); err != nil {
+func decodeImage(imageBase64 string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(imageBase64)
+}
+
+func saveImage(fs afero.Fs, outputPath string, data []byte) error {
+	if err := fs.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
+		return err
+	}
+	return afero.WriteFile(fs, outputPath, data, 0644)
+}
+
+func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, blocksJSON string, outputPath string) (string, error) {
+	wsServer, err := newWebSocketServer()
+	if err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+	}
+	defer wsServer.Shutdown()
+
+	builderURL, err := buildBlockKitBuilderURL(clients.API().Host(), teamID, wsServer.Port, blocksJSON)
+	if err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+	}
+	openInBrowser(ctx, clients.IO, clients.Browser(), builderURL)
+
+	ws, err := awaitConnection(ctx, wsServer.ConnChan, wsServer.ErrChan)
+	if err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+	}
+	defer ws.Close()
+	clients.IO.PrintInfo(ctx, false, "Block Kit Builder connected")
+
+	if err := handshake(ctx, clients.IO, ws); err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
 
-	imageBytes, err := base64.StdEncoding.DecodeString(sp.Image)
+	screenshot, err := requestScreenshot(ctx, clients.IO, ws)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
 
-	if err := clients.Fs.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
-	}
-	if err := afero.WriteFile(clients.Fs, outputPath, imageBytes, 0644); err != nil {
+	imageBytes, err := decodeImage(screenshot.Image)
+	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
 
-	clients.IO.PrintDebug(ctx, "Screenshot saved: %s (%dx%d)", outputPath, sp.Width, sp.Height)
+	if err := saveImage(clients.Fs, outputPath, imageBytes); err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+	}
+
+	clients.IO.PrintDebug(ctx, "Screenshot saved: %s (%dx%d)", outputPath, screenshot.Width, screenshot.Height)
 	return outputPath, nil
 }
 
