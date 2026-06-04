@@ -65,7 +65,8 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := buildBlockKitBuilderURL(tc.apiHost, tc.teamID, tc.port, tc.blocksJSON)
+			result, err := buildBlockKitBuilderURL(tc.apiHost, tc.teamID, tc.port, tc.blocksJSON)
+			assert.NoError(t, err)
 			for _, exp := range tc.expected {
 				assert.Contains(t, result, exp)
 			}
@@ -275,7 +276,7 @@ func Test_Preview_ResponseTimeout(t *testing.T) {
 	_, err := Preview(ctx, clients, "T0123456789", `{"blocks":[]}`, "/tmp/test.png")
 
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Timed out waiting for screenshot")
+	assert.Contains(t, err.Error(), "i/o timeout")
 }
 
 func extractWSPort(builderURL string) string {

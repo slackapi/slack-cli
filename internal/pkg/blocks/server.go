@@ -61,31 +61,17 @@ type connectedPayload struct {
 }
 
 func readWSMessage(conn *websocket.Conn, timeout time.Duration) (wsMessage, error) {
-	type result struct {
-		msg wsMessage
-		err error
+	_ = conn.SetReadDeadline(time.Now().Add(timeout))
+	_, data, err := conn.ReadMessage()
+	_ = conn.SetReadDeadline(time.Time{})
+	if err != nil {
+		return wsMessage{}, err
 	}
-	ch := make(chan result, 1)
-	go func() {
-		_, data, err := conn.ReadMessage()
-		if err != nil {
-			ch <- result{err: err}
-			return
-		}
-		var msg wsMessage
-		if err := json.Unmarshal(data, &msg); err != nil {
-			ch <- result{err: fmt.Errorf("invalid message from Block Kit Builder: %w", err)}
-			return
-		}
-		ch <- result{msg: msg}
-	}()
-
-	select {
-	case r := <-ch:
-		return r.msg, r.err
-	case <-time.After(timeout):
-		return wsMessage{}, fmt.Errorf("timed out waiting for message")
+	var msg wsMessage
+	if err := json.Unmarshal(data, &msg); err != nil {
+		return wsMessage{}, fmt.Errorf("invalid message from Block Kit Builder: %w", err)
 	}
+	return msg, nil
 }
 
 func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, blocksJSON string, outputPath string) (string, error) {
@@ -111,9 +97,16 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 
 	server := &http.Server{Handler: mux}
 	go func() { _ = server.Serve(listener) }()
-	defer func() { _ = server.Shutdown(context.Background()) }()
+	defer func() {
+		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = server.Shutdown(shutCtx)
+	}()
 
-	builderURL := buildBlockKitBuilderURL(clients.API().Host(), teamID, port, blocksJSON)
+	builderURL, err := buildBlockKitBuilderURL(clients.API().Host(), teamID, port, blocksJSON)
+	if err != nil {
+		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
+	}
 	clients.IO.PrintDebug(ctx, "Opening Block Kit Builder: %s", builderURL)
 	clients.IO.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
 	clients.Browser().OpenURL(builderURL)
@@ -154,8 +147,7 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 
 	response, err := readWSMessage(conn, responseTimeout)
 	if err != nil {
-		return "", slackerror.New(slackerror.ErrBlocksPreview).
-			WithMessage("Timed out waiting for screenshot response")
+		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}
 
 	if response.Type == "ERROR" {
@@ -194,13 +186,16 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	return outputPath, nil
 }
 
-func buildBlockKitBuilderURL(apiHost string, teamID string, port int, blocksJSON string) string {
-	parsed, _ := url.Parse(apiHost)
+func buildBlockKitBuilderURL(apiHost string, teamID string, port int, blocksJSON string) (string, error) {
+	parsed, err := url.Parse(apiHost)
+	if err != nil {
+		return "", fmt.Errorf("invalid API host %q: %w", apiHost, err)
+	}
 	parsed.Host = "app." + parsed.Host
 	parsed.Path = fmt.Sprintf("/block-kit-builder/%s/builder", teamID)
 	q := parsed.Query()
 	q.Set("ws_port", fmt.Sprintf("%d", port))
 	parsed.RawQuery = q.Encode()
 	parsed.Fragment = blocksJSON
-	return parsed.String()
+	return parsed.String(), nil
 }
