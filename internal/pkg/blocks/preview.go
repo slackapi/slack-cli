@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -107,8 +108,27 @@ func requestScreenshot(ctx context.Context, io iostreams.IOStreamer, ws wsConn) 
 	}
 }
 
-func decodeImage(imageBase64 string) ([]byte, error) {
-	return base64.StdEncoding.DecodeString(imageBase64)
+// decodeImage parses a RFC 2397 data URL (e.g. "data:image/png;base64,...")
+// and returns the decoded binary data. Only base64-encoded data URLs are supported.
+func decodeImage(dataURL string) ([]byte, error) {
+	after, found := strings.CutPrefix(dataURL, "data:")
+	if !found {
+		return nil, slackerror.New(slackerror.ErrBlocksPreview).
+			WithMessage("Invalid image data: missing data URL scheme")
+	}
+
+	metadata, data, found := strings.Cut(after, ",")
+	if !found {
+		return nil, slackerror.New(slackerror.ErrBlocksPreview).
+			WithMessage("Invalid image data: missing comma separator in data URL")
+	}
+
+	if !strings.HasSuffix(metadata, ";base64") {
+		return nil, slackerror.New(slackerror.ErrBlocksPreview).
+			WithMessage("Invalid image data: data URL is not base64-encoded")
+	}
+
+	return base64.StdEncoding.DecodeString(data)
 }
 
 func saveImage(fs afero.Fs, outputPath string, data []byte) error {

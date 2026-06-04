@@ -167,7 +167,7 @@ func Test_Preview_Success(t *testing.T) {
 
 			// Send SCREENSHOT response
 			payload, _ := json.Marshal(screenshotPayload{
-				Image:  base64.StdEncoding.EncodeToString(fakePNG),
+				Image:  "data:image/png;base64," + base64.StdEncoding.EncodeToString(fakePNG),
 				Width:  620,
 				Height: 400,
 			})
@@ -277,6 +277,53 @@ func Test_Preview_ResponseTimeout(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "i/o timeout")
+}
+
+func Test_decodeImage(t *testing.T) {
+	fakePNG := []byte{0x89, 0x50, 0x4E, 0x47}
+
+	tests := map[string]struct {
+		input   string
+		want    []byte
+		wantErr string
+	}{
+		"valid PNG data URL": {
+			input: "data:image/png;base64," + base64.StdEncoding.EncodeToString(fakePNG),
+			want:  fakePNG,
+		},
+		"valid JPEG data URL": {
+			input: "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(fakePNG),
+			want:  fakePNG,
+		},
+		"missing data prefix": {
+			input:   base64.StdEncoding.EncodeToString(fakePNG),
+			wantErr: "missing data URL scheme",
+		},
+		"missing comma separator": {
+			input:   "data:image/png;base64" + base64.StdEncoding.EncodeToString(fakePNG),
+			wantErr: "missing comma separator",
+		},
+		"not base64 encoded": {
+			input:   "data:image/png,rawdata",
+			wantErr: "not base64-encoded",
+		},
+		"invalid base64 data": {
+			input:   "data:image/png;base64,!!!invalid!!!",
+			wantErr: "illegal base64",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := decodeImage(tc.input)
+			if tc.wantErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.want, got)
+			}
+		})
+	}
 }
 
 func extractWSPort(builderURL string) string {

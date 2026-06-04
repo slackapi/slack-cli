@@ -72,7 +72,7 @@ func Test_handshake(t *testing.T) {
 
 func Test_requestScreenshot(t *testing.T) {
 	screenshotPayloadJSON, _ := json.Marshal(screenshotPayload{
-		Image:  "aW1hZ2VkYXRh",
+		Image:  "data:image/png;base64,aW1hZ2VkYXRh",
 		Width:  620,
 		Height: 400,
 	})
@@ -94,7 +94,7 @@ func Test_requestScreenshot(t *testing.T) {
 				Payload: json.RawMessage(screenshotPayloadJSON),
 			},
 			wantPayload: screenshotPayload{
-				Image:  "aW1hZ2VkYXRh",
+				Image:  "data:image/png;base64,aW1hZ2VkYXRh",
 				Width:  620,
 				Height: 400,
 			},
