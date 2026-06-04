@@ -35,12 +35,14 @@ import (
 
 func Test_buildBlockKitBuilderURL(t *testing.T) {
 	tests := map[string]struct {
+		apiHost    string
 		teamID     string
 		port       int
 		blocksJSON string
 		expected   []string
 	}{
-		"constructs correct URL": {
+		"constructs correct URL for dev instance": {
+			apiHost:    "https://dev1388.slack.com",
 			teamID:     "T0123456789",
 			port:       12345,
 			blocksJSON: `{"blocks":[]}`,
@@ -50,18 +52,20 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 				"%7B%22blocks%22:%5B%5D%7D",
 			},
 		},
-		"includes port in query string": {
+		"constructs correct URL for production": {
+			apiHost:    "https://slack.com",
 			teamID:     "T0123456789",
 			port:       8080,
 			blocksJSON: `{"blocks":[{"type":"section"}]}`,
 			expected: []string{
+				"app.slack.com/block-kit-builder/T0123456789/builder",
 				"ws_port=8080",
 			},
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := buildBlockKitBuilderURL(tc.teamID, tc.port, tc.blocksJSON)
+			result := buildBlockKitBuilderURL(tc.apiHost, tc.teamID, tc.port, tc.blocksJSON)
 			for _, exp := range tc.expected {
 				assert.Contains(t, result, exp)
 			}
@@ -133,7 +137,7 @@ func Test_Preview_Success(t *testing.T) {
 	clientsMock.Browser.ExpectedCalls = nil
 	clientsMock.Browser.On("OpenURL", mock.Anything).Run(func(args mock.Arguments) {
 		openedURL := args.Get(0).(string)
-		assert.Contains(t, openedURL, "app.dev1388.slack.com/block-kit-builder/T0123456789/builder")
+		assert.Contains(t, openedURL, "app.slack.com/block-kit-builder/T0123456789/builder")
 		assert.Contains(t, openedURL, "ws_port=")
 
 		go func() {

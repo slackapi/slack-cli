@@ -40,8 +40,6 @@ var upgrader = websocket.Upgrader{
 
 var netListen = net.Listen
 
-const blockKitBuilderURLTemplate = "https://app.dev1388.slack.com/block-kit-builder/%s/builder"
-
 type wsMessage struct {
 	Type    string          `json:"type"`
 	Payload json.RawMessage `json:"payload,omitempty"`
@@ -115,7 +113,7 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	go func() { _ = server.Serve(listener) }()
 	defer func() { _ = server.Shutdown(context.Background()) }()
 
-	builderURL := buildBlockKitBuilderURL(teamID, port, blocksJSON)
+	builderURL := buildBlockKitBuilderURL(clients.API().Host(), teamID, port, blocksJSON)
 	clients.IO.PrintDebug(ctx, "Opening Block Kit Builder: %s", builderURL)
 	clients.IO.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
 	clients.Browser().OpenURL(builderURL)
@@ -196,12 +194,13 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	return outputPath, nil
 }
 
-func buildBlockKitBuilderURL(teamID string, port int, blocksJSON string) string {
-	base := fmt.Sprintf(blockKitBuilderURLTemplate, teamID)
-	u, _ := url.Parse(base)
-	q := u.Query()
+func buildBlockKitBuilderURL(apiHost string, teamID string, port int, blocksJSON string) string {
+	parsed, _ := url.Parse(apiHost)
+	parsed.Host = "app." + parsed.Host
+	parsed.Path = fmt.Sprintf("/block-kit-builder/%s/builder", teamID)
+	q := parsed.Query()
 	q.Set("ws_port", fmt.Sprintf("%d", port))
-	u.RawQuery = q.Encode()
-	u.Fragment = blocksJSON
-	return u.String()
+	parsed.RawQuery = q.Encode()
+	parsed.Fragment = blocksJSON
+	return parsed.String()
 }
