@@ -177,8 +177,6 @@ func Test_newWebSocketServer(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, server)
 				assert.Greater(t, server.Port, 0)
-				assert.NotNil(t, server.ConnChan)
-				assert.NotNil(t, server.ErrChan)
 				server.Shutdown()
 			}
 		})

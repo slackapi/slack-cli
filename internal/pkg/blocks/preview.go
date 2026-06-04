@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
@@ -58,20 +57,6 @@ func openInBrowser(ctx context.Context, io iostreams.IOStreamer, browser slackde
 	io.PrintDebug(ctx, "Opening Block Kit Builder: %s", url)
 	io.PrintInfo(ctx, false, "Opening Block Kit Builder in your browser...")
 	browser.OpenURL(url)
-}
-
-func awaitConnection(ctx context.Context, connChan <-chan *websocket.Conn, errChan <-chan error) (wsConn, error) {
-	select {
-	case conn := <-connChan:
-		return &webSocket{conn: conn}, nil
-	case err := <-errChan:
-		return nil, err
-	case <-time.After(connectionTimeout):
-		return nil, slackerror.New(slackerror.ErrBlocksPreview).
-			WithMessage("Timed out waiting for Block Kit Builder to connect")
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	}
 }
 
 func handshake(ctx context.Context, io iostreams.IOStreamer, ws wsConn) error {
@@ -146,7 +131,7 @@ func Preview(ctx context.Context, clients *shared.ClientFactory, teamID string, 
 	}
 	openInBrowser(ctx, clients.IO, clients.Browser(), builderURL)
 
-	ws, err := awaitConnection(ctx, wsServer.ConnChan, wsServer.ErrChan)
+	ws, err := wsServer.Accept(ctx, connectionTimeout)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrBlocksPreview)
 	}

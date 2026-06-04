@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 var upgrader = websocket.Upgrader{
@@ -70,8 +71,8 @@ func (ws *webSocket) Close() error {
 type webSocketServer struct {
 	server   *http.Server
 	Port     int
-	ConnChan <-chan *websocket.Conn
-	ErrChan  <-chan error
+	connChan <-chan *websocket.Conn
+	errChan  <-chan error
 }
 
 func newWebSocketServer() (*webSocketServer, error) {
@@ -101,9 +102,23 @@ func newWebSocketServer() (*webSocketServer, error) {
 	return &webSocketServer{
 		server:   server,
 		Port:     port,
-		ConnChan: connChan,
-		ErrChan:  errChan,
+		connChan: connChan,
+		errChan:  errChan,
 	}, nil
+}
+
+func (s *webSocketServer) Accept(ctx context.Context, timeout time.Duration) (wsConn, error) {
+	select {
+	case conn := <-s.connChan:
+		return &webSocket{conn: conn}, nil
+	case err := <-s.errChan:
+		return nil, err
+	case <-time.After(timeout):
+		return nil, slackerror.New(slackerror.ErrBlocksPreview).
+			WithMessage("Timed out waiting for Block Kit Builder to connect")
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 }
 
 func (s *webSocketServer) Shutdown() {
