@@ -392,6 +392,76 @@ func Test_AppManifest_OAuthConfig_Scopes(t *testing.T) {
 	}
 }
 
+func Test_AppManifest_MCPServers(t *testing.T) {
+	tests := map[string]struct {
+		manifest     AppManifest
+		expectedJSON string
+	}{
+		"undefined mcp_servers are omitted": {
+			manifest:     AppManifest{},
+			expectedJSON: `{"display_information":{"name":""}}`,
+		},
+		"nil mcp_servers are omitted": {
+			manifest:     AppManifest{MCPServers: nil},
+			expectedJSON: `{"display_information":{"name":""}}`,
+		},
+		"mcp_servers with url only": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {URL: "https://mcp.acme.com/mcp"},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp"}}}`,
+		},
+		"mcp_servers with auth_provider_key": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:             "https://mcp.acme.com/mcp",
+					AuthProviderKey: "acme",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme"}}}`,
+		},
+		"mcp_servers with auth_type": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:      "https://mcp.acme.com/mcp",
+					AuthType: "dynamic_client_registration",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_type":"dynamic_client_registration"}}}`,
+		},
+		"mcp_servers with all fields": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:             "https://mcp.acme.com/mcp",
+					AuthProviderKey: "acme",
+					AuthType:        "manual_auth",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme","auth_type":"manual_auth"}}}`,
+		},
+		"multiple mcp_servers": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme":  {URL: "https://mcp.acme.com/mcp"},
+				"other": {URL: "https://mcp.other.com/mcp", AuthType: "no_auth"},
+			}},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualJSON, err := json.Marshal(tc.manifest)
+			require.NoError(t, err)
+			if tc.expectedJSON != "" {
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+			}
+			// Verify round-trip unmarshaling
+			var unmarshaled AppManifest
+			err = json.Unmarshal(actualJSON, &unmarshaled)
+			require.NoError(t, err)
+			assert.Equal(t, tc.manifest.MCPServers, unmarshaled.MCPServers)
+		})
+	}
+}
+
 func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 	tests := map[string]struct {
 		settings        *AppSettings
