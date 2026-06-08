@@ -23,8 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/pkg/apps"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -133,7 +133,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			WithMessage("The --subdir flag requires the --template flag")
 	}
 
-	// --app requires --template (Mode 2 deferred)
+	// --app requires --template
 	appFlagProvided := clients.Config.AppFlag != "" && types.IsAppID(clients.Config.AppFlag)
 	if appFlagProvided && !templateFlagProvided {
 		return slackerror.New(slackerror.ErrMismatchedFlags).
@@ -144,23 +144,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	if cmd.Flags().Changed("environment") && !appFlagProvided {
 		return slackerror.New(slackerror.ErrMismatchedFlags).
 			WithMessage("The --environment flag requires the --app flag when used with create")
-	}
-
-	// Fail fast: resolve auth and fetch manifest before creating the project
-	var appAuth types.SlackAuth
-	var remoteManifest types.SlackYaml
-	if appFlagProvided {
-		auth, err := apps.ResolveAuthForApp(ctx, clients, clients.Config.AppFlag)
-		if err != nil {
-			return err
-		}
-		appAuth = auth
-
-		manifest, err := apps.FetchRemoteManifest(ctx, clients, auth.Token, clients.Config.AppFlag)
-		if err != nil {
-			return err
-		}
-		remoteManifest = manifest
 	}
 
 	// Collect the template URL or select a starting template
@@ -183,13 +166,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 
 	// Prompt for app name if not provided via flag or argument
 	if appPathArg == "" {
-		if appFlagProvided {
-			if remoteManifest.DisplayInformation.Name != "" {
-				appPathArg = remoteManifest.DisplayInformation.Name
-			} else {
-				appPathArg = generateRandomAppName()
-			}
-		} else if clients.IO.IsTTY() {
+		if clients.IO.IsTTY() {
 			defaultName := generateRandomAppName()
 			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{
 				Placeholder: defaultName,
@@ -230,19 +207,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		if err != nil {
 			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 		}
-		if nameFlagProvided {
-			remoteManifest.DisplayInformation.Name = displayName
-		}
-		if err := apps.WriteManifestToProject(clients.Fs, absProjectPath, remoteManifest); err != nil {
-			return err
-		}
-		// LinkAppToProject requires the working directory to be the project
-		// because SaveDeployed/SaveLocal use os.Getwd() to find .slack/
 		originalDir, _ := clients.Os.Getwd()
 		if err := os.Chdir(absProjectPath); err != nil {
 			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 		}
-		linkErr := apps.LinkAppToProject(ctx, clients, appAuth, clients.Config.AppFlag, remoteManifest, createEnvironmentFlag)
+		linkErr := app.LinkExistingApp(ctx, clients, &types.App{}, false)
 		_ = os.Chdir(originalDir)
 		if linkErr != nil {
 			return linkErr

@@ -16,7 +16,6 @@ package project
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -876,239 +875,6 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
-		"app flag with template fetches manifest and links as local by default": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
-				}, nil)
-				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
-					Return(api.GetAppStatusResult{}, nil)
-
-				manifestMock := cf.AppClient().Manifest.(*app.ManifestMockObject)
-				manifestMock.On("GetManifestRemote", mock.Anything, "xoxp-test-token", "A0123456789").
-					Return(types.SlackYaml{
-						AppManifest: types.AppManifest{
-							Settings: &types.AppSettings{
-								FunctionRuntime: types.Remote,
-							},
-						},
-					}, nil)
-
-				appClientMock := &app.AppClientMock{}
-				appClientMock.On("GetDeployed", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("GetLocal", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("SaveLocal", mock.Anything, mock.Anything).Return(nil)
-				cf.AppClient().AppClientInterface = appClientMock
-
-				tmpDir := t.TempDir()
-				projectDir := filepath.Join(tmpDir, "my-app")
-				require.NoError(t, os.MkdirAll(projectDir, 0755))
-
-				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"app flag with slack-hosted runtime links as deployed": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
-				}, nil)
-				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
-					Return(api.GetAppStatusResult{}, nil)
-
-				manifestMock := cf.AppClient().Manifest.(*app.ManifestMockObject)
-				manifestMock.On("GetManifestRemote", mock.Anything, "xoxp-test-token", "A0123456789").
-					Return(types.SlackYaml{
-						AppManifest: types.AppManifest{
-							Settings: &types.AppSettings{
-								FunctionRuntime: types.SlackHosted,
-							},
-						},
-					}, nil)
-
-				appClientMock := &app.AppClientMock{}
-				appClientMock.On("GetDeployed", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("GetLocal", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("SaveDeployed", mock.Anything, mock.MatchedBy(func(a types.App) bool {
-					return a.AppID == "A0123456789" && a.TeamID == "T123" && !a.IsDev
-				})).Return(nil)
-				cf.AppClient().AppClientInterface = appClientMock
-
-				tmpDir := t.TempDir()
-				projectDir := filepath.Join(tmpDir, "my-app")
-				require.NoError(t, os.MkdirAll(projectDir, 0755))
-
-				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"app flag with local runtime links as dev app": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
-				}, nil)
-				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
-					Return(api.GetAppStatusResult{}, nil)
-
-				manifestMock := cf.AppClient().Manifest.(*app.ManifestMockObject)
-				manifestMock.On("GetManifestRemote", mock.Anything, "xoxp-test-token", "A0123456789").
-					Return(types.SlackYaml{
-						AppManifest: types.AppManifest{
-							Settings: &types.AppSettings{
-								FunctionRuntime: types.LocallyRun,
-							},
-						},
-					}, nil)
-
-				appClientMock := &app.AppClientMock{}
-				appClientMock.On("GetDeployed", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("GetLocal", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("SaveLocal", mock.Anything, mock.Anything).Return(nil)
-				cf.AppClient().AppClientInterface = appClientMock
-
-				tmpDir := t.TempDir()
-				projectDir := filepath.Join(tmpDir, "my-app")
-				require.NoError(t, os.MkdirAll(projectDir, 0755))
-
-				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"name flag overrides manifest display name": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--name", "Custom Name"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
-				}, nil)
-				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
-					Return(api.GetAppStatusResult{}, nil)
-
-				manifestMock := cf.AppClient().Manifest.(*app.ManifestMockObject)
-				manifestMock.On("GetManifestRemote", mock.Anything, "xoxp-test-token", "A0123456789").
-					Return(types.SlackYaml{
-						AppManifest: types.AppManifest{
-							DisplayInformation: types.DisplayInformation{
-								Name: "Original Remote Name",
-							},
-							Settings: &types.AppSettings{
-								FunctionRuntime: types.Remote,
-							},
-						},
-					}, nil)
-
-				appClientMock := &app.AppClientMock{}
-				appClientMock.On("GetDeployed", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("GetLocal", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("SaveLocal", mock.Anything, mock.Anything).Return(nil)
-				cf.AppClient().AppClientInterface = appClientMock
-
-				tmpDir := t.TempDir()
-				projectDir := filepath.Join(tmpDir, "my-app")
-				require.NoError(t, os.MkdirAll(projectDir, 0755))
-
-				createClientMock = new(CreateClientMock)
-				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-				call := createClientMock.Calls[0]
-				projectDir := call.ReturnArguments[0].(string)
-				data, err := afero.ReadFile(cm.Fs, filepath.Join(projectDir, "manifest.json"))
-				require.NoError(t, err)
-				var result map[string]any
-				require.NoError(t, json.Unmarshal(data, &result))
-				displayInfo := result["display_information"].(map[string]any)
-				assert.Equal(t, "Custom Name", displayInfo["name"])
-			},
-		},
-		"app flag with no authenticated workspace returns error": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{}, nil)
-
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedErrorStrings: []string{"No workspaces connected"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"app flag with inaccessible app returns error": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
-				}, nil)
-				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
-					Return(api.GetAppStatusResult{}, assert.AnError)
-
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedErrorStrings: []string{"No authenticated workspace has access to app A0123456789"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"app flag with manifest export failure surfaces original error": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
-
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
-				}, nil)
-				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
-					Return(api.GetAppStatusResult{}, nil)
-
-				manifestMock := cf.AppClient().Manifest.(*app.ManifestMockObject)
-				manifestMock.On("GetManifestRemote", mock.Anything, "xoxp-test-token", "A0123456789").
-					Return(types.SlackYaml{}, assert.AnError)
-
-				createClientMock = new(CreateClientMock)
-				CreateFunc = createClientMock.Create
-			},
-			ExpectedErrorStrings: []string{assert.AnError.Error()},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
 		"environment flag without app flag returns error": {
 			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--environment", "deployed"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -1120,39 +886,37 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
-		"environment flag deployed overrides manifest inference": {
-			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "deployed"},
+		"app flag with template creates project then runs link": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
 
+				// LinkExistingApp calls PromptTeamSlackAuth which calls Auths
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					{Token: "xoxp-test-token", TeamID: "T123", TeamDomain: "test-team", UserID: "U123"},
 				}, nil)
+				// LinkExistingApp validates app access
 				cm.API.On("GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123").
 					Return(api.GetAppStatusResult{}, nil)
 
-				manifestMock := cf.AppClient().Manifest.(*app.ManifestMockObject)
-				manifestMock.On("GetManifestRemote", mock.Anything, "xoxp-test-token", "A0123456789").
-					Return(types.SlackYaml{
-						AppManifest: types.AppManifest{
-							Settings: &types.AppSettings{
-								FunctionRuntime: types.Remote,
-							},
-						},
-					}, nil)
-
+				// LinkExistingApp calls saveAppToJSON
 				appClientMock := &app.AppClientMock{}
 				appClientMock.On("GetDeployed", mock.Anything, "T123").Return(types.NewApp(), nil)
 				appClientMock.On("GetLocal", mock.Anything, "T123").Return(types.NewApp(), nil)
-				appClientMock.On("SaveDeployed", mock.Anything, mock.MatchedBy(func(a types.App) bool {
-					return a.AppID == "A0123456789" && !a.IsDev
-				})).Return(nil)
+				appClientMock.On("SaveLocal", mock.Anything, mock.Anything).Return(nil)
 				cf.AppClient().AppClientInterface = appClientMock
 
+				// Create project directory on real filesystem for os.Chdir
 				tmpDir := t.TempDir()
 				projectDir := filepath.Join(tmpDir, "my-app")
 				require.NoError(t, os.MkdirAll(projectDir, 0755))
+
+				// Set up mock Os.Getwd to return the project dir (used by ProjectConfig)
+				cm.Os.On("Getwd").Return(projectDir, nil)
+				// Create .slack/hooks.json on mock filesystem so GetProjectDirPath succeeds
+				require.NoError(t, cm.Fs.MkdirAll(filepath.Join(projectDir, ".slack"), 0755))
+				require.NoError(t, afero.WriteFile(cm.Fs, filepath.Join(projectDir, ".slack", "hooks.json"), []byte("{}"), 0644))
 
 				createClientMock = new(CreateClientMock)
 				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
@@ -1160,6 +924,7 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertCalled(t, "GetAppStatus", mock.Anything, "xoxp-test-token", []string{"A0123456789"}, "T123")
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
