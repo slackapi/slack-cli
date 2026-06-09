@@ -35,12 +35,12 @@ import (
 )
 
 // Flags
-var createTemplateURLFlag string
-var createGitBranchFlag string
 var createAppNameFlag string
+var createEnvironmentFlag string
+var createGitBranchFlag string
 var createListFlag bool
 var createSubdirFlag string
-var createEnvironmentFlag string
+var createTemplateURLFlag string
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -71,7 +71,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
 			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
 			{Command: "create my-project -t org/monorepo --subdir apps/my-app", Meaning: "Create from a subdirectory of a template"},
-			{Command: "create my-project -t slack-samples/bolt-js-starter-template --app A0123456789", Meaning: "Create from template and link to an existing app"},
+			{Command: "create my-project -t slack-samples/bolt-js-starter-template --app A0123456789 --environment local", Meaning: "Create from template and link to an existing app"},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -140,10 +140,16 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			WithMessage("The --app flag requires the --template flag when used with create")
 	}
 
-	// --environment requires --app
-	if cmd.Flags().Changed("environment") && !appFlagProvided {
-		return slackerror.New(slackerror.ErrMismatchedFlags).
-			WithMessage("The --environment flag requires the --app flag when used with create")
+	// --environment requires --app and must be "local" or "deployed"
+	if cmd.Flags().Changed("environment") {
+		if !appFlagProvided {
+			return slackerror.New(slackerror.ErrMismatchedFlags).
+				WithMessage("The --environment flag requires the --app flag when used with create")
+		}
+		if !types.IsAppFlagEnvironment(createEnvironmentFlag) {
+			return slackerror.New(slackerror.ErrMismatchedFlags).
+				WithMessage("The --environment flag must be either 'local' or 'deployed'")
+		}
 	}
 
 	// Collect the template URL or select a starting template
