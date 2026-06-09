@@ -16,6 +16,7 @@ package project
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -31,6 +32,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -211,10 +213,25 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		if err := os.Chdir(absProjectPath); err != nil {
 			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 		}
-		linkErr := app.LinkExistingApp(ctx, clients, &types.App{}, false)
+
+		linkedApp := &types.App{}
+		auth, linkErr := app.LinkExistingApp(ctx, clients, linkedApp, false)
 		_ = os.Chdir(originalDir)
 		if linkErr != nil {
 			return linkErr
+		}
+
+		if auth != nil && linkedApp.AppID != "" {
+			fetchErr := fetchAndWriteRemoteManifest(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
+			if fetchErr != nil {
+				clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
+					Text: "Could not fetch the remote app manifest",
+					Secondary: []string{
+						fetchErr.Error(),
+						"The template manifest was kept unchanged",
+					},
+				}))
+			}
 		}
 	}
 
@@ -271,6 +288,21 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 		}))
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.CreateSuccess)
+}
+
+// fetchAndWriteRemoteManifest fetches the app manifest from remote settings and writes it to the project.
+func fetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFactory, token, appID, projectPath string) error {
+	slackYaml, err := clients.AppClient().Manifest.GetManifestRemote(ctx, token, appID)
+	if err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(slackYaml.AppManifest, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	manifestPath := filepath.Join(projectPath, "manifest.json")
+	return afero.WriteFile(clients.Fs, manifestPath, data, 0644)
 }
 
 // generateRandomAppName will create a random app name based on two words and a number

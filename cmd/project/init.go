@@ -110,7 +110,7 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
 	// Add an existing app to the project
-	err = app.LinkExistingApp(ctx, clients, &types.App{}, true)
+	_, err = app.LinkExistingApp(ctx, clients, &types.App{}, true)
 	if err != nil {
 		// Display the error but continue to init
 		clients.IO.PrintError(ctx, "%s", err.Error())
