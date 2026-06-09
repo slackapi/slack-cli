@@ -407,18 +407,19 @@ func Test_AppManifest_MCPServers(t *testing.T) {
 		},
 		"mcp_servers with url only": {
 			manifest: AppManifest{MCPServers: map[string]MCPServer{
-				"acme": {URL: "https://mcp.acme.com/mcp"},
+				"acme": {URL: "https://mcp.acme.com/mcp", AuthType: "no_auth"},
 			}},
-			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp"}}}`,
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_type":"no_auth"}}}`,
 		},
 		"mcp_servers with auth_provider_key": {
 			manifest: AppManifest{MCPServers: map[string]MCPServer{
 				"acme": {
 					URL:             "https://mcp.acme.com/mcp",
 					AuthProviderKey: "acme",
+					AuthType:        "manual_auth",
 				},
 			}},
-			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme"}}}`,
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme","auth_type":"manual_auth"}}}`,
 		},
 		"mcp_servers with auth_type": {
 			manifest: AppManifest{MCPServers: map[string]MCPServer{
@@ -441,7 +442,7 @@ func Test_AppManifest_MCPServers(t *testing.T) {
 		},
 		"multiple mcp_servers": {
 			manifest: AppManifest{MCPServers: map[string]MCPServer{
-				"acme":  {URL: "https://mcp.acme.com/mcp"},
+				"acme":  {URL: "https://mcp.acme.com/mcp", AuthType: "dynamic_client_registration"},
 				"other": {URL: "https://mcp.other.com/mcp", AuthType: "no_auth"},
 			}},
 		},
