@@ -1156,6 +1156,12 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### no_app_selected {#no_app_selected}
+
+**Message**: No app selected
+
+---
+
 ### no_file {#no_file}
 
 **Message**: Couldn't upload your bundled code to server

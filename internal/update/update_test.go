@@ -158,6 +158,18 @@ func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 			command:  "api",
 			expected: true,
 		},
+		"api command with method": {
+			command:  "api chat.postMessage",
+			expected: true,
+		},
+		"api command with method and args": {
+			command:  "api chat.postMessage channel=C123 text=hello",
+			expected: true,
+		},
+		"api command with flags": {
+			command:  "api chat.postMessage --json {}",
+			expected: true,
+		},
 		"fingerprint command": {
 			command:  "_fingerprint",
 			expected: true,

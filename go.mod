@@ -1,9 +1,9 @@
 module github.com/slackapi/slack-cli
 
-go 1.26.3
+go 1.26.4
 
 require (
-	charm.land/bubbletea/v2 v2.0.6
+	charm.land/bubbletea/v2 v2.0.7
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.3
 	github.com/briandowns/spinner v1.23.2
@@ -25,9 +25,9 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
-	golang.org/x/mod v0.36.0
-	golang.org/x/sys v0.45.0
-	golang.org/x/text v0.37.0
+	golang.org/x/mod v0.37.0
+	golang.org/x/sys v0.46.0
+	golang.org/x/text v0.38.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -167,7 +167,7 @@ require (
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/fang v1.0.0 // indirect
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260416155717-489999b90468 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260525132238-948f4557a654 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/exp/charmtone v0.0.0-20250603201427-c31516f43444 // indirect
 	github.com/charmbracelet/x/exp/ordered v0.1.0 // indirect
@@ -486,13 +486,13 @@ require (
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	gocloud.dev v0.45.0 // indirect
-	golang.org/x/crypto v0.50.0 // indirect
+	golang.org/x/crypto v0.51.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.272.0 // indirect
 	google.golang.org/genproto v0.0.0-20260316180232-0b37fe3546d5 // indirect
@@ -527,7 +527,7 @@ require (
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/uber/jaeger-lib v2.4.1+incompatible // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/term v0.42.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
