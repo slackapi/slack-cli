@@ -22,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
@@ -878,6 +879,64 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 			ExpectedErrorStrings: []string{"The --environment flag requires the --app flag when used with create"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"invalid environment flag returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "invalid"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --environment flag must be either 'local' or 'deployed'"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with template creates project then calls link": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				linkCalled := false
+				LinkFunc = func(ctx context.Context, clients *shared.ClientFactory, a *types.App, shouldConfirm bool) error {
+					linkCalled = true
+					assert.False(t, shouldConfirm)
+					return nil
+				}
+				t.Cleanup(func() {
+					assert.True(t, linkCalled, "LinkFunc should have been called")
+				})
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag without environment still calls link": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				linkCalled := false
+				LinkFunc = func(ctx context.Context, clients *shared.ClientFactory, a *types.App, shouldConfirm bool) error {
+					linkCalled = true
+					return nil
+				}
+				t.Cleanup(func() {
+					assert.True(t, linkCalled, "LinkFunc should have been called")
+				})
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
