@@ -220,14 +220,18 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		if err != nil {
 			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 		}
-		originalDir, _ := clients.Os.Getwd()
+		originalDir, err := clients.Os.Getwd()
+		if err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
 		if err := os.Chdir(absProjectPath); err != nil {
 			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
 		}
-		linkErr := LinkFunc(ctx, clients, &types.App{}, false)
-		_ = os.Chdir(originalDir)
-		if linkErr != nil {
-			return linkErr
+		defer func() {
+			_ = os.Chdir(originalDir)
+		}()
+		if err := LinkFunc(ctx, clients, &types.App{}, false); err != nil {
+			return err
 		}
 	}
 
