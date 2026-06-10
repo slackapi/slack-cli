@@ -45,7 +45,6 @@ var createTemplateURLFlag string
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
 var CreateFunc = create.Create
-var LinkFunc = app.LinkExistingApp
 
 // promptObject describes the Github app template
 type promptObject struct {
@@ -230,7 +229,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		defer func() {
 			_ = os.Chdir(originalDir)
 		}()
-		if err := LinkFunc(ctx, clients, &types.App{}, false); err != nil {
+		if err := app.LinkExistingApp(ctx, clients, &types.App{}, false); err != nil {
 			return err
 		}
 	}
