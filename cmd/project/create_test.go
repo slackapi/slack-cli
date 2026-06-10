@@ -870,6 +870,28 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
+		"app flag with environment-style value returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires an app ID when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with lowercase id returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "a0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires an app ID when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
 		"environment flag without app flag returns error": {
 			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--environment", "deployed"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

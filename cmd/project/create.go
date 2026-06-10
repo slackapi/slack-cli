@@ -134,8 +134,14 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			WithMessage("The --subdir flag requires the --template flag")
 	}
 
+	// --app must be an app ID when used with create
+	appFlagProvided := clients.Config.AppFlag != ""
+	if appFlagProvided && !types.IsAppID(clients.Config.AppFlag) {
+		return slackerror.New(slackerror.ErrInvalidAppFlag).
+			WithMessage("The --app flag requires an app ID when used with create")
+	}
+
 	// --app requires --template
-	appFlagProvided := clients.Config.AppFlag != "" && types.IsAppID(clients.Config.AppFlag)
 	if appFlagProvided && !templateFlagProvided {
 		return slackerror.New(slackerror.ErrMismatchedFlags).
 			WithMessage("The --app flag requires the --template flag when used with create")
