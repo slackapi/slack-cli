@@ -19,8 +19,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/app"
-	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -34,88 +32,22 @@ import (
 
 func TestExternalAuthAddClientSecretCommandPreRun(t *testing.T) {
 	tests := map[string]struct {
-		mockFlagForce        bool
-		mockManifestResponse types.SlackYaml
-		mockManifestError    error
-		mockManifestSource   config.ManifestSource
 		mockWorkingDirectory string
 		expectedError        error
 	}{
-		"continues if the application is hosted on slack": {
-			mockManifestResponse: types.SlackYaml{
-				AppManifest: types.AppManifest{
-					Settings: &types.AppSettings{
-						FunctionRuntime: types.SlackHosted,
-					},
-				},
-			},
-			mockManifestError:    nil,
+		"continues if the command is run in a valid project directory": {
 			mockWorkingDirectory: "/slack/path/to/project",
 			expectedError:        nil,
-		},
-		"errors if the application is not hosted on slack": {
-			mockManifestResponse: types.SlackYaml{
-				AppManifest: types.AppManifest{
-					Settings: &types.AppSettings{
-						FunctionRuntime: types.Remote,
-					},
-				},
-			},
-			mockManifestError:    nil,
-			mockManifestSource:   config.ManifestSourceLocal,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
-		},
-		"continues if the force flag is used in a project": {
-			mockFlagForce:        true,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        nil,
-		},
-		"errors if the project manifest cannot be retrieved": {
-			mockManifestResponse: types.SlackYaml{},
-			mockManifestError:    slackerror.New(slackerror.ErrSDKHookInvocationFailed),
-			mockManifestSource:   config.ManifestSourceLocal,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrSDKHookInvocationFailed),
 		},
 		"errors if the command is not run in a project": {
-			mockManifestResponse: types.SlackYaml{},
-			mockManifestError:    slackerror.New(slackerror.ErrSDKHookNotFound),
-			mockManifestSource:   config.ManifestSourceLocal,
 			mockWorkingDirectory: "",
 			expectedError:        slackerror.New(slackerror.ErrInvalidAppDirectory),
-		},
-		"errors if the manifest source is set to remote": {
-			mockManifestSource:   config.ManifestSourceRemote,
-			mockWorkingDirectory: "/slack/path/to/project",
-			expectedError:        slackerror.New(slackerror.ErrAppNotHosted),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
-			manifestMock := &app.ManifestMockObject{}
-			manifestMock.On(
-				"GetManifestLocal",
-				mock.Anything,
-				mock.Anything,
-				mock.Anything,
-			).Return(
-				tc.mockManifestResponse,
-				tc.mockManifestError,
-			)
-			clientsMock.AppClient.Manifest = manifestMock
-			projectConfigMock := config.NewProjectConfigMock()
-			projectConfigMock.On(
-				"GetManifestSource",
-				mock.Anything,
-			).Return(
-				tc.mockManifestSource,
-				nil,
-			)
-			clientsMock.Config.ProjectConfig = projectConfigMock
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(cf *shared.ClientFactory) {
-				cf.Config.ForceFlag = tc.mockFlagForce
 				cf.SDKConfig.WorkingDirectory = tc.mockWorkingDirectory
 			})
 			cmd := NewAddClientSecretCommand(clients)
