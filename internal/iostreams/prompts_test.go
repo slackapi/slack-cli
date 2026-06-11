@@ -203,8 +203,8 @@ func TestErrInteractivityFlags(t *testing.T) {
 			cfg: SelectPromptConfig{
 				Flag: &pflag.Flag{Name: "team"},
 				Options: []PromptOption{
-					{Label: "team-one", Flag: "team", Value: "T0001"},
-					{Label: "team-two", Flag: "team", Value: "T0002"},
+					{Label: "team-one", Flag: &pflag.Flag{Name: "team"}, Value: "T0001"},
+					{Label: "team-two", Flag: &pflag.Flag{Name: "team"}, Value: "T0002"},
 				},
 			},
 			message: "Choose a team",
@@ -223,7 +223,7 @@ func TestErrInteractivityFlags(t *testing.T) {
 			cfg: SelectPromptConfig{
 				Flag: &pflag.Flag{Name: "team"},
 				Options: []PromptOption{
-					{Label: "team-one", Flag: "team", Value: "T0001"},
+					{Label: "team-one", Flag: &pflag.Flag{Name: "team"}, Value: "T0001"},
 				},
 			},
 			message: "Choose a team",
@@ -259,8 +259,8 @@ func TestErrInteractivityFlags_StructuredDetails(t *testing.T) {
 	cfg := SelectPromptConfig{
 		Flag: &pflag.Flag{Name: "team"},
 		Options: []PromptOption{
-			{Label: "team-one", Flag: "team", Value: "T0001"},
-			{Label: "team-two", Flag: "team", Value: "T0002"},
+			{Label: "team-one", Flag: &pflag.Flag{Name: "team"}, Value: "T0001"},
+			{Label: "team-two", Flag: &pflag.Flag{Name: "team"}, Value: "T0002"},
 		},
 	}
 	err := errInteractivityFlags(cfg, "Choose a team", []string{"team-one", "team-two"})

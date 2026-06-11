@@ -601,6 +601,7 @@ func AppSelectPrompt(
 	if cfg.includeNoApp {
 		options = append(options, Selection{label: noApp})
 	}
+	appFlag := clients.Config.Flags.Lookup("app")
 	labels := []string{}
 	appOptions := []iostreams.PromptOption{}
 	for _, opt := range options {
@@ -609,7 +610,7 @@ func AppSelectPrompt(
 		// are emitted as label-only so the option list stays 1:1 with labels.
 		promptOpt := iostreams.PromptOption{Label: opt.label}
 		if opt.app.App.AppID != "" {
-			promptOpt.Flag = "app"
+			promptOpt.Flag = appFlag
 			promptOpt.Value = opt.app.App.AppID
 		}
 		appOptions = append(appOptions, promptOpt)

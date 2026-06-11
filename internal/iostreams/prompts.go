@@ -38,9 +38,9 @@ type PromptConfig interface {
 // a non-TTY context, the resulting error renders one of these per option so
 // agents and scripts can re-run with the right --flag=value.
 type PromptOption struct {
-	Label string // The option as rendered in the interactive list
-	Flag  string // The pflag name, e.g. "team", "app"
-	Value string // The value to pass, e.g. "T0123" or "A0ABCD"
+	Label string      // The option as rendered in the interactive list
+	Flag  *pflag.Flag // The flag substitute for this option
+	Value string      // The value to pass, e.g. "T0123" or "A0ABCD"
 }
 
 // PromptOptionsConfig is optionally implemented by prompt configs that can
@@ -212,7 +212,7 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 
 	hasFlagOptions := false
 	for _, opt := range promptOptions {
-		if opt.Flag != "" && opt.Value != "" {
+		if opt.Flag != nil && opt.Value != "" {
 			hasFlagOptions = true
 			break
 		}
@@ -231,7 +231,7 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 		labelWidth := 0
 		if hasFlagOptions {
 			for _, opt := range promptOptions {
-				if opt.Flag == "" || opt.Value == "" {
+				if opt.Flag == nil || opt.Value == "" {
 					continue
 				}
 				if w := lipgloss.Width(opt.Label); w > labelWidth {
@@ -240,12 +240,12 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 			}
 		}
 		for _, opt := range promptOptions {
-			if opt.Flag == "" || opt.Value == "" {
+			if opt.Flag == nil || opt.Value == "" {
 				body = append(body, fmt.Sprintf("    %s", opt.Label))
 				continue
 			}
 			padding := max(labelWidth-lipgloss.Width(opt.Label), 0)
-			flagText := style.Secondary(fmt.Sprintf("--%s=%s", opt.Flag, opt.Value))
+			flagText := style.Secondary(fmt.Sprintf("--%s=%s", opt.Flag.Name, opt.Value))
 			body = append(body, fmt.Sprintf("    %s%s  %s", opt.Label, strings.Repeat(" ", padding), flagText))
 		}
 	case len(options) > 0:
@@ -257,10 +257,10 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 	var remediation string
 	switch {
 	case hasFlagOptions:
-		flagName := promptOptions[0].Flag
+		var flagName string
 		for _, opt := range promptOptions {
-			if opt.Flag != "" {
-				flagName = opt.Flag
+			if opt.Flag != nil {
+				flagName = opt.Flag.Name
 				break
 			}
 		}
