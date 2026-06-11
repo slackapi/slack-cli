@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	lipgloss "charm.land/lipgloss/v2"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/pflag"
@@ -195,29 +196,18 @@ func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, erro
 
 // errInteractivityFlags formats an error for when flag substitutes are needed.
 // It re-renders the prompt question and any enumerable options (with their
-// equivalent --flag=value invocations) so agents and devops scripts can read
-// the error and re-run with the right flags. Configs that don't expose
-// per-option flag invocations fall back to a flag-name-only suggestion.
+// equivalent --flag=value invocations) as part of the error body so agents
+// and devops scripts can read the error and re-run with the right flags.
+// The Suggestion remains a short, single-line directive.
 func errInteractivityFlags(cfg PromptConfig, message string, options []string) error {
 	flags := cfg.GetFlags()
-
-	details := slackerror.ErrorDetails{
-		slackerror.ErrorDetail{Message: "The input device is not a TTY or does not support interactivity"},
-	}
 
 	var promptOptions []PromptOption
 	if oc, ok := cfg.(PromptOptionsConfig); ok {
 		promptOptions = oc.GetPromptOptions()
 	}
-	// Only honor per-option flag invocations when they line up with the
-	// options actually shown to the user; mismatches indicate a stale config.
 	if len(options) > 0 && len(promptOptions) != len(options) {
 		promptOptions = nil
-	}
-
-	var lines []string
-	if message != "" {
-		lines = append(lines, fmt.Sprintf("? %s", message))
 	}
 
 	hasFlagOptions := false
@@ -228,33 +218,70 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 		}
 	}
 
+	body := []string{"The input device is not a TTY or does not support interactivity"}
+	if message != "" || len(promptOptions) > 0 || len(options) > 0 {
+		body = append(body, "The prompt that would have been shown is below:", "")
+	}
+	if message != "" {
+		body = append(body, fmt.Sprintf("› %s", message))
+	}
+
 	switch {
-	case hasFlagOptions:
+	case len(promptOptions) > 0:
+		labelWidth := 0
+		if hasFlagOptions {
+			for _, opt := range promptOptions {
+				if opt.Flag == "" || opt.Value == "" {
+					continue
+				}
+				if w := lipgloss.Width(opt.Label); w > labelWidth {
+					labelWidth = w
+				}
+			}
+		}
 		for _, opt := range promptOptions {
 			if opt.Flag == "" || opt.Value == "" {
-				lines = append(lines, fmt.Sprintf("  %s", opt.Label))
+				body = append(body, fmt.Sprintf("    %s", opt.Label))
 				continue
 			}
-			lines = append(lines, fmt.Sprintf("  %s  %s", opt.Label, style.Secondary(fmt.Sprintf("--%s=%s", opt.Flag, opt.Value))))
+			padding := max(labelWidth-lipgloss.Width(opt.Label), 0)
+			flagText := style.Secondary(fmt.Sprintf("--%s=%s", opt.Flag, opt.Value))
+			body = append(body, fmt.Sprintf("    %s%s  %s", opt.Label, strings.Repeat(" ", padding), flagText))
 		}
-		lines = append(lines, "Re-run with one of the values above")
+	case len(options) > 0:
+		for _, opt := range options {
+			body = append(body, fmt.Sprintf("    %s", opt))
+		}
+	}
+
+	var remediation string
+	switch {
+	case hasFlagOptions:
+		flagName := promptOptions[0].Flag
+		for _, opt := range promptOptions {
+			if opt.Flag != "" {
+				flagName = opt.Flag
+				break
+			}
+		}
+		remediation = fmt.Sprintf("Re-run with one of the `--%s` values shown above", flagName)
 	case len(flags) == 1:
-		lines = append(lines, fmt.Sprintf("Try running the command with the `--%s` flag included", flags[0].Name))
-		lines = append(lines, "Learn more about this flag with `--help`")
+		remediation = fmt.Sprintf("Try running the command with the `--%s` flag included\nLearn more about this flag with `--help`", flags[0].Name)
 	case len(flags) > 1:
 		names := make([]string, 0, len(flags))
 		for _, flag := range flags {
 			names = append(names, flag.Name)
 		}
-		lines = append(lines, fmt.Sprintf("Consider using the following flags when running this command:\n   `--%s`", strings.Join(names, "`\n   `--")))
-		lines = append(lines, "Learn more about these flags with `--help`")
+		remediation = fmt.Sprintf("Consider using the following flags when running this command:\n   `--%s`\nLearn more about these flags with `--help`", strings.Join(names, "`\n   `--"))
 	default:
-		lines = append(lines, "Learn more about this command with `--help`")
+		remediation = "Learn more about this command with `--help`"
 	}
 
 	return slackerror.New(slackerror.ErrPrompt).
-		WithDetails(details).
-		WithRemediation("%s", strings.Join(lines, "\n"))
+		WithDetails(slackerror.ErrorDetails{
+			slackerror.ErrorDetail{Message: strings.Join(body, "\n")},
+		}).
+		WithRemediation("%s", remediation)
 }
 
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for

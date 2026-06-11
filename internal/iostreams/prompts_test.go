@@ -210,10 +210,13 @@ func TestErrInteractivityFlags(t *testing.T) {
 			message: "Choose a team",
 			options: []string{"team-one", "team-two"},
 			contains: []string{
-				"Choose a team",
+				"prompt that would have been shown",
+				"› Choose a team",
+				"team-one",
 				"--team=T0001",
+				"team-two",
 				"--team=T0002",
-				"Re-run with one of the values above",
+				"Re-run with one of the `--team` values shown above",
 			},
 		},
 		"degrades to flag suggestion when option count mismatches": {
@@ -223,15 +226,20 @@ func TestErrInteractivityFlags(t *testing.T) {
 					{Label: "team-one", Flag: "team", Value: "T0001"},
 				},
 			},
-			message:  "Choose a team",
-			options:  []string{"team-one", "team-two"},
-			contains: []string{"--team", "Choose a team"},
-			excludes: []string{"--team=T0001", "Re-run with one of the values above"},
+			message: "Choose a team",
+			options: []string{"team-one", "team-two"},
+			contains: []string{
+				"--team",
+				"› Choose a team",
+				"team-one",
+				"team-two",
+			},
+			excludes: []string{"--team=T0001", "Re-run with one of"},
 		},
 		"renders question even without options": {
 			cfg:      InputPromptConfig{Required: true},
 			message:  "Enter a name",
-			contains: []string{"Enter a name"},
+			contains: []string{"› Enter a name"},
 		},
 	}
 	for name, tc := range tests {
@@ -260,15 +268,15 @@ func TestErrInteractivityFlags_StructuredDetails(t *testing.T) {
 
 	assert.Equal(t, slackerror.ErrPrompt, se.Code)
 	require.Len(t, se.Details, 1)
-	assert.Contains(t, se.Details[0].Message, "not a TTY")
 
-	rendered := err.Error()
-	assert.Contains(t, rendered, "? Choose a team")
-	assert.Contains(t, rendered, "team-one")
-	assert.Contains(t, rendered, "--team=T0001")
-	assert.Contains(t, rendered, "team-two")
-	assert.Contains(t, rendered, "--team=T0002")
-	assert.Contains(t, rendered, "Re-run with one of the values above")
+	body := se.Details[0].Message
+	assert.Contains(t, body, "not a TTY")
+	assert.Contains(t, body, "prompt that would have been shown")
+	assert.Contains(t, body, "› Choose a team")
+	assert.Contains(t, body, "--team=T0001")
+	assert.Contains(t, body, "--team=T0002")
+
+	assert.Equal(t, "Re-run with one of the `--team` values shown above", se.Remediation)
 }
 
 func TestPasswordPrompt(t *testing.T) {
