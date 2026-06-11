@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/pflag"
 )
 
@@ -29,6 +30,23 @@ import (
 type PromptConfig interface {
 	GetFlags() []*pflag.Flag // GetFlags returns all flags for the prompt
 	IsRequired() bool        // IsRequired returns if a response must be provided
+}
+
+// PromptOption pairs an interactive option label with the flag invocation
+// that picks the same option non-interactively. When a prompt is reached in
+// a non-TTY context, the resulting error renders one of these per option so
+// agents and scripts can re-run with the right --flag=value.
+type PromptOption struct {
+	Label string // The option as rendered in the interactive list
+	Flag  string // The pflag name, e.g. "team", "app"
+	Value string // The value to pass, e.g. "T0123" or "A0ABCD"
+}
+
+// PromptOptionsConfig is optionally implemented by prompt configs that can
+// enumerate options as flag invocations. Configs that do not implement it
+// (or return an empty slice) keep the simpler "Try --flag" remediation.
+type PromptOptionsConfig interface {
+	GetPromptOptions() []PromptOption
 }
 
 // ConfirmPromptConfig holds additional configs for a Confirm prompt
@@ -64,12 +82,18 @@ func (cfg InputPromptConfig) IsRequired() bool {
 
 // MultiSelectPromptConfig holds additional configs for a MultiSelect prompt
 type MultiSelectPromptConfig struct {
-	Required bool // If a response is required
+	Options  []PromptOption // Optional flag invocations parallel to the prompt's options
+	Required bool           // If a response is required
 }
 
 // GetFlags returns all flags for the MultiSelect prompt
 func (cfg MultiSelectPromptConfig) GetFlags() []*pflag.Flag {
 	return []*pflag.Flag{}
+}
+
+// GetPromptOptions returns flag invocations for each option, when set
+func (cfg MultiSelectPromptConfig) GetPromptOptions() []PromptOption {
+	return cfg.Options
 }
 
 // IsRequired returns if a response is required
@@ -112,6 +136,7 @@ type SelectPromptConfig struct {
 	Flag        *pflag.Flag                          // The single flag substitute for this prompt
 	Flags       []*pflag.Flag                        // Otherwise multiple flag substitutes for this prompt
 	Help        string                               // Optional help text displayed below the select title
+	Options     []PromptOption                       // Optional flag invocations parallel to the prompt's options
 	PageSize    int                                  // DEPRECATED: The number of options displayed before the user needs to scroll
 	Required    bool                                 // If a response is required
 	Template    string                               // DEPRECATED: Custom formatting of the selection prompt
@@ -127,6 +152,11 @@ func (cfg SelectPromptConfig) GetFlags() []*pflag.Flag {
 	default:
 		return []*pflag.Flag{}
 	}
+}
+
+// GetPromptOptions returns flag invocations for each option, when set
+func (cfg SelectPromptConfig) GetPromptOptions() []PromptOption {
+	return cfg.Options
 }
 
 // IsRequired returns if a response is required
@@ -163,37 +193,75 @@ func (io *IOStreams) retrieveFlagValue(flagset []*pflag.Flag) (*pflag.Flag, erro
 	return flag, nil
 }
 
-// errInteractivityFlags formats an error for when flag substitutes are needed
-func errInteractivityFlags(cfg PromptConfig) error {
+// errInteractivityFlags formats an error for when flag substitutes are needed.
+// It re-renders the prompt question and any enumerable options (with their
+// equivalent --flag=value invocations) so agents and devops scripts can read
+// the error and re-run with the right flags. Configs that don't expose
+// per-option flag invocations fall back to a flag-name-only suggestion.
+func errInteractivityFlags(cfg PromptConfig, message string, options []string) error {
 	flags := cfg.GetFlags()
-	var remediation string
-	var helpMessage = "Learn more about this command with `--help`"
 
-	if len(flags) == 1 {
-		remediation = fmt.Sprintf("Try running the command with the `--%s` flag included", flags[0].Name)
-		helpMessage = "Learn more about this flag with `--help`"
-	} else if len(flags) > 1 {
-		var names []string
+	details := slackerror.ErrorDetails{
+		slackerror.ErrorDetail{Message: "The input device is not a TTY or does not support interactivity"},
+	}
+
+	var promptOptions []PromptOption
+	if oc, ok := cfg.(PromptOptionsConfig); ok {
+		promptOptions = oc.GetPromptOptions()
+	}
+	// Only honor per-option flag invocations when they line up with the
+	// options actually shown to the user; mismatches indicate a stale config.
+	if len(options) > 0 && len(promptOptions) != len(options) {
+		promptOptions = nil
+	}
+
+	var lines []string
+	if message != "" {
+		lines = append(lines, fmt.Sprintf("? %s", message))
+	}
+
+	hasFlagOptions := false
+	for _, opt := range promptOptions {
+		if opt.Flag != "" && opt.Value != "" {
+			hasFlagOptions = true
+			break
+		}
+	}
+
+	switch {
+	case hasFlagOptions:
+		for _, opt := range promptOptions {
+			if opt.Flag == "" || opt.Value == "" {
+				lines = append(lines, fmt.Sprintf("  %s", opt.Label))
+				continue
+			}
+			lines = append(lines, fmt.Sprintf("  %s  %s", opt.Label, style.Secondary(fmt.Sprintf("--%s=%s", opt.Flag, opt.Value))))
+		}
+		lines = append(lines, "Re-run with one of the values above")
+	case len(flags) == 1:
+		lines = append(lines, fmt.Sprintf("Try running the command with the `--%s` flag included", flags[0].Name))
+		lines = append(lines, "Learn more about this flag with `--help`")
+	case len(flags) > 1:
+		names := make([]string, 0, len(flags))
 		for _, flag := range flags {
 			names = append(names, flag.Name)
 		}
-		flags := strings.Join(names, "`\n   `--")
-		remediation = fmt.Sprintf("Consider using the following flags when running this command:\n   `--%s`", flags)
-		helpMessage = "Learn more about these flags with `--help`"
+		lines = append(lines, fmt.Sprintf("Consider using the following flags when running this command:\n   `--%s`", strings.Join(names, "`\n   `--")))
+		lines = append(lines, "Learn more about these flags with `--help`")
+	default:
+		lines = append(lines, "Learn more about this command with `--help`")
 	}
 
 	return slackerror.New(slackerror.ErrPrompt).
-		WithDetails(slackerror.ErrorDetails{
-			slackerror.ErrorDetail{Message: "The input device is not a TTY or does not support interactivity"},
-		}).
-		WithRemediation("%s\n%s", remediation, helpMessage)
+		WithDetails(details).
+		WithRemediation("%s", strings.Join(lines, "\n"))
 }
 
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
 // the message
 func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
 	if !io.IsTTY() {
-		return false, errInteractivityFlags(ConfirmPromptConfig{})
+		return false, errInteractivityFlags(ConfirmPromptConfig{}, message, nil)
 	}
 	return confirmForm(io, ctx, message, defaultValue)
 }
@@ -203,7 +271,7 @@ func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultV
 func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error) {
 	if !io.IsTTY() {
 		if cfg.IsRequired() {
-			return "", errInteractivityFlags(cfg)
+			return "", errInteractivityFlags(cfg, message, nil)
 		}
 		return "", nil
 	}
@@ -214,7 +282,7 @@ func (io *IOStreams) InputPrompt(ctx context.Context, message string, cfg InputP
 // returns the selected values
 func (io *IOStreams) MultiSelectPrompt(ctx context.Context, message string, options []string) ([]string, error) {
 	if !io.IsTTY() {
-		return nil, errInteractivityFlags(MultiSelectPromptConfig{})
+		return nil, errInteractivityFlags(MultiSelectPromptConfig{}, message, options)
 	}
 	return multiSelectForm(io, ctx, message, options)
 }
@@ -228,7 +296,7 @@ func (io *IOStreams) PasswordPrompt(ctx context.Context, message string, cfg Pas
 		return PasswordPromptResponse{Flag: true, Value: cfg.Flag.Value.String()}, nil
 	}
 	if !io.IsTTY() {
-		return PasswordPromptResponse{}, errInteractivityFlags(cfg)
+		return PasswordPromptResponse{}, errInteractivityFlags(cfg, message, nil)
 	}
 
 	return passwordForm(io, ctx, message, cfg)
@@ -250,7 +318,7 @@ func (io *IOStreams) SelectPrompt(ctx context.Context, msg string, options []str
 	}
 	if !io.IsTTY() {
 		if cfg.IsRequired() {
-			return SelectPromptResponse{}, errInteractivityFlags(cfg)
+			return SelectPromptResponse{}, errInteractivityFlags(cfg, msg, options)
 		} else {
 			return SelectPromptResponse{}, nil
 		}

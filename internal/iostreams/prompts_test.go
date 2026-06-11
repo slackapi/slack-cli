@@ -177,7 +177,10 @@ func TestRetrieveFlagValue(t *testing.T) {
 func TestErrInteractivityFlags(t *testing.T) {
 	tests := map[string]struct {
 		cfg      PromptConfig
+		message  string
+		options  []string
 		contains []string
+		excludes []string
 	}{
 		"no flags shows generic message": {
 			cfg:      ConfirmPromptConfig{},
@@ -196,15 +199,76 @@ func TestErrInteractivityFlags(t *testing.T) {
 			}},
 			contains: []string{"--app", "--team"},
 		},
+		"renders question and per-option flag invocations when provided": {
+			cfg: SelectPromptConfig{
+				Flag: &pflag.Flag{Name: "team"},
+				Options: []PromptOption{
+					{Label: "team-one", Flag: "team", Value: "T0001"},
+					{Label: "team-two", Flag: "team", Value: "T0002"},
+				},
+			},
+			message: "Choose a team",
+			options: []string{"team-one", "team-two"},
+			contains: []string{
+				"Choose a team",
+				"--team=T0001",
+				"--team=T0002",
+				"Re-run with one of the values above",
+			},
+		},
+		"degrades to flag suggestion when option count mismatches": {
+			cfg: SelectPromptConfig{
+				Flag: &pflag.Flag{Name: "team"},
+				Options: []PromptOption{
+					{Label: "team-one", Flag: "team", Value: "T0001"},
+				},
+			},
+			message:  "Choose a team",
+			options:  []string{"team-one", "team-two"},
+			contains: []string{"--team", "Choose a team"},
+			excludes: []string{"--team=T0001", "Re-run with one of the values above"},
+		},
+		"renders question even without options": {
+			cfg:      InputPromptConfig{Required: true},
+			message:  "Enter a name",
+			contains: []string{"Enter a name"},
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := errInteractivityFlags(tc.cfg)
+			err := errInteractivityFlags(tc.cfg, tc.message, tc.options)
 			for _, s := range tc.contains {
 				assert.Contains(t, err.Error(), s)
 			}
+			for _, s := range tc.excludes {
+				assert.NotContains(t, err.Error(), s)
+			}
 		})
 	}
+}
+
+func TestErrInteractivityFlags_StructuredDetails(t *testing.T) {
+	cfg := SelectPromptConfig{
+		Flag: &pflag.Flag{Name: "team"},
+		Options: []PromptOption{
+			{Label: "team-one", Flag: "team", Value: "T0001"},
+			{Label: "team-two", Flag: "team", Value: "T0002"},
+		},
+	}
+	err := errInteractivityFlags(cfg, "Choose a team", []string{"team-one", "team-two"})
+	se := slackerror.ToSlackError(err)
+
+	assert.Equal(t, slackerror.ErrPrompt, se.Code)
+	require.Len(t, se.Details, 1)
+	assert.Contains(t, se.Details[0].Message, "not a TTY")
+
+	rendered := err.Error()
+	assert.Contains(t, rendered, "? Choose a team")
+	assert.Contains(t, rendered, "team-one")
+	assert.Contains(t, rendered, "--team=T0001")
+	assert.Contains(t, rendered, "team-two")
+	assert.Contains(t, rendered, "--team=T0002")
+	assert.Contains(t, rendered, "Re-run with one of the values above")
 }
 
 func TestPasswordPrompt(t *testing.T) {
