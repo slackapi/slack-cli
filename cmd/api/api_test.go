@@ -44,13 +44,15 @@ func Test_NewCommand(t *testing.T) {
 
 func Test_runAPICommand_BodyFormats(t *testing.T) {
 	tests := map[string]struct {
-		flags          cmdFlags
-		args           []string
-		expectedMethod string
-		expectedCT     string
-		expectedAuth   string
-		bodyContains   []string
-		bodyEquals     string
+		flags           cmdFlags
+		args            []string
+		expectedMethod  string
+		expectedCT      string
+		expectedAuth    string
+		assertNoAuth    bool
+		bodyContains    []string
+		bodyNotContains []string
+		bodyEquals      string
 	}{
 		"form-encoded key=value params": {
 			flags:          cmdFlags{method: "POST"},
@@ -84,6 +86,36 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			args:           []string{"auth.test"},
 			expectedMethod: "GET",
 		},
+		"no token with key=value params": {
+			flags:           cmdFlags{method: "POST"},
+			args:            []string{"blocks.validate", "blocks=[...]"},
+			expectedCT:      "application/x-www-form-urlencoded",
+			assertNoAuth:    true,
+			bodyContains:    []string{"blocks="},
+			bodyNotContains: []string{"token="},
+		},
+		"no token with --data flag": {
+			flags:           cmdFlags{method: "POST", data: "blocks=[...]"},
+			args:            []string{"blocks.validate"},
+			expectedCT:      "application/x-www-form-urlencoded",
+			assertNoAuth:    true,
+			bodyEquals:      "blocks=[...]",
+			bodyNotContains: []string{"token="},
+		},
+		"no token with --json flag": {
+			flags:        cmdFlags{method: "POST", json: `{"blocks":[]}`},
+			args:         []string{"blocks.validate"},
+			expectedCT:   "application/json; charset=utf-8",
+			assertNoAuth: true,
+			bodyEquals:   `{"blocks":[]}`,
+		},
+		"no token with no params": {
+			flags:        cmdFlags{method: "POST"},
+			args:         []string{"api.test"},
+			expectedCT:   "application/x-www-form-urlencoded",
+			assertNoAuth: true,
+			bodyEquals:   "",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -105,7 +137,9 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
-			clientsMock.Config.TokenFlag = "xoxb-test-token"
+			if !tc.assertNoAuth {
+				clientsMock.Config.TokenFlag = "xoxb-test-token"
+			}
 			clientsMock.Config.APIHostResolved = server.URL
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
@@ -126,11 +160,21 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			if tc.expectedAuth != "" {
 				assert.Equal(t, tc.expectedAuth, receivedAuth)
 			}
+			if tc.assertNoAuth {
+				assert.Empty(t, receivedAuth)
+				assert.NotContains(t, receivedBody, "token=")
+			} else {
+				assert.True(t, receivedAuth != "" || strings.Contains(receivedBody, "token="),
+					"expected auth via Authorization header or token in body")
+			}
 			if tc.bodyEquals != "" {
 				assert.Equal(t, tc.bodyEquals, receivedBody)
 			}
 			for _, s := range tc.bodyContains {
 				assert.Contains(t, receivedBody, s)
+			}
+			for _, s := range tc.bodyNotContains {
+				assert.NotContains(t, receivedBody, s)
 			}
 		})
 	}
@@ -548,7 +592,63 @@ func Test_resolveToken_NoTokenFound(t *testing.T) {
 	clientsMock := shared.NewClientsMock()
 	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	_, err := resolveToken(ctx, clients)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "no token found")
+	token, err := resolveToken(ctx, clients)
+	assert.NoError(t, err)
+	assert.Empty(t, token)
+}
+
+func Test_runAPICommand_NoAuth_MutualExclusivity(t *testing.T) {
+	tests := map[string]struct {
+		tokenFlag string
+		appFlag   string
+	}{
+		"no-auth with --token": {
+			tokenFlag: "xoxb-test",
+		},
+		"no-auth with --app": {
+			appFlag: "A123",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Config.TokenFlag = tc.tokenFlag
+			clientsMock.Config.AppFlag = tc.appFlag
+			clientsMock.Config.APIHostResolved = "https://slack.com"
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			cmd := NewCommand(clients)
+			testutil.MockCmdIO(clients.IO, cmd)
+
+			flags = cmdFlags{method: "POST", noAuth: true}
+			cmd.SetArgs([]string{"blocks.validate"})
+			err := cmd.ExecuteContext(ctx)
+
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "--no-auth cannot be used with --token or --app")
+		})
+	}
+}
+
+func Test_runAPICommand_NoAuth_SkipsTokenResolution(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"ok":true}`)
+	}))
+	defer server.Close()
+
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clientsMock.Config.APIHostResolved = server.URL
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	cmd := NewCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+
+	flags = cmdFlags{method: "POST", noAuth: true}
+	cmd.SetArgs([]string{"api.test"})
+	err := cmd.ExecuteContext(ctx)
+
+	assert.NoError(t, err)
 }

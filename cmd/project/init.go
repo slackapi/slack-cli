@@ -141,7 +141,7 @@ func printNextStepSection(ctx context.Context, clients *shared.ClientFactory, pr
 
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
-		Text:      "Next steps to begin development",
+		Text:      "Next Steps",
 		Secondary: secondaryOutput,
 	}))
 }

@@ -8,6 +8,11 @@ Checks for available updates to the CLI or the SDKs of a project
 
 If there are any, then you will be prompted to upgrade
 
+In non-interactive environments (CI/CD, scripts, piped output),
+update checks still run but the auto-update prompt is skipped.
+To suppress update checks entirely on other commands, use
+--skip-update or set SLACK_SKIP_UPDATE.
+
 The changelog can be found at [https://docs.slack.dev/changelog](https://docs.slack.dev/changelog)
 
 ```
@@ -23,6 +28,7 @@ slack upgrade [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command

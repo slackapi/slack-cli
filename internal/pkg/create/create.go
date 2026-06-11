@@ -126,7 +126,7 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 	)
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "open_file_folder",
-		Text:      "Created a new Slack project",
+		Text:      "Project Create",
 		Secondary: projectDetails,
 	}))
 
@@ -447,8 +447,8 @@ func InstallProjectDependencies(
 
 	// Start the spinner
 	spinnerText := fmt.Sprintf(
-		"Installing project dependencies %s",
-		style.Secondary("(this may take a few seconds)"),
+		"Project Dependencies %s",
+		style.Secondary("(installing... this may take a second)"),
 	)
 	spinner := style.NewSpinner(clients.IO.WriteErr())
 	spinner.Update(spinnerText, "").Start()
@@ -456,7 +456,7 @@ func InstallProjectDependencies(
 	// Stop the spinner when the function returns
 	defer func() {
 		spinnerText = style.Sectionf(style.TextSection{
-			Text:      "Installed project dependencies",
+			Text:      "Project Dependencies",
 			Secondary: outputs,
 		})
 		spinner.Update(spinnerText, "package").Stop()

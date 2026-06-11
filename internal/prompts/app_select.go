@@ -91,6 +91,20 @@ var appTransferDisclaimer = style.TextSection{
 	},
 }
 
+// AppSelectOption configures optional behavior of AppSelectPrompt
+type AppSelectOption func(*appSelectConfig)
+
+type appSelectConfig struct {
+	includeNoApp bool
+}
+
+// WithNoAppOption adds a "No app" choice to the selection prompt
+func WithNoAppOption() AppSelectOption {
+	return func(c *appSelectConfig) {
+		c.includeNoApp = true
+	}
+}
+
 var SelectTeamPrompt = "Select a team"
 
 // getApps returns the apps saved to files with known credentials
@@ -388,17 +402,22 @@ func AppSelectPrompt(
 	clients *shared.ClientFactory,
 	environment AppEnvironmentType,
 	status AppInstallStatus,
+	opts ...AppSelectOption,
 ) (
 	selected SelectedApp,
 	err error,
 ) {
+	var cfg appSelectConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	switch {
 	case environment.Equals(ShowAllEnvironments) && types.IsAppFlagEnvironment(clients.Config.AppFlag):
 		switch {
 		case types.IsAppFlagDeploy(clients.Config.AppFlag):
-			return AppSelectPrompt(ctx, clients, ShowHostedOnly, status)
+			return AppSelectPrompt(ctx, clients, ShowHostedOnly, status, opts...)
 		case types.IsAppFlagLocal(clients.Config.AppFlag):
-			return AppSelectPrompt(ctx, clients, ShowLocalOnly, status)
+			return AppSelectPrompt(ctx, clients, ShowLocalOnly, status, opts...)
 		}
 	case environment.Equals(ShowLocalOnly) && types.IsAppFlagDeploy(clients.Config.AppFlag):
 		return SelectedApp{}, slackerror.New(slackerror.ErrDeployedAppNotSupported)
@@ -578,6 +597,10 @@ func AppSelectPrompt(
 			return SelectedApp{}, slackerror.New(slackerror.ErrTeamNotFound)
 		}
 	}
+	noApp := style.Secondary("No app")
+	if cfg.includeNoApp {
+		options = append(options, Selection{label: noApp})
+	}
 	labels := []string{}
 	for _, label := range options {
 		labels = append(labels, label.label)
@@ -621,6 +644,8 @@ func AppSelectPrompt(
 	}
 	creation := style.Secondary("Create a new app")
 	switch {
+	case selection.Prompt && options[selection.Index].label == noApp:
+		return SelectedApp{}, slackerror.New(slackerror.ErrNoAppSelected)
 	case selection.Prompt && options[selection.Index].label != creation:
 		return options[selection.Index].app, nil
 	case selection.Prompt && options[selection.Index].label == creation:

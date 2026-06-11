@@ -22,7 +22,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +34,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/uber/jaeger-client-go"
 )
 
@@ -128,10 +128,9 @@ func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.V
 	if err != nil {
 		return nil, err
 	}
-	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 
 	request.Header.Add("content-type", "application/x-www-form-urlencoded")
-	request.Header.Add("User-Agent", userAgent)
+	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
 		request.Header.Add("x-b3-sampled", "0")
 		request.Header.Add("x-b3-spanid", jaegerSpanContext.SpanID().String())
@@ -179,8 +178,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint, token string, cookie st
 	if err != nil {
 		return nil, err
 	}
-	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
-	request.Header.Add("User-Agent", userAgent)
+	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
 		request.Header.Add("x-b3-sampled", "0")
 		request.Header.Add("x-b3-spanid", jaegerSpanContext.SpanID().String())
@@ -232,9 +230,8 @@ func (c *Client) get(ctx context.Context, endpoint, token string, cookie string)
 	if err != nil {
 		return nil, err
 	}
-	var userAgent = fmt.Sprintf("slack-cli/%s (os: %s)", cliVersion, runtime.GOOS)
 
-	request.Header.Add("User-Agent", userAgent)
+	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
 		request.Header.Add("x-b3-sampled", "0")
 		request.Header.Add("x-b3-spanid", jaegerSpanContext.SpanID().String())

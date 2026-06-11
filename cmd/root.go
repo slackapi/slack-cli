@@ -52,6 +52,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/internal/update"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -287,6 +288,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		rootCmd.SetContext(ctx)
 		// Debug logging
 		clients.IO.PrintDebug(ctx, "system_id: %s", clients.Config.SystemID)
+		clients.IO.PrintDebug(ctx, "user_agent: %s", useragent.BuildUserAgent(version.Raw()))
 	}
 
 	// Init Project ID, if current directory is a project

@@ -27,6 +27,7 @@ slack env <subcommand> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -41,6 +42,8 @@ slack env <subcommand> [flags]
 ## Examples
 
 ```
+# Initialize environment variables from a template file
+$ slack env init
 $ slack env set MAGIC_PASSWORD abracadbra  # Set an environment variable
 
 # List all environment variables
@@ -51,6 +54,7 @@ $ slack env unset MAGIC_PASSWORD           # Unset an environment variable
 ## See also
 
 * [slack](slack)	 - Slack command-line tool
+* [slack env init](slack_env_init)	 - Initialize environment variables from a template file
 * [slack env list](slack_env_list)	 - List all environment variables of the project
 * [slack env set](slack_env_set)	 - Set an environment variable for the project
 * [slack env unset](slack_env_unset)	 - Unset an environment variable from the project

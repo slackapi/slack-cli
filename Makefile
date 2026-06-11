@@ -73,18 +73,18 @@ build-ci: clean
 build-snapshot: clean
 	BUILD_VERSION="$(BUILD_VERSION)" LDFLAGS="$(LDFLAGS)" go tool goreleaser --snapshot --clean --skip=publish --config .goreleaser.yml
 
-# Update documentation in a commit tagged as the release
-# Usage: `make tag RELEASE_VERSION=3.7.0-example`
-.PHONY: tag
-tag:
+# Create a release candidate commit with updated docs
+# Usage: `make rc RELEASE_VERSION=3.7.0-example`
+.PHONY: rc
+rc:
 	git diff --quiet --cached
 	git diff --quiet
 	@if echo "$(RELEASE_VERSION)" | grep -q '^v'; then \
 		echo "Error: Release version should not begin with a version prefix."; \
 		exit 1; \
 	fi
-	@printf "$(FONT_BOLD)Creating Branch$(FONT_RESET)\n"
-	git checkout -b "chore-release-$(RELEASE_VERSION)"
+	@printf "$(FONT_BOLD)Building CLI$(FONT_RESET)\n"
+	$(MAKE) build-ci LDFLAGS="-X 'github.com/slackapi/slack-cli/internal/version.Version=v$(RELEASE_VERSION)'"
 	@printf "$(FONT_BOLD)Updating Docs$(FONT_RESET)\n"
 	rm -rf ./docs/reference/commands ./docs/reference/errors.md
 	./bin/slack docgen ./docs/reference --skip-update
@@ -103,5 +103,3 @@ tag:
 	git add docs/guides/installing-the-slack-cli-for-windows.md
 	@printf "$(FONT_BOLD)Git Commit$(FONT_RESET)\n"
 	git commit -m "chore: release slack-cli v$(RELEASE_VERSION)"
-#	@printf "$(FONT_BOLD)Git Tag$(FONT_RESET)\n"
-#	git tag v$(RELEASE_VERSION)

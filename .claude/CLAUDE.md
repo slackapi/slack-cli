@@ -207,6 +207,7 @@ See [`.github/STYLE_GUIDE.md`](../.github/STYLE_GUIDE.md) for conventions on com
 - `go.mod` - Go module dependencies and minimum Go version (see `go.mod` for current version)
 - `.circleci/config.yml` - CircleCI workflows for CI/CD pipeline
 - `.github/workflows/` - GitHub Actions for automated testing and releases
+- `.githooks/` - Opt-in Git hooks (enable with `git config core.hooksPath .githooks`)
 
 ## Commit Message Format
 
@@ -228,6 +229,10 @@ Use conventional commit format (feat:, fix:, chore:, etc.) for commit titles.
 4. Add tests in `cmd/<category>/<command>_test.go`
 5. Run `slack docgen ./docs/reference` to generate docs
 6. Consider adding command alias in `AliasMap` if appropriate
+
+### Command Descriptions and Documentation
+
+Command `Long` descriptions are parsed as Go `text/template` by `docgen` and rendered as MDX for the documentation site. Escape `{` and `[` as `\{` and `\[` in description text to prevent build errors on the docs site. Available template functions: `{{Emoji "name"}}`, `{{LinkText "url"}}`, `{{ToBold "text"}}`.
 
 ### Adding New Dependencies
 
