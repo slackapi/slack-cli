@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -21,6 +22,19 @@ type SyncResult struct {
 // both manifests, computes diffs, prompts the user for resolution, writes
 // the merged result to both the API and the local file, and returns the result.
 func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, auth types.SlackAuth) (*SyncResult, error) {
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if manifestSource.Equals(config.ManifestSourceRemote) {
+		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
+			WithMessage("Manifest sync is unavailable for projects with remote source of truth").
+			WithRemediation("This project's manifest source is %s. Edit the manifest at %s.",
+				config.ManifestSourceRemote.Human(),
+				style.CommandText("slack app settings"),
+			)
+	}
+
 	localManifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 	if err != nil {
 		return nil, slackerror.New("Failed to get local manifest").WithRootCause(err).WithCode(slackerror.ErrInvalidManifest)
