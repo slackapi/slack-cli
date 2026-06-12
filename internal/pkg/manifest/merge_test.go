@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -95,6 +96,33 @@ func Test_Merge(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected.DisplayInformation.Name, result.DisplayInformation.Name)
 			assert.Equal(t, tc.expected.DisplayInformation.Description, result.DisplayInformation.Description)
+		})
+	}
+}
+
+func Test_unflatten_PathCollision(t *testing.T) {
+	tests := map[string]struct {
+		flat map[string]any
+	}{
+		"leaf at parent path collides with deeper path": {
+			flat: map[string]any{
+				"a.b":   "scalar",
+				"a.b.c": "deep",
+			},
+		},
+		"deeper path collides with leaf at parent": {
+			flat: map[string]any{
+				"a.b.c": "deep",
+				"a.b":   "scalar",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := unflatten(tc.flat)
+			require.Error(t, err, "expected path-collision error, got nil")
+			slackErr := slackerror.ToSlackError(err)
+			assert.Equal(t, slackerror.ErrInvalidManifest, slackErr.Code)
 		})
 	}
 }

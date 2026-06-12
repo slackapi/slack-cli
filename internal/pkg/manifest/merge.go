@@ -6,6 +6,7 @@ import (
 	"maps"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 // Resolution represents which side the user chose for a given field.
@@ -101,7 +102,10 @@ func MergeAllFrom(local, remote types.AppManifest, diffs *DiffResult, strategy M
 // unflatten converts a flat dot-notation map back into a nested structure,
 // then marshals/unmarshals into AppManifest.
 func unflatten(flat map[string]any) (types.AppManifest, error) {
-	nested := unflattenToMap(flat)
+	nested, err := unflattenToMap(flat)
+	if err != nil {
+		return types.AppManifest{}, err
+	}
 	data, err := json.Marshal(nested)
 	if err != nil {
 		return types.AppManifest{}, fmt.Errorf("failed to marshal merged manifest: %w", err)
@@ -114,29 +118,43 @@ func unflatten(flat map[string]any) (types.AppManifest, error) {
 }
 
 // unflattenToMap reconstructs a nested map from dot-notation paths.
-func unflattenToMap(flat map[string]any) map[string]any {
+func unflattenToMap(flat map[string]any) (map[string]any, error) {
 	result := make(map[string]any)
 	for path, value := range flat {
-		setNestedValue(result, path, value)
+		if err := setNestedValue(result, path, value); err != nil {
+			return nil, err
+		}
 	}
-	return result
+	return result, nil
 }
 
-func setNestedValue(m map[string]any, path string, value any) {
+func setNestedValue(m map[string]any, path string, value any) error {
 	parts := splitPath(path)
 	current := m
 	for i, part := range parts {
 		if i == len(parts)-1 {
+			if existing, exists := current[part]; exists {
+				if _, isMap := existing.(map[string]any); isMap {
+					return slackerror.New(slackerror.ErrInvalidManifest).
+						WithMessage("Conflicting types at manifest path %q: leaf value would overwrite a nested object", path)
+				}
+			}
 			current[part] = value
-			return
+			return nil
 		}
 		next, exists := current[part]
 		if !exists {
 			next = make(map[string]any)
 			current[part] = next
 		}
-		current = next.(map[string]any)
+		nextMap, ok := next.(map[string]any)
+		if !ok {
+			return slackerror.New(slackerror.ErrInvalidManifest).
+				WithMessage("Conflicting types at manifest path %q: cannot descend into a non-object value", path)
+		}
+		current = nextMap
 	}
+	return nil
 }
 
 func splitPath(path string) []string {
