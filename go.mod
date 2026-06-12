@@ -1,11 +1,11 @@
 module github.com/slackapi/slack-cli
 
-go 1.26.3
+go 1.26.4
 
 require (
 	charm.land/bubbletea/v2 v2.0.7
 	charm.land/huh/v2 v2.0.3
-	charm.land/lipgloss/v2 v2.0.3
+	charm.land/lipgloss/v2 v2.0.4
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/x/ansi v0.11.7
 	github.com/cli/safeexec v1.0.1
