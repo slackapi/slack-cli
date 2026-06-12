@@ -61,17 +61,24 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 
 	DisplayDiffs(ctx, clients.IO, diffs)
 
-	if !clients.IO.IsTTY() {
+	var merged types.AppManifest
+	switch {
+	case clients.Config.ForceFlag:
+		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllLocal)
+		if err != nil {
+			return nil, err
+		}
+	case !clients.IO.IsTTY():
 		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
-			WithRemediation("Run %s interactively to resolve manifest differences, or use %s to overwrite app settings",
+			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings",
 				style.CommandText("slack manifest sync"),
 				style.CommandText("--force"),
 			)
-	}
-
-	merged, err := resolveInteractively(ctx, clients, localManifest.AppManifest, remoteManifest.AppManifest, diffs)
-	if err != nil {
-		return nil, err
+	default:
+		merged, err = resolveInteractively(ctx, clients, localManifest.AppManifest, remoteManifest.AppManifest, diffs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Push merged manifest to API
