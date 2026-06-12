@@ -82,6 +82,15 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	}
 	clients.IO.PrintInfo(ctx, false, "  %s Updated app settings", style.Green("✓"))
 
+	// Refresh the cached manifest hash so install/deploy don't see drift.
+	hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, merged)
+	if err != nil {
+		return nil, slackerror.New("Failed to hash merged manifest").WithRootCause(err)
+	}
+	if err := clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, app.AppID, hash); err != nil {
+		return nil, slackerror.New("Failed to cache merged manifest hash").WithRootCause(err)
+	}
+
 	// Write back to local file
 	workingDir := clients.SDKConfig.WorkingDirectory
 	writeResult, err := WriteManifestLocal(clients.Fs, workingDir, merged)
