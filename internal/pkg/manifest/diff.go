@@ -45,10 +45,10 @@ func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to flatten remote manifest: %w", err)
 	}
-	return diffFlat(localFlat, remoteFlat), nil
+	return diffFlat(localFlat, remoteFlat)
 }
 
-func diffFlat(local, remote map[string]any) *DiffResult {
+func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 	result := &DiffResult{}
 	seen := make(map[string]bool)
 
@@ -63,7 +63,11 @@ func diffFlat(local, remote map[string]any) *DiffResult {
 			})
 			continue
 		}
-		if !valuesEqual(localVal, remoteVal) {
+		equal, err := valuesEqual(localVal, remoteVal)
+		if err != nil {
+			return nil, fmt.Errorf("failed to compare manifest values at %q: %w", path, err)
+		}
+		if !equal {
 			result.Diffs = append(result.Diffs, FieldDiff{
 				Path:        path,
 				Type:        DiffModified,
@@ -84,17 +88,17 @@ func diffFlat(local, remote map[string]any) *DiffResult {
 		})
 	}
 
-	return result
+	return result, nil
 }
 
-func valuesEqual(a, b any) bool {
+func valuesEqual(a, b any) (bool, error) {
 	aJSON, err := json.Marshal(a)
 	if err != nil {
-		return false
+		return false, err
 	}
 	bJSON, err := json.Marshal(b)
 	if err != nil {
-		return false
+		return false, err
 	}
-	return string(aJSON) == string(bJSON)
+	return string(aJSON) == string(bJSON), nil
 }
