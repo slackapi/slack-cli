@@ -41,7 +41,7 @@ func WriteManifestLocal(fs afero.Fs, workingDir string, manifest types.AppManife
 		return WriteBackResult{}, fmt.Errorf("failed to read %s: %w", manifestFileName, err)
 	}
 
-	merged, err := marshalPreservingOrder(original, manifest)
+	merged, fellBack, err := marshalPreservingOrder(original, manifest)
 	if err != nil {
 		return WriteBackResult{}, fmt.Errorf("failed to serialize merged manifest: %w", err)
 	}
@@ -50,7 +50,11 @@ func WriteManifestLocal(fs afero.Fs, workingDir string, manifest types.AppManife
 		return WriteBackResult{}, fmt.Errorf("failed to write %s: %w", manifestFileName, err)
 	}
 
-	return WriteBackResult{Written: true, FilePath: manifestPath}, nil
+	result := WriteBackResult{Written: true, FilePath: manifestPath}
+	if fellBack {
+		result.Warning = fmt.Sprintf("Could not parse the original %s, so its key order was not preserved", manifestFileName)
+	}
+	return result, nil
 }
 
 // atomicWriteFile writes to a sibling temp file and renames it over the
@@ -67,22 +71,25 @@ func atomicWriteFile(fs afero.Fs, dest string, data []byte, mode os.FileMode) er
 	return nil
 }
 
-// marshalPreservingOrder serializes the manifest to JSON, preserving the key
-// order from the original file. It does this by unmarshaling the original into
-// an ordered structure, applying the new values, then re-serializing.
-func marshalPreservingOrder(original []byte, manifest types.AppManifest) ([]byte, error) {
+// marshalPreservingOrder serializes the manifest to JSON, preserving the
+// top-level key order from the original file. The returned fellBack is true
+// when the original could not be parsed and the result was emitted with
+// default key order instead.
+func marshalPreservingOrder(original []byte, manifest types.AppManifest) (data []byte, fellBack bool, err error) {
 	var originalKeys []string
 	if err := extractTopLevelKeyOrder(original, &originalKeys); err != nil {
-		return marshalFresh(manifest)
+		fresh, err := marshalFresh(manifest)
+		return fresh, true, err
 	}
 
 	newData, err := json.Marshal(manifest)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	var newMap map[string]json.RawMessage
 	if err := json.Unmarshal(newData, &newMap); err != nil {
-		return marshalFresh(manifest)
+		fresh, err := marshalFresh(manifest)
+		return fresh, true, err
 	}
 
 	// Build output with original key order, then append any new keys
@@ -110,11 +117,11 @@ func marshalPreservingOrder(original []byte, manifest types.AppManifest) ([]byte
 	for i, item := range ordered {
 		keyJSON, err := json.Marshal(item.Key)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal manifest key %q: %w", item.Key, err)
+			return nil, false, fmt.Errorf("failed to marshal manifest key %q: %w", item.Key, err)
 		}
 		indented, err := json.MarshalIndent(json.RawMessage(item.Value), "  ", "  ")
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal manifest value at %q: %w", item.Key, err)
+			return nil, false, fmt.Errorf("failed to marshal manifest value at %q: %w", item.Key, err)
 		}
 		buf = fmt.Appendf(buf, "  %s: %s", keyJSON, indented)
 		if i < len(ordered)-1 {
@@ -125,7 +132,7 @@ func marshalPreservingOrder(original []byte, manifest types.AppManifest) ([]byte
 	buf = append(buf, '}')
 	buf = append(buf, '\n')
 
-	return buf, nil
+	return buf, false, nil
 }
 
 func extractTopLevelKeyOrder(data []byte, keys *[]string) error {

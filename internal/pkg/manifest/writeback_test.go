@@ -81,6 +81,21 @@ func Test_WriteManifestLocal(t *testing.T) {
 		}
 	})
 
+	t.Run("warns when the original manifest.json cannot be parsed", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		// Original is malformed JSON — extractTopLevelKeyOrder will fail.
+		require.NoError(t, afero.WriteFile(fs, "/project/manifest.json", []byte("not json"), 0644))
+
+		manifest := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "App"},
+		}
+
+		result, err := WriteManifestLocal(fs, "/project", manifest)
+		require.NoError(t, err)
+		assert.True(t, result.Written)
+		assert.Contains(t, result.Warning, "key order was not preserved")
+	})
+
 	t.Run("returns warning when manifest.json does not exist", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
 		manifest := types.AppManifest{
