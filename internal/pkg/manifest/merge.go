@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -157,21 +158,33 @@ func setNestedValue(m map[string]any, path string, value any) error {
 	return nil
 }
 
+// splitPath splits a flatten-produced dot-delimited path into segments,
+// honoring backslash-escaped dots so that keys containing literal dots
+// (e.g. function IDs like "slack.users.lookup") round-trip correctly.
 func splitPath(path string) []string {
 	var parts []string
-	current := ""
+	var current strings.Builder
+	escaped := false
 	for _, ch := range path {
-		if ch == '.' {
-			if current != "" {
-				parts = append(parts, current)
-				current = ""
+		if escaped {
+			current.WriteRune(ch)
+			escaped = false
+			continue
+		}
+		switch ch {
+		case '\\':
+			escaped = true
+		case '.':
+			if current.Len() > 0 {
+				parts = append(parts, current.String())
+				current.Reset()
 			}
-		} else {
-			current += string(ch)
+		default:
+			current.WriteRune(ch)
 		}
 	}
-	if current != "" {
-		parts = append(parts, current)
+	if current.Len() > 0 {
+		parts = append(parts, current.String())
 	}
 	return parts
 }

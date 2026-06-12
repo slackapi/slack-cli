@@ -4,12 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // Flatten converts a manifest (as JSON-serializable struct) into a flat map
 // where keys are dot-notation paths and values are the leaf values.
 // Arrays are treated as leaf values (not recursed into individually) because
 // array element identity is ambiguous without a key field.
+//
+// Keys that contain literal dots (e.g. function IDs like "slack.users.lookup")
+// have those dots backslash-escaped in the path so flatten/unflatten round-
+// trip cleanly. splitPath honors the same escape sequence.
 func Flatten(manifest any) (map[string]any, error) {
 	data, err := json.Marshal(manifest)
 	if err != nil {
@@ -26,9 +31,9 @@ func Flatten(manifest any) (map[string]any, error) {
 
 func flattenRecursive(prefix string, data map[string]any, result map[string]any) {
 	for key, value := range data {
-		fullKey := key
+		fullKey := escapePathSegment(key)
 		if prefix != "" {
-			fullKey = prefix + "." + key
+			fullKey = prefix + "." + fullKey
 		}
 		switch v := value.(type) {
 		case map[string]any:
@@ -37,6 +42,14 @@ func flattenRecursive(prefix string, data map[string]any, result map[string]any)
 			result[fullKey] = value
 		}
 	}
+}
+
+// escapePathSegment backslash-escapes the path delimiter and the escape
+// character so a key containing a literal dot survives flatten/splitPath.
+func escapePathSegment(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `.`, `\.`)
+	return s
 }
 
 // SortedKeys returns the keys of a flat map in sorted order for deterministic output.
