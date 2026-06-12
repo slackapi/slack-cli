@@ -12,7 +12,7 @@ The following is a list of currently available experiments. We'll remove experim
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
-- **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
+- **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](/tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
 - **April 2026**: Added the `set-icon` experiment to enable icon upload for non-hosted apps.
 - **April 2026**: Concluded the `huh` experiment with full support now enabled by default in the Slack CLI. 
 - **March 2026**: Split the `charm` experiment into more beautiful `huh` prompts and prettier `lipgloss` styles for ongoing change.
