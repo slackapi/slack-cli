@@ -25,7 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/icon"
-	manifestpkg "github.com/slackapi/slack-cli/internal/pkg/manifest"
+	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
