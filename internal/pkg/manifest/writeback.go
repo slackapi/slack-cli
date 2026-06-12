@@ -108,8 +108,14 @@ func marshalPreservingOrder(original []byte, manifest types.AppManifest) ([]byte
 	// Manually build JSON with preserved order
 	buf := []byte("{\n")
 	for i, item := range ordered {
-		keyJSON, _ := json.Marshal(item.Key)
-		indented, _ := json.MarshalIndent(json.RawMessage(item.Value), "  ", "  ")
+		keyJSON, err := json.Marshal(item.Key)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal manifest key %q: %w", item.Key, err)
+		}
+		indented, err := json.MarshalIndent(json.RawMessage(item.Value), "  ", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal manifest value at %q: %w", item.Key, err)
+		}
 		buf = fmt.Appendf(buf, "  %s: %s", keyJSON, indented)
 		if i < len(ordered)-1 {
 			buf = append(buf, ',')
