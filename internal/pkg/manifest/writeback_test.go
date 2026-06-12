@@ -62,6 +62,25 @@ func Test_WriteManifestLocal(t *testing.T) {
 		assert.Less(t, settingsIdx, displayIdx, "key order should be preserved from original file")
 	})
 
+	t.Run("does not leave a temporary file after success", func(t *testing.T) {
+		fs := afero.NewMemMapFs()
+		original := `{"display_information":{"name":"Original"}}`
+		require.NoError(t, afero.WriteFile(fs, "/project/manifest.json", []byte(original), 0644))
+
+		manifest := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "Merged"},
+		}
+
+		_, err := WriteManifestLocal(fs, "/project", manifest)
+		require.NoError(t, err)
+
+		entries, err := afero.ReadDir(fs, "/project")
+		require.NoError(t, err)
+		for _, e := range entries {
+			assert.NotContains(t, e.Name(), ".tmp", "temporary file should be cleaned up after atomic write")
+		}
+	})
+
 	t.Run("returns warning when manifest.json does not exist", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
 		manifest := types.AppManifest{

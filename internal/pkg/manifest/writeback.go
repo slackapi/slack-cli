@@ -46,11 +46,25 @@ func WriteManifestLocal(fs afero.Fs, workingDir string, manifest types.AppManife
 		return WriteBackResult{}, fmt.Errorf("failed to serialize merged manifest: %w", err)
 	}
 
-	if err := afero.WriteFile(fs, manifestPath, merged, os.FileMode(0644)); err != nil {
+	if err := atomicWriteFile(fs, manifestPath, merged, 0644); err != nil {
 		return WriteBackResult{}, fmt.Errorf("failed to write %s: %w", manifestFileName, err)
 	}
 
 	return WriteBackResult{Written: true, FilePath: manifestPath}, nil
+}
+
+// atomicWriteFile writes to a sibling temp file and renames it over the
+// destination so an interrupted write cannot leave the destination truncated.
+func atomicWriteFile(fs afero.Fs, dest string, data []byte, mode os.FileMode) error {
+	tmp := dest + ".tmp"
+	if err := afero.WriteFile(fs, tmp, data, mode); err != nil {
+		return err
+	}
+	if err := fs.Rename(tmp, dest); err != nil {
+		_ = fs.Remove(tmp)
+		return err
+	}
+	return nil
 }
 
 // marshalPreservingOrder serializes the manifest to JSON, preserving the key
