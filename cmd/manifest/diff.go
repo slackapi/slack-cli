@@ -32,6 +32,7 @@ func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long:  "Compare the project manifest with app settings and print any differences.",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "manifest diff", Meaning: "Show differences between project manifest and app settings"},
+			{Command: "manifest diff --app A0123456789 --token xoxp-...", Meaning: "Detect manifest drift in CI without prompts"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
