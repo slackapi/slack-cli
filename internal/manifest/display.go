@@ -44,8 +44,10 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 		},
 	}))
 
-	for _, d := range sorted {
-		io.PrintInfo(ctx, false, "")
+	for i, d := range sorted {
+		if i > 0 {
+			io.PrintInfo(ctx, false, "")
+		}
 		switch d.Type {
 		case DiffModified:
 			io.PrintInfo(ctx, false, "  %s", style.Bold(d.Path))
