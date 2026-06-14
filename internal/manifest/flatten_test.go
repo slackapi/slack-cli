@@ -69,6 +69,10 @@ func Test_Flatten(t *testing.T) {
 				"display_information.name":    "App",
 				"functions.greet.title":       "Greet",
 				"functions.greet.description": "Greets a user",
+				// ManifestFunction.InputParameters/OutputParameters lack `omitempty`
+				// so they always serialize as null. Flatten captures the nulls.
+				"functions.greet.input_parameters":  nil,
+				"functions.greet.output_parameters": nil,
 			},
 		},
 		"treats arrays as leaf values": {
@@ -102,6 +106,7 @@ func Test_Flatten(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result, err := Flatten(tc.manifest)
 			require.NoError(t, err)
+			assert.Len(t, result, len(tc.expected), "unexpected number of flattened keys: got %+v", result)
 			for key, expectedVal := range tc.expected {
 				assert.Contains(t, result, key)
 				assert.Equal(t, expectedVal, result[key], "mismatch at key %s", key)

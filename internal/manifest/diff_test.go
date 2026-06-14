@@ -83,6 +83,11 @@ func Test_Diff(t *testing.T) {
 			expected: []FieldDiff{
 				{Path: "functions.greet.description", Type: DiffLocalOnly, LocalValue: "Hello"},
 				{Path: "functions.greet.title", Type: DiffLocalOnly, LocalValue: "Greet"},
+				// ManifestFunction.InputParameters/OutputParameters lack
+				// `omitempty`, so an added function flattens with nil values
+				// for both — they show as local-only too.
+				{Path: "functions.greet.input_parameters", Type: DiffLocalOnly, LocalValue: nil},
+				{Path: "functions.greet.output_parameters", Type: DiffLocalOnly, LocalValue: nil},
 			},
 		},
 		"array values compared as wholes": {
@@ -121,6 +126,7 @@ func Test_Diff(t *testing.T) {
 				return
 			}
 			assert.True(t, result.HasDifferences())
+			assert.Len(t, result.Diffs, len(tc.expected), "unexpected number of diffs: got %+v", result.Diffs)
 			for _, expectedDiff := range tc.expected {
 				found := false
 				for _, actualDiff := range result.Diffs {
