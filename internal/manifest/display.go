@@ -62,6 +62,9 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 	io.PrintInfo(ctx, false, "")
 }
 
+// formatValue renders a leaf value for display. Strings are quoted, other
+// values are JSON-encoded, and any value longer than 80 characters is
+// truncated with an ellipsis.
 func formatValue(v any) string {
 	if v == nil {
 		return "(not present)"

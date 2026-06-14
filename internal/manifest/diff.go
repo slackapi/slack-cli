@@ -62,6 +62,8 @@ func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 	return diffFlat(localFlat, remoteFlat)
 }
 
+// diffFlat compares two flattened manifests and returns one FieldDiff per
+// path that differs (modified, local-only, or remote-only).
 func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 	result := &DiffResult{}
 	seen := make(map[string]bool)
@@ -105,6 +107,9 @@ func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 	return result, nil
 }
 
+// valuesEqual reports whether two leaf values from a flattened manifest are
+// equivalent. It compares their JSON encodings so type-equivalent values
+// (e.g. matching arrays or nested objects) compare equal.
 func valuesEqual(a, b any) (bool, error) {
 	aJSON, err := json.Marshal(a)
 	if err != nil {

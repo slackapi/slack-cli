@@ -43,6 +43,9 @@ func Flatten(manifest any) (map[string]any, error) {
 	return result, nil
 }
 
+// flattenRecursive walks a map produced by json.Unmarshal and writes one
+// dot-notation entry per leaf into result. Nested maps recurse; arrays and
+// scalars are leaves.
 func flattenRecursive(prefix string, data map[string]any, result map[string]any) {
 	for key, value := range data {
 		fullKey := escapePathSegment(key)
