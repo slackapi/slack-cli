@@ -25,6 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewDiffCommand implements the "manifest diff" command, which prints the
+// differences between the project manifest and the app settings on Slack.
 func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 	return &cobra.Command{
 		Use:   "diff",
