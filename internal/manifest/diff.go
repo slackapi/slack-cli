@@ -17,9 +17,17 @@ package manifest
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
 )
+
+// ignoredDiffPaths are top-level manifest fields that the project may declare
+// but Slack's apps.manifest.export does not echo back. Diffs at or under these
+// paths are dropped to avoid spurious "only in project" entries on every run.
+var ignoredDiffPaths = []string{
+	"_metadata", // SDK-side schema annotations; not stored in app settings
+}
 
 // DiffType describes how a field differs between local and remote.
 type DiffType int
@@ -49,7 +57,8 @@ func (dr *DiffResult) HasDifferences() bool {
 }
 
 // Diff performs a two-way comparison between local and remote manifests,
-// returning all fields that differ between them.
+// returning all fields that differ between them. Paths under ignoredDiffPaths
+// are excluded.
 func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 	localFlat, err := Flatten(local)
 	if err != nil {
@@ -59,7 +68,29 @@ func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to flatten remote manifest: %w", err)
 	}
-	return diffFlat(localFlat, remoteFlat)
+	result, err := diffFlat(localFlat, remoteFlat)
+	if err != nil {
+		return nil, err
+	}
+	filtered := result.Diffs[:0]
+	for _, d := range result.Diffs {
+		if !isIgnoredPath(d.Path) {
+			filtered = append(filtered, d)
+		}
+	}
+	result.Diffs = filtered
+	return result, nil
+}
+
+// isIgnoredPath reports whether a flattened manifest path is at or under any
+// entry in ignoredDiffPaths.
+func isIgnoredPath(path string) bool {
+	for _, prefix := range ignoredDiffPaths {
+		if path == prefix || strings.HasPrefix(path, prefix+".") {
+			return true
+		}
+	}
+	return false
 }
 
 // diffFlat compares two flattened manifests and returns one FieldDiff per

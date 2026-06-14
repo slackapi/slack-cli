@@ -142,6 +142,51 @@ func Test_Diff(t *testing.T) {
 	}
 }
 
+func Test_Diff_IgnoresMetadataPaths(t *testing.T) {
+	// _metadata is project-side annotation that apps.manifest.export does not
+	// echo back. Without filtering, projects using _metadata see noisy
+	// "(only in project)" entries on every diff run.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Metadata: &types.ManifestMetadata{
+			MajorVersion: 1,
+			MinorVersion: 2,
+		},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+	}
+
+	result, err := Diff(local, remote)
+	require.NoError(t, err)
+	assert.False(t, result.HasDifferences(), "metadata-only differences should be filtered, got %+v", result.Diffs)
+}
+
+func Test_Diff_FiltersMetadataButKeepsOtherDiffs(t *testing.T) {
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "Project"},
+		Metadata:           &types.ManifestMetadata{MajorVersion: 1},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "Remote"},
+	}
+
+	result, err := Diff(local, remote)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences())
+	for _, d := range result.Diffs {
+		assert.False(t, isIgnoredPath(d.Path), "unexpected ignored path in result: %s", d.Path)
+	}
+	// The display_information.name diff must still be reported.
+	var sawNameDiff bool
+	for _, d := range result.Diffs {
+		if d.Path == "display_information.name" {
+			sawNameDiff = true
+		}
+	}
+	assert.True(t, sawNameDiff, "display_information.name diff was unexpectedly filtered")
+}
+
 func Test_DiffResult_HasDifferences(t *testing.T) {
 	t.Run("empty result has no differences", func(t *testing.T) {
 		result := &DiffResult{}
