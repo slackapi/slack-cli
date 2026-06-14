@@ -29,6 +29,17 @@ var ignoredDiffPaths = []string{
 	"_metadata", // SDK-side schema annotations; not stored in app settings
 }
 
+// devLocalSuffixPaths are flattened paths where Slack's apps.manifest.export
+// appends " (local)" for dev-installed apps. Diffs at these paths are
+// dropped only when removing the suffix would make the values equal; real
+// renames still surface.
+var devLocalSuffixPaths = []string{
+	"display_information.name",
+	"features.bot_user.display_name",
+}
+
+const devLocalSuffix = " (local)"
+
 // DiffType describes how a field differs between local and remote.
 type DiffType int
 
@@ -74,9 +85,13 @@ func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 	}
 	filtered := result.Diffs[:0]
 	for _, d := range result.Diffs {
-		if !isIgnoredPath(d.Path) {
-			filtered = append(filtered, d)
+		if isIgnoredPath(d.Path) {
+			continue
 		}
+		if isDevLocalSuffixDiff(d) {
+			continue
+		}
+		filtered = append(filtered, d)
 	}
 	result.Diffs = filtered
 	return result, nil
@@ -91,6 +106,35 @@ func isIgnoredPath(path string) bool {
 		}
 	}
 	return false
+}
+
+// isDevLocalSuffixDiff reports whether a Modified diff is purely the result
+// of Slack's apps.manifest.export appending " (local)" to a name field for a
+// dev-installed app. Real renames are not suppressed because trimming the
+// suffix from RemoteValue would not produce LocalValue.
+func isDevLocalSuffixDiff(d FieldDiff) bool {
+	if d.Type != DiffModified {
+		return false
+	}
+	matched := false
+	for _, p := range devLocalSuffixPaths {
+		if d.Path == p {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		return false
+	}
+	local, ok := d.LocalValue.(string)
+	if !ok {
+		return false
+	}
+	remote, ok := d.RemoteValue.(string)
+	if !ok {
+		return false
+	}
+	return strings.TrimSuffix(remote, devLocalSuffix) == local
 }
 
 // diffFlat compares two flattened manifests and returns one FieldDiff per

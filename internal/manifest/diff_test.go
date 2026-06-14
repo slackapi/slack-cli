@@ -193,6 +193,46 @@ func Test_Diff_FiltersMetadataButKeepsOtherDiffs(t *testing.T) {
 	assert.True(t, sawNameDiff, "display_information.name diff was unexpectedly filtered")
 }
 
+func Test_Diff_SuppressesDevLocalSuffix(t *testing.T) {
+	// apps.manifest.export appends " (local)" to display_information.name and
+	// features.bot_user.display_name for dev-installed apps. The diff command
+	// suppresses these so users don't see noise on every run.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526"},
+		Features: &types.AppFeatures{
+			BotUser: types.BotUser{DisplayName: "romantic-dolphin-526"},
+		},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526 (local)"},
+		Features: &types.AppFeatures{
+			BotUser: types.BotUser{DisplayName: "romantic-dolphin-526 (local)"},
+		},
+	}
+	result, err := Diff(local, remote)
+	require.NoError(t, err)
+	assert.False(t, result.HasDifferences(), "dev-local suffix differences should be suppressed, got %+v", result.Diffs)
+}
+
+func Test_Diff_PreservesRealRenames(t *testing.T) {
+	// A genuine rename (suffix-trimmed remote does not equal local) must
+	// continue to surface as a diff.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "new-name"},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "old-name (local)"},
+	}
+	result, err := Diff(local, remote)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences())
+	require.Len(t, result.Diffs, 1)
+	assert.Equal(t, "display_information.name", result.Diffs[0].Path)
+	assert.Equal(t, DiffModified, result.Diffs[0].Type)
+	assert.Equal(t, "new-name", result.Diffs[0].LocalValue)
+	assert.Equal(t, "old-name (local)", result.Diffs[0].RemoteValue)
+}
+
 func Test_DiffResult_HasDifferences(t *testing.T) {
 	t.Run("empty result has no differences", func(t *testing.T) {
 		result := &DiffResult{}
