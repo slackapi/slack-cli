@@ -233,6 +233,49 @@ func Test_Diff_PreservesRealRenames(t *testing.T) {
 	assert.Equal(t, "old-name (local)", result.Diffs[0].RemoteValue)
 }
 
+func Test_Diff_SuppressesRemoteFalseDefaultIsMcpEnabled(t *testing.T) {
+	// apps.manifest.export emits settings.is_mcp_enabled: false for every app
+	// even when the project never declared the field. Suppress the
+	// remote-only diff so users do not see a phantom entry on every run.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Settings: &types.AppSettings{
+			IsMCPEnabled: ptrBool(false),
+		},
+	}
+	result, err := Diff(local, remote)
+	require.NoError(t, err)
+	assert.False(t, result.HasDifferences(), "remote-only is_mcp_enabled=false should be suppressed, got %+v", result.Diffs)
+}
+
+func Test_Diff_SurfacesRealIsMcpEnabledDisagreement(t *testing.T) {
+	// A genuine disagreement — local sets is_mcp_enabled to true while
+	// remote returns false — must still surface as a Modified diff.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Settings: &types.AppSettings{
+			IsMCPEnabled: ptrBool(true),
+		},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Settings: &types.AppSettings{
+			IsMCPEnabled: ptrBool(false),
+		},
+	}
+	result, err := Diff(local, remote)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences())
+	require.Len(t, result.Diffs, 1)
+	assert.Equal(t, "settings.is_mcp_enabled", result.Diffs[0].Path)
+	assert.Equal(t, DiffModified, result.Diffs[0].Type)
+}
+
+func ptrBool(b bool) *bool { return &b }
+
 func Test_DiffResult_HasDifferences(t *testing.T) {
 	t.Run("empty result has no differences", func(t *testing.T) {
 		result := &DiffResult{}
