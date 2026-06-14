@@ -65,7 +65,7 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 }
 
 // formatValue renders a leaf value for display. Strings are quoted, other
-// values are JSON-encoded, and any value longer than 80 characters is
+// values are JSON-encoded, and any value longer than 80 runes is
 // truncated with an ellipsis.
 func formatValue(v any) string {
 	if v == nil {
@@ -79,10 +79,20 @@ func formatValue(v any) string {
 		if err != nil {
 			return fmt.Sprintf("%v", val)
 		}
-		s := string(data)
-		if len(s) > 80 {
-			return s[:77] + "..."
-		}
+		return truncateRunes(string(data), 80)
+	}
+}
+
+// truncateRunes returns s unchanged if it is at most max runes, otherwise it
+// returns the first max-3 runes followed by "...". Splitting on runes (rather
+// than bytes) avoids cutting through a multi-byte UTF-8 character.
+func truncateRunes(s string, max int) string {
+	if max <= 3 {
 		return s
 	}
+	runes := []rune(s)
+	if len(runes) <= max {
+		return s
+	}
+	return string(runes[:max-3]) + "..."
 }
