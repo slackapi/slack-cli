@@ -71,7 +71,7 @@ func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 				clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 					Emoji:     "books",
 					Text:      "App Manifest",
-					Secondary: []string{"Project manifest and app settings are in sync"},
+					Secondary: []string{"Project manifest and app settings match"},
 				}))
 				return nil
 			}

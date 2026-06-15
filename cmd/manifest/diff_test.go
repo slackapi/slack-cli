@@ -30,7 +30,7 @@ import (
 
 func TestDiffCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"prints in-sync message when manifests match": {
+		"prints match message when manifests match": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				appSelectMock := prompts.NewAppSelectMock()
 				appSelectPromptFunc = appSelectMock.AppSelectPrompt
@@ -53,7 +53,7 @@ func TestDiffCommand(t *testing.T) {
 				cf.AppClient().Manifest = manifestMock
 				cf.SDKConfig = hooks.NewSDKConfigMock()
 			},
-			ExpectedOutputs: []string{"in sync"},
+			ExpectedOutputs: []string{"match"},
 		},
 		"prints differences when project and app settings disagree": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
