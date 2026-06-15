@@ -40,7 +40,7 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 		Emoji: "books",
 		Text:  "App Manifest",
 		Secondary: []string{
-			fmt.Sprintf("Found %d difference(s) between project and app settings", len(sorted)),
+			fmt.Sprintf("Found %d %s between project and app settings", len(sorted), style.Pluralize("difference", "differences", len(sorted))),
 		},
 	}))
 
