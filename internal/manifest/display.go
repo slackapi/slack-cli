@@ -48,21 +48,30 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 		if i > 0 {
 			io.PrintInfo(ctx, false, "")
 		}
+		var local, remote string
 		switch d.Type {
-		case DiffModified:
-			io.PrintInfo(ctx, false, "  %s", style.Bold(d.Path))
-			io.PrintInfo(ctx, false, "    Project:      %s", formatValue(d.LocalValue))
-			io.PrintInfo(ctx, false, "    App settings: %s", formatValue(d.RemoteValue))
 		case DiffLocalOnly:
-			io.PrintInfo(ctx, false, "  %s %s", style.Bold(d.Path), "(only in project)")
-			io.PrintInfo(ctx, false, "    Value: %s", formatValue(d.LocalValue))
+			local = formatValue(d.LocalValue)
+			remote = absentValue
 		case DiffRemoteOnly:
-			io.PrintInfo(ctx, false, "  %s %s", style.Bold(d.Path), "(only in app settings)")
-			io.PrintInfo(ctx, false, "    Value: %s", formatValue(d.RemoteValue))
+			local = absentValue
+			remote = formatValue(d.RemoteValue)
+		default:
+			local = formatValue(d.LocalValue)
+			remote = formatValue(d.RemoteValue)
 		}
+		io.PrintInfo(ctx, false, "  %s", style.Bold(d.Path))
+		io.PrintInfo(ctx, false, "    Project:      %s", local)
+		io.PrintInfo(ctx, false, "    App settings: %s", remote)
 	}
 	io.PrintInfo(ctx, false, "")
 }
+
+// absentValue is shown opposite a present value when a field exists on only
+// one side of a diff. It is intentionally distinct from formatValue(nil)'s
+// "(not present)", which represents a JSON null on a side that does have
+// the field.
+const absentValue = "(not set)"
 
 // formatValue renders a leaf value for display. Strings are quoted, other
 // values are JSON-encoded, and any value longer than 80 runes is
