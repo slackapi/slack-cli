@@ -8,9 +8,6 @@ Add the client secret for an external provider of a workflow app.
 
 This secret will be used when initiating the OAuth2 flow.
 
-This command is supported for apps deployed to Slack managed infrastructure but
-other apps can attempt to run the command with the --force flag.
-
 ```
 slack external-auth add-secret [flags]
 ```

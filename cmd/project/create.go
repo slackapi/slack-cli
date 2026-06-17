@@ -18,13 +18,16 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -32,11 +35,12 @@ import (
 )
 
 // Flags
-var createTemplateURLFlag string
-var createGitBranchFlag string
 var createAppNameFlag string
+var createEnvironmentFlag string
+var createGitBranchFlag string
 var createListFlag bool
 var createSubdirFlag string
+var createTemplateURLFlag string
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -67,6 +71,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
 			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
 			{Command: "create my-project -t org/monorepo --subdir apps/my-app", Meaning: "Create from a subdirectory of a template"},
+			{Command: "create my-project -t slack-samples/bolt-js-starter-template --app A0123456789 --environment local", Meaning: "Create from template and link to an existing app"},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -81,6 +86,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
 	cmd.Flags().BoolVar(&createListFlag, "list", false, "list available app templates")
 	cmd.Flags().StringVar(&createSubdirFlag, "subdir", "", "subdirectory in the template to use as project")
+	cmd.Flags().StringVarP(&createEnvironmentFlag, "environment", "E", "", "environment to save existing app (local, deployed)")
 
 	return cmd
 }
@@ -125,6 +131,31 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	if cmd.Flags().Changed("subdir") && !templateFlagProvided {
 		return slackerror.New(slackerror.ErrMismatchedFlags).
 			WithMessage("The --subdir flag requires the --template flag")
+	}
+
+	// --app must be an app ID when used with create
+	appFlagProvided := clients.Config.AppFlag != ""
+	if appFlagProvided && !types.IsAppID(clients.Config.AppFlag) {
+		return slackerror.New(slackerror.ErrInvalidAppFlag).
+			WithMessage("The --app flag requires an app ID when used with create")
+	}
+
+	// --app requires --template
+	if appFlagProvided && !templateFlagProvided {
+		return slackerror.New(slackerror.ErrMismatchedFlags).
+			WithMessage("The --app flag requires the --template flag when used with create")
+	}
+
+	// --environment requires --app and must be "local" or "deployed"
+	if cmd.Flags().Changed("environment") {
+		if !appFlagProvided {
+			return slackerror.New(slackerror.ErrMismatchedFlags).
+				WithMessage("The --environment flag requires the --app flag when used with create")
+		}
+		if !types.IsAppFlagEnvironment(createEnvironmentFlag) {
+			return slackerror.New(slackerror.ErrMismatchedFlags).
+				WithMessage("The --environment flag must be either 'local' or 'deployed'")
+		}
 	}
 
 	// Collect the template URL or select a starting template
@@ -181,6 +212,26 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	appDirPath, err := CreateFunc(ctx, clients, createArgs)
 	if err != nil {
 		return err
+	}
+
+	if appFlagProvided {
+		absProjectPath, err := filepath.Abs(appDirPath)
+		if err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
+		originalDir, err := clients.Os.Getwd()
+		if err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
+		if err := os.Chdir(absProjectPath); err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
+		defer func() {
+			_ = os.Chdir(originalDir)
+		}()
+		if err := app.LinkExistingApp(ctx, clients, &types.App{}, false); err != nil {
+			return err
+		}
 	}
 
 	printCreateSuccess(ctx, clients, appDirPath)

@@ -41,6 +41,7 @@ type AppManifest struct {
 	Workflows             map[string]Workflow          `json:"workflows,omitempty" yaml:"workflows,flow,omitempty"`
 	OutgoingDomains       *[]string                    `json:"outgoing_domains,omitempty" yaml:"outgoing_domains,flow,omitempty"`
 	ExternalAuthProviders *ManifestAuthProviders       `json:"external_auth_providers,omitempty" yaml:"external_auth_providers,flow,omitempty"`
+	MCPServers            map[string]MCPServer         `json:"mcp_servers,omitempty" yaml:"mcp_servers,flow,omitempty"`
 }
 
 type ManifestMetadata struct {
@@ -155,6 +156,13 @@ type ManifestFunction struct {
 
 type ManifestAuthProviders struct {
 	OAuth2 map[string]*RawJSON `json:"oauth2" yaml:"oauth2"`
+}
+
+// MCPServer defines the configuration of an MCP server in the app manifest.
+type MCPServer struct {
+	URL             string `json:"url" yaml:"url"`
+	AuthProviderKey string `json:"auth_provider_key,omitempty" yaml:"auth_provider_key,omitempty"`
+	AuthType        string `json:"auth_type,omitempty" yaml:"auth_type,omitempty"`
 }
 
 type RawJSON struct {
