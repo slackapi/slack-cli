@@ -16,12 +16,17 @@ package project
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
@@ -852,4 +857,158 @@ func TestCreateCommand_confirmExternalTemplateSelection(t *testing.T) {
 			tc.expect(confirmed, err, cm, scm)
 		})
 	}
+}
+
+func TestCreateCommand_AppFlag(t *testing.T) {
+	var createClientMock *CreateClientMock
+
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"app flag without template flag returns error": {
+			CmdArgs: []string{"my-app", "--app", "A0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires the --template flag when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with environment-style value returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires an app ID when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with lowercase id returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "a0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires an app ID when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"environment flag without app flag returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --environment flag requires the --app flag when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"invalid environment flag returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "invalid"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --environment flag must be either 'local' or 'deployed'"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with template creates project and links a deployed app": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocks(t, ctx, cm, cf)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "deployed"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetDeployed(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+				assert.Equal(t, mockCreateLinkAuth.TeamID, saved.TeamID)
+				assert.False(t, saved.IsDev)
+			},
+		},
+		"app flag without environment links a local app via prompt": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocks(t, ctx, cm, cf)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+				assert.Equal(t, mockCreateLinkAuth.TeamID, saved.TeamID)
+				assert.True(t, saved.IsDev)
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCreateCommand(cf)
+	})
+}
+
+var mockCreateLinkAuth = types.SlackAuth{
+	Token:        "xoxp-example",
+	TeamDomain:   "team1",
+	TeamID:       "T001",
+	EnterpriseID: "E001",
+	UserID:       "U001",
+}
+
+// setupCreateLinkMocks prepares the in-memory project config and manifest mocks
+// needed by app.LinkExistingApp when called from the create command.
+func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+	projectDirPath := slackdeps.MockWorkingDirectory
+	cm.Os.On("Getwd").Return(projectDirPath, nil)
+
+	if _, err := config.CreateProjectConfigDir(ctx, cm.Fs, projectDirPath); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to create the project config directory: %s", err))
+	}
+	if _, err := config.CreateProjectHooksJSONFile(cm.Fs, projectDirPath, []byte("{}")); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to create the hooks file: %s", err))
+	}
+	if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceRemote); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source: %s", err))
+	}
+
+	manifestMock := &app.ManifestMockObject{}
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+		Return(types.SlackYaml{}, nil)
+	cf.AppClient().Manifest = manifestMock
 }

@@ -24,7 +24,7 @@ jobs:
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
 
       - name: Checkout repo
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           persist-credentials: true
@@ -84,6 +84,13 @@ jobs:
               ;;
           esac
 
+          # Skip if docs already reference this version
+          if grep -q "Using slack v${NEXT_VERSION}" docs/guides/installing-the-slack-cli-for-mac-and-linux.md; then
+            echo "Docs already at v$NEXT_VERSION, nothing to release"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
           echo "next=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
           echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
@@ -110,11 +117,19 @@ jobs:
           PR_BODY=$(cat <<EOF
           ### Summary
 
-          Release v${RELEASE_VERSION}. After merging, create a [GitHub Release](https://github.com/${{ github.repository }}/releases/new?tag=v${RELEASE_VERSION}&title=v${RELEASE_VERSION}) to tag and trigger the release pipeline.
+          Release v${RELEASE_VERSION}.
 
           ### Testing
 
-          Install the [dev-build](https://github.com/slackapi/slack-cli/releases/tag/dev-build) and verify changes.
+          - [ ] Confirm unit tests and E2E tests are passing on the [`main`](https://github.com/slackapi/slack-cli/commits/main) branch.
+          - [ ] Confirm unit tests and E2E tests are passing on this PR.
+          - [ ] Confirm the [dev-build](https://github.com/slackapi/slack-cli/releases/tag/dev-build) includes all commits since last release.
+          - [ ] Review open issues or PRs on the "[Next Release](https://github.com/slackapi/slack-cli/milestones)" milestone.
+          - [ ] Confirm the new version matches the expected next version.
+
+          ### Reviewers
+
+          After merging, create a [GitHub Release](https://github.com/${{ github.repository }}/releases/new?tag=v${RELEASE_VERSION}&title=v${RELEASE_VERSION}) to tag the new version.
 
           ### Requirements
 
@@ -131,6 +146,6 @@ jobs:
             gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
             echo "Updated PR #$EXISTING_PR"
           else
-            gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --add-label "release" --add-label "semver:${SEMVER}"
+            gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --label "release" --label "semver:${SEMVER}"
             echo "Created new release PR"
           fi

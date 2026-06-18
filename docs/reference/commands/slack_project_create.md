@@ -16,12 +16,13 @@ slack project create [name | agent <name>] [flags]
 ## Flags
 
 ```
-  -b, --branch string     name of git branch to checkout
-  -h, --help              help for create
-      --list              list available app templates
-  -n, --name string       name for your app (overrides the name argument)
-      --subdir string     subdirectory in the template to use as project
-  -t, --template string   template URL for your app
+  -b, --branch string        name of git branch to checkout
+  -E, --environment string   environment to save existing app (local, deployed)
+  -h, --help                 help for create
+      --list                 list available app templates
+  -n, --name string          name for your app (overrides the name argument)
+      --subdir string        subdirectory in the template to use as project
+  -t, --template string      template URL for your app
 ```
 
 ## Global flags
@@ -56,6 +57,9 @@ $ slack create --name my-project
 
 # Create from a subdirectory of a template
 $ slack create my-project -t org/monorepo --subdir apps/my-app
+
+# Create from template and link to an existing app
+$ slack create my-project -t slack-samples/bolt-js-starter-template --app A0123456789 --environment local
 ```
 
 ## See also
