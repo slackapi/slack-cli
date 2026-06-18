@@ -84,6 +84,13 @@ jobs:
               ;;
           esac
 
+          # Skip if docs already reference this version
+          if grep -q "Using slack v${NEXT_VERSION}" docs/guides/installing-the-slack-cli-for-mac-and-linux.md; then
+            echo "Docs already at v$NEXT_VERSION, nothing to release"
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           echo "has_changes=true" >> "$GITHUB_OUTPUT"
           echo "next=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
           echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
