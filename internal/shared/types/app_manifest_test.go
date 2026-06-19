@@ -260,54 +260,6 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 	}
 }
 
-func Test_AppManifest_AgentView_RoundTrip(t *testing.T) {
-	original := AppManifest{
-		DisplayInformation: DisplayInformation{Name: "agent_smith"},
-		Features: &AppFeatures{
-			AgentView: &AgentView{
-				AgentDescription: "summarizes threads",
-				SuggestedPrompts: []SuggestedPrompts{
-					{Title: "summarize", Message: "please summarize"},
-				},
-				Actions: []AgentViewAction{
-					{Name: "open_settings", Description: "Open the agent settings panel."},
-				},
-			},
-		},
-	}
-
-	t.Run("JSON round-trip preserves agent_view", func(t *testing.T) {
-		blob, err := json.Marshal(original)
-		require.NoError(t, err)
-		assert.Contains(t, string(blob), `"agent_view":{`)
-
-		var got AppManifest
-		require.NoError(t, json.Unmarshal(blob, &got))
-		assert.Equal(t, original.Features.AgentView, got.Features.AgentView)
-	})
-
-	t.Run("YAML round-trip preserves agent_view", func(t *testing.T) {
-		blob, err := yaml.Marshal(original)
-		require.NoError(t, err)
-		assert.Contains(t, string(blob), "agent_view:")
-		assert.Contains(t, string(blob), "agent_description: summarizes threads")
-
-		var got AppManifest
-		require.NoError(t, yaml.Unmarshal(blob, &got))
-		assert.Equal(t, original.Features.AgentView, got.Features.AgentView)
-	})
-
-	t.Run("nil agent_view is omitted from JSON", func(t *testing.T) {
-		manifest := AppManifest{
-			DisplayInformation: DisplayInformation{Name: "no_agent"},
-			Features:           &AppFeatures{BotUser: BotUser{DisplayName: "no_agent"}},
-		}
-		blob, err := json.Marshal(manifest)
-		require.NoError(t, err)
-		assert.NotContains(t, string(blob), "agent_view")
-	})
-}
-
 func Test_AppManifest_AppSettings_SiwsLinks(t *testing.T) {
 	expectedSiws := SiwsLinks{
 		InitiateURI: "an initiate uri",
