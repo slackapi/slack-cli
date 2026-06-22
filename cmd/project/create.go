@@ -229,7 +229,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		defer func() {
 			_ = os.Chdir(originalDir)
 		}()
-		if err := app.LinkExistingApp(ctx, clients, &types.App{}, false); err != nil {
+		if err := app.LinkExistingAppQuiet(ctx, clients, &types.App{}); err != nil {
 			return err
 		}
 	}

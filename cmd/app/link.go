@@ -192,6 +192,37 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	return nil
 }
 
+// LinkExistingAppQuiet links an existing app without verbose output. It resolves
+// the team and environment, validates the app, saves it, and prints only the app
+// summary. Used by `create --app` where the surrounding create output is enough.
+func LinkExistingAppQuiet(ctx context.Context, clients *shared.ClientFactory, app *types.App) error {
+	linkedApp, auth, err := promptExistingApp(ctx, clients)
+	if err != nil {
+		return err
+	}
+	*app = linkedApp
+
+	appIDs := []string{app.AppID}
+	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
+	if err != nil {
+		return err
+	}
+
+	err = saveAppToJSON(ctx, clients, *app)
+	if err != nil {
+		clients.IO.PrintDebug(ctx, "Error saving app to file when linking existing app: %s", err)
+		return err
+	}
+
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		Emoji:     "house",
+		Text:      "App",
+		Secondary: formatListSuccess([]types.App{*app}),
+	}))
+
+	return nil
+}
+
 // LinkAppFooterSection displays the details of app that was added to the project.
 func LinkAppFooterSection(ctx context.Context, clients *shared.ClientFactory, app *types.App) {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
