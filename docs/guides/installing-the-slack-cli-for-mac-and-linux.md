@@ -103,7 +103,9 @@ Manual installation allows you to customize certain paths used when installing t
 
 🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_macOS_amd64.tar.gz)
 
-🐧 💾 [**Download for Linux (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_linux_64-bit.tar.gz)
+🐧 💾 [**Download for Linux x86_64 (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_linux_amd64.tar.gz)
+
+🐧 💪 [**Download for Linux ARM64 (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_linux_arm64.tar.gz)
 
 **3\. Add the** `slack` **CLI to your path.**
 
