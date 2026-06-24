@@ -18,8 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"slices"
 	"strings"
 
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
@@ -27,14 +29,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildDocsSearchURL(query string) string {
-	encodedQuery := url.QueryEscape(query)
-	return fmt.Sprintf("%s/search/?q=%s", docsURL, encodedQuery)
+func buildDocsSearchURL(query, category string) string {
+	params := url.Values{}
+	params.Set("q", query)
+	if category != "" {
+		params.Set("filter", category)
+	}
+	return fmt.Sprintf("%s/search/?%s", docsURL, params.Encode())
 }
 
 type searchConfig struct {
-	output string
-	limit  int
+	output   string
+	limit    int
+	category string
 }
 
 func makeAbsoluteURL(relativeURL string) string {
@@ -67,6 +74,10 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 				Meaning: "Search docs with limited JSON results",
 				Command: "docs search \"api\" --output=json --limit=5",
 			},
+			{
+				Meaning: "Search only the API reference docs",
+				Command: "docs search \"chat.postMessage\" --category=reference",
+			},
 		}),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -76,6 +87,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	cmd.Flags().StringVar(&cfg.output, "output", "text", "output format: text, json, browser")
 	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of text or json search results to return")
+	cmd.Flags().StringVar(&cfg.category, "category", "", fmt.Sprintf("filter results by category: %s", strings.Join(api.DocsSearchCategories, ", ")))
 
 	return cmd
 }
@@ -85,9 +97,17 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 	query := strings.Join(args, " ")
 
+	if cfg.category != "" && !slices.Contains(api.DocsSearchCategories, cfg.category) {
+		return slackerror.New(slackerror.ErrInvalidFlag).WithMessage(
+			"Invalid category: %s", cfg.category,
+		).WithRemediation(
+			"Use one of: %s", strings.Join(api.DocsSearchCategories, ", "),
+		)
+	}
+
 	switch cfg.output {
 	case "json":
-		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
 		if err != nil {
 			return err
 		}
@@ -106,7 +126,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 		return nil
 	case "text":
-		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
 		if err != nil {
 			return err
 		}
@@ -144,7 +164,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 		return nil
 	case "browser":
-		docsSearchURL := buildDocsSearchURL(query)
+		docsSearchURL := buildDocsSearchURL(query, cfg.category)
 
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "books",
