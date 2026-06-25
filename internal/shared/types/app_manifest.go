@@ -70,6 +70,7 @@ type DisplayInformation struct {
 
 type AppFeatures struct {
 	AppHome                    ManifestAppHome             `json:"app_home,omitempty" yaml:"app_home,flow,omitempty"`
+	AgentView                  *AgentView                  `json:"agent_view,omitempty" yaml:"agent_view,omitempty"`
 	AssistantView              *AssistantView              `json:"assistant_view,omitempty" yaml:"assistant_view,omitempty"`
 	BotUser                    BotUser                     `json:"bot_user,omitempty" yaml:"bot_user,flow,omitempty"`
 	WorkflowSteps              []WorkflowStep              `json:"workflow_steps,omitempty" yaml:"workflow_steps,flow,omitempty"`
@@ -93,6 +94,17 @@ type AssistantView struct {
 type SuggestedPrompts struct {
 	Title   string `json:"title,omitempty" yaml:"title,omitempty"`
 	Message string `json:"message,omitempty" yaml:"message,omitempty"`
+}
+
+type AgentView struct {
+	AgentDescription string             `json:"agent_description,omitempty" yaml:"agent_description,omitempty"`
+	SuggestedPrompts []SuggestedPrompts `json:"suggested_prompts,omitempty" yaml:"suggested_prompts,flow,omitempty"`
+	Actions          []AgentViewAction  `json:"actions,omitempty" yaml:"actions,flow,omitempty"`
+}
+
+type AgentViewAction struct {
+	Name        string `json:"name,omitempty" yaml:"name,omitempty"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
 type OAuthConfig struct {
