@@ -109,11 +109,25 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	// Existing projects initialized always default to config.ManifestSourceLocal.
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
-	// Add an existing app to the project
-	err = app.LinkCommandRunE(ctx, clients, &types.App{}, true, false)
+	// Prompt to add an existing app to the project
+	app.LinkAppHeaderSection(ctx, clients, true)
+	proceed, err := clients.IO.ConfirmPrompt(ctx, app.LinkAppConfirmPromptText, true)
 	if err != nil {
-		// Display the error but continue to init
-		clients.IO.PrintError(ctx, "%s", err.Error())
+		clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
+	}
+	if proceed {
+		linkedApp := &types.App{}
+		err = app.LinkExistingApp(ctx, clients, linkedApp)
+		if err != nil {
+			// Display the error but continue to init
+			clients.IO.PrintError(ctx, "%s", err.Error())
+		} else {
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+				Emoji:     "house",
+				Text:      "App",
+				Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
+			}))
+		}
 	}
 
 	printNextStepSection(ctx, clients, projectDirPath)

@@ -80,7 +80,7 @@ func NewLinkCommand(clients *shared.ClientFactory) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			clients.IO.PrintTrace(ctx, slacktrace.AppLinkStart)
-			return LinkCommandRunE(ctx, clients, app, false, false)
+			return LinkCommandRunE(ctx, clients, app)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
@@ -93,47 +93,28 @@ func NewLinkCommand(clients *shared.ClientFactory) *cobra.Command {
 }
 
 // LinkCommandRunE saves details about the provided application
-func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool, quiet bool) (err error) {
-	if !quiet {
-		// Add empty line between executed command and first output
-		clients.IO.PrintInfo(ctx, false, "")
-		// Header section
-		LinkAppHeaderSection(ctx, clients, shouldConfirm)
+func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *types.App) (err error) {
+	// Add empty line between executed command and first output
+	clients.IO.PrintInfo(ctx, false, "")
+
+	// Header section
+	LinkAppHeaderSection(ctx, clients, false)
+
+	// App Manifest section
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return err
 	}
 
-	// Confirm to add an existing app; useful for third-party callers
-	if shouldConfirm {
-		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppConfirmPromptText, true)
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
-			return err
-		}
-
-		// Add newline to match the trailing newline inserted from the footer section
-		clients.IO.PrintInfo(ctx, false, "")
-
-		if !proceed {
-			return nil
-		}
-	}
-
-	if !quiet {
-		// App Manifest section
-		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-		if err != nil {
-			return err
-		}
-
-		configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
-		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-			Emoji: "books",
-			Text:  "App Manifest",
-			Secondary: []string{
-				"Manifest source is gathered from " + style.Highlight(manifestSource.Human()),
-				"Manifest source is configured in " + style.Highlight(configPath),
-			},
-		}))
-	}
+	configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		Emoji: "books",
+		Text:  "App Manifest",
+		Secondary: []string{
+			"Manifest source is gathered from " + style.Highlight(manifestSource.Human()),
+			"Manifest source is configured in " + style.Highlight(configPath),
+		},
+	}))
 
 	err = LinkExistingApp(ctx, clients, app)
 	if err != nil {
@@ -144,19 +125,17 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "house",
 		Text:      "App",
-		Secondary: formatListSuccess([]types.App{*app}),
+		Secondary: FormatListSuccess([]types.App{*app}),
 	}))
 
-	if !quiet {
-		// Footer section
-		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-			Emoji: "house_with_garden",
-			Text:  "App Link",
-			Secondary: []string{
-				"Added existing app to project",
-			},
-		}))
-	}
+	// Footer section
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		Emoji: "house_with_garden",
+		Text:  "App Link",
+		Secondary: []string{
+			"Added existing app to project",
+		},
+	}))
 
 	return nil
 }
