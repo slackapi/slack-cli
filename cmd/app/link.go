@@ -80,7 +80,7 @@ func NewLinkCommand(clients *shared.ClientFactory) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			clients.IO.PrintTrace(ctx, slacktrace.AppLinkStart)
-			return LinkCommandRunE(ctx, clients, app)
+			return LinkCommandRunE(ctx, clients, app, false, false)
 		},
 		PostRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
@@ -93,13 +93,69 @@ func NewLinkCommand(clients *shared.ClientFactory) *cobra.Command {
 }
 
 // LinkCommandRunE saves details about the provided application
-func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *types.App) (err error) {
-	// Add empty line between executed command and first output
-	clients.IO.PrintInfo(ctx, false, "")
+func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool, quiet bool) (err error) {
+	if !quiet {
+		// Add empty line between executed command and first output
+		clients.IO.PrintInfo(ctx, false, "")
+		// Header section
+		LinkAppHeaderSection(ctx, clients, shouldConfirm)
+	}
 
-	err = LinkExistingApp(ctx, clients, app, false)
+	// Confirm to add an existing app; useful for third-party callers
+	if shouldConfirm {
+		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppConfirmPromptText, true)
+		if err != nil {
+			clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
+			return err
+		}
+
+		// Add newline to match the trailing newline inserted from the footer section
+		clients.IO.PrintInfo(ctx, false, "")
+
+		if !proceed {
+			return nil
+		}
+	}
+
+	if !quiet {
+		// App Manifest section
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			return err
+		}
+
+		configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+			Emoji: "books",
+			Text:  "App Manifest",
+			Secondary: []string{
+				"Manifest source is gathered from " + style.Highlight(manifestSource.Human()),
+				"Manifest source is configured in " + style.Highlight(configPath),
+			},
+		}))
+	}
+
+	err = LinkExistingApp(ctx, clients, app)
 	if err != nil {
 		return err
+	}
+
+	// App summary section
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		Emoji:     "house",
+		Text:      "App",
+		Secondary: formatListSuccess([]types.App{*app}),
+	}))
+
+	if !quiet {
+		// Footer section
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+			Emoji: "house_with_garden",
+			Text:  "App Link",
+			Secondary: []string{
+				"Added existing app to project",
+			},
+		}))
 	}
 
 	return nil
@@ -126,46 +182,9 @@ func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, sh
 	}))
 }
 
-// LinkExistingApp prompts for an existing App ID and saves the details to the project.
-// When shouldConfirm is true, a confirmation prompt will ask the user if they want to
-// link an existing app and additional information is included in the header.
-// The shouldConfirm option is encouraged for third-party callers.
-func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool) (err error) {
-	// Header section
-	LinkAppHeaderSection(ctx, clients, shouldConfirm)
-
-	// Confirm to add an existing app; useful for third-party callers
-	if shouldConfirm {
-		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppConfirmPromptText, true)
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
-			return err
-		}
-
-		// Add newline to match the trailing newline inserted from the footer section
-		clients.IO.PrintInfo(ctx, false, "")
-
-		if !proceed {
-			return nil
-		}
-	}
-
-	// App Manifest section
-	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
-	if err != nil {
-		return err
-	}
-
-	configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
-	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-		Emoji: "books",
-		Text:  "App Manifest",
-		Secondary: []string{
-			"Manifest source is gathered from " + style.Highlight(manifestSource.Human()),
-			"Manifest source is configured in " + style.Highlight(configPath),
-		},
-	}))
-
+// LinkExistingApp resolves app details, validates the app, and saves it to the
+// project. It produces no output — callers handle their own display.
+func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App) (err error) {
 	// Prompt to get app details
 	var auth *types.SlackAuth
 	*app, auth, err = promptExistingApp(ctx, clients)
@@ -186,57 +205,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 		return err
 	}
 
-	// Footer section
-	LinkAppFooterSection(ctx, clients, app)
-
 	return nil
-}
-
-// LinkExistingAppQuiet links an existing app without verbose output. It resolves
-// the team and environment, validates the app, saves it, and prints only the app
-// summary. Used by `create --app` where the surrounding create output is enough.
-func LinkExistingAppQuiet(ctx context.Context, clients *shared.ClientFactory, app *types.App) error {
-	linkedApp, auth, err := promptExistingApp(ctx, clients)
-	if err != nil {
-		return err
-	}
-	*app = linkedApp
-
-	appIDs := []string{app.AppID}
-	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
-	if err != nil {
-		return err
-	}
-
-	err = saveAppToJSON(ctx, clients, *app)
-	if err != nil {
-		clients.IO.PrintDebug(ctx, "Error saving app to file when linking existing app: %s", err)
-		return err
-	}
-
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji:     "house",
-		Text:      "App",
-		Secondary: formatListSuccess([]types.App{*app}),
-	}))
-
-	return nil
-}
-
-// LinkAppFooterSection displays the details of app that was added to the project.
-func LinkAppFooterSection(ctx context.Context, clients *shared.ClientFactory, app *types.App) {
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji:     "house",
-		Text:      "App",
-		Secondary: formatListSuccess([]types.App{*app}),
-	}))
-	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-		Emoji: "house_with_garden",
-		Text:  "App Link",
-		Secondary: []string{
-			"Added existing app to project",
-		},
-	}))
 }
 
 // promptExistingApp gathers details to represent app information
