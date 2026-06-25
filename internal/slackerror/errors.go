@@ -104,6 +104,7 @@ const (
 	ErrDotEnvPlaceholderNotFound                     = "dotenv_placeholder_not_found"
 	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
+	ErrExperimentRequired                            = "experiment_required"
 	ErrFailForSomeRequests                           = "failed_for_some_requests"
 	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
@@ -731,6 +732,11 @@ Otherwise start your app for local development with: %s`,
 	ErrEnterpriseNotFound: {
 		Code:    ErrEnterpriseNotFound,
 		Message: "The `enterprise` was not found",
+	},
+
+	ErrExperimentRequired: {
+		Code:    ErrExperimentRequired,
+		Message: "This command requires an experiment to be enabled",
 	},
 
 	ErrFailForSomeRequests: {
