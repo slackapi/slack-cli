@@ -572,53 +572,16 @@ func Test_Apps_Link(t *testing.T) {
 }
 
 func Test_Apps_LinkAppHeaderSection(t *testing.T) {
-	tests := map[string]struct {
-		shouldConfirm     bool
-		expectedOutputs   []string
-		unexpectedOutputs []string
-	}{
-		"When shouldConfirm is false": {
-			shouldConfirm: false,
-			expectedOutputs: []string{
-				"Add an existing app from app settings",
-				"Find your existing apps at: https://api.slack.com/apps",
-			},
-			unexpectedOutputs: []string{
-				"Manually add apps later with",
-			},
-		},
-		"When shouldConfirm is true": {
-			shouldConfirm: true,
-			expectedOutputs: []string{
-				"Add an existing app from app settings",
-				"Find your existing apps at: https://api.slack.com/apps",
-				"Manually add apps later with",
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Create mocks
-			ctx := slackcontext.MockContext(t.Context())
-			clientsMock := shared.NewClientsMock()
-			clientsMock.AddDefaultMocks()
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-			// Create clients that is mocked for testing
-			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	LinkAppHeaderSection(ctx, clients)
 
-			// Run the test
-			LinkAppHeaderSection(ctx, clients, tc.shouldConfirm)
-
-			// Assertions
-			output := clientsMock.GetCombinedOutput()
-			for _, expectedOutput := range tc.expectedOutputs {
-				require.Contains(t, output, expectedOutput)
-			}
-			for _, unexpectedOutput := range tc.unexpectedOutputs {
-				require.NotContains(t, output, unexpectedOutput)
-			}
-		})
-	}
+	output := clientsMock.GetCombinedOutput()
+	require.Contains(t, output, "Add an existing app from app settings")
+	require.Contains(t, output, "Find your existing apps at: https://api.slack.com/apps")
 }
 
 func setupAppLinkCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

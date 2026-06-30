@@ -98,7 +98,7 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 	clients.IO.PrintInfo(ctx, false, "")
 
 	// Header section
-	LinkAppHeaderSection(ctx, clients, false)
+	LinkAppHeaderSection(ctx, clients)
 
 	// App Manifest section
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
@@ -141,23 +141,14 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 }
 
 // LinkAppHeaderSection displays a section explaining how to find existing apps.
-// External callers can use extraSecondaryText to show additional information.
-// When shouldConfirm is true, additional information is included in the header
-// explaining how to link apps, in case the user declines.
-func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, shouldConfirm bool) {
-	var secondaryText = []string{
-		"Add an existing app from app settings",
-		"Find your existing apps at: " + style.Underline("https://api.slack.com/apps"),
-	}
-
-	if shouldConfirm {
-		secondaryText = append(secondaryText, "Manually add apps later with "+style.Commandf("app link", true))
-	}
-
+func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory) {
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-		Emoji:     "house",
-		Text:      "App Link",
-		Secondary: secondaryText,
+		Emoji: "house",
+		Text:  "App Link",
+		Secondary: []string{
+			"Add an existing app from app settings",
+			"Find your existing apps at: " + style.Underline("https://api.slack.com/apps"),
+		},
 	}))
 }
 

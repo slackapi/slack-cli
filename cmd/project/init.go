@@ -110,7 +110,8 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
 	// Prompt to add an existing app to the project
-	app.LinkAppHeaderSection(ctx, clients, true)
+	app.LinkAppHeaderSection(ctx, clients)
+	clients.IO.PrintInfo(ctx, false, "   %s\n", "Manually add apps later with "+style.Commandf("app link", true))
 	proceed, err := clients.IO.ConfirmPrompt(ctx, app.LinkAppConfirmPromptText, true)
 	if err != nil {
 		clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
