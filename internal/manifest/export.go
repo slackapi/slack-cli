@@ -38,5 +38,12 @@ func FetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFact
 		return err
 	}
 	manifestPath := filepath.Join(projectPath, "manifest.json")
-	return afero.WriteFile(clients.Fs, manifestPath, buf.Bytes(), 0644)
+	if err := afero.WriteFile(clients.Fs, manifestPath, buf.Bytes(), 0644); err != nil {
+		return err
+	}
+	hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, slackYaml.AppManifest)
+	if err != nil {
+		return err
+	}
+	return clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, appID, hash)
 }
