@@ -16,7 +16,6 @@ package project
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os"
@@ -26,13 +25,13 @@ import (
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
-	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
@@ -239,7 +238,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}
 
 		if auth != nil && linkedApp.AppID != "" {
-			fetchErr := fetchAndWriteRemoteManifest(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
+			fetchErr := manifest.FetchAndWriteRemoteManifest(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
 			if fetchErr != nil {
 				clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
 					Text: "Could not fetch the remote app manifest",
@@ -305,21 +304,6 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 		}))
 	}
 	clients.IO.PrintTrace(ctx, slacktrace.CreateSuccess)
-}
-
-// fetchAndWriteRemoteManifest fetches the app manifest from remote settings and writes it to the project.
-func fetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFactory, token, appID, projectPath string) error {
-	slackYaml, err := clients.AppClient().Manifest.GetManifestRemote(ctx, token, appID)
-	if err != nil {
-		return err
-	}
-	data, err := json.MarshalIndent(slackYaml.AppManifest, "", "  ")
-	if err != nil {
-		return err
-	}
-	data = append(data, '\n')
-	manifestPath := filepath.Join(projectPath, "manifest.json")
-	return afero.WriteFile(clients.Fs, manifestPath, data, 0644)
 }
 
 // generateRandomAppName will create a random app name based on two words and a number

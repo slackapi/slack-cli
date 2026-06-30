@@ -1,0 +1,39 @@
+// Copyright 2022-2026 Salesforce, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package manifest
+
+import (
+	"context"
+	"encoding/json"
+	"path/filepath"
+
+	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/spf13/afero"
+)
+
+// FetchAndWriteRemoteManifest fetches the app manifest from remote settings and writes it to the project.
+func FetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFactory, token, appID, projectPath string) error {
+	slackYaml, err := clients.AppClient().Manifest.GetManifestRemote(ctx, token, appID)
+	if err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(slackYaml.AppManifest, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	manifestPath := filepath.Join(projectPath, "manifest.json")
+	return afero.WriteFile(clients.Fs, manifestPath, data, 0644)
+}
