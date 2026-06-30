@@ -20,7 +20,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	internalApp "github.com/slackapi/slack-cli/internal/app"
+	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
@@ -1039,7 +1039,7 @@ func TestCreateCommand_AppFlag_FetchesRemoteManifest(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				projectDir = setupAppFlagMocks(t, ctx, cm, cf)
 
-				manifestMock := &internalApp.ManifestMockObject{}
+				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestRemote", mock.Anything, mockAuth.Token, "A0123456789").
 					Return(mockManifest, nil)
 				cf.AppClient().Manifest = manifestMock
@@ -1058,7 +1058,7 @@ func TestCreateCommand_AppFlag_FetchesRemoteManifest(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				projectDir = setupAppFlagMocks(t, ctx, cm, cf)
 
-				manifestMock := &internalApp.ManifestMockObject{}
+				manifestMock := &app.ManifestMockObject{}
 				manifestMock.On("GetManifestRemote", mock.Anything, mockAuth.Token, "A0123456789").
 					Return(types.SlackYaml{}, slackerror.New("network error"))
 				cf.AppClient().Manifest = manifestMock
@@ -1099,7 +1099,7 @@ func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsM
 		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source: %s", err))
 	}
 
-	manifestMock := &internalApp.ManifestMockObject{}
+	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 		Return(types.SlackYaml{}, nil)
 	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
