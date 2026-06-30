@@ -15,6 +15,7 @@
 package manifest
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"path/filepath"
@@ -29,11 +30,13 @@ func FetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFact
 	if err != nil {
 		return err
 	}
-	data, err := json.MarshalIndent(slackYaml.AppManifest, "", "  ")
-	if err != nil {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(slackYaml.AppManifest); err != nil {
 		return err
 	}
-	data = append(data, '\n')
 	manifestPath := filepath.Join(projectPath, "manifest.json")
-	return afero.WriteFile(clients.Fs, manifestPath, data, 0644)
+	return afero.WriteFile(clients.Fs, manifestPath, buf.Bytes(), 0644)
 }
