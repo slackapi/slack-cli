@@ -99,13 +99,13 @@ Manual installation allows you to customize certain paths used when installing t
 
 **2\. Download the** `slack` **CLI installer for your environment.**
 
-🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_macOS_arm64.tar.gz)
+🍎 ⚡️ [**Download for macOS Apple Silicon (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.4.0_macOS_arm64.tar.gz)
 
-🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_macOS_amd64.tar.gz)
+🍏 🪨 [**Download for macOS Intel (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.4.0_macOS_amd64.tar.gz)
 
-🐧 💾 [**Download for Linux x86_64 (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_linux_amd64.tar.gz)
+🐧 💾 [**Download for Linux x86_64 (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.4.0_linux_amd64.tar.gz)
 
-🐧 💪 [**Download for Linux ARM64 (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.3.0_linux_arm64.tar.gz)
+🐧 💪 [**Download for Linux ARM64 (.tar.gz)**](https://downloads.slack-edge.com/slack-cli/slack_cli_4.4.0_linux_arm64.tar.gz)
 
 **3\. Add the** `slack` **CLI to your path.**
 
@@ -123,7 +123,7 @@ We recommend using an alias if another `slack` binary exists. To do this, change
 
 ```sh
 $ slack version
-Using slack v4.3.0
+Using slack v4.4.0
 ```
 
 </TabItem>
