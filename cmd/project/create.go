@@ -233,7 +233,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}()
 
 		linkedApp := &types.App{}
-		auth, linkErr := app.LinkExistingApp(ctx, clients, linkedApp, false)
+		auth, linkErr := app.LinkExistingApp(ctx, clients, linkedApp)
 		if linkErr != nil {
 			return linkErr
 		}

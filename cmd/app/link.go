@@ -97,7 +97,7 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 	// Add empty line between executed command and first output
 	clients.IO.PrintInfo(ctx, false, "")
 
-	_, err = LinkExistingApp(ctx, clients, app, false)
+	_, err = LinkExistingApp(ctx, clients, app)
 	if err != nil {
 		return err
 	}
@@ -106,18 +106,13 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 }
 
 // LinkAppHeaderSection displays a section explaining how to find existing apps.
-// External callers can use extraSecondaryText to show additional information.
-// When shouldConfirm is true, additional information is included in the header
-// explaining how to link apps, in case the user declines.
-func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, shouldConfirm bool) {
-	var secondaryText = []string{
+// Callers can pass extra secondary lines to append additional context.
+func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, extraSecondary ...string) {
+	secondaryText := []string{
 		"Add an existing app from app settings",
 		"Find your existing apps at: " + style.Underline("https://api.slack.com/apps"),
 	}
-
-	if shouldConfirm {
-		secondaryText = append(secondaryText, "Manually add apps later with "+style.Commandf("app link", true))
-	}
+	secondaryText = append(secondaryText, extraSecondary...)
 
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "house",
@@ -127,28 +122,9 @@ func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, sh
 }
 
 // LinkExistingApp prompts for an existing App ID and saves the details to the project.
-// When shouldConfirm is true, a confirmation prompt will ask the user if they want to
-// link an existing app and additional information is included in the header.
-// The shouldConfirm option is encouraged for third-party callers.
-func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool) (_ *types.SlackAuth, err error) {
+func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App) (_ *types.SlackAuth, err error) {
 	// Header section
-	LinkAppHeaderSection(ctx, clients, shouldConfirm)
-
-	// Confirm to add an existing app; useful for third-party callers
-	if shouldConfirm {
-		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppConfirmPromptText, true)
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
-			return nil, err
-		}
-
-		// Add newline to match the trailing newline inserted from the footer section
-		clients.IO.PrintInfo(ctx, false, "")
-
-		if !proceed {
-			return nil, nil
-		}
-	}
+	LinkAppHeaderSection(ctx, clients)
 
 	// App Manifest section
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
@@ -194,7 +170,7 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 
 // LinkAppFooterSection displays the details of app that was added to the project.
 func LinkAppFooterSection(ctx context.Context, clients *shared.ClientFactory, app *types.App) {
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "house",
 		Text:      "App",
 		Secondary: formatListSuccess([]types.App{*app}),
