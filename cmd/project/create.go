@@ -232,12 +232,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}()
 
 		linkedApp := &types.App{}
-		auth, linkErr := app.LinkExistingApp(ctx, clients, linkedApp, false)
-		if linkErr != nil {
+		if linkErr := app.LinkExistingApp(ctx, clients, linkedApp, false); linkErr != nil {
 			return linkErr
 		}
 
-		if auth != nil && linkedApp.AppID != "" {
+		if linkedApp.AppID != "" {
+			auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID)
+			if err != nil {
+				return err
+			}
 			fetchErr := manifest.FetchAndWriteRemoteManifest(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
 			if fetchErr != nil {
 				clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{

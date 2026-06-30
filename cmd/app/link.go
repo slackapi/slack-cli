@@ -97,7 +97,7 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 	// Add empty line between executed command and first output
 	clients.IO.PrintInfo(ctx, false, "")
 
-	_, err = LinkExistingApp(ctx, clients, app, false)
+	err = LinkExistingApp(ctx, clients, app, false)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory, sh
 // When shouldConfirm is true, a confirmation prompt will ask the user if they want to
 // link an existing app and additional information is included in the header.
 // The shouldConfirm option is encouraged for third-party callers.
-func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool) (_ *types.SlackAuth, err error) {
+func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App, shouldConfirm bool) (err error) {
 	// Header section
 	LinkAppHeaderSection(ctx, clients, shouldConfirm)
 
@@ -139,21 +139,21 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 		proceed, err := clients.IO.ConfirmPrompt(ctx, LinkAppConfirmPromptText, true)
 		if err != nil {
 			clients.IO.PrintDebug(ctx, "Error prompting to add an existing app: %s", err)
-			return nil, err
+			return err
 		}
 
 		// Add newline to match the trailing newline inserted from the footer section
 		clients.IO.PrintInfo(ctx, false, "")
 
 		if !proceed {
-			return nil, nil
+			return nil
 		}
 	}
 
 	// App Manifest section
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	configPath := filepath.Join(config.ProjectConfigDirName, config.ProjectConfigJSONFilename)
@@ -170,26 +170,26 @@ func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *ty
 	var auth *types.SlackAuth
 	*app, auth, err = promptExistingApp(ctx, clients)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	appIDs := []string{app.AppID}
 	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Save the app to the project
 	err = saveAppToJSON(ctx, clients, *app)
 	if err != nil {
 		clients.IO.PrintDebug(ctx, "Error saving app to file when linking existing app: %s", err)
-		return nil, err
+		return err
 	}
 
 	// Footer section
 	LinkAppFooterSection(ctx, clients, app)
 
-	return auth, nil
+	return nil
 }
 
 // LinkAppFooterSection displays the details of app that was added to the project.

@@ -1019,6 +1019,7 @@ func TestCreateCommand_AppFlag_FetchesRemoteManifest(t *testing.T) {
 			Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil)
 
 		cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockAuth}, nil)
+		cm.Auth.On("AuthWithTeamID", mock.Anything, mock.Anything).Return(mockAuth, nil)
 		cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
 			Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0, Option: mockAuth.TeamDomain}, nil)
 		cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
@@ -1086,6 +1087,7 @@ var mockCreateLinkAuth = types.SlackAuth{
 func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	projectDirPath := slackdeps.MockWorkingDirectory
 	cm.Os.On("Getwd").Return(projectDirPath, nil)
+	cm.Auth.On("AuthWithTeamID", mock.Anything, mock.Anything).Return(mockCreateLinkAuth, nil)
 
 	if _, err := config.CreateProjectConfigDir(ctx, cm.Fs, projectDirPath); err != nil {
 		require.FailNow(t, fmt.Sprintf("Failed to create the project config directory: %s", err))
