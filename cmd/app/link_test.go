@@ -573,12 +573,12 @@ func Test_Apps_Link(t *testing.T) {
 
 func Test_Apps_LinkAppHeaderSection(t *testing.T) {
 	tests := map[string]struct {
-		extraSecondary    []string
+		shouldConfirm     bool
 		expectedOutputs   []string
 		unexpectedOutputs []string
 	}{
-		"Without extra secondary text": {
-			extraSecondary: nil,
+		"When shouldConfirm is false": {
+			shouldConfirm: false,
 			expectedOutputs: []string{
 				"Add an existing app from app settings",
 				"Find your existing apps at: https://api.slack.com/apps",
@@ -587,8 +587,8 @@ func Test_Apps_LinkAppHeaderSection(t *testing.T) {
 				"Manually add apps later with",
 			},
 		},
-		"With extra secondary text": {
-			extraSecondary: []string{"Manually add apps later with app link"},
+		"When shouldConfirm is true": {
+			shouldConfirm: true,
 			expectedOutputs: []string{
 				"Add an existing app from app settings",
 				"Find your existing apps at: https://api.slack.com/apps",
@@ -607,7 +607,7 @@ func Test_Apps_LinkAppHeaderSection(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			// Run the test
-			LinkAppHeaderSection(ctx, clients, tc.extraSecondary...)
+			LinkAppHeaderSection(ctx, clients, tc.shouldConfirm)
 
 			// Assertions
 			output := clientsMock.GetCombinedOutput()
