@@ -231,10 +231,10 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			_ = os.Chdir(originalDir)
 		}()
 
-		linkedApp := &types.App{}
-		if linkErr := app.LinkExistingApp(ctx, clients, linkedApp, false); linkErr != nil {
-			return linkErr
-		}
+	  linkedApp := &types.App{}
+    if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
+      return err
+     }
 
 		if linkedApp.AppID != "" {
 			auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID)
@@ -252,6 +252,11 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 				}))
 			}
 		}
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+			Emoji:     "house",
+			Text:      "App",
+			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
+		}))
 	}
 
 	printCreateSuccess(ctx, clients, appDirPath)

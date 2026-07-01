@@ -218,7 +218,7 @@ func TestAppsListFormat(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			listFlags = tc.Flags
-			formattedList := formatListSuccess(tc.Apps)
+			formattedList := FormatListSuccess(tc.Apps)
 			for ii, value := range formattedList {
 				formattedList[ii] = strings.TrimRight(value, ":")
 			}
