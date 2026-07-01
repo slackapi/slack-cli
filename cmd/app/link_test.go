@@ -572,16 +572,31 @@ func Test_Apps_Link(t *testing.T) {
 }
 
 func Test_Apps_LinkAppHeaderSection(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	clientsMock := shared.NewClientsMock()
-	clientsMock.AddDefaultMocks()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	tests := map[string]struct {
+		expectedOutputs []string
+	}{
+		"Displays app link header with base information": {
+			expectedOutputs: []string{
+				"Add an existing app from app settings",
+				"Find your existing apps at: https://api.slack.com/apps",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
-	LinkAppHeaderSection(ctx, clients)
+			LinkAppHeaderSection(ctx, clients)
 
-	output := clientsMock.GetCombinedOutput()
-	require.Contains(t, output, "Add an existing app from app settings")
-	require.Contains(t, output, "Find your existing apps at: https://api.slack.com/apps")
+			output := clientsMock.GetCombinedOutput()
+			for _, expectedOutput := range tc.expectedOutputs {
+				require.Contains(t, output, expectedOutput)
+			}
+		})
+	}
 }
 
 func setupAppLinkCommandMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

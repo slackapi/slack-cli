@@ -32,9 +32,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// LinkAppConfirmPromptText is displayed when prompting to add an existing app
-const LinkAppConfirmPromptText = "Do you want to add an existing app?"
-
 // appLinkFlagSet contains flag values to reference
 type appLinkFlagSet struct {
 	environmentFlag string
