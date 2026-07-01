@@ -229,9 +229,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		defer func() {
 			_ = os.Chdir(originalDir)
 		}()
-		if err := app.LinkExistingApp(ctx, clients, &types.App{}, false); err != nil {
+		linkedApp := &types.App{}
+		if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
 			return err
 		}
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+			Emoji:     "house",
+			Text:      "App",
+			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
+		}))
 	}
 
 	printCreateSuccess(ctx, clients, appDirPath)
