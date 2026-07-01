@@ -231,10 +231,10 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			_ = os.Chdir(originalDir)
 		}()
 
-	  linkedApp := &types.App{}
-    if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
-      return err
-     }
+		linkedApp := &types.App{}
+		if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
+			return err
+		}
 
 		if linkedApp.AppID != "" {
 			auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID)
