@@ -29,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -983,6 +984,98 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 	})
 }
 
+func TestCreateCommand_AppFlag_FetchesRemoteManifest(t *testing.T) {
+	var createClientMock *CreateClientMock
+
+	mockAuth := types.SlackAuth{
+		Token:      "xoxp-test-token",
+		TeamDomain: "test-team",
+		TeamID:     "T001",
+		UserID:     "U001",
+	}
+	mockManifest := types.SlackYaml{
+		AppManifest: types.AppManifest{
+			DisplayInformation: types.DisplayInformation{
+				Name:        "My Remote App",
+				Description: "An app from remote settings",
+			},
+		},
+	}
+
+	setupAppFlagMocks := func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) string {
+		projectDir := t.TempDir()
+		createClientMock = new(CreateClientMock)
+		createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
+		CreateFunc = createClientMock.Create
+
+		cm.Os.On("Getwd").Return(projectDir, nil)
+
+		err := cm.Fs.MkdirAll(projectDir+"/.slack", 0755)
+		require.NoError(t, err)
+		err = afero.WriteFile(cm.Fs, projectDir+"/.slack/hooks.json", []byte("{}"), 0644)
+		require.NoError(t, err)
+
+		cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
+			Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil)
+
+		cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockAuth}, nil)
+		cm.Auth.On("AuthWithTeamID", mock.Anything, mock.Anything).Return(mockAuth, nil)
+		cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+			Return(iostreams.SelectPromptResponse{Prompt: true, Index: 0, Option: mockAuth.TeamDomain}, nil)
+		cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+			Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+
+		cm.API.On("GetAppStatus", mock.Anything, mockAuth.Token, []string{"A0123456789"}, mockAuth.TeamID).
+			Return(api.GetAppStatusResult{}, nil)
+
+		return projectDir
+	}
+
+	var projectDir string
+
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"fetches remote manifest after linking app": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir = setupAppFlagMocks(t, ctx, cm, cf)
+
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestRemote", mock.Anything, mockAuth.Token, "A0123456789").
+					Return(mockManifest, nil)
+				cf.AppClient().Manifest = manifestMock
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+
+				manifestData, err := afero.ReadFile(cm.Fs, projectDir+"/manifest.json")
+				require.NoError(t, err)
+				assert.Contains(t, string(manifestData), `"name": "My Remote App"`)
+				assert.Contains(t, string(manifestData), `"description": "An app from remote settings"`)
+			},
+		},
+		"warns on manifest fetch failure": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir = setupAppFlagMocks(t, ctx, cm, cf)
+
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestRemote", mock.Anything, mockAuth.Token, "A0123456789").
+					Return(types.SlackYaml{}, slackerror.New("network error"))
+				cf.AppClient().Manifest = manifestMock
+			},
+			ExpectedStdoutOutputs: []string{
+				"Could not fetch the remote app manifest",
+				"The template manifest was kept unchanged",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCreateCommand(cf)
+	})
+}
+
 var mockCreateLinkAuth = types.SlackAuth{
 	Token:        "xoxp-example",
 	TeamDomain:   "team1",
@@ -991,11 +1084,10 @@ var mockCreateLinkAuth = types.SlackAuth{
 	UserID:       "U001",
 }
 
-// setupCreateLinkMocks prepares the in-memory project config and manifest mocks
-// needed by app.LinkExistingApp when called from the create command.
 func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 	projectDirPath := slackdeps.MockWorkingDirectory
 	cm.Os.On("Getwd").Return(projectDirPath, nil)
+	cm.Auth.On("AuthWithTeamID", mock.Anything, mock.Anything).Return(mockCreateLinkAuth, nil)
 
 	if _, err := config.CreateProjectConfigDir(ctx, cm.Fs, projectDirPath); err != nil {
 		require.FailNow(t, fmt.Sprintf("Failed to create the project config directory: %s", err))
@@ -1009,6 +1101,8 @@ func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsM
 
 	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+		Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 		Return(types.SlackYaml{}, nil)
 	cf.AppClient().Manifest = manifestMock
 }

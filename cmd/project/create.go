@@ -25,6 +25,7 @@ import (
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -229,9 +230,27 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		defer func() {
 			_ = os.Chdir(originalDir)
 		}()
+
 		linkedApp := &types.App{}
 		if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
 			return err
+		}
+
+		if linkedApp.AppID != "" {
+			auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID)
+			if err != nil {
+				return err
+			}
+			fetchErr := manifest.FetchAndWriteRemoteManifest(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
+			if fetchErr != nil {
+				clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
+					Text: "Could not fetch the remote app manifest",
+					Secondary: []string{
+						fetchErr.Error(),
+						"The template manifest was kept unchanged",
+					},
+				}))
+			}
 		}
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "house",
