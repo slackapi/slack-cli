@@ -3,9 +3,9 @@ module github.com/slackapi/slack-cli
 go 1.26.4
 
 require (
-	charm.land/bubbletea/v2 v2.0.7
+	charm.land/bubbletea/v2 v2.0.8
 	charm.land/huh/v2 v2.0.3
-	charm.land/lipgloss/v2 v2.0.4
+	charm.land/lipgloss/v2 v2.0.5
 	github.com/briandowns/spinner v1.23.2
 	github.com/charmbracelet/x/ansi v0.11.7
 	github.com/cli/safeexec v1.0.1
@@ -167,7 +167,7 @@ require (
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/fang v1.0.0 // indirect
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260525132238-948f4557a654 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260703014108-f5a850f9c2b7 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/exp/charmtone v0.0.0-20250603201427-c31516f43444 // indirect
 	github.com/charmbracelet/x/exp/ordered v0.1.0 // indirect
