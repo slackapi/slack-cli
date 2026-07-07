@@ -15,11 +15,10 @@
 package manifest
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"path/filepath"
 
+	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/spf13/afero"
 )
@@ -30,15 +29,12 @@ func FetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFact
 	if err != nil {
 		return err
 	}
-	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(false)
-	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(slackYaml.AppManifest); err != nil {
+	manifestJSON, err := goutils.JSONMarshalUnescapedIndent(slackYaml.AppManifest)
+	if err != nil {
 		return err
 	}
 	manifestPath := filepath.Join(projectPath, "manifest.json")
-	if err := afero.WriteFile(clients.Fs, manifestPath, buf.Bytes(), 0644); err != nil {
+	if err := afero.WriteFile(clients.Fs, manifestPath, []byte(manifestJSON), 0644); err != nil {
 		return err
 	}
 	hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, slackYaml.AppManifest)
