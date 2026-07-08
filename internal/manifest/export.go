@@ -23,8 +23,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-// FetchAndWriteRemoteManifest fetches the app manifest from remote settings and writes it to the project.
-func FetchAndWriteRemoteManifest(ctx context.Context, clients *shared.ClientFactory, token, appID, projectPath string) error {
+// SetManifestLocal fetches the app manifest from remote settings and writes it to the project.
+func SetManifestLocal(ctx context.Context, clients *shared.ClientFactory, token, appID, projectPath string) error {
 	slackYaml, err := clients.AppClient().Manifest.GetManifestRemote(ctx, token, appID)
 	if err != nil {
 		return err

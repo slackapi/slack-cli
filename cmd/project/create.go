@@ -241,7 +241,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			if err != nil {
 				return err
 			}
-			fetchErr := manifest.FetchAndWriteRemoteManifest(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
+			fetchErr := manifest.SetManifestLocal(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
 			if fetchErr != nil {
 				clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
 					Text: "Could not fetch the remote app manifest",
@@ -249,6 +249,12 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 						fetchErr.Error(),
 						"The template manifest was kept unchanged",
 					},
+				}))
+			} else {
+				clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+					Emoji:     "pencil2",
+					Text:      "Manifest",
+					Secondary: []string{"Written to manifest.json from remote app settings"},
 				}))
 			}
 		}
