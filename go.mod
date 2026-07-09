@@ -1,6 +1,6 @@
 module github.com/slackapi/slack-cli
 
-go 1.26.4
+go 1.26.5
 
 require (
 	charm.land/bubbletea/v2 v2.0.8
