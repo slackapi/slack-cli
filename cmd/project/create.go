@@ -241,22 +241,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			if err != nil {
 				return err
 			}
-			fetchErr := manifest.SetManifestLocal(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath)
-			if fetchErr != nil {
-				clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
-					Text: "Could not fetch the remote app manifest",
-					Secondary: []string{
-						fetchErr.Error(),
-						"The template manifest was kept unchanged",
-					},
-				}))
-			} else {
-				clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
-					Emoji:     "pencil2",
-					Text:      "Manifest",
-					Secondary: []string{"Written to manifest.json from remote app settings"},
-				}))
+			if err := manifest.SetManifestLocal(ctx, clients, auth.Token, linkedApp.AppID, absProjectPath); err != nil {
+				return slackerror.Wrap(err, "Could not fetch the remote app manifest").
+					WithRemediation("Run %s to retrieve your app manifest manually", style.Commandf("manifest info --source remote", true))
 			}
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+				Emoji:     "pencil2",
+				Text:      "Manifest",
+				Secondary: []string{"Written to manifest.json from remote app settings"},
+			}))
 		}
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "house",

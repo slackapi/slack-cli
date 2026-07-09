@@ -1053,7 +1053,7 @@ func TestCreateCommand_AppFlag_FetchesRemoteManifest(t *testing.T) {
 				assert.Contains(t, string(manifestData), `"description": "An app from remote settings"`)
 			},
 		},
-		"warns on manifest fetch failure": {
+		"returns error on manifest fetch failure": {
 			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				projectDir = setupAppFlagMocks(t, ctx, cm, cf)
@@ -1063,10 +1063,7 @@ func TestCreateCommand_AppFlag_FetchesRemoteManifest(t *testing.T) {
 					Return(types.SlackYaml{}, slackerror.New("network error"))
 				cf.AppClient().Manifest = manifestMock
 			},
-			ExpectedStdoutOutputs: []string{
-				"Could not fetch the remote app manifest",
-				"The template manifest was kept unchanged",
-			},
+			ExpectedErrorStrings: []string{"network error"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
 			},
