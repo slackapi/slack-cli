@@ -20,22 +20,16 @@ import (
 	"os"
 )
 
-// claudeCodePluginHint is the one-line marker that recommends the official Slack
-// plugin to Claude Code users. Claude Code scans command output for this tag,
-// strips it before the output reaches the model (so it never counts toward token
-// usage), and shows a one-time install prompt. The tag must occupy its own line
-// and the plugin must live in Anthropic's official marketplace to have any
-// effect. See https://code.claude.com/docs/en/plugin-hints.
+// claudeCodePluginHint is the marker to recommend the official Slack plugin to
+// users of Claude Code.
+//
+// https://code.claude.com/docs/en/plugin-hints
 const claudeCodePluginHint = `<claude-code-hint v="1" type="plugin" value="slack@claude-plugins-official" />`
 
-// EmitClaudeCodePluginHint writes the Claude Code plugin-recommendation marker to
-// w on its own line when the CLI is running inside Claude Code, prompting a
-// one-time install of the official Slack plugin. It is a no-op in every other
-// environment. Claude Code deduplicates the hint by plugin and per session, so
-// callers may emit it on every invocation without spamming the user.
+// EmitClaudeCodePluginHint writes the Claude Code plugin recommendation marker
+// to a writer that must be stderr to prompt installation without an appearance
+// in actual outputs.
 func EmitClaudeCodePluginHint(w io.Writer) {
-	// Gate on any non-empty CLAUDECODE value, matching the published protocol
-	// example, so the hint keeps working if Claude Code ever changes the value.
 	if os.Getenv("CLAUDECODE") == "" {
 		return
 	}
