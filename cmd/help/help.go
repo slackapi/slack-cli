@@ -51,11 +51,6 @@ func HelpFunc(
 			"Experiments": experiments,
 		}
 		PrintHelpTemplate(cmd, data)
-
-		// Cobra serves help before PersistentPreRunE runs, so the root emit is
-		// skipped on `--help` paths. Recommend the official Slack plugin here too
-		// when running inside Claude Code. No-op in every other environment.
-		useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
 	}
 }
 
@@ -81,6 +76,9 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 	if err != nil {
 		cmd.PrintErrln(err)
 	}
+
+	// Recommend the official Slack plugin when running inside Claude Code
+	useragent.EmitClaudeCodePluginHint(cmd.ErrOrStderr())
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
