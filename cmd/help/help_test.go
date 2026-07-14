@@ -30,7 +30,9 @@ func TestHelpFunc(t *testing.T) {
 	tests := map[string]struct {
 		exampleCommands []style.ExampleCommand
 		experiments     []string
+		claudeCode      string
 		expectedOutput  []string
+		expectHint      bool
 	}{
 		"basic command information is included": {
 			expectedOutput: []string{
@@ -63,6 +65,14 @@ func TestHelpFunc(t *testing.T) {
 				"unknown (invalid)",
 			},
 		},
+		"the Claude Code plugin hint is emitted inside Claude Code": {
+			claudeCode: "1",
+			expectHint: true,
+		},
+		"the Claude Code plugin hint is not emitted outside Claude Code": {
+			claudeCode: "",
+			expectHint: false,
+		},
 	}
 
 	for name, tc := range tests {
@@ -74,6 +84,7 @@ func TestHelpFunc(t *testing.T) {
 				// Restore original EnabledExperiments
 				experiment.EnabledExperiments = _EnabledExperiments
 			}()
+			t.Setenv("CLAUDECODE", tc.claudeCode)
 
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -102,44 +113,6 @@ func TestHelpFunc(t *testing.T) {
 			for _, expectedString := range tc.expectedOutput {
 				assert.Contains(t, clientsMock.GetStdoutOutput(), expectedString)
 			}
-		})
-	}
-}
-
-func TestHelpFunc_ClaudeCodePluginHint(t *testing.T) {
-	tests := map[string]struct {
-		claudeCode string
-		expectHint bool
-	}{
-		"emits the plugin hint on stderr inside Claude Code": {
-			claudeCode: "1",
-			expectHint: true,
-		},
-		"does not emit the plugin hint outside Claude Code": {
-			claudeCode: "",
-			expectHint: false,
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			t.Setenv("CLAUDECODE", tc.claudeCode)
-
-			ctx := slackcontext.MockContext(t.Context())
-			clientsMock := shared.NewClientsMock()
-			clientsMock.AddDefaultMocks()
-			rootCmd := &cobra.Command{
-				Use: "root",
-				Run: func(cmd *cobra.Command, args []string) {},
-			}
-			rootCmd.SetContext(ctx)
-			rootCmd.Flags().Bool("help", true, "mock help flag")
-			clientsMock.Config.SetFlags(rootCmd)
-			testutil.MockCmdIO(clientsMock.IO, rootCmd)
-			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-
-			helpFunc := HelpFunc(clients, map[string]string{})
-			helpFunc(rootCmd, []string{})
 
 			// The hint belongs on stderr so it stays out of the help text on stdout.
 			assert.NotContains(t, clientsMock.GetStdoutOutput(), "claude-code-hint")
