@@ -131,7 +131,6 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			updateNotification.CheckForUpdateInBackground(ctx, false)
 
 			// Recommend the official Slack plugin when running inside Claude Code.
-			// No-op in every other environment. See internal/useragent/hint.go.
 			useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
 			return nil
 		},
