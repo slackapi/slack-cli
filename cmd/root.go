@@ -130,7 +130,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			updateNotification = update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
 			updateNotification.CheckForUpdateInBackground(ctx, false)
 
-			// Recommend the official Slack plugin when running inside Claude Code.
+			// Recommend the official Slack plugin when running inside Claude Code
 			useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
 			return nil
 		},

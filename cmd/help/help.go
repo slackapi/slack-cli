@@ -77,7 +77,7 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 		cmd.PrintErrln(err)
 	}
 
-	// Recommend the official Slack plugin when running inside Claude Code.
+	// Recommend the official Slack plugin when running inside Claude Code
 	useragent.EmitClaudeCodePluginHint(cmd.ErrOrStderr())
 }
 
