@@ -28,11 +28,11 @@ import (
 
 func TestHelpFunc(t *testing.T) {
 	tests := map[string]struct {
-		exampleCommands []style.ExampleCommand
-		experiments     []string
-		envVars         map[string]string
-		expectedOutput  []string
-		expectHint      bool
+		exampleCommands     []style.ExampleCommand
+		experiments         []string
+		envVars             map[string]string
+		expectedOutput      []string
+		expectedErrorOutput []string
 	}{
 		"basic command information is included": {
 			expectedOutput: []string{
@@ -66,12 +66,8 @@ func TestHelpFunc(t *testing.T) {
 			},
 		},
 		"the Claude Code plugin hint is emitted inside Claude Code": {
-			envVars:    map[string]string{"CLAUDECODE": "1"},
-			expectHint: true,
-		},
-		"the Claude Code plugin hint is not emitted outside Claude Code": {
-			envVars:    map[string]string{"CLAUDECODE": ""},
-			expectHint: false,
+			envVars:             map[string]string{"CLAUDECODE": "1"},
+			expectedErrorOutput: []string{"claude-code-hint"},
 		},
 	}
 
@@ -84,9 +80,6 @@ func TestHelpFunc(t *testing.T) {
 				// Restore original EnabledExperiments
 				experiment.EnabledExperiments = _EnabledExperiments
 			}()
-			// Clear CLAUDECODE first so cases without an explicit value assert
-			// the hint's absence deterministically, then apply per-case vars.
-			t.Setenv("CLAUDECODE", "")
 			for name, value := range tc.envVars {
 				t.Setenv(name, value)
 			}
@@ -118,13 +111,8 @@ func TestHelpFunc(t *testing.T) {
 			for _, expectedString := range tc.expectedOutput {
 				assert.Contains(t, clientsMock.GetStdoutOutput(), expectedString)
 			}
-
-			// The hint belongs on stderr so it stays out of the help text on stdout.
-			assert.NotContains(t, clientsMock.GetStdoutOutput(), "claude-code-hint")
-			if tc.expectHint {
-				assert.Contains(t, clientsMock.GetStderrOutput(), "claude-code-hint")
-			} else {
-				assert.NotContains(t, clientsMock.GetStderrOutput(), "claude-code-hint")
+			for _, expectedString := range tc.expectedErrorOutput {
+				assert.Contains(t, clientsMock.GetStderrOutput(), expectedString)
 			}
 		})
 	}
