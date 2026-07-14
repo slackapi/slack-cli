@@ -30,12 +30,12 @@ func Test_EmitClaudeCodePluginHint(t *testing.T) {
 			claudeCode: "1",
 			expected:   claudeCodePluginHint + "\n",
 		},
+		"emits the hint for any non-empty CLAUDECODE value": {
+			claudeCode: "true",
+			expected:   claudeCodePluginHint + "\n",
+		},
 		"emits nothing when CLAUDECODE is unset": {
 			claudeCode: "",
-			expected:   "",
-		},
-		"emits nothing when CLAUDECODE is set to another value": {
-			claudeCode: "true",
 			expected:   "",
 		},
 	}

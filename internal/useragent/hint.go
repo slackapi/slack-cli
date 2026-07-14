@@ -34,7 +34,9 @@ const claudeCodePluginHint = `<claude-code-hint v="1" type="plugin" value="slack
 // environment. Claude Code deduplicates the hint by plugin and per session, so
 // callers may emit it on every invocation without spamming the user.
 func EmitClaudeCodePluginHint(w io.Writer) {
-	if os.Getenv("CLAUDECODE") != "1" {
+	// Gate on any non-empty CLAUDECODE value, matching the published protocol
+	// example, so the hint keeps working if Claude Code ever changes the value.
+	if os.Getenv("CLAUDECODE") == "" {
 		return
 	}
 	fmt.Fprintln(w, claudeCodePluginHint)
