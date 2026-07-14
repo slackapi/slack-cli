@@ -30,7 +30,7 @@ func TestHelpFunc(t *testing.T) {
 	tests := map[string]struct {
 		exampleCommands []style.ExampleCommand
 		experiments     []string
-		claudeCode      string
+		envVars         map[string]string
 		expectedOutput  []string
 		expectHint      bool
 	}{
@@ -66,11 +66,11 @@ func TestHelpFunc(t *testing.T) {
 			},
 		},
 		"the Claude Code plugin hint is emitted inside Claude Code": {
-			claudeCode: "1",
+			envVars:    map[string]string{"CLAUDECODE": "1"},
 			expectHint: true,
 		},
 		"the Claude Code plugin hint is not emitted outside Claude Code": {
-			claudeCode: "",
+			envVars:    map[string]string{"CLAUDECODE": ""},
 			expectHint: false,
 		},
 	}
@@ -84,7 +84,12 @@ func TestHelpFunc(t *testing.T) {
 				// Restore original EnabledExperiments
 				experiment.EnabledExperiments = _EnabledExperiments
 			}()
-			t.Setenv("CLAUDECODE", tc.claudeCode)
+			// Clear CLAUDECODE first so cases without an explicit value assert
+			// the hint's absence deterministically, then apply per-case vars.
+			t.Setenv("CLAUDECODE", "")
+			for name, value := range tc.envVars {
+				t.Setenv(name, value)
+			}
 
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
