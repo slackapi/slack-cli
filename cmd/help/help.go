@@ -21,6 +21,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/cobra"
 )
 
@@ -50,6 +51,11 @@ func HelpFunc(
 			"Experiments": experiments,
 		}
 		PrintHelpTemplate(cmd, data)
+
+		// Cobra serves help before PersistentPreRunE runs, so the root emit is
+		// skipped on `--help` paths. Recommend the official Slack plugin here too
+		// when running inside Claude Code. No-op in every other environment.
+		useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
 	}
 }
 

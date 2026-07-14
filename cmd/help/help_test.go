@@ -105,3 +105,49 @@ func TestHelpFunc(t *testing.T) {
 		})
 	}
 }
+
+func TestHelpFunc_ClaudeCodePluginHint(t *testing.T) {
+	tests := map[string]struct {
+		claudeCode string
+		expectHint bool
+	}{
+		"emits the plugin hint on stderr inside Claude Code": {
+			claudeCode: "1",
+			expectHint: true,
+		},
+		"does not emit the plugin hint outside Claude Code": {
+			claudeCode: "",
+			expectHint: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Setenv("CLAUDECODE", tc.claudeCode)
+
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			rootCmd := &cobra.Command{
+				Use: "root",
+				Run: func(cmd *cobra.Command, args []string) {},
+			}
+			rootCmd.SetContext(ctx)
+			rootCmd.Flags().Bool("help", true, "mock help flag")
+			clientsMock.Config.SetFlags(rootCmd)
+			testutil.MockCmdIO(clientsMock.IO, rootCmd)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			helpFunc := HelpFunc(clients, map[string]string{})
+			helpFunc(rootCmd, []string{})
+
+			// The hint belongs on stderr so it stays out of the help text on stdout.
+			assert.NotContains(t, clientsMock.GetStdoutOutput(), "claude-code-hint")
+			if tc.expectHint {
+				assert.Contains(t, clientsMock.GetStderrOutput(), "claude-code-hint")
+			} else {
+				assert.NotContains(t, clientsMock.GetStderrOutput(), "claude-code-hint")
+			}
+		})
+	}
+}
