@@ -26,7 +26,7 @@ func Test_EmitClaudeCodePluginHint(t *testing.T) {
 		claudeCode string
 		expected   string
 	}{
-		"emits the hint on its own line inside Claude Code": {
+		"emits the hint on its own line inside claude code": {
 			claudeCode: "1",
 			expected:   claudeCodePluginHint + "\n",
 		},

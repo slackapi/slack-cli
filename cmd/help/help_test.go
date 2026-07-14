@@ -65,7 +65,7 @@ func TestHelpFunc(t *testing.T) {
 				"unknown (invalid)",
 			},
 		},
-		"the Claude Code plugin hint is emitted inside Claude Code": {
+		"the claude code plugin hint is emitted inside claude code": {
 			envVars:             map[string]string{"CLAUDECODE": "1"},
 			expectedErrorOutput: []string{"claude-code-hint"},
 		},
