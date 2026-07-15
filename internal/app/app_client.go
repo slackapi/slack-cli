@@ -302,9 +302,7 @@ func (ac *AppClient) readDeployedApps() error {
 	// than a parse error. This state occurs when a prior write was truncated
 	// but not completed (e.g. a process was interrupted between afero.WriteFile's
 	// O_TRUNC and the actual write). Without this guard, every subsequent CLI
-	// invocation logs ErrUnableToParseJSON on the same file — see the June 2026
-	// monthly report showing a hot loop of unable_to_parse_json events from a
-	// small user cohort.
+	// invocation logs ErrUnableToParseJSON on the same file.
 	if goutils.IsEmptyJSON(f) {
 		ac.apps = types.Apps{
 			DeployedApps: map[string]types.App{},
