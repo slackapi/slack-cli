@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -297,6 +298,24 @@ func (ac *AppClient) readDeployedApps() error {
 		return err
 	}
 
+	// Treat an empty (or whitespace-only) file as "no apps saved yet" rather
+	// than a parse error. This state occurs when a prior write was truncated
+	// but not completed (e.g. a process was interrupted between afero.WriteFile's
+	// O_TRUNC and the actual write). Without this guard, every subsequent CLI
+	// invocation logs ErrUnableToParseJSON on the same file — see the June 2026
+	// monthly report showing a hot loop of unable_to_parse_json events from a
+	// small user cohort.
+	if goutils.IsEmptyJSON(f) {
+		ac.apps = types.Apps{
+			DeployedApps: map[string]types.App{},
+			LocalApps:    map[string]types.App{},
+		}
+		if err = ac.saveDeployedApps(); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if err = json.Unmarshal(f, &ac.apps); err != nil {
 		return slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of deployed apps file").
@@ -369,6 +388,17 @@ func (ac *AppClient) readLocalApps() error {
 		}
 
 		return err
+	}
+
+	// Treat an empty (or whitespace-only) file as "no local apps saved yet"
+	// rather than a parse error. See readDeployedApps for the corresponding
+	// note on why this state occurs.
+	if goutils.IsEmptyJSON(f) {
+		ac.apps.LocalApps = map[string]types.App{}
+		if err = ac.saveLocalApps(); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	err = json.Unmarshal(f, &ac.apps.LocalApps)
