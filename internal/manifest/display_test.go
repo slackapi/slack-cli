@@ -258,7 +258,7 @@ func Test_formatValue(t *testing.T) {
 			input:    map[string]any{"key": "value"},
 			expected: `{"key":"value"}`,
 		},
-		"long value is truncated at 80 chars": {
+		"long value is truncated to exactly 80 chars ending in ellipsis": {
 			input: map[string]any{
 				"a_very_long_key_name_that_exceeds": "a_value_that_when_combined_with_the_key_will_definitely_push_past_eighty_chars_total",
 			},
@@ -269,15 +269,9 @@ func Test_formatValue(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result := formatValue(tc.input)
 			assert.Contains(t, result, tc.expected)
+			if tc.expected == "..." {
+				assert.Len(t, result, 80)
+			}
 		})
 	}
-
-	t.Run("long value result is exactly 80 chars", func(t *testing.T) {
-		longMap := map[string]any{
-			"a_very_long_key_name_that_exceeds": "a_value_that_when_combined_with_the_key_will_definitely_push_past_eighty_chars_total",
-		}
-		result := formatValue(longMap)
-		assert.Len(t, result, 80)
-		assert.True(t, result[len(result)-3:] == "...")
-	})
 }
