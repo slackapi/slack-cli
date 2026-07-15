@@ -90,7 +90,8 @@ rc:
 	./bin/slack docgen ./docs/reference --skip-update
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_arm64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_arm64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
-	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_linux_64-bit\.tar\.gz#slack_cli_$(RELEASE_VERSION)_linux_64-bit.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
+	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_linux_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_linux_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
+	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_linux_arm64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_linux_arm64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_windows_64-bit\.zip#slack_cli_$(RELEASE_VERSION)_windows_64-bit.zip#" docs/guides/installing-the-slack-cli-for-windows.md
 	sed -i.bak -E "s/Using slack v[0-9]+\.[0-9]+\.[0-9]+/Using slack v$(RELEASE_VERSION)/" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	sed -i.bak -E "s/Using slack v[0-9]+\.[0-9]+\.[0-9]+/Using slack v$(RELEASE_VERSION)/" docs/guides/installing-the-slack-cli-for-windows.md

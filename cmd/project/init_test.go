@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/api"
 	internalApp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -58,7 +57,7 @@ func Test_Project_InitCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupProjectInitCommandMocks(t, ctx, cm, cf)
 				// Do not link an existing app
-				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(false, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, linkAppConfirmPromptText, mock.Anything).Return(false, nil)
 			},
 			ExpectedStdoutOutputs: []string{
 				"Project Initialization", // Assert section header
@@ -78,7 +77,7 @@ func Test_Project_InitCommand(t *testing.T) {
 					t,
 					"ConfirmPrompt",
 					mock.Anything,
-					app.LinkAppConfirmPromptText,
+					linkAppConfirmPromptText,
 					mock.Anything,
 				)
 				// Assert Trace
@@ -109,7 +108,7 @@ func Test_Project_InitCommand(t *testing.T) {
 				// Default setup
 				setupProjectInitCommandMocks(t, ctx, cm, cf)
 				// Link an existing app
-				cm.IO.On("ConfirmPrompt", mock.Anything, app.LinkAppConfirmPromptText, mock.Anything).Return(true, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, linkAppConfirmPromptText, mock.Anything).Return(true, nil)
 				// Mock prompt for team
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
@@ -156,7 +155,7 @@ func Test_Project_InitCommand(t *testing.T) {
 				// Assert prompt to add existing apps was called
 				cm.IO.AssertCalled(t, "ConfirmPrompt",
 					mock.Anything,
-					app.LinkAppConfirmPromptText,
+					linkAppConfirmPromptText,
 					mock.Anything,
 				)
 				// Assert prompt for team
