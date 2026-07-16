@@ -192,6 +192,40 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"assistant_view":{"assistant_description":"magic","suggested_prompts":[{"title":"visit the beach","message":"what is glass"}]},"bot_user":{"display_name":"einstein"}}`,
 		},
+		"includes agent view when provided": {
+			features: AppFeatures{
+				AgentView: &AgentView{
+					AgentDescription: "summarizes threads",
+					SuggestedPrompts: []SuggestedPrompts{
+						{
+							Title:   "summarize this thread",
+							Message: "please summarize the conversation",
+						},
+					},
+					Actions: []AgentViewAction{
+						{
+							Name:        "open_settings",
+							Description: "Open the agent settings panel.",
+						},
+					},
+				},
+				BotUser: BotUser{
+					DisplayName: "agent_smith",
+				},
+			},
+			want: `{"app_home":{},"agent_view":{"agent_description":"summarizes threads","suggested_prompts":[{"title":"summarize this thread","message":"please summarize the conversation"}],"actions":[{"name":"open_settings","description":"Open the agent settings panel."}]},"bot_user":{"display_name":"agent_smith"}}`,
+		},
+		"omits agent view fields when empty": {
+			features: AppFeatures{
+				AgentView: &AgentView{
+					AgentDescription: "minimal",
+				},
+				BotUser: BotUser{
+					DisplayName: "agent_smith",
+				},
+			},
+			want: `{"app_home":{},"agent_view":{"agent_description":"minimal"},"bot_user":{"display_name":"agent_smith"}}`,
+		},
 		"includes search when provided": {
 			features: AppFeatures{
 				BotUser: BotUser{

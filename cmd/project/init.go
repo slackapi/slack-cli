@@ -29,6 +29,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const linkAppConfirmPromptText = "Do you want to add an existing app?"
+
 // NewInitCommand returns a Cobra command to initialize projects with Slack CLI support
 func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
@@ -109,11 +111,25 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	// Existing projects initialized always default to config.ManifestSourceLocal.
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
-	// Add an existing app to the project
-	err = app.LinkExistingApp(ctx, clients, &types.App{}, true)
+	// Prompt to add an existing app to the project
+	app.LinkAppHeaderSection(ctx, clients)
+	proceed, err := clients.IO.ConfirmPrompt(ctx, linkAppConfirmPromptText, true)
 	if err != nil {
-		// Display the error but continue to init
-		clients.IO.PrintError(ctx, "%s", err.Error())
+		return err
+	}
+	if proceed {
+		linkedApp := &types.App{}
+		err = app.LinkExistingApp(ctx, clients, linkedApp)
+		if err != nil {
+			// Display the error but continue to init
+			clients.IO.PrintError(ctx, "%s", err.Error())
+		} else {
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+				Emoji:     "house",
+				Text:      "App",
+				Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
+			}))
+		}
 	}
 
 	printNextStepSection(ctx, clients, projectDirPath)
