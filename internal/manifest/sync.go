@@ -82,11 +82,17 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 		if err != nil {
 			return nil, err
 		}
+	case clients.Config.ForceRemoteFlag:
+		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllRemote)
+		if err != nil {
+			return nil, err
+		}
 	case !clients.IO.IsTTY():
 		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
-			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings",
+			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings or %s to pull app settings to project",
 				style.CommandText("slack manifest sync"),
 				style.CommandText("--force"),
+				style.CommandText("--force-remote"),
 			)
 	default:
 		merged, err = resolveInteractively(ctx, clients, localManifest.AppManifest, remoteManifest.AppManifest, diffs)
