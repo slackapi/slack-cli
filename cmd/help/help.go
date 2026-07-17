@@ -21,6 +21,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/cobra"
 )
 
@@ -75,6 +76,9 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 	if err != nil {
 		cmd.PrintErrln(err)
 	}
+
+	// Recommend the official Slack plugin when running inside Claude Code
+	useragent.EmitClaudeCodePluginHint(cmd.ErrOrStderr())
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
