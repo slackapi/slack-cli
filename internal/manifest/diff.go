@@ -16,10 +16,10 @@ package manifest
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 // ignoredDiffPaths are top-level manifest fields that the project may declare
@@ -83,11 +83,11 @@ func (dr *DiffResult) HasDifferences() bool {
 func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 	localFlat, err := Flatten(local)
 	if err != nil {
-		return nil, fmt.Errorf("failed to flatten local manifest: %w", err)
+		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 	}
 	remoteFlat, err := Flatten(remote)
 	if err != nil {
-		return nil, fmt.Errorf("failed to flatten remote manifest: %w", err)
+		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 	}
 	result, err := diffFlat(localFlat, remoteFlat)
 	if err != nil {
@@ -192,7 +192,7 @@ func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 		}
 		equal, err := valuesEqual(localVal, remoteVal)
 		if err != nil {
-			return nil, fmt.Errorf("failed to compare manifest values at %q: %w", path, err)
+			return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 		}
 		if !equal {
 			result.Diffs = append(result.Diffs, FieldDiff{

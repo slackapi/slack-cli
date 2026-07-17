@@ -44,6 +44,7 @@ const (
 	ErrAppHosted                                     = "app_hosted"
 	ErrAppInstall                                    = "app_install_error"
 	ErrAppManifestAccess                             = "app_manifest_access_error"
+	ErrAppManifestCompare                            = "app_manifest_compare_error"
 	ErrAppManifestCreate                             = "app_manifest_create_error"
 	ErrAppManifestGenerate                           = "app_manifest_generate_error"
 	ErrAppManifestUpdate                             = "app_manifest_update_error"
@@ -405,6 +406,11 @@ Otherwise start your app for local development with: %s`,
 	ErrAppManifestAccess: {
 		Code:    ErrAppManifestAccess,
 		Message: "Couldn't access your app manifest",
+	},
+
+	ErrAppManifestCompare: {
+		Code:    ErrAppManifestCompare,
+		Message: "Couldn't compare your app manifests",
 	},
 
 	ErrAppManifestCreate: {

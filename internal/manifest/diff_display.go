@@ -60,7 +60,7 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 			local = formatValue(d.LocalValue)
 			remote = formatValue(d.RemoteValue)
 		}
-		io.PrintInfo(ctx, false, "  %s", style.Bold(d.Path))
+		io.PrintInfo(ctx, false, "  %s", d.Path)
 		io.PrintInfo(ctx, false, "    Project:      %s", local)
 		io.PrintInfo(ctx, false, "    App settings: %s", remote)
 	}

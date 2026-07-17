@@ -16,9 +16,10 @@ package manifest
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
 // Flatten converts a manifest (as JSON-serializable struct) into a flat map
@@ -32,11 +33,11 @@ import (
 func Flatten(manifest any) (map[string]any, error) {
 	data, err := json.Marshal(manifest)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal manifest: %w", err)
+		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 	}
 	var raw map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal manifest: %w", err)
+		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 	}
 	result := make(map[string]any)
 	flattenRecursive("", raw, result)
