@@ -8,7 +8,7 @@ Search the Slack developer docs and return results in text, JSON, or browser
 format.
 
 Results can be filtered to a single category with the --category flag. Available
-categories: guides, reference, changelog, python, javascript, java, slack_cli, slack_github_action, deno_slack_sdk.
+categories: guides, reference, changelog, python, javascript, java, slack_cli, slack_github_action, deno_slack_sdk, legacy.
 
 ```
 slack docs search [query] [flags]
@@ -17,7 +17,7 @@ slack docs search [query] [flags]
 ## Flags
 
 ```
-      --category string   filter results by category: guides, reference, changelog, python, javascript, java, slack_cli, slack_github_action, deno_slack_sdk
+      --category string   filter results by category: guides, reference, changelog, python, javascript, java, slack_cli, slack_github_action, deno_slack_sdk, legacy
   -h, --help              help for search
       --limit int         maximum number of text or json search results to return (default 20)
       --output string     output format: text, json, browser (default "text")

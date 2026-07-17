@@ -43,6 +43,7 @@ var DocsSearchCategories = []string{
 	"slack_cli",
 	"slack_github_action",
 	"deno_slack_sdk",
+	"legacy",
 }
 
 type DocsClient interface {
