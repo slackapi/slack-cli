@@ -20,6 +20,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
@@ -27,14 +28,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildDocsSearchURL(query string) string {
-	encodedQuery := url.QueryEscape(query)
-	return fmt.Sprintf("%s/search/?q=%s", docsURL, encodedQuery)
+func buildDocsSearchURL(query, category string) string {
+	params := url.Values{}
+	params.Set("q", query)
+	if category != "" {
+		params.Set("filter", category)
+	}
+	return fmt.Sprintf("%s/search/?%s", docsURL, params.Encode())
 }
 
 type searchConfig struct {
-	output string
-	limit  int
+	output   string
+	limit    int
+	category string
 }
 
 func makeAbsoluteURL(relativeURL string) string {
@@ -53,6 +59,9 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long: strings.Join([]string{
 			"Search the Slack developer docs and return results in text, JSON, or browser",
 			"format.",
+			"",
+			"Results can be filtered to a single category with the --category flag. Available",
+			"categories: " + strings.Join(api.DocsSearchCategories, ", ") + ".",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -67,6 +76,10 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 				Meaning: "Search docs with limited JSON results",
 				Command: "docs search \"api\" --output=json --limit=5",
 			},
+			{
+				Meaning: "Search only the API reference docs",
+				Command: "docs search \"chat.postMessage\" --category=reference",
+			},
 		}),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -76,6 +89,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	cmd.Flags().StringVar(&cfg.output, "output", "text", "output format: text, json, browser")
 	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of text or json search results to return")
+	cmd.Flags().StringVar(&cfg.category, "category", "", fmt.Sprintf("filter results by category: %s", strings.Join(api.DocsSearchCategories, ", ")))
 
 	return cmd
 }
@@ -87,7 +101,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 	switch cfg.output {
 	case "json":
-		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
 		if err != nil {
 			return err
 		}
@@ -106,9 +120,14 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 		return nil
 	case "text":
-		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
 		if err != nil {
 			return err
+		}
+
+		categorySuffix := ""
+		if cfg.category != "" {
+			categorySuffix = fmt.Sprintf(" in category \"%s\"", cfg.category)
 		}
 
 		if len(searchResponse.Results) == 0 {
@@ -116,7 +135,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 				Emoji: "books",
 				Text:  "Docs Search",
 				Secondary: []string{
-					fmt.Sprintf("Found zero results for \"%s\"", query),
+					fmt.Sprintf("Found zero results for \"%s\"%s", query, categorySuffix),
 				},
 			}))
 			clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
@@ -127,7 +146,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 			Emoji: "books",
 			Text:  "Docs Search",
 			Secondary: []string{
-				fmt.Sprintf("Displaying first %d of %d results for \"%s\"", len(searchResponse.Results), searchResponse.TotalResults, query),
+				fmt.Sprintf("Displaying first %d of %d results for \"%s\"%s", len(searchResponse.Results), searchResponse.TotalResults, query, categorySuffix),
 			},
 		}))
 
@@ -144,7 +163,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 		return nil
 	case "browser":
-		docsSearchURL := buildDocsSearchURL(query)
+		docsSearchURL := buildDocsSearchURL(query, cfg.category)
 
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "books",

@@ -30,8 +30,24 @@ var docsBaseURL = "https://docs.slack.dev"
 
 const docsSearchMethod = "api/v1/search"
 
+// DocsSearchCategories lists the categories the docs search endpoint accepts,
+// mirroring the filters offered by the docs site search modal. An empty
+// category searches across all content.
+var DocsSearchCategories = []string{
+	"guides",
+	"reference",
+	"changelog",
+	"python",
+	"javascript",
+	"java",
+	"slack_cli",
+	"slack_github_action",
+	"deno_slack_sdk",
+	"legacy",
+}
+
 type DocsClient interface {
-	DocsSearch(ctx context.Context, query string, limit int) (*DocsSearchResponse, error)
+	DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error)
 }
 
 type DocsSearchResponse struct {
@@ -45,8 +61,11 @@ type DocsSearchItem struct {
 	Title string `json:"title"`
 }
 
-func buildDocsSearchURL(baseURL, query string, limit int) (string, error) {
+func buildDocsSearchURL(baseURL, query string, limit int, category string) (string, error) {
 	endpoint := fmt.Sprintf("%s?query=%s&limit=%d", docsSearchMethod, url.QueryEscape(query), limit)
+	if category != "" {
+		endpoint += fmt.Sprintf("&category=%s", url.QueryEscape(category))
+	}
 	sURL, err := url.Parse(baseURL + "/" + endpoint)
 	if err != nil {
 		return "", err
@@ -64,12 +83,12 @@ func buildDocsSearchRequest(ctx context.Context, urlStr, cliVersion string) (*ht
 }
 
 // DocsSearch searches the Slack developer docs API
-func (c *Client) DocsSearch(ctx context.Context, query string, limit int) (*DocsSearchResponse, error) {
+func (c *Client) DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error) {
 	var span opentracing.Span
 	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsSearch")
 	defer span.Finish()
 
-	urlStr, err := buildDocsSearchURL(docsBaseURL, query, limit)
+	urlStr, err := buildDocsSearchURL(docsBaseURL, query, limit, category)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}

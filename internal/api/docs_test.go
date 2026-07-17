@@ -28,6 +28,7 @@ func Test_buildDocsSearchURL(t *testing.T) {
 		baseURL               string
 		query                 string
 		limit                 int
+		category              string
 		expectedURL           string
 		expectedErrorContains string
 	}{
@@ -43,6 +44,20 @@ func Test_buildDocsSearchURL(t *testing.T) {
 			limit:       5,
 			expectedURL: "https://docs.slack.dev/api/v1/search?query=messages+%26+webhooks&limit=5",
 		},
+		"appends category when set": {
+			baseURL:     "https://docs.slack.dev",
+			query:       "chat.postMessage",
+			limit:       20,
+			category:    "reference",
+			expectedURL: "https://docs.slack.dev/api/v1/search?query=chat.postMessage&limit=20&category=reference",
+		},
+		"omits category when empty": {
+			baseURL:     "https://docs.slack.dev",
+			query:       "test",
+			limit:       20,
+			category:    "",
+			expectedURL: "https://docs.slack.dev/api/v1/search?query=test&limit=20",
+		},
 		"returns error for invalid base URL": {
 			baseURL:               "ht!tp://invalid",
 			query:                 "test",
@@ -52,7 +67,7 @@ func Test_buildDocsSearchURL(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			url, err := buildDocsSearchURL(tc.baseURL, tc.query, tc.limit)
+			url, err := buildDocsSearchURL(tc.baseURL, tc.query, tc.limit, tc.category)
 
 			if tc.expectedErrorContains != "" {
 				require.Error(t, err)
@@ -103,6 +118,7 @@ func Test_Client_DocsSearch(t *testing.T) {
 	tests := map[string]struct {
 		query                 string
 		limit                 int
+		category              string
 		response              string
 		statusCode            int
 		expectedQuerystring   string
@@ -125,6 +141,23 @@ func Test_Client_DocsSearch(t *testing.T) {
 					{
 						Title: "Block Kit Elements",
 						URL:   "/block-kit/elements",
+					},
+				},
+			},
+		},
+		"includes category in querystring": {
+			query:               "chat.postMessage",
+			limit:               20,
+			category:            "reference",
+			response:            `{"total_results":1,"limit":20,"results":[{"title":"chat.postMessage","url":"/reference/methods/chat.postMessage"}]}`,
+			expectedQuerystring: "query=chat.postMessage&limit=20&category=reference",
+			expectedResponse: &DocsSearchResponse{
+				TotalResults: 1,
+				Limit:        20,
+				Results: []DocsSearchItem{
+					{
+						Title: "chat.postMessage",
+						URL:   "/reference/methods/chat.postMessage",
 					},
 				},
 			},
@@ -178,7 +211,7 @@ func Test_Client_DocsSearch(t *testing.T) {
 			docsBaseURL = c.Host()
 			defer func() { docsBaseURL = originalURL }()
 
-			result, err := c.DocsSearch(ctx, tc.query, tc.limit)
+			result, err := c.DocsSearch(ctx, tc.query, tc.limit, tc.category)
 
 			if tc.expectedErrorContains != "" {
 				require.Error(t, err)
