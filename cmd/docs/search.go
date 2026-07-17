@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"slices"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -60,6 +59,9 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long: strings.Join([]string{
 			"Search the Slack developer docs and return results in text, JSON, or browser",
 			"format.",
+			"",
+			"Results can be filtered to a single category with the --category flag. Available",
+			"categories: " + strings.Join(api.DocsSearchCategories, ", ") + ".",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -97,14 +99,6 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 	query := strings.Join(args, " ")
 
-	if cfg.category != "" && !slices.Contains(api.DocsSearchCategories, cfg.category) {
-		return slackerror.New(slackerror.ErrInvalidFlag).WithMessage(
-			"Invalid category: %s", cfg.category,
-		).WithRemediation(
-			"Use one of: %s", strings.Join(api.DocsSearchCategories, ", "),
-		)
-	}
-
 	switch cfg.output {
 	case "json":
 		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
@@ -131,12 +125,17 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 			return err
 		}
 
+		categorySuffix := ""
+		if cfg.category != "" {
+			categorySuffix = fmt.Sprintf(" in category \"%s\"", cfg.category)
+		}
+
 		if len(searchResponse.Results) == 0 {
 			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 				Emoji: "books",
 				Text:  "Docs Search",
 				Secondary: []string{
-					fmt.Sprintf("Found zero results for \"%s\"", query),
+					fmt.Sprintf("Found zero results for \"%s\"%s", query, categorySuffix),
 				},
 			}))
 			clients.IO.PrintTrace(ctx, slacktrace.DocsSearchSuccess, query)
@@ -147,7 +146,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 			Emoji: "books",
 			Text:  "Docs Search",
 			Secondary: []string{
-				fmt.Sprintf("Displaying first %d of %d results for \"%s\"", len(searchResponse.Results), searchResponse.TotalResults, query),
+				fmt.Sprintf("Displaying first %d of %d results for \"%s\"%s", len(searchResponse.Results), searchResponse.TotalResults, query, categorySuffix),
 			},
 		}))
 

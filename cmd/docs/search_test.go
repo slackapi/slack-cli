@@ -164,8 +164,24 @@ func Test_Docs_SearchCommand(t *testing.T) {
 					},
 				}, nil)
 			},
+			ExpectedStdoutOutputs: []string{
+				`Displaying first 1 of 1 results for "chat.postMessage" in category "reference"`,
+			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "chat.postMessage", 20, "reference")
+			},
+		},
+		"includes category in zero results message": {
+			CmdArgs: []string{"search", "nonexistent", "--category=reference"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsSearch", mock.Anything, "nonexistent", 20, "reference").Return(&api.DocsSearchResponse{
+					TotalResults: 0,
+					Results:      []api.DocsSearchItem{},
+					Limit:        20,
+				}, nil)
+			},
+			ExpectedStdoutOutputs: []string{
+				`Found zero results for "nonexistent" in category "reference"`,
 			},
 		},
 		"passes category to API for json output": {
@@ -181,11 +197,17 @@ func Test_Docs_SearchCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "events", 20, "reference")
 			},
 		},
-		"rejects invalid category": {
+		"passes unknown category through to API": {
 			CmdArgs: []string{"search", "test", "--category=bogus"},
-			ExpectedErrorStrings: []string{
-				"Invalid category",
-				"reference",
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsSearch", mock.Anything, "test", 20, "bogus").Return(&api.DocsSearchResponse{
+					TotalResults: 0,
+					Results:      []api.DocsSearchItem{},
+					Limit:        20,
+				}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "test", 20, "bogus")
 			},
 		},
 		"opens browser with category filter": {
