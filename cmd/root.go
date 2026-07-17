@@ -129,6 +129,9 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			// Check for an CLI update in the background while the command runs
 			updateNotification = update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
 			updateNotification.CheckForUpdateInBackground(ctx, false)
+
+			// Recommend the official Slack plugin when running inside Claude Code
+			useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
 			return nil
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
