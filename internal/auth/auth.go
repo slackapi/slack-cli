@@ -216,6 +216,16 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 		return auths, err
 	}
 
+	// Treat an empty (or whitespace-only) credentials file as "no credentials
+	// stored" rather than a parse error. This state occurs when a prior write
+	// was truncated but not completed (e.g. a process was interrupted between
+	// afero.WriteFile's O_TRUNC and the actual write). Without this guard,
+	// every subsequent CLI invocation reads the same 0-byte file and logs
+	// ErrUnableToParseJSON in a hot loop.
+	if goutils.IsEmptyJSON(raw) {
+		return types.AuthByTeamID{}, nil
+	}
+
 	err = json.Unmarshal(raw, &auths)
 	if err != nil {
 		return auths, slackerror.New(slackerror.ErrUnableToParseJSON).

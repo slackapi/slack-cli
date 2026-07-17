@@ -26,6 +26,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
+	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -125,6 +126,17 @@ func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
 	configFileBytes, err := c.readConfigFile(path)
 	if err != nil {
 		return &config, err
+	}
+
+	// Treat an empty (or whitespace-only) config file as "no user config saved
+	// yet" rather than a parse error. This state occurs when a prior write was
+	// truncated but not completed (e.g. a process was interrupted between
+	// afero.WriteFile's O_TRUNC and the actual write). Without this guard,
+	// every subsequent CLI invocation reads the same 0-byte file and logs
+	// ErrUnableToParseJSON in a hot loop.
+	if goutils.IsEmptyJSON(configFileBytes) {
+		config.Surveys = map[string]SurveyConfig{}
+		return &config, nil
 	}
 
 	err = json.Unmarshal(configFileBytes, &config)
