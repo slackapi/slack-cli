@@ -119,7 +119,7 @@ func Test_Diff(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := Diff(tc.local, tc.remote)
+			result, err := Diff(tc.local, tc.remote, false)
 			require.NoError(t, err)
 			if tc.expected == nil {
 				assert.False(t, result.HasDifferences())
@@ -163,7 +163,7 @@ func Test_Diff_IgnoresMetadataPaths(t *testing.T) {
 		DisplayInformation: types.DisplayInformation{Name: "App"},
 	}
 
-	result, err := Diff(local, remote)
+	result, err := Diff(local, remote, false)
 	require.NoError(t, err)
 	assert.False(t, result.HasDifferences(), "metadata-only differences should be filtered, got %+v", result.Diffs)
 }
@@ -177,7 +177,7 @@ func Test_Diff_FiltersMetadataButKeepsOtherDiffs(t *testing.T) {
 		DisplayInformation: types.DisplayInformation{Name: "Remote"},
 	}
 
-	result, err := Diff(local, remote)
+	result, err := Diff(local, remote, false)
 	require.NoError(t, err)
 	require.True(t, result.HasDifferences())
 	for _, d := range result.Diffs {
@@ -209,9 +209,25 @@ func Test_Diff_SuppressesDevLocalSuffix(t *testing.T) {
 			BotUser: types.BotUser{DisplayName: "romantic-dolphin-526 (local)"},
 		},
 	}
-	result, err := Diff(local, remote)
+	result, err := Diff(local, remote, true)
 	require.NoError(t, err)
 	assert.False(t, result.HasDifferences(), "dev-local suffix differences should be suppressed, got %+v", result.Diffs)
+}
+
+func Test_Diff_DoesNotSuppressLocalSuffixForNonDevApps(t *testing.T) {
+	// When the app is not a dev app, the (local) suffix filter should not
+	// suppress the diff — it surfaces as a normal difference.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526"},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526 (local)"},
+	}
+	result, err := Diff(local, remote, false)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences(), "non-dev app should surface (local) suffix as a diff")
+	require.Len(t, result.Diffs, 1)
+	assert.Equal(t, "display_information.name", result.Diffs[0].Path)
 }
 
 func Test_Diff_PreservesRealRenames(t *testing.T) {
@@ -223,7 +239,7 @@ func Test_Diff_PreservesRealRenames(t *testing.T) {
 	remote := types.AppManifest{
 		DisplayInformation: types.DisplayInformation{Name: "old-name (local)"},
 	}
-	result, err := Diff(local, remote)
+	result, err := Diff(local, remote, true)
 	require.NoError(t, err)
 	require.True(t, result.HasDifferences())
 	require.Len(t, result.Diffs, 1)
@@ -231,24 +247,6 @@ func Test_Diff_PreservesRealRenames(t *testing.T) {
 	assert.Equal(t, DiffModified, result.Diffs[0].Type)
 	assert.Equal(t, "new-name", result.Diffs[0].LocalValue)
 	assert.Equal(t, "old-name (local)", result.Diffs[0].RemoteValue)
-}
-
-func Test_Diff_SuppressesRemoteFalseDefaultIsMcpEnabled(t *testing.T) {
-	// apps.manifest.export emits settings.is_mcp_enabled: false for every app
-	// even when the project never declared the field. Suppress the
-	// remote-only diff so users do not see a phantom entry on every run.
-	local := types.AppManifest{
-		DisplayInformation: types.DisplayInformation{Name: "App"},
-	}
-	remote := types.AppManifest{
-		DisplayInformation: types.DisplayInformation{Name: "App"},
-		Settings: &types.AppSettings{
-			IsMCPEnabled: ptrBool(false),
-		},
-	}
-	result, err := Diff(local, remote)
-	require.NoError(t, err)
-	assert.False(t, result.HasDifferences(), "remote-only is_mcp_enabled=false should be suppressed, got %+v", result.Diffs)
 }
 
 func Test_Diff_SurfacesRealIsMcpEnabledDisagreement(t *testing.T) {
@@ -266,7 +264,7 @@ func Test_Diff_SurfacesRealIsMcpEnabledDisagreement(t *testing.T) {
 			IsMCPEnabled: ptrBool(false),
 		},
 	}
-	result, err := Diff(local, remote)
+	result, err := Diff(local, remote, false)
 	require.NoError(t, err)
 	require.True(t, result.HasDifferences())
 	require.Len(t, result.Diffs, 1)

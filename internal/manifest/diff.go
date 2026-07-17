@@ -40,16 +40,6 @@ var devLocalSuffixPaths = []string{
 
 const devLocalSuffix = " (local)"
 
-// remoteFalseDefaultPaths are flattened paths where Slack's
-// apps.manifest.export emits a default `false` for every app, even when the
-// project has not declared the field. Remote-only diffs at these paths are
-// dropped when the value is false so users do not see a phantom entry on
-// every run; a real disagreement (e.g. local sets the field to true) still
-// surfaces as a Modified diff.
-var remoteFalseDefaultPaths = []string{
-	"settings.is_mcp_enabled",
-}
-
 // DiffType describes how a field differs between local and remote.
 type DiffType int
 
@@ -80,7 +70,7 @@ func (dr *DiffResult) HasDifferences() bool {
 // Diff performs a two-way comparison between local and remote manifests,
 // returning all fields that differ between them. Paths under ignoredDiffPaths
 // are excluded.
-func Diff(local, remote types.AppManifest) (*DiffResult, error) {
+func Diff(local, remote types.AppManifest, isDev bool) (*DiffResult, error) {
 	localFlat, err := Flatten(local)
 	if err != nil {
 		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
@@ -98,10 +88,7 @@ func Diff(local, remote types.AppManifest) (*DiffResult, error) {
 		if isIgnoredPath(d.Path) {
 			continue
 		}
-		if isDevLocalSuffixDiff(d) {
-			continue
-		}
-		if isRemoteFalseDefaultDiff(d) {
+		if isDev && isDevLocalSuffixDiff(d) {
 			continue
 		}
 		filtered = append(filtered, d)
@@ -119,29 +106,6 @@ func isIgnoredPath(path string) bool {
 		}
 	}
 	return false
-}
-
-// isRemoteFalseDefaultDiff reports whether a remote-only diff is purely the
-// result of Slack's apps.manifest.export emitting a default `false` for a
-// field the project did not declare. Real disagreements (e.g. local sets
-// the field to true) are not suppressed because they would surface as a
-// Modified diff, not a remote-only diff.
-func isRemoteFalseDefaultDiff(d FieldDiff) bool {
-	if d.Type != DiffRemoteOnly {
-		return false
-	}
-	matched := false
-	for _, p := range remoteFalseDefaultPaths {
-		if d.Path == p {
-			matched = true
-			break
-		}
-	}
-	if !matched {
-		return false
-	}
-	v, ok := d.RemoteValue.(bool)
-	return ok && !v
 }
 
 // isDevLocalSuffixDiff reports whether a Modified diff is purely the result

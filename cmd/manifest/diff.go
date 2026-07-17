@@ -62,7 +62,7 @@ func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 				return err
 			}
 
-			diffs, err := manifest.Diff(localManifest.AppManifest, remoteManifest.AppManifest)
+			diffs, err := manifest.Diff(localManifest.AppManifest, remoteManifest.AppManifest, selection.App.IsDev)
 			if err != nil {
 				return err
 			}
@@ -70,7 +70,7 @@ func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 			if !diffs.HasDifferences() {
 				clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 					Emoji:     "books",
-					Text:      "App Manifest",
+					Text:      "Manifest Diff",
 					Secondary: []string{"Project manifest and app settings match"},
 				}))
 				return nil

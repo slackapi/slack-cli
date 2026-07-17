@@ -20,6 +20,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -192,7 +193,7 @@ func Test_truncateRunes(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := truncateRunes(tc.input, tc.max)
+			got := style.TruncateRunes(tc.input, tc.max)
 			assert.Equal(t, tc.expected, got)
 			// In every case the result must remain valid UTF-8.
 			assert.True(t, utf8.ValidString(got), "result is not valid UTF-8: %q", got)

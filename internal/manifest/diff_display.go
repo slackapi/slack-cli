@@ -38,7 +38,7 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 
 	io.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "books",
-		Text:  "App Manifest",
+		Text:  "Manifest Diff",
 		Secondary: []string{
 			fmt.Sprintf("Found %d %s between project and app settings", len(sorted), style.Pluralize("difference", "differences", len(sorted))),
 		},
@@ -88,20 +88,6 @@ func formatValue(v any) string {
 		if err != nil {
 			return fmt.Sprintf("%v", val)
 		}
-		return truncateRunes(string(data), 80)
+		return style.TruncateRunes(string(data), 80)
 	}
-}
-
-// truncateRunes returns s unchanged if it is at most max runes, otherwise it
-// returns the first max-3 runes followed by "...". Splitting on runes (rather
-// than bytes) avoids cutting through a multi-byte UTF-8 character.
-func truncateRunes(s string, max int) string {
-	if max <= 3 {
-		return s
-	}
-	runes := []rune(s)
-	if len(runes) <= max {
-		return s
-	}
-	return string(runes[:max-3]) + "..."
 }
