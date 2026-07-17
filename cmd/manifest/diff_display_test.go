@@ -16,25 +16,24 @@ package manifest
 
 import (
 	"testing"
-	"unicode/utf8"
 
+	internalmanifest "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
-	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_DisplayDiffs(t *testing.T) {
+func Test_displayDiffs(t *testing.T) {
 	tests := map[string]struct {
-		diffs            []FieldDiff
+		diffs            []internalmanifest.FieldDiff
 		expectedSubstrs  []string
 		forbiddenSubstrs []string
 	}{
 		"modified field shows both values side-by-side": {
-			diffs: []FieldDiff{
+			diffs: []internalmanifest.FieldDiff{
 				{
 					Path:        "display_information.name",
-					Type:        DiffModified,
+					Type:        internalmanifest.DiffModified,
 					LocalValue:  "Project Name",
 					RemoteValue: "Remote Name",
 				},
@@ -47,10 +46,10 @@ func Test_DisplayDiffs(t *testing.T) {
 			forbiddenSubstrs: []string{"(only in", "Value:", "(not set)"},
 		},
 		"local-only field shows (not set) on the app settings side": {
-			diffs: []FieldDiff{
+			diffs: []internalmanifest.FieldDiff{
 				{
 					Path:       "functions.greet.title",
-					Type:       DiffLocalOnly,
+					Type:       internalmanifest.DiffLocalOnly,
 					LocalValue: "Greet",
 				},
 			},
@@ -62,10 +61,10 @@ func Test_DisplayDiffs(t *testing.T) {
 			forbiddenSubstrs: []string{"(only in", "Value:"},
 		},
 		"remote-only field shows (not set) on the project side": {
-			diffs: []FieldDiff{
+			diffs: []internalmanifest.FieldDiff{
 				{
 					Path:        "settings.is_mcp_enabled",
-					Type:        DiffRemoteOnly,
+					Type:        internalmanifest.DiffRemoteOnly,
 					RemoteValue: false,
 				},
 			},
@@ -77,14 +76,11 @@ func Test_DisplayDiffs(t *testing.T) {
 			forbiddenSubstrs: []string{"(only in", "Value:"},
 		},
 		"multiple diffs are sorted by path and rendered in order": {
-			// Intentionally unsorted in the input. DisplayDiffs sorts by path,
-			// so display_information.name must appear before features.bot_user.
-			diffs: []FieldDiff{
-				{Path: "features.bot_user.display_name", Type: DiffModified, LocalValue: "App", RemoteValue: "App (local)"},
-				{Path: "display_information.name", Type: DiffModified, LocalValue: "App", RemoteValue: "App (local)"},
+			diffs: []internalmanifest.FieldDiff{
+				{Path: "features.bot_user.display_name", Type: internalmanifest.DiffModified, LocalValue: "App", RemoteValue: "App (local)"},
+				{Path: "display_information.name", Type: internalmanifest.DiffModified, LocalValue: "App", RemoteValue: "App (local)"},
 			},
 			expectedSubstrs: []string{
-				// Header reflects the count and uses singular/plural correctly.
 				"Found 2 differences between project and app settings",
 				"display_information.name",
 				"features.bot_user.display_name",
@@ -106,7 +102,7 @@ func Test_DisplayDiffs(t *testing.T) {
 			cm := shared.NewClientsMock()
 			cm.AddDefaultMocks()
 
-			DisplayDiffs(ctx, cm.IO, &DiffResult{Diffs: tc.diffs})
+			displayDiffs(ctx, cm.IO, &internalmanifest.DiffResult{Diffs: tc.diffs})
 
 			out := cm.GetStdoutOutput()
 			for _, want := range tc.expectedSubstrs {
@@ -137,10 +133,6 @@ func Test_formatValue(t *testing.T) {
 			expected: "false",
 		},
 		"long non-string values are rune-truncated": {
-			// Strings short-circuit through the `case string` arm and are
-			// quoted as-is with no truncation. Non-string values go
-			// through json.Marshal and then truncateRunes, so use a
-			// long array to exercise the truncation path.
 			input: []string{
 				"alpha", "bravo", "charlie", "delta", "echo", "foxtrot",
 				"golf", "hotel", "india", "juliet", "kilo",
@@ -151,52 +143,6 @@ func Test_formatValue(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.expected, formatValue(tc.input))
-		})
-	}
-}
-
-func Test_truncateRunes(t *testing.T) {
-	tests := map[string]struct {
-		input    string
-		max      int
-		expected string
-	}{
-		"shorter than max returns unchanged": {
-			input:    "hello",
-			max:      80,
-			expected: "hello",
-		},
-		"exactly max runes returns unchanged": {
-			input:    "abcdefghij",
-			max:      10,
-			expected: "abcdefghij",
-		},
-		"longer than max truncates with ellipsis": {
-			input:    "abcdefghijklmno",
-			max:      10,
-			expected: "abcdefg...",
-		},
-		"max less than ellipsis budget returns input unchanged": {
-			// max <= 3 leaves no room for the "..." sentinel, so the
-			// helper short-circuits and returns the input as-is.
-			input:    "abcdef",
-			max:      3,
-			expected: "abcdef",
-		},
-		"multi-byte runes are not cut mid-character": {
-			// Each emoji is 4 bytes in UTF-8 but one rune. Byte-based
-			// slicing would split the middle emoji.
-			input:    "🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮",
-			max:      6,
-			expected: "🐶🐱🐭...",
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := style.TruncateRunes(tc.input, tc.max)
-			assert.Equal(t, tc.expected, got)
-			// In every case the result must remain valid UTF-8.
-			assert.True(t, utf8.ValidString(got), "result is not valid UTF-8: %q", got)
 		})
 	}
 }

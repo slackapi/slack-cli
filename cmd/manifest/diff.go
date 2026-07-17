@@ -76,7 +76,7 @@ func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 				return nil
 			}
 
-			manifest.DisplayDiffs(ctx, clients.IO, diffs)
+			displayDiffs(ctx, clients.IO, diffs)
 			return nil
 		},
 	}

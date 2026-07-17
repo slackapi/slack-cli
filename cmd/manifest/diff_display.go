@@ -21,16 +21,16 @@ import (
 	"sort"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	internalmanifest "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
-// DisplayDiffs prints the differences to the terminal.
-func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResult) {
+func displayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *internalmanifest.DiffResult) {
 	if !diffs.HasDifferences() {
 		return
 	}
 
-	sorted := make([]FieldDiff, len(diffs.Diffs))
+	sorted := make([]internalmanifest.FieldDiff, len(diffs.Diffs))
 	copy(sorted, diffs.Diffs)
 	sort.Slice(sorted, func(i, j int) bool {
 		return sorted[i].Path < sorted[j].Path
@@ -50,10 +50,10 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 		}
 		var local, remote string
 		switch d.Type {
-		case DiffLocalOnly:
+		case internalmanifest.DiffLocalOnly:
 			local = formatValue(d.LocalValue)
 			remote = absentValue
-		case DiffRemoteOnly:
+		case internalmanifest.DiffRemoteOnly:
 			local = absentValue
 			remote = formatValue(d.RemoteValue)
 		default:
@@ -67,15 +67,8 @@ func DisplayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *DiffResul
 	io.PrintInfo(ctx, false, "")
 }
 
-// absentValue is shown opposite a present value when a field exists on only
-// one side of a diff. It is intentionally distinct from formatValue(nil)'s
-// "(not present)", which represents a JSON null on a side that does have
-// the field.
 const absentValue = "(not set)"
 
-// formatValue renders a leaf value for display. Strings are quoted, other
-// values are JSON-encoded, and any value longer than 80 runes is
-// truncated with an ellipsis.
 func formatValue(v any) string {
 	if v == nil {
 		return "(not present)"
