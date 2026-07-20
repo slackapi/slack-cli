@@ -30,6 +30,10 @@ type Experiment string
 // e.g. --experiment=first-toggle,second-toggle
 
 const (
+	// BlockKitBuilder experiment enables the blocks preview command that opens
+	// the Block Kit Builder in a browser.
+	BlockKitBuilder Experiment = "block-kit-builder"
+
 	// Lipgloss experiment shows pretty styles.
 	Lipgloss Experiment = "lipgloss"
 
@@ -43,6 +47,7 @@ const (
 // AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
 var AllExperiments = []Experiment{
+	BlockKitBuilder,
 	Lipgloss,
 	Placeholder,
 	SetIcon,

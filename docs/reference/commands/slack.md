@@ -45,6 +45,7 @@ $ slack docs    # Open Slack developer docs
 * [slack api](slack_api)	 - Call any Slack API method
 * [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
 * [slack auth](slack_auth)	 - Add and remove local team authorizations
+* [slack blocks](slack_blocks)	 - Work with Block Kit blocks
 * [slack collaborator](slack_collaborator)	 - Manage app collaborators
 * [slack create](slack_create)	 - Create a new Slack project
 * [slack datastore](slack_datastore)	 - Interact with an app's datastore
