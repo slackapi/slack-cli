@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -61,7 +60,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return previewCommandPreRunE(clients)
+			return previewCommandPreRunE()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return previewCommandRunE(clients, cmd, blocksFlag, cmd.Flags().Changed("blocks"))
@@ -71,12 +70,13 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// previewCommandPreRunE gates the command behind the block-kit-builder experiment
-func previewCommandPreRunE(clients *shared.ClientFactory) error {
-	if !clients.Config.WithExperimentOn(experiment.BlockKitBuilder) {
-		return slackerror.New(slackerror.ErrMissingExperiment).
-			WithMessage("The blocks preview command is experimental").
-			WithRemediation("Enable this command with the %s flag", style.Highlight("--experiment "+string(experiment.BlockKitBuilder)))
+// previewCommandPreRunE gates the command to AI coding tools, which are the
+// intended callers
+func previewCommandPreRunE() error {
+	if aiAgentFunc() == nil {
+		return slackerror.New(slackerror.ErrCommandUnavailable).
+			WithMessage("The blocks preview command is only available to AI coding tools").
+			WithRemediation("Run this command through a supported AI coding tool")
 	}
 	return nil
 }

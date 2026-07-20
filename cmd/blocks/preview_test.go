@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -31,14 +32,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// enableExperiment turns on the block-kit-builder experiment for a test.
-// Default mocks are installed first so LoadExperiments can read config and log
-// debug output. Register any custom mocks (such as the API host) before calling
-// this so that they take precedence over the defaults.
-func enableExperiment(ctx context.Context, cm *shared.ClientsMock) {
-	cm.AddDefaultMocks()
-	cm.Config.ExperimentsFlag = append(cm.Config.ExperimentsFlag, "block-kit-builder")
-	cm.Config.LoadExperiments(ctx, cm.IO.PrintDebug)
+// stubAIAgent stubs the detected AI coding tool and returns a function that
+// restores the original detection.
+func stubAIAgent(agent *useragent.AIAgent) func() {
+	original := aiAgentFunc
+	aiAgentFunc = func() *useragent.AIAgent { return agent }
+	return func() { aiAgentFunc = original }
 }
 
 // stubTeamAuth stubs the team selection to return the provided auth
@@ -51,13 +50,17 @@ func stubTeamAuth(auth *types.SlackAuth) func() {
 }
 
 func Test_Blocks_PreviewCommand(t *testing.T) {
+	// The command is gated to AI coding tools, so detect one for every case.
+	// The "errors when not run by an AI coding tool" case overrides this.
+	restoreAIAgent := stubAIAgent(&useragent.AIAgent{Name: "claude-code"})
+	defer restoreAIAgent()
+
 	var restore func()
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"opens the builder with blocks from the --blocks flag": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -72,7 +75,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -86,7 +88,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
 				// default IsStdinTTY() is false (piped)
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -99,7 +100,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `{"blocks":[{"type":"divider"}]}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -108,14 +108,20 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
-		"errors when the experiment is not enabled": {
-			CmdArgs:              []string{"--blocks", `[{"type":"divider"}]`},
-			ExpectedErrorStrings: []string{slackerror.ErrMissingExperiment, "experimental"},
+		"errors when not run by an AI coding tool": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				restore = stubAIAgent(nil)
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrCommandUnavailable, "AI coding tools"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
+			Teardown: func() { restore() },
 		},
 		"errors without hanging when no blocks are provided on a terminal": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsStdinTTY").Return(true)
-				enableExperiment(ctx, cm)
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -123,24 +129,15 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 		},
 		"errors when the --blocks flag is empty": {
-			CmdArgs: []string{"--blocks", ""},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableExperiment(ctx, cm)
-			},
+			CmdArgs:              []string{"--blocks", ""},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
 		},
 		"errors when the blocks are not valid json": {
-			CmdArgs: []string{"--blocks", `not json`},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableExperiment(ctx, cm)
-			},
+			CmdArgs:              []string{"--blocks", `not json`},
 			ExpectedErrorStrings: []string{slackerror.ErrUnableToParseJSON},
 		},
 		"errors when the json is not a blocks payload": {
-			CmdArgs: []string{"--blocks", `{"foo":"bar"}`},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableExperiment(ctx, cm)
-			},
+			CmdArgs:              []string{"--blocks", `{"foo":"bar"}`},
 			ExpectedErrorStrings: []string{slackerror.ErrInvalidBlocks},
 		},
 		"errors when piping blocks with multiple teams and no --team flag": {
@@ -151,7 +148,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 					{TeamID: "T123", TeamDomain: "team-a"},
 					{TeamID: "T456", TeamDomain: "team-b"},
 				}, nil)
-				enableExperiment(ctx, cm)
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingFlag, "--team"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -163,7 +159,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -177,7 +172,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -191,7 +185,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				enableExperiment(ctx, cm)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: false})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {

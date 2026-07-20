@@ -17,17 +17,22 @@ package blocks
 import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/cobra"
 )
+
+// aiAgentFunc detects the AI coding tool invoking the CLI. It is a package
+// variable so that it can be stubbed in tests.
+var aiAgentFunc = useragent.GetAIAgent
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "blocks <subcommand> [flags]",
 		Short: "Work with Block Kit blocks",
 		Long:  "Work with Block Kit blocks, such as previewing them in the Block Kit Builder.",
-		// Hidden while gated behind the block-kit-builder experiment. Remove
-		// when the experiment graduates.
-		Hidden: true,
+		// The command is intended for AI coding tools, so it is hidden from help
+		// and docs unless one is detected.
+		Hidden: aiAgentFunc() == nil,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Preview blocks in the Block Kit Builder",

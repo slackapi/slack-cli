@@ -76,6 +76,7 @@ const (
 	ErrCannotRemoveOwners                            = "cannot_remove_owner"
 	ErrCannotRevokeOrgBotToken                       = "cannot_revoke_org_bot_token"
 	ErrChannelNotFound                               = "channel_not_found"
+	ErrCommandUnavailable                            = "command_unavailable"
 	ErrCommentRequired                               = "comment_required"
 	ErrConnectedOrgDenied                            = "connected_org_denied"
 	ErrConnectedTeamDenied                           = "connected_team_denied"
@@ -586,6 +587,11 @@ Otherwise start your app for local development with: %s`,
 		Code:        ErrChannelNotFound,
 		Message:     "Couldn't find the specified Slack channel",
 		Remediation: "Try adding your app as a member to the channel.",
+	},
+
+	ErrCommandUnavailable: {
+		Code:    ErrCommandUnavailable,
+		Message: "The command is not available in this environment",
 	},
 
 	ErrCommentRequired: {

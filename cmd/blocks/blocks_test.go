@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -40,8 +41,28 @@ func Test_Blocks_Command(t *testing.T) {
 }
 
 func Test_Blocks_Command_Hidden(t *testing.T) {
-	clientsMock := shared.NewClientsMock()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	cmd := NewCommand(clients)
-	assert.True(t, cmd.Hidden, "blocks command should be hidden while experimental")
+	tests := map[string]struct {
+		aiAgent        *useragent.AIAgent
+		expectedHidden bool
+	}{
+		"hidden when no AI coding tool is detected": {
+			aiAgent:        nil,
+			expectedHidden: true,
+		},
+		"visible when an AI coding tool is detected": {
+			aiAgent:        &useragent.AIAgent{Name: "claude-code"},
+			expectedHidden: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			restore := stubAIAgent(tc.aiAgent)
+			defer restore()
+
+			clientsMock := shared.NewClientsMock()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			cmd := NewCommand(clients)
+			assert.Equal(t, tc.expectedHidden, cmd.Hidden)
+		})
+	}
 }

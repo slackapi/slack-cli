@@ -371,6 +371,12 @@ Move the .slack/cli.json file to .slack/hooks.json and try again.
 
 ---
 
+### command_unavailable {#command_unavailable}
+
+**Message**: The command is not available in this environment
+
+---
+
 ### comment_required {#comment_required}
 
 **Message**: Your admin is requesting a reason to approve installation of this app
