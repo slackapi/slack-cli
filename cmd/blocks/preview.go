@@ -213,7 +213,7 @@ func normalizeBlocksPayload(input string) (string, error) {
 // teamOrEnterpriseID returns the enterprise ID for enterprise installs and the
 // team ID otherwise, matching the identifier used in Block Kit Builder URLs
 func teamOrEnterpriseID(auth *types.SlackAuth) string {
-	if auth.EnterpriseID != "" {
+	if auth.IsEnterpriseInstall {
 		return auth.EnterpriseID
 	}
 	return auth.TeamID

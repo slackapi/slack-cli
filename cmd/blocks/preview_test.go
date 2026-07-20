@@ -173,6 +173,34 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
+		"uses the enterprise id for enterprise installs": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
+				enableExperiment(ctx, cm)
+				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true})
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
+					return assert.Contains(t, url, "/block-kit-builder/E456/builder")
+				}))
+			},
+			Teardown: func() { restore() },
+		},
+		"uses the team id for org-grid workspace installs": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
+				enableExperiment(ctx, cm)
+				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: false})
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
+					return assert.Contains(t, url, "/block-kit-builder/T123/builder")
+				}))
+			},
+			Teardown: func() { restore() },
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewPreviewCommand(cf)
 	})
