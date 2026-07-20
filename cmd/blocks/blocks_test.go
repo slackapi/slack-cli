@@ -21,6 +21,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Blocks_Command(t *testing.T) {
@@ -36,4 +37,11 @@ func Test_Blocks_Command(t *testing.T) {
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCommand(cf)
 	})
+}
+
+func Test_Blocks_Command_Hidden(t *testing.T) {
+	clientsMock := shared.NewClientsMock()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	cmd := NewCommand(clients)
+	assert.True(t, cmd.Hidden, "blocks command should be hidden while experimental")
 }

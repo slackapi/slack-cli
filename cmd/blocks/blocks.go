@@ -25,10 +25,13 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Use:   "blocks <subcommand> [flags]",
 		Short: "Work with Block Kit blocks",
 		Long:  "Work with Block Kit blocks, such as previewing them in the Block Kit Builder.",
+		// Hidden while gated behind the block-kit-builder experiment. Remove
+		// when the experiment graduates.
+		Hidden: true,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Preview blocks in the Block Kit Builder",
-				Command: "blocks preview '[{\"type\":\"divider\"}]'",
+				Command: "blocks preview --blocks '[{\"type\":\"divider\"}]'",
 			},
 		}),
 		Args: cobra.NoArgs,
