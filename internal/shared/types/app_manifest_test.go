@@ -192,6 +192,40 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"assistant_view":{"assistant_description":"magic","suggested_prompts":[{"title":"visit the beach","message":"what is glass"}]},"bot_user":{"display_name":"einstein"}}`,
 		},
+		"includes agent view when provided": {
+			features: AppFeatures{
+				AgentView: &AgentView{
+					AgentDescription: "summarizes threads",
+					SuggestedPrompts: []SuggestedPrompts{
+						{
+							Title:   "summarize this thread",
+							Message: "please summarize the conversation",
+						},
+					},
+					Actions: []AgentViewAction{
+						{
+							Name:        "open_settings",
+							Description: "Open the agent settings panel.",
+						},
+					},
+				},
+				BotUser: BotUser{
+					DisplayName: "agent_smith",
+				},
+			},
+			want: `{"app_home":{},"agent_view":{"agent_description":"summarizes threads","suggested_prompts":[{"title":"summarize this thread","message":"please summarize the conversation"}],"actions":[{"name":"open_settings","description":"Open the agent settings panel."}]},"bot_user":{"display_name":"agent_smith"}}`,
+		},
+		"omits agent view fields when empty": {
+			features: AppFeatures{
+				AgentView: &AgentView{
+					AgentDescription: "minimal",
+				},
+				BotUser: BotUser{
+					DisplayName: "agent_smith",
+				},
+			},
+			want: `{"app_home":{},"agent_view":{"agent_description":"minimal"},"bot_user":{"display_name":"agent_smith"}}`,
+		},
 		"includes search when provided": {
 			features: AppFeatures{
 				BotUser: BotUser{
@@ -388,6 +422,77 @@ func Test_AppManifest_OAuthConfig_Scopes(t *testing.T) {
 			actualJSON, err := json.Marshal(tc.oauthConfig)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedJSON, string(actualJSON))
+		})
+	}
+}
+
+func Test_AppManifest_MCPServers(t *testing.T) {
+	tests := map[string]struct {
+		manifest     AppManifest
+		expectedJSON string
+	}{
+		"undefined mcp_servers are omitted": {
+			manifest:     AppManifest{},
+			expectedJSON: `{"display_information":{"name":""}}`,
+		},
+		"nil mcp_servers are omitted": {
+			manifest:     AppManifest{MCPServers: nil},
+			expectedJSON: `{"display_information":{"name":""}}`,
+		},
+		"mcp_servers with url only": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {URL: "https://mcp.acme.com/mcp", AuthType: "no_auth"},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_type":"no_auth"}}}`,
+		},
+		"mcp_servers with auth_provider_key": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:             "https://mcp.acme.com/mcp",
+					AuthProviderKey: "acme",
+					AuthType:        "manual_auth",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme","auth_type":"manual_auth"}}}`,
+		},
+		"mcp_servers with auth_type": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:      "https://mcp.acme.com/mcp",
+					AuthType: "dynamic_client_registration",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_type":"dynamic_client_registration"}}}`,
+		},
+		"mcp_servers with all fields": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:             "https://mcp.acme.com/mcp",
+					AuthProviderKey: "acme",
+					AuthType:        "manual_auth",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme","auth_type":"manual_auth"}}}`,
+		},
+		"multiple mcp_servers": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme":  {URL: "https://mcp.acme.com/mcp", AuthType: "dynamic_client_registration"},
+				"other": {URL: "https://mcp.other.com/mcp", AuthType: "no_auth"},
+			}},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualJSON, err := json.Marshal(tc.manifest)
+			require.NoError(t, err)
+			if tc.expectedJSON != "" {
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+			}
+			// Verify round-trip unmarshaling
+			var unmarshaled AppManifest
+			err = json.Unmarshal(actualJSON, &unmarshaled)
+			require.NoError(t, err)
+			assert.Equal(t, tc.manifest.MCPServers, unmarshaled.MCPServers)
 		})
 	}
 }

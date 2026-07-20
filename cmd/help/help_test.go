@@ -28,9 +28,11 @@ import (
 
 func TestHelpFunc(t *testing.T) {
 	tests := map[string]struct {
-		exampleCommands []style.ExampleCommand
-		experiments     []string
-		expectedOutput  []string
+		exampleCommands     []style.ExampleCommand
+		experiments         []string
+		envVars             map[string]string
+		expectedOutput      []string
+		expectedErrorOutput []string
 	}{
 		"basic command information is included": {
 			expectedOutput: []string{
@@ -63,6 +65,10 @@ func TestHelpFunc(t *testing.T) {
 				"unknown (invalid)",
 			},
 		},
+		"the claude code plugin hint is emitted inside claude code": {
+			envVars:             map[string]string{"CLAUDECODE": "1"},
+			expectedErrorOutput: []string{"claude-code-hint"},
+		},
 	}
 
 	for name, tc := range tests {
@@ -74,6 +80,9 @@ func TestHelpFunc(t *testing.T) {
 				// Restore original EnabledExperiments
 				experiment.EnabledExperiments = _EnabledExperiments
 			}()
+			for name, value := range tc.envVars {
+				t.Setenv(name, value)
+			}
 
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
@@ -101,6 +110,9 @@ func TestHelpFunc(t *testing.T) {
 			helpFunc(rootCmd, []string{})
 			for _, expectedString := range tc.expectedOutput {
 				assert.Contains(t, clientsMock.GetStdoutOutput(), expectedString)
+			}
+			for _, expectedString := range tc.expectedErrorOutput {
+				assert.Contains(t, clientsMock.GetStderrOutput(), expectedString)
 			}
 		})
 	}

@@ -41,6 +41,7 @@ type AppManifest struct {
 	Workflows             map[string]Workflow          `json:"workflows,omitempty" yaml:"workflows,flow,omitempty"`
 	OutgoingDomains       *[]string                    `json:"outgoing_domains,omitempty" yaml:"outgoing_domains,flow,omitempty"`
 	ExternalAuthProviders *ManifestAuthProviders       `json:"external_auth_providers,omitempty" yaml:"external_auth_providers,flow,omitempty"`
+	MCPServers            map[string]MCPServer         `json:"mcp_servers,omitempty" yaml:"mcp_servers,flow,omitempty"`
 }
 
 type ManifestMetadata struct {
@@ -69,6 +70,7 @@ type DisplayInformation struct {
 
 type AppFeatures struct {
 	AppHome                    ManifestAppHome             `json:"app_home,omitempty" yaml:"app_home,flow,omitempty"`
+	AgentView                  *AgentView                  `json:"agent_view,omitempty" yaml:"agent_view,omitempty"`
 	AssistantView              *AssistantView              `json:"assistant_view,omitempty" yaml:"assistant_view,omitempty"`
 	BotUser                    BotUser                     `json:"bot_user,omitempty" yaml:"bot_user,flow,omitempty"`
 	WorkflowSteps              []WorkflowStep              `json:"workflow_steps,omitempty" yaml:"workflow_steps,flow,omitempty"`
@@ -92,6 +94,17 @@ type AssistantView struct {
 type SuggestedPrompts struct {
 	Title   string `json:"title,omitempty" yaml:"title,omitempty"`
 	Message string `json:"message,omitempty" yaml:"message,omitempty"`
+}
+
+type AgentView struct {
+	AgentDescription string             `json:"agent_description,omitempty" yaml:"agent_description,omitempty"`
+	SuggestedPrompts []SuggestedPrompts `json:"suggested_prompts,omitempty" yaml:"suggested_prompts,flow,omitempty"`
+	Actions          []AgentViewAction  `json:"actions,omitempty" yaml:"actions,flow,omitempty"`
+}
+
+type AgentViewAction struct {
+	Name        string `json:"name,omitempty" yaml:"name,omitempty"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
 type OAuthConfig struct {
@@ -155,6 +168,13 @@ type ManifestFunction struct {
 
 type ManifestAuthProviders struct {
 	OAuth2 map[string]*RawJSON `json:"oauth2" yaml:"oauth2"`
+}
+
+// MCPServer defines the configuration of an MCP server in the app manifest.
+type MCPServer struct {
+	URL             string `json:"url" yaml:"url"`
+	AuthProviderKey string `json:"auth_provider_key,omitempty" yaml:"auth_provider_key,omitempty"`
+	AuthType        string `json:"auth_type,omitempty" yaml:"auth_type,omitempty"`
 }
 
 type RawJSON struct {

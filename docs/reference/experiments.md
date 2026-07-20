@@ -1,18 +1,18 @@
 # Experiments
 
-The Slack CLI has an experiment (`-e`) flag behind which we put features currently under development. These features may be fleeting, may not be perfectly polished, and many will not work without a development instance - but we have made them available for use "at your own risk."
+The Slack CLI has an experiment (`-e`) flag behind which we put features currently under development. These features may be fleeting, may not be perfectly polished, and many will not work without a development instance, but we've made them available for use "at your own risk."
 
 ## Available experiments
 
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
 - `lipgloss`: shows pretty styles.
-- `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
 - `set-icon`: enables icon upload for non-hosted apps ([PR#469](https://github.com/slackapi/slack-cli/pull/469)).
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
+- **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](/tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
 - **April 2026**: Added the `set-icon` experiment to enable icon upload for non-hosted apps.
 - **April 2026**: Concluded the `huh` experiment with full support now enabled by default in the Slack CLI. 
 - **March 2026**: Split the `charm` experiment into more beautiful `huh` prompts and prettier `lipgloss` styles for ongoing change.
