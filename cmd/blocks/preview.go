@@ -225,7 +225,11 @@ func teamOrEnterpriseID(auth *types.SlackAuth) string {
 func buildBlockKitBuilderURL(apiHost string, id string, blocksJSON string) (string, error) {
 	parsed, err := url.Parse(apiHost)
 	if err != nil {
-		return "", err
+		return "", slackerror.Wrap(err, slackerror.ErrInvalidArguments)
+	}
+	if parsed.Host == "" {
+		return "", slackerror.New(slackerror.ErrInvalidArguments).
+			WithMessage("The API host %q is not a valid URL", apiHost)
 	}
 	parsed.Host = "app." + parsed.Host
 	parsed.Path = fmt.Sprintf("/block-kit-builder/%s/builder", id)

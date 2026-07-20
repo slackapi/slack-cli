@@ -208,10 +208,11 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 
 func Test_buildBlockKitBuilderURL(t *testing.T) {
 	tests := map[string]struct {
-		apiHost    string
-		id         string
-		blocksJSON string
-		expected   string
+		apiHost     string
+		id          string
+		blocksJSON  string
+		expected    string
+		expectedErr string
 	}{
 		"production host": {
 			apiHost:    "https://slack.com",
@@ -225,10 +226,27 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 			blocksJSON: `{"blocks":[]}`,
 			expected:   "https://app.dev1234.slack.com/block-kit-builder/E456/builder#%7B%22blocks%22:%5B%5D%7D",
 		},
+		"empty host": {
+			apiHost:     "",
+			id:          "T123",
+			blocksJSON:  `{"blocks":[]}`,
+			expectedErr: slackerror.ErrInvalidArguments,
+		},
+		"scheme-less host": {
+			apiHost:     "app.slack.com",
+			id:          "T123",
+			blocksJSON:  `{"blocks":[]}`,
+			expectedErr: slackerror.ErrInvalidArguments,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual, err := buildBlockKitBuilderURL(tc.apiHost, tc.id, tc.blocksJSON)
+			if tc.expectedErr != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err).Code)
+				return
+			}
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
 		})
