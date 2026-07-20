@@ -84,3 +84,14 @@ func JSONUnmarshal(data []byte, v interface{}) error {
 	}
 	return nil
 }
+
+// IsEmptyJSON returns true when the provided bytes are empty or contain only
+// whitespace. This matches the state left behind when a JSON state file was
+// truncated but not yet rewritten, e.g. after a process was interrupted between
+// afero.WriteFile's O_TRUNC and the actual write. Callers that read on-disk
+// config/auth/app state should treat this case as "empty state" rather than a
+// parse error, otherwise every subsequent CLI invocation logs
+// ErrUnableToParseJSON until the user manually clears the file.
+func IsEmptyJSON(data []byte) bool {
+	return len(bytes.TrimSpace(data)) == 0
+}

@@ -25,6 +25,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cache"
+	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -252,6 +253,17 @@ func ReadProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os) (Proje
 	projectConfigFileBytes, err := afero.ReadFile(fs, projectConfigFilePath)
 	if err != nil {
 		return projectConfig, err
+	}
+
+	// Treat an empty (or whitespace-only) project config as "no project config
+	// saved yet" rather than a parse error. This state occurs when a prior
+	// write was truncated but not completed (e.g. a process was interrupted
+	// between afero.WriteFile's O_TRUNC and the actual write). Without this
+	// guard, every subsequent CLI invocation reads the same 0-byte file and
+	// logs ErrUnableToParseJSON in a hot loop.
+	if goutils.IsEmptyJSON(projectConfigFileBytes) {
+		projectConfig.Surveys = map[string]SurveyConfig{}
+		return projectConfig, nil
 	}
 
 	err = json.Unmarshal(projectConfigFileBytes, &projectConfig)
