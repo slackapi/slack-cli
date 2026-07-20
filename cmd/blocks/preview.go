@@ -15,6 +15,7 @@
 package blocks
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -86,7 +87,7 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 	ctx := cmd.Context()
 	clients.IO.PrintTrace(ctx, slacktrace.BlocksPreviewStart)
 
-	blocksInput, _, err := resolveBlocksInput(clients, blocksFlag, blocksFlagChanged)
+	blocksInput, fromStdin, err := resolveBlocksInput(clients, blocksFlag, blocksFlagChanged)
 	if err != nil {
 		return err
 	}
@@ -96,7 +97,7 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 		return err
 	}
 
-	auth, err := promptTeamSlackAuthFunc(ctx, clients, "Select a team to preview blocks for", nil)
+	auth, err := selectTeamAuth(ctx, clients, fromStdin)
 	if err != nil {
 		return err
 	}
@@ -117,6 +118,25 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 
 	clients.IO.PrintTrace(ctx, slacktrace.BlocksPreviewSuccess, builderURL)
 	return nil
+}
+
+// selectTeamAuth chooses the team whose Block Kit Builder to open. When blocks
+// were read from stdin the interactive picker cannot prompt (stdin is spent),
+// so with more than one authorization and no --team flag we return an
+// actionable error instead of failing on EOF inside the prompt.
+func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdin bool) (*types.SlackAuth, error) {
+	if fromStdin && clients.Config.TeamFlag == "" {
+		auths, err := clients.Auth().Auths(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if len(auths) > 1 {
+			return nil, slackerror.New(slackerror.ErrMissingFlag).
+				WithMessage("The team could not be determined").
+				WithRemediation("Select a team with the %s flag when piping blocks", style.Highlight("--team"))
+		}
+	}
+	return promptTeamSlackAuthFunc(ctx, clients, "Select a team to preview blocks for", nil)
 }
 
 // resolveBlocksInput returns the blocks to preview and whether they were read

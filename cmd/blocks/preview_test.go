@@ -143,6 +143,36 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrInvalidBlocks},
 		},
+		"errors when piping blocks with multiple teams and no --team flag": {
+			CmdArgs: []string{"--blocks", "-"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+					{TeamID: "T123", TeamDomain: "team-a"},
+					{TeamID: "T456", TeamDomain: "team-b"},
+				}, nil)
+				enableExperiment(ctx, cm)
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrMissingFlag, "--team"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
+		},
+		"opens the builder when piping blocks with the --team flag set": {
+			CmdArgs: []string{"--blocks", "-", "--team", "T123"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
+				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
+				enableExperiment(ctx, cm)
+				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
+					return assert.Contains(t, url, "/block-kit-builder/T123/builder")
+				}))
+			},
+			Teardown: func() { restore() },
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewPreviewCommand(cf)
 	})
