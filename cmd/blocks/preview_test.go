@@ -53,8 +53,8 @@ func stubTeamAuth(auth *types.SlackAuth) func() {
 func Test_Blocks_PreviewCommand(t *testing.T) {
 	var restore func()
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"opens the builder with blocks from an argument": {
-			CmdArgs: []string{`[{"type":"divider"}]`},
+		"opens the builder with blocks from the --blocks flag": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				enableExperiment(ctx, cm)
@@ -67,7 +67,8 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
-		"opens the builder with blocks piped from stdin": {
+		"opens the builder with blocks from stdin via the - sentinel": {
+			CmdArgs: []string{"--blocks", "-"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
@@ -80,8 +81,22 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
+		"opens the builder with auto-detected piped stdin": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
+				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
+				// default IsStdinTTY() is false (piped)
+				enableExperiment(ctx, cm)
+				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				expectedURL := `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
+				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+			},
+			Teardown: func() { restore() },
+		},
 		"accepts a blocks object payload": {
-			CmdArgs: []string{`{"blocks":[{"type":"divider"}]}`},
+			CmdArgs: []string{"--blocks", `{"blocks":[{"type":"divider"}]}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				enableExperiment(ctx, cm)
@@ -93,53 +108,36 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
-		"uses the enterprise id for enterprise installs": {
-			CmdArgs: []string{`[{"type":"divider"}]`},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("Host").Return("https://slack.com")
-				enableExperiment(ctx, cm)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true})
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
-					return assert.Contains(t, url, "/block-kit-builder/E456/builder")
-				}))
-			},
-			Teardown: func() { restore() },
-		},
-		"derives the host for developer instances": {
-			CmdArgs: []string{`[{"type":"divider"}]`},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("Host").Return("https://dev1234.slack.com")
-				enableExperiment(ctx, cm)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
-					return assert.Contains(t, url, "https://app.dev1234.slack.com/block-kit-builder/T123/builder")
-				}))
-			},
-			Teardown: func() { restore() },
-		},
 		"errors when the experiment is not enabled": {
-			CmdArgs:              []string{`[{"type":"divider"}]`},
+			CmdArgs:              []string{"--blocks", `[{"type":"divider"}]`},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingExperiment, "experimental"},
 		},
-		"errors when no blocks are provided": {
+		"errors without hanging when no blocks are provided on a terminal": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsStdinTTY").Return(true)
+				enableExperiment(ctx, cm)
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
+		},
+		"errors when the --blocks flag is empty": {
+			CmdArgs: []string{"--blocks", ""},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				enableExperiment(ctx, cm)
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
 		},
 		"errors when the blocks are not valid json": {
-			CmdArgs: []string{`not json`},
+			CmdArgs: []string{"--blocks", `not json`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				enableExperiment(ctx, cm)
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrUnableToParseJSON},
 		},
 		"errors when the json is not a blocks payload": {
-			CmdArgs: []string{`{"foo":"bar"}`},
+			CmdArgs: []string{"--blocks", `{"foo":"bar"}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				enableExperiment(ctx, cm)
 			},

@@ -37,33 +37,36 @@ import (
 var promptTeamSlackAuthFunc = prompts.PromptTeamSlackAuth
 
 func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
+	var blocksFlag string
 	cmd := &cobra.Command{
-		Use:   "preview [blocks]",
+		Use:   "preview [flags]",
 		Short: "Preview blocks in the Block Kit Builder",
 		Long: strings.Join([]string{
 			"Open a set of Block Kit blocks in the Block Kit Builder in a web browser.",
 			"",
-			"Blocks can be passed as an argument or piped in through standard input. The",
-			"input is a JSON array of blocks or a JSON object with a \"blocks\" array.",
+			"Provide blocks with the --blocks flag or pipe them through standard input.",
+			"The input is a JSON array of blocks or a JSON object with a \"blocks\" array.",
+			"Pass - to --blocks to read explicitly from standard input.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Preview blocks passed as an argument",
-				Command: "blocks preview '[{\"type\":\"divider\"}]'",
+				Meaning: "Preview blocks passed with a flag",
+				Command: "blocks preview --blocks '[{\"type\":\"divider\"}]'",
 			},
 			{
 				Meaning: "Preview blocks piped from a file",
 				Command: "blocks preview < blocks.json",
 			},
 		}),
-		Args: cobra.MaximumNArgs(1),
+		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return previewCommandPreRunE(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return previewCommandRunE(clients, cmd, args)
+			return previewCommandRunE(clients, cmd, blocksFlag, cmd.Flags().Changed("blocks"))
 		},
 	}
+	cmd.Flags().StringVar(&blocksFlag, "blocks", "", "blocks to preview as a JSON array or object\n  (use - to read from standard input)")
 	return cmd
 }
 
@@ -77,13 +80,13 @@ func previewCommandPreRunE(clients *shared.ClientFactory) error {
 	return nil
 }
 
-// previewCommandRunE reads blocks from an argument or standard input and opens
+// previewCommandRunE resolves blocks from the flag or standard input and opens
 // them in the Block Kit Builder for the selected team
-func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
+func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, blocksFlag string, blocksFlagChanged bool) error {
 	ctx := cmd.Context()
 	clients.IO.PrintTrace(ctx, slacktrace.BlocksPreviewStart)
 
-	blocksInput, err := readBlocksInput(clients, args)
+	blocksInput, _, err := resolveBlocksInput(clients, blocksFlag, blocksFlagChanged)
 	if err != nil {
 		return err
 	}
@@ -116,24 +119,46 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, args 
 	return nil
 }
 
-// readBlocksInput returns the blocks provided as an argument or, when no
-// argument is given, read from standard input
-func readBlocksInput(clients *shared.ClientFactory, args []string) (string, error) {
-	if len(args) == 1 {
-		return strings.TrimSpace(args[0]), nil
+// resolveBlocksInput returns the blocks to preview and whether they were read
+// from standard input. Resolution order: an explicit --blocks value, the -
+// sentinel or an auto-detected stdin pipe, otherwise a friendly error. Reading
+// stdin is never attempted against an interactive terminal, so a bare command
+// on a TTY errors instead of blocking on io.ReadAll.
+func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, bool, error) {
+	switch {
+	case flagChanged && flagValue == "-":
+		return readStdinBlocks(clients)
+	case flagChanged:
+		input := strings.TrimSpace(flagValue)
+		if input == "" {
+			return "", false, missingBlocksError()
+		}
+		return input, false, nil
+	case !clients.IO.IsStdinTTY():
+		return readStdinBlocks(clients)
+	default:
+		return "", false, missingBlocksError()
 	}
+}
 
+// readStdinBlocks reads and trims blocks from standard input
+func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
 	piped, err := io.ReadAll(clients.IO.ReadIn())
 	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrMissingInput)
+		return "", true, slackerror.Wrap(err, slackerror.ErrMissingInput)
 	}
 	input := strings.TrimSpace(string(piped))
 	if input == "" {
-		return "", slackerror.New(slackerror.ErrMissingInput).
-			WithMessage("No blocks were provided").
-			WithRemediation("Provide blocks as an argument or pipe them through standard input")
+		return "", true, missingBlocksError()
 	}
-	return input, nil
+	return input, true, nil
+}
+
+// missingBlocksError is the friendly error returned when no blocks are supplied
+func missingBlocksError() error {
+	return slackerror.New(slackerror.ErrMissingInput).
+		WithMessage("No blocks were provided").
+		WithRemediation("Provide blocks with the %s flag or pipe them through standard input", style.Highlight("--blocks"))
 }
 
 // normalizeBlocksPayload parses the provided input and returns a compact JSON
