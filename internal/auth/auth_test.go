@@ -222,6 +222,30 @@ func Test_AuthGettersAndSetters(t *testing.T) {
 		require.Error(t, err)
 		assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 	})
+
+	// A zero-byte or whitespace-only credentials.json (e.g. from a truncated
+	// write after a prior process interrupt) should be treated as empty state
+	// rather than a parse error, otherwise every CLI invocation would log
+	// ErrUnableToParseJSON in a hot loop.
+	t.Run("empty credentials file returns empty auth state, not a parse error", func(t *testing.T) {
+		cases := map[string]string{
+			"zero-byte file":       "",
+			"whitespace-only file": "  \n\t\n",
+		}
+		for name, contents := range cases {
+			t.Run(name, func(t *testing.T) {
+				ctx, authClient := setup(t)
+				dir, err := authClient.config.SystemConfig.SlackConfigDir(ctx)
+				require.NoError(t, err)
+				path := filepath.Join(dir, credentialsFileName)
+				err = afero.WriteFile(authClient.fs, path, []byte(contents), 0o600)
+				require.NoError(t, err)
+				got, err := authClient.auths(ctx)
+				require.NoError(t, err)
+				require.Empty(t, got)
+			})
+		}
+	})
 }
 
 func Test_AuthsRotation(t *testing.T) {

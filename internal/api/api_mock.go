@@ -384,8 +384,8 @@ func (m *APIMock) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStream
 
 // DocsClient
 
-func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int) (*DocsSearchResponse, error) {
-	args := m.Called(ctx, query, limit)
+func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error) {
+	args := m.Called(ctx, query, limit, category)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

@@ -601,9 +601,19 @@ func AppSelectPrompt(
 	if cfg.includeNoApp {
 		options = append(options, Selection{label: noApp})
 	}
+	appFlag := clients.Config.Flags.Lookup("app")
 	labels := []string{}
-	for _, label := range options {
-		labels = append(labels, label.label)
+	appOptions := []iostreams.PromptOption{}
+	for _, opt := range options {
+		labels = append(labels, opt.label)
+		// Synthetic entries ("Create a new app", "No app") have no AppID and
+		// are emitted as label-only so the option list stays 1:1 with labels.
+		promptOpt := iostreams.PromptOption{Label: opt.label}
+		if opt.app.App.AppID != "" {
+			promptOpt.Flag = appFlag
+			promptOpt.Value = opt.app.App.AppID
+		}
+		appOptions = append(appOptions, promptOpt)
 	}
 	switch {
 	case types.IsAppID(clients.Config.AppFlag):
@@ -633,11 +643,13 @@ func AppSelectPrompt(
 		labels,
 		iostreams.SelectPromptConfig{
 			Required: true,
+			Options:  appOptions,
 
-			// Flag is checked before since the value might be an app "environment" while
-			// an app ID is required in the return.
-			//
-			// Flag:  clients.Config.Flags.Lookup("app"),
+			// Flag is intentionally not set: --app may be an environment value
+			// ("local", "deployed") which must not be matched against an app
+			// ID. The IsAppID and IsAppFlagEnvironment branches above handle
+			// the cases where --app is set; Options provides per-option
+			// flag-substitute hints for the non-TTY error path.
 		})
 	if err != nil {
 		return SelectedApp{}, err
