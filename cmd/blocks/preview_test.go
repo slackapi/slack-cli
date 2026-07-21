@@ -78,19 +78,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
-		"opens the builder with auto-detected piped stdin": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("Host").Return("https://slack.com")
-				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
-				// default IsStdinTTY() is false (piped)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedURL := `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
-				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
-			},
-			Teardown: func() { restore() },
-		},
 		"accepts a blocks object payload": {
 			CmdArgs: []string{"--blocks", `{"blocks":[{"type":"divider"}]}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -103,10 +90,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 			Teardown: func() { restore() },
 		},
-		"errors without hanging when no blocks are provided on a terminal": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("IsStdinTTY").Return(true)
-			},
+		"errors when no blocks are provided": {
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
@@ -124,7 +108,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs:              []string{"--blocks", `{"foo":"bar"}`},
 			ExpectedErrorStrings: []string{slackerror.ErrInvalidBlocks},
 		},
-		"errors when piping blocks with multiple teams and no --team flag": {
+		"errors when reading blocks from stdin with multiple teams and no --team flag": {
 			CmdArgs: []string{"--blocks", "-"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
@@ -138,7 +122,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
 			},
 		},
-		"opens the builder when piping blocks with the --team flag set": {
+		"opens the builder when reading blocks from stdin with the --team flag set": {
 			CmdArgs: []string{"--blocks", "-", "--team", "T123"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")

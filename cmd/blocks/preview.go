@@ -44,18 +44,18 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long: strings.Join([]string{
 			"Open a set of Block Kit blocks in the Block Kit Builder in a web browser.",
 			"",
-			"Provide blocks with the --blocks flag or pipe them through standard input.",
+			"Provide blocks with the --blocks flag.",
 			"The input is a JSON array of blocks or a JSON object with a \"blocks\" array.",
-			"Pass - to --blocks to read explicitly from standard input.",
+			"Pass - to --blocks to read from standard input.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Preview blocks passed with a flag",
+				Meaning: "Preview blocks passed as a flag value",
 				Command: "blocks preview --blocks '[{\"type\":\"divider\"}]'",
 			},
 			{
-				Meaning: "Preview blocks piped from a file",
-				Command: "blocks preview < blocks.json",
+				Meaning: "Preview blocks read from a file",
+				Command: "blocks preview --blocks - < blocks.json",
 			},
 		}),
 		Args: cobra.NoArgs,
@@ -119,7 +119,7 @@ func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdi
 		if len(auths) > 1 {
 			return nil, slackerror.New(slackerror.ErrMissingFlag).
 				WithMessage("The team could not be determined").
-				WithRemediation("Select a team with the %s flag when piping blocks", style.Highlight("--team"))
+				WithRemediation("Select a team with the %s flag when reading blocks from standard input", style.Highlight("--team"))
 		}
 	}
 	return promptTeamSlackAuthFunc(ctx, clients, "Select a team to preview blocks for", nil)
@@ -127,9 +127,9 @@ func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdi
 
 // resolveBlocksInput returns the blocks to preview and whether they were read
 // from standard input. Resolution order: an explicit --blocks value, the -
-// sentinel or an auto-detected stdin pipe, otherwise a friendly error. Reading
-// stdin is never attempted against an interactive terminal, so a bare command
-// on a TTY errors instead of blocking on io.ReadAll.
+// sentinel to read from standard input, otherwise a friendly error. Standard
+// input is read only when requested explicitly with -, matching tools like
+// kubectl (-f -) and gh (--input -).
 func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, bool, error) {
 	switch {
 	case flagChanged && flagValue == "-":
@@ -140,8 +140,6 @@ func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagCha
 			return "", false, missingBlocksError()
 		}
 		return input, false, nil
-	case !clients.IO.IsStdinTTY():
-		return readStdinBlocks(clients)
 	default:
 		return "", false, missingBlocksError()
 	}
@@ -164,7 +162,7 @@ func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
 func missingBlocksError() error {
 	return slackerror.New(slackerror.ErrMissingInput).
 		WithMessage("No blocks were provided").
-		WithRemediation("Provide blocks with the %s flag or pipe them through standard input", style.Highlight("--blocks"))
+		WithRemediation("Provide blocks with the %s flag, or pass %s to read from standard input", style.Highlight("--blocks"), style.Highlight("--blocks -"))
 }
 
 // normalizeBlocksPayload parses the provided input and returns a compact JSON
