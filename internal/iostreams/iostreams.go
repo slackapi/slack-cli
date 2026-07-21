@@ -135,8 +135,7 @@ func (io *IOStreams) IsTTY() bool {
 
 // IsStdinTTY returns true if stdin is an interactive terminal
 //
-// Unlike IsTTY, which inspects stdout, this inspects stdin so that piped or
-// redirected input (e.g. `cat blocks.json | slack ...`) is detected even when
+// Inspects stdin so that piped or redirected input (e.g. `slack ... < blocks.json`) is detected when
 // stdout is still attached to a terminal.
 func (io *IOStreams) IsStdinTTY() bool {
 	if o, err := io.os.Stdin().Stat(); o == nil || err != nil {
