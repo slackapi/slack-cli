@@ -59,26 +59,12 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 			},
 		}),
 		Args: cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return previewCommandPreRunE()
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return previewCommandRunE(clients, cmd, blocksFlag, cmd.Flags().Changed("blocks"))
 		},
 	}
 	cmd.Flags().StringVar(&blocksFlag, "blocks", "", "blocks to preview as a JSON array or object\n  (use - to read from standard input)")
 	return cmd
-}
-
-// previewCommandPreRunE gates the command to AI coding tools, which are the
-// intended callers
-func previewCommandPreRunE() error {
-	if aiAgentFunc() == nil {
-		return slackerror.New(slackerror.ErrCommandUnavailable).
-			WithMessage("The blocks preview command is only available to AI coding tools").
-			WithRemediation("Run this command through a supported AI coding tool")
-	}
-	return nil
 }
 
 // previewCommandRunE resolves blocks from the flag or standard input and opens

@@ -50,11 +50,6 @@ func stubTeamAuth(auth *types.SlackAuth) func() {
 }
 
 func Test_Blocks_PreviewCommand(t *testing.T) {
-	// The command is gated to AI coding tools, so detect one for every case.
-	// The "errors when not run by an AI coding tool" case overrides this.
-	restoreAIAgent := stubAIAgent(&useragent.AIAgent{Name: "claude-code"})
-	defer restoreAIAgent()
-
 	var restore func()
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"opens the builder with blocks from the --blocks flag": {
@@ -105,17 +100,6 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				expectedURL := `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
 				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
-			},
-			Teardown: func() { restore() },
-		},
-		"errors when not run by an AI coding tool": {
-			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				restore = stubAIAgent(nil)
-			},
-			ExpectedErrorStrings: []string{slackerror.ErrCommandUnavailable, "AI coding tools"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
 			},
 			Teardown: func() { restore() },
 		},

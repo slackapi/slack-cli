@@ -27,11 +27,9 @@ var aiAgentFunc = useragent.GetAIAgent
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "blocks <subcommand> [flags]",
-		Short: "Work with Block Kit blocks",
-		Long:  "Work with Block Kit blocks, such as previewing them in the Block Kit Builder.",
-		// The command is intended for AI coding tools, so it is hidden from help
-		// and docs unless one is detected.
+		Use:    "blocks <subcommand> [flags]",
+		Short:  "Work with Block Kit blocks",
+		Long:   "Work with Block Kit blocks, such as previewing them in the Block Kit Builder.",
 		Hidden: aiAgentFunc() == nil,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
