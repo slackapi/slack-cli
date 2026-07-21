@@ -21,8 +21,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// aiAgentFunc detects the AI coding tool invoking the CLI. It is a package
-// variable so that it can be stubbed in tests.
+// aiAgentFunc is a package variable so it can be stubbed in tests.
 var aiAgentFunc = useragent.GetAIAgent
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {

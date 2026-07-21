@@ -32,8 +32,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// promptTeamSlackAuthFunc selects the team whose Block Kit Builder should open.
-// It is a package variable so that it can be stubbed in tests.
+// promptTeamSlackAuthFunc is a package variable so it can be stubbed in tests.
 var promptTeamSlackAuthFunc = prompts.PromptTeamSlackAuth
 
 func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -67,8 +66,6 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// previewCommandRunE resolves blocks from the flag or standard input and opens
-// them in the Block Kit Builder for the selected team
 func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, blocksFlag string, blocksFlagChanged bool) error {
 	ctx := cmd.Context()
 	clients.IO.PrintTrace(ctx, slacktrace.BlocksPreviewStart)
@@ -106,10 +103,6 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 	return nil
 }
 
-// selectTeamAuth chooses the team whose Block Kit Builder to open. When blocks
-// were read from stdin the interactive picker cannot prompt (stdin is spent),
-// so with more than one authorization and no --team flag we return an
-// actionable error instead of failing on EOF inside the prompt.
 func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdin bool) (*types.SlackAuth, error) {
 	if fromStdin && clients.Config.TeamFlag == "" {
 		auths, err := clients.Auth().Auths(ctx)
@@ -125,11 +118,6 @@ func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdi
 	return promptTeamSlackAuthFunc(ctx, clients, "Select a team to preview blocks for", nil)
 }
 
-// resolveBlocksInput returns the blocks to preview and whether they were read
-// from standard input. Resolution order: an explicit --blocks value, the -
-// sentinel to read from standard input, otherwise a friendly error. Standard
-// input is read only when requested explicitly with -, matching tools like
-// kubectl (-f -) and gh (--input -).
 func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, bool, error) {
 	switch {
 	case flagChanged && flagValue == "-":
@@ -145,7 +133,6 @@ func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagCha
 	}
 }
 
-// readStdinBlocks reads and trims blocks from standard input
 func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
 	piped, err := io.ReadAll(clients.IO.ReadIn())
 	if err != nil {
@@ -158,16 +145,12 @@ func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
 	return input, true, nil
 }
 
-// missingBlocksError is the friendly error returned when no blocks are supplied
 func missingBlocksError() error {
 	return slackerror.New(slackerror.ErrMissingInput).
 		WithMessage("No blocks were provided").
 		WithRemediation("Provide blocks with the %s flag, or pass %s to read from standard input", style.Highlight("--blocks"), style.Highlight("--blocks -"))
 }
 
-// normalizeBlocksPayload parses the provided input and returns a compact JSON
-// string in the shape expected by the Block Kit Builder: {"blocks":[...]}.
-// The input may be a bare array of blocks or an object containing a "blocks" key.
 func normalizeBlocksPayload(input string) (string, error) {
 	var parsed any
 	if err := goutils.JSONUnmarshal([]byte(input), &parsed); err != nil {
@@ -194,8 +177,6 @@ func normalizeBlocksPayload(input string) (string, error) {
 	return string(compact), nil
 }
 
-// teamOrEnterpriseID returns the enterprise ID for enterprise installs and the
-// team ID otherwise, matching the identifier used in Block Kit Builder URLs
 func teamOrEnterpriseID(auth *types.SlackAuth) string {
 	if auth.IsEnterpriseInstall {
 		return auth.EnterpriseID
@@ -203,9 +184,6 @@ func teamOrEnterpriseID(auth *types.SlackAuth) string {
 	return auth.TeamID
 }
 
-// buildBlockKitBuilderURL constructs the Block Kit Builder URL for the given
-// API host, team or enterprise ID, and compact blocks JSON. The blocks JSON is
-// placed in the URL fragment, which url.URL.String percent-encodes.
 func buildBlockKitBuilderURL(apiHost string, id string, blocksJSON string) (string, error) {
 	parsed, err := url.Parse(apiHost)
 	if err != nil {
