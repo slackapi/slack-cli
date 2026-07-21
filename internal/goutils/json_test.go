@@ -159,6 +159,26 @@ func Test_JSONMarshalUnescapedIndent(t *testing.T) {
 	}
 }
 
+func Test_IsEmptyJSON(t *testing.T) {
+	for name, tc := range map[string]struct {
+		data     string
+		expected bool
+	}{
+		"nil bytes":               {data: "", expected: true},
+		"empty string":            {data: "", expected: true},
+		"single space":            {data: " ", expected: true},
+		"whitespace mix":          {data: "  \n\t\n", expected: true},
+		"empty JSON object":       {data: "{}", expected: false},
+		"whitespace around JSON":  {data: "  {}  ", expected: false},
+		"JSON payload":            {data: `{"one":"1"}`, expected: false},
+		"invalid JSON is nonzero": {data: "{", expected: false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, IsEmptyJSON([]byte(tc.data)))
+		})
+	}
+}
+
 func Test_UnmarshalJSON(t *testing.T) {
 	type testConfig struct {
 		One string `json:"one,omitempty"`

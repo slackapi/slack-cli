@@ -50,17 +50,23 @@ func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, pro
 		return strings.Compare(i.TeamDomain, j.TeamDomain)
 	})
 
+	teamFlag := clients.Config.Flags.Lookup("team")
 	var teamLabels []string
+	var teamOptions []iostreams.PromptOption
 	for _, auth := range allAuths {
-		teamLabels = append(
-			teamLabels,
-			style.TeamSelectLabel(auth.TeamDomain, auth.TeamID),
-		)
+		label := style.TeamSelectLabel(auth.TeamDomain, auth.TeamID)
+		teamLabels = append(teamLabels, label)
+		teamOptions = append(teamOptions, iostreams.PromptOption{
+			Label: label,
+			Flag:  teamFlag,
+			Value: auth.TeamID,
+		})
 	}
 
 	selectPromptConfig := iostreams.SelectPromptConfig{
 		Required: true,
-		Flag:     clients.Config.Flags.Lookup("team"),
+		Flag:     teamFlag,
+		Options:  teamOptions,
 	}
 	if promptConfig != nil && promptConfig.HelpText != "" {
 		selectPromptConfig.Help = promptConfig.HelpText
