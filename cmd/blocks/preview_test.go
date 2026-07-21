@@ -56,6 +56,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -69,6 +70,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", "-"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
@@ -82,6 +84,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `{"blocks":[{"type":"divider"}]}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -99,6 +102,26 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 		"errors when the --blocks flag is empty": {
 			CmdArgs:              []string{"--blocks", ""},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
+		},
+		"errors when reading from stdin on an interactive terminal": {
+			CmdArgs: []string{"--blocks", "-"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsStdinTTY").Return(true)
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "standard input"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
+		},
+		"errors when no teams are logged in": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{}, nil)
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrCredentialsNotFound},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
 		},
 		"errors when the blocks are not valid json": {
 			CmdArgs:              []string{"--blocks", `not json`},
@@ -126,6 +149,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", "-", "--team", "T123"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
@@ -140,6 +164,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -153,6 +178,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: false})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
@@ -231,6 +257,14 @@ func Test_normalizeBlocksPayload(t *testing.T) {
 		"compacts whitespace": {
 			input:    "[\n  {\n    \"type\": \"divider\"\n  }\n]",
 			expected: `{"blocks":[{"type":"divider"}]}`,
+		},
+		"preserves key order when wrapping a bare array": {
+			input:    `[{"type":"section","text":{"type":"mrkdwn","text":"hi"}}]`,
+			expected: `{"blocks":[{"type":"section","text":{"type":"mrkdwn","text":"hi"}}]}`,
+		},
+		"preserves key order in a blocks object": {
+			input:    `{"blocks":[{"type":"section","text":{"type":"mrkdwn","text":"hi"}}]}`,
+			expected: `{"blocks":[{"type":"section","text":{"type":"mrkdwn","text":"hi"}}]}`,
 		},
 		"rejects invalid json": {
 			input:       `not json`,

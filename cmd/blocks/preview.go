@@ -15,6 +15,7 @@
 package blocks
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -104,16 +105,17 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 }
 
 func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdin bool) (*types.SlackAuth, error) {
-	if fromStdin && clients.Config.TeamFlag == "" {
-		auths, err := clients.Auth().Auths(ctx)
-		if err != nil {
-			return nil, err
-		}
-		if len(auths) > 1 {
-			return nil, slackerror.New(slackerror.ErrMissingFlag).
-				WithMessage("The team could not be determined").
-				WithRemediation("Select a team with the %s flag when reading blocks from standard input", style.Highlight("--team"))
-		}
+	auths, err := clients.Auth().Auths(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(auths) == 0 {
+		return nil, slackerror.New(slackerror.ErrCredentialsNotFound)
+	}
+	if fromStdin && clients.Config.TeamFlag == "" && len(auths) > 1 {
+		return nil, slackerror.New(slackerror.ErrMissingFlag).
+			WithMessage("The team could not be determined").
+			WithRemediation("Select a team with the %s flag when reading blocks from standard input", style.Highlight("--team"))
 	}
 	return promptTeamSlackAuthFunc(ctx, clients, "Select a team to preview blocks for", nil)
 }
@@ -134,6 +136,11 @@ func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagCha
 }
 
 func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
+	if clients.IO.IsStdinTTY() {
+		return "", true, slackerror.New(slackerror.ErrMissingInput).
+			WithMessage("No blocks were provided on standard input").
+			WithRemediation("Redirect blocks into the command with %s, e.g. %s", style.Highlight("<"), style.Highlight("slack blocks preview --blocks - < blocks.json"))
+	}
 	piped, err := io.ReadAll(clients.IO.ReadIn())
 	if err != nil {
 		return "", true, slackerror.Wrap(err, slackerror.ErrMissingInput)
@@ -157,24 +164,30 @@ func normalizeBlocksPayload(input string) (string, error) {
 		return "", err
 	}
 
-	var payload map[string]any
+	compacted, err := compactJSON(input)
+	if err != nil {
+		return "", slackerror.New(slackerror.ErrInvalidBlocks)
+	}
+
 	switch value := parsed.(type) {
 	case []any:
-		payload = map[string]any{"blocks": value}
+		return fmt.Sprintf(`{"blocks":%s}`, compacted), nil
 	case map[string]any:
 		if _, ok := value["blocks"].([]any); !ok {
 			return "", slackerror.New(slackerror.ErrInvalidBlocks)
 		}
-		payload = value
+		return compacted, nil
 	default:
 		return "", slackerror.New(slackerror.ErrInvalidBlocks)
 	}
+}
 
-	compact, err := json.Marshal(payload)
-	if err != nil {
-		return "", slackerror.New(slackerror.ErrInvalidBlocks)
+func compactJSON(input string) (string, error) {
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, []byte(input)); err != nil {
+		return "", err
 	}
-	return string(compact), nil
+	return buf.String(), nil
 }
 
 func teamOrEnterpriseID(auth *types.SlackAuth) string {
