@@ -941,7 +941,7 @@ Otherwise start your app for local development with: %s`,
 	ErrInvalidBlocks: {
 		Code:        ErrInvalidBlocks,
 		Message:     "The provided blocks are not valid Block Kit blocks",
-		Remediation: "Provide a JSON array of blocks or a JSON object with a \"blocks\" array. Design blocks with the Block Kit Builder or see the reference: https://docs.slack.dev/reference/block-kit/blocks",
+		Remediation: "Provide a JSON array of blocks or a JSON object with a \"blocks\" array. Reference: https://docs.slack.dev/reference/block-kit/blocks",
 	},
 
 	ErrInvalidChallenge: {
