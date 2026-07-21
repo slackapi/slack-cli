@@ -25,7 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/icon"
-	"github.com/slackapi/slack-cli/internal/manifest"
+	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -273,11 +273,11 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, token string, app types.App, appManifest types.AppManifest) error {
 	validationResult, err := clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 
-	if retryValidate := manifest.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
+	if retryValidate := manifestpkg.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
 		validationResult, err = clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 	}
 
-	if err := manifest.HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
+	if err := manifestpkg.HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
 		return err
 	}
 
@@ -764,6 +764,15 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	default:
 		notice = style.Yellow("The manifest on app settings has been changed since last update")
 	}
+
+	if clients.Config.WithExperimentOn(experiment.ManifestSync) {
+		_, err := manifestpkg.Sync(ctx, clients, app, auth)
+		if err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "books",
 		Text:      "App Manifest",

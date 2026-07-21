@@ -1,0 +1,154 @@
+// Copyright 2022-2026 Salesforce, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package manifest
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/style"
+)
+
+// SyncResult describes what happened during a sync operation.
+type SyncResult struct {
+	Merged         types.AppManifest
+	WriteBack      WriteBackResult
+	HasDifferences bool
+}
+
+// Sync performs two-way manifest sync between local and remote. It fetches
+// both manifests, computes diffs, prompts the user for resolution, writes
+// the merged result to both the API and the local file, and returns the result.
+func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, auth types.SlackAuth) (*SyncResult, error) {
+	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if manifestSource.Equals(config.ManifestSourceRemote) {
+		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
+			WithMessage("Manifest sync is unavailable for projects with remote source of truth").
+			WithRemediation("This project's manifest source is %s. Edit the manifest at %s.",
+				config.ManifestSourceRemote.Human(),
+				style.CommandText("slack app settings"),
+			)
+	}
+
+	localManifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
+	if err != nil {
+		return nil, slackerror.New("Failed to get local manifest").WithRootCause(err).WithCode(slackerror.ErrInvalidManifest)
+	}
+
+	remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, app.AppID)
+	if err != nil {
+		return nil, slackerror.New("Failed to get remote manifest from app settings").WithRootCause(err)
+	}
+
+	diffs, err := Diff(localManifest.AppManifest, remoteManifest.AppManifest)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compute manifest differences: %w", err)
+	}
+
+	if !diffs.HasDifferences() {
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji:     "books",
+			Text:      "App Manifest",
+			Secondary: []string{"Project manifest and app settings are in sync"},
+		}))
+		return &SyncResult{Merged: localManifest.AppManifest, HasDifferences: false}, nil
+	}
+
+	DisplayDiffs(ctx, clients.IO, diffs)
+
+	var merged types.AppManifest
+	switch {
+	case clients.Config.ForceFlag:
+		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllLocal)
+		if err != nil {
+			return nil, err
+		}
+	case !clients.IO.IsTTY():
+		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
+			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings",
+				style.CommandText("slack manifest sync"),
+				style.CommandText("--force"),
+			)
+	default:
+		merged, err = resolveInteractively(ctx, clients, localManifest.AppManifest, remoteManifest.AppManifest, diffs)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Push merged manifest to API
+	clients.IO.PrintInfo(ctx, false, "\n  Syncing manifest...")
+	_, err = clients.API().UpdateApp(ctx, auth.Token, app.AppID, merged, true, true)
+	if err != nil {
+		return nil, slackerror.New("Failed to update app settings with merged manifest").WithRootCause(err)
+	}
+	clients.IO.PrintInfo(ctx, false, "  %s Updated app settings", style.Green("✓"))
+
+	// Refresh the cached manifest hash so install/deploy don't see drift.
+	hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, merged)
+	if err != nil {
+		return nil, slackerror.New("Failed to hash merged manifest").WithRootCause(err)
+	}
+	if err := clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, app.AppID, hash); err != nil {
+		return nil, slackerror.New("Failed to cache merged manifest hash").WithRootCause(err)
+	}
+
+	// Write back to local file
+	workingDir := clients.SDKConfig.WorkingDirectory
+	writeResult, err := WriteManifestLocal(clients.Fs, workingDir, merged)
+	if err != nil {
+		return nil, err
+	}
+	if writeResult.Written {
+		clients.IO.PrintInfo(ctx, false, "  %s Updated %s", style.Green("✓"), manifestFileName)
+	} else if writeResult.Warning != "" {
+		clients.IO.PrintInfo(ctx, false, "  %s %s", style.Yellow("!"), writeResult.Warning)
+	}
+
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		Emoji:     "books",
+		Text:      "App Manifest",
+		Secondary: []string{fmt.Sprintf("Finished manifest sync for %q", localManifest.DisplayInformation.Name)},
+	}))
+
+	return &SyncResult{Merged: merged, WriteBack: writeResult, HasDifferences: true}, nil
+}
+
+func resolveInteractively(ctx context.Context, clients *shared.ClientFactory, local, remote types.AppManifest, diffs *DiffResult) (types.AppManifest, error) {
+	strategy, err := PromptResolutionStrategy(ctx, clients.IO)
+	if err != nil {
+		return types.AppManifest{}, err
+	}
+
+	switch strategy {
+	case MergeAllLocal:
+		return MergeAllFrom(local, remote, diffs, MergeAllLocal)
+	case MergeAllRemote:
+		return MergeAllFrom(local, remote, diffs, MergeAllRemote)
+	default:
+		resolutions, err := PromptFieldResolutions(ctx, clients.IO, diffs)
+		if err != nil {
+			return types.AppManifest{}, err
+		}
+		return Merge(local, remote, resolutions)
+	}
+}

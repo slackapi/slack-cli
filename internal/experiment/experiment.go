@@ -33,6 +33,9 @@ const (
 	// Lipgloss experiment shows pretty styles.
 	Lipgloss Experiment = "lipgloss"
 
+	// ManifestSync experiment enables two-way manifest sync between local and remote.
+	ManifestSync Experiment = "manifest-sync"
+
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
 
@@ -44,6 +47,7 @@ const (
 // Please also add here 👇
 var AllExperiments = []Experiment{
 	Lipgloss,
+	ManifestSync,
 	Placeholder,
 	SetIcon,
 }

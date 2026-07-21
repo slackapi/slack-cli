@@ -81,6 +81,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	// Add child commands
 	cmd.AddCommand(NewInfoCommand(clients))
+	cmd.AddCommand(NewSyncCommand(clients))
 	cmd.AddCommand(NewValidateCommand(clients))
 
 	cmd.Flags().StringVar(
