@@ -90,7 +90,7 @@ func Test_displayDiffs(t *testing.T) {
 			diffs: nil,
 			forbiddenSubstrs: []string{
 				"Found",
-				"App Manifest",
+				"Manifest Diff",
 				"Project:",
 				"App settings:",
 			},
@@ -132,6 +132,10 @@ func Test_formatValue(t *testing.T) {
 			input:    false,
 			expected: "false",
 		},
+		"long strings are rune-truncated": {
+			input:    "This is a very long description that exceeds the eighty character limit for displayed values in the manifest diff",
+			expected: `"This is a very long description that exceeds the eighty character limit for ...`,
+		},
 		"long non-string values are rune-truncated": {
 			input: []string{
 				"alpha", "bravo", "charlie", "delta", "echo", "foxtrot",
@@ -143,6 +147,35 @@ func Test_formatValue(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.expected, formatValue(tc.input))
+		})
+	}
+}
+
+func Test_displayPath(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"plain path passes through unchanged": {
+			input:    "display_information.name",
+			expected: "display_information.name",
+		},
+		"escaped dots are unescaped for display": {
+			input:    `functions.slack\.users\.lookup.title`,
+			expected: "functions.slack.users.lookup.title",
+		},
+		"escaped backslashes are preserved": {
+			input:    `path.key\\with\\backslashes.field`,
+			expected: `path.key\with\backslashes.field`,
+		},
+		"escaped backslash before dot is handled correctly": {
+			input:    `path.segment\\.next`,
+			expected: `path.segment\.next`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, displayPath(tc.input))
 		})
 	}
 }
