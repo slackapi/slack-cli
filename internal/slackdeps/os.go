@@ -98,3 +98,8 @@ func (c *Os) Exit(code int) {
 func (c *Os) Stdout() types.File {
 	return os.Stdout
 }
+
+// Stdin returns the file descriptor for stdin
+func (c *Os) Stdin() types.File {
+	return os.Stdin
+}

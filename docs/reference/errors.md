@@ -820,6 +820,14 @@ Or choose a specific app with `--app <app_id>`
 
 ---
 
+### invalid_blocks {#invalid_blocks}
+
+**Message**: The provided blocks are not valid Block Kit blocks
+
+**Remediation**: Provide a JSON array of blocks or a JSON object with a "blocks" array. Reference: https://docs.slack.dev/reference/block-kit/blocks
+
+---
+
 ### invalid_challenge {#invalid_challenge}
 
 **Message**: The challenge code is invalid

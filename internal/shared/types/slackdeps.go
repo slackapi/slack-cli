@@ -65,4 +65,7 @@ type Os interface {
 
 	// Stdout returns the file descriptor for stdout
 	Stdout() File
+
+	// Stdin returns the file descriptor for stdin
+	Stdin() File
 }

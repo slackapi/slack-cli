@@ -97,6 +97,38 @@ func Test_IOStreams_IsTTY(t *testing.T) {
 	}
 }
 
+func Test_IOStreams_IsStdinTTY(t *testing.T) {
+	tests := map[string]struct {
+		fileInfo os.FileInfo
+		expected bool
+	}{
+		"interactive when stdin is a char device": {
+			fileInfo: &slackdeps.FileInfoCharDevice{},
+			expected: true,
+		},
+		"not interactive when stdin is a named pipe": {
+			fileInfo: &slackdeps.FileInfoNamedPipe{},
+			expected: false,
+		},
+		"not interactive when the stat check errors": {
+			expected: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			config := config.NewConfig(fsMock, osMock)
+			osMock.On("Stdin").Return(&slackdeps.FileMock{FileInfo: tc.fileInfo})
+			io := NewIOStreams(config, fsMock, osMock)
+
+			isStdinTTY := io.IsStdinTTY()
+			assert.Equal(t, tc.expected, isStdinTTY)
+		})
+	}
+}
+
 func Test_IOStreams_SetCmdIO(t *testing.T) {
 	fsMock := slackdeps.NewFsMock()
 	osMock := slackdeps.NewOsMock()
