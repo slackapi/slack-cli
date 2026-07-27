@@ -83,6 +83,11 @@ func Test_Diff(t *testing.T) {
 			expected: []FieldDiff{
 				{Path: "functions.greet.description", Type: DiffLocalOnly, LocalValue: "Hello"},
 				{Path: "functions.greet.title", Type: DiffLocalOnly, LocalValue: "Greet"},
+				// ManifestFunction.InputParameters/OutputParameters lack
+				// `omitempty`, so an added function flattens with nil values
+				// for both — they show as local-only too.
+				{Path: "functions.greet.input_parameters", Type: DiffLocalOnly, LocalValue: nil},
+				{Path: "functions.greet.output_parameters", Type: DiffLocalOnly, LocalValue: nil},
 			},
 		},
 		"array values compared as wholes": {
@@ -114,13 +119,14 @@ func Test_Diff(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := Diff(tc.local, tc.remote)
+			result, err := Diff(tc.local, tc.remote, false)
 			require.NoError(t, err)
 			if tc.expected == nil {
 				assert.False(t, result.HasDifferences())
 				return
 			}
 			assert.True(t, result.HasDifferences())
+			assert.Len(t, result.Diffs, len(tc.expected), "unexpected number of diffs: got %+v", result.Diffs)
 			for _, expectedDiff := range tc.expected {
 				found := false
 				for _, actualDiff := range result.Diffs {
@@ -141,6 +147,132 @@ func Test_Diff(t *testing.T) {
 		})
 	}
 }
+
+func Test_Diff_IgnoresMetadataPaths(t *testing.T) {
+	// _metadata is project-side annotation that apps.manifest.export does not
+	// echo back. Without filtering, projects using _metadata see noisy
+	// "(only in project)" entries on every diff run.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Metadata: &types.ManifestMetadata{
+			MajorVersion: 1,
+			MinorVersion: 2,
+		},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+	}
+
+	result, err := Diff(local, remote, false)
+	require.NoError(t, err)
+	assert.False(t, result.HasDifferences(), "metadata-only differences should be filtered, got %+v", result.Diffs)
+}
+
+func Test_Diff_FiltersMetadataButKeepsOtherDiffs(t *testing.T) {
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "Project"},
+		Metadata:           &types.ManifestMetadata{MajorVersion: 1},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "Remote"},
+	}
+
+	result, err := Diff(local, remote, false)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences())
+	for _, d := range result.Diffs {
+		assert.False(t, isIgnoredPath(d.Path), "unexpected ignored path in result: %s", d.Path)
+	}
+	// The display_information.name diff must still be reported.
+	var sawNameDiff bool
+	for _, d := range result.Diffs {
+		if d.Path == "display_information.name" {
+			sawNameDiff = true
+		}
+	}
+	assert.True(t, sawNameDiff, "display_information.name diff was unexpectedly filtered")
+}
+
+func Test_Diff_SuppressesDevLocalSuffix(t *testing.T) {
+	// apps.manifest.export appends " (local)" to display_information.name and
+	// features.bot_user.display_name for dev-installed apps. The diff command
+	// suppresses these so users don't see noise on every run.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526"},
+		Features: &types.AppFeatures{
+			BotUser: types.BotUser{DisplayName: "romantic-dolphin-526"},
+		},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526 (local)"},
+		Features: &types.AppFeatures{
+			BotUser: types.BotUser{DisplayName: "romantic-dolphin-526 (local)"},
+		},
+	}
+	result, err := Diff(local, remote, true)
+	require.NoError(t, err)
+	assert.False(t, result.HasDifferences(), "dev-local suffix differences should be suppressed, got %+v", result.Diffs)
+}
+
+func Test_Diff_DoesNotSuppressLocalSuffixForNonDevApps(t *testing.T) {
+	// When the app is not a dev app, the (local) suffix filter should not
+	// suppress the diff — it surfaces as a normal difference.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526"},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "romantic-dolphin-526 (local)"},
+	}
+	result, err := Diff(local, remote, false)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences(), "non-dev app should surface (local) suffix as a diff")
+	require.Len(t, result.Diffs, 1)
+	assert.Equal(t, "display_information.name", result.Diffs[0].Path)
+}
+
+func Test_Diff_PreservesRealRenames(t *testing.T) {
+	// A genuine rename (suffix-trimmed remote does not equal local) must
+	// continue to surface as a diff.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "new-name"},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "old-name (local)"},
+	}
+	result, err := Diff(local, remote, true)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences())
+	require.Len(t, result.Diffs, 1)
+	assert.Equal(t, "display_information.name", result.Diffs[0].Path)
+	assert.Equal(t, DiffModified, result.Diffs[0].Type)
+	assert.Equal(t, "new-name", result.Diffs[0].LocalValue)
+	assert.Equal(t, "old-name (local)", result.Diffs[0].RemoteValue)
+}
+
+func Test_Diff_SurfacesRealIsMcpEnabledDisagreement(t *testing.T) {
+	// A genuine disagreement — local sets is_mcp_enabled to true while
+	// remote returns false — must still surface as a Modified diff.
+	local := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Settings: &types.AppSettings{
+			IsMCPEnabled: ptrBool(true),
+		},
+	}
+	remote := types.AppManifest{
+		DisplayInformation: types.DisplayInformation{Name: "App"},
+		Settings: &types.AppSettings{
+			IsMCPEnabled: ptrBool(false),
+		},
+	}
+	result, err := Diff(local, remote, false)
+	require.NoError(t, err)
+	require.True(t, result.HasDifferences())
+	require.Len(t, result.Diffs, 1)
+	assert.Equal(t, "settings.is_mcp_enabled", result.Diffs[0].Path)
+	assert.Equal(t, DiffModified, result.Diffs[0].Type)
+}
+
+func ptrBool(b bool) *bool { return &b }
 
 func Test_DiffResult_HasDifferences(t *testing.T) {
 	t.Run("empty result has no differences", func(t *testing.T) {
