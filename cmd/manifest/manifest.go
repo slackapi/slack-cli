@@ -80,6 +80,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	// Add child commands
+	cmd.AddCommand(NewDiffCommand(clients))
 	cmd.AddCommand(NewInfoCommand(clients))
 	cmd.AddCommand(NewValidateCommand(clients))
 
