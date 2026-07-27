@@ -287,6 +287,17 @@ func Pluralize(singular string, plural string, count int) string {
 	return plural
 }
 
+func TruncateRunes(s string, max int) string {
+	if max <= 3 {
+		return s
+	}
+	runes := []rune(s)
+	if len(runes) <= max {
+		return s
+	}
+	return string(runes[:max-3]) + "..."
+}
+
 // ════════════════════════════════════════════════════════════════════════════════
 // DEPRECATED: Legacy aurora styling
 //

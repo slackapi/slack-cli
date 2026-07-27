@@ -148,7 +148,7 @@ func Test_MergeAllFrom(t *testing.T) {
 	remote := types.AppManifest{
 		DisplayInformation: types.DisplayInformation{Name: "Remote", Description: "Remote desc"},
 	}
-	diffs, err := Diff(local, remote)
+	diffs, err := Diff(local, remote, false)
 	require.NoError(t, err)
 
 	t.Run("merge all local", func(t *testing.T) {

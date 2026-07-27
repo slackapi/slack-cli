@@ -59,7 +59,7 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 		return nil, slackerror.New("Failed to get remote manifest from app settings").WithRootCause(err)
 	}
 
-	diffs, err := Diff(localManifest.AppManifest, remoteManifest.AppManifest)
+	diffs, err := Diff(localManifest.AppManifest, remoteManifest.AppManifest, app.IsDev)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compute manifest differences: %w", err)
 	}

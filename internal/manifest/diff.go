@@ -16,10 +16,29 @@ package manifest
 
 import (
 	"encoding/json"
-	"fmt"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 )
+
+// ignoredDiffPaths are top-level manifest fields that the project may declare
+// but Slack's apps.manifest.export does not echo back. Diffs at or under these
+// paths are dropped to avoid spurious "only in project" entries on every run.
+var ignoredDiffPaths = []string{
+	"_metadata", // SDK-side schema annotations; not stored in app settings
+}
+
+// devLocalSuffixPaths are flattened paths where Slack's apps.manifest.export
+// appends " (local)" for dev-installed apps. Diffs at these paths are
+// dropped only when removing the suffix would make the values equal; real
+// renames still surface.
+var devLocalSuffixPaths = []string{
+	"display_information.name",
+	"features.bot_user.display_name",
+}
+
+const devLocalSuffix = " (local)"
 
 // DiffType describes how a field differs between local and remote.
 type DiffType int
@@ -49,19 +68,77 @@ func (dr *DiffResult) HasDifferences() bool {
 }
 
 // Diff performs a two-way comparison between local and remote manifests,
-// returning all fields that differ between them.
-func Diff(local, remote types.AppManifest) (*DiffResult, error) {
+// returning all fields that differ between them. Paths under ignoredDiffPaths
+// are excluded.
+func Diff(local, remote types.AppManifest, isDev bool) (*DiffResult, error) {
 	localFlat, err := Flatten(local)
 	if err != nil {
-		return nil, fmt.Errorf("failed to flatten local manifest: %w", err)
+		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 	}
 	remoteFlat, err := Flatten(remote)
 	if err != nil {
-		return nil, fmt.Errorf("failed to flatten remote manifest: %w", err)
+		return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 	}
-	return diffFlat(localFlat, remoteFlat)
+	result, err := diffFlat(localFlat, remoteFlat)
+	if err != nil {
+		return nil, err
+	}
+	filtered := result.Diffs[:0]
+	for _, d := range result.Diffs {
+		if isIgnoredPath(d.Path) {
+			continue
+		}
+		if isDev && isDevLocalSuffixDiff(d) {
+			continue
+		}
+		filtered = append(filtered, d)
+	}
+	result.Diffs = filtered
+	return result, nil
 }
 
+// isIgnoredPath reports whether a flattened manifest path is at or under any
+// entry in ignoredDiffPaths.
+func isIgnoredPath(path string) bool {
+	for _, prefix := range ignoredDiffPaths {
+		if path == prefix || strings.HasPrefix(path, prefix+".") {
+			return true
+		}
+	}
+	return false
+}
+
+// isDevLocalSuffixDiff reports whether a Modified diff is purely the result
+// of Slack's apps.manifest.export appending " (local)" to a name field for a
+// dev-installed app. Real renames are not suppressed because trimming the
+// suffix from RemoteValue would not produce LocalValue.
+func isDevLocalSuffixDiff(d FieldDiff) bool {
+	if d.Type != DiffModified {
+		return false
+	}
+	matched := false
+	for _, p := range devLocalSuffixPaths {
+		if d.Path == p {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		return false
+	}
+	local, ok := d.LocalValue.(string)
+	if !ok {
+		return false
+	}
+	remote, ok := d.RemoteValue.(string)
+	if !ok {
+		return false
+	}
+	return strings.TrimSuffix(remote, devLocalSuffix) == local
+}
+
+// diffFlat compares two flattened manifests and returns one FieldDiff per
+// path that differs (modified, local-only, or remote-only).
 func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 	result := &DiffResult{}
 	seen := make(map[string]bool)
@@ -79,7 +156,7 @@ func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 		}
 		equal, err := valuesEqual(localVal, remoteVal)
 		if err != nil {
-			return nil, fmt.Errorf("failed to compare manifest values at %q: %w", path, err)
+			return nil, slackerror.Wrap(err, slackerror.ErrAppManifestCompare)
 		}
 		if !equal {
 			result.Diffs = append(result.Diffs, FieldDiff{
@@ -105,6 +182,9 @@ func diffFlat(local, remote map[string]any) (*DiffResult, error) {
 	return result, nil
 }
 
+// valuesEqual reports whether two leaf values from a flattened manifest are
+// equivalent. It compares their JSON encodings so type-equivalent values
+// (e.g. matching arrays or nested objects) compare equal.
 func valuesEqual(a, b any) (bool, error) {
 	aJSON, err := json.Marshal(a)
 	if err != nil {

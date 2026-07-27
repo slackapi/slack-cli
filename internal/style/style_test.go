@@ -315,3 +315,43 @@ func TestEmoji(t *testing.T) {
 		assert.NotEmpty(t, result)
 	})
 }
+
+func Test_TruncateRunes(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		max      int
+		expected string
+	}{
+		"shorter than max returns unchanged": {
+			input:    "hello",
+			max:      80,
+			expected: "hello",
+		},
+		"exactly max runes returns unchanged": {
+			input:    "abcdefghij",
+			max:      10,
+			expected: "abcdefghij",
+		},
+		"longer than max truncates with ellipsis": {
+			input:    "abcdefghijklmno",
+			max:      10,
+			expected: "abcdefg...",
+		},
+		"max less than ellipsis budget returns input unchanged": {
+			input:    "abcdef",
+			max:      3,
+			expected: "abcdef",
+		},
+		"multi-byte runes are not cut mid-character": {
+			input:    "🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮",
+			max:      6,
+			expected: "🐶🐱🐭...",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := TruncateRunes(tc.input, tc.max)
+			assert.Equal(t, tc.expected, got)
+		})
+	}
+}
