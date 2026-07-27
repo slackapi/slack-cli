@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	internalmanifest "github.com/slackapi/slack-cli/internal/manifest"
@@ -60,7 +61,7 @@ func displayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *internalm
 			local = formatValue(d.LocalValue)
 			remote = formatValue(d.RemoteValue)
 		}
-		io.PrintInfo(ctx, false, "  %s", d.Path)
+		io.PrintInfo(ctx, false, "  %s", displayPath(d.Path))
 		io.PrintInfo(ctx, false, "    Project:      %s", local)
 		io.PrintInfo(ctx, false, "    App settings: %s", remote)
 	}
@@ -69,13 +70,20 @@ func displayDiffs(ctx context.Context, io iostreams.IOStreamer, diffs *internalm
 
 const absentValue = "(not set)"
 
+func displayPath(escaped string) string {
+	s := strings.ReplaceAll(escaped, `\\`, "\x00")
+	s = strings.ReplaceAll(s, `\.`, ".")
+	s = strings.ReplaceAll(s, "\x00", `\`)
+	return s
+}
+
 func formatValue(v any) string {
 	if v == nil {
 		return "(not present)"
 	}
 	switch val := v.(type) {
 	case string:
-		return fmt.Sprintf("%q", val)
+		return style.TruncateRunes(fmt.Sprintf("%q", val), 80)
 	default:
 		data, err := json.Marshal(val)
 		if err != nil {
