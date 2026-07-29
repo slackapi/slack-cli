@@ -53,3 +53,37 @@ func Test_ReadIn(t *testing.T) {
 		})
 	}
 }
+
+func Test_ReadInAll(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected string
+	}{
+		"reads all of stdin": {
+			input:    `[{"type":"divider"}]`,
+			expected: `[{"type":"divider"}]`,
+		},
+		"trims surrounding whitespace": {
+			input:    "\n  hello world  \n",
+			expected: "hello world",
+		},
+		"returns an empty string for empty stdin": {
+			input:    "",
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			cfg := config.NewConfig(fsMock, osMock)
+			io := NewIOStreams(cfg, fsMock, osMock)
+			io.Stdin = strings.NewReader(tc.input)
+
+			actual, err := io.ReadInAll()
+
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
