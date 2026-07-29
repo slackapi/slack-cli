@@ -40,7 +40,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	var blocksFlag string
 	cmd := &cobra.Command{
 		Use:   "preview [flags]",
-		Short: "Preview blocks in the Block Kit Builder",
+		Short: "Preview blocks in Block Kit Builder",
 		Long: strings.Join([]string{
 			"Open a set of Block Kit blocks in the Block Kit Builder in a web browser.",
 			"",
