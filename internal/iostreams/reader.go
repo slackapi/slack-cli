@@ -15,17 +15,28 @@
 package iostreams
 
 import (
-	"io"
+	stdio "io"
+	"strings"
 )
 
 // Reader contains implementations of a Read methods for various inputs methods
 //
 // Only stdin is supported for now
 type Reader interface {
-	ReadIn() io.Reader
+	ReadIn() stdio.Reader
+	ReadInAll() (string, error)
 }
 
 // ReadIn returns the reader associated with stdin
-func (io *IOStreams) ReadIn() io.Reader {
+func (io *IOStreams) ReadIn() stdio.Reader {
 	return io.Stdin
+}
+
+// ReadInAll reads all of stdin and returns it with surrounding whitespace trimmed
+func (io *IOStreams) ReadInAll() (string, error) {
+	raw, err := stdio.ReadAll(io.Stdin)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(raw)), nil
 }

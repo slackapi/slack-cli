@@ -31,7 +31,7 @@ func Test_Blocks_Command(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 			},
 			ExpectedOutputs: []string{
-				"Work with Block Kit blocks",
+				"Build layouts using Block Kit",
 				"preview",
 			},
 		},

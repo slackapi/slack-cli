@@ -19,7 +19,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -40,31 +39,23 @@ func stubAIAgent(agent *useragent.AIAgent) func() {
 	return func() { aiAgentFunc = original }
 }
 
-// stubTeamAuth stubs the team selection to return the provided auth
-func stubTeamAuth(auth *types.SlackAuth) func() {
-	original := promptTeamSlackAuthFunc
-	promptTeamSlackAuthFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
-		return auth, nil
-	}
-	return func() { promptTeamSlackAuthFunc = original }
-}
-
 func Test_Blocks_PreviewCommand(t *testing.T) {
-	var restore func()
+	// teamlessURL is the Block Kit Builder URL rendered when no team can be
+	// resolved. The browser resolves the team from its own session.
+	const teamlessURL = `https://app.slack.com/block-kit-builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
+	// teamURL is the Block Kit Builder URL scoped to team T123.
+	const teamURL = `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"opens the builder with blocks from the --blocks flag": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedURL := `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
-				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
-				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.BlocksPreviewSuccess, []string{expectedURL})
+				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.BlocksPreviewSuccess, []string{teamURL})
 			},
-			Teardown: func() { restore() },
 		},
 		"opens the builder with blocks from stdin via the - sentinel": {
 			CmdArgs: []string{"--blocks", "-"},
@@ -72,26 +63,30 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedURL := `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
-				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
 			},
-			Teardown: func() { restore() },
+		},
+		"opens the builder with blocks from stdin when the --blocks flag is omitted": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
+				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
+			},
 		},
 		"accepts a blocks object payload": {
 			CmdArgs: []string{"--blocks", `{"blocks":[{"type":"divider"}]}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				expectedURL := `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
-				cm.Browser.AssertCalled(t, "OpenURL", expectedURL)
+				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
 			},
-			Teardown: func() { restore() },
 		},
 		"errors when no blocks are provided": {
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
@@ -113,14 +108,24 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
 			},
 		},
-		"errors when no teams are logged in": {
+		"opens the team-less builder when no teams are logged in": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{}, nil)
 			},
-			ExpectedErrorStrings: []string{slackerror.ErrCredentialsNotFound},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
+			},
+		},
+		"opens the team-less builder when the credentials cannot be read": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound))
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
 			},
 		},
 		"errors when the blocks are not valid json": {
@@ -131,62 +136,71 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs:              []string{"--blocks", `{"foo":"bar"}`},
 			ExpectedErrorStrings: []string{slackerror.ErrInvalidBlocks},
 		},
-		"errors when reading blocks from stdin with multiple teams and no --team flag": {
+		"opens the team-less builder with multiple teams and no --team flag": {
 			CmdArgs: []string{"--blocks", "-"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("Host").Return("https://slack.com")
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					{TeamID: "T123", TeamDomain: "team-a"},
 					{TeamID: "T456", TeamDomain: "team-b"},
 				}, nil)
 			},
-			ExpectedErrorStrings: []string{slackerror.ErrMissingFlag, "--team"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
 			},
 		},
 		"opens the builder when reading blocks from stdin with the --team flag set": {
 			CmdArgs: []string{"--blocks", "-", "--team", "T123"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+					{TeamID: "T123", TeamDomain: "team-a"},
+					{TeamID: "T456", TeamDomain: "team-b"},
+				}, nil)
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123"})
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
-					return assert.Contains(t, url, "/block-kit-builder/T123/builder")
-				}))
+				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
 			},
-			Teardown: func() { restore() },
+		},
+		"errors when the --team flag has no matching auth": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`, "--team", "T999"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrTeamNotFound},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
 		},
 		"uses the enterprise id for enterprise installs": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true})
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+					{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true},
+				}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
 					return assert.Contains(t, url, "/block-kit-builder/E456/builder")
 				}))
 			},
-			Teardown: func() { restore() },
 		},
 		"uses the team id for org-grid workspace installs": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
-				restore = stubTeamAuth(&types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: false})
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+					{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: false},
+				}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Browser.AssertCalled(t, "OpenURL", mock.MatchedBy(func(url string) bool {
 					return assert.Contains(t, url, "/block-kit-builder/T123/builder")
 				}))
 			},
-			Teardown: func() { restore() },
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewPreviewCommand(cf)
@@ -195,40 +209,46 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 
 func Test_buildBlockKitBuilderURL(t *testing.T) {
 	tests := map[string]struct {
-		apiHost     string
-		id          string
-		blocksJSON  string
-		expected    string
-		expectedErr string
+		apiHost            string
+		teamOrEnterpriseID string
+		blocksJSON         string
+		expected           string
+		expectedErr        string
 	}{
 		"production host": {
-			apiHost:    "https://slack.com",
-			id:         "T123",
-			blocksJSON: `{"blocks":[]}`,
-			expected:   "https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%5D%7D",
+			apiHost:            "https://slack.com",
+			teamOrEnterpriseID: "T123",
+			blocksJSON:         `{"blocks":[]}`,
+			expected:           "https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%5D%7D",
 		},
 		"developer host": {
-			apiHost:    "https://dev1234.slack.com",
-			id:         "E456",
-			blocksJSON: `{"blocks":[]}`,
-			expected:   "https://app.dev1234.slack.com/block-kit-builder/E456/builder#%7B%22blocks%22:%5B%5D%7D",
+			apiHost:            "https://dev1234.slack.com",
+			teamOrEnterpriseID: "E456",
+			blocksJSON:         `{"blocks":[]}`,
+			expected:           "https://app.dev1234.slack.com/block-kit-builder/E456/builder#%7B%22blocks%22:%5B%5D%7D",
+		},
+		"team-less builder when the id is empty": {
+			apiHost:            "https://slack.com",
+			teamOrEnterpriseID: "",
+			blocksJSON:         `{"blocks":[]}`,
+			expected:           "https://app.slack.com/block-kit-builder#%7B%22blocks%22:%5B%5D%7D",
 		},
 		"empty host": {
-			apiHost:     "",
-			id:          "T123",
-			blocksJSON:  `{"blocks":[]}`,
-			expectedErr: slackerror.ErrInvalidArguments,
+			apiHost:            "",
+			teamOrEnterpriseID: "T123",
+			blocksJSON:         `{"blocks":[]}`,
+			expectedErr:        slackerror.ErrInvalidArguments,
 		},
 		"scheme-less host": {
-			apiHost:     "app.slack.com",
-			id:          "T123",
-			blocksJSON:  `{"blocks":[]}`,
-			expectedErr: slackerror.ErrInvalidArguments,
+			apiHost:            "app.slack.com",
+			teamOrEnterpriseID: "T123",
+			blocksJSON:         `{"blocks":[]}`,
+			expectedErr:        slackerror.ErrInvalidArguments,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			actual, err := buildBlockKitBuilderURL(tc.apiHost, tc.id, tc.blocksJSON)
+			actual, err := buildBlockKitBuilderURL(tc.apiHost, tc.teamOrEnterpriseID, tc.blocksJSON)
 			if tc.expectedErr != "" {
 				require.Error(t, err)
 				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err).Code)
@@ -236,6 +256,31 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func Test_teamOrEnterpriseID(t *testing.T) {
+	tests := map[string]struct {
+		auth     *types.SlackAuth
+		expected string
+	}{
+		"returns an empty string when the auth is nil": {
+			auth:     nil,
+			expected: "",
+		},
+		"returns the team id for workspace installs": {
+			auth:     &types.SlackAuth{TeamID: "T123", EnterpriseID: "E456"},
+			expected: "T123",
+		},
+		"returns the enterprise id for enterprise installs": {
+			auth:     &types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true},
+			expected: "E456",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, teamOrEnterpriseID(tc.auth))
 		})
 	}
 }

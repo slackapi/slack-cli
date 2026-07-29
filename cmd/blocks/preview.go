@@ -15,16 +15,12 @@
 package blocks
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/url"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/goutils"
-	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -32,9 +28,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
-
-// promptTeamSlackAuthFunc is a package variable so it can be stubbed in tests.
-var promptTeamSlackAuthFunc = prompts.PromptTeamSlackAuth
 
 func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 	var blocksFlag string
@@ -46,7 +39,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"Provide blocks with the --blocks flag.",
 			"The input is a JSON array of blocks or a JSON object with a \"blocks\" array.",
-			"Pass - to --blocks to read from standard input.",
+			"Pass - to --blocks, or omit the all flags, to read from standard input.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -55,7 +48,11 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 			},
 			{
 				Meaning: "Preview blocks read from a file",
-				Command: "blocks preview --blocks - < blocks.json",
+				Command: "blocks preview < blocks.json",
+			},
+			{
+				Meaning: "Preview blocks read from a redirect and scoped to a team",
+				Command: "blocks preview --team T0123456 --blocks - < blocks.json",
 			},
 		}),
 		Args: cobra.NoArgs,
@@ -71,7 +68,7 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 	ctx := cmd.Context()
 	clients.IO.PrintTrace(ctx, slacktrace.BlocksPreviewStart)
 
-	blocksInput, fromStdin, err := resolveBlocksInput(clients, blocksFlag, blocksFlagChanged)
+	blocksInput, err := resolveBlocksInput(clients, blocksFlag, blocksFlagChanged)
 	if err != nil {
 		return err
 	}
@@ -81,7 +78,7 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 		return err
 	}
 
-	auth, err := selectTeamAuth(ctx, clients, fromStdin)
+	auth, err := resolveTeamAuth(ctx, clients)
 	if err != nil {
 		return err
 	}
@@ -104,52 +101,57 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 	return nil
 }
 
-func selectTeamAuth(ctx context.Context, clients *shared.ClientFactory, fromStdin bool) (*types.SlackAuth, error) {
+func resolveTeamAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
 	auths, err := clients.Auth().Auths(ctx)
 	if err != nil {
-		return nil, err
+		clients.IO.PrintDebug(ctx, "unable to read authentications, previewing without a team: %s", err)
+		return nil, nil
 	}
-	if len(auths) == 0 {
-		return nil, slackerror.New(slackerror.ErrCredentialsNotFound)
+	if clients.Config.TeamFlag != "" {
+		for i, auth := range auths {
+			if clients.Config.TeamFlag == auth.TeamID || clients.Config.TeamFlag == auth.TeamDomain {
+				return &auths[i], nil
+			}
+		}
+		return nil, slackerror.New(slackerror.ErrTeamNotFound)
 	}
-	if fromStdin && clients.Config.TeamFlag == "" && len(auths) > 1 {
-		return nil, slackerror.New(slackerror.ErrMissingFlag).
-			WithMessage("The team could not be determined").
-			WithRemediation("Select a team with the %s flag when reading blocks from standard input", style.Highlight("--team"))
+	if len(auths) == 1 {
+		return &auths[0], nil
 	}
-	return promptTeamSlackAuthFunc(ctx, clients, "Select a team to preview blocks for", nil)
+	return nil, nil
 }
 
-func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, bool, error) {
+func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, error) {
 	switch {
 	case flagChanged && flagValue == "-":
 		return readStdinBlocks(clients)
 	case flagChanged:
 		input := strings.TrimSpace(flagValue)
 		if input == "" {
-			return "", false, missingBlocksError()
+			return "", missingBlocksError()
 		}
-		return input, false, nil
+		return input, nil
+	case !clients.IO.IsStdinTTY():
+		return readStdinBlocks(clients)
 	default:
-		return "", false, missingBlocksError()
+		return "", missingBlocksError()
 	}
 }
 
-func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
+func readStdinBlocks(clients *shared.ClientFactory) (string, error) {
 	if clients.IO.IsStdinTTY() {
-		return "", true, slackerror.New(slackerror.ErrMissingInput).
+		return "", slackerror.New(slackerror.ErrMissingInput).
 			WithMessage("No blocks were provided on standard input").
-			WithRemediation("Redirect blocks into the command with "<", e.g. %s", style.Commandf("blocks preview --blocks - < blocks.json", false))
+			WithRemediation("Redirect blocks into the command with \"<\", e.g. %s", style.Commandf("blocks preview < blocks.json", false))
 	}
-	piped, err := io.ReadAll(clients.IO.ReadIn())
+	input, err := clients.IO.ReadInAll()
 	if err != nil {
-		return "", true, slackerror.Wrap(err, slackerror.ErrMissingInput)
+		return "", slackerror.Wrap(err, slackerror.ErrMissingInput)
 	}
-	input := strings.TrimSpace(string(piped))
 	if input == "" {
-		return "", true, missingBlocksError()
+		return "", missingBlocksError()
 	}
-	return input, true, nil
+	return input, nil
 }
 
 func missingBlocksError() error {
@@ -164,7 +166,7 @@ func normalizeBlocksPayload(input string) (string, error) {
 		return "", err
 	}
 
-	compacted, err := compactJSON(input)
+	compacted, err := goutils.CompactJSON([]byte(input))
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocks)
 	}
@@ -176,28 +178,23 @@ func normalizeBlocksPayload(input string) (string, error) {
 		if _, ok := value["blocks"].([]any); !ok {
 			return "", slackerror.New(slackerror.ErrInvalidBlocks)
 		}
-		return compacted, nil
+		return string(compacted), nil
 	default:
 		return "", slackerror.New(slackerror.ErrInvalidBlocks)
 	}
 }
 
-func compactJSON(input string) (string, error) {
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, []byte(input)); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
 func teamOrEnterpriseID(auth *types.SlackAuth) string {
+	if auth == nil {
+		return ""
+	}
 	if auth.IsEnterpriseInstall {
 		return auth.EnterpriseID
 	}
 	return auth.TeamID
 }
 
-func buildBlockKitBuilderURL(apiHost string, id string, blocksJSON string) (string, error) {
+func buildBlockKitBuilderURL(apiHost string, teamOrEnterpriseID string, blocksJSON string) (string, error) {
 	parsed, err := url.Parse(apiHost)
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrInvalidArguments)
@@ -207,7 +204,11 @@ func buildBlockKitBuilderURL(apiHost string, id string, blocksJSON string) (stri
 			WithMessage("The API host %q is not a valid URL", apiHost)
 	}
 	parsed.Host = "app." + parsed.Host
-	parsed.Path = fmt.Sprintf("/block-kit-builder/%s/builder", id)
+	if teamOrEnterpriseID != "" {
+		parsed.Path = fmt.Sprintf("/block-kit-builder/%s/builder", teamOrEnterpriseID)
+	} else {
+		parsed.Path = "/block-kit-builder"
+	}
 	parsed.Fragment = blocksJSON
 	return parsed.String(), nil
 }

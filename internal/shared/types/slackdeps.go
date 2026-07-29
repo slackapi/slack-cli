@@ -63,9 +63,9 @@ type Os interface {
 	// Exit causes the program to exit and return with the status code
 	Exit(code int)
 
-	// Stdout returns the file descriptor for stdout
-	Stdout() File
-
 	// Stdin returns the file descriptor for stdin
 	Stdin() File
+
+	// Stdout returns the file descriptor for stdout
+	Stdout() File
 }

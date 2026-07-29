@@ -55,8 +55,8 @@ func (m *OsMock) AddDefaultMocks() {
 	m.On("IsNotExist", mock.Anything).Return(true)
 	m.On("Exit", mock.Anything).Return()
 	m.On("Stat", mock.Anything).Return()
-	m.On("Stdout").Return(os.Stdout)
 	m.On("Stdin").Return(os.Stdin)
+	m.On("Stdout").Return(os.Stdout)
 }
 
 // Getenv mocks returning an environment variable
@@ -132,14 +132,14 @@ func (m *OsMock) Exit(code int) {
 	m.Called(code)
 }
 
-// Stdout mocks the stdout with a file that can be adjusted
-func (m *OsMock) Stdout() types.File {
+// Stdin mocks the stdin with a file that can be adjusted
+func (m *OsMock) Stdin() types.File {
 	args := m.Called()
 	return args.Get(0).(types.File)
 }
 
-// Stdin mocks the stdin with a file that can be adjusted
-func (m *OsMock) Stdin() types.File {
+// Stdout mocks the stdout with a file that can be adjusted
+func (m *OsMock) Stdout() types.File {
 	args := m.Called()
 	return args.Get(0).(types.File)
 }
