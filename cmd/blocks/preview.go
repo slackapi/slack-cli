@@ -104,23 +104,19 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 }
 
 func resolveTeamAuth(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
-	auths, err := clients.Auth().Auths(ctx)
-	if err != nil {
-		clients.IO.PrintDebug(ctx, "unable to read authentications, previewing without a team: %s", err)
+	if clients.Config.TeamFlag == "" {
 		return nil, nil
 	}
-	if clients.Config.TeamFlag != "" {
-		for i, auth := range auths {
-			if clients.Config.TeamFlag == auth.TeamID || clients.Config.TeamFlag == auth.TeamDomain {
-				return &auths[i], nil
-			}
+	auths, err := clients.Auth().Auths(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for i, auth := range auths {
+		if clients.Config.TeamFlag == auth.TeamID || clients.Config.TeamFlag == auth.TeamDomain {
+			return &auths[i], nil
 		}
-		return nil, slackerror.New(slackerror.ErrTeamNotFound)
 	}
-	if len(auths) == 1 {
-		return &auths[0], nil
-	}
-	return nil, nil
+	return nil, slackerror.New(slackerror.ErrTeamNotFound)
 }
 
 func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, error) {

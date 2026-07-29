@@ -46,46 +46,42 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 	// teamURL is the Block Kit Builder URL scoped to team T123.
 	const teamURL = `https://app.slack.com/block-kit-builder/T123/builder#%7B%22blocks%22:%5B%7B%22type%22:%22divider%22%7D%5D%7D`
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"opens the builder with blocks from the --blocks flag": {
+		"opens the team-less builder with blocks from the --blocks flag": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
-				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.BlocksPreviewSuccess, []string{teamURL})
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
+				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.BlocksPreviewSuccess, []string{teamlessURL})
 			},
 		},
-		"opens the builder with blocks from stdin via the - sentinel": {
+		"opens the team-less builder with blocks from stdin via the - sentinel": {
 			CmdArgs: []string{"--blocks", "-"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
 			},
 		},
-		"opens the builder with blocks from stdin when the --blocks flag is omitted": {
+		"opens the team-less builder with blocks from stdin when the --blocks flag is omitted": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 				cm.IO.Stdin = bytes.NewBufferString(`[{"type":"divider"}]`)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
 			},
 		},
 		"accepts a blocks object payload": {
 			CmdArgs: []string{"--blocks", `{"blocks":[{"type":"divider"}]}`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
-				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{{TeamID: "T123"}}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.Browser.AssertCalled(t, "OpenURL", teamURL)
+				cm.Browser.AssertCalled(t, "OpenURL", teamlessURL)
 			},
 		},
 		"errors when no blocks are provided": {
@@ -185,7 +181,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 		},
 		"uses the enterprise id for enterprise installs": {
-			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`, "--team", "T123"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
@@ -199,7 +195,7 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			},
 		},
 		"uses the team id for org-grid workspace installs": {
-			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`, "--team", "T123"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.API.On("Host").Return("https://slack.com")
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
