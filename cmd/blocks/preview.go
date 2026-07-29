@@ -139,7 +139,7 @@ func readStdinBlocks(clients *shared.ClientFactory) (string, bool, error) {
 	if clients.IO.IsStdinTTY() {
 		return "", true, slackerror.New(slackerror.ErrMissingInput).
 			WithMessage("No blocks were provided on standard input").
-			WithRemediation("Redirect blocks into the command with %s, e.g. %s", style.Highlight("<"), style.Highlight("slack blocks preview --blocks - < blocks.json"))
+			WithRemediation("Redirect blocks into the command with "<", e.g. %s", style.Commandf("blocks preview --blocks - < blocks.json", false))
 	}
 	piped, err := io.ReadAll(clients.IO.ReadIn())
 	if err != nil {
