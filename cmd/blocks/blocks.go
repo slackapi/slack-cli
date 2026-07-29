@@ -28,7 +28,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "blocks <subcommand> [flags]",
 		Short:  "Build with Block Kit",
-		Long:   "Work with Block Kit blocks, such as previewing them in the Block Kit Builder.",
+		Long:   "Build layouts using Block Kit and iterate on designs with Block Kit Builder.",
 		Hidden: aiAgentFunc() == nil,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
