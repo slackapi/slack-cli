@@ -42,7 +42,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Use:   "preview [flags]",
 		Short: "Preview blocks in Block Kit Builder",
 		Long: strings.Join([]string{
-			"Open a set of Block Kit blocks in the Block Kit Builder in a web browser.",
+			"Preview a set of Block Kit blocks with Block Kit Builder in a web browser.",
 			"",
 			"Provide blocks with the --blocks flag.",
 			"The input is a JSON array of blocks or a JSON object with a \"blocks\" array.",
