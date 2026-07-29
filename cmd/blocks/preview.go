@@ -166,7 +166,7 @@ func normalizeBlocksPayload(input string) (string, error) {
 
 	compacted, err := compactJSON(input)
 	if err != nil {
-		return "", slackerror.New(slackerror.ErrInvalidBlocks)
+		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocks)
 	}
 
 	switch value := parsed.(type) {
