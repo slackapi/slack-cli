@@ -15,7 +15,9 @@
 package blocks
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -39,7 +41,7 @@ func NewPreviewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"Provide blocks with the --blocks flag.",
 			"The input is a JSON array of blocks or a JSON object with a \"blocks\" array.",
-			"Pass - to --blocks, or omit the all flags, to read from standard input.",
+			"Pass - to --blocks, or omit all flags, to read from standard input.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -124,6 +126,11 @@ func resolveTeamAuth(ctx context.Context, clients *shared.ClientFactory) (*types
 func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, error) {
 	switch {
 	case flagChanged && flagValue == "-":
+		if clients.IO.IsStdinTTY() {
+			return "", slackerror.New(slackerror.ErrMissingInput).
+				WithMessage("No blocks were provided on standard input").
+				WithRemediation("Redirect blocks into the command with \"<\", e.g. %s", style.Commandf("blocks preview < blocks.json", false))
+		}
 		return readStdinBlocks(clients)
 	case flagChanged:
 		input := strings.TrimSpace(flagValue)
@@ -139,11 +146,6 @@ func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagCha
 }
 
 func readStdinBlocks(clients *shared.ClientFactory) (string, error) {
-	if clients.IO.IsStdinTTY() {
-		return "", slackerror.New(slackerror.ErrMissingInput).
-			WithMessage("No blocks were provided on standard input").
-			WithRemediation("Redirect blocks into the command with \"<\", e.g. %s", style.Commandf("blocks preview < blocks.json", false))
-	}
 	input, err := clients.IO.ReadInAll()
 	if err != nil {
 		return "", slackerror.Wrap(err, slackerror.ErrMissingInput)
@@ -161,24 +163,28 @@ func missingBlocksError() error {
 }
 
 func normalizeBlocksPayload(input string) (string, error) {
-	var parsed any
-	if err := goutils.JSONUnmarshal([]byte(input), &parsed); err != nil {
-		return "", err
-	}
-
 	compacted, err := goutils.CompactJSON([]byte(input))
 	if err != nil {
-		return "", slackerror.Wrap(err, slackerror.ErrInvalidBlocks)
+		return "", slackerror.JSONUnmarshalError(err, []byte(input))
+	}
+	trimmed := bytes.TrimSpace(compacted)
+	if len(trimmed) == 0 {
+		return "", slackerror.New(slackerror.ErrInvalidBlocks)
 	}
 
-	switch value := parsed.(type) {
-	case []any:
-		return fmt.Sprintf(`{"blocks":%s}`, compacted), nil
-	case map[string]any:
-		if _, ok := value["blocks"].([]any); !ok {
+	switch trimmed[0] {
+	case '[':
+		return fmt.Sprintf(`{"blocks":%s}`, trimmed), nil
+	case '{':
+		var object map[string]json.RawMessage
+		if err := json.Unmarshal(trimmed, &object); err != nil {
 			return "", slackerror.New(slackerror.ErrInvalidBlocks)
 		}
-		return string(compacted), nil
+		blocks, ok := object["blocks"]
+		if !ok || len(bytes.TrimSpace(blocks)) == 0 || bytes.TrimSpace(blocks)[0] != '[' {
+			return "", slackerror.New(slackerror.ErrInvalidBlocks)
+		}
+		return string(trimmed), nil
 	default:
 		return "", slackerror.New(slackerror.ErrInvalidBlocks)
 	}

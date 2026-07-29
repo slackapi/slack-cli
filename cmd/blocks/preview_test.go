@@ -174,6 +174,16 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
 			},
 		},
+		"errors when the --team flag is set but the credentials cannot be read": {
+			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`, "--team", "T123"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound))
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrCredentialsNotFound},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
+		},
 		"uses the enterprise id for enterprise installs": {
 			CmdArgs: []string{"--blocks", `[{"type":"divider"}]`},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -260,31 +270,6 @@ func Test_buildBlockKitBuilderURL(t *testing.T) {
 	}
 }
 
-func Test_teamOrEnterpriseID(t *testing.T) {
-	tests := map[string]struct {
-		auth     *types.SlackAuth
-		expected string
-	}{
-		"returns an empty string when the auth is nil": {
-			auth:     nil,
-			expected: "",
-		},
-		"returns the team id for workspace installs": {
-			auth:     &types.SlackAuth{TeamID: "T123", EnterpriseID: "E456"},
-			expected: "T123",
-		},
-		"returns the enterprise id for enterprise installs": {
-			auth:     &types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true},
-			expected: "E456",
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, teamOrEnterpriseID(tc.auth))
-		})
-	}
-}
-
 func Test_normalizeBlocksPayload(t *testing.T) {
 	tests := map[string]struct {
 		input       string
@@ -338,6 +323,31 @@ func Test_normalizeBlocksPayload(t *testing.T) {
 			}
 			require.NoError(t, err)
 			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func Test_teamOrEnterpriseID(t *testing.T) {
+	tests := map[string]struct {
+		auth     *types.SlackAuth
+		expected string
+	}{
+		"returns an empty string when the auth is nil": {
+			auth:     nil,
+			expected: "",
+		},
+		"returns the team id for workspace installs": {
+			auth:     &types.SlackAuth{TeamID: "T123", EnterpriseID: "E456"},
+			expected: "T123",
+		},
+		"returns the enterprise id for enterprise installs": {
+			auth:     &types.SlackAuth{TeamID: "T123", EnterpriseID: "E456", IsEnterpriseInstall: true},
+			expected: "E456",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, teamOrEnterpriseID(tc.auth))
 		})
 	}
 }
