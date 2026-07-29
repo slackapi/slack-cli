@@ -32,7 +32,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Hidden: aiAgentFunc() == nil,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
-				Meaning: "Preview blocks in the Block Kit Builder",
+				Meaning: "Preview blocks in Block Kit Builder",
 				Command: "blocks preview --blocks '[{\"type\":\"divider\"}]'",
 			},
 		}),
