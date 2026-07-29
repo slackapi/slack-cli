@@ -93,7 +93,7 @@ func previewCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, block
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "bricks",
-		Text:  "Block Kit Builder",
+		Text:  "Blocks Preview",
 		Secondary: []string{
 			builderURL,
 		},
