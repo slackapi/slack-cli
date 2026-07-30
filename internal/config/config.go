@@ -53,6 +53,7 @@ type Config struct {
 	DeprecatedWorkspaceFlag string
 	DisableTelemetryFlag    bool
 	ForceFlag               bool
+	ForceRemoteFlag         bool
 	LogstashHostResolved    string
 	NoColor                 bool
 	RuntimeFlag             string

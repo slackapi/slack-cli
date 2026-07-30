@@ -45,6 +45,16 @@ func TestSyncCommand(t *testing.T) {
 			// the gate itself should pass.
 			ExpectedErrorStrings: []string{},
 		},
+		"errors when both --force and --force-remote are set": {
+			CmdArgs: []string{"--force-remote"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.AddDefaultMocks()
+				cf.Config.ExperimentsFlag = []string{string(experiment.ManifestSync)}
+				cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
+				cf.Config.ForceFlag = true
+			},
+			ExpectedErrorStrings: []string{"Cannot use both", "--force", "--force-remote"},
+		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
 		return NewSyncCommand(clients)
 	})

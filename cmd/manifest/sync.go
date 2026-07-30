@@ -37,6 +37,8 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 		Hidden: true,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "manifest sync", Meaning: "Sync project manifest with app settings"},
+			{Command: "manifest sync --force", Meaning: "Push project manifest to app settings without prompting"},
+			{Command: "manifest sync --force-remote", Meaning: "Pull app settings to project manifest without prompting"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -46,6 +48,10 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 						style.Highlight(string(experiment.ManifestSync)),
 						style.CommandText("--experiment manifest-sync"),
 					)
+			}
+			if clients.Config.ForceFlag && clients.Config.ForceRemoteFlag {
+				return slackerror.New(slackerror.ErrMismatchedFlags).
+					WithMessage("Cannot use both %s and %s flags", style.CommandText("--force"), style.CommandText("--force-remote"))
 			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
@@ -65,5 +71,6 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 			return err
 		},
 	}
+	cmd.Flags().BoolVar(&clients.Config.ForceRemoteFlag, "force-remote", false, "use all app settings values without prompting")
 	return cmd
 }
