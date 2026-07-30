@@ -71,6 +71,7 @@ func NewIOStreamsMock(config *config.Config, fsm *slackdeps.FsMock, osm *slackde
 // AddDefaultMocks prepares default mock methods to fallback to
 func (m *IOStreamsMock) AddDefaultMocks() {
 	m.On("IsTTY").Return(false)
+	m.On("IsStdinTTY").Return(false)
 	m.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
 	m.On("PrintTrace", mock.Anything, mock.Anything, mock.MatchedBy(func(args []string) bool { return true }))
 	m.On("PrintWarning", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
@@ -93,6 +94,11 @@ func (m *IOStreamsMock) SetCmdIO(cmd *cobra.Command) {
 }
 
 func (m *IOStreamsMock) IsTTY() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+func (m *IOStreamsMock) IsStdinTTY() bool {
 	args := m.Called()
 	return args.Bool(0)
 }

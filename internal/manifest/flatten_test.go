@@ -115,9 +115,9 @@ func Test_Flatten(t *testing.T) {
 	}
 }
 
-func Test_Flatten_EscapesDotsInKeys(t *testing.T) {
+func Test_Flatten_DottedKeyRoundTrip(t *testing.T) {
 	// Manifest function IDs may contain literal dots (e.g. "slack.users.lookup").
-	// Flatten must backslash-escape those dots so the path remains parseable.
+	// Flatten followed by unflatten must reproduce the original structure.
 	manifest := types.AppManifest{
 		DisplayInformation: types.DisplayInformation{Name: "App"},
 		Functions: map[string]types.ManifestFunction{
@@ -128,9 +128,18 @@ func Test_Flatten_EscapesDotsInKeys(t *testing.T) {
 	flat, err := Flatten(manifest)
 	require.NoError(t, err)
 
+	// Verify escaping
 	assert.Contains(t, flat, `functions.slack\.users\.lookup.title`)
 	assert.Equal(t, "Lookup", flat[`functions.slack\.users\.lookup.title`])
 	assert.Equal(t, "Lookup a user", flat[`functions.slack\.users\.lookup.description`])
+
+	// Verify round-trip through unflatten
+	round, err := unflatten(flat)
+	require.NoError(t, err)
+
+	assert.Contains(t, round.Functions, "slack.users.lookup")
+	assert.Equal(t, "Lookup", round.Functions["slack.users.lookup"].Title)
+	assert.Equal(t, "Lookup a user", round.Functions["slack.users.lookup"].Description)
 }
 
 func Test_SortedKeys(t *testing.T) {

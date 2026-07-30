@@ -105,6 +105,7 @@ const (
 	ErrDotEnvPlaceholderNotFound                     = "dotenv_placeholder_not_found"
 	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
+	ErrExperimentRequired                            = "experiment_required"
 	ErrFailForSomeRequests                           = "failed_for_some_requests"
 	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
@@ -141,6 +142,7 @@ const (
 	ErrInvalidArguments                              = "invalid_arguments"
 	ErrInvalidArgumentsCustomizableInputs            = "invalid_arguments_customizable_inputs"
 	ErrInvalidAuth                                   = "invalid_auth"
+	ErrInvalidBlocks                                 = "invalid_blocks"
 	ErrInvalidChallenge                              = "invalid_challenge"
 	ErrInvalidChannelID                              = "invalid_channel_id"
 	ErrInvalidCursor                                 = "invalid_cursor"
@@ -739,6 +741,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "The `enterprise` was not found",
 	},
 
+	ErrExperimentRequired: {
+		Code:    ErrExperimentRequired,
+		Message: "This command requires an experiment to be enabled",
+	},
+
 	ErrFailForSomeRequests: {
 		Code:    ErrFailForSomeRequests,
 		Message: "At least one request was not cancelled",
@@ -941,6 +948,12 @@ Otherwise start your app for local development with: %s`,
 			"Your user account authorization may be expired or does not have permission to access the resource. Try to login to the same user account again using %s.",
 			style.Commandf("login", false),
 		),
+	},
+
+	ErrInvalidBlocks: {
+		Code:        ErrInvalidBlocks,
+		Message:     "The provided blocks are not valid Block Kit blocks",
+		Remediation: "Provide a JSON array of blocks or a JSON object with a \"blocks\" array. Reference: https://docs.slack.dev/reference/block-kit/blocks",
 	},
 
 	ErrInvalidChallenge: {

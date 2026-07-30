@@ -94,6 +94,11 @@ func (c *Os) Exit(code int) {
 	os.Exit(code)
 }
 
+// Stdin returns the file descriptor for stdin
+func (c *Os) Stdin() types.File {
+	return os.Stdin
+}
+
 // Stdout returns the file descriptor for stdout
 func (c *Os) Stdout() types.File {
 	return os.Stdout

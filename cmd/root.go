@@ -25,6 +25,7 @@ import (
 	apicmd "github.com/slackapi/slack-cli/cmd/api"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
+	"github.com/slackapi/slack-cli/cmd/blocks"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
 	"github.com/slackapi/slack-cli/cmd/datastore"
 	"github.com/slackapi/slack-cli/cmd/docgen"
@@ -81,6 +82,7 @@ var AliasMap = map[string]*AliasInfo{
 	"logout":    {CommandFactory: auth.NewLogoutCommand, CanonicalName: "auth logout", ParentName: "auth"},
 	"run":       {CommandFactory: platform.NewRunCommand, CanonicalName: "platform run", ParentName: "platform"},
 	"samples":   {CommandFactory: project.NewSamplesCommand, CanonicalName: "project samples", ParentName: "project"},
+	"sync":      {CommandFactory: manifest.NewSyncCommand, CanonicalName: "manifest sync", ParentName: "manifest"},
 	"uninstall": {CommandFactory: app.NewUninstallCommand, CanonicalName: "app uninstall", ParentName: "app"},
 }
 var processName = cmdutil.GetProcessName()
@@ -167,6 +169,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		apicmd.NewCommand(clients),
 		app.NewCommand(clients),
 		auth.NewCommand(clients),
+		blocks.NewCommand(clients),
 		collaborators.NewCommand(clients),
 		datastore.NewCommand(clients),
 		docgen.NewCommand(clients),

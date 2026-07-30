@@ -57,6 +57,8 @@ const (
 	AuthLogoutSuccess                      = "SLACK_TRACE_AUTH_LOGOUT_SUCCESS"
 	AuthRevokeStart                        = "SLACK_TRACE_AUTH_REVOKE_START"
 	AuthRevokeSuccess                      = "SLACK_TRACE_AUTH_REVOKE_SUCCESS"
+	BlocksPreviewStart                     = "SLACK_TRACE_BLOCKS_PREVIEW_START"
+	BlocksPreviewSuccess                   = "SLACK_TRACE_BLOCKS_PREVIEW_SUCCESS"
 	CollaboratorAddCollaborator            = "SLACK_TRACE_COLLABORATOR_ADD_COLLABORATOR"
 	CollaboratorAddSuccess                 = "SLACK_TRACE_COLLABORATOR_ADD_SUCCESS"
 	CollaboratorListCollaborator           = "SLACK_TRACE_COLLABORATOR_LIST_COLLABORATOR"

@@ -82,6 +82,10 @@ type IOStreamer interface {
 	// IsTTY returns true if the device is an interactive terminal
 	IsTTY() bool
 
+	// IsStdinTTY returns true if stdin is an interactive terminal (not a pipe
+	// or redirected file)
+	IsStdinTTY() bool
+
 	// GetExitCode returns the most-recently set desired exit code in a thread safe way
 	GetExitCode() ExitCode
 	// SetExitCode sets the desired process exit code in a thread safe way
@@ -123,6 +127,18 @@ func (io *IOStreams) SetCmdIO(cmd *cobra.Command) {
 // Reference: https://rderik.com/blog/identify-if-output-goes-to-the-terminal-or-is-being-redirected-in-golang/
 func (io *IOStreams) IsTTY() bool {
 	if o, err := io.os.Stdout().Stat(); o == nil || err != nil {
+		return false
+	} else {
+		return (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
+	}
+}
+
+// IsStdinTTY returns true if stdin is an interactive terminal
+//
+// Inspects stdin so that piped or redirected input (e.g. `slack ... < blocks.json`) is detected when
+// stdout is still attached to a terminal.
+func (io *IOStreams) IsStdinTTY() bool {
+	if o, err := io.os.Stdin().Stat(); o == nil || err != nil {
 		return false
 	} else {
 		return (o.Mode() & os.ModeCharDevice) == os.ModeCharDevice
