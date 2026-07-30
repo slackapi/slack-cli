@@ -151,6 +151,12 @@ Otherwise start your app for local development with: `slack run`
 
 ---
 
+### app_manifest_compare_error {#app_manifest_compare_error}
+
+**Message**: Couldn't compare your app manifests
+
+---
+
 ### app_manifest_create_error {#app_manifest_create_error}
 
 **Message**: Couldn't create your app manifest
@@ -561,6 +567,12 @@ Approval is pending review
 ### enterprise_not_found {#enterprise_not_found}
 
 **Message**: The `enterprise` was not found
+
+---
+
+### experiment_required {#experiment_required}
+
+**Message**: This command requires an experiment to be enabled
 
 ---
 
