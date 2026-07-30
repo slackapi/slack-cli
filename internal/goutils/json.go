@@ -85,6 +85,16 @@ func JSONUnmarshal(data []byte, v interface{}) error {
 	return nil
 }
 
+// CompactJSON removes insignificant whitespace from the JSON-encoded data,
+// returning the compacted encoding. It is a thin wrapper around json.Compact.
+func CompactJSON(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, data); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 // IsEmptyJSON returns true when the provided bytes are empty or contain only
 // whitespace. This matches the state left behind when a JSON state file was
 // truncated but not yet rewritten, e.g. after a process was interrupted between

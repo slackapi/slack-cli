@@ -55,6 +55,7 @@ func (m *OsMock) AddDefaultMocks() {
 	m.On("IsNotExist", mock.Anything).Return(true)
 	m.On("Exit", mock.Anything).Return()
 	m.On("Stat", mock.Anything).Return()
+	m.On("Stdin").Return(os.Stdin)
 	m.On("Stdout").Return(os.Stdout)
 }
 
@@ -129,6 +130,12 @@ func (m *OsMock) Glob(pattern string) (matches []string, err error) {
 // Exit mocks exiting the program with a return code, but does not actually exit
 func (m *OsMock) Exit(code int) {
 	m.Called(code)
+}
+
+// Stdin mocks the stdin with a file that can be adjusted
+func (m *OsMock) Stdin() types.File {
+	args := m.Called()
+	return args.Get(0).(types.File)
 }
 
 // Stdout mocks the stdout with a file that can be adjusted

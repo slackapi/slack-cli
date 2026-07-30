@@ -16,9 +16,19 @@ package iostreams
 
 import (
 	"io"
+	"strings"
 )
 
 // ReadIn returns the mocked reader associated with stdin
 func (m *IOStreamsMock) ReadIn() io.Reader {
 	return m.Stdin
+}
+
+// ReadInAll reads all of the mocked stdin and returns it with surrounding whitespace trimmed
+func (m *IOStreamsMock) ReadInAll() (string, error) {
+	raw, err := io.ReadAll(m.Stdin)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(raw)), nil
 }
