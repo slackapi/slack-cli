@@ -45,7 +45,7 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 			WithMessage("Manifest sync is unavailable for projects with remote source of truth").
 			WithRemediation("This project's manifest source is %s. Edit the manifest at %s.",
 				config.ManifestSourceRemote.Human(),
-				style.CommandText("slack app settings"),
+				style.Commandf("app settings", false),
 			)
 	}
 
@@ -85,7 +85,7 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	case !clients.IO.IsTTY():
 		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
 			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings",
-				style.CommandText("slack manifest sync"),
+				style.Commandf("manifest sync", false),
 				style.CommandText("--force"),
 			)
 	default:
