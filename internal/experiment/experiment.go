@@ -35,9 +35,6 @@ const (
 
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
-
-	// SetIcon experiment enables icon upload for non-hosted apps.
-	SetIcon Experiment = "set-icon"
 )
 
 // AllExperiments is a list of all available experiments that can be enabled
@@ -45,7 +42,6 @@ const (
 var AllExperiments = []Experiment{
 	Lipgloss,
 	Placeholder,
-	SetIcon,
 }
 
 // EnabledExperiments is a list of experiments that are permanently enabled

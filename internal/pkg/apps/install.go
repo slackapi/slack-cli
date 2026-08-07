@@ -23,7 +23,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/icon"
 	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -222,10 +221,10 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 
 	iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
 	if iconPath != "" {
-		err = updateIcon(ctx, clients, iconPath, app.AppID, token, manifest.IsFunctionRuntimeSlackHosted())
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "icon error: %s", err)
-			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", err)))
+		_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
+		if iconErr != nil {
+			clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", iconErr)))
 		} else {
 			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
 		}
@@ -518,17 +517,14 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, result, installState, err
 	}
 
-	// upload icon for non-hosted apps (gated behind set-icon experiment)
-	if clients.Config.WithExperimentOn(experiment.SetIcon) {
-		iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
-		if iconPath != "" {
-			_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
-			if iconErr != nil {
-				clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
-				_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", iconErr)))
-			} else {
-				_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
-			}
+	iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
+	if iconPath != "" {
+		_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
+		if iconErr != nil {
+			clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", iconErr)))
+		} else {
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
 		}
 	}
 
@@ -660,32 +656,6 @@ func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifes
 		return ""
 	}
 	return icon.ResolveIconPath(clients.Fs)
-}
-
-// updateIcon will upload the new icon to the Slack API
-func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, appID string, token string, isHosted bool) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "updateIcon")
-	defer span.Finish()
-
-	var err error
-	if clients.Config.WithExperimentOn(experiment.SetIcon) {
-		_, err = clients.API().IconSet(ctx, clients.Fs, token, appID, iconPath)
-	} else if isHosted {
-		// DEPRECATED: Prefer IconSet once the SetIcon experiment concludes
-		_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
-	} else {
-		return nil
-	}
-	if err != nil {
-		// TODO: separate the icon upload into a different function because if an error is returned
-		// the new app_id might be ignored and next time we'll create another app.
-		return fmt.Errorf("%s %s", err, iconPath)
-	}
-
-	// Save a md5 hash of the icon in environments.yaml
-	// env.IconHash = iconResp.MD5Hash
-	return nil
 }
 
 // shouldCreateManifest decides if an app manifest needs to be created for an
