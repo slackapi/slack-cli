@@ -16,7 +16,6 @@ package apps
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -1803,40 +1802,6 @@ func Test_resolveIconPath(t *testing.T) {
 
 			result := resolveIconPath(ctx, clients, tc.manifestIcon)
 			assert.Equal(t, tc.expected, result)
-		})
-	}
-}
-
-func Test_updateIcon(t *testing.T) {
-	tests := map[string]struct {
-		mockError     error
-		expectedError bool
-	}{
-		"succeeds with IconSet": {},
-		"returns error from IconSet": {
-			mockError:     fmt.Errorf("api error"),
-			expectedError: true,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := slackcontext.MockContext(t.Context())
-			clientsMock := shared.NewClientsMock()
-			clientsMock.AddDefaultMocks()
-
-			clientsMock.API.On("IconSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-				Return(api.IconResult{}, tc.mockError)
-
-			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			err := updateIcon(ctx, clients, "icon.png", "A001", "xoxe-token")
-
-			if tc.expectedError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-			}
-
-			clientsMock.API.AssertCalled(t, "IconSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 		})
 	}
 }

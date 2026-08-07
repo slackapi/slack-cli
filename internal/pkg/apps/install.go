@@ -220,10 +220,10 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 
 	iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
 	if iconPath != "" {
-		err = updateIcon(ctx, clients, iconPath, app.AppID, token)
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "icon error: %s", err)
-			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", err)))
+		_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
+		if iconErr != nil {
+			clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", iconErr)))
 		} else {
 			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
 		}
@@ -655,20 +655,6 @@ func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifes
 		return ""
 	}
 	return icon.ResolveIconPath(clients.Fs)
-}
-
-// updateIcon will upload the new icon to the Slack API
-func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, appID string, token string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "updateIcon")
-	defer span.Finish()
-
-	_, err := clients.API().IconSet(ctx, clients.Fs, token, appID, iconPath)
-	if err != nil {
-		return fmt.Errorf("%s %s", err, iconPath)
-	}
-
-	return nil
 }
 
 // shouldCreateManifest decides if an app manifest needs to be created for an
