@@ -8,12 +8,12 @@ The following is a list of currently available experiments. We'll remove experim
 
 - `lipgloss`: shows pretty styles.
 - `manifest-sync`: resolves conflicting app manifest values.
-- `set-icon`: enables icon upload for non-hosted apps ([PR#469](https://github.com/slackapi/slack-cli/pull/469)).
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
 
+- **August 2026**: Concluded the `set-icon` experiment; The Slack CLI now offers full support for icon upload on all app types by default.
 - **July 2026**: Added the `manifest-sync` experiment to resolve changed app manifest values between a project and app settings.
 - **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](/tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
 - **April 2026**: Added the `set-icon` experiment to enable icon upload for non-hosted apps.
