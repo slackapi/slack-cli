@@ -622,8 +622,9 @@ func TestInstall(t *testing.T) {
 				clients,
 				tc.mockAuth,
 				tc.mockApp,
-				tc.mockOrgGrantWorkspaceID,
-				false,
+				InstallOptions{
+					OrgGrantWorkspaceID: tc.mockOrgGrantWorkspaceID,
+				},
 			)
 
 			if tc.expectedError != nil {
@@ -1444,8 +1445,10 @@ func TestInstallDevApp(t *testing.T) {
 				clients,
 				tc.mockAuth,
 				tc.mockApp,
-				tc.mockOrgGrantWorkspaceID,
-				true,
+				InstallOptions{
+					OrgGrantWorkspaceID: tc.mockOrgGrantWorkspaceID,
+					Dev:                 true,
+				},
 			)
 
 			require.NoError(t, err)

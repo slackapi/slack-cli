@@ -34,16 +34,22 @@ import (
 
 const additionalManifestInfoNotice = "App manifest contains some components that may require additional information"
 
+// InstallOptions configures how an app is installed to a workspace.
+type InstallOptions struct {
+	// OrgGrantWorkspaceID is the workspace to grant org-wide app access, if any.
+	OrgGrantWorkspaceID string
+	// Dev installs a local (slack run) app when true, otherwise a deployed
+	// (slack deploy) app. It controls the display name, hosted manifest
+	// defaults, persistence location, and environment token handling.
+	Dev bool
+}
+
 // Install installs an app to a workspace.
-//
-// When dev is true it installs a local (slack run) app; otherwise it installs a
-// deployed (slack deploy) app. The dev toggle controls the display name, hosted
-// manifest defaults, persistence location, and environment token handling.
 //
 // The returned api.DeveloperAppInstallResult carries the API access tokens and
 // is only consumed on the dev path (socket-mode wiring in run.go); deploy
 // callers discard it.
-func Install(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, orgGrantWorkspaceID string, dev bool) (types.App, api.DeveloperAppInstallResult, types.InstallState, error) {
+func Install(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, opts InstallOptions) (types.App, api.DeveloperAppInstallResult, types.InstallState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.apps.install")
 	defer span.Finish()
 
@@ -100,7 +106,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	}
 
 	manifest := slackManifest.AppManifest
-	if dev {
+	if opts.Dev {
 		appendLocalToDisplayName(&manifest)
 		if manifest.IsFunctionRuntimeSlackHosted() {
 			configureLocalManifest(ctx, clients, &manifest)
@@ -158,7 +164,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		}
 	}
 
-	if dev {
+	if opts.Dev {
 		// specifically set app.IsDev to be true for dev installation
 		app.IsDev = true
 	}
@@ -166,7 +172,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	// save the updated or created app to the project's apps file
 	if !clients.Config.SkipLocalFs() {
 		var err error
-		if dev {
+		if opts.Dev {
 			err = clients.AppClient().SaveLocal(ctx, app)
 		} else {
 			err = clients.AppClient().SaveDeployed(ctx, app)
@@ -220,7 +226,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	// Note - we use DeveloperAppInstall endpoint for both local (dev) runs
 	// and hosted installs https://github.com/slackapi/slack-cli/pull/456#discussion_r830272175
 
-	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
+	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, opts.OrgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)
 		return app, api.DeveloperAppInstallResult{}, "", err
@@ -233,7 +239,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 
 	// Local apps always store the resulting tokens for the running process while
 	// deployed apps only do so for non-hosted runtimes.
-	if dev || manifest.FunctionRuntime() != types.SlackHosted {
+	if opts.Dev || manifest.FunctionRuntime() != types.SlackHosted {
 		if err := setAppEnvironmentTokens(ctx, clients, result); err != nil {
 			return app, result, installState, err
 		}

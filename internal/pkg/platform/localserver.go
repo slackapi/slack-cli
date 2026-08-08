@@ -410,7 +410,7 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 					r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, reinstalling app...", event.Path)))
 
 					// Reinstall the app when manifest changes
-					if _, _, _, err := apps.Install(ctx, r.clients, auth, app, "", true); err != nil {
+					if _, _, _, err := apps.Install(ctx, r.clients, auth, app, apps.InstallOptions{Dev: true}); err != nil {
 						r.clients.IO.PrintError(ctx, "Error: %s", err)
 					} else {
 						r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary("App successfully reinstalled"))

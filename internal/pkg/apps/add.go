@@ -70,7 +70,7 @@ func addAppRemotely(ctx context.Context, clients *shared.ClientFactory, auth typ
 		app.TeamID = auth.TeamID
 	}
 
-	app, _, installState, err := Install(ctx, clients, auth, app, orgGrantWorkspaceID, false)
+	app, _, installState, err := Install(ctx, clients, auth, app, InstallOptions{OrgGrantWorkspaceID: orgGrantWorkspaceID})
 	if err != nil {
 		return installState, types.App{}, slackerror.Wrap(err, slackerror.ErrAppAdd)
 	}
