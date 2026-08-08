@@ -233,9 +233,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		return app, api.DeveloperAppInstallResult{}, installState, nil
 	}
 
-	// Local apps always store the resulting tokens for the running process while
-	// deployed apps only do so for non-hosted runtimes.
-	if opts.Dev || manifest.FunctionRuntime() != types.SlackHosted {
+	if manifest.FunctionRuntime() != types.SlackHosted {
 		if err := setAppEnvironmentTokens(ctx, clients, result); err != nil {
 			return app, result, installState, err
 		}
