@@ -101,6 +101,7 @@ func TestInstall(t *testing.T) {
 				EnterpriseID: mockEnterpriseID,
 				TeamID:       mockTeamID,
 				TeamDomain:   mockTeamDomain,
+				UserID:       mockUserID,
 			},
 			expectedManifest: types.AppManifest{
 				Metadata: &types.ManifestMetadata{
@@ -335,6 +336,7 @@ func TestInstall(t *testing.T) {
 				EnterpriseID: mockEnterpriseID,
 				TeamID:       mockTeamID,
 				TeamDomain:   mockTeamDomain,
+				UserID:       mockUserID,
 			},
 			expectedManifest: types.AppManifest{
 				Metadata: &types.ManifestMetadata{
@@ -615,13 +617,13 @@ func TestInstall(t *testing.T) {
 			clientsMock.Config.ProjectConfig = mockProjectConfig
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			app, state, err := Install(
+			app, _, state, err := Install(
 				ctx,
 				clients,
 				tc.mockAuth,
-				false,
 				tc.mockApp,
 				tc.mockOrgGrantWorkspaceID,
+				false,
 			)
 
 			if tc.expectedError != nil {
@@ -674,7 +676,7 @@ func TestInstall(t *testing.T) {
 	}
 }
 
-func TestInstallLocalApp(t *testing.T) {
+func TestInstallDevApp(t *testing.T) {
 	mockEnterpriseID := "E001"
 	mockTeamID := "T001"
 	mockTeamDomain := "sandbox"
@@ -1437,12 +1439,13 @@ func TestInstallLocalApp(t *testing.T) {
 			clientsMock.Config.ProjectConfig = mockProjectConfig
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			app, _, state, err := InstallLocalApp(
+			app, _, state, err := Install(
 				ctx,
 				clients,
-				tc.mockOrgGrantWorkspaceID,
 				tc.mockAuth,
 				tc.mockApp,
+				tc.mockOrgGrantWorkspaceID,
+				true,
 			)
 
 			require.NoError(t, err)

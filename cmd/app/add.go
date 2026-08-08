@@ -32,7 +32,7 @@ import (
 // Handle to client's function used for testing
 var runAddCommandFunc = RunAddCommand
 var appInstallProdAppFunc = apps.Add
-var appInstallDevAppFunc = apps.InstallLocalApp
+var appInstallDevAppFunc = apps.Install
 var appSelectPromptFunc = prompts.AppSelectPrompt
 
 // Flags
@@ -201,7 +201,7 @@ func printAddSuccess(clients *shared.ClientFactory, cmd *cobra.Command, appInsta
 func appInstall(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (types.App, types.InstallState, error) {
 	if selection != nil && selection.App.IsDev {
 		// Install local dev app to a team
-		installedApp, _, installState, err := appInstallDevAppFunc(ctx, clients, "", selection.Auth, selection.App)
+		installedApp, _, installState, err := appInstallDevAppFunc(ctx, clients, selection.Auth, selection.App, "", true)
 		return installedApp, installState, err
 	} else {
 		installState, installedApp, err := appInstallProdAppFunc(ctx, clients, selection.Auth, selection.App, orgGrantWorkspaceID)
