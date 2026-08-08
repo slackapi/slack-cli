@@ -63,7 +63,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	token := auth.Token
 	authSession, err := apiInterface.ValidateSession(ctx, token)
 	if err != nil {
-		return app, api.DeveloperAppInstallResult{}, "", slackerror.Wrap(err, slackerror.ErrInvalidAuth)
+		return types.App{}, api.DeveloperAppInstallResult{}, "", slackerror.Wrap(err, slackerror.ErrInvalidAuth)
 	}
 
 	// Set the user_id, team id, team_domain of team that app belongs to on context
