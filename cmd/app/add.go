@@ -32,8 +32,9 @@ import (
 // Handle to client's function used for testing
 var runAddCommandFunc = RunAddCommand
 
-// TODO: this points at apps.Add (which adds an app to the project), so the
-// "install" name is a little misleading, but it's tolerable for now.
+// TODO: this points at apps.Add, which creates the app remotely, installs it,
+// and adds it to the project's apps file, so the "install" name is a little
+// misleading, but it's tolerable for now.
 var appInstallProdAppFunc = apps.Add
 var appInstallFunc = apps.Install
 var appSelectPromptFunc = prompts.AppSelectPrompt
