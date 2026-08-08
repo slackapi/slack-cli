@@ -129,7 +129,6 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		clients.IO.PrintDebug(ctx, "updating app %s", app.AppID)
 		_, err := apiInterface.UpdateApp(ctx, token, app.AppID, manifest, clients.Config.ForceFlag, true)
 		if err != nil {
-			clients.IO.PrintDebug(ctx, "failed updating app %s: %s", app.AppID, err)
 			return app, api.DeveloperAppInstallResult{}, "", err
 		}
 	case manifestCreates:
