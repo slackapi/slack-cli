@@ -45,10 +45,6 @@ type InstallOptions struct {
 }
 
 // Install installs an app to a workspace.
-//
-// The returned api.DeveloperAppInstallResult carries the API access tokens and
-// is only consumed on the dev path (socket-mode wiring in run.go); deploy
-// callers discard it.
 func Install(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, opts InstallOptions) (types.App, api.DeveloperAppInstallResult, types.InstallState, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.apps.install")
 	defer span.Finish()
