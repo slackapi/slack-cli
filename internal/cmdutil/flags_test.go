@@ -29,7 +29,7 @@ func Test_ValidateManifestSourceFlag(t *testing.T) {
 		value     string
 		expectErr bool
 	}{
-		"empty string is valid": {
+		"flag not provided is valid": {
 			value:     "",
 			expectErr: false,
 		},
