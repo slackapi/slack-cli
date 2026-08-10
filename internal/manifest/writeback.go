@@ -36,7 +36,7 @@ type WriteBackResult struct {
 
 // WriteManifestLocal writes the merged manifest back to the project's
 // manifest.json file, preserving the original file's key ordering by
-// using the same JSON structure.
+// using the same JSON structure. Creates the file if it does not exist.
 func WriteManifestLocal(fs afero.Fs, workingDir string, manifest types.AppManifest) (WriteBackResult, error) {
 	manifestPath := filepath.Join(workingDir, manifestFileName)
 
@@ -45,9 +45,14 @@ func WriteManifestLocal(fs afero.Fs, workingDir string, manifest types.AppManife
 		return WriteBackResult{}, fmt.Errorf("failed to check manifest file: %w", err)
 	}
 	if !exists {
-		return WriteBackResult{
-			Warning: fmt.Sprintf("No %s found in project root — merged manifest was not written locally", manifestFileName),
-		}, nil
+		fresh, err := marshalFresh(manifest)
+		if err != nil {
+			return WriteBackResult{}, fmt.Errorf("failed to serialize merged manifest: %w", err)
+		}
+		if err := atomicWriteFile(fs, manifestPath, fresh, 0644); err != nil {
+			return WriteBackResult{}, fmt.Errorf("failed to write %s: %w", manifestFileName, err)
+		}
+		return WriteBackResult{Written: true, FilePath: manifestPath}, nil
 	}
 
 	original, err := afero.ReadFile(fs, manifestPath)

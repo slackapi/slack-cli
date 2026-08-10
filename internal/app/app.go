@@ -41,7 +41,7 @@ func NewClient(
 	os types.Os,
 ) *Client {
 	return &Client{
-		Manifest:           NewManifestClient(apiClient, config),
+		Manifest:           NewManifestClient(apiClient, config, fs),
 		AppClientInterface: NewAppClient(config, fs, os),
 	}
 }
