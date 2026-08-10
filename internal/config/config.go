@@ -54,7 +54,6 @@ type Config struct {
 	DisableTelemetryFlag    bool
 	ForceFlag               bool
 	ForceRemoteFlag         bool
-	ManifestSourceFlag      string
 	LogstashHostResolved    string
 	NoColor                 bool
 	RuntimeFlag             string

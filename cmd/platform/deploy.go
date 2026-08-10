@@ -59,9 +59,6 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "platform deploy --team T0123456", Meaning: "Deploy to a specific team"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
-				return err
-			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -111,7 +108,6 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&deployFlags.hideTriggers, "hide-triggers", false, "do not list triggers and skip trigger creation prompts")
-	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (project or remote)")
 	cmd.Flags().StringVar(&deployFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 
 	return cmd

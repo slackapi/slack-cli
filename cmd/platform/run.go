@@ -58,9 +58,6 @@ func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "platform run --cleanup", Meaning: "Run a local development server with cleanup"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
-				return err
-			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -72,7 +69,6 @@ func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&runFlags.activityLevel, "activity-level", platform.ActivityMinLevelDefault, "activity level to display")
 	cmd.Flags().BoolVar(&runFlags.noActivity, "no-activity", false, "hide Slack Platform log activity")
 	cmd.Flags().BoolVar(&runFlags.cleanup, "cleanup", false, "uninstall the local app after exiting")
-	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (project or remote)")
 	cmd.Flags().StringVar(&runFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 	cmd.Flags().BoolVar(&runFlags.hideTriggers, "hide-triggers", false, "do not list triggers and skip trigger creation prompts")
 
