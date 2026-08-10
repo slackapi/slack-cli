@@ -17,9 +17,54 @@ package cmdutil
 import (
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func Test_ValidateManifestSourceFlag(t *testing.T) {
+	tests := map[string]struct {
+		value     string
+		expectErr bool
+	}{
+		"empty string is valid": {
+			value:     "",
+			expectErr: false,
+		},
+		"project is valid": {
+			value:     "project",
+			expectErr: false,
+		},
+		"remote is valid": {
+			value:     "remote",
+			expectErr: false,
+		},
+		"invalid value returns error": {
+			value:     "invalid",
+			expectErr: true,
+		},
+		"local is not valid": {
+			value:     "local",
+			expectErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			clients := &shared.ClientFactory{
+				Config: &config.Config{ManifestSourceFlag: tc.value},
+			}
+			err := ValidateManifestSourceFlag(clients)
+			if tc.expectErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.value)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
 
 func Test_IsFlagChanged(t *testing.T) {
 	tests := map[string]struct {

@@ -220,6 +220,66 @@ func Test_Sync(t *testing.T) {
 		assert.Equal(t, "Remote", result.Merged.DisplayInformation.Description)
 	})
 
+	t.Run("manifest-source=project merges all local and pushes to API", func(t *testing.T) {
+		f := newSyncTestFixture(t)
+		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+			Return(localManifest, nil)
+		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+			Return(remoteManifest, nil)
+		f.clients.Config.ManifestSourceFlag = "project"
+		f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(api.UpdateAppResult{}, nil)
+		f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
+		f.cacheMock.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		_ = afero.WriteFile(f.fs, "/project/manifest.json", []byte(`{"display_information":{"name":"App"}}`), 0644)
+
+		result, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.True(t, result.HasDifferences)
+		assert.Equal(t, "Local", result.Merged.DisplayInformation.Description)
+	})
+
+	t.Run("manifest-source=remote merges all remote and pushes to API", func(t *testing.T) {
+		f := newSyncTestFixture(t)
+		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+			Return(localManifest, nil)
+		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+			Return(remoteManifest, nil)
+		f.clients.Config.ManifestSourceFlag = "remote"
+		f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(api.UpdateAppResult{}, nil)
+		f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
+		f.cacheMock.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		_ = afero.WriteFile(f.fs, "/project/manifest.json", []byte(`{"display_information":{"name":"App"}}`), 0644)
+
+		result, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.True(t, result.HasDifferences)
+		assert.Equal(t, "Remote", result.Merged.DisplayInformation.Description)
+	})
+
+	t.Run("non-TTY error mentions --manifest-source in remediation", func(t *testing.T) {
+		f := newSyncTestFixture(t)
+		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+			Return(localManifest, nil)
+		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+			Return(remoteManifest, nil)
+
+		_, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+		require.Error(t, err)
+		slackErr := slackerror.ToSlackError(err)
+		assert.Contains(t, slackErr.Remediation, "--manifest-source=project")
+		assert.Contains(t, slackErr.Remediation, "--manifest-source=remote")
+	})
+
 	t.Run("API UpdateApp failure is propagated", func(t *testing.T) {
 		f := newSyncTestFixture(t)
 		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
@@ -279,7 +339,7 @@ func Test_Sync(t *testing.T) {
 		assert.Contains(t, err.Error(), "cache")
 	})
 
-	t.Run("missing manifest.json still succeeds with warning", func(t *testing.T) {
+	t.Run("missing manifest.json creates the file", func(t *testing.T) {
 		f := newSyncTestFixture(t)
 		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
@@ -297,7 +357,7 @@ func Test_Sync(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		assert.True(t, result.HasDifferences)
-		assert.False(t, result.WriteBack.Written)
+		assert.True(t, result.WriteBack.Written)
 	})
 
 	t.Run("TTY interactive resolution with all-local strategy", func(t *testing.T) {
