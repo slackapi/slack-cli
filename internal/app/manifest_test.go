@@ -69,7 +69,32 @@ func Test_AppManifest_SetManifestEnvTeamVars(t *testing.T) {
 }
 
 func Test_AppManifest_GetManifestLocal(t *testing.T) {
-	t.Run("reads manifest.json directly when it exists", func(t *testing.T) {
+	t.Run("uses hook when get-manifest is available", func(t *testing.T) {
+		ctx := slackcontext.MockContext(t.Context())
+		fsMock := slackdeps.NewFsMock()
+		osMock := slackdeps.NewOsMock()
+		osMock.AddDefaultMocks()
+		configMock := config.NewConfig(fsMock, osMock)
+		configMock.DomainAuthTokens = "api.slack.com"
+		mockSDKConfig := hooks.NewSDKConfigMock()
+		mockSDKConfig.WorkingDirectory = "/project"
+		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest", Command: "echo manifest"}
+
+		_ = fsMock.MkdirAll("/project", 0755)
+		_ = afero.WriteFile(fsMock, "/project/manifest.json", []byte(`{"display_information":{"name":"file-app"}}`), 0644)
+
+		mockHookExecutor := &hooks.MockHookExecutor{}
+		mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
+			Return(`{"display_information":{"name":"hook-app"}}`, nil)
+		manifestClient := NewManifestClient(&api.APIMock{}, configMock, fsMock)
+
+		result, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
+		require.NoError(t, err)
+		assert.Equal(t, "hook-app", result.DisplayInformation.Name)
+		mockHookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
+	})
+
+	t.Run("falls back to manifest.json when no hook exists", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
@@ -77,7 +102,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 		configMock := config.NewConfig(fsMock, osMock)
 		mockSDKConfig := hooks.NewSDKConfigMock()
 		mockSDKConfig.WorkingDirectory = "/project"
-		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest", Command: "echo manifest"}
+		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}
 
 		_ = fsMock.MkdirAll("/project", 0755)
 		_ = afero.WriteFile(fsMock, "/project/manifest.json", []byte(`{"display_information":{"name":"file-app"}}`), 0644)
@@ -91,13 +116,14 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 		mockHookExecutor.AssertNotCalled(t, "Execute", mock.Anything, mock.Anything)
 	})
 
-	t.Run("errors if no manifest.json and no get-manifest hook exists", func(t *testing.T) {
+	t.Run("errors if no hook and no manifest.json", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
 		configMock := config.NewConfig(fsMock, osMock)
 		mockSDKConfig := hooks.NewSDKConfigMock()
+		mockSDKConfig.WorkingDirectory = "/project"
 		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}
 
 		mockHookExecutor := &hooks.MockHookExecutor{}
@@ -105,7 +131,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 
 		_, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
 		require.Error(t, err)
-		assert.Equal(t, slackerror.ErrSDKHookNotFound, err.(*slackerror.Error).Code)
+		assert.Equal(t, slackerror.ErrInvalidManifest, err.(*slackerror.Error).Code)
 	})
 
 	t.Run("errors if manifest.json contains invalid JSON", func(t *testing.T) {
@@ -116,6 +142,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 		configMock := config.NewConfig(fsMock, osMock)
 		mockSDKConfig := hooks.NewSDKConfigMock()
 		mockSDKConfig.WorkingDirectory = "/project"
+		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}
 
 		_ = fsMock.MkdirAll("/project", 0755)
 		_ = afero.WriteFile(fsMock, "/project/manifest.json", []byte(`not json`), 0644)
@@ -128,13 +155,13 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 		assert.Equal(t, slackerror.ErrInvalidManifest, err.(*slackerror.Error).Code)
 	})
 
-	hookFallbackTests := map[string]struct {
+	hookTests := map[string]struct {
 		hookOutput   string
 		hookErr      error
 		expectedName string
 		expectedErr  string
 	}{
-		"falls back to hook when no manifest.json exists": {
+		"returns manifest from hook output": {
 			hookOutput:   `{"display_information":{"name":"hook-app"}}`,
 			expectedName: "hook-app",
 		},
@@ -152,7 +179,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			expectedErr: slackerror.ErrInvalidManifest,
 		},
 	}
-	for name, tc := range hookFallbackTests {
+	for name, tc := range hookTests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
