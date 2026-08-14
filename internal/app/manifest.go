@@ -75,19 +75,24 @@ func NewManifestClient(
 	return client
 }
 
-// GetManifestLocal reads the local manifest, preferring the "get-manifest" hook
-// when available. Falls back to reading manifest.json directly from the project root.
+// GetManifestLocal reads the local manifest, preferring the manifest.json file
+// when available. Falls back to the "get-manifest" hook.
 func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
+	manifestPath := filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)
+	if exists, _ := afero.Exists(c.fs, manifestPath); exists {
+		return c.getManifestFromFile(sdkConfig)
+	}
 	if sdkConfig.Hooks.GetManifest.IsAvailable() {
 		return c.getManifestFromHook(ctx, sdkConfig, hookExecutor)
 	}
-	manifestPath := filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)
-	return c.readManifestFile(manifestPath)
+	return types.SlackYaml{}, slackerror.New("No manifest.json found and no get-manifest hook available").
+		WithCode(slackerror.ErrInvalidManifest)
 }
 
-func (c *ManifestClient) readManifestFile(path string) (types.SlackYaml, error) {
+func (c *ManifestClient) getManifestFromFile(sdkConfig hooks.SDKCLIConfig) (types.SlackYaml, error) {
 	var sl types.SlackYaml
-	data, err := afero.ReadFile(c.fs, path)
+	manifestPath := filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)
+	data, err := afero.ReadFile(c.fs, manifestPath)
 	if err != nil {
 		return sl, slackerror.New("Failed to read manifest file").
 			WithRootCause(err).

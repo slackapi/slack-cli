@@ -110,21 +110,16 @@ func Test_WriteManifestLocal(t *testing.T) {
 		assert.Contains(t, result.Warning, "key order was not preserved")
 	})
 
-	t.Run("creates manifest.json when it does not exist", func(t *testing.T) {
+	t.Run("returns warning when manifest.json does not exist", func(t *testing.T) {
 		fs := afero.NewMemMapFs()
-		_ = fs.MkdirAll("/project", 0755)
 		manifest := types.AppManifest{
 			DisplayInformation: types.DisplayInformation{Name: "App"},
 		}
 
 		result, err := WriteManifestLocal(fs, "/project", manifest)
 		require.NoError(t, err)
-		assert.True(t, result.Written)
-		assert.Equal(t, "/project/manifest.json", result.FilePath)
-
-		content, err := afero.ReadFile(fs, "/project/manifest.json")
-		require.NoError(t, err)
-		assert.Contains(t, string(content), `"name": "App"`)
+		assert.False(t, result.Written)
+		assert.Contains(t, result.Warning, "No manifest.json found")
 	})
 }
 

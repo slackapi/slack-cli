@@ -69,7 +69,7 @@ func Test_AppManifest_SetManifestEnvTeamVars(t *testing.T) {
 }
 
 func Test_AppManifest_GetManifestLocal(t *testing.T) {
-	t.Run("uses hook when get-manifest is available", func(t *testing.T) {
+	t.Run("prefers manifest.json over hook when file exists", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
@@ -90,30 +90,30 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 
 		result, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
 		require.NoError(t, err)
-		assert.Equal(t, "hook-app", result.DisplayInformation.Name)
-		mockHookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
+		assert.Equal(t, "file-app", result.DisplayInformation.Name)
+		mockHookExecutor.AssertNotCalled(t, "Execute", mock.Anything, mock.Anything)
 	})
 
-	t.Run("falls back to manifest.json when no hook exists", func(t *testing.T) {
+	t.Run("falls back to hook when no manifest.json exists", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
 		fsMock := slackdeps.NewFsMock()
 		osMock := slackdeps.NewOsMock()
 		osMock.AddDefaultMocks()
 		configMock := config.NewConfig(fsMock, osMock)
+		configMock.DomainAuthTokens = "api.slack.com"
 		mockSDKConfig := hooks.NewSDKConfigMock()
 		mockSDKConfig.WorkingDirectory = "/project"
-		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest"}
-
-		_ = fsMock.MkdirAll("/project", 0755)
-		_ = afero.WriteFile(fsMock, "/project/manifest.json", []byte(`{"display_information":{"name":"file-app"}}`), 0644)
+		mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest", Command: "echo manifest"}
 
 		mockHookExecutor := &hooks.MockHookExecutor{}
+		mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
+			Return(`{"display_information":{"name":"hook-app"}}`, nil)
 		manifestClient := NewManifestClient(&api.APIMock{}, configMock, fsMock)
 
 		result, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
 		require.NoError(t, err)
-		assert.Equal(t, "file-app", result.DisplayInformation.Name)
-		mockHookExecutor.AssertNotCalled(t, "Execute", mock.Anything, mock.Anything)
+		assert.Equal(t, "hook-app", result.DisplayInformation.Name)
+		mockHookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
 	})
 
 	t.Run("errors if no hook and no manifest.json", func(t *testing.T) {

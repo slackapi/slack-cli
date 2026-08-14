@@ -272,7 +272,7 @@ func Test_Sync(t *testing.T) {
 		assert.Contains(t, err.Error(), "cache")
 	})
 
-	t.Run("missing manifest.json creates the file", func(t *testing.T) {
+	t.Run("missing manifest.json still succeeds with warning", func(t *testing.T) {
 		f := newSyncTestFixture(t)
 		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
@@ -290,7 +290,7 @@ func Test_Sync(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, result)
 		assert.True(t, result.HasDifferences)
-		assert.True(t, result.WriteBack.Written)
+		assert.False(t, result.WriteBack.Written)
 	})
 
 	t.Run("TTY interactive resolution with all-local strategy", func(t *testing.T) {
