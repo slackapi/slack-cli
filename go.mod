@@ -27,7 +27,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/mod v0.39.0
 	golang.org/x/sys v0.47.0
-	golang.org/x/text v0.40.0
+	golang.org/x/text v0.41.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
