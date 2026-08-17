@@ -75,17 +75,13 @@ func NewManifestClient(
 	return client
 }
 
-// GetManifestLocal reads the local manifest, preferring the manifest.json file
-// when available. Falls back to the "get-manifest" hook.
+// GetManifestLocal reads the local manifest, preferring the "get-manifest" hook
+// when available. Falls back to reading manifest.json from the project root.
 func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
-	if exists, _ := afero.Exists(c.fs, filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)); exists {
-		return c.getManifestFromFile(sdkConfig)
-	}
 	if sdkConfig.Hooks.GetManifest.IsAvailable() {
 		return c.getManifestFromHook(ctx, sdkConfig, hookExecutor)
 	}
-	return types.SlackYaml{}, slackerror.New("No manifest.json found and no get-manifest hook available").
-		WithCode(slackerror.ErrInvalidManifest)
+	return c.getManifestFromFile(sdkConfig)
 }
 
 func (c *ManifestClient) getManifestFromFile(sdkConfig hooks.SDKCLIConfig) (types.SlackYaml, error) {
