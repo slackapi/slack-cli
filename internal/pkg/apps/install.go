@@ -701,10 +701,10 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	if manifestSource.Equals(config.ManifestSourceRemote) {
+	if clients.Config.ManifestSourceFlag == "remote" || manifestSource.Equals(config.ManifestSourceRemote) {
 		return false, nil
 	}
-	if clients.Config.ForceFlag {
+	if clients.Config.ManifestSourceFlag == "project" || clients.Config.ForceFlag {
 		return true, nil
 	}
 	manifest, err := clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
