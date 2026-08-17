@@ -534,7 +534,7 @@ Access to this project is also required with the selected application scopes.
 
 Credentials and secrets for the app can be stored as the following variables:
 
-- `GH_APP_ID_RELEASER`
+- `GH_APP_CLIENT_ID_RELEASER`
 - `GH_APP_PRIVATE_KEY_RELEASER`
 
 #### Bumping Go package versions
