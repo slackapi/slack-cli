@@ -58,6 +58,7 @@ func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "platform run --cleanup", Meaning: "Run a local development server with cleanup"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			// Verify command is run in a project directory
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

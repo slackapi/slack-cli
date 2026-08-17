@@ -78,8 +78,7 @@ func NewManifestClient(
 // GetManifestLocal reads the local manifest, preferring the manifest.json file
 // when available. Falls back to the "get-manifest" hook.
 func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
-	manifestPath := filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)
-	if exists, _ := afero.Exists(c.fs, manifestPath); exists {
+	if exists, _ := afero.Exists(c.fs, filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)); exists {
 		return c.getManifestFromFile(sdkConfig)
 	}
 	if sdkConfig.Hooks.GetManifest.IsAvailable() {
