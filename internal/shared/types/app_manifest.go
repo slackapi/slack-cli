@@ -79,6 +79,7 @@ type AppFeatures struct {
 	ManifestSlashCommandsItems []ManifestSlashCommandsItem `json:"slash_commands,omitempty" yaml:"slash_commands,flow,omitempty"`
 	Search                     *Search                     `json:"search,omitempty" yaml:"search,flow,omitempty"`
 	RichPreviews               *RichPreviews               `json:"rich_previews,omitempty" yaml:"rich_previews,flow,omitempty"`
+	CodeChannels               *CodeChannels               `json:"code_channels,omitempty" yaml:"code_channels,flow,omitempty"`
 }
 
 type RichPreviews struct {
@@ -287,6 +288,15 @@ type Search struct {
 	SearchFunctionCallbackID        string `json:"search_function_callback_id,omitempty" yaml:"search_function_callback_id,omitempty"`
 	SearchFiltersFunctionCallbackID string `json:"search_filters_function_callback_id,omitempty" yaml:"search_filters_function_callback_id,omitempty"`
 	EnableAIAnswers                 *bool  `json:"enable_ai_answers,omitempty" yaml:"enable_ai_answers,omitempty"`
+}
+
+// CodeChannels contains settings for apps that create code channels: dedicated
+// channels where an agent collaborates with a user on a task. Enabled is a
+// pointer so an explicit `false` (feature turned off) is distinguishable from
+// an unset field.
+type CodeChannels struct {
+	Enabled         *bool  `json:"enabled,omitempty" yaml:"enabled,omitempty"`
+	SlashCommandURL string `json:"slash_command_url,omitempty" yaml:"slash_command_url,omitempty"`
 }
 
 // Workflow defines the structure of a workflow in the app manifest.
