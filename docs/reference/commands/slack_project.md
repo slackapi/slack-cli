@@ -52,8 +52,8 @@ $ slack project samples
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack project create](slack_project_create)	 - Create a new Slack project
-* [slack project init](slack_project_init)	 - Initialize a project to work with the Slack CLI
-* [slack project samples](slack_project_samples)	 - List available sample apps
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack project create](/tools/slack-cli/reference/commands/slack_project_create/)	 - Create a new Slack project
+* [slack project init](/tools/slack-cli/reference/commands/slack_project_init/)	 - Initialize a project to work with the Slack CLI
+* [slack project samples](/tools/slack-cli/reference/commands/slack_project_samples/)	 - List available sample apps
 

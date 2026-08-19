@@ -44,5 +44,5 @@ $ slack env init  # Initialize environment variables from a template file
 
 ## See also
 
-* [slack env](slack_env)	 - Set, unset, or list environment variables
+* [slack env](/tools/slack-cli/reference/commands/slack_env/)	 - Set, unset, or list environment variables
 

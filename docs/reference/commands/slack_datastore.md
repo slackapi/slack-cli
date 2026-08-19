@@ -69,14 +69,14 @@ $ slack datastore count --datastore tasks
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack datastore bulk-delete](slack_datastore_bulk-delete)	 - Delete multiple items from a datastore
-* [slack datastore bulk-get](slack_datastore_bulk-get)	 - Get multiple items from a datastore
-* [slack datastore bulk-put](slack_datastore_bulk-put)	 - Create or replace a list of items in a datastore
-* [slack datastore count](slack_datastore_count)	 - Count the number of items in a datastore
-* [slack datastore delete](slack_datastore_delete)	 - Delete an item from a datastore
-* [slack datastore get](slack_datastore_get)	 - Get an item from a datastore
-* [slack datastore put](slack_datastore_put)	 - Create or replace an item in a datastore
-* [slack datastore query](slack_datastore_query)	 - Query a datastore for items
-* [slack datastore update](slack_datastore_update)	 - Create or update an item in a datastore
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack datastore bulk-delete](/tools/slack-cli/reference/commands/slack_datastore_bulk-delete/)	 - Delete multiple items from a datastore
+* [slack datastore bulk-get](/tools/slack-cli/reference/commands/slack_datastore_bulk-get/)	 - Get multiple items from a datastore
+* [slack datastore bulk-put](/tools/slack-cli/reference/commands/slack_datastore_bulk-put/)	 - Create or replace a list of items in a datastore
+* [slack datastore count](/tools/slack-cli/reference/commands/slack_datastore_count/)	 - Count the number of items in a datastore
+* [slack datastore delete](/tools/slack-cli/reference/commands/slack_datastore_delete/)	 - Delete an item from a datastore
+* [slack datastore get](/tools/slack-cli/reference/commands/slack_datastore_get/)	 - Get an item from a datastore
+* [slack datastore put](/tools/slack-cli/reference/commands/slack_datastore_put/)	 - Create or replace an item in a datastore
+* [slack datastore query](/tools/slack-cli/reference/commands/slack_datastore_query/)	 - Query a datastore for items
+* [slack datastore update](/tools/slack-cli/reference/commands/slack_datastore_update/)	 - Create or update an item in a datastore
 
