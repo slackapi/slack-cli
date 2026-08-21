@@ -154,6 +154,108 @@ func Test_Client_GetAppStatus(t *testing.T) {
 	}
 }
 
+func Test_Client_ListAppApprovalRequests(t *testing.T) {
+	tests := map[string]struct {
+		appID            string
+		requestedTeams   []string
+		expectedRequest  string
+		httpResponseJSON string
+		expectedRequests []AppsApprovalsRequest
+		expectedError    string
+	}{
+		"omits the requested teams when none are named": {
+			appID:            "A1234",
+			expectedRequest:  `{"app_id":"A1234"}`,
+			httpResponseJSON: `{"ok":true,"requests":[]}`,
+			expectedRequests: []AppsApprovalsRequest{},
+		},
+		"includes the requested teams of an organization": {
+			appID:            "A1234",
+			requestedTeams:   []string{"T1234", "T5678"},
+			expectedRequest:  `{"app_id":"A1234","requested_teams":["T1234","T5678"]}`,
+			httpResponseJSON: `{"ok":true,"requests":[]}`,
+			expectedRequests: []AppsApprovalsRequest{},
+		},
+		"collects an open request that awaits review": {
+			appID:            "A1234",
+			expectedRequest:  `{"app_id":"A1234"}`,
+			httpResponseJSON: `{"ok":true,"requests":[{"id":"Ar1234","team_id":"T1234","status":"pending","can_self_approve":false,"date_created":1787000000}]}`,
+			expectedRequests: []AppsApprovalsRequest{
+				{
+					ID:          "Ar1234",
+					TeamID:      "T1234",
+					Status:      AppsApprovalsRequestStatusPending,
+					DateCreated: 1787000000,
+				},
+			},
+		},
+		"collects a settled request of an organization and a workspace": {
+			appID:            "A1234",
+			expectedRequest:  `{"app_id":"A1234"}`,
+			httpResponseJSON: `{"ok":true,"requests":[{"id":"Ar1234","team_id":"E1234","status":"cancelled","can_self_approve":true,"date_created":1787000000,"date_resolved":1787060000,"cancelled_by":"admin"},{"id":"Ar5678","team_id":"T5678","status":"denied","can_self_approve":false,"date_created":1787000000,"date_resolved":1787060000}]}`,
+			expectedRequests: []AppsApprovalsRequest{
+				{
+					ID:             "Ar1234",
+					TeamID:         "E1234",
+					Status:         AppsApprovalsRequestStatusCancelled,
+					CanSelfApprove: true,
+					DateCreated:    1787000000,
+					DateResolved:   1787060000,
+					CancelledBy:    AppsApprovalsRequestCancelledByAdmin,
+				},
+				{
+					ID:           "Ar5678",
+					TeamID:       "T5678",
+					Status:       AppsApprovalsRequestStatusDenied,
+					DateCreated:  1787000000,
+					DateResolved: 1787060000,
+				},
+			},
+		},
+		"errors when the app is not found": {
+			appID:            "A0000",
+			expectedRequest:  `{"app_id":"A0000"}`,
+			httpResponseJSON: `{"ok":false,"error":"app_not_found"}`,
+			expectedError:    "app_not_found",
+		},
+		"errors when a team is outside of the organization": {
+			appID:            "A1234",
+			requestedTeams:   []string{"T0000"},
+			expectedRequest:  `{"app_id":"A1234","requested_teams":["T0000"]}`,
+			httpResponseJSON: `{"ok":false,"error":"restricted_action"}`,
+			expectedError:    "restricted_action",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod:  appApprovalRequestListMethod,
+				ExpectedRequest: tc.expectedRequest,
+				Response:        tc.httpResponseJSON,
+			})
+			defer teardown()
+
+			result, err := c.ListAppApprovalRequests(ctx, "token", tc.appID, tc.requestedTeams)
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedError)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedRequests, result.Requests)
+		})
+	}
+}
+
+func Test_Client_ListAppApprovalRequests_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	verifyCommonErrorCases(t, appApprovalRequestListMethod, func(c *Client) error {
+		_, err := c.ListAppApprovalRequests(ctx, "token", "A1234", nil)
+		return err
+	})
+}
+
 func TestClient_UpdateApp_OK(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
