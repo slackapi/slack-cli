@@ -53,5 +53,5 @@ $ slack env set SECRET_PASSWORD
 
 ## See also
 
-* [slack env](slack_env)	 - Set, unset, or list environment variables
+* [slack env](/tools/slack-cli/reference/commands/slack_env/)	 - Set, unset, or list environment variables
 

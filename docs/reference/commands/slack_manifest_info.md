@@ -52,5 +52,5 @@ $ slack manifest info --source remote
 
 ## See also
 
-* [slack manifest](slack_manifest)	 - Print the app manifest of a project or app
+* [slack manifest](/tools/slack-cli/reference/commands/slack_manifest/)	 - Print the app manifest of a project or app
 

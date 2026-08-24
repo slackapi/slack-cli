@@ -1,22 +1,19 @@
-# `slack platform deploy`
+# `slack blocks`
 
-Deploy the app to the Slack Platform
+Build with Block Kit
 
 ## Description
 
-Deploy the app to the Slack Platform
+Build layouts using Block Kit and iterate on designs with Block Kit Builder.
 
 ```
-slack platform deploy [flags]
+slack blocks <subcommand> [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help                         help for deploy
-      --hide-triggers                do not list triggers and skip trigger creation prompts
-      --org-workspace-grant string   grant access to a specific org workspace ID
-                                       (or 'all' for all workspaces in the org)
+  -h, --help   help for blocks
 ```
 
 ## Global flags
@@ -37,12 +34,12 @@ slack platform deploy [flags]
 ## Examples
 
 ```
-# Select the workspace to deploy to
-$ slack platform deploy
-$ slack platform deploy --team T0123456  # Deploy to a specific team
+# Preview blocks in Block Kit Builder
+$ slack blocks preview --blocks '[{"type":"divider"}]'
 ```
 
 ## See also
 
-* [slack platform](/tools/slack-cli/reference/commands/slack_platform/)	 - Deploy and run apps on the Slack Platform
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack blocks preview](/tools/slack-cli/reference/commands/slack_blocks_preview/)	 - Preview blocks in Block Kit Builder
 
