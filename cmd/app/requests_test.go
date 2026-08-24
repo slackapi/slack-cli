@@ -122,6 +122,32 @@ func TestRequestsCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
 			},
 		},
+		"returns the error of an interrupted app selection": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequests(ctx, cm, cf)
+				requestsAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
+					return prompts.SelectedApp{}, slackerror.New(slackerror.ErrProcessInterrupted)
+				}
+			},
+			Teardown:      restoreRequests,
+			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
+			},
+		},
+		"errors when the selected app is missing an ID": {
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequests(ctx, cm, cf)
+				requestsAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
+					return prompts.SelectedApp{Auth: types.SlackAuth{Token: "xoxp-example"}}, nil
+				}
+			},
+			Teardown:      restoreRequests,
+			ExpectedError: slackerror.New(slackerror.ErrAppNotFound),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
+			},
+		},
 		"returns the error of a failed lookup": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				enableRequests(ctx, cm, cf)
@@ -197,6 +223,25 @@ func TestRequestsFormat(t *testing.T) {
 				"Status:       denied",
 				"You can install this app without approval. Please cancel the request.",
 			},
+		},
+		"a request without a timestamp reports an unknown moment": {
+			Requests: []api.AppsApprovalsRequest{
+				{ID: "Ar1234", TeamID: "T1234", Status: api.AppsApprovalsRequestStatusPending},
+			},
+			Expected:   []string{"Requested:    unknown"},
+			Unexpected: []string{"Resolved:"},
+		},
+		"an unrecognized status is reported without styles": {
+			Requests: []api.AppsApprovalsRequest{
+				{ID: "Ar1234", TeamID: "T1234", Status: api.AppsApprovalsRequestStatus("escalated"), DateCreated: mockRequestCreated},
+			},
+			Expected: []string{"Status:       escalated"},
+		},
+		"an unrecognized cancellation actor is reported as named": {
+			Requests: []api.AppsApprovalsRequest{
+				{ID: "Ar1234", TeamID: "T1234", Status: api.AppsApprovalsRequestStatusCancelled, DateCreated: mockRequestCreated, CancelledBy: api.AppsApprovalsRequestCancelledBy("workflow")},
+			},
+			Expected: []string{"Cancelled by: workflow"},
 		},
 		"requests are sorted by the team ID": {
 			Requests: []api.AppsApprovalsRequest{
