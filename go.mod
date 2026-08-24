@@ -518,7 +518,7 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/go-git/go-git/v5 v5.19.2
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/kubescape/go-git-url v0.0.32
+	github.com/kubescape/go-git-url v0.0.33
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/spf13/pflag v1.0.10
