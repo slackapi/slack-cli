@@ -57,6 +57,14 @@ func TestRequestsCommand(t *testing.T) {
 
 	restoreRequests := func() {
 		requestsAppSelectPromptFunc = prompts.AppSelectPrompt
+		requestsTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
+	}
+
+	// enableRequestsWithoutProject turns on the experiment outside of a project
+	enableRequestsWithoutProject := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+		cm.AddDefaultMocks()
+		cf.Config.ExperimentsFlag = []string{string(experiment.AppApprovalStatus)}
+		cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
 	}
 
 	testutil.TableTestCommand(t, testutil.CommandTests{
@@ -118,6 +126,65 @@ func TestRequestsCommand(t *testing.T) {
 			},
 			Teardown:             restoreRequests,
 			ExpectedErrorStrings: []string{"--team-ids", "at most 50 teams"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
+			},
+		},
+		"checks an app named by ID outside of a project": {
+			CmdArgs: []string{"--app", "A5678"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequestsWithoutProject(ctx, cm, cf)
+				requestsTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
+					return &types.SlackAuth{Token: "xoxp-selected", TeamID: "T5678"}, nil
+				}
+				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(api.AppsApprovalsRequestsListResult{
+						Requests: []api.AppsApprovalsRequest{
+							{ID: "Ar5678", TeamID: "T5678", Status: api.AppsApprovalsRequestStatusApproved, DateCreated: mockRequestCreated},
+						},
+					}, nil)
+			},
+			Teardown:        restoreRequests,
+			ExpectedOutputs: []string{"Status:       approved"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "ListAppApprovalRequests", mock.Anything, "xoxp-selected", "A5678", []string(nil))
+			},
+		},
+		"returns the error of a failed team selection": {
+			CmdArgs: []string{"--app", "A5678"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequestsWithoutProject(ctx, cm, cf)
+				requestsTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
+					return nil, slackerror.New(slackerror.ErrProcessInterrupted)
+				}
+			},
+			Teardown:      restoreRequests,
+			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
+			},
+		},
+		"errors when the selected team has no token": {
+			CmdArgs: []string{"--app", "A5678"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequestsWithoutProject(ctx, cm, cf)
+				requestsTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
+					return &types.SlackAuth{TeamID: "T5678"}, nil
+				}
+			},
+			Teardown:      restoreRequests,
+			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
+			},
+		},
+		"errors without a project when an app environment is used": {
+			CmdArgs: []string{"--app", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequestsWithoutProject(ctx, cm, cf)
+			},
+			Teardown:      restoreRequests,
+			ExpectedError: slackerror.New(slackerror.ErrInvalidAppDirectory),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
 			},

@@ -15,6 +15,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -26,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -39,6 +41,9 @@ const requestsTimeFormat = "2006-01-02 15:04:05 Z07:00"
 
 // Handle to a function used for testing
 var requestsAppSelectPromptFunc = prompts.AppSelectPrompt
+
+// Handle to a function used for testing
+var requestsTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
 
 // Flags
 
@@ -63,10 +68,14 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 			"while an account of an organization searches the organization alone.",
 			"",
 			"Other workspaces of an organization can be searched with the --team-ids flag.",
+			"",
+			"Apps saved to a project are chosen with a prompt, but any app can be checked",
+			"by app ID with the --app flag, which does not require a project.",
 		}, "\n"),
 		Hidden: true,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "app requests", Meaning: "Check requests to install an app"},
+			{Command: "app requests --app A0123456789", Meaning: "Check requests for an app outside a project"},
 			{Command: "app requests --team-ids T0123456789,T9876543210", Meaning: "Check requests on certain teams of an organization"},
 		}),
 		Args: cobra.NoArgs,
@@ -86,6 +95,10 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 					)
 			}
 			clients.Config.SetFlags(cmd)
+			// An app named by ID is checked without the apps of a project
+			if types.IsAppID(clients.Config.AppFlag) {
+				return nil
+			}
 			// Verify command is run in a project directory
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
@@ -105,15 +118,12 @@ func runRequestsCommand(cmd *cobra.Command, clients *shared.ClientFactory) error
 	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.app.requests")
 	defer span.Finish()
 
-	selection, err := requestsAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
+	appID, token, err := requestsAppSelection(ctx, clients)
 	if err != nil {
 		return err
 	}
-	if selection.App.AppID == "" {
-		return slackerror.New(slackerror.ErrAppNotFound)
-	}
 
-	result, err := clients.API().ListAppApprovalRequests(ctx, selection.Auth.Token, selection.App.AppID, requestsFlags.teamIDs)
+	result, err := clients.API().ListAppApprovalRequests(ctx, token, appID, requestsFlags.teamIDs)
 	if err != nil {
 		return err
 	}
@@ -124,6 +134,33 @@ func runRequestsCommand(cmd *cobra.Command, clients *shared.ClientFactory) error
 		Secondary: FormatRequestsSuccess(result.Requests),
 	}))
 	return nil
+}
+
+// requestsAppSelection decides the app to check and a token of the app team.
+//
+// An app named by ID with the app flag is checked without a project so that
+// apps missing from a project can be checked too. The team of that app is
+// gathered from the authenticated accounts instead of the project apps.
+func requestsAppSelection(ctx context.Context, clients *shared.ClientFactory) (appID string, token string, err error) {
+	if types.IsAppID(clients.Config.AppFlag) {
+		auth, err := requestsTeamSelectPromptFunc(ctx, clients, "Select the team of the app", nil)
+		if err != nil {
+			return "", "", err
+		}
+		if auth == nil || auth.Token == "" {
+			return "", "", slackerror.New(slackerror.ErrCredentialsNotFound)
+		}
+		clients.Auth().SetSelectedAuth(ctx, *auth, clients.Config, clients.Os)
+		return clients.Config.AppFlag, auth.Token, nil
+	}
+	selection, err := requestsAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
+	if err != nil {
+		return "", "", err
+	}
+	if selection.App.AppID == "" {
+		return "", "", slackerror.New(slackerror.ErrAppNotFound)
+	}
+	return selection.App.AppID, selection.Auth.Token, nil
 }
 
 // FormatRequestsSuccess formats the install request of each team
