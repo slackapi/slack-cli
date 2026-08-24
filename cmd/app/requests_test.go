@@ -89,6 +89,7 @@ func TestRequestsCommand(t *testing.T) {
 			Teardown: restoreRequests,
 			ExpectedOutputs: []string{
 				"App Requests",
+				"App ID:       A1234",
 				"T1234",
 				"Request ID:   Ar1234",
 				"Status:       pending",
@@ -237,7 +238,20 @@ func TestRequestsFormat(t *testing.T) {
 	}{
 		"no request was made for the app": {
 			Requests: []api.AppsApprovalsRequest{},
-			Expected: []string{"You have not requested to install this app"},
+			Expected: []string{
+				"App ID:       A1234",
+				"You have not requested to install this app",
+			},
+		},
+		"the app is named before the requests of each team": {
+			Requests: []api.AppsApprovalsRequest{
+				{ID: "Ar1234", TeamID: "T1234", Status: api.AppsApprovalsRequestStatusPending, DateCreated: mockRequestCreated},
+			},
+			Expected: []string{
+				"App ID:       A1234",
+				"T1234",
+				"Request ID:   Ar1234",
+			},
 		},
 		"an open request omits the resolved timestamp": {
 			Requests: []api.AppsApprovalsRequest{
@@ -326,7 +340,7 @@ func TestRequestsFormat(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			formatted := strings.Join(FormatRequestsSuccess(tc.Requests), "\n")
+			formatted := strings.Join(FormatRequestsSuccess("A1234", tc.Requests), "\n")
 			previous := -1
 			for _, value := range tc.Expected {
 				index := strings.Index(formatted, value)

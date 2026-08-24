@@ -69,6 +69,9 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"Other workspaces of an organization can be searched with the --team-ids flag.",
 			"",
+			"Searches are made with the credentials of an authenticated account chosen",
+			"with the --team flag or a prompt.",
+			"",
 			"Apps saved to a project are chosen with a prompt, but any app can be checked",
 			"by app ID with the --app flag, which does not require a project.",
 		}, "\n"),
@@ -131,7 +134,7 @@ func runRequestsCommand(cmd *cobra.Command, clients *shared.ClientFactory) error
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "lock",
 		Text:      "App Requests",
-		Secondary: FormatRequestsSuccess(result.Requests),
+		Secondary: FormatRequestsSuccess(appID, result.Requests),
 	}))
 	return nil
 }
@@ -143,7 +146,7 @@ func runRequestsCommand(cmd *cobra.Command, clients *shared.ClientFactory) error
 // gathered from the authenticated accounts instead of the project apps.
 func requestsAppSelection(ctx context.Context, clients *shared.ClientFactory) (appID string, token string, err error) {
 	if types.IsAppID(clients.Config.AppFlag) {
-		auth, err := requestsTeamSelectPromptFunc(ctx, clients, "Select the team of the app", nil)
+		auth, err := requestsTeamSelectPromptFunc(ctx, clients, "Select an account to search with", nil)
 		if err != nil {
 			return "", "", err
 		}
@@ -163,32 +166,38 @@ func requestsAppSelection(ctx context.Context, clients *shared.ClientFactory) (a
 	return selection.App.AppID, selection.Auth.Token, nil
 }
 
-// FormatRequestsSuccess formats the install request of each team
-func FormatRequestsSuccess(requests []api.AppsApprovalsRequest) (secondaryText []string) {
+// FormatRequestsSuccess formats the install request of each team for an app
+func FormatRequestsSuccess(appID string, requests []api.AppsApprovalsRequest) (secondaryText []string) {
 	sort.Slice(requests, func(i, j int) bool {
 		return requests[i].TeamID < requests[j].TeamID
 	})
 	field := func(label string, value string) string {
 		return fmt.Sprintf(style.Indent(style.Secondary("%-13s %s")), label+":", value)
 	}
+	if appID != "" {
+		secondaryText = append(secondaryText, fmt.Sprintf(style.Bold("%-13s %s"), "App ID:", appID))
+	}
+	// Requests are gathered apart from the app to know when none were made
+	requestsText := []string{}
 	for _, request := range requests {
-		secondaryText = append(secondaryText, fmt.Sprintf(style.Bold("%s:"), request.TeamID))
-		secondaryText = append(secondaryText, field("Request ID", request.ID))
-		secondaryText = append(secondaryText, field("Status", formatRequestStatus(request.Status)))
-		secondaryText = append(secondaryText, field("Requested", formatRequestTime(request.DateCreated)))
+		requestsText = append(requestsText, fmt.Sprintf(style.Bold("%s:"), request.TeamID))
+		requestsText = append(requestsText, field("Request ID", request.ID))
+		requestsText = append(requestsText, field("Status", formatRequestStatus(request.Status)))
+		requestsText = append(requestsText, field("Requested", formatRequestTime(request.DateCreated)))
 		if request.DateResolved > 0 {
-			secondaryText = append(secondaryText, field("Resolved", formatRequestTime(request.DateResolved)))
+			requestsText = append(requestsText, field("Resolved", formatRequestTime(request.DateResolved)))
 		}
 		if request.CancelledBy != "" {
-			secondaryText = append(secondaryText, field("Cancelled by", formatRequestCancelledBy(request.CancelledBy)))
+			requestsText = append(requestsText, field("Cancelled by", formatRequestCancelledBy(request.CancelledBy)))
 		}
 		if request.CanSelfApprove {
-			secondaryText = append(secondaryText, style.Indent(style.Secondary("You can install this app without approval. Please cancel the request.")))
+			requestsText = append(requestsText, style.Indent(style.Secondary("You can install this app without approval. Please cancel the request.")))
 		}
 	}
-	if len(secondaryText) <= 0 {
-		secondaryText = append(secondaryText, "You have not requested to install this app")
+	if len(requestsText) <= 0 {
+		requestsText = append(requestsText, "You have not requested to install this app")
 	}
+	secondaryText = append(secondaryText, requestsText...)
 	return
 }
 
