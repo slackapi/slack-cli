@@ -33,9 +33,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// requestsTeamsLimit is the most teams the API searches in a single call
-const requestsTeamsLimit = 50
-
 // requestsTimeFormat displays the moment a request changed
 const requestsTimeFormat = "2006-01-02 15:04:05 Z07:00"
 
@@ -48,7 +45,7 @@ var requestsTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
 // Flags
 
 type requestsCmdFlags struct {
-	teamIDs []string
+	workspaceIDs []string
 }
 
 var requestsFlags requestsCmdFlags
@@ -67,7 +64,8 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 			"a workspace that belongs to an organization also searches that organization,",
 			"while an account of an organization searches the organization alone.",
 			"",
-			"Other workspaces of an organization can be searched with the --team-ids flag.",
+			"Other workspaces of an organization can be searched with the --workspace-ids",
+			"flag.",
 			"",
 			"Searches are made with the credentials of an authenticated account chosen",
 			"with the --team flag or a prompt.",
@@ -79,7 +77,7 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "app requests", Meaning: "Check requests to install an app"},
 			{Command: "app requests --app A0123456789", Meaning: "Check requests for an app outside a project"},
-			{Command: "app requests --team-ids T0123456789,T9876543210", Meaning: "Check requests on certain teams of an organization"},
+			{Command: "app requests --workspace-ids T0123456789,T9876543210", Meaning: "Check requests on certain workspaces of an organization"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -90,27 +88,27 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 						style.CommandText("--experiment app-approval-status"),
 					)
 			}
-			if len(requestsFlags.teamIDs) > requestsTeamsLimit {
-				return slackerror.New(slackerror.ErrInvalidArguments).
-					WithMessage("The %s flag accepts at most %d teams",
-						style.CommandText("--team-ids"),
-						requestsTeamsLimit,
-					)
-			}
 			clients.Config.SetFlags(cmd)
 			// An app named by ID is checked without the apps of a project
 			if types.IsAppID(clients.Config.AppFlag) {
 				return nil
 			}
 			// Verify command is run in a project directory
-			return cmdutil.IsValidProjectDirectory(clients)
+			if err := cmdutil.IsValidProjectDirectory(clients); err != nil {
+				invalid := slackerror.ToSlackError(err)
+				return invalid.WithRemediation("%s\n\nApps of other projects can be checked with %s",
+					invalid.Remediation,
+					style.CommandText("--app A0123456789"),
+				)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRequestsCommand(cmd, clients)
 		},
 	}
 
-	cmd.Flags().StringSliceVar(&requestsFlags.teamIDs, "team-ids", nil, "also check these teams of an organization,\nwith a maximum of 50 teams")
+	cmd.Flags().StringSliceVar(&requestsFlags.workspaceIDs, "workspace-ids", nil, "also check these workspaces of an organization,\nwith a maximum of 50 workspaces")
 
 	return cmd
 }
@@ -126,7 +124,7 @@ func runRequestsCommand(cmd *cobra.Command, clients *shared.ClientFactory) error
 		return err
 	}
 
-	result, err := clients.API().ListAppApprovalRequests(ctx, token, appID, requestsFlags.teamIDs)
+	result, err := clients.API().ListAppApprovalRequests(ctx, token, appID, requestsFlags.workspaceIDs)
 	if err != nil {
 		return err
 	}
@@ -153,7 +151,6 @@ func requestsAppSelection(ctx context.Context, clients *shared.ClientFactory) (a
 		if auth == nil || auth.Token == "" {
 			return "", "", slackerror.New(slackerror.ErrCredentialsNotFound)
 		}
-		clients.Auth().SetSelectedAuth(ctx, *auth, clients.Config, clients.Os)
 		return clients.Config.AppFlag, auth.Token, nil
 	}
 	selection, err := requestsAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)

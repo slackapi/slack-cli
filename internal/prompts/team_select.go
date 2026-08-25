@@ -40,6 +40,7 @@ func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, pro
 	}
 
 	if len(allAuths) == 1 {
+		clients.Auth().SetSelectedAuth(ctx, allAuths[0], clients.Config, clients.Os)
 		return &allAuths[0], nil
 	}
 

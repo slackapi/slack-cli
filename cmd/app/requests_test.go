@@ -108,8 +108,8 @@ func TestRequestsCommand(t *testing.T) {
 			Teardown:        restoreRequests,
 			ExpectedOutputs: []string{"You have not requested to install this app"},
 		},
-		"searches the teams of the provided team IDs": {
-			CmdArgs: []string{"--team-ids", "T1234,T5678"},
+		"searches the workspaces of the provided workspace IDs": {
+			CmdArgs: []string{"--workspace-ids", "T1234,T5678"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				enableRequests(ctx, cm, cf)
 				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -120,16 +120,25 @@ func TestRequestsCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "ListAppApprovalRequests", mock.Anything, "xoxp-example", "A1234", []string{"T1234", "T5678"})
 			},
 		},
-		"errors when more than fifty teams are provided": {
-			CmdArgs: []string{"--team-ids", strings.Join(mockRequestTeamIDs(requestsTeamsLimit+1), ",")},
+		"suggests the app flag without a project directory": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
+				enableRequestsWithoutProject(ctx, cm, cf)
 			},
 			Teardown:             restoreRequests,
-			ExpectedErrorStrings: []string{"--team-ids", "at most 50 teams"},
+			ExpectedErrorStrings: []string{slackerror.ErrInvalidAppDirectory, "hooks.json", "--app A0123456789"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
 			},
+		},
+		"returns the error of too many searched workspaces": {
+			CmdArgs: []string{"--workspace-ids", strings.Join(mockRequestTeamIDs(51), ",")},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequests(ctx, cm, cf)
+				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(api.AppsApprovalsRequestsListResult{}, slackerror.New(slackerror.ErrInvalidArguments))
+			},
+			Teardown:      restoreRequests,
+			ExpectedError: slackerror.New(slackerror.ErrInvalidArguments),
 		},
 		"checks an app named by ID outside of a project": {
 			CmdArgs: []string{"--app", "A5678"},

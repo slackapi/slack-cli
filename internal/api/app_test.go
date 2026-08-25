@@ -161,7 +161,7 @@ func Test_Client_ListAppApprovalRequests(t *testing.T) {
 		expectedRequest  string
 		httpResponseJSON string
 		expectedRequests []AppsApprovalsRequest
-		expectedError    string
+		expectedErrors   []string
 	}{
 		"omits the requested teams when none are named": {
 			appID:            "A1234",
@@ -216,14 +216,35 @@ func Test_Client_ListAppApprovalRequests(t *testing.T) {
 			appID:            "A0000",
 			expectedRequest:  `{"app_id":"A0000"}`,
 			httpResponseJSON: `{"ok":false,"error":"app_not_found"}`,
-			expectedError:    "app_not_found",
+			expectedErrors:   []string{slackerror.ErrAppNotFound, "The app was not found"},
 		},
 		"errors when a team is outside of the organization": {
 			appID:            "A1234",
 			requestedTeams:   []string{"T0000"},
 			expectedRequest:  `{"app_id":"A1234","requested_teams":["T0000"]}`,
 			httpResponseJSON: `{"ok":false,"error":"restricted_action"}`,
-			expectedError:    "restricted_action",
+			expectedErrors: []string{
+				slackerror.ErrRestrictedAction,
+				"The requested action is not allowed for a specified team",
+				"Check that each team belongs to the organization",
+			},
+		},
+		"errors when the team cannot check requests": {
+			appID:            "A1234",
+			expectedRequest:  `{"app_id":"A1234"}`,
+			httpResponseJSON: `{"ok":false,"error":"feature_not_enabled"}`,
+			expectedErrors: []string{
+				slackerror.ErrFeatureNotEnabled,
+				"This feature is not enabled for the team",
+				"Reach out to an admin for additional information",
+			},
+		},
+		"errors when more than fifty workspaces are searched": {
+			appID:            "A1234",
+			requestedTeams:   []string{"T0000"},
+			expectedRequest:  `{"app_id":"A1234","requested_teams":["T0000"]}`,
+			httpResponseJSON: `{"ok":false,"error":"invalid_arguments"}`,
+			expectedErrors:   []string{slackerror.ErrInvalidArguments},
 		},
 	}
 	for name, tc := range tests {
@@ -237,9 +258,11 @@ func Test_Client_ListAppApprovalRequests(t *testing.T) {
 			defer teardown()
 
 			result, err := c.ListAppApprovalRequests(ctx, "token", tc.appID, tc.requestedTeams)
-			if tc.expectedError != "" {
+			if len(tc.expectedErrors) > 0 {
 				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.expectedError)
+				for _, expected := range tc.expectedErrors {
+					require.Contains(t, err.Error(), expected)
+				}
 				return
 			}
 			require.NoError(t, err)
