@@ -56,5 +56,5 @@ $ slack sandbox create --name test-box --password mypass --domain test-box --arc
 
 ## See also
 
-* [slack sandbox](slack_sandbox)	 - Manage developer sandboxes
+* [slack sandbox](/tools/slack-cli/reference/commands/slack_sandbox/)	 - Manage developer sandboxes
 

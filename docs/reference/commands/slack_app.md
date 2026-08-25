@@ -45,12 +45,12 @@ $ slack app delete     # Delete an app and app info from a team
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack app delete](slack_app_delete)	 - Delete the app
-* [slack app install](slack_app_install)	 - Install the app to a team
-* [slack app link](slack_app_link)	 - Add an existing app to the project
-* [slack app list](slack_app_list)	 - List teams with the app installed
-* [slack app settings](slack_app_settings)	 - Open app settings for configurations
-* [slack app uninstall](slack_app_uninstall)	 - Uninstall the app from a team
-* [slack app unlink](slack_app_unlink)	 - Remove a linked app from the project
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack app delete](/tools/slack-cli/reference/commands/slack_app_delete/)	 - Delete the app
+* [slack app install](/tools/slack-cli/reference/commands/slack_app_install/)	 - Install the app to a team
+* [slack app link](/tools/slack-cli/reference/commands/slack_app_link/)	 - Add an existing app to the project
+* [slack app list](/tools/slack-cli/reference/commands/slack_app_list/)	 - List teams with the app installed
+* [slack app settings](/tools/slack-cli/reference/commands/slack_app_settings/)	 - Open app settings for configurations
+* [slack app uninstall](/tools/slack-cli/reference/commands/slack_app_uninstall/)	 - Uninstall the app from a team
+* [slack app unlink](/tools/slack-cli/reference/commands/slack_app_unlink/)	 - Remove a linked app from the project
 

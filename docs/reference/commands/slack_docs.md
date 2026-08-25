@@ -46,6 +46,6 @@ $ slack docs search "Block Kit" --output=browser
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack docs search](slack_docs_search)	 - Search Slack developer docs
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack docs search](/tools/slack-cli/reference/commands/slack_docs_search/)	 - Search Slack developer docs
 

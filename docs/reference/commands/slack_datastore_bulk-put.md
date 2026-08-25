@@ -50,5 +50,5 @@ $ slack datastore bulk-put '{"datastore": "tasks", "items": [{"id": "12", "descr
 
 ## See also
 
-* [slack datastore](slack_datastore)	 - Interact with an app's datastore
+* [slack datastore](/tools/slack-cli/reference/commands/slack_datastore/)	 - Interact with an app's datastore
 
