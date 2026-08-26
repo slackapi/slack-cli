@@ -224,7 +224,7 @@ func Test_Client_ListAppApprovalRequests(t *testing.T) {
 			expectedRequest:  `{"app_id":"A1234","requested_teams":["T0000"]}`,
 			httpResponseJSON: `{"ok":false,"error":"restricted_action"}`,
 			expectedErrors: []string{
-				slackerror.ErrRestrictedAction,
+				slackerror.ErrAPIRestrictedAction,
 				"The requested action is not allowed for a specified team",
 				"Check that each team belongs to the organization",
 			},
@@ -234,7 +234,7 @@ func Test_Client_ListAppApprovalRequests(t *testing.T) {
 			expectedRequest:  `{"app_id":"A1234"}`,
 			httpResponseJSON: `{"ok":false,"error":"feature_not_enabled"}`,
 			expectedErrors: []string{
-				slackerror.ErrFeatureNotEnabled,
+				slackerror.ErrAPIFeatureNotEnabled,
 				"This feature is not enabled for the team",
 				"Reach out to an admin for additional information",
 			},

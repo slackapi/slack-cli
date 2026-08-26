@@ -40,28 +40,28 @@ var mockRequestCreated = time.Date(2026, 8, 21, 15, 4, 5, 0, time.UTC).Unix()
 // mockRequestResolved is the moment a mocked request was reviewed
 var mockRequestResolved = time.Date(2026, 8, 22, 9, 30, 0, 0, time.UTC).Unix()
 
-func TestRequestsCommand(t *testing.T) {
-	// enableRequests turns on the experiment that gates the command
-	enableRequests := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+func TestRequestCommand(t *testing.T) {
+	// enableRequest turns on the experiment that gates the command
+	enableRequest := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 		cm.AddDefaultMocks()
 		cf.SDKConfig = hooks.NewSDKConfigMock()
 		cf.Config.ExperimentsFlag = []string{string(experiment.AppApprovalStatus)}
 		cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
-		requestsAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
+		requestAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
 			return prompts.SelectedApp{
 				App:  types.App{AppID: "A1234", TeamID: "T1234", TeamDomain: "teamone"},
-				Auth: types.SlackAuth{Token: "xoxp-example"},
+				Auth: types.SlackAuth{Token: "xoxp-example", TeamID: "T1234", TeamDomain: "teamone"},
 			}, nil
 		}
 	}
 
-	restoreRequests := func() {
-		requestsAppSelectPromptFunc = prompts.AppSelectPrompt
-		requestsTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
+	restoreRequest := func() {
+		requestAppSelectPromptFunc = prompts.AppSelectPrompt
+		requestTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
 	}
 
-	// enableRequestsWithoutProject turns on the experiment outside of a project
-	enableRequestsWithoutProject := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+	// enableRequestWithoutProject turns on the experiment outside of a project
+	enableRequestWithoutProject := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 		cm.AddDefaultMocks()
 		cf.Config.ExperimentsFlag = []string{string(experiment.AppApprovalStatus)}
 		cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
@@ -78,7 +78,7 @@ func TestRequestsCommand(t *testing.T) {
 		},
 		"reports a request that awaits review": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
+				enableRequest(ctx, cm, cf)
 				cm.API.On("ListAppApprovalRequests", mock.Anything, "xoxp-example", "A1234", []string(nil)).
 					Return(api.AppsApprovalsRequestsListResult{
 						Requests: []api.AppsApprovalsRequest{
@@ -86,11 +86,11 @@ func TestRequestsCommand(t *testing.T) {
 						},
 					}, nil)
 			},
-			Teardown: restoreRequests,
+			Teardown: restoreRequest,
 			ExpectedOutputs: []string{
-				"App Requests",
+				"App Install Approval Requests",
 				"App ID:       A1234",
-				"T1234",
+				"teamone (T1234):",
 				"Request ID:   Ar1234",
 				"Status:       pending",
 				"Requested:",
@@ -101,61 +101,67 @@ func TestRequestsCommand(t *testing.T) {
 		},
 		"explains that an app was never requested": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
+				enableRequest(ctx, cm, cf)
 				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(api.AppsApprovalsRequestsListResult{Requests: []api.AppsApprovalsRequest{}}, nil)
 			},
-			Teardown:        restoreRequests,
+			Teardown:        restoreRequest,
 			ExpectedOutputs: []string{"You have not requested to install this app"},
 		},
 		"searches the workspaces of the provided workspace IDs": {
 			CmdArgs: []string{"--workspace-ids", "T1234,T5678"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
+				enableRequest(ctx, cm, cf)
 				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(api.AppsApprovalsRequestsListResult{}, nil)
 			},
-			Teardown: restoreRequests,
+			Teardown: restoreRequest,
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListAppApprovalRequests", mock.Anything, "xoxp-example", "A1234", []string{"T1234", "T5678"})
 			},
 		},
+		"returns the error of too many searched workspaces": {
+			CmdArgs: []string{"--workspace-ids", strings.Join(mockRequestWorkspaceIDs(51), ",")},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableRequest(ctx, cm, cf)
+				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+					Return(api.AppsApprovalsRequestsListResult{}, slackerror.New(slackerror.ErrInvalidArguments))
+			},
+			Teardown:      restoreRequest,
+			ExpectedError: slackerror.New(slackerror.ErrInvalidArguments),
+		},
 		"suggests the app flag without a project directory": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequestsWithoutProject(ctx, cm, cf)
+				enableRequestWithoutProject(ctx, cm, cf)
 			},
-			Teardown:             restoreRequests,
+			Teardown:             restoreRequest,
 			ExpectedErrorStrings: []string{slackerror.ErrInvalidAppDirectory, "hooks.json", "--app A0123456789"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
 			},
 		},
-		"returns the error of too many searched workspaces": {
-			CmdArgs: []string{"--workspace-ids", strings.Join(mockRequestTeamIDs(51), ",")},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
-				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(api.AppsApprovalsRequestsListResult{}, slackerror.New(slackerror.ErrInvalidArguments))
-			},
-			Teardown:      restoreRequests,
-			ExpectedError: slackerror.New(slackerror.ErrInvalidArguments),
-		},
 		"checks an app named by ID outside of a project": {
 			CmdArgs: []string{"--app", "A5678"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequestsWithoutProject(ctx, cm, cf)
-				requestsTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
-					return &types.SlackAuth{Token: "xoxp-selected", TeamID: "T5678"}, nil
+				enableRequestWithoutProject(ctx, cm, cf)
+				requestTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
+					return &types.SlackAuth{Token: "xoxp-selected", TeamID: "T5678", TeamDomain: "teamtwo"}, nil
 				}
 				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 					Return(api.AppsApprovalsRequestsListResult{
 						Requests: []api.AppsApprovalsRequest{
 							{ID: "Ar5678", TeamID: "T5678", Status: api.AppsApprovalsRequestStatusApproved, DateCreated: mockRequestCreated},
+							{ID: "Ar9012", TeamID: "T9012", Status: api.AppsApprovalsRequestStatusPending, DateCreated: mockRequestCreated},
 						},
 					}, nil)
 			},
-			Teardown:        restoreRequests,
-			ExpectedOutputs: []string{"Status:       approved"},
+			Teardown: restoreRequest,
+			ExpectedOutputs: []string{
+				"teamtwo (T5678):",
+				"Status:       approved",
+				"T9012:",
+				"Status:       pending",
+			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListAppApprovalRequests", mock.Anything, "xoxp-selected", "A5678", []string(nil))
 			},
@@ -163,12 +169,12 @@ func TestRequestsCommand(t *testing.T) {
 		"returns the error of a failed team selection": {
 			CmdArgs: []string{"--app", "A5678"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequestsWithoutProject(ctx, cm, cf)
-				requestsTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
+				enableRequestWithoutProject(ctx, cm, cf)
+				requestTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
 					return nil, slackerror.New(slackerror.ErrProcessInterrupted)
 				}
 			},
-			Teardown:      restoreRequests,
+			Teardown:      restoreRequest,
 			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
@@ -177,12 +183,12 @@ func TestRequestsCommand(t *testing.T) {
 		"errors when the selected team has no token": {
 			CmdArgs: []string{"--app", "A5678"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequestsWithoutProject(ctx, cm, cf)
-				requestsTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
+				enableRequestWithoutProject(ctx, cm, cf)
+				requestTeamSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *prompts.PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
 					return &types.SlackAuth{TeamID: "T5678"}, nil
 				}
 			},
-			Teardown:      restoreRequests,
+			Teardown:      restoreRequest,
 			ExpectedError: slackerror.New(slackerror.ErrCredentialsNotFound),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
@@ -191,9 +197,9 @@ func TestRequestsCommand(t *testing.T) {
 		"errors without a project when an app environment is used": {
 			CmdArgs: []string{"--app", "local"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequestsWithoutProject(ctx, cm, cf)
+				enableRequestWithoutProject(ctx, cm, cf)
 			},
-			Teardown:      restoreRequests,
+			Teardown:      restoreRequest,
 			ExpectedError: slackerror.New(slackerror.ErrInvalidAppDirectory),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
@@ -201,12 +207,12 @@ func TestRequestsCommand(t *testing.T) {
 		},
 		"returns the error of an interrupted app selection": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
-				requestsAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
+				enableRequest(ctx, cm, cf)
+				requestAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
 					return prompts.SelectedApp{}, slackerror.New(slackerror.ErrProcessInterrupted)
 				}
 			},
-			Teardown:      restoreRequests,
+			Teardown:      restoreRequest,
 			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
@@ -214,12 +220,12 @@ func TestRequestsCommand(t *testing.T) {
 		},
 		"errors when the selected app is missing an ID": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
-				requestsAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
+				enableRequest(ctx, cm, cf)
+				requestAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
 					return prompts.SelectedApp{Auth: types.SlackAuth{Token: "xoxp-example"}}, nil
 				}
 			},
-			Teardown:      restoreRequests,
+			Teardown:      restoreRequest,
 			ExpectedError: slackerror.New(slackerror.ErrAppNotFound),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "ListAppApprovalRequests")
@@ -227,20 +233,21 @@ func TestRequestsCommand(t *testing.T) {
 		},
 		"returns the error of a failed lookup": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				enableRequests(ctx, cm, cf)
+				enableRequest(ctx, cm, cf)
 				cm.API.On("ListAppApprovalRequests", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-					Return(api.AppsApprovalsRequestsListResult{}, slackerror.New(slackerror.ErrFeatureNotEnabled))
+					Return(api.AppsApprovalsRequestsListResult{}, slackerror.New(slackerror.ErrAPIFeatureNotEnabled))
 			},
-			Teardown:      restoreRequests,
-			ExpectedError: slackerror.New(slackerror.ErrFeatureNotEnabled),
+			Teardown:      restoreRequest,
+			ExpectedError: slackerror.New(slackerror.ErrAPIFeatureNotEnabled),
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
-		return NewRequestsCommand(cf)
+		return NewRequestCommand(cf)
 	})
 }
 
-func TestRequestsFormat(t *testing.T) {
+func TestRequestFormat(t *testing.T) {
 	tests := map[string]struct {
+		TeamNames  map[string]string
 		Requests   []api.AppsApprovalsRequest
 		Expected   []string
 		Unexpected []string
@@ -333,6 +340,17 @@ func TestRequestsFormat(t *testing.T) {
 			},
 			Expected: []string{"Cancelled by: workflow"},
 		},
+		"a searched team is titled by name when it is known": {
+			TeamNames: map[string]string{"T1234": "teamone"},
+			Requests: []api.AppsApprovalsRequest{
+				{ID: "Ar1234", TeamID: "T1234", Status: api.AppsApprovalsRequestStatusPending, DateCreated: mockRequestCreated},
+				{ID: "Ar5678", TeamID: "T5678", Status: api.AppsApprovalsRequestStatusPending, DateCreated: mockRequestCreated},
+			},
+			Expected: []string{
+				"teamone (T1234):",
+				"T5678:",
+			},
+		},
 		"requests are sorted by the team ID": {
 			Requests: []api.AppsApprovalsRequest{
 				{ID: "Ar5678", TeamID: "T5678", Status: api.AppsApprovalsRequestStatusCancelled, DateCreated: mockRequestCreated},
@@ -349,7 +367,7 @@ func TestRequestsFormat(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			formatted := strings.Join(FormatRequestsSuccess("A1234", tc.Requests), "\n")
+			formatted := strings.Join(FormatRequestSuccess("A1234", tc.TeamNames, tc.Requests), "\n")
 			previous := -1
 			for _, value := range tc.Expected {
 				index := strings.Index(formatted, value)
@@ -363,11 +381,26 @@ func TestRequestsFormat(t *testing.T) {
 	}
 }
 
-// mockRequestTeamIDs returns a count of unique team IDs
-func mockRequestTeamIDs(count int) []string {
-	teamIDs := []string{}
-	for i := range count {
-		teamIDs = append(teamIDs, fmt.Sprintf("T%09d", i))
+// TestRequestFormatOrdering checks that the requests of the caller are left in
+// the order they were provided while output remains sorted by team
+func TestRequestFormatOrdering(t *testing.T) {
+	requests := []api.AppsApprovalsRequest{
+		{ID: "Ar5678", TeamID: "T5678", Status: api.AppsApprovalsRequestStatusPending, DateCreated: mockRequestCreated},
+		{ID: "Ar1234", TeamID: "T1234", Status: api.AppsApprovalsRequestStatusPending, DateCreated: mockRequestCreated},
 	}
-	return teamIDs
+
+	formatted := strings.Join(FormatRequestSuccess("A1234", nil, requests), "\n")
+
+	assert.Less(t, strings.Index(formatted, "Ar1234"), strings.Index(formatted, "Ar5678"))
+	assert.Equal(t, "Ar5678", requests[0].ID, "expected the provided requests to remain unsorted")
+	assert.Equal(t, "Ar1234", requests[1].ID, "expected the provided requests to remain unsorted")
+}
+
+// mockRequestWorkspaceIDs returns a count of unique workspace IDs
+func mockRequestWorkspaceIDs(count int) []string {
+	workspaceIDs := []string{}
+	for i := range count {
+		workspaceIDs = append(workspaceIDs, fmt.Sprintf("T%09d", i))
+	}
+	return workspaceIDs
 }

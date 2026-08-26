@@ -27,6 +27,8 @@ const (
 	ErrAddAppToProject                               = "add_app_to_project_error"
 	ErrAlreadyLoggedOut                              = "already_logged_out"
 	ErrAlreadyResolved                               = "already_resolved"
+	ErrAPIFeatureNotEnabled                          = "feature_not_enabled"
+	ErrAPIRestrictedAction                           = "restricted_action"
 	ErrAppAdd                                        = "app_add_error"
 	ErrAppApprovalRequestDenied                      = "app_approval_request_denied"
 	ErrAppApprovalRequestEligible                    = "app_approval_request_eligible"
@@ -114,7 +116,6 @@ const (
 	ErrFailedExport                                  = "failed_export"
 	ErrFailedToGetUser                               = "failed_to_get_user"
 	ErrFailedToSaveExtensionLogs                     = "failed_to_save_extension_logs"
-	ErrFeatureNotEnabled                             = "feature_not_enabled"
 	ErrFeedbackNameInvalid                           = "feedback_name_invalid"
 	ErrFeedbackNameRequired                          = "feedback_name_required"
 	ErrFileRejected                                  = "file_rejected"
@@ -225,7 +226,6 @@ const (
 	ErrPublishedAppOnly                              = "published_app_only"
 	ErrRatelimited                                   = "ratelimited"
 	ErrRequestIDOrAppIDIsRequired                    = "request_id_or_app_id_is_required"
-	ErrRestrictedAction                              = "restricted_action"
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
 	ErrRuntimeNotFound                               = "runtime_not_found"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
@@ -308,6 +308,18 @@ var ErrorCodeMap = map[string]Error{
 	ErrAlreadyResolved: {
 		Code:    ErrAlreadyResolved,
 		Message: "The app already has a resolution and cannot be requested",
+	},
+
+	ErrAPIFeatureNotEnabled: {
+		Code:        ErrAPIFeatureNotEnabled,
+		Message:     "This feature is not enabled for the team",
+		Remediation: "Reach out to an admin for additional information",
+	},
+
+	ErrAPIRestrictedAction: {
+		Code:        ErrAPIRestrictedAction,
+		Message:     "The requested action is not allowed for a specified team",
+		Remediation: "Check that each team belongs to the organization of the authenticated account",
 	},
 
 	ErrAppAdd: {
@@ -787,12 +799,6 @@ Otherwise start your app for local development with: %s`,
 	ErrFailedToSaveExtensionLogs: {
 		Code:    ErrFailedToSaveExtensionLogs,
 		Message: "Couldn't save the logs",
-	},
-
-	ErrFeatureNotEnabled: {
-		Code:        ErrFeatureNotEnabled,
-		Message:     "This feature is not enabled for the team",
-		Remediation: "Reach out to an admin for additional information",
 	},
 
 	ErrFeedbackNameInvalid: {
@@ -1388,12 +1394,6 @@ Otherwise start your app for local development with: %s`,
 	ErrRequestIDOrAppIDIsRequired: {
 		Code:    ErrRequestIDOrAppIDIsRequired,
 		Message: "Must include a request_id or app_id",
-	},
-
-	ErrRestrictedAction: {
-		Code:        ErrRestrictedAction,
-		Message:     "The requested action is not allowed for a specified team",
-		Remediation: "Check that each team belongs to the organization of the authenticated account",
 	},
 
 	ErrRestrictedPlanLevel: {

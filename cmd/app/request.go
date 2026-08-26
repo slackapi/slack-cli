@@ -17,7 +17,7 @@ package app
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -33,29 +33,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// requestsTimeFormat displays the moment a request changed
-const requestsTimeFormat = "2006-01-02 15:04:05 Z07:00"
+// requestTimeFormat displays the moment a request changed
+const requestTimeFormat = "2006-01-02 15:04:05 Z07:00"
 
 // Handle to a function used for testing
-var requestsAppSelectPromptFunc = prompts.AppSelectPrompt
+var requestAppSelectPromptFunc = prompts.AppSelectPrompt
 
 // Handle to a function used for testing
-var requestsTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
+var requestTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
 
 // Flags
-
-type requestsCmdFlags struct {
+type requestCmdFlags struct {
 	workspaceIDs []string
 }
 
-var requestsFlags requestsCmdFlags
+var requestFlags requestCmdFlags
 
-// NewRequestsCommand returns a new Cobra command
-func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
+// NewRequestCommand returns a new Cobra command
+func NewRequestCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "requests [flags]",
-		Aliases: []string{"approval-requests", "approvals"},
-		Short:   "Check requests to install the app",
+		Use:     "request [flags]",
+		Aliases: []string{"requests"},
+		Short:   "Check approval requests to install the app",
 		Long: strings.Join([]string{
 			"Check the status of your most recent request to have the app approved for",
 			"install.",
@@ -75,9 +74,9 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 		}, "\n"),
 		Hidden: true,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "app requests", Meaning: "Check requests to install an app"},
-			{Command: "app requests --app A0123456789", Meaning: "Check requests for an app outside a project"},
-			{Command: "app requests --workspace-ids T0123456789,T9876543210", Meaning: "Check requests on certain workspaces of an organization"},
+			{Command: "app request", Meaning: "Check requests to install an app"},
+			{Command: "app request --app A0123456789", Meaning: "Check requests for an app outside a project"},
+			{Command: "app request --workspace-ids T0123456789,T9876543210", Meaning: "Check requests on certain workspaces of an organization"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -104,69 +103,82 @@ func NewRequestsCommand(clients *shared.ClientFactory) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRequestsCommand(cmd, clients)
+			return runRequestCommand(cmd, clients)
 		},
 	}
 
-	cmd.Flags().StringSliceVar(&requestsFlags.workspaceIDs, "workspace-ids", nil, "also check these workspaces of an organization,\nwith a maximum of 50 workspaces")
+	cmd.Flags().StringSliceVar(&requestFlags.workspaceIDs, "workspace-ids", nil, "also check these workspaces of an organization,\nwith a maximum of 50 workspaces")
 
 	return cmd
 }
 
-// runRequestsCommand will execute the requests command
-func runRequestsCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
+// runRequestCommand will execute the request command
+func runRequestCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.app.requests")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.app.request")
 	defer span.Finish()
 
-	appID, token, err := requestsAppSelection(ctx, clients)
+	appID, auth, err := requestAppSelection(ctx, clients)
 	if err != nil {
 		return err
 	}
 
-	result, err := clients.API().ListAppApprovalRequests(ctx, token, appID, requestsFlags.workspaceIDs)
+	result, err := clients.API().ListAppApprovalRequests(ctx, auth.Token, appID, requestFlags.workspaceIDs)
 	if err != nil {
 		return err
 	}
 
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "lock",
-		Text:      "App Requests",
-		Secondary: FormatRequestsSuccess(appID, result.Requests),
+		Text:      "App Install Approval Requests",
+		Secondary: FormatRequestSuccess(appID, requestTeamNames(auth), result.Requests),
 	}))
 	return nil
 }
 
-// requestsAppSelection decides the app to check and a token of the app team.
+// requestTeamNames collects the names of searched teams that are known.
+//
+// Requests are returned with team IDs alone, so only the team of the
+// authenticated account is named. Other teams of an organization are not
+// looked up to avoid another API call.
+func requestTeamNames(auth types.SlackAuth) map[string]string {
+	if auth.TeamID == "" || auth.TeamDomain == "" {
+		return nil
+	}
+	return map[string]string{auth.TeamID: auth.TeamDomain}
+}
+
+// requestAppSelection decides the app to check and the account to search with.
 //
 // An app named by ID with the app flag is checked without a project so that
 // apps missing from a project can be checked too. The team of that app is
 // gathered from the authenticated accounts instead of the project apps.
-func requestsAppSelection(ctx context.Context, clients *shared.ClientFactory) (appID string, token string, err error) {
+func requestAppSelection(ctx context.Context, clients *shared.ClientFactory) (appID string, auth types.SlackAuth, err error) {
 	if types.IsAppID(clients.Config.AppFlag) {
-		auth, err := requestsTeamSelectPromptFunc(ctx, clients, "Select an account to search with", nil)
+		selected, err := requestTeamSelectPromptFunc(ctx, clients, "Select an account to search with", nil)
 		if err != nil {
-			return "", "", err
+			return "", types.SlackAuth{}, err
 		}
-		if auth == nil || auth.Token == "" {
-			return "", "", slackerror.New(slackerror.ErrCredentialsNotFound)
+		if selected == nil || selected.Token == "" {
+			return "", types.SlackAuth{}, slackerror.New(slackerror.ErrCredentialsNotFound)
 		}
-		return clients.Config.AppFlag, auth.Token, nil
+		return clients.Config.AppFlag, *selected, nil
 	}
-	selection, err := requestsAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
+	selection, err := requestAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
-		return "", "", err
+		return "", types.SlackAuth{}, err
 	}
 	if selection.App.AppID == "" {
-		return "", "", slackerror.New(slackerror.ErrAppNotFound)
+		return "", types.SlackAuth{}, slackerror.New(slackerror.ErrAppNotFound)
 	}
-	return selection.App.AppID, selection.Auth.Token, nil
+	return selection.App.AppID, selection.Auth, nil
 }
 
-// FormatRequestsSuccess formats the install request of each team for an app
-func FormatRequestsSuccess(appID string, requests []api.AppsApprovalsRequest) (secondaryText []string) {
-	sort.Slice(requests, func(i, j int) bool {
-		return requests[i].TeamID < requests[j].TeamID
+// FormatRequestSuccess formats the install request of each team for an app.
+// Teams found in teamNames are titled by name while others are titled by ID.
+func FormatRequestSuccess(appID string, teamNames map[string]string, requests []api.AppsApprovalsRequest) (secondaryText []string) {
+	sorted := slices.SortedFunc(slices.Values(requests), func(a api.AppsApprovalsRequest, b api.AppsApprovalsRequest) int {
+		return strings.Compare(a.TeamID, b.TeamID)
 	})
 	field := func(label string, value string) string {
 		return fmt.Sprintf(style.Indent(style.Secondary("%-13s %s")), label+":", value)
@@ -176,8 +188,8 @@ func FormatRequestsSuccess(appID string, requests []api.AppsApprovalsRequest) (s
 	}
 	// Requests are gathered apart from the app to know when none were made
 	requestsText := []string{}
-	for _, request := range requests {
-		requestsText = append(requestsText, fmt.Sprintf(style.Bold("%s:"), request.TeamID))
+	for _, request := range sorted {
+		requestsText = append(requestsText, fmt.Sprintf(style.Bold("%s:"), formatRequestTeam(teamNames, request.TeamID)))
 		requestsText = append(requestsText, field("Request ID", request.ID))
 		requestsText = append(requestsText, field("Status", formatRequestStatus(request.Status)))
 		requestsText = append(requestsText, field("Requested", formatRequestTime(request.DateCreated)))
@@ -198,12 +210,20 @@ func FormatRequestsSuccess(appID string, requests []api.AppsApprovalsRequest) (s
 	return
 }
 
+// formatRequestTeam titles a team by name and ID when the name is known
+func formatRequestTeam(teamNames map[string]string, teamID string) string {
+	if name, ok := teamNames[teamID]; ok {
+		return fmt.Sprintf("%s (%s)", name, teamID)
+	}
+	return teamID
+}
+
 // formatRequestTime displays a Unix timestamp in the local timezone
 func formatRequestTime(timestamp int64) string {
 	if timestamp <= 0 {
 		return "unknown"
 	}
-	return time.Unix(timestamp, 0).Format(requestsTimeFormat)
+	return time.Unix(timestamp, 0).Format(requestTimeFormat)
 }
 
 // formatRequestCancelledBy names the kind of actor that cancelled a request.
