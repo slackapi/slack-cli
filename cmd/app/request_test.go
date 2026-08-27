@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/internal/api"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -41,12 +40,10 @@ var mockRequestCreated = time.Date(2026, 8, 21, 15, 4, 5, 0, time.UTC).Unix()
 var mockRequestResolved = time.Date(2026, 8, 22, 9, 30, 0, 0, time.UTC).Unix()
 
 func TestRequestCommand(t *testing.T) {
-	// enableRequest turns on the experiment that gates the command
+	// enableRequest prepares a project with an app to select
 	enableRequest := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 		cm.AddDefaultMocks()
 		cf.SDKConfig = hooks.NewSDKConfigMock()
-		cf.Config.ExperimentsFlag = []string{string(experiment.AppApprovalStatus)}
-		cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
 		requestAppSelectPromptFunc = func(ctx context.Context, clients *shared.ClientFactory, environment prompts.AppEnvironmentType, status prompts.AppInstallStatus, opts ...prompts.AppSelectOption) (prompts.SelectedApp, error) {
 			return prompts.SelectedApp{
 				App:  types.App{AppID: "A1234", TeamID: "T1234", TeamDomain: "teamone"},
@@ -60,22 +57,12 @@ func TestRequestCommand(t *testing.T) {
 		requestTeamSelectPromptFunc = prompts.PromptTeamSlackAuth
 	}
 
-	// enableRequestWithoutProject turns on the experiment outside of a project
+	// enableRequestWithoutProject prepares the command outside of a project
 	enableRequestWithoutProject := func(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 		cm.AddDefaultMocks()
-		cf.Config.ExperimentsFlag = []string{string(experiment.AppApprovalStatus)}
-		cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
 	}
 
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		"errors when the app-approval-status experiment is off": {
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cf.SDKConfig = hooks.NewSDKConfigMock()
-				cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
-			},
-			ExpectedError: slackerror.New(slackerror.ErrExperimentRequired),
-		},
 		"reports a request that awaits review": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				enableRequest(ctx, cm, cf)

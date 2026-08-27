@@ -24,7 +24,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -72,7 +71,6 @@ func NewRequestCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Apps saved to a project are chosen with a prompt, but any app can be checked",
 			"by app ID with the --app flag, which does not require a project.",
 		}, "\n"),
-		Hidden: true,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "app request", Meaning: "Check requests to install an app"},
 			{Command: "app request --app A0123456789", Meaning: "Check requests for an app outside a project"},
@@ -80,13 +78,6 @@ func NewRequestCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if !clients.Config.WithExperimentOn(experiment.AppApprovalStatus) {
-				return slackerror.New(slackerror.ErrExperimentRequired).
-					WithRemediation("Enable the %s experiment with %s",
-						style.Highlight(string(experiment.AppApprovalStatus)),
-						style.CommandText("--experiment app-approval-status"),
-					)
-			}
 			clients.Config.SetFlags(cmd)
 			// An app named by ID is checked without the apps of a project
 			if types.IsAppID(clients.Config.AppFlag) {

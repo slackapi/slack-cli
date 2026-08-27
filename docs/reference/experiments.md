@@ -6,7 +6,6 @@ The Slack CLI has an experiment (`-e`) flag behind which we put features current
 
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
-- `app-approval-status`: checks requests to install an app.
 - `lipgloss`: shows pretty styles.
 - `manifest-sync`: resolves conflicting app manifest values.
 
@@ -14,7 +13,6 @@ The following is a list of currently available experiments. We'll remove experim
 
 Below is a list of updates related to experiments.
 
-- **August 2026**: Added the `app-approval-status` experiment to check the status of requests to have an app approved for install.
 - **August 2026**: Concluded the `set-icon` experiment; The Slack CLI now offers full support for icon upload on all app types by default.
 - **July 2026**: Added the `manifest-sync` experiment to resolve changed app manifest values between a project and app settings.
 - **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](/tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
