@@ -49,5 +49,5 @@ $ slack auth token --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
 
 ## See also
 
-* [slack auth](slack_auth)	 - Add and remove local team authorizations
+* [slack auth](/tools/slack-cli/reference/commands/slack_auth/)	 - Add and remove local team authorizations
 

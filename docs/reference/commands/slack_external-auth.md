@@ -54,9 +54,9 @@ $ slack external-auth select-auth
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack external-auth add](slack_external-auth_add)	 - Initiate the OAuth2 flow for a provider
-* [slack external-auth add-secret](slack_external-auth_add-secret)	 - Add the client secret for a provider
-* [slack external-auth remove](slack_external-auth_remove)	 - Remove the saved tokens for a provider
-* [slack external-auth select-auth](slack_external-auth_select-auth)	 - Select developer authentication of a workflow
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack external-auth add](/tools/slack-cli/reference/commands/slack_external-auth_add/)	 - Initiate the OAuth2 flow for a provider
+* [slack external-auth add-secret](/tools/slack-cli/reference/commands/slack_external-auth_add-secret/)	 - Add the client secret for a provider
+* [slack external-auth remove](/tools/slack-cli/reference/commands/slack_external-auth_remove/)	 - Remove the saved tokens for a provider
+* [slack external-auth select-auth](/tools/slack-cli/reference/commands/slack_external-auth_select-auth/)	 - Select developer authentication of a workflow
 
