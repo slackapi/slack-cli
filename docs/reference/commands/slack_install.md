@@ -49,5 +49,5 @@ $ slack app install --team T0123456 --environment local
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

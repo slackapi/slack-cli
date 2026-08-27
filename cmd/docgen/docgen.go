@@ -34,6 +34,15 @@ import (
 // defaultDocsDirPath is the default value for the <path> argument
 const defaultDocsDirPath = "docs"
 
+// commandsDocsURLPath is the docs site base path for command reference pages.
+// "See also" links must resolve against this path rather than a bare slug.
+const commandsDocsURLPath = "/tools/slack-cli/reference/commands/"
+
+// commandDocsURL returns the docs site link for a command path (e.g. "slack app").
+func commandDocsURL(commandPath string) string {
+	return commandsDocsURLPath + strings.ReplaceAll(commandPath, " ", "_") + "/"
+}
+
 //go:embed errors.tmpl
 var errorsMarkdownTemplate string
 
@@ -196,8 +205,7 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 		if cmd.HasParent() {
 			parent := cmd.Parent()
 			pname := parent.CommandPath()
-			link := strings.ReplaceAll(pname, " ", "_")
-			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", pname, link, parent.Short)
+			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", pname, commandDocsURL(pname), parent.Short)
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -217,8 +225,7 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 				continue
 			}
 			cname := name + " " + child.Name()
-			link := strings.ReplaceAll(cname, " ", "_")
-			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", cname, link, child.Short)
+			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", cname, commandDocsURL(cname), child.Short)
 		}
 		fmt.Fprintf(buf, "\n")
 	}

@@ -52,5 +52,5 @@ $ slack auth login --token xoxp-...
 
 ## See also
 
-* [slack auth](slack_auth)	 - Add and remove local team authorizations
+* [slack auth](/tools/slack-cli/reference/commands/slack_auth/)	 - Add and remove local team authorizations
 

@@ -43,5 +43,5 @@ $ slack collaborator add USLACKBOT      # Add a collaborator by user ID
 
 ## See also
 
-* [slack collaborator](slack_collaborator)	 - Manage app collaborators
+* [slack collaborator](/tools/slack-cli/reference/commands/slack_collaborator/)	 - Manage app collaborators
 
