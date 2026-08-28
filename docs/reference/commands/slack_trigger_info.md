@@ -44,5 +44,5 @@ $ slack trigger info --trigger-id Ft01234ABCD --app A0123456
 
 ## See also
 
-* [slack trigger](slack_trigger)	 - List details of existing triggers
+* [slack trigger](/tools/slack-cli/reference/commands/slack_trigger/)	 - List details of existing triggers
 

@@ -163,7 +163,7 @@ function install_slack_cli {
   $slack_cli_new_binary_path = "$($slack_cli_dir)\bin\${confirmed_alias}.exe"
 
   delay 0.3 "Extracting the executable to:`n   $slack_cli_new_binary_path"
-  Expand-Archive "$($slack_cli_dir)\slack_cli.zip" -DestinationPath "$($slack_cli_dir)" -Force
+  Microsoft.PowerShell.Archive\Expand-Archive "$($slack_cli_dir)\slack_cli.zip" -DestinationPath "$($slack_cli_dir)" -Force
   Move-Item -Path $slack_cli_binary_path -Destination $slack_cli_new_binary_path -Force
 
   $User = [System.EnvironmentVariableTarget]::User

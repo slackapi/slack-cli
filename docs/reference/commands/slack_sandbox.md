@@ -40,8 +40,8 @@ slack sandbox <subcommand> [flags]
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack sandbox create](slack_sandbox_create)	 - Create a developer sandbox
-* [slack sandbox delete](slack_sandbox_delete)	 - Delete a developer sandbox
-* [slack sandbox list](slack_sandbox_list)	 - List developer sandboxes
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack sandbox create](/tools/slack-cli/reference/commands/slack_sandbox_create/)	 - Create a developer sandbox
+* [slack sandbox delete](/tools/slack-cli/reference/commands/slack_sandbox_delete/)	 - Delete a developer sandbox
+* [slack sandbox list](/tools/slack-cli/reference/commands/slack_sandbox_list/)	 - List developer sandboxes
 

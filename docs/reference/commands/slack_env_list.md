@@ -45,5 +45,5 @@ $ slack env list  # List all environment variables
 
 ## See also
 
-* [slack env](slack_env)	 - Set, unset, or list environment variables
+* [slack env](/tools/slack-cli/reference/commands/slack_env/)	 - Set, unset, or list environment variables
 

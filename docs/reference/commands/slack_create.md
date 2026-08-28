@@ -64,5 +64,5 @@ $ slack create my-project -t slack-samples/bolt-js-starter-template --app A01234
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

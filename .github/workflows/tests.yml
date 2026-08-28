@@ -25,14 +25,36 @@ jobs:
         run: go tool golangci-lint run --timeout=5m
       - name: Unit Tests
         run: make test
-      - name: Install Tests
-        run: make test-install
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.out
           fail_ci_if_error: false
+
+  install-tests:
+    name: Install Tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Tests (Unix)
+        if: runner.os != 'Windows'
+        run: make test-install
+      - name: Install Tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/install-windows-test.ps1
 
   # Monitor code coverage and TODO/FIXME-type comments
   health-score:
