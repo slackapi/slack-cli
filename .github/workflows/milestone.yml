@@ -15,7 +15,7 @@ concurrency: ${{ github.workflow }}
 
 jobs:
   triage:
-    name: Triage
+    name: Triage Milestone
     # Development and feature builds are published as prereleases by CircleCI
     if: >-
       github.event_name == 'workflow_dispatch' ||
