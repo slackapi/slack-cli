@@ -17,19 +17,14 @@ package blocks
 import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
-	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/cobra"
 )
 
-// aiAgentFunc is a package variable so it can be stubbed in tests.
-var aiAgentFunc = useragent.GetAIAgent
-
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "blocks <subcommand> [flags]",
-		Short:  "Build with Block Kit",
-		Long:   "Build layouts using Block Kit and iterate on designs with Block Kit Builder.",
-		Hidden: aiAgentFunc() == nil,
+		Use:   "blocks <subcommand> [flags]",
+		Short: "Build with Block Kit",
+		Long:  "Build layouts using Block Kit and iterate on designs with Block Kit Builder.",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Preview blocks in Block Kit Builder",
