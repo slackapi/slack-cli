@@ -91,7 +91,7 @@ func (c *ManifestClient) getManifestFromFile(sdkConfig hooks.SDKCLIConfig) (type
 	if err != nil {
 		return sl, slackerror.New("Failed to read manifest file").
 			WithRootCause(err).
-			WithCode(slackerror.ErrInvalidManifest)
+			WithCode(slackerror.ErrNoFile)
 	}
 	if err := json.Unmarshal(data, &sl); err != nil {
 		return sl, slackerror.New("Failed to parse manifest file").
@@ -103,11 +103,6 @@ func (c *ManifestClient) getManifestFromFile(sdkConfig hooks.SDKCLIConfig) (type
 
 func (c *ManifestClient) getManifestFromHook(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
 	var sl types.SlackYaml
-
-	if !sdkConfig.Hooks.GetManifest.IsAvailable() {
-		return sl, slackerror.New(slackerror.ErrSDKHookNotFound).
-			WithMessage("The `get-manifest` script was not found")
-	}
 
 	var manifestHookOpts = hooks.HookExecOpts{
 		Args: map[string]string{
