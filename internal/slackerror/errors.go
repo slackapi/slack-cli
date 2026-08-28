@@ -27,6 +27,8 @@ const (
 	ErrAddAppToProject                               = "add_app_to_project_error"
 	ErrAlreadyLoggedOut                              = "already_logged_out"
 	ErrAlreadyResolved                               = "already_resolved"
+	ErrAPIFeatureNotEnabled                          = "feature_not_enabled"
+	ErrAPIRestrictedAction                           = "restricted_action"
 	ErrAppAdd                                        = "app_add_error"
 	ErrAppApprovalRequestDenied                      = "app_approval_request_denied"
 	ErrAppApprovalRequestEligible                    = "app_approval_request_eligible"
@@ -306,6 +308,18 @@ var ErrorCodeMap = map[string]Error{
 	ErrAlreadyResolved: {
 		Code:    ErrAlreadyResolved,
 		Message: "The app already has a resolution and cannot be requested",
+	},
+
+	ErrAPIFeatureNotEnabled: {
+		Code:        ErrAPIFeatureNotEnabled,
+		Message:     "This feature is not enabled for the team",
+		Remediation: "Reach out to an admin for additional information",
+	},
+
+	ErrAPIRestrictedAction: {
+		Code:        ErrAPIRestrictedAction,
+		Message:     "The requested action is not allowed for a specified team",
+		Remediation: "Check that each team belongs to the organization of the authenticated account",
 	},
 
 	ErrAppAdd: {
