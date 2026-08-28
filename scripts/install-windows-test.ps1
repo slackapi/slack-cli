@@ -14,13 +14,7 @@
 
 $ErrorActionPreference = "Stop"
 
-# Guard against the Pscx-shadowing regression from https://github.com/slackapi/slack-cli/issues/651:
-# Pscx 3.3.2 ships its own Expand-Archive that shadows the built-in, so the extraction call must be
-# qualified as Microsoft.PowerShell.Archive\Expand-Archive. We assert this statically (parse the AST,
-# not run the installer) because the installers' post-install courtesy check hangs under pwsh 7 on
-# current Windows runner images -- `& slack _fingerprint | Tee-Object -Variable | Out-Null` blocks
-# with no console -- so a real end-to-end install is not yet runnable in CI. Tracked separately.
-$qualifiedCommand = "Microsoft.PowerShell.Archive\Expand-Archive"
+$qualifiedCommand = "Microsoft.PowerShell.Archive\Expand-Archive" # https://github.com/slackapi/slack-cli/issues/651
 
 $installers = @(
   "install-windows.ps1",
@@ -48,10 +42,6 @@ foreach ($name in $installers) {
         $node.GetCommandName() -like "*Expand-Archive"
     }, $true)
 
-  # The invariant is "no unqualified extraction call," not a fixed count: every
-  # *Expand-Archive invocation must be the qualified form, and there must be at
-  # least one (so a removed/renamed extraction can't pass vacuously). This won't
-  # break if an installer legitimately extracts more than once.
   if ($archiveCommands.Count -lt 1) {
     throw "$installer calls no Expand-Archive; expected $qualifiedCommand (issue #651)"
   }
