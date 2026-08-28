@@ -48,9 +48,17 @@ foreach ($name in $installers) {
         $node.GetCommandName() -like "*Expand-Archive"
     }, $true)
 
-  if ($archiveCommands.Count -ne 1 -or $archiveCommands[0].GetCommandName() -ne $qualifiedCommand) {
-    throw "$installer must call $qualifiedCommand exactly once (issue #651)"
+  # The invariant is "no unqualified extraction call," not a fixed count: every
+  # *Expand-Archive invocation must be the qualified form, and there must be at
+  # least one (so a removed/renamed extraction can't pass vacuously). This won't
+  # break if an installer legitimately extracts more than once.
+  if ($archiveCommands.Count -lt 1) {
+    throw "$installer calls no Expand-Archive; expected $qualifiedCommand (issue #651)"
+  }
+  $unqualified = $archiveCommands | Where-Object { $_.GetCommandName() -ne $qualifiedCommand }
+  if ($unqualified) {
+    throw "$installer must call $qualifiedCommand (found unqualified Expand-Archive; issue #651)"
   }
 
-  Write-Host "$name calls $qualifiedCommand exactly once (issue #651 guard passed)"
+  Write-Host "$name calls $qualifiedCommand ($($archiveCommands.Count)x), all qualified (issue #651 guard passed)"
 }
