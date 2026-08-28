@@ -50,6 +50,7 @@ $ slack app delete     # Delete an app and app info from a team
 * [slack app install](/tools/slack-cli/reference/commands/slack_app_install/)	 - Install the app to a team
 * [slack app link](/tools/slack-cli/reference/commands/slack_app_link/)	 - Add an existing app to the project
 * [slack app list](/tools/slack-cli/reference/commands/slack_app_list/)	 - List teams with the app installed
+* [slack app request](/tools/slack-cli/reference/commands/slack_app_request/)	 - Check approval requests to install the app
 * [slack app settings](/tools/slack-cli/reference/commands/slack_app_settings/)	 - Open app settings for configurations
 * [slack app uninstall](/tools/slack-cli/reference/commands/slack_app_uninstall/)	 - Uninstall the app from a team
 * [slack app unlink](/tools/slack-cli/reference/commands/slack_app_unlink/)	 - Remove a linked app from the project
