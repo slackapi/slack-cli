@@ -44,6 +44,11 @@ test-install: clean
 	bash scripts/install-test.sh
 	bash scripts/install-dev-test.sh
 
+# Run milestone triage script tests
+.PHONY: test-milestone
+test-milestone:
+	bash scripts/triage-milestone-test.sh
+
 # Report test coverage
 .PHONY: coverage
 coverage:
