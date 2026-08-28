@@ -626,6 +626,14 @@ Approval is pending review
 
 ---
 
+### feature_not_enabled {#feature_not_enabled}
+
+**Message**: This feature is not enabled for the team
+
+**Remediation**: Reach out to an admin for additional information
+
+---
+
 ### feedback_name_invalid {#feedback_name_invalid}
 
 **Message**: The name of the feedback is invalid
@@ -1338,6 +1346,14 @@ Read about manifest sourcing with the `slack manifest info --help` command
 ### request_id_or_app_id_is_required {#request_id_or_app_id_is_required}
 
 **Message**: Must include a request_id or app_id
+
+---
+
+### restricted_action {#restricted_action}
+
+**Message**: The requested action is not allowed for a specified team
+
+**Remediation**: Check that each team belongs to the organization of the authenticated account
 
 ---
 
