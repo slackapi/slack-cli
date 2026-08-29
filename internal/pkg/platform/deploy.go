@@ -185,19 +185,27 @@ func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App
 	var elapsedDeploy = time.Since(startDeploy)
 	var deployTime = fmt.Sprintf("%.1fs", elapsedDeploy.Seconds())
 
-	// Set the SLACK_API_URL environment variable for development workspaces
-	//
-	// Note: This errors silently to continue deployment without any problem
-	var apiHost = clients.Config.APIHostResolved
-	if clients.Auth().IsAPIHostSlackDev(apiHost) {
-		apiHostURL := fmt.Sprintf("%s/api/", apiHost)
-		_ = clients.API().AddVariable(ctx, token, app.AppID, "SLACK_API_URL", apiHostURL)
+	if err := setAPIHostVariable(ctx, clients, app.AppID); err != nil {
+		return err
 	}
 
 	successfulDeployText := deploySuccessText(clients, app, manifest, authSession, deployTime)
 	deploySpinner.Update(successfulDeployText, "").Stop()
 
 	return nil
+}
+
+// setAPIHostVariable configures deployed apps to use the resolved custom API
+// host when the invocation explicitly requests one or targets Slack development.
+func setAPIHostVariable(ctx context.Context, clients *shared.ClientFactory, appID string) error {
+	apiHost := clients.Config.APIHostResolved
+	if clients.Config.APIHostFlag == "" && !clients.Auth().IsAPIHostSlackDev(apiHost) {
+		return nil
+	}
+
+	token := config.GetContextToken(ctx)
+	apiHostURL := fmt.Sprintf("%s/api/", apiHost)
+	return clients.API().AddVariable(ctx, token, appID, "SLACK_API_URL", apiHostURL)
 }
 
 // deploySuccessText formats the success message and app information for a deployed app

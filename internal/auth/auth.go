@@ -238,7 +238,11 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 	var updatedAuthsByTeamID types.AuthByTeamID
 	var hasUpdateRotation, hasUpdateNaming bool
 
-	updatedAuthsByName, hasUpdateRotation = c.rotateTokenAll(ctx, auths)
+	if c.config.APIHostFlag != "" {
+		updatedAuthsByName = auths
+	} else {
+		updatedAuthsByName, hasUpdateRotation = c.rotateTokenAll(ctx, auths)
+	}
 
 	// As of v2.4.0 we migrate users credentials json to storing auths by team_id
 	updatedAuthsByTeamID, hasUpdateNaming = c.migrateToAuthByTeamID(ctx, updatedAuthsByName)

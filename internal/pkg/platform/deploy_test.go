@@ -15,13 +15,77 @@
 package platform
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestSetAPIHostVariable(t *testing.T) {
+	tests := map[string]struct {
+		apiHostFlag     string
+		apiHostResolved string
+		isSlackDev      bool
+		addVariableErr  error
+		expectUpdate    bool
+	}{
+		"explicit custom host is added": {
+			apiHostFlag:     "api.your.test.endpoint",
+			apiHostResolved: "https://api.your.test.endpoint",
+			expectUpdate:    true,
+		},
+		"explicit custom host update returns an error": {
+			apiHostFlag:     "api.your.test.endpoint",
+			apiHostResolved: "https://api.your.test.endpoint",
+			addVariableErr:  errors.New("variable update failed"),
+			expectUpdate:    true,
+		},
+		"development host without an explicit flag is added": {
+			apiHostResolved: "https://dev.slack.com",
+			isSlackDev:      true,
+			expectUpdate:    true,
+		},
+		"production host without an explicit flag is not added": {
+			apiHostResolved: "https://slack.com",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := config.SetContextToken(context.Background(), "token")
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Config.APIHostFlag = tc.apiHostFlag
+			clientsMock.Config.APIHostResolved = tc.apiHostResolved
+			if tc.apiHostFlag == "" {
+				clientsMock.Auth.On("IsAPIHostSlackDev", tc.apiHostResolved).Return(tc.isSlackDev).Once()
+			}
+			if tc.expectUpdate {
+				clientsMock.API.On(
+					"AddVariable",
+					ctx,
+					"token",
+					"A123",
+					"SLACK_API_URL",
+					tc.apiHostResolved+"/api/",
+				).Return(tc.addVariableErr).Once()
+			}
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			err := setAPIHostVariable(ctx, clients, "A123")
+
+			require.ErrorIs(t, err, tc.addVariableErr)
+			clientsMock.API.AssertNumberOfCalls(t, "AddVariable", map[bool]int{true: 1, false: 0}[tc.expectUpdate])
+			clientsMock.Auth.AssertExpectations(t)
+			clientsMock.API.AssertExpectations(t)
+		})
+	}
+}
 
 func TestDeploySuccessText(t *testing.T) {
 	tests := map[string]struct {

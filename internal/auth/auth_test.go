@@ -374,6 +374,31 @@ func Test_AuthsRotation(t *testing.T) {
 		require.NoError(t, err, "Should not return an error when the contents of credentials are valid")
 	})
 
+	t.Run("token rotation is skipped with an explicit API host", func(t *testing.T) {
+		ctx, authClient := setup(t)
+		fiveMinutesAgo := int(time.Now().Unix()) - 60*5
+		savedAPIHost := "https://saved.slack.test"
+		authClient.config.APIHostFlag = "api.your.test.endpoint"
+
+		workspaceAuth := types.SlackAuth{
+			APIHost:      &savedAPIHost,
+			Token:        "expiredToken",
+			RefreshToken: "valid-refresh-token",
+			ExpiresAt:    fiveMinutesAgo,
+			TeamDomain:   "workspace-a",
+			TeamID:       "T123456789A",
+		}
+		_, err := authClient.setAuths(ctx, types.AuthByTeamDomain{
+			workspaceAuth.TeamID: workspaceAuth,
+		})
+		require.NoError(t, err)
+
+		updatedAuths, err := authClient.auths(ctx)
+
+		require.NoError(t, err)
+		require.Equal(t, workspaceAuth, updatedAuths[workspaceAuth.TeamID])
+	})
+
 	t.Run("token rotation returns an error", func(t *testing.T) {
 		// Setup
 		ctx, authClient := setup(t)
@@ -566,6 +591,7 @@ func Test_SetSelectedAuth(t *testing.T) {
 	mockAPIHost := "dev.slack.com"
 	tests := map[string]struct {
 		auth            types.SlackAuth
+		apiHostFlag     string
 		expectedAPIHost string
 		expectedAPIURL  string
 	}{
@@ -577,10 +603,20 @@ func Test_SetSelectedAuth(t *testing.T) {
 			expectedAPIHost: fmt.Sprintf("https://%s", mockAPIHost),
 			expectedAPIURL:  fmt.Sprintf("https://%s/api/", mockAPIHost),
 		},
+		"explicit API host overrides authentication host": {
+			auth: types.SlackAuth{
+				TeamID:  "T002",
+				APIHost: &mockAPIHost,
+			},
+			apiHostFlag:     "api.your.test.endpoint",
+			expectedAPIHost: "https://api.your.test.endpoint",
+			expectedAPIURL:  "https://api.your.test.endpoint/api/",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, authClient, osMock := setup(t)
+			authClient.config.APIHostFlag = tc.apiHostFlag
 			authClient.SetSelectedAuth(ctx, tc.auth, authClient.config, osMock)
 			assert.Equal(t, authClient.config.TeamFlag, tc.auth.TeamID)
 			assert.Equal(t, authClient.config.APIHostResolved, tc.expectedAPIHost)
