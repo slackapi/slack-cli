@@ -23,21 +23,12 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
-	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
-
-// stubAIAgent stubs the detected AI coding tool and returns a function that
-// restores the original detection.
-func stubAIAgent(agent *useragent.AIAgent) func() {
-	original := aiAgentFunc
-	aiAgentFunc = func() *useragent.AIAgent { return agent }
-	return func() { aiAgentFunc = original }
-}
 
 func Test_Blocks_PreviewCommand(t *testing.T) {
 	// teamlessURL is the Block Kit Builder URL rendered when no team can be
