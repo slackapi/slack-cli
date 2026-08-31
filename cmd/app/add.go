@@ -31,8 +31,12 @@ import (
 
 // Handle to client's function used for testing
 var runAddCommandFunc = RunAddCommand
+
+// TODO: this points at apps.Add, which creates the app remotely, installs it,
+// and adds it to the project's apps file, so the "install" name is a little
+// misleading, but it's tolerable for now.
 var appInstallProdAppFunc = apps.Add
-var appInstallDevAppFunc = apps.InstallLocalApp
+var appInstallFunc = apps.Install
 var appSelectPromptFunc = prompts.AppSelectPrompt
 
 // Flags
@@ -201,7 +205,7 @@ func printAddSuccess(clients *shared.ClientFactory, cmd *cobra.Command, appInsta
 func appInstall(ctx context.Context, clients *shared.ClientFactory, selection *prompts.SelectedApp, orgGrantWorkspaceID string) (types.App, types.InstallState, error) {
 	if selection != nil && selection.App.IsDev {
 		// Install local dev app to a team
-		installedApp, _, installState, err := appInstallDevAppFunc(ctx, clients, "", selection.Auth, selection.App)
+		installedApp, _, installState, err := appInstallFunc(ctx, clients, selection.Auth, selection.App, apps.InstallOptions{Dev: true})
 		return installedApp, installState, err
 	} else {
 		installState, installedApp, err := appInstallProdAppFunc(ctx, clients, selection.Auth, selection.App, orgGrantWorkspaceID)
