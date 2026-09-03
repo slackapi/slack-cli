@@ -20,7 +20,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.27.0"
+          go-version: "1.27.1"
       - name: Lint
         run: go tool golangci-lint run --timeout=5m
       - name: Unit Tests
@@ -71,7 +71,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: "1.27.0"
+          go-version: "1.27.1"
       - name: Report health score
         uses: slackapi/slack-health-score@d58a419f15cdaff97e9aa7f09f95772830ab66f7 # v0.1.1
         with:
