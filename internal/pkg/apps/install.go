@@ -22,6 +22,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/icon"
@@ -700,6 +701,12 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return false, err
+	}
+	if clients.Config.ManifestSourceFlag == cmdutil.ManifestSourceRemote {
+		return false, nil
+	}
+	if clients.Config.ManifestSourceFlag == cmdutil.ManifestSourceProject {
+		return true, nil
 	}
 	if manifestSource.Equals(config.ManifestSourceRemote) {
 		return false, nil
