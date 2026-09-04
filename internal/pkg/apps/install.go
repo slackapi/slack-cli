@@ -23,7 +23,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/icon"
 	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -37,6 +36,8 @@ const (
 	CreateAppManifestOnly       = true
 	CreateAppManifestAndInstall = false
 )
+
+var manifestSyncFunc = manifestpkg.Sync
 
 const additionalManifestInfoNotice = "App manifest contains some components that may require additional information"
 
@@ -726,70 +727,15 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	notice := ""
-	switch {
-	case saved.Equals(hash):
+	if saved.Equals(hash) {
 		return true, nil
-	case saved.Equals(""):
-		notice = "Manifest values for this app are overwritten on reinstall"
-	default:
-		notice = style.Yellow("The manifest on app settings has been changed since last update")
 	}
 
-	if clients.Config.WithExperimentOn(experiment.ManifestSync) {
-		_, err := manifestpkg.Sync(ctx, clients, app, auth)
-		if err != nil {
-			return false, err
-		}
-		return false, nil
-	}
-
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji:     "books",
-		Text:      "App Manifest",
-		Secondary: []string{notice},
-	}))
-	if !clients.IO.IsTTY() {
-		return false, errorAppManifestUpdate(app, true)
-	}
-	continues, err := clients.IO.ConfirmPrompt(
-		ctx,
-		"Overwrite manifest on app settings with the project's manifest file?",
-		false,
-	)
+	_, err = manifestSyncFunc(ctx, clients, app, auth)
 	if err != nil {
 		return false, err
 	}
-	if !continues {
-		return false, errorAppManifestUpdate(app, false)
-	}
-	return true, nil
-}
-
-// errorAppManifestUpdate formats an error message with app specific remediation
-func errorAppManifestUpdate(app types.App, forceOption bool) *slackerror.Error {
-	url := "https://api.slack.com/apps"
-	switch {
-	case app.AppID != "" && app.EnterpriseID != "":
-		url = fmt.Sprintf("https://app.slack.com/app-settings/%s/%s/app-manifest", app.EnterpriseID, app.AppID)
-	case app.AppID != "" && app.TeamID != "":
-		url = fmt.Sprintf("https://app.slack.com/app-settings/%s/%s/app-manifest", app.TeamID, app.AppID)
-	case app.AppID != "":
-		url = fmt.Sprintf("https://api.slack.com/apps/%s", app.AppID)
-	}
-	command := style.Commandf(fmt.Sprintf("manifest --source %s", config.ManifestSourceLocal.String()), false)
-	remediation := []string{
-		fmt.Sprintf("Check %s values with %s", config.ManifestSourceLocal.String(), command),
-		fmt.Sprintf("Compare app settings: %s", style.LinkText(url)),
-	}
-	if forceOption {
-		option := fmt.Sprintf("Write %s manifest values to app settings using `%s`",
-			config.ManifestSourceLocal.String(),
-			style.CommandText("--force"),
-		)
-		remediation = append(remediation, option)
-	}
-	return slackerror.New(slackerror.ErrAppManifestUpdate).WithRemediation("%s", strings.Join(remediation, "\n"))
+	return false, nil
 }
 
 // Displays warning message and details and then gives user a prompt on if they want to continue or not. Returns false

@@ -18,7 +18,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -31,10 +30,9 @@ var manifestSyncFunc = manifest.Sync
 
 func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:    "sync",
-		Short:  "Sync the app manifest between project and app settings",
-		Long:   "Compare the local project manifest with app settings, resolve differences, and sync both to the same state.",
-		Hidden: true,
+		Use:   "sync",
+		Short: "Sync the app manifest between project and app settings",
+		Long:  "Compare the local project manifest with app settings, resolve differences, and sync both to the same state.",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "manifest sync", Meaning: "Sync project manifest with app settings"},
 			{Command: "manifest sync --force", Meaning: "Push project manifest to app settings without prompting"},
@@ -42,13 +40,6 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if !clients.Config.WithExperimentOn(experiment.ManifestSync) {
-				return slackerror.New(slackerror.ErrExperimentRequired).
-					WithRemediation("Enable the %s experiment with %s",
-						style.Highlight(string(experiment.ManifestSync)),
-						style.CommandText("--experiment manifest-sync"),
-					)
-			}
 			if clients.Config.ForceFlag && clients.Config.ForceRemoteFlag {
 				return slackerror.New(slackerror.ErrMismatchedFlags).
 					WithMessage("Cannot use both %s and %s flags", style.CommandText("--force"), style.CommandText("--force-remote"))
