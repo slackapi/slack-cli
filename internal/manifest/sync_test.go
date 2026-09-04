@@ -22,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cache"
+	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -227,7 +228,7 @@ func Test_Sync(t *testing.T) {
 			Return(localManifest, nil)
 		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 			Return(remoteManifest, nil)
-		f.clients.Config.ManifestSourceFlag = "project"
+		f.clients.Config.ManifestSourceFlag = cmdutil.ManifestSourceProject
 		f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(api.UpdateAppResult{}, nil)
 		f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
@@ -249,7 +250,7 @@ func Test_Sync(t *testing.T) {
 			Return(localManifest, nil)
 		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 			Return(remoteManifest, nil)
-		f.clients.Config.ManifestSourceFlag = "remote"
+		f.clients.Config.ManifestSourceFlag = cmdutil.ManifestSourceRemote
 		f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return(api.UpdateAppResult{}, nil)
 		f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
@@ -278,6 +279,8 @@ func Test_Sync(t *testing.T) {
 		slackErr := slackerror.ToSlackError(err)
 		assert.Contains(t, slackErr.Remediation, "--manifest-source=project")
 		assert.Contains(t, slackErr.Remediation, "--manifest-source=remote")
+		assert.Contains(t, slackErr.Remediation, "--force")
+		assert.Contains(t, slackErr.Remediation, "--force-remote")
 	})
 
 	t.Run("API UpdateApp failure is propagated", func(t *testing.T) {
