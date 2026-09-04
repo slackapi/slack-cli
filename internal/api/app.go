@@ -45,6 +45,7 @@ const (
 	appStatusMethod                = "apps.status"
 	appApprovalRequestCreateMethod = "apps.approvals.requests.create"
 	appApprovalRequestCancelMethod = "apps.approvals.requests.cancel"
+	appApprovalRequestListMethod   = "apps.approvals.requests.list"
 )
 
 // AppsClient is the interface for app-related API calls
@@ -60,6 +61,7 @@ type AppsClient interface {
 	Host() string
 	Icon(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error)
 	IconSet(ctx context.Context, fs afero.Fs, token, appID, iconFilePath string) (IconResult, error)
+	ListAppApprovalRequests(ctx context.Context, token string, appID string, requestedTeams []string) (AppsApprovalsRequestsListResult, error)
 	RequestAppApproval(ctx context.Context, token string, appID string, teamID string, reason string, scopes string, outgoingDomains []string) (AppsApprovalsRequestsCreateResult, error)
 	SetHost(host string)
 	UninstallApp(ctx context.Context, token string, appID, teamID string) error
@@ -585,6 +587,109 @@ type appsApprovalsRequestsCreateResponse struct {
 
 type appsApprovalsRequestsCancelResponse struct {
 	extendedBaseResponse
+}
+
+// AppsApprovalsRequestStatus is where an app approval request stands. A pending
+// request has not been resolved yet, while approved, denied, and cancelled
+// requests are settled. The status is a property of the request alone, so it
+// reads the same for every caller.
+type AppsApprovalsRequestStatus string
+
+const (
+	AppsApprovalsRequestStatusApproved  AppsApprovalsRequestStatus = "approved"
+	AppsApprovalsRequestStatusCancelled AppsApprovalsRequestStatus = "cancelled"
+	AppsApprovalsRequestStatusDenied    AppsApprovalsRequestStatus = "denied"
+	AppsApprovalsRequestStatusPending   AppsApprovalsRequestStatus = "pending"
+)
+
+// AppsApprovalsRequestCancelledBy is the kind of actor that cancelled an app
+// approval request. A user is the requester withdrawing their own request, an
+// admin is someone who resolves approvals on the team, and system is Slack
+// cancelling the request with no actor of its own, which is what happens when
+// the app named by the request is deleted.
+type AppsApprovalsRequestCancelledBy string
+
+const (
+	AppsApprovalsRequestCancelledByAdmin  AppsApprovalsRequestCancelledBy = "admin"
+	AppsApprovalsRequestCancelledBySystem AppsApprovalsRequestCancelledBy = "system"
+	AppsApprovalsRequestCancelledByUser   AppsApprovalsRequestCancelledBy = "user"
+)
+
+// AppsApprovalsRequest is a single request by a user to have an app approved
+// for install
+type AppsApprovalsRequest struct {
+	// ID is the encoded ID of the request
+	ID string `json:"id"`
+	// TeamID is the team that resolves the request, which is an organization
+	// for requests routed to an organization and a workspace otherwise
+	TeamID string `json:"team_id"`
+	// Status is where the request stands
+	Status AppsApprovalsRequestStatus `json:"status"`
+	// CanSelfApprove is true if the account can install the app on the team
+	// without approval from anyone else
+	CanSelfApprove bool `json:"can_self_approve"`
+	// DateCreated is the Unix timestamp of when the request was created
+	DateCreated int64 `json:"date_created"`
+	// DateResolved is the Unix timestamp of when the request was resolved and
+	// is absent while the request remains open
+	DateResolved int64 `json:"date_resolved,omitempty"`
+	// CancelledBy is the kind of actor that cancelled the request and is absent
+	// unless the request was cancelled
+	CancelledBy AppsApprovalsRequestCancelledBy `json:"cancelled_by,omitempty"`
+}
+
+type AppsApprovalsRequestsListResult struct {
+	// Requests contains the most recent request that the authenticated account
+	// made for an app on each of the searched teams
+	Requests []AppsApprovalsRequest `json:"requests"`
+}
+
+type appsApprovalsRequestsListResponse struct {
+	extendedBaseResponse
+	AppsApprovalsRequestsListResult
+}
+
+// ListAppApprovalRequests fetches the most recent request that the authenticated
+// account made to install an app on each of the searched teams.
+//
+// The teams searched are the team of the token, the organization of that team
+// if the token is scoped to a workspace of one, and any workspace of that
+// organization named in requestedTeams.
+func (c *Client) ListAppApprovalRequests(ctx context.Context, token string, appID string, requestedTeams []string) (AppsApprovalsRequestsListResult, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListAppApprovalRequests")
+	defer span.Finish()
+
+	args := struct {
+		AppID          string   `json:"app_id"`
+		RequestedTeams []string `json:"requested_teams,omitempty"`
+	}{
+		appID,
+		requestedTeams,
+	}
+
+	body, err := json.Marshal(args)
+	if err != nil {
+		return AppsApprovalsRequestsListResult{}, errInvalidArguments.WithRootCause(err)
+	}
+
+	b, err := c.postJSON(ctx, appApprovalRequestListMethod, token, "", body)
+	if err != nil {
+		return AppsApprovalsRequestsListResult{}, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := appsApprovalsRequestsListResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+
+	if err != nil {
+		return AppsApprovalsRequestsListResult{}, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(appApprovalRequestListMethod)
+	}
+
+	if !resp.Ok {
+		return AppsApprovalsRequestsListResult{}, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, appApprovalRequestListMethod)
+	}
+
+	return resp.AppsApprovalsRequestsListResult, nil
 }
 
 // GenerateS3PresignedPost details to be saved

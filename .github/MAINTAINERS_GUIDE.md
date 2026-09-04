@@ -192,7 +192,8 @@ pkg/
 
 ### `scripts/`
 
-Installation and setup scripts for various operating systems are available here.
+Installation and setup scripts for various operating systems are available here,
+along with scripts that support the release process.
 
 ### `test/`
 
@@ -526,15 +527,20 @@ For these changes to complete, certain application permissions are needed:
 
 - **Actions**: Read and write
 - **Contents**: Read and write
+- **Issues**: Read and write
 - **Metadata**: Read
 - **Pull requests**: Read and write
 - **Workflows**: Read and write
+
+The **Issues** permission is needed to create, rename, and close milestones.
+Note that adding a permission to the app is not enough on its own, since each
+existing installation must also be granted the new permission.
 
 Access to this project is also required with the selected application scopes.
 
 Credentials and secrets for the app can be stored as the following variables:
 
-- `GH_APP_ID_RELEASER`
+- `GH_APP_CLIENT_ID_RELEASER`
 - `GH_APP_PRIVATE_KEY_RELEASER`
 
 #### Bumping Go package versions
@@ -800,7 +806,16 @@ Steps to triage a pull request:
 4. **Milestone**:
    - A milestone should be assigned when possible, usually as the `Next Release`
    - After a release, the `Next Release` milestone is renamed to the tagged
-     version
+     version and closed, while a new `Next Release` milestone gathers the issues
+     and pull requests that remain open
+   - This happens automatically with [this workflow][wf-milestone] when a
+     production release is published, but can also be done by hand:
+     ```sh
+     $ DRY_RUN=true ./scripts/triage-milestone.sh v4.8.0
+     $ ./scripts/triage-milestone.sh v4.8.0
+     ```
+   - The `Next Release` milestone must keep this exact name because release and
+     dependency automation assigns pull requests to it by title
 
 #### Pull request: merge
 
@@ -853,3 +868,4 @@ When in doubt, find the other maintainers and ask.
 [sync]: https://github.com/slackapi/slack-cli/blob/main/.github/workflows/sync-docs-from-cli-repo.yml
 [vscode]: https://github.com/slackapi/slack-cli/blob/main/.vscode/settings.json
 [wf-dependencies]: ./workflows/dependencies.yml
+[wf-milestone]: ./workflows/milestone.yml

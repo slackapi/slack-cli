@@ -1,0 +1,60 @@
+name: Milestone
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag to triage
+        required: true
+        type: string
+
+concurrency: ${{ github.workflow }}
+
+jobs:
+  triage:
+    name: Triage Milestone
+    # Development and feature builds are published as prereleases by CircleCI
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.release.prerelease == false && github.event.release.draft == false)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Gather credentials
+        id: credentials
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.GH_APP_CLIENT_ID_RELEASER }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+
+      - name: Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Decide the release tag
+        id: release
+        env:
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "The $TAG tag is not a production release, nothing to triage"
+            echo "should_triage=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_triage=true" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Triaging the milestone of $TAG"
+
+      - name: Triage the milestone
+        if: steps.release.outputs.should_triage == 'true'
+        env:
+          GH_TOKEN: ${{ steps.credentials.outputs.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: ./scripts/triage-milestone.sh "$TAG"
