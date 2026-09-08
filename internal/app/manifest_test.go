@@ -69,24 +69,33 @@ func Test_AppManifest_SetManifestEnvTeamVars(t *testing.T) {
 }
 
 func Test_AppManifest_GetManifestLocal(t *testing.T) {
-	fallbackTests := map[string]struct {
-		hookCommand     string
-		hookOutput      string
-		manifestFile    string
-		expectedName    string
-		expectedErrCode string
-		expectHookCall  bool
+	tests := map[string]struct {
+		hookCommand      string
+		hookOutput       string
+		hookErr          error
+		manifestFile     string
+		expectedManifest types.SlackYaml
+		expectedErrCode  string
+		expectHookCall   bool
 	}{
 		"prefers hook over manifest.json when hook is available": {
-			hookCommand:    "echo manifest",
-			hookOutput:     `{"display_information":{"name":"hook-app"}}`,
-			manifestFile:   `{"display_information":{"name":"file-app"}}`,
-			expectedName:   "hook-app",
+			hookCommand:  "echo manifest",
+			hookOutput:   `{"display_information":{"name":"hook-app"}}`,
+			manifestFile: `{"display_information":{"name":"file-app"}}`,
+			expectedManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "hook-app"},
+				},
+			},
 			expectHookCall: true,
 		},
 		"falls back to manifest.json when no hook exists": {
 			manifestFile: `{"display_information":{"name":"file-app"}}`,
-			expectedName: "file-app",
+			expectedManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "file-app"},
+				},
+			},
 		},
 		"errors if no hook and no manifest.json": {
 			expectedErrCode: slackerror.ErrNoFile,
@@ -95,8 +104,41 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			manifestFile:    `not json`,
 			expectedErrCode: slackerror.ErrInvalidManifest,
 		},
+		"returns manifest from hook output": {
+			hookCommand: "generate-manifest",
+			hookOutput:  `{"display_information":{"name":"hook-app"}}`,
+			expectedManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "hook-app"},
+				},
+			},
+			expectHookCall: true,
+		},
+		"parses hook output with leading characters": {
+			hookCommand: "generate-manifest",
+			hookOutput:  `...{"display_information":{"name":"hook-app"}}`,
+			expectedManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "hook-app"},
+				},
+			},
+			expectHookCall: true,
+		},
+		"errors if hook execution errors": {
+			hookCommand:     "generate-manifest",
+			hookOutput:      `{}`,
+			hookErr:         slackerror.New(slackerror.ErrNoFile),
+			expectedErrCode: slackerror.ErrInvalidManifest,
+			expectHookCall:  true,
+		},
+		"errors if hook output has no JSON": {
+			hookCommand:     "generate-manifest",
+			hookOutput:      `...unknown`,
+			expectedErrCode: slackerror.ErrInvalidManifest,
+			expectHookCall:  true,
+		},
 	}
-	for name, tc := range fallbackTests {
+	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			fsMock := slackdeps.NewFsMock()
@@ -121,7 +163,7 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			mockHookExecutor := &hooks.MockHookExecutor{}
 			if tc.hookCommand != "" {
 				mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
-					Return(tc.hookOutput, nil)
+					Return(tc.hookOutput, tc.hookErr)
 			}
 
 			manifestClient := NewManifestClient(&api.APIMock{}, configMock, fsMock)
@@ -132,65 +174,13 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 				assert.Equal(t, tc.expectedErrCode, err.(*slackerror.Error).Code)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, tc.expectedName, result.DisplayInformation.Name)
+				assert.Equal(t, tc.expectedManifest, result)
 			}
 
 			if tc.expectHookCall {
 				mockHookExecutor.AssertCalled(t, "Execute", mock.Anything, mock.Anything)
 			} else {
 				mockHookExecutor.AssertNotCalled(t, "Execute", mock.Anything, mock.Anything)
-			}
-		})
-	}
-
-	hookTests := map[string]struct {
-		hookOutput   string
-		hookErr      error
-		expectedName string
-		expectedErr  string
-	}{
-		"returns manifest from hook output": {
-			hookOutput:   `{"display_information":{"name":"hook-app"}}`,
-			expectedName: "hook-app",
-		},
-		"parses hook output with leading characters": {
-			hookOutput:   `...{"display_information":{"name":"hook-app"}}`,
-			expectedName: "hook-app",
-		},
-		"errors if hook execution errors": {
-			hookOutput:  `{}`,
-			hookErr:     slackerror.New(slackerror.ErrNoFile),
-			expectedErr: slackerror.ErrInvalidManifest,
-		},
-		"errors if hook output has no JSON": {
-			hookOutput:  `...unknown`,
-			expectedErr: slackerror.ErrInvalidManifest,
-		},
-	}
-	for name, tc := range hookTests {
-		t.Run(name, func(t *testing.T) {
-			ctx := slackcontext.MockContext(t.Context())
-			fsMock := slackdeps.NewFsMock()
-			osMock := slackdeps.NewOsMock()
-			osMock.AddDefaultMocks()
-			configMock := config.NewConfig(fsMock, osMock)
-			configMock.DomainAuthTokens = "api.slack.com"
-			mockSDKConfig := hooks.NewSDKConfigMock()
-			mockSDKConfig.Hooks.GetManifest = hooks.HookScript{Name: "GetManifest", Command: "generate-manifest"}
-
-			mockHookExecutor := &hooks.MockHookExecutor{}
-			mockHookExecutor.On("Execute", mock.Anything, mock.Anything).
-				Return(tc.hookOutput, tc.hookErr)
-
-			manifestClient := NewManifestClient(&api.APIMock{}, configMock, fsMock)
-
-			result, err := manifestClient.GetManifestLocal(ctx, mockSDKConfig, mockHookExecutor)
-			if tc.expectedErr != "" {
-				require.Error(t, err)
-				assert.Equal(t, tc.expectedErr, err.(*slackerror.Error).Code)
-			} else {
-				require.NoError(t, err)
-				assert.Equal(t, tc.expectedName, result.DisplayInformation.Name)
 			}
 		})
 	}
