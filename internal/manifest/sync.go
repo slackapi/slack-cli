@@ -91,8 +91,8 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
 			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings or %s to pull app settings to project",
 				style.Commandf("manifest sync", false),
-				style.CommandText("--manifest-source=local / --force"),
-				style.CommandText("--manifest-source=remote / --force-remote"),
+				style.CommandText("--manifest-source=local"),
+				style.CommandText("--manifest-source=remote"),
 			)
 	default:
 		merged, err = resolveInteractively(ctx, clients, localManifest.AppManifest, remoteManifest.AppManifest, diffs)

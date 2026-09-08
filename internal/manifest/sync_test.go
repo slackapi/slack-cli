@@ -278,8 +278,6 @@ func Test_Sync(t *testing.T) {
 		slackErr := slackerror.ToSlackError(err)
 		assert.Contains(t, slackErr.Remediation, "--manifest-source=local")
 		assert.Contains(t, slackErr.Remediation, "--manifest-source=remote")
-		assert.Contains(t, slackErr.Remediation, "--force")
-		assert.Contains(t, slackErr.Remediation, "--force-remote")
 	})
 
 	t.Run("API UpdateApp failure is propagated", func(t *testing.T) {
