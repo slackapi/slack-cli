@@ -17,6 +17,7 @@ package cmdutil
 import (
 	"fmt"
 
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -37,24 +38,18 @@ var OrgGrantWorkspaceDescription = func() string {
 		style.Secondary("(or 'all' for all workspaces in the org)"))
 }
 
-// ManifestSourceFlag values
-const (
-	ManifestSourceProject = "project"
-	ManifestSourceRemote  = "remote"
-)
-
 // ValidateManifestSourceFlag checks that --manifest-source has a valid value if set
 func ValidateManifestSourceFlag(clients *shared.ClientFactory) error {
 	v := clients.Config.ManifestSourceFlag
 	if v == "" {
 		return nil
 	}
-	if v != ManifestSourceProject && v != ManifestSourceRemote {
+	if v != string(config.ManifestSourceLocal) && v != string(config.ManifestSourceRemote) {
 		return slackerror.New(slackerror.ErrInvalidFlag).
 			WithMessage("Invalid value %q for %s flag", v, style.CommandText("--manifest-source")).
 			WithRemediation("Valid values are %s or %s",
-				style.Highlight(ManifestSourceProject),
-				style.Highlight(ManifestSourceRemote),
+				style.Highlight(string(config.ManifestSourceLocal)),
+				style.Highlight(string(config.ManifestSourceRemote)),
 			)
 	}
 	return nil

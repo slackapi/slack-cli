@@ -33,8 +33,8 @@ func Test_ValidateManifestSourceFlag(t *testing.T) {
 			value:     "",
 			expectErr: false,
 		},
-		"project is valid": {
-			value:     "project",
+		"local is valid": {
+			value:     "local",
 			expectErr: false,
 		},
 		"remote is valid": {
@@ -45,8 +45,8 @@ func Test_ValidateManifestSourceFlag(t *testing.T) {
 			value:     "invalid",
 			expectErr: true,
 		},
-		"local is not valid": {
-			value:     "local",
+		"project is not valid": {
+			value:     "project",
 			expectErr: true,
 		},
 	}

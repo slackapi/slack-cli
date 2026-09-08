@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -78,12 +77,12 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 
 	var merged types.AppManifest
 	switch {
-	case clients.Config.ManifestSourceFlag == cmdutil.ManifestSourceProject || clients.Config.ForceFlag:
+	case clients.Config.ManifestSourceFlag == string(config.ManifestSourceLocal) || clients.Config.ForceFlag:
 		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllLocal)
 		if err != nil {
 			return nil, err
 		}
-	case clients.Config.ManifestSourceFlag == cmdutil.ManifestSourceRemote || clients.Config.ForceRemoteFlag:
+	case clients.Config.ManifestSourceFlag == string(config.ManifestSourceRemote) || clients.Config.ForceRemoteFlag:
 		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllRemote)
 		if err != nil {
 			return nil, err
@@ -92,7 +91,7 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
 			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings or %s to pull app settings to project",
 				style.Commandf("manifest sync", false),
-				style.CommandText("--manifest-source=project / --force"),
+				style.CommandText("--manifest-source=local / --force"),
 				style.CommandText("--manifest-source=remote / --force-remote"),
 			)
 	default:

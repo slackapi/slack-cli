@@ -111,7 +111,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&deployFlags.hideTriggers, "hide-triggers", false, "do not list triggers and skip trigger creation prompts")
-	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (project or remote)")
+	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (local or remote)")
 	cmd.Flags().StringVar(&deployFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 
 	return cmd
