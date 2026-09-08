@@ -61,7 +61,7 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 
 	diffs, err := Diff(localManifest.AppManifest, remoteManifest.AppManifest, app.IsDev)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to compute manifest differences: %w", err)
+		return nil, fmt.Errorf("failed to compute manifest differences: %w", err)
 	}
 
 	if !diffs.HasDifferences() {
