@@ -36,6 +36,15 @@ type SyncResult struct {
 // both manifests, computes diffs, prompts the user for resolution, writes
 // the merged result to both the API and the local file, and returns the result.
 func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, auth types.SlackAuth) (*SyncResult, error) {
+	if v := clients.Config.ManifestSourceFlag; v != "" && !(v == string(config.ManifestSourceLocal) || v == string(config.ManifestSourceRemote)) {
+		return nil, slackerror.New(slackerror.ErrInvalidFlag).
+			WithMessage("Invalid value %q for %s flag", v, style.CommandText("--manifest-source")).
+			WithRemediation("Valid values are %s or %s",
+				style.Highlight(string(config.ManifestSourceLocal)),
+				style.Highlight(string(config.ManifestSourceRemote)),
+			)
+	}
+
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return nil, err
@@ -74,15 +83,6 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	}
 
 	DisplayDiffs(ctx, clients.IO, diffs)
-
-	if v := clients.Config.ManifestSourceFlag; v != "" && v != string(config.ManifestSourceLocal) && v != string(config.ManifestSourceRemote) {
-		return nil, slackerror.New(slackerror.ErrInvalidFlag).
-			WithMessage("Invalid value %q for %s flag", v, style.CommandText("--manifest-source")).
-			WithRemediation("Valid values are %s or %s",
-				style.Highlight(string(config.ManifestSourceLocal)),
-				style.Highlight(string(config.ManifestSourceRemote)),
-			)
-	}
 
 	var merged types.AppManifest
 	switch {
