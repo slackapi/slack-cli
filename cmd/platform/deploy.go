@@ -59,9 +59,6 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "platform deploy --team T0123456", Meaning: "Deploy to a specific team"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
-				return err
-			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

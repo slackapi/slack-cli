@@ -50,9 +50,6 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 						style.CommandText("--experiment manifest-sync"),
 					)
 			}
-			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
-				return err
-			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

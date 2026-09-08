@@ -264,6 +264,23 @@ func Test_Sync(t *testing.T) {
 		assert.Equal(t, "Remote", result.Merged.DisplayInformation.Description)
 	})
 
+	t.Run("invalid manifest-source flag returns error", func(t *testing.T) {
+		f := newSyncTestFixture(t)
+		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+			Return(localManifest, nil)
+		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+			Return(remoteManifest, nil)
+		f.clients.Config.ManifestSourceFlag = "invalid"
+
+		result, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "invalid")
+		assert.Contains(t, err.Error(), "--manifest-source")
+	})
+
 	t.Run("non-TTY error mentions --manifest-source in remediation", func(t *testing.T) {
 		f := newSyncTestFixture(t)
 		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)

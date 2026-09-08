@@ -45,15 +45,6 @@ func TestSyncCommand(t *testing.T) {
 			// the gate itself should pass.
 			ExpectedErrorStrings: []string{},
 		},
-		"errors when --manifest-source has an invalid value": {
-			CmdArgs: []string{"--manifest-source=invalid"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.AddDefaultMocks()
-				cf.Config.ExperimentsFlag = []string{string(experiment.ManifestSync)}
-				cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
-			},
-			ExpectedErrorStrings: []string{"Invalid value", "invalid", "--manifest-source"},
-		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
 		return NewSyncCommand(clients)
 	})
