@@ -79,6 +79,7 @@ type AppFeatures struct {
 	ManifestSlashCommandsItems []ManifestSlashCommandsItem `json:"slash_commands,omitempty" yaml:"slash_commands,flow,omitempty"`
 	Search                     *Search                     `json:"search,omitempty" yaml:"search,flow,omitempty"`
 	RichPreviews               *RichPreviews               `json:"rich_previews,omitempty" yaml:"rich_previews,flow,omitempty"`
+	CodeChannels               *RawJSON                    `json:"code_channels,omitempty" yaml:"code_channels,flow,omitempty"`
 }
 
 type RichPreviews struct {

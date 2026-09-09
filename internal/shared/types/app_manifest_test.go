@@ -250,6 +250,15 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/file"]}}`,
 		},
+		"includes code channels when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "codebot",
+				},
+				CodeChannels: ToRawJSON(`{"enabled":true}`),
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"codebot"},"code_channels":{"enabled":true}}`,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
