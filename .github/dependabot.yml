@@ -13,13 +13,21 @@ updates:
           - "charm.land/*"
           - "github.com/charmbracelet/*"
     ignore:
-      # lipgloss v2.0.6 trims trailing whitespace in Canvas.Render(), which
-      # breaks bubbletea's inline erase-on-quit and leaves stale selection
-      # lines on screen (see #669). Pin to v2.0.5 until an upstream fix ships;
-      # lift this rule when un-pinning go.mod.
+      # ultraviolet's terminal renderer rewrite (the 006e29f9 pseudo-version)
+      # leaves stale selection lines on screen after a `slack create` pick
+      # (see #669). The regression rode in on the charmbracelet group bump #636,
+      # which was titled as a lipgloss 2.0.5 -> 2.0.6 bump but also carried
+      # ultraviolet f5a850f9 -> 006e29f9; lipgloss 2.0.6 in turn requires the
+      # new ultraviolet via MVS, so both are pinned back together (lipgloss to
+      # v2.0.5, ultraviolet to the f5a850f9 pseudo-version) and both are fenced
+      # here. Lift both rules together once the upstream ultraviolet fix ships
+      # and we bump go.mod forward.
       - dependency-name: "charm.land/lipgloss/v2"
         versions:
           - ">= 2.0.6"
+      - dependency-name: "github.com/charmbracelet/ultraviolet"
+        versions:
+          - ">= v0.0.0-20260811164956-006e29f97886"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
