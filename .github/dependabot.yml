@@ -12,6 +12,14 @@ updates:
         patterns:
           - "charm.land/*"
           - "github.com/charmbracelet/*"
+    ignore:
+      # lipgloss v2.0.6 trims trailing whitespace in Canvas.Render(), which
+      # breaks bubbletea's inline erase-on-quit and leaves stale selection
+      # lines on screen (see #669). Pin to v2.0.5 until an upstream fix ships;
+      # lift this rule when un-pinning go.mod.
+      - dependency-name: "charm.land/lipgloss/v2"
+        versions:
+          - ">= 2.0.6"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
