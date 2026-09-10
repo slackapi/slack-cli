@@ -86,7 +86,7 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 
 	var merged types.AppManifest
 	switch {
-	case clients.Config.ManifestSourceFlag == string(config.ManifestSourceLocal) || clients.Config.ForceFlag:
+	case config.ManifestSource(clients.Config.ManifestSourceFlag).Equals(config.ManifestSourceLocal):
 		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllLocal)
 		if err != nil {
 			return nil, err
