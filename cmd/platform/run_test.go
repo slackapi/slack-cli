@@ -32,6 +32,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // Setup a mock for the package
@@ -275,6 +276,24 @@ func TestRunCommand_Flags(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunCommand_ManifestSourceFlag_InvalidValue(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.IO.On("IsTTY").Return(true)
+	clientsMock.IO.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
+		clients.SDKConfig = hooks.NewSDKConfigMock()
+	})
+
+	cmd := NewRunCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--manifest-source", "invalid"})
+
+	err := cmd.ExecuteContext(ctx)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid")
 }
 
 func TestRunCommand_Help(t *testing.T) {

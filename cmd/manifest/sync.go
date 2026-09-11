@@ -18,6 +18,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -37,8 +38,8 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 		Hidden: true,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "manifest sync", Meaning: "Sync project manifest with app settings"},
-			{Command: "manifest sync --force", Meaning: "Push project manifest to app settings without prompting"},
-			{Command: "manifest sync --force-remote", Meaning: "Pull app settings to project manifest without prompting"},
+			{Command: "manifest sync --manifest-source=local", Meaning: "Push project manifest to app settings without prompting"},
+			{Command: "manifest sync --manifest-source=remote", Meaning: "Pull app settings to project manifest without prompting"},
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -49,9 +50,8 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 						style.CommandText("--experiment manifest-sync"),
 					)
 			}
-			if clients.Config.ForceFlag && clients.Config.ForceRemoteFlag {
-				return slackerror.New(slackerror.ErrMismatchedFlags).
-					WithMessage("Cannot use both %s and %s flags", style.CommandText("--force"), style.CommandText("--force-remote"))
+			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
+				return err
 			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
@@ -71,6 +71,6 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().BoolVar(&clients.Config.ForceRemoteFlag, "force-remote", false, "use all app settings values without prompting")
+	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source ("+string(config.ManifestSourceLocal)+" or "+string(config.ManifestSourceRemote)+")")
 	return cmd
 }
