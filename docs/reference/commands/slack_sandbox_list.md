@@ -44,5 +44,5 @@ $ slack sandbox list --status active  # List active sandboxes only
 
 ## See also
 
-* [slack sandbox](slack_sandbox)	 - Manage developer sandboxes
+* [slack sandbox](/tools/slack-cli/reference/commands/slack_sandbox/)	 - Manage developer sandboxes
 

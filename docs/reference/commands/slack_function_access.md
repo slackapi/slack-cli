@@ -67,5 +67,5 @@ $ slack function access --info
 
 ## See also
 
-* [slack function](slack_function)	 - Manage the functions of an app
+* [slack function](/tools/slack-cli/reference/commands/slack_function/)	 - Manage the functions of an app
 

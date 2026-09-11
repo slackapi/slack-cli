@@ -702,6 +702,13 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
+	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
+	if flagSource.Equals(config.ManifestSourceRemote) {
+		return false, nil
+	}
+	if flagSource.Equals(config.ManifestSourceLocal) {
+		return true, nil
+	}
 	if manifestSource.Equals(config.ManifestSourceRemote) {
 		return false, nil
 	}

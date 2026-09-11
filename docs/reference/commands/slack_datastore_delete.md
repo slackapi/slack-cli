@@ -49,5 +49,5 @@ $ slack datastore delete '{"datastore": "tasks", "id": "42"}'
 
 ## See also
 
-* [slack datastore](slack_datastore)	 - Interact with an app's datastore
+* [slack datastore](/tools/slack-cli/reference/commands/slack_datastore/)	 - Interact with an app's datastore
 

@@ -43,8 +43,8 @@ $ slack collaborator remove USLACKBOT
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack collaborator add](slack_collaborator_add)	 - Add a new collaborator to the app
-* [slack collaborator list](slack_collaborator_list)	 - List all collaborators of an app
-* [slack collaborator remove](slack_collaborator_remove)	 - Remove a collaborator from an app
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack collaborator add](/tools/slack-cli/reference/commands/slack_collaborator_add/)	 - Add a new collaborator to the app
+* [slack collaborator list](/tools/slack-cli/reference/commands/slack_collaborator_list/)	 - List all collaborators of an app
+* [slack collaborator remove](/tools/slack-cli/reference/commands/slack_collaborator_remove/)	 - Remove a collaborator from an app
 

@@ -41,10 +41,10 @@ $ slack auth logout  # Log out of a team
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack auth list](slack_auth_list)	 - List all authorized accounts
-* [slack auth login](slack_auth_login)	 - Log in to a Slack account
-* [slack auth logout](slack_auth_logout)	 - Log out of a team
-* [slack auth revoke](slack_auth_revoke)	 - Revoke an authentication token
-* [slack auth token](slack_auth_token)	 - Collect a service token
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack auth list](/tools/slack-cli/reference/commands/slack_auth_list/)	 - List all authorized accounts
+* [slack auth login](/tools/slack-cli/reference/commands/slack_auth_login/)	 - Log in to a Slack account
+* [slack auth logout](/tools/slack-cli/reference/commands/slack_auth_logout/)	 - Log out of a team
+* [slack auth revoke](/tools/slack-cli/reference/commands/slack_auth_revoke/)	 - Revoke an authentication token
+* [slack auth token](/tools/slack-cli/reference/commands/slack_auth_token/)	 - Collect a service token
 

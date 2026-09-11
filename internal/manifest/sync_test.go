@@ -173,51 +173,82 @@ func Test_Sync(t *testing.T) {
 		assert.Equal(t, slackerror.ErrAppManifestUpdate, slackErr.Code)
 	})
 
-	t.Run("force flag merges all local and pushes to API", func(t *testing.T) {
+	mergeStrategyTests := map[string]struct {
+		forceFlag          bool
+		manifestSourceFlag string
+		expectedDesc       string
+	}{
+		"force flag merges all local and pushes to API": {
+			forceFlag:    true,
+			expectedDesc: "Local",
+		},
+		"manifest-source=local merges all local and pushes to API": {
+			manifestSourceFlag: string(config.ManifestSourceLocal),
+			expectedDesc:       "Local",
+		},
+		"manifest-source=remote merges all remote and pushes to API": {
+			manifestSourceFlag: string(config.ManifestSourceRemote),
+			expectedDesc:       "Remote",
+		},
+	}
+	for name, tc := range mergeStrategyTests {
+		t.Run(name, func(t *testing.T) {
+			f := newSyncTestFixture(t)
+			f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+			f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+				Return(localManifest, nil)
+			f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+				Return(remoteManifest, nil)
+			f.clients.Config.ForceFlag = tc.forceFlag
+			f.clients.Config.ManifestSourceFlag = tc.manifestSourceFlag
+			f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+				Return(api.UpdateAppResult{}, nil)
+			f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
+			f.cacheMock.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			_ = afero.WriteFile(f.fs, "/project/manifest.json", []byte(`{"display_information":{"name":"App"}}`), 0644)
+
+			result, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+			require.NoError(t, err)
+			require.NotNil(t, result)
+			assert.True(t, result.HasDifferences)
+			assert.True(t, result.WriteBack.Written)
+			assert.Equal(t, tc.expectedDesc, result.Merged.DisplayInformation.Description)
+			f.clientsMock.API.AssertCalled(t, "UpdateApp", mock.Anything, "xoxb-test", "A123", mock.Anything, true, true)
+		})
+	}
+
+	t.Run("invalid manifest-source flag returns error", func(t *testing.T) {
 		f := newSyncTestFixture(t)
 		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 			Return(localManifest, nil)
 		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 			Return(remoteManifest, nil)
-		f.clients.Config.ForceFlag = true
-		f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(api.UpdateAppResult{}, nil)
-		f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
-		f.cacheMock.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		_ = afero.WriteFile(f.fs, "/project/manifest.json", []byte(`{"display_information":{"name":"App"}}`), 0644)
+		f.clients.Config.ManifestSourceFlag = "invalid"
 
 		result, err := Sync(f.ctx, f.clients, testApp, testAuth)
 
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		assert.True(t, result.HasDifferences)
-		assert.True(t, result.WriteBack.Written)
-		f.clientsMock.API.AssertCalled(t, "UpdateApp", mock.Anything, "xoxb-test", "A123", mock.Anything, true, true)
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "invalid")
+		assert.Contains(t, err.Error(), "--manifest-source")
 	})
 
-	t.Run("force-remote flag merges all remote and pushes to API", func(t *testing.T) {
+	t.Run("non-TTY error mentions --manifest-source in remediation", func(t *testing.T) {
 		f := newSyncTestFixture(t)
 		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
 		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 			Return(localManifest, nil)
 		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 			Return(remoteManifest, nil)
-		f.clients.Config.ForceRemoteFlag = true
-		f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(api.UpdateAppResult{}, nil)
-		f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
-		f.cacheMock.On("SetManifestHash", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		_ = afero.WriteFile(f.fs, "/project/manifest.json", []byte(`{"display_information":{"name":"App"}}`), 0644)
 
-		result, err := Sync(f.ctx, f.clients, testApp, testAuth)
+		_, err := Sync(f.ctx, f.clients, testApp, testAuth)
 
-		require.NoError(t, err)
-		require.NotNil(t, result)
-		assert.True(t, result.HasDifferences)
-		assert.True(t, result.WriteBack.Written)
-		// Verify remote value was used — the merged manifest should have "Remote" description
-		assert.Equal(t, "Remote", result.Merged.DisplayInformation.Description)
+		require.Error(t, err)
+		slackErr := slackerror.ToSlackError(err)
+		assert.Contains(t, slackErr.Remediation, "--manifest-source=local")
+		assert.Contains(t, slackErr.Remediation, "--manifest-source=remote")
 	})
 
 	t.Run("API UpdateApp failure is propagated", func(t *testing.T) {

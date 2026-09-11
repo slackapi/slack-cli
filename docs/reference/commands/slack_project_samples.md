@@ -43,5 +43,5 @@ $ slack samples my-project              # Select a sample app to create
 
 ## See also
 
-* [slack project](slack_project)	 - Create, manage, and doctor a project
+* [slack project](/tools/slack-cli/reference/commands/slack_project/)	 - Create, manage, and doctor a project
 

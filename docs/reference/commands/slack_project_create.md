@@ -64,5 +64,5 @@ $ slack create my-project -t slack-samples/bolt-js-starter-template --app A01234
 
 ## See also
 
-* [slack project](slack_project)	 - Create, manage, and doctor a project
+* [slack project](/tools/slack-cli/reference/commands/slack_project/)	 - Create, manage, and doctor a project
 

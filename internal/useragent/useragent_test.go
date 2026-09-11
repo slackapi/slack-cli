@@ -22,7 +22,7 @@ import (
 
 func clearEnvVars(t *testing.T) {
 	t.Helper()
-	for _, env := range []string{"CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CODEX_CI", "GEMINI_CLI", "CLINE_ACTIVE", "CURSOR_AGENT", "AGENT"} {
+	for _, env := range []string{"CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CODEX_CI", "GEMINI_CLI", "CLINE_ACTIVE", "CURSOR_AGENT", "OPENCODE", "AGENT"} {
 		t.Setenv(env, "")
 	}
 }
@@ -36,6 +36,10 @@ func Test_UserAgent_BuildUserAgent(t *testing.T) {
 		"CLAUDECODE takes priority over AGENT": {
 			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose", "CLAUDE_CODE_ENTRYPOINT": "cli"},
 			contains: "AI-Agent (name: claude-code, entry: cli)",
+		},
+		"OPENCODE takes priority over AGENT": {
+			envVars:  map[string]string{"OPENCODE": "1", "AGENT": "1"},
+			contains: "AI-Agent (name: opencode)",
 		},
 		"includes AI-Agent suffix for AGENT env var": {
 			envVars:  map[string]string{"AGENT": "goose"},
@@ -68,6 +72,10 @@ func Test_UserAgent_BuildUserAgent(t *testing.T) {
 		"includes AI-Agent suffix for Gemini CLI": {
 			envVars:  map[string]string{"GEMINI_CLI": "1"},
 			contains: "AI-Agent (name: gemini-cli)",
+		},
+		"includes AI-Agent suffix for OpenCode": {
+			envVars:  map[string]string{"OPENCODE": "1"},
+			contains: "AI-Agent (name: opencode)",
 		},
 		"includes AI-Agent suffix for unknown agent": {
 			envVars:  map[string]string{"AGENT": "future-agent"},
@@ -105,9 +113,17 @@ func Test_UserAgent_GetAIAgent(t *testing.T) {
 			envVars:  map[string]string{"CLAUDECODE": "1", "AGENT": "goose"},
 			expected: &AIAgent{Name: "claude-code", Entry: ""},
 		},
+		"CLAUDECODE takes priority over OPENCODE": {
+			envVars:  map[string]string{"CLAUDECODE": "1", "OPENCODE": "1", "AGENT": "1"},
+			expected: &AIAgent{Name: "claude-code", Entry: ""},
+		},
 		"CODEX_CI takes priority over AGENT": {
 			envVars:  map[string]string{"CODEX_CI": "1", "AGENT": "goose"},
 			expected: &AIAgent{Name: "codex"},
+		},
+		"OPENCODE takes priority over AGENT": {
+			envVars:  map[string]string{"OPENCODE": "1", "AGENT": "1"},
+			expected: &AIAgent{Name: "opencode"},
 		},
 		"detects agent via AGENT env var": {
 			envVars:  map[string]string{"AGENT": "goose"},
@@ -140,6 +156,10 @@ func Test_UserAgent_GetAIAgent(t *testing.T) {
 		"detects Gemini CLI": {
 			envVars:  map[string]string{"GEMINI_CLI": "1"},
 			expected: &AIAgent{Name: "gemini-cli"},
+		},
+		"detects OpenCode": {
+			envVars:  map[string]string{"OPENCODE": "1"},
+			expected: &AIAgent{Name: "opencode"},
 		},
 		"detects unknown agent via AGENT env var": {
 			envVars:  map[string]string{"AGENT": "future-agent"},

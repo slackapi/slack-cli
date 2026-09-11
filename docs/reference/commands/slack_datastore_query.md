@@ -57,5 +57,5 @@ $ slack datastore query '{"datastore": "tasks", "expression": "#status = :status
 
 ## See also
 
-* [slack datastore](slack_datastore)	 - Interact with an app's datastore
+* [slack datastore](/tools/slack-cli/reference/commands/slack_datastore/)	 - Interact with an app's datastore
 

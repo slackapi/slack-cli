@@ -51,5 +51,5 @@ $ slack platform run --cleanup
 
 ## See also
 
-* [slack platform](slack_platform)	 - Deploy and run apps on the Slack Platform
+* [slack platform](/tools/slack-cli/reference/commands/slack_platform/)	 - Deploy and run apps on the Slack Platform
 

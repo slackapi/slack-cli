@@ -41,5 +41,5 @@ $ slack app list  # List all teams with the app installed
 
 ## See also
 
-* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
+* [slack app](/tools/slack-cli/reference/commands/slack_app/)	 - Install, uninstall, and list teams with the app installed
 

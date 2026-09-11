@@ -41,5 +41,5 @@ $ slack sandbox delete --sandbox-id E0123456
 
 ## See also
 
-* [slack sandbox](slack_sandbox)	 - Manage developer sandboxes
+* [slack sandbox](/tools/slack-cli/reference/commands/slack_sandbox/)	 - Manage developer sandboxes
 

@@ -96,7 +96,7 @@ const charmHelpTemplate string = `{{.Long | ToDescription}}
 {{if eq .Name (GetProcessName)}}{{Header "Commands"}}{{range .Commands}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}
   {{.Name | ToGroupName }}{{range .Commands}}{{if (not .Hidden)}}
     {{rpad .Name .NamePadding | ToCommandText}} {{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}{{if not (IsAlias .Name $.Data.Aliases)}}
-  {{(rpad .Name .NamePadding) | ToGroupName }}{{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if not .HasAvailableSubCommands}}
+  {{(rpad .Name .NamePadding) | ToGroupName }}{{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToCommandText }} {{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{Header "Flags"}}
@@ -139,7 +139,7 @@ const legacyHelpTemplate string = `{{.Long}}
 {{if eq .Name (GetProcessName)}}{{Header "Commands"}}{{range .Commands}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}
   {{.Name | ToCommandText }}{{range .Commands}}{{if (not .Hidden)}}
     {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}{{if not (IsAlias .Name $.Data.Aliases)}}
-  {{(rpad .Name .NamePadding) | ToCommandText }}{{.Short}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if not .HasAvailableSubCommands}}
+  {{(rpad .Name .NamePadding) | ToCommandText }}{{.Short}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToCommandText }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{Header "Flags"}}

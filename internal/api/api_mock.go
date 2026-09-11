@@ -315,6 +315,11 @@ func (m *APIMock) CertifiedAppInstall(ctx context.Context, token string, certifi
 	return args.Get(0).(CertifiedInstallResult), args.Error(1)
 }
 
+func (m *APIMock) ListAppApprovalRequests(ctx context.Context, token string, appID string, requestedTeams []string) (AppsApprovalsRequestsListResult, error) {
+	args := m.Called(ctx, token, appID, requestedTeams)
+	return args.Get(0).(AppsApprovalsRequestsListResult), args.Error(1)
+}
+
 func (m *APIMock) RequestAppApproval(ctx context.Context, token string, appID string, teamID string, reason string, scopes string, outgoingDomains []string) (AppsApprovalsRequestsCreateResult, error) {
 	args := m.Called(ctx, token, appID, teamID, reason, scopes, outgoingDomains)
 	return args.Get(0).(AppsApprovalsRequestsCreateResult), args.Error(1)

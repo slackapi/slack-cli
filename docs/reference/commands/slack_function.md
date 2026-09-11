@@ -52,6 +52,6 @@ $ slack function distribute --info
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack function access](slack_function_access)	 - Adjust who can access functions published from an app
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack function access](/tools/slack-cli/reference/commands/slack_function_access/)	 - Adjust who can access functions published from an app
 
