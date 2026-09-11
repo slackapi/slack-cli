@@ -76,23 +76,31 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	DisplayDiffs(ctx, clients.IO, diffs)
 
 	var merged types.AppManifest
+	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
 	switch {
-	case clients.Config.ForceFlag:
+	case flagSource.Equals(config.ManifestSourceLocal) || clients.Config.ForceFlag:
 		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllLocal)
 		if err != nil {
 			return nil, err
 		}
-	case clients.Config.ForceRemoteFlag:
+	case flagSource.Equals(config.ManifestSourceRemote):
 		merged, err = MergeAllFrom(localManifest.AppManifest, remoteManifest.AppManifest, diffs, MergeAllRemote)
 		if err != nil {
 			return nil, err
 		}
+	case flagSource.Exists() && !flagSource.IsValid():
+		return nil, slackerror.New(slackerror.ErrInvalidFlag).
+			WithMessage("Invalid value %q for %s flag", clients.Config.ManifestSourceFlag, style.CommandText("--manifest-source")).
+			WithRemediation("Valid values are %s or %s",
+				style.Highlight(string(config.ManifestSourceLocal)),
+				style.Highlight(string(config.ManifestSourceRemote)),
+			)
 	case !clients.IO.IsTTY():
 		return nil, slackerror.New(slackerror.ErrAppManifestUpdate).
 			WithRemediation("Run %s interactively to resolve manifest differences, or pass %s to push the project manifest to app settings or %s to pull app settings to project",
 				style.Commandf("manifest sync", false),
-				style.CommandText("--force"),
-				style.CommandText("--force-remote"),
+				style.CommandText("--manifest-source=local"),
+				style.CommandText("--manifest-source=remote"),
 			)
 	default:
 		merged, err = resolveInteractively(ctx, clients, localManifest.AppManifest, remoteManifest.AppManifest, diffs)

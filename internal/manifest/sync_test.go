@@ -174,17 +174,21 @@ func Test_Sync(t *testing.T) {
 	})
 
 	mergeStrategyTests := map[string]struct {
-		forceFlag       bool
-		forceRemoteFlag bool
-		expectedDesc    string
+		forceFlag          bool
+		manifestSourceFlag string
+		expectedDesc       string
 	}{
 		"force flag merges all local and pushes to API": {
 			forceFlag:    true,
 			expectedDesc: "Local",
 		},
-		"force-remote flag merges all remote and pushes to API": {
-			forceRemoteFlag: true,
-			expectedDesc:    "Remote",
+		"manifest-source=local merges all local and pushes to API": {
+			manifestSourceFlag: string(config.ManifestSourceLocal),
+			expectedDesc:       "Local",
+		},
+		"manifest-source=remote merges all remote and pushes to API": {
+			manifestSourceFlag: string(config.ManifestSourceRemote),
+			expectedDesc:       "Remote",
 		},
 	}
 	for name, tc := range mergeStrategyTests {
@@ -196,7 +200,7 @@ func Test_Sync(t *testing.T) {
 			f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 				Return(remoteManifest, nil)
 			f.clients.Config.ForceFlag = tc.forceFlag
-			f.clients.Config.ForceRemoteFlag = tc.forceRemoteFlag
+			f.clients.Config.ManifestSourceFlag = tc.manifestSourceFlag
 			f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(api.UpdateAppResult{}, nil)
 			f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
@@ -213,6 +217,39 @@ func Test_Sync(t *testing.T) {
 			f.clientsMock.API.AssertCalled(t, "UpdateApp", mock.Anything, "xoxb-test", "A123", mock.Anything, true, true)
 		})
 	}
+
+	t.Run("invalid manifest-source flag returns error", func(t *testing.T) {
+		f := newSyncTestFixture(t)
+		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+			Return(localManifest, nil)
+		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+			Return(remoteManifest, nil)
+		f.clients.Config.ManifestSourceFlag = "invalid"
+
+		result, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "invalid")
+		assert.Contains(t, err.Error(), "--manifest-source")
+	})
+
+	t.Run("non-TTY error mentions --manifest-source in remediation", func(t *testing.T) {
+		f := newSyncTestFixture(t)
+		f.projectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+		f.manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+			Return(localManifest, nil)
+		f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+			Return(remoteManifest, nil)
+
+		_, err := Sync(f.ctx, f.clients, testApp, testAuth)
+
+		require.Error(t, err)
+		slackErr := slackerror.ToSlackError(err)
+		assert.Contains(t, slackErr.Remediation, "--manifest-source=local")
+		assert.Contains(t, slackErr.Remediation, "--manifest-source=remote")
+	})
 
 	t.Run("API UpdateApp failure is propagated", func(t *testing.T) {
 		f := newSyncTestFixture(t)
