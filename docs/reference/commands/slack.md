@@ -68,7 +68,6 @@ $ slack docs    # Open Slack developer docs
 * [slack run](/tools/slack-cli/reference/commands/slack_run/)	 - Start a local server to develop and run the app locally
 * [slack samples](/tools/slack-cli/reference/commands/slack_samples/)	 - List available sample apps
 * [slack sandbox](/tools/slack-cli/reference/commands/slack_sandbox/)	 - Manage developer sandboxes
-* [slack sync](/tools/slack-cli/reference/commands/slack_sync/)	 - Sync the app manifest between project and app settings
 * [slack trigger](/tools/slack-cli/reference/commands/slack_trigger/)	 - List details of existing triggers
 * [slack uninstall](/tools/slack-cli/reference/commands/slack_uninstall/)	 - Uninstall the app from a team
 * [slack upgrade](/tools/slack-cli/reference/commands/slack_upgrade/)	 - Checks for available updates to the CLI or SDK
