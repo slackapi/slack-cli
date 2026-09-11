@@ -15,6 +15,7 @@ slack deploy [flags]
 ```
   -h, --help                         help for deploy
       --hide-triggers                do not list triggers and skip trigger creation prompts
+      --manifest-source string       resolve manifest differences using this source (local or remote)
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)
 ```
