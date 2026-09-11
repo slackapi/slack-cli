@@ -39,5 +39,5 @@ $ slack collaborator list  # List all of the collaborators
 
 ## See also
 
-* [slack collaborator](slack_collaborator)	 - Manage app collaborators
+* [slack collaborator](/tools/slack-cli/reference/commands/slack_collaborator/)	 - Manage app collaborators
 

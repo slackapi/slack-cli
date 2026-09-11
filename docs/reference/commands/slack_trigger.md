@@ -53,11 +53,11 @@ $ slack trigger update --trigger-id Ft01234ABCD
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack trigger access](slack_trigger_access)	 - Manage who can use your triggers
-* [slack trigger create](slack_trigger_create)	 - Create a trigger for a workflow
-* [slack trigger delete](slack_trigger_delete)	 - Delete an existing trigger
-* [slack trigger info](slack_trigger_info)	 - Get details for a specific trigger
-* [slack trigger list](slack_trigger_list)	 - List details of existing triggers
-* [slack trigger update](slack_trigger_update)	 - Updates an existing trigger
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack trigger access](/tools/slack-cli/reference/commands/slack_trigger_access/)	 - Manage who can use your triggers
+* [slack trigger create](/tools/slack-cli/reference/commands/slack_trigger_create/)	 - Create a trigger for a workflow
+* [slack trigger delete](/tools/slack-cli/reference/commands/slack_trigger_delete/)	 - Delete an existing trigger
+* [slack trigger info](/tools/slack-cli/reference/commands/slack_trigger_info/)	 - Get details for a specific trigger
+* [slack trigger list](/tools/slack-cli/reference/commands/slack_trigger_list/)	 - List details of existing triggers
+* [slack trigger update](/tools/slack-cli/reference/commands/slack_trigger_update/)	 - Updates an existing trigger
 

@@ -57,5 +57,5 @@ $ slack external-auth remove --all
 
 ## See also
 
-* [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
+* [slack external-auth](/tools/slack-cli/reference/commands/slack_external-auth/)	 - Adjust settings of external authentication providers
 

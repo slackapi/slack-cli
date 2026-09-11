@@ -41,8 +41,8 @@ $ slack activity -t             # Continuously poll for new activity logs
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack platform activity](slack_platform_activity)	 - Display the app activity logs from the Slack Platform
-* [slack platform deploy](slack_platform_deploy)	 - Deploy the app to the Slack Platform
-* [slack platform run](slack_platform_run)	 - Start a local server to develop and run the app locally
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack platform activity](/tools/slack-cli/reference/commands/slack_platform_activity/)	 - Display the app activity logs from the Slack Platform
+* [slack platform deploy](/tools/slack-cli/reference/commands/slack_platform_deploy/)	 - Deploy the app to the Slack Platform
+* [slack platform run](/tools/slack-cli/reference/commands/slack_platform_run/)	 - Start a local server to develop and run the app locally
 

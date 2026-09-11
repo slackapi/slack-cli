@@ -39,5 +39,5 @@ $ slack app uninstall  # Uninstall an app from a team
 
 ## See also
 
-* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
+* [slack app](/tools/slack-cli/reference/commands/slack_app/)	 - Install, uninstall, and list teams with the app installed
 

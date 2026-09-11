@@ -30,7 +30,7 @@ type AIAgent struct {
 // GetAIAgent checks environment variables to determine if the CLI is being run
 // by an AI coding agent. Returns nil if no agent is detected. Detection
 // priority: CLAUDECODE > CODEX_CI > GEMINI_CLI > CLINE_ACTIVE > CURSOR_AGENT >
-// AGENT.
+// OPENCODE > AGENT.
 func GetAIAgent() *AIAgent {
 	switch {
 	case os.Getenv("CLAUDECODE") == "1":
@@ -46,6 +46,10 @@ func GetAIAgent() *AIAgent {
 		return &AIAgent{Name: "cline"}
 	case os.Getenv("CURSOR_AGENT") == "1":
 		return &AIAgent{Name: "cursor"}
+	// OpenCode sets both OPENCODE=1 and AGENT=1, so it must be checked before
+	// the AGENT fallback to report a name instead of the literal "1".
+	case os.Getenv("OPENCODE") == "1":
+		return &AIAgent{Name: "opencode"}
 	case os.Getenv("AGENT") != "":
 		return &AIAgent{Name: os.Getenv("AGENT")}
 	default:

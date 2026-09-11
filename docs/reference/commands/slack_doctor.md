@@ -48,5 +48,5 @@ $ slack doctor  # Create a status report of system dependencies
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

@@ -62,5 +62,5 @@ $ slack trigger access --trigger-id Ft01234ABCD --revoke \
 
 ## See also
 
-* [slack trigger](slack_trigger)	 - List details of existing triggers
+* [slack trigger](/tools/slack-cli/reference/commands/slack_trigger/)	 - List details of existing triggers
 

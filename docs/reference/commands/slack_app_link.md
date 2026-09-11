@@ -53,5 +53,5 @@ $ slack app link --team T0123456789 --app A0123456789 --environment deployed
 
 ## See also
 
-* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
+* [slack app](/tools/slack-cli/reference/commands/slack_app/)	 - Install, uninstall, and list teams with the app installed
 
