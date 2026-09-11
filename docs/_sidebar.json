@@ -1,34 +1,18 @@
 [
-    {
-        "type": "doc",
-        "id": "tools/slack-cli/index",
-        "label": "Slack CLI",
-        "className": "sidebar-title"
-    },
-    { "type": "html", "value": "<hr>" },
-    {
-        "type": "category",
-        "label": "Guides",
-        "collapsed": false,
-        "items": [
-            "tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux",
-            "tools/slack-cli/guides/installing-the-slack-cli-for-windows",
-            "tools/slack-cli/guides/authorizing-the-slack-cli",
-            "tools/slack-cli/guides/using-slack-cli-on-an-enterprise-grid-organization",
-            "tools/slack-cli/guides/running-slack-cli-commands",
-            "tools/slack-cli/guides/developing-locally",
-            "tools/slack-cli/guides/using-environment-variables-with-the-slack-cli",
-            "tools/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli",
-            "tools/slack-cli/guides/deploying-with-the-slack-cli-and-github-actions",
-            "tools/slack-cli/guides/removing-an-app",
-            "tools/slack-cli/guides/uninstalling-the-slack-cli"
-        ]
-    },
-    { "type": "html", "value": "<hr>" },
+    "tools/slack-cli/guides/installing-the-slack-cli-for-mac-and-linux",
+    "tools/slack-cli/guides/installing-the-slack-cli-for-windows",
+    "tools/slack-cli/guides/authorizing-the-slack-cli",
+    "tools/slack-cli/guides/using-slack-cli-on-an-enterprise-grid-organization",
+    "tools/slack-cli/guides/running-slack-cli-commands",
+    "tools/slack-cli/guides/developing-locally",
+    "tools/slack-cli/guides/using-environment-variables-with-the-slack-cli",
+    "tools/slack-cli/guides/setting-up-ci-cd-with-the-slack-cli",
+    "tools/slack-cli/guides/deploying-with-the-slack-cli-and-github-actions",
+    "tools/slack-cli/guides/removing-an-app",
+    "tools/slack-cli/guides/uninstalling-the-slack-cli",
     {
         "type": "category",
         "label": "Reference",
-        "collapsed": false,
         "items": [
             {
                 "type": "category",
