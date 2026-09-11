@@ -12,7 +12,7 @@ The following is a list of currently available experiments. We'll remove experim
 
 Below is a list of updates related to experiments.
 
-- **August 2026**: Concluded the `manifest-sync` experiment with full support for two-way manifest sync now enabled by default in the Slack CLI.
+- **September 2026**: Concluded the `manifest-sync` experiment with full support for two-way manifest sync now enabled by default in the Slack CLI.
 - **August 2026**: Concluded the `set-icon` experiment; The Slack CLI now offers full support for icon upload on all app types by default.
 - **July 2026**: Added the `manifest-sync` experiment to resolve changed app manifest values between a project and app settings.
 - **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](/tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
