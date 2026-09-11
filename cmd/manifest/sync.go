@@ -19,11 +19,9 @@ import (
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
@@ -42,13 +40,6 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if !clients.Config.WithExperimentOn(experiment.ManifestSync) {
-				return slackerror.New(slackerror.ErrExperimentRequired).
-					WithRemediation("Enable the %s experiment with %s",
-						style.Highlight(string(experiment.ManifestSync)),
-						style.CommandText("--experiment manifest-sync"),
-					)
-			}
 			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
 				return err
 			}
