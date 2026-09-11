@@ -40,13 +40,10 @@ var OrgGrantWorkspaceDescription = func() string {
 
 // ValidateManifestSourceFlag checks that --manifest-source has a valid value if set
 func ValidateManifestSourceFlag(clients *shared.ClientFactory) error {
-	v := clients.Config.ManifestSourceFlag
-	if v == "" {
-		return nil
-	}
-	if !(v == string(config.ManifestSourceLocal) || v == string(config.ManifestSourceRemote)) {
+	ms := config.ManifestSource(clients.Config.ManifestSourceFlag)
+	if ms.Exists() && !ms.IsValid() {
 		return slackerror.New(slackerror.ErrInvalidFlag).
-			WithMessage("Invalid value %q for %s flag", v, style.CommandText("--manifest-source")).
+			WithMessage("Invalid value %q for %s flag", clients.Config.ManifestSourceFlag, style.CommandText("--manifest-source")).
 			WithRemediation("Valid values are %s or %s",
 				style.Highlight(string(config.ManifestSourceLocal)),
 				style.Highlight(string(config.ManifestSourceRemote)),

@@ -174,17 +174,17 @@ func Test_Sync(t *testing.T) {
 	})
 
 	mergeStrategyTests := map[string]struct {
-		forceFlag       bool
-		forceRemoteFlag bool
-		expectedDesc    string
+		forceFlag          bool
+		manifestSourceFlag string
+		expectedDesc       string
 	}{
 		"force flag merges all local and pushes to API": {
 			forceFlag:    true,
 			expectedDesc: "Local",
 		},
-		"force-remote flag merges all remote and pushes to API": {
-			forceRemoteFlag: true,
-			expectedDesc:    "Remote",
+		"manifest-source=remote merges all remote and pushes to API": {
+			manifestSourceFlag: string(config.ManifestSourceRemote),
+			expectedDesc:       "Remote",
 		},
 	}
 	for name, tc := range mergeStrategyTests {
@@ -196,7 +196,7 @@ func Test_Sync(t *testing.T) {
 			f.manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 				Return(remoteManifest, nil)
 			f.clients.Config.ForceFlag = tc.forceFlag
-			f.clients.Config.ForceRemoteFlag = tc.forceRemoteFlag
+			f.clients.Config.ManifestSourceFlag = tc.manifestSourceFlag
 			f.clientsMock.API.On("UpdateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 				Return(api.UpdateAppResult{}, nil)
 			f.cacheMock.On("NewManifestHash", mock.Anything, mock.Anything).Return(cache.Hash("newhash"), nil)
