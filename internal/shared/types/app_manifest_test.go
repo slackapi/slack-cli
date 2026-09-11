@@ -250,6 +250,29 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/file"]}}`,
 		},
+		"includes code channels when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "coding_agent",
+				},
+				CodeChannels: &CodeChannels{
+					Enabled:         new(true),
+					SlashCommandURL: "https://example.com/slack/code-channel-commands",
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"coding_agent"},"code_channels":{"enabled":true,"slash_command_url":"https://example.com/slack/code-channel-commands"}}`,
+		},
+		"serializes code channels disabled explicitly": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "coding_agent",
+				},
+				CodeChannels: &CodeChannels{
+					Enabled: new(false),
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"coding_agent"},"code_channels":{"enabled":false}}`,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
