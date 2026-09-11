@@ -17,6 +17,7 @@ slack platform run [app-file-path] [flags]
       --cleanup                      uninstall the local app after exiting
   -h, --help                         help for run
       --hide-triggers                do not list triggers and skip trigger creation prompts
+      --manifest-source string       resolve manifest differences using this source (local or remote)
       --no-activity                  hide Slack Platform log activity
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)

@@ -1,23 +1,20 @@
-# `slack platform deploy`
+# `slack sync`
 
-Deploy the app to the Slack Platform
+Sync the app manifest between project and app settings
 
 ## Description
 
-Deploy the app to the Slack Platform
+Compare the local project manifest with app settings, resolve differences, and sync both to the same state.
 
 ```
-slack platform deploy [flags]
+slack sync [flags]
 ```
 
 ## Flags
 
 ```
-  -h, --help                         help for deploy
-      --hide-triggers                do not list triggers and skip trigger creation prompts
-      --manifest-source string       resolve manifest differences using this source (local or remote)
-      --org-workspace-grant string   grant access to a specific org workspace ID
-                                       (or 'all' for all workspaces in the org)
+  -h, --help                     help for sync
+      --manifest-source string   resolve manifest differences using this source (local or remote)
 ```
 
 ## Global flags
@@ -38,12 +35,17 @@ slack platform deploy [flags]
 ## Examples
 
 ```
-# Select the workspace to deploy to
-$ slack platform deploy
-$ slack platform deploy --team T0123456  # Deploy to a specific team
+# Sync project manifest with app settings
+$ slack manifest sync
+
+# Push project manifest to app settings without prompting
+$ slack manifest sync --manifest-source=local
+
+# Pull app settings to project manifest without prompting
+$ slack manifest sync --manifest-source=remote
 ```
 
 ## See also
 
-* [slack platform](/tools/slack-cli/reference/commands/slack_platform/)	 - Deploy and run apps on the Slack Platform
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 
