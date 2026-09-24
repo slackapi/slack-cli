@@ -248,7 +248,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		} else {
 			clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, linkedApp.TeamDomain, linkedApp.IsDev)
 			clients.Config.ManifestSourceFlag = "remote"
-			if _, err := manifest.Sync(ctx, clients, *linkedApp, *auth); err != nil {
+			if _, err := manifest.Sync(ctx, clients, *linkedApp, *auth, manifest.SyncOpts{Quiet: true}); err != nil {
 				clients.IO.PrintDebug(ctx, "Manifest sync after app link: %s", err)
 			}
 		}
