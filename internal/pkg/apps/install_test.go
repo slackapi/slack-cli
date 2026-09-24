@@ -546,7 +546,7 @@ func TestInstall(t *testing.T) {
 				nil,
 			)
 			originalSyncFunc := manifestSyncFunc
-			manifestSyncFunc = func(_ context.Context, _ *shared.ClientFactory, _ types.App, _ types.SlackAuth, _ ...manifestpkg.SyncOpts) (*manifestpkg.SyncResult, error) {
+			manifestSyncFunc = func(_ context.Context, _ *shared.ClientFactory, _ types.App, _ types.SlackAuth) (*manifestpkg.SyncResult, error) {
 				if tc.mockManifestSyncError != nil {
 					return nil, tc.mockManifestSyncError
 				}
@@ -1317,7 +1317,7 @@ func TestInstallLocalApp(t *testing.T) {
 				nil,
 			)
 			originalSyncFunc := manifestSyncFunc
-			manifestSyncFunc = func(_ context.Context, _ *shared.ClientFactory, _ types.App, _ types.SlackAuth, _ ...manifestpkg.SyncOpts) (*manifestpkg.SyncResult, error) {
+			manifestSyncFunc = func(_ context.Context, _ *shared.ClientFactory, _ types.App, _ types.SlackAuth) (*manifestpkg.SyncResult, error) {
 				if tc.mockManifestSyncError != nil {
 					return nil, tc.mockManifestSyncError
 				}

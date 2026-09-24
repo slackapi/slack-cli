@@ -32,19 +32,10 @@ type SyncResult struct {
 	HasDifferences bool
 }
 
-// SyncOpts configures optional behavior for Sync.
-type SyncOpts struct {
-	Quiet bool // suppress informational output
-}
-
 // Sync performs two-way manifest sync between local and remote. It fetches
 // both manifests, computes diffs, prompts the user for resolution, writes
 // the merged result to both the API and the local file, and returns the result.
-func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, auth types.SlackAuth, opts ...SyncOpts) (*SyncResult, error) {
-	var opt SyncOpts
-	if len(opts) > 0 {
-		opt = opts[0]
-	}
+func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, auth types.SlackAuth) (*SyncResult, error) {
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return nil, err
@@ -74,19 +65,15 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	}
 
 	if !diffs.HasDifferences() {
-		if !opt.Quiet {
-			clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-				Emoji:     "books",
-				Text:      "App Manifest",
-				Secondary: []string{"Project manifest and app settings are in sync"},
-			}))
-		}
+		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+			Emoji:     "books",
+			Text:      "App Manifest",
+			Secondary: []string{"Project manifest and app settings are in sync"},
+		}))
 		return &SyncResult{Merged: localManifest.AppManifest, HasDifferences: false}, nil
 	}
 
-	if !opt.Quiet {
-		DisplayDiffs(ctx, clients.IO, diffs)
-	}
+	DisplayDiffs(ctx, clients.IO, diffs)
 
 	var merged types.AppManifest
 	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
@@ -123,16 +110,12 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	}
 
 	// Push merged manifest to API
-	if !opt.Quiet {
-		clients.IO.PrintInfo(ctx, false, "\n  Syncing manifest...")
-	}
+	clients.IO.PrintInfo(ctx, false, "\n  Syncing manifest...")
 	_, err = clients.API().UpdateApp(ctx, auth.Token, app.AppID, merged, true, true)
 	if err != nil {
 		return nil, slackerror.New("Failed to update app settings with merged manifest").WithRootCause(err)
 	}
-	if !opt.Quiet {
-		clients.IO.PrintInfo(ctx, false, "  %s Updated app settings", style.Green("✓"))
-	}
+	clients.IO.PrintInfo(ctx, false, "  %s Updated app settings", style.Green("✓"))
 
 	// Refresh the cached manifest hash so install/deploy don't see drift.
 	hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, merged)
@@ -149,19 +132,17 @@ func Sync(ctx context.Context, clients *shared.ClientFactory, app types.App, aut
 	if err != nil {
 		return nil, err
 	}
-	if !opt.Quiet {
-		if writeResult.Written {
-			clients.IO.PrintInfo(ctx, false, "  %s Updated %s", style.Green("✓"), manifestFileName)
-		} else if writeResult.Warning != "" {
-			clients.IO.PrintInfo(ctx, false, "  %s %s", style.Yellow("!"), writeResult.Warning)
-		}
-
-		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-			Emoji:     "books",
-			Text:      "App Manifest",
-			Secondary: []string{fmt.Sprintf("Finished manifest sync for %q", localManifest.DisplayInformation.Name)},
-		}))
+	if writeResult.Written {
+		clients.IO.PrintInfo(ctx, false, "  %s Updated %s", style.Green("✓"), manifestFileName)
+	} else if writeResult.Warning != "" {
+		clients.IO.PrintInfo(ctx, false, "  %s %s", style.Yellow("!"), writeResult.Warning)
 	}
+
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+		Emoji:     "books",
+		Text:      "App Manifest",
+		Secondary: []string{fmt.Sprintf("Finished manifest sync for %q", localManifest.DisplayInformation.Name)},
+	}))
 
 	return &SyncResult{Merged: merged, WriteBack: writeResult, HasDifferences: true}, nil
 }
