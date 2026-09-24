@@ -249,7 +249,8 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, linkedApp.TeamDomain, linkedApp.IsDev)
 			clients.Config.ManifestSourceFlag = "remote"
 			if _, err := manifest.Sync(ctx, clients, *linkedApp, *auth, manifest.SyncOpts{Quiet: true}); err != nil {
-				clients.IO.PrintDebug(ctx, "Manifest sync after app link: %s", err)
+				clients.IO.PrintWarning(ctx, "Failed to sync manifest from app settings: %s", err)
+				clients.IO.PrintInfo(ctx, false, "  Run %s to sync manually", style.Commandf("manifest sync --manifest-source=remote", false))
 			}
 		}
 	}
