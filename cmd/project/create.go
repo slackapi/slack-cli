@@ -242,11 +242,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
 		}))
 
-		// Sync manifest from remote (app settings) to local project
-		clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, linkedApp.TeamDomain, linkedApp.IsDev)
-		clients.Config.ManifestSourceFlag = "remote"
-		if _, err := manifest.Sync(ctx, clients, *linkedApp, *auth); err != nil {
-			clients.IO.PrintDebug(ctx, "Manifest sync after app link: %s", err)
+		// Reinitialize SDK config for the new project directory so hooks resolve correctly
+		if err := clients.InitSDKConfig(ctx, absProjectPath); err != nil {
+			clients.IO.PrintDebug(ctx, "Failed to init SDK config for manifest sync: %s", err)
+		} else {
+			clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, linkedApp.TeamDomain, linkedApp.IsDev)
+			clients.Config.ManifestSourceFlag = "remote"
+			if _, err := manifest.Sync(ctx, clients, *linkedApp, *auth); err != nil {
+				clients.IO.PrintDebug(ctx, "Manifest sync after app link: %s", err)
+			}
 		}
 	}
 
