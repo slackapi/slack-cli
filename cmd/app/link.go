@@ -113,7 +113,7 @@ func LinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, app *ty
 		},
 	}))
 
-	err = LinkExistingApp(ctx, clients, app)
+	_, err = LinkExistingApp(ctx, clients, app)
 	if err != nil {
 		return err
 	}
@@ -151,28 +151,27 @@ func LinkAppHeaderSection(ctx context.Context, clients *shared.ClientFactory) {
 
 // LinkExistingApp resolves app details, validates the app, and saves it to the
 // project. It produces no output — callers handle their own display.
-func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App) (err error) {
+func LinkExistingApp(ctx context.Context, clients *shared.ClientFactory, app *types.App) (auth *types.SlackAuth, err error) {
 	// Prompt to get app details
-	var auth *types.SlackAuth
 	*app, auth, err = promptExistingApp(ctx, clients)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	appIDs := []string{app.AppID}
 	_, err = clients.API().GetAppStatus(ctx, auth.Token, appIDs, app.TeamID)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Save the app to the project
 	err = saveAppToJSON(ctx, clients, *app)
 	if err != nil {
 		clients.IO.PrintDebug(ctx, "Error saving app to file when linking existing app: %s", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return auth, nil
 }
 
 // promptExistingApp gathers details to represent app information

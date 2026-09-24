@@ -1010,5 +1010,7 @@ func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsM
 	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 		Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+		Return(types.SlackYaml{}, nil)
 	cf.AppClient().Manifest = manifestMock
 }
