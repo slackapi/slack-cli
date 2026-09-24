@@ -24,7 +24,9 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/cmd/app"
+	internalapp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -230,7 +232,8 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			_ = os.Chdir(originalDir)
 		}()
 		linkedApp := &types.App{}
-		if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
+		auth, err := app.LinkExistingApp(ctx, clients, linkedApp)
+		if err != nil {
 			return err
 		}
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
@@ -238,6 +241,13 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			Text:      "App",
 			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
 		}))
+
+		// Sync manifest from remote (app settings) to local project
+		clients.Config.ManifestEnv = internalapp.SetManifestEnvTeamVars(clients.Config.ManifestEnv, linkedApp.TeamDomain, linkedApp.IsDev)
+		clients.Config.ManifestSourceFlag = "remote"
+		if _, err := manifest.Sync(ctx, clients, *linkedApp, *auth); err != nil {
+			clients.IO.PrintDebug(ctx, "Manifest sync after app link: %s", err)
+		}
 	}
 
 	printCreateSuccess(ctx, clients, appDirPath)

@@ -119,7 +119,7 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	}
 	if proceed {
 		linkedApp := &types.App{}
-		err = app.LinkExistingApp(ctx, clients, linkedApp)
+		_, err = app.LinkExistingApp(ctx, clients, linkedApp)
 		if err != nil {
 			// Display the error but continue to init
 			clients.IO.PrintError(ctx, "%s", err.Error())
