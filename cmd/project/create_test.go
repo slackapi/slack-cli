@@ -978,6 +978,34 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				assert.True(t, saved.IsDev)
 			},
 		},
+		"app flag with manifest fetch error shows warning but succeeds": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithManifestError(t, ctx, cm, cf)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCreateCommand(cf)
 	})
@@ -1012,5 +1040,27 @@ func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsM
 		Return(types.SlackYaml{}, nil)
 	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 		Return(types.SlackYaml{}, nil)
+	cf.AppClient().Manifest = manifestMock
+}
+
+func setupCreateLinkMocksWithManifestError(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+	projectDirPath := slackdeps.MockWorkingDirectory
+	cm.Os.On("Getwd").Return(projectDirPath, nil)
+
+	if _, err := config.CreateProjectConfigDir(ctx, cm.Fs, projectDirPath); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to create the project config directory: %s", err))
+	}
+	if _, err := config.CreateProjectHooksJSONFile(cm.Fs, projectDirPath, []byte("{}")); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to create the hooks file: %s", err))
+	}
+	if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, config.ManifestSourceRemote); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source: %s", err))
+	}
+
+	manifestMock := &app.ManifestMockObject{}
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+		Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+		Return(types.SlackYaml{}, fmt.Errorf("network error"))
 	cf.AppClient().Manifest = manifestMock
 }
