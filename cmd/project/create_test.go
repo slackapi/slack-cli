@@ -927,7 +927,7 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
 				cm.AddDefaultMocks()
-				setupCreateLinkMocks(t, ctx, cm, cf)
+				setupCreateLinkMocks(t, ctx, cm, cf, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
 				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
@@ -957,7 +957,7 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
 				cm.AddDefaultMocks()
-				setupCreateLinkMocks(t, ctx, cm, cf)
+				setupCreateLinkMocks(t, ctx, cm, cf, nil)
 				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
 				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
@@ -1021,7 +1021,7 @@ var mockCreateLinkAuth = types.SlackAuth{
 
 // setupCreateLinkMocks prepares the in-memory project config and manifest mocks
 // needed by app.LinkExistingApp when called from the create command.
-func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory, manifestRemoteErr ...error) {
+func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory, manifestRemoteErr error) {
 	projectDirPath := slackdeps.MockWorkingDirectory
 	cm.Os.On("Getwd").Return(projectDirPath, nil)
 
@@ -1035,15 +1035,10 @@ func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsM
 		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source: %s", err))
 	}
 
-	var remoteErr error
-	if len(manifestRemoteErr) > 0 {
-		remoteErr = manifestRemoteErr[0]
-	}
-
 	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 		Return(types.SlackYaml{}, nil)
 	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
-		Return(types.SlackYaml{}, remoteErr)
+		Return(types.SlackYaml{}, manifestRemoteErr)
 	cf.AppClient().Manifest = manifestMock
 }
