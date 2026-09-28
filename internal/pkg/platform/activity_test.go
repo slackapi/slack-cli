@@ -246,6 +246,27 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				cm.API.AssertNumberOfCalls(t, "Activity", 1)
 			},
 		},
+		"should return error if TailArg is set and activity request fails with an auth error while polling": {
+			Args: types.ActivityArgs{
+				TailArg:           true,
+				IdleTimeoutM:      1,
+				PollingIntervalMS: 20, // poll activity every 20 ms
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).Return(api.ActivityResult{}, slackerror.New(slackerror.ErrTokenRevoked))
+				ctx, cancel := context.WithCancel(ctx)
+				go func() {
+					time.Sleep(time.Millisecond * 50) // cancel activity in 50 ms
+					cancel()
+				}()
+				return ctx
+			},
+			ExpectedError: slackerror.New(slackerror.ErrTokenRevoked),
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// the initial request and the first polling request, then polling stops
+				cm.API.AssertNumberOfCalls(t, "Activity", 2)
+			},
+		},
 		"should return nil if TailArg is set and activity request fails while polling": {
 			Args: types.ActivityArgs{
 				TailArg:           true,
@@ -907,6 +928,25 @@ func Test_functionExecutionStartedToString(t *testing.T) {
 	result := functionExecutionStartedToString(activity)
 	assert.Contains(t, result, "Function 'my_function' (custom function) started")
 	assert.Contains(t, result, "Trace=trace1")
+}
+
+func Test_isAuthError(t *testing.T) {
+	tests := map[string]struct {
+		err      error
+		expected bool
+	}{
+		"invalid auth":   {err: slackerror.New(slackerror.ErrInvalidAuth), expected: true},
+		"not authed":     {err: slackerror.New(slackerror.ErrNotAuthed), expected: true},
+		"token expired":  {err: slackerror.New(slackerror.ErrTokenExpired), expected: true},
+		"token revoked":  {err: slackerror.New(slackerror.ErrTokenRevoked), expected: true},
+		"internal error": {err: slackerror.New(slackerror.ErrInternal), expected: false},
+		"unknown error":  {err: slackerror.New("mock_broken_logs"), expected: false},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, isAuthError(tc.err))
+		})
+	}
 }
 
 func Test_triggerPayloadReceivedOutputToString(t *testing.T) {
