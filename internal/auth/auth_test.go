@@ -32,6 +32,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -426,16 +427,80 @@ func Test_AuthsRotation(t *testing.T) {
 			require.Fail(t, "should not return error when saving auths")
 		}
 
+		apiHostBefore := authClient.api.Host()     // track the api host before we call User Auths
 		updatedAuths, err := authClient.auths(ctx) // call the function
+		apiHostAfter := authClient.api.Host()      // track the api host after the function runs.
 
 		// Assertions
 		require.Equal(t, workspaceAuthA, updatedAuths[authATeamID], "should return the same auth")
+		require.Equal(t, apiHostBefore, apiHostAfter, "api host before and after should be the same")
 
 		// because the token rotation results in an error we expect the old stuff back
 		require.Equal(t, workspaceAuthB, updatedAuths[authBTeamID], "should return the same auth")
 
 		require.Equal(t, len(auths), len(updatedAuths), "we expect the same number of auths even if token rotation failed for one")
 		require.NoError(t, err, "Should not return an error when the contents of credentials are valid")
+	})
+
+	t.Run("token rotation with an invalid refresh token removes the refresh token", func(t *testing.T) {
+		ctx, authClient := setup(t)
+		fiveMinutesAgo := int(time.Now().Unix()) - 60*5
+		apiMock := &api.APIMock{}
+		apiMock.AddDefaultMocks()
+		apiMock.On("SetHost", mock.Anything)
+		apiMock.On("RotateToken", mock.Anything, mock.Anything).
+			Return(api.RotateTokenResult{}, slackerror.NewAPIError(slackerror.ErrInvalidRefreshToken, "", nil, "tooling.tokens.rotate"))
+		authClient.api = apiMock
+		expiredAuth := types.SlackAuth{
+			Token:        "expiredToken",
+			RefreshToken: "dead-refresh-token",
+			ExpiresAt:    fiveMinutesAgo,
+			TeamDomain:   "workspace-a",
+			TeamID:       "T123456789A",
+		}
+		_, err := authClient.setAuths(ctx, types.AuthByTeamDomain{expiredAuth.TeamID: expiredAuth})
+		require.NoError(t, err)
+
+		updatedAuths, err := authClient.auths(ctx)
+		require.NoError(t, err)
+		assert.Empty(t, updatedAuths[expiredAuth.TeamID].RefreshToken)
+		assert.Equal(t, expiredAuth.Token, updatedAuths[expiredAuth.TeamID].Token)
+		authClient.io.(*iostreams.IOStreamsMock).AssertCalled(t, "PrintWarning", mock.Anything, mock.Anything, mock.Anything)
+
+		// A new process reads the saved credentials without attempting rotation
+		authClient.rotationAttempted = map[string]bool{}
+		updatedAuths, err = authClient.auths(ctx)
+		require.NoError(t, err)
+		assert.Empty(t, updatedAuths[expiredAuth.TeamID].RefreshToken)
+		apiMock.AssertNumberOfCalls(t, "RotateToken", 1)
+	})
+
+	t.Run("token rotation with a transient error is attempted once per process", func(t *testing.T) {
+		ctx, authClient := setup(t)
+		fiveMinutesAgo := int(time.Now().Unix()) - 60*5
+		apiMock := &api.APIMock{}
+		apiMock.AddDefaultMocks()
+		apiMock.On("SetHost", mock.Anything)
+		apiMock.On("RotateToken", mock.Anything, mock.Anything).
+			Return(api.RotateTokenResult{}, slackerror.NewAPIError(slackerror.ErrInternal, "", nil, "tooling.tokens.rotate"))
+		authClient.api = apiMock
+		expiredAuth := types.SlackAuth{
+			Token:        "expiredToken",
+			RefreshToken: "valid-refresh-token",
+			ExpiresAt:    fiveMinutesAgo,
+			TeamDomain:   "workspace-a",
+			TeamID:       "T123456789A",
+		}
+		_, err := authClient.setAuths(ctx, types.AuthByTeamDomain{expiredAuth.TeamID: expiredAuth})
+		require.NoError(t, err)
+
+		for range 3 {
+			updatedAuths, err := authClient.auths(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, expiredAuth, updatedAuths[expiredAuth.TeamID])
+		}
+		apiMock.AssertNumberOfCalls(t, "RotateToken", 1)
+		apiMock.AssertCalled(t, "SetHost", "https://slack.com")
 	})
 }
 
