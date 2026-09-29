@@ -1035,6 +1035,9 @@ func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsM
 		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source: %s", err))
 	}
 
+	cm.Auth.On("AuthWithTeamID", mock.Anything, mock.Anything).
+		Return(mockCreateLinkAuth, nil)
+
 	manifestMock := &app.ManifestMockObject{}
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
 		Return(types.SlackYaml{}, nil)

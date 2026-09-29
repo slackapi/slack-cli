@@ -231,8 +231,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			_ = os.Chdir(originalDir)
 		}()
 		linkedApp := &types.App{}
-		auth, err := app.LinkExistingApp(ctx, clients, linkedApp)
-		if err != nil {
+		if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
 			return err
 		}
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
@@ -242,15 +241,16 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}))
 
 		// Fetch remote manifest and write it to the local project
-		remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, linkedApp.AppID)
-		if err != nil {
+		syncRemedy := "  Run %s to sync manually"
+		if auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID); err != nil {
+			clients.IO.PrintWarning(ctx, "Failed to resolve auth for manifest sync: %s", err)
+			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
+		} else if remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, linkedApp.AppID); err != nil {
 			clients.IO.PrintWarning(ctx, "Failed to fetch manifest from app settings: %s", err)
-			clients.IO.PrintInfo(ctx, false, "  Run %s to sync manually", style.Commandf("manifest sync --manifest-source=remote", false))
-		} else {
-			if _, err := manifest.WriteManifestLocal(clients.Fs, absProjectPath, remoteManifest.AppManifest); err != nil {
-				clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
-				clients.IO.PrintInfo(ctx, false, "  Run %s to sync manually", style.Commandf("manifest sync --manifest-source=remote", false))
-			}
+			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
+		} else if _, err := manifest.WriteManifestLocal(clients.Fs, absProjectPath, remoteManifest.AppManifest); err != nil {
+			clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
+			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
 		}
 	}
 
