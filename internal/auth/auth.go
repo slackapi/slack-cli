@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
@@ -54,6 +55,11 @@ type Client struct {
 	config    *config.Config
 	io        iostreams.IOStreamer
 	fs        afero.Fs
+
+	// rotationAttempted tracks refresh tokens that were already used for token
+	// rotation during this process so each is attempted at most once
+	rotationAttempted   map[string]bool
+	rotationAttemptedMu sync.Mutex
 }
 
 type AuthInterface interface {
@@ -99,11 +105,12 @@ type AuthInterface interface {
 // NewClient returns a new, empty instance of the Client
 func NewClient(apiClient api.APIInterface, appClient *app.Client, config *config.Config, io iostreams.IOStreamer, fs afero.Fs) *Client {
 	var client = Client{
-		api:       apiClient,
-		appClient: appClient,
-		config:    config,
-		io:        io,
-		fs:        fs,
+		api:               apiClient,
+		appClient:         appClient,
+		config:            config,
+		io:                io,
+		fs:                fs,
+		rotationAttempted: map[string]bool{},
 	}
 
 	return &client
@@ -307,7 +314,14 @@ func (c *Client) rotateTokenAll(ctx context.Context, auths types.AuthByTeamDomai
 			// We also do not want to stop the entire process: so we will not return here.
 			// The user should go ahead with the bad token and the api will handle the
 			// return of the appropriate error to the user.
-			// We only want to warn the user about what we tried to do.
+			if slackerror.ToSlackError(err).Code == slackerror.ErrInvalidRefreshToken {
+				// The refresh token can never succeed again, so remove it to stop
+				// retrying token rotation on every command
+				auth.RefreshToken = ""
+				updatedAuths[authKey] = auth
+				updated = true
+				c.io.PrintWarning(ctx, "Your credentials for '%s' have expired and can no longer be refreshed. Run %s to authorize again.", auth.TeamDomain, style.Commandf("login", false))
+			}
 			c.io.PrintDebug(ctx, "Your auth token for '%s' is outdated. Tried refreshing the credentials but encountered the following error:\n%s", auth.TeamDomain, err.Error())
 		} else if tokenIsUpdated {
 			updated = true
@@ -325,10 +339,21 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 		return auth, false /* tokenIsUpdated */, nil
 	}
 
+	// Attempt rotation with a refresh token at most once per process to avoid
+	// repeated requests when rotation fails
+	c.rotationAttemptedMu.Lock()
+	if c.rotationAttempted[auth.RefreshToken] {
+		c.rotationAttemptedMu.Unlock()
+		return auth, false /* tokenIsUpdated */, nil
+	}
+	c.rotationAttempted[auth.RefreshToken] = true
+	c.rotationAttemptedMu.Unlock()
+
 	// Store the current apiHost before rotation
 	// We need this because we need to restore
 	// the apiHost to what it was before rotating each of the user's auths
 	activeAPIHostBeforeRotation := c.api.Host()
+	defer c.api.SetHost(activeAPIHostBeforeRotation)
 
 	if auth.APIHost != nil {
 		c.api.SetHost(*auth.APIHost)
@@ -339,7 +364,6 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 
 	var result, err = c.api.RotateToken(ctx, auth)
 	if err != nil {
-		// handle token rotation failure by sending meaningful messages to the users and remove already expired auth
 		return auth, false /* tokenIsUpdated */, err
 	}
 
@@ -347,9 +371,6 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 	auth.ExpiresAt = result.ExpiresAt
 	auth.RefreshToken = result.RefreshToken
 	auth.LastUpdated = time.Now()
-
-	// now restore the previous default apiHost
-	c.api.SetHost(activeAPIHostBeforeRotation)
 
 	return auth, true /* tokenIsUpdated */, nil
 }
