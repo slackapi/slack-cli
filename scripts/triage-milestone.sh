@@ -77,10 +77,14 @@ main() {
             echo "-> No \"$UPCOMING_TITLE\" milestone was found, so nothing is triaged"
             exit 0
         fi
+        # Open items are listed before the rename since the issues endpoint can
+        # miss items of a milestone that was just renamed
+        open_issues=$(list_open_issues "$released")
         echo "-> Renaming milestone #$released to $TAG"
         edit_milestone "$released" "title=$TAG"
     else
         echo "-> Milestone $TAG exists as #$released"
+        open_issues=$(list_open_issues "$released")
         upcoming=$(find_milestone "$UPCOMING_TITLE" "open")
     fi
 
@@ -92,7 +96,7 @@ main() {
     fi
 
     echo "-> Moving open issues and pull requests to \"$UPCOMING_TITLE\""
-    move_open_issues "$released" "$upcoming"
+    move_open_issues "$open_issues" "$upcoming"
 
     echo "-> Closing milestone $TAG"
     edit_milestone "$released" "state=closed"
@@ -131,38 +135,26 @@ edit_milestone() {
     gh api --method PATCH "repos/$REPO/milestones/${1}" -f "${2}" --silent
 }
 
-# Assign the open issues and pull requests of a milestone to another milestone
+# Output the numbers of the open issues and pull requests of a milestone
 #
 # Both issues and pull requests are returned by the issues endpoint, which is
 # preferred over a search because search results are not immediately current.
-#
-# The issues endpoint can still miss items right after the milestone is renamed,
-# so the open count of the milestone is checked and the move is repeated until
-# none remain. The script exits before the milestone is closed if items remain.
+list_open_issues() {
+    gh api "repos/$REPO/issues?milestone=${1}&state=open&per_page=100" \
+        --paginate --jq ".[].number"
+}
+
+# Assign a list of issues and pull requests to a milestone
 move_open_issues() {
-    local attempt number remaining
-    for attempt in 1 2 3 4 5; do
-        for number in $(gh api "repos/$REPO/issues?milestone=${1}&state=open&per_page=100" \
-            --paginate --jq ".[].number"); do
-            if is_dry_run; then
-                echo "   Skipping the milestone change of #$number"
-                continue
-            fi
-            echo "   #$number"
-            gh api --method PATCH "repos/$REPO/issues/$number" -F "milestone=${2}" --silent
-        done
+    local number
+    for number in ${1}; do
         if is_dry_run; then
-            return
+            echo "   Skipping the milestone change of #$number"
+            continue
         fi
-        remaining=$(gh api "repos/$REPO/milestones/${1}" --jq ".open_issues")
-        if [ "$remaining" -eq 0 ]; then
-            return
-        fi
-        echo "   Found $remaining open items remaining after attempt $attempt, retrying"
-        sleep 10
+        echo "   #$number"
+        gh api --method PATCH "repos/$REPO/issues/$number" -F "milestone=${2}" --silent
     done
-    echo "Error: Open items remain on milestone #${1}, so it is not closed"
-    exit 1
 }
 
 main "$@"
