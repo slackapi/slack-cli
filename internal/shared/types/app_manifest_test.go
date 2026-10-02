@@ -355,6 +355,41 @@ func Test_AppManifest_AppSettings_IsMCPEnabled(t *testing.T) {
 	}
 }
 
+func Test_AppManifest_AppSettings_AppLevelTokenRotationEnabled(t *testing.T) {
+	truth := true
+	tests := map[string]struct {
+		settings              *AppSettings
+		expectedRotationValue *bool
+		expectedJSON          string
+	}{
+		"undefined setting has no value": {
+			settings:              &AppSettings{},
+			expectedRotationValue: nil,
+			expectedJSON:          `{}`,
+		},
+		"defined setting has a value": {
+			settings:              &AppSettings{AppLevelTokenRotationEnabled: &truth},
+			expectedRotationValue: &truth,
+			expectedJSON:          `{"app_level_token_rotation_enabled":true}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			manifest := AppManifest{
+				Settings: tc.settings,
+			}
+			if tc.settings != nil {
+				actualJSON, err := json.Marshal(tc.settings)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+				assert.Equal(t, tc.expectedRotationValue, manifest.Settings.AppLevelTokenRotationEnabled)
+			} else {
+				assert.Nil(t, manifest.Settings)
+			}
+		})
+	}
+}
+
 func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 	falsity := false
 	expectedIncomingWebhooks := IncomingWebhooks{

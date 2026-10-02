@@ -115,16 +115,17 @@ type OAuthConfig struct {
 }
 
 type AppSettings struct {
-	SocketModeEnabled      *bool                       `json:"socket_mode_enabled,omitempty" yaml:"socket_mode_enabled,omitempty"`
-	OrgDeployEnabled       *bool                       `json:"org_deploy_enabled,omitempty" yaml:"org_deploy_enabled,omitempty"`
-	Interactivity          *ManifestInteractivity      `json:"interactivity,omitempty" yaml:"interactivity,omitempty"`
-	IncomingWebhooks       *IncomingWebhooks           `json:"incoming_webhooks,omitempty" yaml:"incoming_webhooks,flow,omitempty"`
-	EventSubscriptions     *ManifestEventSubscriptions `json:"event_subscriptions,omitempty" yaml:"event_subscriptions,flow,omitempty"`
-	AllowedIPAddressRanges []string                    `json:"allowed_ip_address_ranges,omitempty" yaml:"allowed_ip_address_ranges,flow,omitempty"`
-	FunctionRuntime        FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
-	TokenRotationEnabled   *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
-	SiwsLinks              *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
-	IsMCPEnabled           *bool                       `json:"is_mcp_enabled,omitempty" yaml:"is_mcp_enabled,omitempty"`
+	SocketModeEnabled            *bool                       `json:"socket_mode_enabled,omitempty" yaml:"socket_mode_enabled,omitempty"`
+	OrgDeployEnabled             *bool                       `json:"org_deploy_enabled,omitempty" yaml:"org_deploy_enabled,omitempty"`
+	Interactivity                *ManifestInteractivity      `json:"interactivity,omitempty" yaml:"interactivity,omitempty"`
+	IncomingWebhooks             *IncomingWebhooks           `json:"incoming_webhooks,omitempty" yaml:"incoming_webhooks,flow,omitempty"`
+	EventSubscriptions           *ManifestEventSubscriptions `json:"event_subscriptions,omitempty" yaml:"event_subscriptions,flow,omitempty"`
+	AllowedIPAddressRanges       []string                    `json:"allowed_ip_address_ranges,omitempty" yaml:"allowed_ip_address_ranges,flow,omitempty"`
+	FunctionRuntime              FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
+	TokenRotationEnabled         *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
+	AppLevelTokenRotationEnabled *bool                       `json:"app_level_token_rotation_enabled,omitempty" yaml:"app_level_token_rotation_enabled,omitempty"`
+	SiwsLinks                    *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
+	IsMCPEnabled                 *bool                       `json:"is_mcp_enabled,omitempty" yaml:"is_mcp_enabled,omitempty"`
 }
 
 type WorkflowStep struct {
