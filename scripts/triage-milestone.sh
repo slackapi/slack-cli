@@ -135,17 +135,34 @@ edit_milestone() {
 #
 # Both issues and pull requests are returned by the issues endpoint, which is
 # preferred over a search because search results are not immediately current.
+#
+# The issues endpoint can still miss items right after the milestone is renamed,
+# so the open count of the milestone is checked and the move is repeated until
+# none remain. The script exits before the milestone is closed if items remain.
 move_open_issues() {
-    local number
-    for number in $(gh api "repos/$REPO/issues?milestone=${1}&state=open&per_page=100" \
-        --paginate --jq ".[].number"); do
+    local attempt number remaining
+    for attempt in 1 2 3 4 5; do
+        for number in $(gh api "repos/$REPO/issues?milestone=${1}&state=open&per_page=100" \
+            --paginate --jq ".[].number"); do
+            if is_dry_run; then
+                echo "   Skipping the milestone change of #$number"
+                continue
+            fi
+            echo "   #$number"
+            gh api --method PATCH "repos/$REPO/issues/$number" -F "milestone=${2}" --silent
+        done
         if is_dry_run; then
-            echo "   Skipping the milestone change of #$number"
-            continue
+            return
         fi
-        echo "   #$number"
-        gh api --method PATCH "repos/$REPO/issues/$number" -F "milestone=${2}" --silent
+        remaining=$(gh api "repos/$REPO/milestones/${1}" --jq ".open_issues")
+        if [ "$remaining" -eq 0 ]; then
+            return
+        fi
+        echo "   Found $remaining open items remaining after attempt $attempt, retrying"
+        sleep 10
     done
+    echo "Error: Open items remain on milestone #${1}, so it is not closed"
+    exit 1
 }
 
 main "$@"
