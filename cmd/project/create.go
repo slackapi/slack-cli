@@ -25,6 +25,7 @@ import (
 
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -238,6 +239,19 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			Text:      "App",
 			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
 		}))
+
+		// Fetch remote manifest and write it to the local project
+		syncRemedy := "  Run %s to sync manually"
+		if auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID); err != nil {
+			clients.IO.PrintWarning(ctx, "Failed to resolve auth for manifest sync: %s", err)
+			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
+		} else if remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, linkedApp.AppID); err != nil {
+			clients.IO.PrintWarning(ctx, "Failed to fetch manifest from app settings: %s", err)
+			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
+		} else if _, err := manifest.WriteManifestLocal(clients.Fs, absProjectPath, remoteManifest.AppManifest); err != nil {
+			clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
+			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
+		}
 	}
 
 	printCreateSuccess(ctx, clients, appDirPath)
