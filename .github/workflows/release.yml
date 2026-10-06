@@ -121,7 +121,7 @@ jobs:
 
           ### Testing
 
-          - [ ] Confirm unit tests and E2E tests are passing on the [`main`](https://github.com/slackapi/slack-cli/commits/main) branch.
+          - [ ] Confirm unit tests and E2E tests are passing on the [main](https://github.com/slackapi/slack-cli/commits/main) branch.
           - [ ] Confirm unit tests and E2E tests are passing on this PR.
           - [ ] Confirm the [dev-build](https://github.com/slackapi/slack-cli/releases/tag/dev-build) includes all commits since last release.
           - [ ] Review open issues or PRs on the "[Next Release](https://github.com/slackapi/slack-cli/milestones)" milestone.

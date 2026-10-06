@@ -3,7 +3,7 @@ module github.com/slackapi/slack-cli
 go 1.27.1
 
 require (
-	charm.land/bubbletea/v2 v2.0.9
+	charm.land/bubbletea/v2 v2.0.10
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/briandowns/spinner v1.23.2
