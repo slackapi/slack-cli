@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/slackapi/slack-cli/cmd/app"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
@@ -240,17 +241,37 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
 		}))
 
-		// Fetch remote manifest and write it to the local project
-		syncRemedy := "  Run %s to sync manually"
-		if auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID); err != nil {
-			clients.IO.PrintWarning(ctx, "Failed to resolve auth for manifest sync: %s", err)
-			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
-		} else if remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, linkedApp.AppID); err != nil {
-			clients.IO.PrintWarning(ctx, "Failed to fetch manifest from app settings: %s", err)
-			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
-		} else if _, err := manifest.WriteManifestLocal(clients.Fs, absProjectPath, remoteManifest.AppManifest); err != nil {
-			clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
-			clients.IO.PrintInfo(ctx, false, syncRemedy, style.Commandf("manifest sync --manifest-source=remote", false))
+		// Fetch remote manifest and write it to the local project.
+		// Skip for remote-source projects where manifest.json is not used.
+		manifestSource, _ := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if !manifestSource.Equals(config.ManifestSourceRemote) {
+			syncRemedy := "  Run %s to sync manually"
+			syncRemedyCmd := style.Commandf("manifest sync --manifest-source=remote", false)
+			if auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID); err != nil {
+				clients.IO.PrintWarning(ctx, "Failed to resolve auth for manifest sync: %s", err)
+				clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
+			} else if remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, linkedApp.AppID); err != nil {
+				clients.IO.PrintWarning(ctx, "Failed to fetch manifest from app settings: %s", err)
+				clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
+			} else {
+				appManifest := remoteManifest.AppManifest
+				if linkedApp.IsDev {
+					appManifest = manifest.StripDevLocalSuffix(appManifest)
+				}
+				writeResult, err := manifest.WriteManifestLocal(clients.Fs, absProjectPath, appManifest)
+				if err != nil {
+					clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
+					clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
+				} else if writeResult.Written {
+					clients.IO.PrintInfo(ctx, false, "  %s Updated %s", style.Green("✓"), "manifest.json")
+					hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, appManifest)
+					if err == nil {
+						_ = clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, linkedApp.AppID, hash)
+					}
+				} else if writeResult.Warning != "" {
+					clients.IO.PrintInfo(ctx, false, "  %s %s", style.Yellow("!"), writeResult.Warning)
+				}
+			}
 		}
 	}
 
