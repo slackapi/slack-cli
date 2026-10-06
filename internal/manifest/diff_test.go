@@ -295,6 +295,16 @@ func Test_StripDevLocalSuffix(t *testing.T) {
 		assert.Equal(t, "My App", result.Features.BotUser.DisplayName)
 	})
 
+	t.Run("does not modify the input manifest", func(t *testing.T) {
+		m := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+			Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App (local)"}},
+		}
+		_ = StripDevLocalSuffix(m)
+		assert.Equal(t, "My App (local)", m.DisplayInformation.Name)
+		assert.Equal(t, "My App (local)", m.Features.BotUser.DisplayName)
+	})
+
 	t.Run("handles nil features", func(t *testing.T) {
 		m := types.AppManifest{
 			DisplayInformation: types.DisplayInformation{Name: "My App (local)"},

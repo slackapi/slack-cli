@@ -264,7 +264,8 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 					clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
 				} else if writeResult.Written {
 					clients.IO.PrintInfo(ctx, false, "  %s Updated %s", style.Green("✓"), "manifest.json")
-					hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, appManifest)
+					// Hash the remote manifest as exported, since install compares against the export.
+					hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, remoteManifest.AppManifest)
 					if err == nil {
 						_ = clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, linkedApp.AppID, hash)
 					}

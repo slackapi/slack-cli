@@ -113,7 +113,10 @@ func isIgnoredPath(path string) bool {
 func StripDevLocalSuffix(m types.AppManifest) types.AppManifest {
 	m.DisplayInformation.Name = strings.TrimSuffix(m.DisplayInformation.Name, devLocalSuffix)
 	if m.Features != nil {
-		m.Features.BotUser.DisplayName = strings.TrimSuffix(m.Features.BotUser.DisplayName, devLocalSuffix)
+		// Copy so the caller's manifest, which shares this pointer, is not modified.
+		features := *m.Features
+		features.BotUser.DisplayName = strings.TrimSuffix(features.BotUser.DisplayName, devLocalSuffix)
+		m.Features = &features
 	}
 	return m
 }

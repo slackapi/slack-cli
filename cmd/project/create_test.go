@@ -1058,6 +1058,19 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				require.NoError(t, err)
 				assert.Contains(t, string(written), `"My App"`)
 				assert.NotContains(t, string(written), "(local)")
+				assert.Contains(t, cm.GetCombinedOutput(), "Updated manifest.json")
+
+				// The cached hash must match the manifest as exported (with the suffix),
+				// which is what install compares against.
+				exported := types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+					Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App (local)"}},
+				}
+				want, err := cm.Config.ProjectConfig.Cache().NewManifestHash(ctx, exported)
+				require.NoError(t, err)
+				got, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
+				require.NoError(t, err)
+				assert.Equal(t, want, got)
 			},
 		},
 		"app flag with no manifest.json shows warning": {
@@ -1093,10 +1106,13 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
 				require.NoError(t, err)
 				assert.Equal(t, "A0123456789", saved.AppID)
-				// No manifest.json in project dir, so WriteManifestLocal returns Written: false
-				// with a warning — verify it doesn't call PrintWarning (which would indicate a
-				// failure in the sync flow) and that the command still succeeds
 				cm.IO.AssertNotCalled(t, "PrintWarning", mock.Anything, "Failed to write manifest to project: %s", mock.Anything)
+				output := cm.GetCombinedOutput()
+				assert.Contains(t, output, "No manifest.json found in project root")
+				assert.NotContains(t, output, "Updated manifest.json")
+				hash, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
+				require.NoError(t, err)
+				assert.Empty(t, hash)
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
