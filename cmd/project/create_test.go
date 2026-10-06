@@ -1058,7 +1058,8 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				require.NoError(t, err)
 				assert.Contains(t, string(written), `"My App"`)
 				assert.NotContains(t, string(written), "(local)")
-				assert.Contains(t, cm.GetCombinedOutput(), "Updated manifest.json")
+				assert.Contains(t, cm.GetCombinedOutput(), "App Manifest")
+				assert.Contains(t, cm.GetCombinedOutput(), "Updated manifest.json from app settings")
 
 				// The cached hash must match the manifest as exported (with the suffix),
 				// which is what install compares against.
@@ -1108,7 +1109,9 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				assert.Equal(t, "A0123456789", saved.AppID)
 				cm.IO.AssertNotCalled(t, "PrintWarning", mock.Anything, "Failed to write manifest to project: %s", mock.Anything)
 				output := cm.GetCombinedOutput()
-				assert.Contains(t, output, "No manifest.json found in project root")
+				assert.Contains(t, output, "App Manifest")
+				assert.Contains(t, output, "no manifest.json found in the project root")
+				assert.Contains(t, output, "manifest.ts")
 				assert.NotContains(t, output, "Updated manifest.json")
 				hash, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
 				require.NoError(t, err)

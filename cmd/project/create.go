@@ -263,14 +263,21 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 					clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
 					clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
 				} else if writeResult.Written {
-					clients.IO.PrintInfo(ctx, false, "  %s Updated %s", style.Green("✓"), "manifest.json")
+					lines := []string{fmt.Sprintf("%s Updated manifest.json from app settings", style.Green("✓"))}
+					if writeResult.Warning != "" {
+						lines = append(lines, fmt.Sprintf("%s %s", style.Yellow("!"), writeResult.Warning))
+					}
+					printCreateManifestSection(ctx, clients, lines...)
 					// Hash the remote manifest as exported, since install compares against the export.
 					hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, remoteManifest.AppManifest)
 					if err == nil {
 						_ = clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, linkedApp.AppID, hash)
 					}
-				} else if writeResult.Warning != "" {
-					clients.IO.PrintInfo(ctx, false, "  %s %s", style.Yellow("!"), writeResult.Warning)
+				} else {
+					printCreateManifestSection(ctx, clients,
+						"Skipped copying app settings to the project: no manifest.json found in the project root",
+						"Your project manifest is managed elsewhere (e.g. manifest.ts), so no changes were made",
+					)
 				}
 			}
 		}
@@ -278,6 +285,14 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 
 	printCreateSuccess(ctx, clients, appDirPath)
 	return nil
+}
+
+func printCreateManifestSection(ctx context.Context, clients *shared.ClientFactory, lines ...string) {
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		Emoji:     "books",
+		Text:      "App Manifest",
+		Secondary: lines,
+	}))
 }
 
 // printCreateSuccess outputs an informative message after creating a new app
