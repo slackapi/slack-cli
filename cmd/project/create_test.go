@@ -588,6 +588,26 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
+		"without app flag does not sync the manifest or print the app manifest section": {
+			CmdArgs: []string{"my-project", "--template", "slack-samples/bolt-js-starter-template"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				manifestMock := &app.ManifestMockObject{}
+				cf.AppClient().Manifest = manifestMock
+				createManifestMock = manifestMock
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				createManifestMock.AssertNotCalled(t, "GetManifestRemote", mock.Anything, mock.Anything, mock.Anything)
+				cm.Auth.AssertNotCalled(t, "AuthWithTeamID", mock.Anything, mock.Anything)
+				assert.NotContains(t, cm.GetCombinedOutput(), "App Manifest")
+			},
+		},
 		"subdir without template flag returns error": {
 			CmdArgs: []string{"--subdir", "apps/my-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -1010,6 +1030,102 @@ func TestCreateCommand_AppFlag(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, "A0123456789", saved.AppID)
 				cm.IO.AssertCalled(t, "PrintWarning", mock.Anything, "Failed to fetch manifest from app settings: %s", mock.Anything)
+				assert.Contains(t, cm.GetCombinedOutput(), "manifest sync --manifest-source=remote")
+				assert.NotContains(t, cm.GetCombinedOutput(), "App Manifest")
+			},
+		},
+		"app flag skips manifest sync for remote source of truth projects": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir := t.TempDir()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
+				CreateFunc = createClientMock.Create
+
+				original := []byte(`{"display_information": {"name": "Original"}}`)
+				require.NoError(t, afero.WriteFile(cm.Fs, filepath.Join(projectDir, "manifest.json"), original, 0644))
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource: config.ManifestSourceRemote,
+					remoteManifest: types.SlackYaml{
+						AppManifest: types.AppManifest{
+							DisplayInformation: types.DisplayInformation{Name: "Remote"},
+						},
+					},
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+
+				createManifestMock.AssertNotCalled(t, "GetManifestRemote", mock.Anything, mock.Anything, mock.Anything)
+				projectDir := createClientMock.Calls[0].ReturnArguments[0].(string)
+				written, err := afero.ReadFile(cm.Fs, filepath.Join(projectDir, "manifest.json"))
+				require.NoError(t, err)
+				assert.Contains(t, string(written), "Original")
+				output := cm.GetCombinedOutput()
+				assert.NotContains(t, output, "App Manifest")
+				assert.NotContains(t, output, "manifest sync --manifest-source=remote")
+				hash, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
+				require.NoError(t, err)
+				assert.Empty(t, hash)
+			},
+		},
+		"app flag does not strip local suffix for deployed apps": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir := t.TempDir()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
+				CreateFunc = createClientMock.Create
+
+				manifestJSON := []byte(`{"display_information": {"name": "Original"}}`)
+				require.NoError(t, afero.WriteFile(cm.Fs, filepath.Join(projectDir, "manifest.json"), manifestJSON, 0644))
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource: config.ManifestSourceLocal,
+					remoteManifest: types.SlackYaml{
+						AppManifest: types.AppManifest{
+							DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+						},
+					},
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "deployed"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				saved, err := cm.AppClient.GetDeployed(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.False(t, saved.IsDev)
+
+				projectDir := createClientMock.Calls[0].ReturnArguments[0].(string)
+				written, err := afero.ReadFile(cm.Fs, filepath.Join(projectDir, "manifest.json"))
+				require.NoError(t, err)
+				assert.Contains(t, string(written), "My App (local)")
 			},
 		},
 		"app flag writes manifest and strips local suffix for dev apps": {
@@ -1169,4 +1285,7 @@ func setupCreateLinkMocksWithOpts(t *testing.T, ctx context.Context, cm *shared.
 	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
 		Return(opts.remoteManifest, opts.manifestRemoteErr)
 	cf.AppClient().Manifest = manifestMock
+	createManifestMock = manifestMock
 }
+
+var createManifestMock *app.ManifestMockObject
