@@ -62,6 +62,16 @@ func TestListCommand(t *testing.T) {
 						Status:       "active",
 						DateCreated:  1700000000,
 						DateArchived: 0,
+						Type:         "regular",
+					},
+					{
+						TeamID:       "T456",
+						Name:         "basic-sandbox",
+						Domain:       "basic-sandbox",
+						Status:       "active",
+						DateCreated:  1700000000,
+						DateArchived: 0,
+						Type:         "basic",
 					},
 				}
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
@@ -69,7 +79,7 @@ func TestListCommand(t *testing.T) {
 
 				cm.AddDefaultMocks()
 			},
-			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com", "Status: active"},
+			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com", "Status: active", "basic-sandbox", "T456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 				assert.NotContains(t, cm.GetStdoutOutput(), "Type:")
