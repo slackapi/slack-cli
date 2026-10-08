@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -67,7 +66,7 @@ func TestListCommand(t *testing.T) {
 						TeamID:      "T456",
 						Name:        "basic-sandbox",
 						Domain:      "basic-sandbox",
-						Status:      "active",
+						Status:      "archived",
 						DateCreated: 1700002000,
 						Type:        "basic",
 					},
@@ -86,13 +85,12 @@ func TestListCommand(t *testing.T) {
 				cm.AddDefaultMocks()
 			},
 			ExpectedStdoutOutputs: []string{
-				"regular-sandbox", "T123",
-				"basic-sandbox", "T456", "Type: basic",
-				"partner-sandbox", "T789", "Type: partner",
+				"regular-sandbox (T123)\n    URL: https://regular-sandbox.slack.com\n    Status: active",
+				"basic-sandbox (T456)\n    URL: https://basic-sandbox.slack.com\n    Type: basic\n    Status: archived",
+				"partner-sandbox (T789)\n    URL: https://partner-sandbox.slack.com\n    Type: partner\n    Status: active",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
-				assert.NotContains(t, cm.GetStdoutOutput(), "Type: regular")
 			},
 		},
 		"with an error from the list API": {
