@@ -20,8 +20,8 @@ This will install the Slack CLI and configure the command.
 
 Runtime installations are left to the developer and depend on the app being built. For more information and next steps, review the quickstart guides:
 
-- [Bolt for JavaScript](/tools/bolt-js/getting-started)
-- [Bolt for Python](/tools/bolt-python/getting-started)
+- [Bolt for JavaScript](/tools/bolt-js/creating-an-app)
+- [Bolt for Python](/tools/bolt-python/creating-an-app)
 - [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
