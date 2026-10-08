@@ -98,6 +98,7 @@ func TestListCommand(t *testing.T) {
 						Status:       "archived",
 						DateCreated:  1700000000,
 						DateArchived: 1710000000,
+						Type:         "regular",
 					},
 				}
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
