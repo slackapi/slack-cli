@@ -35,7 +35,7 @@ const (
 type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
-	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
+	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
 }
 
 type createSandboxResponse struct {

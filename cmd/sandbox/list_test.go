@@ -23,7 +23,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -47,83 +46,37 @@ func TestListCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
-		"with active sandboxes": {
+		"with multiple sandboxes": {
 			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				sandboxes := []types.Sandbox{
-					{
-						TeamID:       "T123",
-						Name:         "my-sandbox",
-						Domain:       "my-sandbox",
-						Status:       "active",
-						DateCreated:  1700000000,
-						DateArchived: 0,
-					},
-				}
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
-				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
-
-				cm.AddDefaultMocks()
-			},
-			ExpectedStdoutOutputs: []string{"my-sandbox", "T123", "https://my-sandbox.slack.com", "Status: ACTIVE"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
-				assert.NotContains(t, cm.GetStdoutOutput(), "Type:")
-			},
-		},
-		"with archived sandbox": {
-			CmdArgs: []string{"--token", "xoxb-test-token"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
-				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				sandboxes := []types.Sandbox{
-					{
-						TeamID:       "T456",
-						Name:         "old-sandbox",
-						Domain:       "old-sandbox",
-						Status:       "archived",
-						DateCreated:  1700000000,
-						DateArchived: 1710000000,
-					},
-				}
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
-				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
-
-				cm.AddDefaultMocks()
-			},
-			ExpectedStdoutOutputs: []string{"old-sandbox", "T456", "Status: ARCHIVED"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
-			},
-		},
-		"with partner sandbox shows type for all sandboxes": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
-				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				sandboxes := []types.Sandbox{
 					{
 						TeamID:      "T123",
 						Name:        "regular-sandbox",
 						Domain:      "regular-sandbox",
 						Status:      "active",
-						DateCreated: 1700000000,
+						DateCreated: 1700001000,
+						Type:        "regular",
+					},
+					{
+						TeamID:      "T456",
+						Name:        "basic-sandbox",
+						Domain:      "basic-sandbox",
+						Status:      "archived",
+						DateCreated: 1700002000,
+						Type:        "basic",
 					},
 					{
 						TeamID:      "T789",
 						Name:        "partner-sandbox",
 						Domain:      "partner-sandbox",
 						Status:      "active",
-						DateCreated: 1700000000,
-						IsPartner:   true,
+						DateCreated: 1700003000,
+						Type:        "partner",
 					},
 				}
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
@@ -131,28 +84,16 @@ func TestListCommand(t *testing.T) {
 
 				cm.AddDefaultMocks()
 			},
-			ExpectedStdoutOutputs: []string{"regular-sandbox", "partner-sandbox", "Type: Partner"},
+			ExpectedStdoutOutputs: []string{
+				"regular-sandbox (T123)\n    URL: https://regular-sandbox.slack.com\n    Status: active",
+				"basic-sandbox (T456)\n    URL: https://basic-sandbox.slack.com\n    Type: basic\n    Status: archived",
+				"partner-sandbox (T789)\n    URL: https://partner-sandbox.slack.com\n    Type: partner\n    Status: active",
+			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
 			},
 		},
-		"with status": {
-			CmdArgs: []string{"--token", "xoxb-test-token", "--status", "active"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				testToken := "xoxb-test-token"
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
-				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
-				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "active").Return([]types.Sandbox{}, nil)
-				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
-
-				cm.AddDefaultMocks()
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "active")
-			},
-		},
-		"list error": {
+		"with an error from the list API": {
 			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"

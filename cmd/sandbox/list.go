@@ -113,12 +113,15 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.Domain)))
 		}
 
-		if s.IsPartner {
-			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: Partner"))
+		switch s.Type {
+		case "basic":
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: basic"))
+		case "partner":
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: partner"))
 		}
 
 		if s.Status != "" {
-			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
+			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToLower(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
 				clients.IO.PrintInfo(ctx, false, "    %s", style.Red(status))
 			} else {
