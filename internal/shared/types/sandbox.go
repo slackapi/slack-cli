@@ -21,6 +21,6 @@ type Sandbox struct {
 	Domain       string `json:"sandbox_domain"`
 	Name         string `json:"sandbox_name"`
 	TeamID       string `json:"sandbox_team_id"`
-	Status       string `json:"status"`
-	IsPartner    bool   `json:"is_partner"`
+	Status string `json:"status"`
+	Type   string `json:"type"`
 }

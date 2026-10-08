@@ -81,7 +81,7 @@ func TestClient_ListSandboxes_Ok(t *testing.T) {
 		Response:       `{"ok":true,"sandboxes":[{"sandbox_team_id":"T1","sandbox_name":"Sandbox 1","sandbox_domain":"sb1","status":"active","date_created":123,"date_archived":0},{"sandbox_team_id":"T2","sandbox_name":"Sandbox 2","sandbox_domain":"sb2","status":"active","date_created":456,"date_archived":0}]}`,
 	})
 	defer teardown()
-	sandboxes, err := c.ListSandboxes(ctx, "token", "")
+	sandboxes, err := c.ListSandboxes(ctx, "token", "", "")
 	require.NoError(t, err)
 	require.Len(t, sandboxes, 2)
 	require.Equal(t, "T1", sandboxes[0].TeamID)
@@ -98,7 +98,7 @@ func TestClient_ListSandboxes_Empty(t *testing.T) {
 		Response:       `{"ok":true,"sandboxes":[]}`,
 	})
 	defer teardown()
-	sandboxes, err := c.ListSandboxes(ctx, "token", "")
+	sandboxes, err := c.ListSandboxes(ctx, "token", "", "")
 	require.NoError(t, err)
 	require.Empty(t, sandboxes)
 }
@@ -110,7 +110,7 @@ func TestClient_ListSandboxes_NilSandboxesReturnsEmptySlice(t *testing.T) {
 		Response:       `{"ok":true}`,
 	})
 	defer teardown()
-	sandboxes, err := c.ListSandboxes(ctx, "token", "")
+	sandboxes, err := c.ListSandboxes(ctx, "token", "", "")
 	require.NoError(t, err)
 	require.Equal(t, []types.Sandbox{}, sandboxes)
 }
@@ -122,7 +122,7 @@ func TestClient_ListSandboxes_WithStatusFilter(t *testing.T) {
 		Response:       `{"ok":true,"sandboxes":[{"sandbox_team_id":"T1","sandbox_name":"Archived","sandbox_domain":"arch","status":"archived","date_created":100,"date_archived":200}]}`,
 	})
 	defer teardown()
-	sandboxes, err := c.ListSandboxes(ctx, "token", "archived")
+	sandboxes, err := c.ListSandboxes(ctx, "token", "archived", "")
 	require.NoError(t, err)
 	require.Len(t, sandboxes, 1)
 	require.Equal(t, "archived", sandboxes[0].Status)
@@ -131,7 +131,7 @@ func TestClient_ListSandboxes_WithStatusFilter(t *testing.T) {
 func TestClient_ListSandboxes_CommonErrors(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, sandboxListMethod, func(c *Client) error {
-		_, err := c.ListSandboxes(ctx, "token", "")
+		_, err := c.ListSandboxes(ctx, "token", "", "")
 		return err
 	})
 }

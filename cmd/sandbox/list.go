@@ -26,7 +26,8 @@ import (
 )
 
 type listFlags struct {
-	status string
+	status      string
+	sandboxType string
 }
 
 var listCmdFlags listFlags
@@ -44,6 +45,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox list", Meaning: "List developer sandboxes"},
 			{Command: "sandbox list --status active", Meaning: "List active sandboxes only"},
+			{Command: "sandbox list --type basic", Meaning: "List basic sandboxes only"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runListCommand(cmd, clients)
@@ -51,6 +53,7 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&listCmdFlags.status, "status", "", "Filter by status: active, archived")
+	cmd.Flags().StringVar(&listCmdFlags.sandboxType, "type", "", "Filter by type: basic, regular, partner")
 
 	return cmd
 }
@@ -75,7 +78,7 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token string, auth *types.SlackAuth) error {
 	ctx := cmd.Context()
 
-	sandboxes, err := clients.API().ListSandboxes(ctx, token, listCmdFlags.status)
+	sandboxes, err := clients.API().ListSandboxes(ctx, token, listCmdFlags.status, listCmdFlags.sandboxType)
 	if err != nil {
 		return err
 	}
@@ -113,12 +116,15 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.Domain)))
 		}
 
-		if s.IsPartner {
-			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: Partner"))
+		switch s.Type {
+		case "basic":
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: basic"))
+		case "partner":
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: partner"))
 		}
 
 		if s.Status != "" {
-			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
+			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToLower(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
 				clients.IO.PrintInfo(ctx, false, "    %s", style.Red(status))
 			} else {

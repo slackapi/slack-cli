@@ -40,7 +40,7 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "T123").Return(nil)
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
+				cm.API.On("ListSandboxes", mock.Anything, testToken, "", "").Return([]types.Sandbox{}, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
@@ -49,7 +49,7 @@ func TestDeleteCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Auth.AssertCalled(t, "AuthWithToken", mock.Anything, "xoxb-test-token")
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
+				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "", "")
 			},
 		},
 		"delete with remaining sandboxes": {
@@ -74,7 +74,7 @@ func TestDeleteCommand(t *testing.T) {
 						DateArchived: 0,
 					},
 				}
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return(sandboxes, nil)
+				cm.API.On("ListSandboxes", mock.Anything, testToken, "", "").Return(sandboxes, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()
@@ -82,7 +82,7 @@ func TestDeleteCommand(t *testing.T) {
 			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "T123", "other-sandbox", "T456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "T123")
-				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "")
+				cm.API.AssertCalled(t, "ListSandboxes", mock.Anything, "xoxb-test-token", "", "")
 			},
 		},
 		"deletion cancelled": {
@@ -117,7 +117,7 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
 				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(true, nil)
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "E0123456").Return(nil)
-				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
+				cm.API.On("ListSandboxes", mock.Anything, testToken, "", "").Return([]types.Sandbox{}, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
 
 				cm.AddDefaultMocks()

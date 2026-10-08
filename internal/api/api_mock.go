@@ -225,8 +225,8 @@ func (m *APIMock) DeleteSandbox(ctx context.Context, token, sandboxID string) er
 	return args.Error(0)
 }
 
-func (m *APIMock) ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error) {
-	args := m.Called(ctx, token, filter)
+func (m *APIMock) ListSandboxes(ctx context.Context, token string, status string, sandboxType string) ([]types.Sandbox, error) {
+	args := m.Called(ctx, token, status, sandboxType)
 	return args.Get(0).([]types.Sandbox), args.Error(1)
 }
 

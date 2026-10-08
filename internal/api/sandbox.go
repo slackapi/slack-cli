@@ -35,7 +35,7 @@ const (
 type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
-	ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error)
+	ListSandboxes(ctx context.Context, token string, status string, sandboxType string) ([]types.Sandbox, error)
 }
 
 type createSandboxResponse struct {
@@ -127,7 +127,7 @@ func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) err
 }
 
 // ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
-func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
+func (c *Client) ListSandboxes(ctx context.Context, token string, status string, sandboxType string) ([]types.Sandbox, error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListSandboxes")
 	defer span.Finish()
@@ -136,6 +136,9 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	values.Add("token", token)
 	if status != "" {
 		values.Add("status", status)
+	}
+	if sandboxType != "" {
+		values.Add("type", sandboxType)
 	}
 
 	b, err := c.postForm(ctx, sandboxListMethod, values)
