@@ -108,6 +108,19 @@ func isIgnoredPath(path string) bool {
 	return false
 }
 
+// StripDevLocalSuffix removes the " (local)" suffix that Slack's
+// apps.manifest.export appends to name fields for dev-installed apps.
+func StripDevLocalSuffix(m types.AppManifest) types.AppManifest {
+	m.DisplayInformation.Name = strings.TrimSuffix(m.DisplayInformation.Name, devLocalSuffix)
+	if m.Features != nil {
+		// Copy so the caller's manifest, which shares this pointer, is not modified.
+		features := *m.Features
+		features.BotUser.DisplayName = strings.TrimSuffix(features.BotUser.DisplayName, devLocalSuffix)
+		m.Features = &features
+	}
+	return m
+}
+
 // isDevLocalSuffixDiff reports whether a Modified diff is purely the result
 // of Slack's apps.manifest.export appending " (local)" to a name field for a
 // dev-installed app. Real renames are not suppressed because trimming the
