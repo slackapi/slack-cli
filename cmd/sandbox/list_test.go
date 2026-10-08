@@ -112,7 +112,7 @@ func TestListCommand(t *testing.T) {
 			},
 		},
 		"with partner sandbox shows type for all sandboxes": {
-			CmdArgs: []string{"--experiment=sandboxes", "--token", "xoxb-test-token"},
+			CmdArgs: []string{"--token", "xoxb-test-token"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				testToken := "xoxb-test-token"
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
