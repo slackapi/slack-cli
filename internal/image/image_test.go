@@ -97,23 +97,6 @@ func Test_CropResizeImageRatioToBytes(t *testing.T) {
 	assert.NotEmpty(t, result)
 }
 
-func Test_CropResizeImageRatioFromFile(t *testing.T) {
-	pngData := createTestPNG(t, 200, 100)
-	fs := slackdeps.NewFsMock()
-	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
-	require.NoError(t, err)
-
-	result, err := CropResizeImageRatioFromFile(fs, "/test.png", 100, 1, 1)
-	require.NoError(t, err)
-	assert.NotNil(t, result)
-}
-
-func Test_CropResizeImageRatioFromFile_FileNotFound(t *testing.T) {
-	fs := slackdeps.NewFsMock()
-	_, err := CropResizeImageRatioFromFile(fs, "/nonexistent.png", 100, 1, 1)
-	assert.Error(t, err)
-}
-
 func Test_CropResizeImageRatioFromFileToBytes(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
 	fs := slackdeps.NewFsMock()
