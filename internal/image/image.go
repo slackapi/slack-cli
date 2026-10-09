@@ -73,36 +73,3 @@ func CropResizeImageRatioToBytes(reader io.Reader, width uint, widthRatio, heigh
 
 	return buf.Bytes(), nil
 }
-
-func ResizeImage(reader io.Reader, width, height uint) (image.Image, error) {
-	originalImage, _, err := image.Decode(reader)
-	if err != nil {
-		return nil, err
-	}
-	return resize.Resize(width, height, originalImage, resize.Lanczos3), nil
-}
-
-func ResizeImageToBytes(reader io.Reader, width, height uint) ([]byte, error) {
-	resizedImg, err := ResizeImage(reader, width, height)
-	if err != nil {
-		return nil, err
-	}
-
-	buf := new(bytes.Buffer)
-	err = png.Encode(buf, resizedImg)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-func ResizeImageFromFileToBytes(fs afero.Fs, filepath string, width, height uint) ([]byte, error) {
-	reader, err := fs.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
-	return ResizeImageToBytes(reader, width, height)
-}
