@@ -30,16 +30,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-func CropResizeImageRatioFromFile(fs afero.Fs, filepath string, width uint, widthRatio, heightRatio int) (image.Image, error) {
-	reader, err := fs.Open(filepath)
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
-	return CropResizeImageRatio(reader, width, widthRatio, heightRatio)
-}
-
 func CropResizeImageRatioFromFileToBytes(fs afero.Fs, filepath string, width uint, widthRatio, heightRatio int) ([]byte, error) {
 	reader, err := fs.Open(filepath)
 	if err != nil {
