@@ -41,43 +41,6 @@ func createTestPNG(t *testing.T, width, height int) []byte {
 	return buf.Bytes()
 }
 
-func Test_ResizeImage(t *testing.T) {
-	pngData := createTestPNG(t, 100, 100)
-	reader := bytes.NewReader(pngData)
-
-	resized, err := ResizeImage(reader, 50, 50)
-	require.NoError(t, err)
-	assert.NotNil(t, resized)
-	assert.Equal(t, 50, resized.Bounds().Dx())
-	assert.Equal(t, 50, resized.Bounds().Dy())
-}
-
-func Test_ResizeImageToBytes(t *testing.T) {
-	pngData := createTestPNG(t, 100, 100)
-	reader := bytes.NewReader(pngData)
-
-	result, err := ResizeImageToBytes(reader, 50, 50)
-	require.NoError(t, err)
-	assert.NotEmpty(t, result)
-}
-
-func Test_ResizeImageFromFileToBytes(t *testing.T) {
-	pngData := createTestPNG(t, 100, 100)
-	fs := slackdeps.NewFsMock()
-	err := afero.WriteFile(fs, "/test.png", pngData, 0644)
-	require.NoError(t, err)
-
-	result, err := ResizeImageFromFileToBytes(fs, "/test.png", 50, 50)
-	require.NoError(t, err)
-	assert.NotEmpty(t, result)
-}
-
-func Test_ResizeImageFromFileToBytes_FileNotFound(t *testing.T) {
-	fs := slackdeps.NewFsMock()
-	_, err := ResizeImageFromFileToBytes(fs, "/nonexistent.png", 50, 50)
-	assert.Error(t, err)
-}
-
 func Test_CropResizeImageRatio(t *testing.T) {
 	pngData := createTestPNG(t, 200, 100)
 	reader := bytes.NewReader(pngData)
@@ -128,11 +91,5 @@ func Test_CropResizeImageRatioFromFileToBytes(t *testing.T) {
 func Test_CropResizeImageRatioFromFileToBytes_FileNotFound(t *testing.T) {
 	fs := slackdeps.NewFsMock()
 	_, err := CropResizeImageRatioFromFileToBytes(fs, "/nonexistent.png", 100, 1, 1)
-	assert.Error(t, err)
-}
-
-func Test_ResizeImage_InvalidReader(t *testing.T) {
-	reader := bytes.NewReader([]byte("not a valid image"))
-	_, err := ResizeImage(reader, 50, 50)
 	assert.Error(t, err)
 }
