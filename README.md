@@ -8,7 +8,7 @@
 
 ## :wave: Welcome
 
-Welcome to the Slack Platform! This is the source code for command-line
+Welcome to the Slack Platform! :smile: This is the source code for command-line
 interface (CLI), which is your doorway to a new way of building Slack apps.
 
 ## :books: Download
