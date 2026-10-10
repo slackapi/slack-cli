@@ -15,7 +15,7 @@ interface (CLI), which is your doorway to a new way of building Slack apps.
 
 To get started, choose the type of build you want:
 
-- **:package: Get latest release**
+- **:package: Get latest release :slightly_smiling_face:**
   - [Latest Stable Release][install] to download the latest official release for
     macOS, Windows, and Linux
   - [Browse Previous Releases][releases] to download any previous release for
