@@ -273,12 +273,73 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"bot_user":{"display_name":"coding_agent"},"code_channels":{"enabled":false}}`,
 		},
+		"includes user connections when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "connector",
+				},
+				UserConnections: &UserConnections{
+					IsEnabled: true,
+					AuthHosts: []string{"example.com", "auth.example.com"},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":true,"auth_hosts":["example.com","auth.example.com"]}}`,
+		},
+		"serializes user connections disabled explicitly": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "connector",
+				},
+				UserConnections: &UserConnections{
+					IsEnabled: false,
+					AuthHosts: []string{"example.com"},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":false,"auth_hosts":["example.com"]}}`,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual, err := json.Marshal(tc.features)
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, string(actual))
+		})
+	}
+}
+
+func Test_AppManifest_AppFeatures_UserConnections(t *testing.T) {
+	tests := map[string]struct {
+		manifestJSON string
+		expected     *UserConnections
+	}{
+		"undefined user connections are omitted": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"}}}`,
+			expected:     nil,
+		},
+		"enabled user connections are preserved": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":true,"auth_hosts":["example.com","auth.example.com"]}}}`,
+			expected: &UserConnections{
+				IsEnabled: true,
+				AuthHosts: []string{"example.com", "auth.example.com"},
+			},
+		},
+		"disabled user connections keep their auth hosts": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":false,"auth_hosts":["example.com"]}}}`,
+			expected: &UserConnections{
+				IsEnabled: false,
+				AuthHosts: []string{"example.com"},
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var manifest AppManifest
+			err := json.Unmarshal([]byte(tc.manifestJSON), &manifest)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, manifest.Features.UserConnections)
+			actualJSON, err := json.Marshal(manifest)
+			require.NoError(t, err)
+			assert.JSONEq(t, tc.manifestJSON, string(actualJSON))
 		})
 	}
 }

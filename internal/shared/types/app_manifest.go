@@ -80,6 +80,7 @@ type AppFeatures struct {
 	Search                     *Search                     `json:"search,omitempty" yaml:"search,flow,omitempty"`
 	RichPreviews               *RichPreviews               `json:"rich_previews,omitempty" yaml:"rich_previews,flow,omitempty"`
 	CodeChannels               *CodeChannels               `json:"code_channels,omitempty" yaml:"code_channels,flow,omitempty"`
+	UserConnections            *UserConnections            `json:"user_connections,omitempty" yaml:"user_connections,flow,omitempty"`
 }
 
 type RichPreviews struct {
@@ -298,6 +299,11 @@ type Search struct {
 type CodeChannels struct {
 	Enabled         *bool  `json:"enabled,omitempty" yaml:"enabled,omitempty"`
 	SlashCommandURL string `json:"slash_command_url,omitempty" yaml:"slash_command_url,omitempty"`
+}
+
+type UserConnections struct {
+	IsEnabled bool     `json:"is_enabled" yaml:"is_enabled"`
+	AuthHosts []string `json:"auth_hosts" yaml:"auth_hosts,flow"`
 }
 
 // Workflow defines the structure of a workflow in the app manifest.
