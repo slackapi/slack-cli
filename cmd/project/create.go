@@ -242,9 +242,12 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		}))
 
 		// Fetch remote manifest and write it to the local project.
-		// Skip for remote-source projects where manifest.json is not used.
-		manifestSource, _ := clients.Config.ProjectConfig.GetManifestSource(ctx)
-		if !manifestSource.Equals(config.ManifestSourceRemote) {
+		// Only sync for local-source projects since others don't use manifest.json.
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			clients.IO.PrintDebug(ctx, "Failed to get manifest source for manifest sync: %s", err)
+		}
+		if manifestSource.Equals(config.ManifestSourceLocal) {
 			syncRemedy := "  Run %s to sync manually"
 			syncRemedyCmd := style.Commandf("manifest sync --manifest-source=remote", false)
 			if auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID); err != nil {
@@ -270,8 +273,10 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 					printCreateManifestSection(ctx, clients, lines...)
 					// Hash the remote manifest as exported, since install compares against the export.
 					hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, remoteManifest.AppManifest)
-					if err == nil {
-						_ = clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, linkedApp.AppID, hash)
+					if err != nil {
+						clients.IO.PrintDebug(ctx, "Failed to hash manifest for app %s: %s", linkedApp.AppID, err)
+					} else if err := clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, linkedApp.AppID, hash); err != nil {
+						clients.IO.PrintDebug(ctx, "Failed to cache manifest hash for app %s: %s", linkedApp.AppID, err)
 					}
 				} else {
 					printCreateManifestSection(ctx, clients,
