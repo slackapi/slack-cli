@@ -274,6 +274,47 @@ func Test_Diff_SurfacesRealIsMcpEnabledDisagreement(t *testing.T) {
 
 func ptrBool(b bool) *bool { return &b }
 
+func Test_StripDevLocalSuffix(t *testing.T) {
+	t.Run("strips suffix from display name and bot user", func(t *testing.T) {
+		m := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+			Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App (local)"}},
+		}
+		result := StripDevLocalSuffix(m)
+		assert.Equal(t, "My App", result.DisplayInformation.Name)
+		assert.Equal(t, "My App", result.Features.BotUser.DisplayName)
+	})
+
+	t.Run("no-op when suffix is absent", func(t *testing.T) {
+		m := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "My App"},
+			Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App"}},
+		}
+		result := StripDevLocalSuffix(m)
+		assert.Equal(t, "My App", result.DisplayInformation.Name)
+		assert.Equal(t, "My App", result.Features.BotUser.DisplayName)
+	})
+
+	t.Run("does not modify the input manifest", func(t *testing.T) {
+		m := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+			Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App (local)"}},
+		}
+		_ = StripDevLocalSuffix(m)
+		assert.Equal(t, "My App (local)", m.DisplayInformation.Name)
+		assert.Equal(t, "My App (local)", m.Features.BotUser.DisplayName)
+	})
+
+	t.Run("handles nil features", func(t *testing.T) {
+		m := types.AppManifest{
+			DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+		}
+		result := StripDevLocalSuffix(m)
+		assert.Equal(t, "My App", result.DisplayInformation.Name)
+		assert.Nil(t, result.Features)
+	})
+}
+
 func Test_DiffResult_HasDifferences(t *testing.T) {
 	t.Run("empty result has no differences", func(t *testing.T) {
 		result := &DiffResult{}
