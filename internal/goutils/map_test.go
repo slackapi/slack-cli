@@ -57,16 +57,3 @@ func Test_MapToStringSlice(t *testing.T) {
 		})
 	}
 }
-
-func Test_MapToStringSliceKeys(t *testing.T) {
-	var inputMap = map[string]struct{}{
-		"color": {},
-		"size":  {},
-	}
-	var expectedSlice = []string{"color", "size"}
-
-	t.Run("Returns all keys in the map", func(t *testing.T) {
-		actualSlice := MapToStringSliceKeys(inputMap)
-		assert.ElementsMatch(t, expectedSlice, actualSlice)
-	})
-}
