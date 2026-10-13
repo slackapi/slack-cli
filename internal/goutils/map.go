@@ -37,13 +37,3 @@ func MapToStringSlice(args map[string]string, prefix string) []string {
 	}
 	return res
 }
-
-// MapToStringSliceKeys takes a map[string]interface{} and returns its keys as a
-// slice of strings
-func MapToStringSliceKeys(args map[string]struct{}) []string {
-	var keys = []string{}
-	for key := range args {
-		keys = append(keys, key)
-	}
-	return keys
-}
