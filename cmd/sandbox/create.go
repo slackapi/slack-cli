@@ -63,9 +63,10 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short: "Create a developer sandbox",
 		Long:  `Create a new Slack developer sandbox`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
-			{Command: "sandbox create --name test-box --password mypass", Meaning: "Create a sandbox named test-box"},
-			{Command: "sandbox create --name test-box --password mypass --domain test-box --archive-ttl 1d", Meaning: "Create a temporary sandbox that will be archived in 1 day"},
-			{Command: "sandbox create --name test-box --password mypass --domain test-box --archive-date 2025-12-31", Meaning: "Create a sandbox that will be archived on a specific date"},
+			{Command: "sandbox create --name test-box", Meaning: "Create a sandbox with password-free sign-in"},
+			{Command: "sandbox create --name test-box --password mypass", Meaning: "Create a sandbox with a password"},
+			{Command: "sandbox create --name test-box --domain test-box --archive-ttl 1d", Meaning: "Create a temporary sandbox that will be archived in 1 day"},
+			{Command: "sandbox create --name test-box --archive-date 2025-12-31", Meaning: "Create a sandbox that will be archived on a specific date"},
 		}),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -75,7 +76,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	cmd.Flags().StringVar(&createCmdFlags.name, "name", "", "Organization name for the new sandbox")
 	cmd.Flags().StringVar(&createCmdFlags.domain, "domain", "", "Team domain. Derived from org name if not provided")
-	cmd.Flags().StringVar(&createCmdFlags.password, "password", "", "Password used to log into the sandbox")
+	cmd.Flags().StringVar(&createCmdFlags.password, "password", "", "Password used to log into the sandbox. If not provided, password-free sign-in is enabled")
 	cmd.Flags().StringVar(&createCmdFlags.locale, "locale", "", "Locale (eg. en-us, languageCode-countryCode)")
 	cmd.Flags().StringVar(&createCmdFlags.template, "template", "", "Template with sample data to apply to the sandbox (options: default, empty)")
 	cmd.Flags().StringVar(&createCmdFlags.eventCode, "event-code", "", "Event code for the sandbox")
@@ -111,19 +112,9 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
+	// If password is provided via flag, use it; otherwise enable password-free sign-in
 	password := createCmdFlags.password
-	if password == "" {
-		password, err = clients.IO.InputPrompt(
-			ctx,
-			"Enter a password for the sandbox",
-			iostreams.InputPromptConfig{
-				Required: true,
-			},
-		)
-		if err != nil {
-			return err
-		}
-	}
+	isPasswordFree := password == ""
 
 	domain := createCmdFlags.domain
 	if domain == "" {
@@ -167,6 +158,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		createCmdFlags.eventCode,
 		archiveEpochDatetime,
 		createCmdFlags.partner,
+		isPasswordFree,
 	)
 	if err != nil {
 		return err
