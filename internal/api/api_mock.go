@@ -215,8 +215,8 @@ func (m *APIMock) FunctionDistributionRemoveUsers(ctx context.Context, callbackI
 
 // SandboxClient
 
-func (m *APIMock) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (string, string, error) {
-	args := m.Called(ctx, token, name, domain, password, locale, owningOrgID, templateID, eventCode, archiveDate, isPartner)
+func (m *APIMock) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (string, string, error) {
+	args := m.Called(ctx, token, name, domain, password, locale, owningOrgID, templateID, eventCode, archiveDate, isPartner, useEmailLogin)
 	return args.String(0), args.String(1), args.Error(2)
 }
 
