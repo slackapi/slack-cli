@@ -113,10 +113,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 
 	// Use a password if provided via flag; otherwise enable email login
 	password := createCmdFlags.password
-	useEmailLogin := false
-	if password == "" {
-		useEmailLogin = true
-	}
+	useEmailLogin := password == ""
 
 	// Domain can be set via flag when creating a regular sandbox.
 	// If not provided or the actor is creating a basic sandbox, the backend will generate a domain.
