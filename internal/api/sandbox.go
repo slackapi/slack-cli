@@ -59,8 +59,14 @@ func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, passwor
 	values := url.Values{}
 	values.Add("token", token)
 	values.Add("org_name", name)
-	values.Add("domain", domain)
-	values.Add("password", password)
+	if domain != "" {
+		values.Add("domain", domain)
+	}
+	if useEmailLogin {
+		values.Add("is_password_free", "true")
+	} else {
+		values.Add("password", password)
+	}
 	if locale != "" {
 		values.Add("locale", locale)
 	}
@@ -78,9 +84,6 @@ func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, passwor
 	}
 	if isPartner {
 		values.Add("is_partner", "true")
-	}
-	if useEmailLogin {
-		values.Add("is_password_free", "true")
 	}
 
 	b, err := c.postForm(ctx, sandboxCreateMethod, values)
