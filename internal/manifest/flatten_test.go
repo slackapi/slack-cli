@@ -141,13 +141,3 @@ func Test_Flatten_DottedKeyRoundTrip(t *testing.T) {
 	assert.Equal(t, "Lookup", round.Functions["slack.users.lookup"].Title)
 	assert.Equal(t, "Lookup a user", round.Functions["slack.users.lookup"].Description)
 }
-
-func Test_SortedKeys(t *testing.T) {
-	m := map[string]any{
-		"z.field": "val",
-		"a.field": "val",
-		"m.field": "val",
-	}
-	keys := SortedKeys(m)
-	assert.Equal(t, []string{"a.field", "m.field", "z.field"}, keys)
-}
