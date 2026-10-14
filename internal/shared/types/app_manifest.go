@@ -301,9 +301,12 @@ type CodeChannels struct {
 	SlashCommandURL string `json:"slash_command_url,omitempty" yaml:"slash_command_url,omitempty"`
 }
 
+// UserConnections contains settings for apps that use the standardized user
+// connection flow. IsEnabled is a pointer so an explicit `false` (feature turned
+// off) is distinguishable from an unset field, which Slack rejects as missing.
 type UserConnections struct {
-	IsEnabled bool     `json:"is_enabled" yaml:"is_enabled"`
-	AuthHosts []string `json:"auth_hosts" yaml:"auth_hosts,flow"`
+	IsEnabled *bool    `json:"is_enabled,omitempty" yaml:"is_enabled,omitempty"`
+	AuthHosts []string `json:"auth_hosts,omitempty" yaml:"auth_hosts,flow,omitempty"`
 }
 
 // Workflow defines the structure of a workflow in the app manifest.

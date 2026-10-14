@@ -279,7 +279,7 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 					DisplayName: "connector",
 				},
 				UserConnections: &UserConnections{
-					IsEnabled: true,
+					IsEnabled: new(true),
 					AuthHosts: []string{"example.com", "auth.example.com"},
 				},
 			},
@@ -291,7 +291,7 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 					DisplayName: "connector",
 				},
 				UserConnections: &UserConnections{
-					IsEnabled: false,
+					IsEnabled: new(false),
 					AuthHosts: []string{"example.com"},
 				},
 			},
@@ -319,16 +319,20 @@ func Test_AppManifest_AppFeatures_UserConnections(t *testing.T) {
 		"enabled user connections are preserved": {
 			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":true,"auth_hosts":["example.com","auth.example.com"]}}}`,
 			expected: &UserConnections{
-				IsEnabled: true,
+				IsEnabled: new(true),
 				AuthHosts: []string{"example.com", "auth.example.com"},
 			},
 		},
 		"disabled user connections keep their auth hosts": {
 			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":false,"auth_hosts":["example.com"]}}}`,
 			expected: &UserConnections{
-				IsEnabled: false,
+				IsEnabled: new(false),
 				AuthHosts: []string{"example.com"},
 			},
+		},
+		"omitted user connections fields are not invented": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{}}}`,
+			expected:     &UserConnections{},
 		},
 	}
 	for name, tc := range tests {
