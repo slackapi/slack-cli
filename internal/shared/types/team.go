@@ -40,7 +40,7 @@ type TeamInfo struct {
 	Name string `json:"name"`
 }
 
-// IsTeamID returns true if matches the pattern of a workspace (T-prefixed) team ID
+// IsWorkspaceTeamID returns true if a string matches the pattern of a workspace (T-prefixed) team ID
 // Note: This criteria is an estimate, and not directly related to server-side team_id scheme
 func IsWorkspaceTeamID(str string) bool {
 	return strings.HasPrefix(str, "T") && strings.ToUpper(str) == str
@@ -50,10 +50,4 @@ func IsWorkspaceTeamID(str string) bool {
 // Note: Validation criteria is an estimate, and not directly related to server-side team_id scheme
 func IsEnterpriseTeamID(str string) bool {
 	return strings.HasPrefix(str, "E") && strings.ToUpper(str) == str
-}
-
-// IsTeamID returns true if a string matches the pattern of a team id
-// Note: Validation criteria is an estimate, and not directly related to server-side team_id scheme
-func IsTeamID(str string) bool {
-	return IsEnterpriseTeamID(str) || IsWorkspaceTeamID(str)
 }
