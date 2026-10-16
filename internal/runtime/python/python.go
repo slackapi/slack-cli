@@ -447,23 +447,3 @@ func IsRuntimeForProject(ctx context.Context, fs afero.Fs, dirPath string, sdkCo
 
 	return false
 }
-
-// getProjectDirRelPath returns the relative path from current working directory
-// to projectDirPath or an error. When an error occurs, the projectDirPath is
-// returned as the relative path.
-func getProjectDirRelPath(os types.Os, currentDirPath string, projectDirPath string) (string, error) {
-	// Get the current directory to use as the base for the project
-	if currentDirPath == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return projectDirPath, err
-		}
-		currentDirPath = cwd
-	}
-	// Find relative path between current directory and project directory
-	filePathRel, err := filepath.Rel(currentDirPath, projectDirPath)
-	if err != nil {
-		return projectDirPath, err
-	}
-	return filePathRel, nil
-}
