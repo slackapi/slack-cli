@@ -16,7 +16,6 @@ package manifest
 
 import (
 	"encoding/json"
-	"sort"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -68,14 +67,4 @@ func escapePathSegment(s string) string {
 	s = strings.ReplaceAll(s, `\`, `\\`)
 	s = strings.ReplaceAll(s, `.`, `\.`)
 	return s
-}
-
-// SortedKeys returns the keys of a flat map in sorted order for deterministic output.
-func SortedKeys(m map[string]any) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
