@@ -227,6 +227,7 @@ const (
 	ErrRatelimited                                   = "ratelimited"
 	ErrRequestIDOrAppIDIsRequired                    = "request_id_or_app_id_is_required"
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
+	ErrRestrictedScopes                              = "restricted_scopes"
 	ErrRuntimeNotFound                               = "runtime_not_found"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
 	ErrSDKConfigLoad                                 = "sdk_config_load_error"
@@ -1399,6 +1400,12 @@ Otherwise start your app for local development with: %s`,
 	ErrRestrictedPlanLevel: {
 		Code:    ErrRestrictedPlanLevel,
 		Message: "Your Slack plan does not have access to the requested feature",
+	},
+
+	ErrRestrictedScopes: {
+		Code:        ErrRestrictedScopes,
+		Message:     "You don't have permission to install an app that requests one or more of its scopes",
+		Remediation: "Some scopes can only be granted by a workspace admin or owner, such as admin and audit scopes or the Slack Connect bot scopes `conversations.connect:manage` and `conversations.connect:write`.\nAsk a workspace admin or owner to install the app, or remove the restricted scopes from the app manifest.",
 	},
 
 	ErrRuntimeNotFound: {

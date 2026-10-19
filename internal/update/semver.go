@@ -35,21 +35,6 @@ func SemVerGreaterThan(release string, current string) (bool, error) {
 	return semver.Compare(r, c) > 0, nil
 }
 
-// SemVerLessThan returns true if release is less than current
-func SemVerLessThan(release string, current string) (bool, error) {
-	r := ensureVPrefix(release)
-	c := ensureVPrefix(current)
-	if !semver.IsValid(r) {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer).
-			WithMessage("Value %s is not a semantic version", release)
-	}
-	if !semver.IsValid(c) {
-		return false, slackerror.New(slackerror.ErrInvalidSemVer).
-			WithMessage("Value %s is not a semantic version", current)
-	}
-	return semver.Compare(r, c) < 0, nil
-}
-
 func ensureVPrefix(v string) string {
 	if len(v) > 0 && v[0] != 'v' {
 		return "v" + v

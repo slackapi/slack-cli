@@ -33,7 +33,7 @@ const (
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
-	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (teamID, sandboxURL string, err error)
+	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
 }
@@ -51,7 +51,7 @@ type listSandboxesResponse struct {
 }
 
 // CreateSandbox creates a new developer sandbox
-func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner bool) (teamID, sandboxURL string, err error) {
+func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateSandbox")
 	defer span.Finish()
@@ -59,8 +59,14 @@ func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, passwor
 	values := url.Values{}
 	values.Add("token", token)
 	values.Add("org_name", name)
-	values.Add("domain", domain)
-	values.Add("password", password)
+	if domain != "" {
+		values.Add("domain", domain)
+	}
+	if useEmailLogin {
+		values.Add("is_password_free", "true")
+	} else {
+		values.Add("password", password)
+	}
 	if locale != "" {
 		values.Add("locale", locale)
 	}
