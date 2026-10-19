@@ -42,22 +42,6 @@ type Trigger struct {
 	RawMessage        json.RawMessage `json:"-" yaml:"-"`                                   // "-" will always omit
 }
 
-// IsKnownType returns true if Trigger.Type is a known and supported type
-func (t *Trigger) IsKnownType() bool {
-	switch t.Type {
-	case
-		TriggerTypeShortcut,
-		TriggerTypeSlashCommand,
-		TriggerTypeMessageShortcut,
-		TriggerTypeEvent,
-		TriggerTypeWebhook,
-		TriggerTypeScheduled:
-		return true
-	default:
-		return false
-	}
-}
-
 // TriggerDefinition type is returned by the SDK hook 'triggers'
 type TriggerDefinition struct {
 	Key     string        `json:"key" yaml:"key"`
