@@ -26,31 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_SlackContext_OpenTracingSpan(t *testing.T) {
-	tests := map[string]struct {
-		expectedSpan  opentracing.Span
-		expectedError error
-	}{
-		"returns span when span exists": {
-			expectedSpan:  opentracing.StartSpan("test.span"),
-			expectedError: nil,
-		},
-		"returns error when span not found": {
-			expectedSpan:  nil,
-			expectedError: slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Span could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = opentracing.ContextWithSpan(ctx, tc.expectedSpan)
-			actualSpan, actualError := OpenTracingSpan(ctx)
-			require.Equal(t, tc.expectedSpan, actualSpan)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetOpenTracingSpan(t *testing.T) {
 	tests := map[string]struct {
 		expectedSpan opentracing.Span

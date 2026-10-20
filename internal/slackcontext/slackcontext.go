@@ -47,17 +47,6 @@ const (
 	contextKeyVersion
 )
 
-// OpenTracingSpan returns the `opentracing.Span“ associated with `ctx`, or
-// `nil` and `slackerror.ErrContextValueNotFound` if no `Span` could be found.
-func OpenTracingSpan(ctx context.Context) (opentracing.Span, error) {
-	span := opentracing.SpanFromContext(ctx)
-	if span == nil {
-		return nil, slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for OpenTracing Span could not be found")
-	}
-	return span, nil
-}
-
 // SetOpenTracingSpan returns a new `context.Context` that holds a reference to
 // the span. If span is nil, a new context without an active span is returned.
 func SetOpenTracingSpan(ctx context.Context, span opentracing.Span) context.Context {
