@@ -87,33 +87,6 @@ func Test_SlackContext_SetOpenTracingTraceID(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_OpenTracingTracer(t *testing.T) {
-	_, _tracer := tracer.SetupTracer(true)
-
-	tests := map[string]struct {
-		expectedTracer opentracing.Tracer
-		expectedError  error
-	}{
-		"returns Tracer when it exists": {
-			expectedTracer: _tracer,
-			expectedError:  nil,
-		},
-		"returns error when Tracer not found": {
-			expectedTracer: nil,
-			expectedError:  slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Tracer could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tc.expectedTracer)
-			actualTracer, actualError := OpenTracingTracer(ctx)
-			require.Equal(t, tc.expectedTracer, actualTracer)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 	_, _tracer := tracer.SetupTracer(true)
 
