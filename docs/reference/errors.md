@@ -1363,6 +1363,15 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### restricted_scopes {#restricted_scopes}
+
+**Message**: You don't have permission to install an app that requests one or more of its scopes
+
+**Remediation**: Some scopes can only be granted by a workspace admin or owner, such as admin and audit scopes or the Slack Connect bot scopes `conversations.connect:manage` and `conversations.connect:write`.
+Ask a workspace admin or owner to install the app, or remove the restricted scopes from the app manifest.
+
+---
+
 ### runtime_not_found {#runtime_not_found}
 
 **Message**: The hook runtime executable was not found
