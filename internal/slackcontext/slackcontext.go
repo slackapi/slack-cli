@@ -72,17 +72,6 @@ func SetOpenTracingTraceID(ctx context.Context, traceID string) context.Context 
 	return ctx
 }
 
-// OpenTracingTracer returns the `opentracing.Tracer` associated with `ctx`, or
-// `nil` and `slackerror.ErrContextValueNotFound` if no `Tracer` could be found.
-func OpenTracingTracer(ctx context.Context) (opentracing.Tracer, error) {
-	var tracer, ok = ctx.Value(contextKeyOpenTracingTracer).(opentracing.Tracer)
-	if !ok || tracer == nil {
-		return nil, slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for OpenTracing Tracer could not be found")
-	}
-	return tracer, nil
-}
-
 // SetOpenTracingSpan returns a new `context.Context` that holds a reference to
 // the `opentracing.Tracer`. If tracer is nil, a new context without a tracer returned.
 func SetOpenTracingTracer(ctx context.Context, tracer opentracing.Tracer) context.Context {
