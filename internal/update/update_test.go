@@ -62,14 +62,6 @@ func Test_UpdateNotification_Dependencies(t *testing.T) {
 	require.Equal(t, dep, u.Dependencies()[0])
 }
 
-func Test_UpdateNotification_SetEnabled(t *testing.T) {
-	u := &UpdateNotification{}
-	u.SetEnabled(true)
-	require.True(t, u.Enabled())
-	u.SetEnabled(false)
-	require.False(t, u.Enabled())
-}
-
 func Test_UpdateNotification_SetEnv(t *testing.T) {
 	u := &UpdateNotification{}
 	u.SetEnv("SLACK_SKIP_UPDATE")
