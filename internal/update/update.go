@@ -80,11 +80,6 @@ func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *
 	return updateNotification
 }
 
-// SetEnabled enables or disables checking for the latest version. Default is true.
-func (u *UpdateNotification) SetEnabled(b bool) {
-	u.enabled = b
-}
-
 // Enabled returns true if checking for the latest version is enabled.
 func (u *UpdateNotification) Enabled() bool {
 	return u.enabled
