@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  release:
+    types:
+      - published
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -11,6 +14,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   rc:
     name: RC
+    if: github.event_name != 'release'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -149,3 +153,20 @@ jobs:
             gh pr create --draft --head rc --base main --title "$PR_TITLE" --body "$PR_BODY" --milestone "Next Release" --label "release" --label "semver:${SEMVER}"
             echo "Created new release PR"
           fi
+
+  notify:
+    name: Notify
+    if: github.event_name == 'release' && !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        with:
+          webhook: ${{ secrets.SLACK_RELEASE_ANNOUNCEMENTS_WEBHOOK_URL }}
+          webhook-type: webhook-trigger
+          payload: |
+            action_url: "${{ github.event.release.html_url }}"
+            message: "slack-cli ${{ github.event.release.tag_name }}"
+            repository: "${{ github.repository }}"
