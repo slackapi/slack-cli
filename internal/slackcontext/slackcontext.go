@@ -79,17 +79,6 @@ func SetOpenTracingTracer(ctx context.Context, tracer opentracing.Tracer) contex
 	return ctx
 }
 
-// ProjectID returns the project ID associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no project ID could be found.
-func ProjectID(ctx context.Context) (string, error) {
-	var projectID, ok = ctx.Value(contextKeyProjectID).(string)
-	if !ok || projectID == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for Project ID could not be found")
-	}
-	return projectID, nil
-}
-
 // SetProjectID returns a new `context.Context` that holds a reference to
 // the `projectID` and updates the `opentracing.Span` tag with the `projectID`.
 func SetProjectID(ctx context.Context, projectID string) context.Context {

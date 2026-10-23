@@ -107,31 +107,6 @@ func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_ProjectID(t *testing.T) {
-	tests := map[string]struct {
-		expectedProjectID string
-		expectedError     error
-	}{
-		"returns Project ID when it exists": {
-			expectedProjectID: uuid.New().String(),
-			expectedError:     nil,
-		},
-		"returns error when Project ID not found": {
-			expectedProjectID: "",
-			expectedError:     slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Project ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyProjectID, tc.expectedProjectID)
-			actualProjectID, actualError := ProjectID(ctx)
-			require.Equal(t, tc.expectedProjectID, actualProjectID)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetProjectID(t *testing.T) {
 	tests := map[string]struct {
 		expectedProjectID string
