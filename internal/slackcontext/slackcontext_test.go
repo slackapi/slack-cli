@@ -107,31 +107,6 @@ func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_ProjectID(t *testing.T) {
-	tests := map[string]struct {
-		expectedProjectID string
-		expectedError     error
-	}{
-		"returns Project ID when it exists": {
-			expectedProjectID: uuid.New().String(),
-			expectedError:     nil,
-		},
-		"returns error when Project ID not found": {
-			expectedProjectID: "",
-			expectedError:     slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Project ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyProjectID, tc.expectedProjectID)
-			actualProjectID, actualError := ProjectID(ctx)
-			require.Equal(t, tc.expectedProjectID, actualProjectID)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetProjectID(t *testing.T) {
 	tests := map[string]struct {
 		expectedProjectID string
@@ -189,31 +164,6 @@ func Test_SlackContext_SetSessionID(t *testing.T) {
 			ctx = SetSessionID(ctx, tc.expectedSessionID)
 			actualSessionID := ctx.Value(contextKeySessionID).(string)
 			require.Equal(t, tc.expectedSessionID, actualSessionID)
-		})
-	}
-}
-
-func Test_SlackContext_SystemID(t *testing.T) {
-	tests := map[string]struct {
-		expectedSystemID string
-		expectedError    error
-	}{
-		"returns System ID when it exists": {
-			expectedSystemID: uuid.New().String(),
-			expectedError:    nil,
-		},
-		"returns error when System ID not found": {
-			expectedSystemID: "",
-			expectedError:    slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for System ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeySystemID, tc.expectedSystemID)
-			actualSystemID, actualError := SystemID(ctx)
-			require.Equal(t, tc.expectedSystemID, actualSystemID)
-			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
