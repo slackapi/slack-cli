@@ -83,9 +83,22 @@ type AppFeatures struct {
 	UserConnections            *UserConnections            `json:"user_connections,omitempty" yaml:"user_connections,flow,omitempty"`
 }
 
+// RichPreviews contains the Work Objects settings. DomainAllowlist and
+// AllowSameOrigin configure the embeds an unfurl may show, and Slug how its
+// title is shown. AllowSameOrigin is a pointer so an explicit `false` is
+// distinguishable from an unset field.
 type RichPreviews struct {
-	EntityTypes []string `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
-	IsActive    bool     `json:"is_active,omitempty" yaml:"is_active,flow,omitempty"`
+	EntityTypes     []string          `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
+	IsActive        bool              `json:"is_active,omitempty" yaml:"is_active,flow,omitempty"`
+	DomainAllowlist []string          `json:"domain_allowlist,omitempty" yaml:"domain_allowlist,flow,omitempty"`
+	AllowSameOrigin *bool             `json:"allow_same_origin,omitempty" yaml:"allow_same_origin,omitempty"`
+	Slug            *RichPreviewsSlug `json:"slug,omitempty" yaml:"slug,flow,omitempty"`
+}
+
+// RichPreviewsSlug contains how a Work Object's slug is shown. HideDisplayID
+// is a pointer so an explicit `false` is distinguishable from an unset field.
+type RichPreviewsSlug struct {
+	HideDisplayID *bool `json:"hide_display_id,omitempty" yaml:"hide_display_id,omitempty"`
 }
 
 type AssistantView struct {
