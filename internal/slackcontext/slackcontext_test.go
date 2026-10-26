@@ -168,31 +168,6 @@ func Test_SlackContext_SetSessionID(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_SystemID(t *testing.T) {
-	tests := map[string]struct {
-		expectedSystemID string
-		expectedError    error
-	}{
-		"returns System ID when it exists": {
-			expectedSystemID: uuid.New().String(),
-			expectedError:    nil,
-		},
-		"returns error when System ID not found": {
-			expectedSystemID: "",
-			expectedError:    slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for System ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeySystemID, tc.expectedSystemID)
-			actualSystemID, actualError := SystemID(ctx)
-			require.Equal(t, tc.expectedSystemID, actualSystemID)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetSystemID(t *testing.T) {
 	tests := map[string]struct {
 		expectedSystemID string
