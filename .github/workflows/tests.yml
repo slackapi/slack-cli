@@ -73,7 +73,7 @@ jobs:
         with:
           go-version: "1.27.3"
       - name: Report health score
-        uses: slackapi/slack-health-score@43dcb384ec3d0c1d349d8f2721967bf24fdbe954 # v0.2.0
+        uses: slackapi/slack-health-score@9554f2581c198cdf168c7724ced9d7022c5c4cff # v0.2.1
         with:
           extension: "go"
           codecov_token: ${{ secrets.ELAINES_CODECOV_API_TOKEN }}
