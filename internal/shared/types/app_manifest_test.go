@@ -257,7 +257,7 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 				},
 				RichPreviews: &RichPreviews{
 					EntityTypes:     []string{"slack#/entities/task"},
-					IsActive:        true,
+					IsActive:        new(true),
 					DomainAllowlist: []string{"example.com"},
 					AllowSameOrigin: new(true),
 					Slug:            &RichPreviewsSlug{HideDisplayID: new(true)},
@@ -334,17 +334,24 @@ func Test_AppManifest_AppFeatures_RichPreviews(t *testing.T) {
 		"embed settings are preserved": {
 			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":true,"entity_types":["slack#/entities/task"],"domain_allowlist":["example.com","embed.example.com"],"allow_same_origin":true,"slug":{"hide_display_id":true}}}}`,
 			expected: &RichPreviews{
-				IsActive:        true,
+				IsActive:        new(true),
 				EntityTypes:     []string{"slack#/entities/task"},
 				DomainAllowlist: []string{"example.com", "embed.example.com"},
 				AllowSameOrigin: new(true),
 				Slug:            &RichPreviewsSlug{HideDisplayID: new(true)},
 			},
 		},
+		"explicit inactive setting is preserved": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":false,"entity_types":["slack#/entities/task"]}}}`,
+			expected: &RichPreviews{
+				IsActive:    new(false),
+				EntityTypes: []string{"slack#/entities/task"},
+			},
+		},
 		"explicit false settings are preserved": {
 			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":true,"entity_types":["slack#/entities/task"],"allow_same_origin":false,"slug":{"hide_display_id":false}}}}`,
 			expected: &RichPreviews{
-				IsActive:        true,
+				IsActive:        new(true),
 				EntityTypes:     []string{"slack#/entities/task"},
 				AllowSameOrigin: new(false),
 				Slug:            &RichPreviewsSlug{HideDisplayID: new(false)},
