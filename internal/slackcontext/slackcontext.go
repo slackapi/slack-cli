@@ -112,17 +112,6 @@ func SetSessionID(ctx context.Context, sessionID string) context.Context {
 	return ctx
 }
 
-// SystemID returns the session ID associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no system ID could be found.
-func SystemID(ctx context.Context) (string, error) {
-	var systemID, ok = ctx.Value(contextKeySystemID).(string)
-	if !ok || systemID == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for System ID could not be found")
-	}
-	return systemID, nil
-}
-
 // SetSystemID returns a new `context.Context` that holds a reference to
 // the `systemID` and updates the `opentracing.Span` tag with the `systemID`.
 func SetSystemID(ctx context.Context, systemID string) context.Context {
