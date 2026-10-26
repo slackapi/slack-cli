@@ -250,6 +250,21 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/file"]}}`,
 		},
+		"includes Work Objects embed settings when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "business_bot",
+				},
+				RichPreviews: &RichPreviews{
+					EntityTypes:     []string{"slack#/entities/task"},
+					IsActive:        true,
+					DomainAllowlist: []string{"example.com"},
+					AllowSameOrigin: new(true),
+					Slug:            &RichPreviewsSlug{HideDisplayID: new(true)},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/task"],"is_active":true,"domain_allowlist":["example.com"],"allow_same_origin":true,"slug":{"hide_display_id":true}}}`,
+		},
 		"includes code channels when provided": {
 			features: AppFeatures{
 				BotUser: BotUser{
@@ -303,6 +318,48 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			actual, err := json.Marshal(tc.features)
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, string(actual))
+		})
+	}
+}
+
+func Test_AppManifest_AppFeatures_RichPreviews(t *testing.T) {
+	tests := map[string]struct {
+		manifestJSON string
+		expected     *RichPreviews
+	}{
+		"undefined rich previews are omitted": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"}}}`,
+			expected:     nil,
+		},
+		"embed settings are preserved": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":true,"entity_types":["slack#/entities/task"],"domain_allowlist":["example.com","embed.example.com"],"allow_same_origin":true,"slug":{"hide_display_id":true}}}}`,
+			expected: &RichPreviews{
+				IsActive:        true,
+				EntityTypes:     []string{"slack#/entities/task"},
+				DomainAllowlist: []string{"example.com", "embed.example.com"},
+				AllowSameOrigin: new(true),
+				Slug:            &RichPreviewsSlug{HideDisplayID: new(true)},
+			},
+		},
+		"explicit false settings are preserved": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":true,"entity_types":["slack#/entities/task"],"allow_same_origin":false,"slug":{"hide_display_id":false}}}}`,
+			expected: &RichPreviews{
+				IsActive:        true,
+				EntityTypes:     []string{"slack#/entities/task"},
+				AllowSameOrigin: new(false),
+				Slug:            &RichPreviewsSlug{HideDisplayID: new(false)},
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var manifest AppManifest
+			err := json.Unmarshal([]byte(tc.manifestJSON), &manifest)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, manifest.Features.RichPreviews)
+			actualJSON, err := json.Marshal(manifest)
+			require.NoError(t, err)
+			assert.JSONEq(t, tc.manifestJSON, string(actualJSON))
 		})
 	}
 }
