@@ -86,6 +86,11 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			args:           []string{"auth.test"},
 			expectedMethod: "GET",
 		},
+		"GET method in lowercase": {
+			flags:          cmdFlags{method: "get"},
+			args:           []string{"auth.test"},
+			expectedMethod: "GET",
+		},
 		"no token with key=value params": {
 			flags:           cmdFlags{method: "POST"},
 			args:            []string{"blocks.validate", "blocks=[...]"},

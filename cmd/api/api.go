@@ -102,6 +102,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		Args: cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
+			// Accept lowercase method names since HTTP methods are case-sensitive
+			flags.method = strings.ToUpper(flags.method)
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
