@@ -19,6 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"sort"
@@ -59,9 +61,13 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Body format is auto-detected from positional arguments:",
 			"  - Multiple key=value args: form-encoded (token in request body)",
 			"  - Single arg starting with \\{ or \\[: JSON (Bearer token in header)",
-			"  - No args: token sent in Authorization header",
+			"  - No args: form-encoded (token in request body)",
 			"",
 			"Use --json to explicitly send a JSON body, or --data for a form-encoded body string.",
+			"",
+			"With --method GET or HEAD, key=value args and --data are sent as query",
+			"parameters and the token is sent in the Authorization header. A JSON body",
+			"is still sent as given.",
 			"",
 			"Token resolution (in priority order):",
 			"  1. --token flag              Explicit token value",
@@ -146,7 +152,15 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	}
 	apiClient := api.NewClient(nil, apiHost, clients.IO)
 
-	var bodyReader *strings.Reader
+	httpMethod := strings.ToUpper(flags.method)
+	// Proxies often reject GET and HEAD requests that have a body, so form
+	// params are sent in the query string with the token in the Authorization
+	// header instead.
+	bodyless := httpMethod == http.MethodGet || httpMethod == http.MethodHead
+	endpoint := method
+	jsonArg := len(params) == 1 && (strings.HasPrefix(params[0], "{") || strings.HasPrefix(params[0], "["))
+
+	var bodyReader io.Reader
 	var contentType string
 
 	// When the token is placed in the request body (form-encoded), clear it so
@@ -155,6 +169,8 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	case flags.json != "":
 		contentType = "application/json; charset=utf-8"
 		bodyReader = strings.NewReader(flags.json)
+	case flags.data != "" && bodyless:
+		endpoint = method + "?" + flags.data
 	case flags.data != "":
 		contentType = "application/x-www-form-urlencoded"
 		formData := flags.data
@@ -167,25 +183,28 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 		}
 		bodyReader = strings.NewReader(formData)
 		token = ""
-	case len(params) == 1 && (strings.HasPrefix(params[0], "{") || strings.HasPrefix(params[0], "[")):
+	case jsonArg:
 		contentType = "application/json; charset=utf-8"
 		bodyReader = strings.NewReader(params[0])
+	case len(params) > 0 && bodyless:
+		values, err := parseParams(params)
+		if err != nil {
+			return err
+		}
+		endpoint = method + "?" + values.Encode()
 	case len(params) > 0:
 		contentType = "application/x-www-form-urlencoded"
-		values := url.Values{}
-		if token != "" {
-			values.Set("token", token)
+		values, err := parseParams(params)
+		if err != nil {
+			return err
 		}
-		for _, param := range params {
-			key, value, ok := strings.Cut(param, "=")
-			if !ok {
-				return slackerror.New(slackerror.ErrInvalidArguments).
-					WithMessage("invalid parameter %q: must be in key=value format", param)
-			}
-			values.Set(key, value)
+		if token != "" && !values.Has("token") {
+			values.Set("token", token)
 		}
 		bodyReader = strings.NewReader(values.Encode())
 		token = ""
+	case bodyless:
+		// Send no body and keep the token for the Authorization header
 	default:
 		contentType = "application/x-www-form-urlencoded"
 		values := url.Values{}
@@ -206,7 +225,7 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 		customHeaders[strings.TrimSpace(key)] = strings.TrimSpace(value)
 	}
 
-	resp, err := apiClient.RawRequest(ctx, flags.method, method, token, bodyReader, contentType, customHeaders)
+	resp, err := apiClient.RawRequest(ctx, httpMethod, endpoint, token, bodyReader, contentType, customHeaders)
 	if err != nil {
 		return err
 	}
@@ -242,6 +261,20 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	}
 
 	return nil
+}
+
+// parseParams converts key=value arguments into url.Values
+func parseParams(params []string) (url.Values, error) {
+	values := url.Values{}
+	for _, param := range params {
+		key, value, ok := strings.Cut(param, "=")
+		if !ok {
+			return nil, slackerror.New(slackerror.ErrInvalidArguments).
+				WithMessage("invalid parameter %q: must be in key=value format", param)
+		}
+		values.Set(key, value)
+	}
+	return values, nil
 }
 
 // resolveToken determines the API token to use for the request
