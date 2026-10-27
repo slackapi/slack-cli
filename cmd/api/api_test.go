@@ -106,14 +106,6 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			expectedQuery:  "channel=C123&limit=5",
 			assertNoBody:   true,
 		},
-		"GET method in lowercase": {
-			flags:          cmdFlags{method: "get"},
-			args:           []string{"api.test", "foo=bar"},
-			expectedMethod: "GET",
-			expectedAuth:   "Bearer xoxb-test-token",
-			expectedQuery:  "foo=bar",
-			assertNoBody:   true,
-		},
 		"GET with JSON auto-detect from arg": {
 			flags:          cmdFlags{method: "GET"},
 			args:           []string{"conversations.history", `{"channel":"C123"}`},

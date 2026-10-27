@@ -152,11 +152,10 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	}
 	apiClient := api.NewClient(nil, apiHost, clients.IO)
 
-	httpMethod := strings.ToUpper(flags.method)
 	// Proxies often reject GET and HEAD requests that have a body, so form
 	// params are sent in the query string with the token in the Authorization
 	// header instead.
-	bodyless := httpMethod == http.MethodGet || httpMethod == http.MethodHead
+	bodyless := flags.method == http.MethodGet || flags.method == http.MethodHead
 	endpoint := method
 	jsonArg := len(params) == 1 && (strings.HasPrefix(params[0], "{") || strings.HasPrefix(params[0], "["))
 
@@ -225,7 +224,7 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 		customHeaders[strings.TrimSpace(key)] = strings.TrimSpace(value)
 	}
 
-	resp, err := apiClient.RawRequest(ctx, httpMethod, endpoint, token, bodyReader, contentType, customHeaders)
+	resp, err := apiClient.RawRequest(ctx, flags.method, endpoint, token, bodyReader, contentType, customHeaders)
 	if err != nil {
 		return err
 	}
