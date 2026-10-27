@@ -63,6 +63,21 @@ func Test_Update_SemVerGreaterThan(t *testing.T) {
 			v2:       "2.0.1",
 			expected: false,
 		},
+		"same release of a development build is not greater": {
+			v1:       "v4.11.0",
+			v2:       "v4.11.0-9-g154975a",
+			expected: false,
+		},
+		"newer release of a development build is greater": {
+			v1:       "v4.12.0",
+			v2:       "v4.11.0-9-g154975a",
+			expected: true,
+		},
+		"same release of a feature build is not greater": {
+			v1:       "v4.11.0",
+			v2:       "v4.11.0-example-feature",
+			expected: false,
+		},
 		"invalid first version errors": {
 			v1:  "dev",
 			v2:  "2.0.1",

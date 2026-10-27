@@ -15,12 +15,15 @@
 package update
 
 import (
+	"strings"
+
 	"golang.org/x/mod/semver"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
-// SemVerGreaterThan returns true if release is greater than current
+// SemVerGreaterThan returns true if release is greater than current, ignoring
+// prerelease and development suffixes of current
 func SemVerGreaterThan(release string, current string) (bool, error) {
 	r := ensureVPrefix(release)
 	c := ensureVPrefix(current)
@@ -32,6 +35,7 @@ func SemVerGreaterThan(release string, current string) (bool, error) {
 		return false, slackerror.New(slackerror.ErrInvalidSemVer).
 			WithMessage("Value %s is not a semantic version", current)
 	}
+	c = strings.TrimSuffix(semver.Canonical(c), semver.Prerelease(c))
 	return semver.Compare(r, c) > 0, nil
 }
 
