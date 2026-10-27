@@ -85,11 +85,11 @@ type AppFeatures struct {
 
 // RichPreviews contains the Work Objects settings. DomainAllowlist and
 // AllowSameOrigin configure the embeds an unfurl may show, and Slug how its
-// title is shown. AllowSameOrigin is a pointer so an explicit `false` is
-// distinguishable from an unset field.
+// title is shown. IsActive and AllowSameOrigin are pointers so an explicit
+// `false` is distinguishable from an unset field.
 type RichPreviews struct {
 	EntityTypes     []string          `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
-	IsActive        bool              `json:"is_active,omitempty" yaml:"is_active,flow,omitempty"`
+	IsActive        *bool             `json:"is_active,omitempty" yaml:"is_active,omitempty"`
 	DomainAllowlist []string          `json:"domain_allowlist,omitempty" yaml:"domain_allowlist,flow,omitempty"`
 	AllowSameOrigin *bool             `json:"allow_same_origin,omitempty" yaml:"allow_same_origin,omitempty"`
 	Slug            *RichPreviewsSlug `json:"slug,omitempty" yaml:"slug,flow,omitempty"`
