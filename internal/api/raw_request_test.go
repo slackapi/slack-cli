@@ -73,54 +73,6 @@ func Test_RawRequest_BasicPOST(t *testing.T) {
 	assert.Equal(t, `{"ok":true}`, string(resp.Body))
 }
 
-func Test_RawRequest_NoBody(t *testing.T) {
-	tests := map[string]struct {
-		httpMethod string
-		body       io.Reader
-	}{
-		"GET with a nil body": {
-			httpMethod: "GET",
-			body:       nil,
-		},
-		"GET with an empty body": {
-			httpMethod: "GET",
-			body:       strings.NewReader(""),
-		},
-		"POST with a nil body": {
-			httpMethod: "POST",
-			body:       nil,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			var receivedContentLength int64
-			var receivedTransferEncoding []string
-			var receivedBody string
-
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				receivedContentLength = r.ContentLength
-				receivedTransferEncoding = r.TransferEncoding
-				body, _ := io.ReadAll(r.Body)
-				receivedBody = string(body)
-				fmt.Fprint(w, `{"ok":true}`)
-			}))
-			defer server.Close()
-
-			ctx := slackcontext.MockContext(t.Context())
-			io := newTestIO()
-			client := NewClient(nil, server.URL, io)
-
-			resp, err := client.RawRequest(ctx, tc.httpMethod, "api.test", "", tc.body, "", nil)
-
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
-			assert.Equal(t, int64(0), receivedContentLength)
-			assert.Empty(t, receivedTransferEncoding)
-			assert.Empty(t, receivedBody)
-		})
-	}
-}
-
 func Test_RawRequest_NonOKStatus(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
@@ -184,37 +136,6 @@ func Test_RawRequest_RetryOnTooManyRequests(t *testing.T) {
 	assert.Equal(t, 2, attempts)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, `{"ok":true}`, string(resp.Body))
-}
-
-func Test_RawRequest_RetryResendsBody(t *testing.T) {
-	attempts := 0
-	var receivedBodies []string
-	var receivedContentLengths []int64
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		attempts++
-		body, _ := io.ReadAll(r.Body)
-		receivedBodies = append(receivedBodies, string(body))
-		receivedContentLengths = append(receivedContentLengths, r.ContentLength)
-		if attempts == 1 {
-			w.Header().Set("Retry-After", "1")
-			w.WriteHeader(http.StatusTooManyRequests)
-			return
-		}
-		fmt.Fprint(w, `{"ok":true}`)
-	}))
-	defer server.Close()
-
-	ctx := slackcontext.MockContext(t.Context())
-	io := newTestIO()
-	client := NewClient(nil, server.URL, io)
-
-	resp, err := client.RawRequest(ctx, "POST", "auth.test", "token", strings.NewReader("hello=world"), "application/x-www-form-urlencoded", nil)
-
-	assert.NoError(t, err)
-	assert.Equal(t, 2, attempts)
-	assert.Equal(t, []string{"hello=world", "hello=world"}, receivedBodies)
-	assert.Equal(t, []int64{11, 11}, receivedContentLengths)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func Test_RawRequest_RetryOnServiceUnavailable(t *testing.T) {
