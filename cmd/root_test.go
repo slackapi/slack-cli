@@ -220,11 +220,11 @@ func Test_NewSuggestion(t *testing.T) {
 
 func Test_SkillFlag(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
+	cmd, clients := Init(ctx)
 	clientsMock := shared.NewClientsMock()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	clients.IO = clientsMock.IO
 
 	// Call RunE directly since executing the command runs the global initializers of other tests
-	cmd := NewRootCommand(clients, nil)
 	cmd.SetContext(ctx)
 	require.NoError(t, cmd.ParseFlags([]string{"--skill"}))
 	err := cmd.RunE(cmd, []string{})
