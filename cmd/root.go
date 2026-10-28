@@ -42,6 +42,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/platform"
 	"github.com/slackapi/slack-cli/cmd/project"
 	"github.com/slackapi/slack-cli/cmd/sandbox"
+	skillcmd "github.com/slackapi/slack-cli/cmd/skill"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
@@ -88,9 +89,11 @@ var AliasMap = map[string]*AliasInfo{
 var processName = cmdutil.GetProcessName()
 
 func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.UpdateNotification) *cobra.Command {
+	var skillFlag bool
+
 	// rootCmd is the base Cobra command and all subcommands, that are part of the cmd package,
 	// will be are added to the root command.
-	return &cobra.Command{
+	rootCmd := &cobra.Command{
 		Use:           fmt.Sprintf("%v <command> <subcommand> [flags]", processName),
 		Short:         "Slack command-line tool",
 		SilenceErrors: true, // we will bubble up and handle errors ourselves.
@@ -142,10 +145,17 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			return updateNotification.PrintAndPromptUpdates(cmd, version.Raw())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if skillFlag {
+				return skillcmd.RunSkillCommand(clients, cmd)
+			}
 			return cmd.Help()
 		},
 	}
 
+	// Support `--skill` as a shortcut to the `skill` command, similar to `--version`
+	rootCmd.Flags().BoolVar(&skillFlag, "skill", false, "print the agent skill for the Slack CLI")
+
+	return rootCmd
 }
 
 // Init bootstraps the CLI process. Put things that do not rely on specific arguments or flags passed to the CLI in here. If you need flag/argument values, InitConfig below.
@@ -196,6 +206,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		docs.NewCommand(clients),
 		doctor.NewDoctorCommand(clients),
 		feedback.NewFeedbackCommand(clients),
+		skillcmd.NewCommand(clients),
 	}
 
 	for _, topLevelCommand := range topLevelCommands {

@@ -22,6 +22,7 @@ slack <command> <subcommand> [flags]
   -f, --force                ignore warnings and continue executing command
   -h, --help                 help for slack
       --no-color             remove styles and formatting from outputs
+      --skill                print the agent skill for the Slack CLI
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
@@ -68,6 +69,7 @@ $ slack docs    # Open Slack developer docs
 * [slack run](/tools/slack-cli/reference/commands/slack_run/)	 - Start a local server to develop and run the app locally
 * [slack samples](/tools/slack-cli/reference/commands/slack_samples/)	 - List available sample apps
 * [slack sandbox](/tools/slack-cli/reference/commands/slack_sandbox/)	 - Manage developer sandboxes
+* [slack skill](/tools/slack-cli/reference/commands/slack_skill/)	 - Print the agent skill for the Slack CLI
 * [slack sync](/tools/slack-cli/reference/commands/slack_sync/)	 - Sync the app manifest between project and app settings
 * [slack trigger](/tools/slack-cli/reference/commands/slack_trigger/)	 - List details of existing triggers
 * [slack uninstall](/tools/slack-cli/reference/commands/slack_uninstall/)	 - Uninstall the app from a team
