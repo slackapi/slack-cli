@@ -39,6 +39,20 @@ func Test_NewCommand(t *testing.T) {
 	assert.Equal(t, []string{"skills"}, cmd.Aliases)
 }
 
+func Test_NewCommand_SkillFlag(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	cmd := NewCommand(clients)
+	cmd.SetArgs([]string{"--skill"})
+	testutil.MockCmdIO(clients.IO, cmd)
+
+	err := cmd.ExecuteContext(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, skillFile, clientsMock.GetStdoutOutput())
+}
+
 func Test_NewCommand_Args(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()

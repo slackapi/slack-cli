@@ -59,6 +59,12 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			return RunSkillCommand(clients, cmd)
 		},
 	}
+
+	// Accept the root `--skill` flag here too, so `slack skill --skill` and
+	// `slack --skill skill` print the skill instead of erroring
+	cmd.Flags().Bool("skill", false, "print the agent skill for the Slack CLI")
+	_ = cmd.Flags().MarkHidden("skill")
+
 	return cmd
 }
 
