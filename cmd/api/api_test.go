@@ -49,7 +49,9 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 		expectedMethod  string
 		expectedCT      string
 		expectedAuth    string
+		expectedQuery   string
 		assertNoAuth    bool
+		assertNoBody    bool
 		bodyContains    []string
 		bodyNotContains []string
 		bodyEquals      string
@@ -85,6 +87,48 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			flags:          cmdFlags{method: "GET"},
 			args:           []string{"auth.test"},
 			expectedMethod: "GET",
+			expectedAuth:   "Bearer xoxb-test-token",
+			assertNoBody:   true,
+		},
+		"GET query from key=value params": {
+			flags:          cmdFlags{method: "GET"},
+			args:           []string{"conversations.history", "channel=C123", "limit=5"},
+			expectedMethod: "GET",
+			expectedAuth:   "Bearer xoxb-test-token",
+			expectedQuery:  "channel=C123&limit=5",
+			assertNoBody:   true,
+		},
+		"GET query from --data flag": {
+			flags:          cmdFlags{method: "GET", data: "channel=C123&limit=5"},
+			args:           []string{"conversations.history"},
+			expectedMethod: "GET",
+			expectedAuth:   "Bearer xoxb-test-token",
+			expectedQuery:  "channel=C123&limit=5",
+			assertNoBody:   true,
+		},
+		"GET with JSON auto-detect from arg": {
+			flags:          cmdFlags{method: "GET"},
+			args:           []string{"conversations.history", `{"channel":"C123"}`},
+			expectedMethod: "GET",
+			expectedCT:     "application/json; charset=utf-8",
+			expectedAuth:   "Bearer xoxb-test-token",
+			bodyEquals:     `{"channel":"C123"}`,
+		},
+		"GET with JSON via --json flag": {
+			flags:          cmdFlags{method: "GET", json: `{"channel":"C123"}`},
+			args:           []string{"conversations.history"},
+			expectedMethod: "GET",
+			expectedCT:     "application/json; charset=utf-8",
+			expectedAuth:   "Bearer xoxb-test-token",
+			bodyEquals:     `{"channel":"C123"}`,
+		},
+		"HEAD query from key=value params": {
+			flags:          cmdFlags{method: "HEAD"},
+			args:           []string{"api.test", "foo=bar"},
+			expectedMethod: "HEAD",
+			expectedAuth:   "Bearer xoxb-test-token",
+			expectedQuery:  "foo=bar",
+			assertNoBody:   true,
 		},
 		"no token with key=value params": {
 			flags:           cmdFlags{method: "POST"},
@@ -116,18 +160,30 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			assertNoAuth: true,
 			bodyEquals:   "",
 		},
+		"no token with GET method": {
+			flags:          cmdFlags{method: "GET"},
+			args:           []string{"api.test", "foo=bar"},
+			expectedMethod: "GET",
+			expectedQuery:  "foo=bar",
+			assertNoAuth:   true,
+			assertNoBody:   true,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			var receivedMethod string
 			var receivedContentType string
+			var receivedContentLength int64
 			var receivedAuth string
+			var receivedQuery string
 			var receivedBody string
 
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				receivedMethod = r.Method
 				receivedContentType = r.Header.Get("Content-Type")
+				receivedContentLength = r.ContentLength
 				receivedAuth = r.Header.Get("Authorization")
+				receivedQuery = r.URL.RawQuery
 				body, _ := io.ReadAll(r.Body)
 				receivedBody = string(body)
 				fmt.Fprint(w, `{"ok":true}`)
@@ -159,6 +215,12 @@ func Test_runAPICommand_BodyFormats(t *testing.T) {
 			}
 			if tc.expectedAuth != "" {
 				assert.Equal(t, tc.expectedAuth, receivedAuth)
+			}
+			assert.Equal(t, tc.expectedQuery, receivedQuery)
+			if tc.assertNoBody {
+				assert.Empty(t, receivedContentType)
+				assert.Zero(t, receivedContentLength)
+				assert.Empty(t, receivedBody)
 			}
 			if tc.assertNoAuth {
 				assert.Empty(t, receivedAuth)

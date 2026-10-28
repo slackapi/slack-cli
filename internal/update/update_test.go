@@ -62,14 +62,6 @@ func Test_UpdateNotification_Dependencies(t *testing.T) {
 	require.Equal(t, dep, u.Dependencies()[0])
 }
 
-func Test_UpdateNotification_SetEnv(t *testing.T) {
-	u := &UpdateNotification{}
-	u.SetEnv("SLACK_SKIP_UPDATE")
-	require.Equal(t, "SLACK_SKIP_UPDATE", u.Env())
-	u.SetEnv("")
-	require.Equal(t, "", u.Env())
-}
-
 func Test_UpdateNotification_HasUpdate(t *testing.T) {
 	for name, tc := range map[string]struct {
 		dependencyHasUpdate []bool

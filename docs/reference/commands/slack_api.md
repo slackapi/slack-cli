@@ -12,9 +12,13 @@ Parameters are passed as key=value pairs, a JSON body, or via flags.
 Body format is auto-detected from positional arguments:
   - Multiple key=value args: form-encoded (token in request body)
   - Single arg starting with \{ or \[: JSON (Bearer token in header)
-  - No args: token sent in Authorization header
+  - No args: form-encoded (token in request body)
 
 Use --json to explicitly send a JSON body, or --data for a form-encoded body string.
+
+With --method GET or HEAD, key=value args and --data are sent as query
+parameters and the token is sent in the Authorization header. A JSON body
+is still sent as given.
 
 Token resolution (in priority order):
   1. --token flag              Explicit token value
