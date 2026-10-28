@@ -80,11 +80,6 @@ func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *
 	return updateNotification
 }
 
-// SetEnv sets an environment variable to disable update notifications.
-func (u *UpdateNotification) SetEnv(s string) {
-	u.envDisabled = s
-}
-
 // Env returns the environment variable to disable update notifications.
 func (u *UpdateNotification) Env() string {
 	return u.envDisabled
