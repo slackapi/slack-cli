@@ -93,7 +93,6 @@ func (c *Client) RawRequest(ctx context.Context, httpMethod, endpoint, token str
 		}
 	}
 
-	// Reattach the body for each attempt, but leave requests without a body empty
 	request.ContentLength = int64(len(data))
 	var r *http.Response
 	for {
