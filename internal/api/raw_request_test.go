@@ -115,8 +115,10 @@ func Test_RawRequest_CustomHeaders(t *testing.T) {
 
 func Test_RawRequest_RetryOnTooManyRequests(t *testing.T) {
 	attempts := 0
+	var receivedContentLengths []int64
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
+		receivedContentLengths = append(receivedContentLengths, r.ContentLength)
 		if attempts == 1 {
 			w.Header().Set("Retry-After", "1")
 			w.WriteHeader(http.StatusTooManyRequests)
@@ -134,14 +136,20 @@ func Test_RawRequest_RetryOnTooManyRequests(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, attempts)
+	assert.Equal(t, []int64{0, 0}, receivedContentLengths)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, `{"ok":true}`, string(resp.Body))
 }
 
 func Test_RawRequest_RetryOnServiceUnavailable(t *testing.T) {
 	attempts := 0
+	var receivedBodies []string
+	var receivedContentLengths []int64
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		attempts++
+		body, _ := io.ReadAll(r.Body)
+		receivedBodies = append(receivedBodies, string(body))
+		receivedContentLengths = append(receivedContentLengths, r.ContentLength)
 		if attempts == 1 {
 			w.Header().Set("Retry-After", "1")
 			w.WriteHeader(http.StatusServiceUnavailable)
@@ -155,10 +163,12 @@ func Test_RawRequest_RetryOnServiceUnavailable(t *testing.T) {
 	io := newTestIO()
 	client := NewClient(nil, server.URL, io)
 
-	resp, err := client.RawRequest(ctx, "POST", "auth.test", "token", nil, "", nil)
+	resp, err := client.RawRequest(ctx, "POST", "auth.test", "token", strings.NewReader("hello=world"), "application/x-www-form-urlencoded", nil)
 
 	assert.NoError(t, err)
 	assert.Equal(t, 2, attempts)
+	assert.Equal(t, []string{"hello=world", "hello=world"}, receivedBodies)
+	assert.Equal(t, []int64{11, 11}, receivedContentLengths)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.Equal(t, `{"ok":true}`, string(resp.Body))
 }
