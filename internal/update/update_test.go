@@ -194,6 +194,22 @@ func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 			command:  "auth",
 			expected: false,
 		},
+		"skill command": {
+			command:  "skill",
+			expected: true,
+		},
+		"skills alias": {
+			command:  "skills",
+			expected: true,
+		},
+		"skill flag": {
+			command:  "--skill",
+			expected: true,
+		},
+		"skill flag with flags": {
+			command:  "--skill --verbose",
+			expected: true,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			if tc.command != "" {
