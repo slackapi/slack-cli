@@ -49,6 +49,36 @@ const (
 	slackCLIHooksPackageSpecifier = slackCLIHooksPackageName + slackCLIHooksPackageVersion
 )
 
+// packageNameRegex matches anything shaped like a Python package name, which
+// starts and ends with a letter or number with letters, numbers, ".", "_", and
+// "-" between
+//
+// https://packaging.python.org/en/latest/specifications/name-normalization/#name-format
+var packageNameRegex = regexp.MustCompile(`(?i)[a-z0-9](?:[a-z0-9._-]*[a-z0-9])?`)
+
+// packageNameSeparatorRegex matches a run of the "-", "_", and "." characters
+// that are treated as the same separator in Python package names
+var packageNameSeparatorRegex = regexp.MustCompile(`[-_.]+`)
+
+// normalizePackageName returns the normalized form of a Python package name so
+// names that differ only in case or separators compare as equal
+//
+// https://packaging.python.org/en/latest/specifications/name-normalization/#name-normalization
+func normalizePackageName(name string) string {
+	return packageNameSeparatorRegex.ReplaceAllString(strings.ToLower(name), "-")
+}
+
+// hasSlackCLIHooksPackage returns if slack-cli-hooks is named in the file data
+// under any spelling of the package name, such as slack_cli_hooks==0.3.0
+func hasSlackCLIHooksPackage(fileData string) bool {
+	for _, name := range packageNameRegex.FindAllString(fileData, -1) {
+		if normalizePackageName(name) == slackCLIHooksPackageName {
+			return true
+		}
+	}
+	return false
+}
+
 // Python runtime type
 type Python struct {
 }
@@ -188,7 +218,7 @@ func installRequirementsTxt(fs afero.Fs, projectDirPath string) (output string, 
 	fileData := string(file)
 
 	// Skip when slack-cli-hooks is already declared in requirements.txt
-	if strings.Contains(fileData, slackCLIHooksPackageName) {
+	if hasSlackCLIHooksPackage(fileData) {
 		return fmt.Sprintf("Found requirements.txt with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
@@ -228,7 +258,7 @@ func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afer
 	fileData := string(file)
 
 	// Check if slack-cli-hooks is already declared
-	if strings.Contains(fileData, slackCLIHooksPackageName) {
+	if hasSlackCLIHooksPackage(fileData) {
 		return fmt.Sprintf("Found pyproject.toml with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
