@@ -55,6 +55,7 @@ const (
 	ErrAppNotFound                                   = "app_not_found"
 	ErrAppNotHosted                                  = "app_not_hosted"
 	ErrAppNotInstalled                               = "app_not_installed"
+	ErrAppNotOrgReady                                = "app_not_org_ready"
 	ErrAppRemove                                     = "app_remove_error"
 	ErrAppRenameApp                                  = "app_rename_app"
 	ErrAppsList                                      = "apps_list_error"
@@ -473,6 +474,16 @@ Otherwise start your app for local development with: %s`,
 	ErrAppNotInstalled: {
 		Code:    ErrAppNotInstalled,
 		Message: "The provided app must be installed on this team",
+	},
+
+	ErrAppNotOrgReady: {
+		Code:    ErrAppNotOrgReady,
+		Message: "Apps installed on an organization must set \"org_deploy_enabled\" to true in the app manifest",
+		Remediation: fmt.Sprintf(`Add "org_deploy_enabled": true to the "settings" of the app manifest and try again.
+
+Otherwise create the app on a workspace from app settings, then add it to this project with: %s`,
+			style.Commandf("app link", false),
+		),
 	},
 
 	ErrAppRemove: {
