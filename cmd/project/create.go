@@ -210,6 +210,8 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		Subdir:      subdir,
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
+	clients.EventTracker.SetAppTemplateShortcut(categoryShortcut)
+	clients.EventTracker.SetAppTemplateSubdir(subdir)
 
 	appDirPath, err := CreateFunc(ctx, clients, createArgs)
 	if err != nil {
