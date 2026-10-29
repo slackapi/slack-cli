@@ -1407,6 +1407,68 @@ func TestInstallLocalApp(t *testing.T) {
 	}
 }
 
+func TestValidateManifestOrgReady(t *testing.T) {
+	orgReady := types.AppManifest{Settings: &types.AppSettings{OrgDeployEnabled: new(true)}}
+	notOrgReady := types.AppManifest{Settings: &types.AppSettings{OrgDeployEnabled: new(false)}}
+	unset := types.AppManifest{}
+	orgAuth := types.SlackAuth{TeamID: "E123", IsEnterpriseInstall: true}
+	workspaceAuth := types.SlackAuth{TeamID: "T123"}
+	uninstalledOrgApp := types.App{AppID: "A123", TeamID: "E123", InstallStatus: types.AppStatusUninstalled}
+	installedOrgApp := types.App{AppID: "A123", TeamID: "E123", InstallStatus: types.AppStatusInstalled}
+
+	tests := map[string]struct {
+		app      types.App
+		auth     types.SlackAuth
+		manifest types.AppManifest
+		err      bool
+	}{
+		"new org app that is org ready": {
+			app:      types.NewApp(),
+			auth:     orgAuth,
+			manifest: orgReady,
+		},
+		"new org app with org deploy disabled": {
+			app:      types.NewApp(),
+			auth:     orgAuth,
+			manifest: notOrgReady,
+			err:      true,
+		},
+		"new org app with org deploy unset": {
+			app:      types.NewApp(),
+			auth:     orgAuth,
+			manifest: unset,
+			err:      true,
+		},
+		"uninstalled org app with org deploy disabled": {
+			app:      uninstalledOrgApp,
+			auth:     orgAuth,
+			manifest: notOrgReady,
+			err:      true,
+		},
+		"installed org app with org deploy disabled": {
+			app:      installedOrgApp,
+			auth:     orgAuth,
+			manifest: notOrgReady,
+		},
+		"new workspace app with org deploy unset": {
+			app:      types.NewApp(),
+			auth:     workspaceAuth,
+			manifest: unset,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := validateManifestOrgReady(tc.app, tc.auth, tc.manifest)
+			if tc.err {
+				require.Error(t, err)
+				assert.Equal(t, slackerror.ErrAppNotOrgReady, slackerror.ToSlackError(err).Code)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestValidateManifestForInstall(t *testing.T) {
 	tests := map[string]struct {
 		app      types.App

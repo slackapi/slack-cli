@@ -434,6 +434,39 @@ func TestAppAddCommand(t *testing.T) {
 				cm.API.AssertCalled(t, "DeveloperAppInstall", mock.Anything, mock.Anything, mockOrgAuth.Token, mock.Anything, mock.Anything, mock.Anything, "T123", mock.Anything)
 			},
 		},
+		"errors before creating a new app on an org when the manifest is not org ready": {
+			CmdArgs:              []string{"--" + cmdutil.OrgGrantWorkspaceFlag, "T123"},
+			ExpectedErrorStrings: []string{slackerror.ErrAppNotOrgReady},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				prepareAddMocks(t, cf, cm, "deployed")
+				manifestMock := &app.ManifestMockObject{}
+				manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
+					AppManifest: types.AppManifest{
+						DisplayInformation: types.DisplayInformation{
+							Name: team1TeamDomain,
+						},
+					},
+				}, nil)
+				cf.AppClient().Manifest = manifestMock
+				// Select workspace
+				appSelectMock := prompts.NewAppSelectMock()
+				appSelectPromptFunc = appSelectMock.AppSelectPrompt
+				appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowHostedOnly, prompts.ShowAllApps).Return(prompts.SelectedApp{App: types.NewApp(), Auth: mockOrgAuth}, nil)
+				// Mock calls
+				cm.API.On("ValidateSession", mock.Anything, mock.Anything).Return(api.AuthSession{
+					UserID:   &mockOrgAuth.UserID,
+					TeamID:   &mockOrgAuth.TeamID,
+					TeamName: &mockOrgAuth.TeamDomain,
+				}, nil)
+				mockProjectConfig := config.NewProjectConfigMock()
+				mockProjectConfig.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceLocal, nil)
+				cm.Config.ProjectConfig = mockProjectConfig
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "CreateApp", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertNotCalled(t, "DeveloperAppInstall", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
 		"adds a new local app when --environment local": {
 			CmdArgs:         []string{"--team", "T123", "--environment", "local"},
 			ExpectedOutputs: []string{"Creating app manifest", "Installing"},
@@ -904,6 +937,9 @@ func prepareAddMocks(t *testing.T, clients *shared.ClientFactory, clientsMock *s
 				Name: team1TeamDomain,
 			},
 			Workflows: map[string]types.Workflow{"test_workflow": {Title: "test workflow", InputParameters: types.ToRawJSON(`{}`)}},
+			Settings: &types.AppSettings{
+				OrgDeployEnabled: new(true),
+			},
 		},
 	}, nil)
 	clients.AppClient().Manifest = manifestMock

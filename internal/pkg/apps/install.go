@@ -103,6 +103,11 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		configureHostedManifest(ctx, clients, &manifest)
 	}
 
+	err = validateManifestOrgReady(app, auth, manifest)
+	if err != nil {
+		return app, "", err
+	}
+
 	err = validateManifestForInstall(ctx, clients, token, app, manifest)
 	if err != nil {
 		return app, "", err
@@ -271,6 +276,21 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 	clients.IO.PrintInfo(ctx, false, "%s", status)
 }
 
+// validateManifestOrgReady errors when an app would be created or reinstalled on
+// an organization without "org_deploy_enabled" set to true in the manifest. Such
+// an app installs on the organization but never receives events.
+func validateManifestOrgReady(app types.App, auth types.SlackAuth, appManifest types.AppManifest) error {
+	newOrgApp := app.AppID == "" && auth.IsEnterpriseInstall
+	uninstalledOrgApp := app.IsUninstalled() && types.IsEnterpriseTeamID(app.TeamID)
+	if !newOrgApp && !uninstalledOrgApp {
+		return nil
+	}
+	if appManifest.Settings != nil && appManifest.Settings.OrgDeployEnabled != nil && *appManifest.Settings.OrgDeployEnabled {
+		return nil
+	}
+	return slackerror.New(slackerror.ErrAppNotOrgReady)
+}
+
 func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, token string, app types.App, appManifest types.AppManifest) error {
 	validationResult, err := clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 
@@ -400,6 +420,11 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 	appendLocalToDisplayName(&manifest)
 	if manifest.IsFunctionRuntimeSlackHosted() {
 		configureLocalManifest(ctx, clients, &manifest)
+	}
+
+	err = validateManifestOrgReady(app, auth, manifest)
+	if err != nil {
+		return app, api.DeveloperAppInstallResult{}, "", err
 	}
 
 	err = validateManifestForInstall(ctx, clients, token, app, manifest)
