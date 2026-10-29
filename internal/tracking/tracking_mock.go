@@ -30,6 +30,8 @@ func (m *EventTrackerMock) AddDefaultMocks() {
 	m.On("SetAppEnterpriseID", mock.Anything)
 	m.On("SetAppTeamID", mock.Anything)
 	m.On("SetAppTemplate", mock.Anything)
+	m.On("SetAppTemplateShortcut", mock.Anything)
+	m.On("SetAppTemplateSubdir", mock.Anything)
 	m.On("SetAppUserID", mock.Anything)
 	m.On("SetAuthEnterpriseID", mock.Anything)
 	m.On("SetAuthTeamID", mock.Anything)
@@ -87,4 +89,12 @@ func (m *EventTrackerMock) SetAppUserID(id string) {
 
 func (m *EventTrackerMock) SetAppTemplate(template string) {
 	m.Called(template)
+}
+
+func (m *EventTrackerMock) SetAppTemplateShortcut(shortcut string) {
+	m.Called(shortcut)
+}
+
+func (m *EventTrackerMock) SetAppTemplateSubdir(subdir string) {
+	m.Called(subdir)
 }

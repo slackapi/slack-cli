@@ -78,4 +78,8 @@ type AppEventData struct {
 	UserID       string `json:"user_id,omitempty"`
 	// Template holds information for the sample app template used as part of the `create` command
 	Template string `json:"template,omitempty"`
+	// TemplateShortcut holds the category shortcut argument used with the `create` command, such as "agent"
+	TemplateShortcut string `json:"template_shortcut,omitempty"`
+	// TemplateSubdir holds the subdirectory of the template used as part of the `create` command
+	TemplateSubdir string `json:"template_subdir,omitempty"`
 }

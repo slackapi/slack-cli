@@ -168,6 +168,9 @@ func TestCreateCommand(t *testing.T) {
 					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
+				cm.EventTracker.AssertCalled(t, "SetAppTemplate", "slack-samples/bolt-js-starter-agent")
+				cm.EventTracker.AssertCalled(t, "SetAppTemplateShortcut", "agent")
+				cm.EventTracker.AssertCalled(t, "SetAppTemplateSubdir", "claude-agent-sdk")
 				// Verify that category prompt was NOT called
 				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
@@ -279,6 +282,8 @@ func TestCreateCommand(t *testing.T) {
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
+				cm.EventTracker.AssertCalled(t, "SetAppTemplateShortcut", "")
+				cm.EventTracker.AssertCalled(t, "SetAppTemplateSubdir", "")
 				// Verify that name prompt was NOT called since name was provided as arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -648,6 +653,7 @@ func TestCreateCommand(t *testing.T) {
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
 					return args.AppPath != "" && args.Template == template && args.Subdir == "apps/my-app"
 				}))
+				cm.EventTracker.AssertCalled(t, "SetAppTemplateSubdir", "apps/my-app")
 			},
 		},
 		"list flag ignores subdir": {
