@@ -150,6 +150,12 @@ func Test_installRequirementsTxt(t *testing.T) {
 			expectedOutput:  "Found requirements.txt with",
 			expectedError:   false,
 		},
+		"Skip when slack_cli_hooks already exists": {
+			existingContent: "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
+			expectedContent: "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
+			expectedOutput:  "Found requirements.txt with",
+			expectedError:   false,
+		},
 		"Add after slack-bolt when it exists": {
 			existingContent: "slack-bolt==2.31.2\npytest==8.3.2\nruff==0.7.2",
 			expectedContent: "slack-bolt==2.31.2\nslack-cli-hooks<1.0.0\npytest==8.3.2\nruff==0.7.2",
@@ -207,6 +213,14 @@ func Test_installPyProjectToml(t *testing.T) {
 name = "my-app"
 dependencies = ["slack-cli-hooks<1.0.0", "pytest==8.3.2"]`,
 			shouldContain:  []string{"slack-cli-hooks"},
+			expectedOutput: "Found pyproject.toml with",
+			expectedError:  false,
+		},
+		"Skip when slack_cli_hooks already exists": {
+			existingContent: `[project]
+name = "my-app"
+dependencies = ["slack_bolt==1.30.0", "slack_cli_hooks==0.3.0"]`,
+			shouldContain:  []string{"slack_cli_hooks==0.3.0"},
 			expectedOutput: "Found pyproject.toml with",
 			expectedError:  false,
 		},

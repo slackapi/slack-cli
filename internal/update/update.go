@@ -80,11 +80,6 @@ func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *
 	return updateNotification
 }
 
-// Env returns the environment variable to disable update notifications.
-func (u *UpdateNotification) Env() string {
-	return u.envDisabled
-}
-
 // SetHours sets the number of hours to wait between checking for updates.
 func (u *UpdateNotification) SetHours(h float64) {
 	u.hoursToWait = h
@@ -210,7 +205,7 @@ func (u *UpdateNotification) isCI() bool {
 func (u *UpdateNotification) isIgnoredCommand() bool {
 	// Commands that skip update checks only when used alone or with flags
 	// "manifest" is included because it's an alias that runs "manifest info"
-	ignoredCommands := []string{"_fingerprint", "manifest", "manifest info", "version"}
+	ignoredCommands := []string{"--skill", "_fingerprint", "manifest", "manifest info", "skill", "skills", "version"}
 	// Commands that skip update checks regardless of any arguments
 	// "api" is a leaf command that accepts positional args, not subcommands
 	ignoredPrefixes := []string{"api"}
