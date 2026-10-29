@@ -188,7 +188,7 @@ func installRequirementsTxt(fs afero.Fs, projectDirPath string) (output string, 
 	fileData := string(file)
 
 	// Skip when slack-cli-hooks is already declared in requirements.txt
-	if strings.Contains(fileData, slackCLIHooksPackageName) {
+	if containsPackage(fileData, slackCLIHooksPackageName) {
 		return fmt.Sprintf("Found requirements.txt with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
@@ -228,7 +228,7 @@ func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afer
 	fileData := string(file)
 
 	// Check if slack-cli-hooks is already declared
-	if strings.Contains(fileData, slackCLIHooksPackageName) {
+	if containsPackage(fileData, slackCLIHooksPackageName) {
 		return fmt.Sprintf("Found pyproject.toml with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
