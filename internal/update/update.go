@@ -80,11 +80,6 @@ func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *
 	return updateNotification
 }
 
-// Env returns the environment variable to disable update notifications.
-func (u *UpdateNotification) Env() string {
-	return u.envDisabled
-}
-
 // SetHours sets the number of hours to wait between checking for updates.
 func (u *UpdateNotification) SetHours(h float64) {
 	u.hoursToWait = h
