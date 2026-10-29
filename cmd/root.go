@@ -42,6 +42,7 @@ import (
 	"github.com/slackapi/slack-cli/cmd/platform"
 	"github.com/slackapi/slack-cli/cmd/project"
 	"github.com/slackapi/slack-cli/cmd/sandbox"
+	skillcmd "github.com/slackapi/slack-cli/cmd/skill"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
@@ -142,6 +143,9 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			return updateNotification.PrintAndPromptUpdates(cmd, version.Raw())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if skill, _ := cmd.Flags().GetBool("skill"); skill {
+				return skillcmd.RunSkillCommand(clients, cmd)
+			}
 			return cmd.Help()
 		},
 	}
@@ -162,6 +166,9 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// Add a newline to `SetVersionTemplate` to display correctly on terminals.
 	rootCmd.Version = version.Raw()
 	rootCmd.SetVersionTemplate(versioncmd.Template() + "\n")
+
+	// Support `--skill` as a shortcut to the `skill` command, similar to `--version`
+	rootCmd.Flags().Bool("skill", false, "print the agent skill for the Slack CLI")
 
 	// Add subcommands (each subcommand may add their own child subcommands)
 	// Please keep these sorted
@@ -196,6 +203,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		docs.NewCommand(clients),
 		doctor.NewDoctorCommand(clients),
 		feedback.NewFeedbackCommand(clients),
+		skillcmd.NewCommand(clients),
 	}
 
 	for _, topLevelCommand := range topLevelCommands {

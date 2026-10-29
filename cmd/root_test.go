@@ -218,6 +218,20 @@ func Test_NewSuggestion(t *testing.T) {
 	require.Regexp(t, `Did you mean this\?\s+create`, err.Error(), "should suggest the create command")
 }
 
+func Test_SkillFlag(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	cmd, clients := Init(ctx)
+	clientsMock := shared.NewClientsMock()
+	clients.IO = clientsMock.IO
+
+	// Call RunE directly since executing the command runs the global initializers of other tests
+	cmd.SetContext(ctx)
+	require.NoError(t, cmd.ParseFlags([]string{"--skill"}))
+	err := cmd.RunE(cmd, []string{})
+	require.NoError(t, err)
+	assert.True(t, strings.HasPrefix(clientsMock.GetStdoutOutput(), "---\nname: slack-cli\n"))
+}
+
 func Test_Aliases(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 
