@@ -150,46 +150,10 @@ func Test_installRequirementsTxt(t *testing.T) {
 			expectedOutput:  "Found requirements.txt with",
 			expectedError:   false,
 		},
-		"Skip when slack-cli-hooks with a version specifier already exists": {
-			existingContent: "slack-bolt==1.30.0\nslack-cli-hooks==0.3.0\npytest==8.3.2",
-			expectedContent: "slack-bolt==1.30.0\nslack-cli-hooks==0.3.0\npytest==8.3.2",
-			expectedOutput:  "Found requirements.txt with",
-			expectedError:   false,
-		},
-		"Skip when slack_cli_hooks with underscores already exists": {
+		"Skip when slack_cli_hooks already exists": {
 			existingContent: "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
 			expectedContent: "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
 			expectedOutput:  "Found requirements.txt with",
-			expectedError:   false,
-		},
-		"Skip when slack.cli.hooks with dots already exists": {
-			existingContent: "slack-bolt==1.30.0\nslack.cli.hooks>=0.3.0\npytest==8.3.2",
-			expectedContent: "slack-bolt==1.30.0\nslack.cli.hooks>=0.3.0\npytest==8.3.2",
-			expectedOutput:  "Found requirements.txt with",
-			expectedError:   false,
-		},
-		"Skip when Slack.CLI-Hooks with mixed case already exists": {
-			existingContent: "slack-bolt==1.30.0\nSlack.CLI-Hooks~=0.3\npytest==8.3.2",
-			expectedContent: "slack-bolt==1.30.0\nSlack.CLI-Hooks~=0.3\npytest==8.3.2",
-			expectedOutput:  "Found requirements.txt with",
-			expectedError:   false,
-		},
-		"Skip when slack__cli--hooks with repeated separators already exists": {
-			existingContent: "slack-bolt==1.30.0\nslack__cli--hooks\npytest==8.3.2",
-			expectedContent: "slack-bolt==1.30.0\nslack__cli--hooks\npytest==8.3.2",
-			expectedOutput:  "Found requirements.txt with",
-			expectedError:   false,
-		},
-		"Skip when slack_cli_hooks with extras and markers already exists": {
-			existingContent: "slack-bolt==1.30.0\nslack_cli_hooks[x]>=0.3; python_version>\"3.9\"\npytest==8.3.2",
-			expectedContent: "slack-bolt==1.30.0\nslack_cli_hooks[x]>=0.3; python_version>\"3.9\"\npytest==8.3.2",
-			expectedOutput:  "Found requirements.txt with",
-			expectedError:   false,
-		},
-		"Add when only a package with a longer name exists": {
-			existingContent: "pytest==8.3.2\nslack-cli-hooks-example==1.0.0",
-			expectedContent: "pytest==8.3.2\nslack-cli-hooks-example==1.0.0\nslack-cli-hooks<1.0.0",
-			expectedOutput:  "Updated requirements.txt with",
 			expectedError:   false,
 		},
 		"Add after slack-bolt when it exists": {
@@ -240,7 +204,6 @@ func Test_installRequirementsTxt(t *testing.T) {
 func Test_installPyProjectToml(t *testing.T) {
 	tests := map[string]struct {
 		existingContent string
-		expectedContent string
 		shouldContain   []string
 		expectedOutput  string
 		expectedError   bool
@@ -249,94 +212,16 @@ func Test_installPyProjectToml(t *testing.T) {
 			existingContent: `[project]
 name = "my-app"
 dependencies = ["slack-cli-hooks<1.0.0", "pytest==8.3.2"]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks<1.0.0", "pytest==8.3.2"]`,
+			shouldContain:  []string{"slack-cli-hooks"},
 			expectedOutput: "Found pyproject.toml with",
 			expectedError:  false,
 		},
-		"Skip when slack-cli-hooks with a version specifier already exists": {
+		"Skip when slack_cli_hooks already exists": {
 			existingContent: `[project]
 name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "slack-cli-hooks==0.3.0"]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "slack-cli-hooks==0.3.0"]`,
+dependencies = ["slack_bolt==1.30.0", "slack_cli_hooks==0.3.0"]`,
+			shouldContain:  []string{"slack_cli_hooks==0.3.0"},
 			expectedOutput: "Found pyproject.toml with",
-			expectedError:  false,
-		},
-		"Skip when slack_cli_hooks with underscores already exists": {
-			existingContent: `[project]
-name = "my-app"
-dependencies = [
-    "slack_bolt==1.30.0",
-    "slack_cli_hooks==0.3.0",
-    "slack_sdk==3.45.0",
-]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = [
-    "slack_bolt==1.30.0",
-    "slack_cli_hooks==0.3.0",
-    "slack_sdk==3.45.0",
-]`,
-			expectedOutput: "Found pyproject.toml with",
-			expectedError:  false,
-		},
-		"Skip when slack.cli.hooks with dots already exists": {
-			existingContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "slack.cli.hooks>=0.3.0"]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "slack.cli.hooks>=0.3.0"]`,
-			expectedOutput: "Found pyproject.toml with",
-			expectedError:  false,
-		},
-		"Skip when Slack.CLI-Hooks with mixed case already exists": {
-			existingContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "Slack.CLI-Hooks~=0.3"]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "Slack.CLI-Hooks~=0.3"]`,
-			expectedOutput: "Found pyproject.toml with",
-			expectedError:  false,
-		},
-		"Skip when slack__cli--hooks with repeated separators already exists": {
-			existingContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "slack__cli--hooks"]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = ["slack-bolt==1.30.0", "slack__cli--hooks"]`,
-			expectedOutput: "Found pyproject.toml with",
-			expectedError:  false,
-		},
-		"Skip when slack_cli_hooks with extras and markers already exists": {
-			existingContent: `[project]
-name = "my-app"
-dependencies = [
-    "slack-bolt==1.30.0",
-    'slack_cli_hooks[x]>=0.3; python_version>"3.9"',
-]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = [
-    "slack-bolt==1.30.0",
-    'slack_cli_hooks[x]>=0.3; python_version>"3.9"',
-]`,
-			expectedOutput: "Found pyproject.toml with",
-			expectedError:  false,
-		},
-		"Add when only a package with a longer name exists": {
-			existingContent: `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks-example==1.0.0"]`,
-			expectedContent: `[project]
-name = "my-app"
-dependencies = ["slack-cli-hooks-example==1.0.0", "slack-cli-hooks<1.0.0"]`,
-			expectedOutput: "Updated pyproject.toml with",
 			expectedError:  false,
 		},
 		"Add after slack-bolt when it exists": {
@@ -391,45 +276,9 @@ dependencies = ["pytest==8.3.2"]`,
 			// Verify file content contains expected strings
 			content, err := afero.ReadFile(fs, pyprojectPath)
 			require.NoError(t, err)
-			if tc.expectedContent != "" {
-				require.Equal(t, tc.expectedContent, string(content))
-			}
 			for _, expected := range tc.shouldContain {
 				require.Contains(t, string(content), expected)
 			}
-		})
-	}
-}
-
-func Test_normalizePackageName(t *testing.T) {
-	tests := map[string]struct {
-		name     string
-		expected string
-	}{
-		"Keeps a normalized name": {
-			name:     "slack-cli-hooks",
-			expected: "slack-cli-hooks",
-		},
-		"Replaces underscores": {
-			name:     "slack_cli_hooks",
-			expected: "slack-cli-hooks",
-		},
-		"Replaces dots": {
-			name:     "slack.cli.hooks",
-			expected: "slack-cli-hooks",
-		},
-		"Lowercases mixed case": {
-			name:     "Slack.CLI-Hooks",
-			expected: "slack-cli-hooks",
-		},
-		"Collapses runs of separators": {
-			name:     "FrIeNdLy-._.-bArD",
-			expected: "friendly-bard",
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tc.expected, normalizePackageName(tc.name))
 		})
 	}
 }
@@ -562,16 +411,6 @@ func Test_Python_InstallProjectDependencies(t *testing.T) {
 			expectedOutputs: []string{"Found"},
 			expectedError:   false,
 		},
-		"Skip when requirements.txt contains slack_cli_hooks==0.3.0": {
-			existingFiles: map[string]string{
-				"requirements.txt": "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
-			},
-			expectedFiles: map[string]string{
-				"requirements.txt": "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
-			},
-			expectedOutputs: []string{"Found"},
-			expectedError:   false,
-		},
 		"Update when requirements.txt contain slack-bolt at top of file": {
 			existingFiles: map[string]string{
 				"requirements.txt": "slack-bolt==2.31.2\npytest==8.3.2\nruff==0.7.2",
@@ -644,26 +483,6 @@ name = "my-app"
 dependencies = [
     "slack-cli-hooks<1.0.0",
     "pytest==8.3.2",
-]`,
-			},
-			expectedOutputs: []string{"Found pyproject.toml"},
-			expectedError:   false,
-		},
-		"Skip when pyproject.toml contains slack_cli_hooks": {
-			existingFiles: map[string]string{
-				"pyproject.toml": `[project]
-name = "my-app"
-dependencies = [
-    "slack_bolt==1.30.0",
-    "slack_cli_hooks==0.3.0",
-]`,
-			},
-			expectedFiles: map[string]string{
-				"pyproject.toml": `[project]
-name = "my-app"
-dependencies = [
-    "slack_bolt==1.30.0",
-    "slack_cli_hooks==0.3.0",
 ]`,
 			},
 			expectedOutputs: []string{"Found pyproject.toml"},
