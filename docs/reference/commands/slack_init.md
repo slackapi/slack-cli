@@ -23,7 +23,7 @@ Installs your project dependencies when supported:
 - Python:  Supported
 
 Adds an existing app to your project (optional):
-- Prompts to add an existing app from app settings
+- Uses the --app flag to add an existing app from app settings
 - Runs the command `slack app link`
 
 ```
@@ -33,7 +33,8 @@ slack init [flags]
 ## Flags
 
 ```
-  -h, --help   help for init
+  -E, --environment string   environment to save existing app (local, deployed)
+  -h, --help                 help for init
 ```
 
 ## Global flags
@@ -54,7 +55,11 @@ slack init [flags]
 ## Examples
 
 ```
-$ slack init  # Initialize a project
+# Initialize a project
+$ slack init
+
+# Initialize a project with an existing app
+$ slack init --app A0123456789 --team T0123456789 --environment local
 ```
 
 ## See also
