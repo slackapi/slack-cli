@@ -80,11 +80,6 @@ func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *
 	return updateNotification
 }
 
-// SetHours sets the number of hours to wait between checking for updates.
-func (u *UpdateNotification) SetHours(h float64) {
-	u.hoursToWait = h
-}
-
 // Hours returns the number of hours to wait between checking for updates.
 func (u *UpdateNotification) Hours() float64 {
 	return u.hoursToWait
