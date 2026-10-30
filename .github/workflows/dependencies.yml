@@ -87,3 +87,39 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
           VERSION: ${{ steps.version.outputs.latest }}
+  skill:
+    name: Sync the agent skill
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: none # Permissions are set with an application token
+    steps:
+      - name: Gather credentials
+        id: credentials
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.GH_APP_CLIENT_ID_RELEASER }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+      - name: Checkout the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          ref: main
+          token: ${{ steps.credentials.outputs.token }}
+      - name: Download the latest skill
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/slackapi/slack-skills-plugin/main/skills/slack-cli/SKILL.md" -o cmd/skill/SKILL.md
+      - name: Open a change request
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b chore-sync-skill
+          if git diff --quiet; then
+            echo "No changes to commit, exiting."
+            exit 0
+          fi
+          git commit --all -m "chore: sync the slack-cli skill from slack-skills-plugin"
+          git push -u origin chore-sync-skill
+          gh pr create --title "chore: sync the slack-cli skill from slack-skills-plugin" --body "Automatic update to the latest \`slack-cli\` skill in [slackapi/slack-skills-plugin](https://github.com/slackapi/slack-skills-plugin/blob/main/skills/slack-cli/SKILL.md)" --milestone "Next Release" --label "code health" --label "semver:patch"
+        env:
+          GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
