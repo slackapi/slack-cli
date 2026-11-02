@@ -21,6 +21,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -43,6 +44,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"The skill is a markdown file with frontmatter that follows the Agent Skills",
 			"format. Agents can read the output or save it to a skills directory.",
+			"",
+			"The frontmatter metadata includes the version of the CLI that printed it.",
+			"Print the skill again after upgrading to update a saved copy.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -74,6 +78,27 @@ func RunSkillCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "cmd.skill")
 	defer span.Finish()
 
-	_, err := clients.IO.WriteOut().Write([]byte(skillFile))
+	_, err := clients.IO.WriteOut().Write([]byte(stampVersion(skillFile, version.Raw())))
 	return err
+}
+
+// stampVersion adds the CLI version to the skill frontmatter metadata so a
+// saved copy shows which release printed it. The embedded file stays the same
+// as the plugin copy and is returned unchanged if it has no frontmatter.
+func stampVersion(skill string, cliVersion string) string {
+	if !strings.HasPrefix(skill, "---\n") {
+		return skill
+	}
+	end := strings.Index(skill[len("---\n"):], "\n---\n")
+	if end < 0 {
+		return skill
+	}
+	end += len("---\n") + 1
+	frontmatter := skill[:end]
+	stamp := "  generated-by: slack-cli " + cliVersion + "\n"
+	if i := strings.Index(frontmatter, "\nmetadata:\n"); i >= 0 {
+		i += len("\nmetadata:\n")
+		return skill[:i] + stamp + skill[i:]
+	}
+	return frontmatter + "metadata:\n" + stamp + skill[end:]
 }
