@@ -210,6 +210,16 @@ Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure
 
 ---
 
+### app_not_org_ready {#app_not_org_ready}
+
+**Message**: Apps installed on an organization must set "org_deploy_enabled" to true in the app manifest
+
+**Remediation**: Add "org_deploy_enabled": true to the "settings" of the app manifest and try again.
+
+Otherwise create the app on a workspace from app settings, then add it to this project with: `slack app link`
+
+---
+
 ### app_remove_error {#app_remove_error}
 
 **Message**: Couldn't remove your app

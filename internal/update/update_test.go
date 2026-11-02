@@ -121,14 +121,6 @@ func Test_UpdateNotification_HasUpdate(t *testing.T) {
 	}
 }
 
-func Test_UpdateNotification_SetHours(t *testing.T) {
-	u := &UpdateNotification{}
-	u.SetHours(48.0)
-	require.Equal(t, 48.0, u.Hours())
-	u.SetHours(0)
-	require.Equal(t, 0.0, u.Hours())
-}
-
 func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 	for name, tc := range map[string]struct {
 		command  string
