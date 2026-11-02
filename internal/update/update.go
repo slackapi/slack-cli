@@ -80,11 +80,6 @@ func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *
 	return updateNotification
 }
 
-// Hours returns the number of hours to wait between checking for updates.
-func (u *UpdateNotification) Hours() float64 {
-	return u.hoursToWait
-}
-
 // Dependencies returns the dependencies to check for updates.
 func (u *UpdateNotification) Dependencies() []Dependency {
 	return u.dependencies
