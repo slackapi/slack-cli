@@ -9,6 +9,9 @@ Print the agent skill that teaches coding agents to use the Slack CLI.
 The skill is a markdown file with frontmatter that follows the Agent Skills
 format. Agents can read the output or save it to a skills directory.
 
+The frontmatter metadata includes the version of the CLI that printed it.
+Print the skill again after upgrading to update a saved copy.
+
 ```
 slack skill [flags]
 ```
