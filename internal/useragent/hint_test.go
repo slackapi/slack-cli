@@ -51,3 +51,48 @@ func Test_EmitClaudeCodePluginHint(t *testing.T) {
 		})
 	}
 }
+
+func Test_EmitAgentPluginHint(t *testing.T) {
+	tests := map[string]struct {
+		envVars  map[string]string
+		expected string
+	}{
+		"emits the hint on its own line inside codex": {
+			envVars:  map[string]string{"CODEX_CI": "1"},
+			expected: agentPluginHint + "\n",
+		},
+		"emits the hint on its own line inside cursor": {
+			envVars:  map[string]string{"CURSOR_AGENT": "1"},
+			expected: agentPluginHint + "\n",
+		},
+		"emits the hint for a generic agent": {
+			envVars:  map[string]string{"AGENT": "amp"},
+			expected: agentPluginHint + "\n",
+		},
+		"emits nothing inside claude code": {
+			envVars:  map[string]string{"CLAUDECODE": "1"},
+			expected: "",
+		},
+		"emits nothing inside claude code with another agent detected": {
+			envVars:  map[string]string{"CLAUDECODE": "true", "CURSOR_AGENT": "1"},
+			expected: "",
+		},
+		"emits nothing when no agent is detected": {
+			envVars:  map[string]string{},
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			clearEnvVars(t)
+			for key, value := range tc.envVars {
+				t.Setenv(key, value)
+			}
+
+			var buf bytes.Buffer
+			EmitAgentPluginHint(&buf)
+
+			assert.Equal(t, tc.expected, buf.String())
+		})
+	}
+}
