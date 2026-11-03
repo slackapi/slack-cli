@@ -49,6 +49,9 @@ jobs:
         with:
           client-id: ${{ secrets.GH_APP_CLIENT_ID_RELEASER }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
       - name: Checkout the repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
