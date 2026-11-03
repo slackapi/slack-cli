@@ -7,7 +7,7 @@ description: "Use when a developer works with the Slack CLI (slack command) to c
 
 Use the Slack CLI to create, run, and manage Slack apps — including calling Web API methods directly and searching Slack developer documentation from the terminal.
 
-For initial setup (sandbox creation, project scaffolding from templates), use the `slack:create-slack-app` skill instead.
+For initial setup (sandbox creation, project scaffolding from templates), use the `create-slack-app` skill instead.
 
 ---
 
@@ -126,7 +126,7 @@ Slack auth is **per-team**, not a single boolean. Run the seamless login flow be
 
 `SLACK_CMD auth list` showing other teams is **not** a reason to skip login — those are different teams. Ask the developer which team they want, then run the flow.
 
-The flow below is the same for every kind of workspace. `/slackauthticket` works in any workspace the developer belongs to, whether that is a developer sandbox, a Free Team, or a production workspace, so there is no sandbox-specific login. Which target to prefer is the `slack:create-slack-app` skill's call (**Step 3: Choose Where to Install the App**).
+The flow below is the same for every kind of workspace. `/slackauthticket` works in any workspace the developer belongs to, whether that is a developer sandbox, a Free Team, or a production workspace, so there is no sandbox-specific login. Which target to prefer is the `create-slack-app` skill's call (**Step 3: Choose Where to Install the App**).
 
 ### Inspect existing auth (optional)
 
@@ -248,4 +248,4 @@ For any other command group (e.g., `trigger`, `datastore`, `env`, `collaborator`
 - `SLACK_CMD` is a placeholder — always substitute the actual command name resolved in Step 1.
 - **Always run `--help`** before constructing a command you have not used in the current session.
 - Interactive commands (e.g., `slack trigger create` without `--trigger-def`) cannot be run in the background. Tell the developer to run these in a **new terminal window**. `slack login` is **not** in this category — drive it inline using the `--no-prompt` / `--ticket` / `--challenge` flow in Step 5.
-- `slack run` runs locally for development. `slack deploy` deploys to Slack's hosted infrastructure, unless `.slack/hooks.json` defines a `deploy` hook, in which case it runs that hook instead (see the `slack:deploy-slack-app` skill). These are different operations, so do not confuse them.
+- `slack run` runs locally for development. `slack deploy` deploys to Slack's hosted infrastructure, unless `.slack/hooks.json` defines a `deploy` hook, in which case it runs that hook instead (see the `deploy-slack-app` skill). These are different operations, so do not confuse them.
