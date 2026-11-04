@@ -179,13 +179,6 @@ func Header(text string) string {
 	return render(lipgloss.NewStyle().Foreground(slackAubergine).Bold(true), strings.ToUpper(text))
 }
 
-func Input(text string) string {
-	if !isLipglossEnabled {
-		return legacyInput(text)
-	}
-	return render(lipgloss.NewStyle().Foreground(slackBlue), text)
-}
-
 // Green applies green color to text without bold
 func Green(text string) string {
 	if !isLipglossEnabled {
@@ -334,7 +327,6 @@ func legacySelector(text string) string    { return Styler().Index(green, text).
 func legacyError(text string) string       { return Styler().Index(red, text).Bold().String() }
 func legacyWarning(text string) string     { return Styler().Index(yellow, text).Bold().String() }
 func legacyHeader(text string) string      { return Styler().Bold(strings.ToUpper(text)).String() }
-func legacyInput(text string) string       { return Styler().Index(blue, text).String() }
 func legacyGreen(text string) string       { return Styler().Index(green, text).String() }
 func legacyRed(text string) string         { return Styler().Index(redDark, text).String() }
 func legacyYellow(text string) string      { return Styler().Index(yellow, text).String() }
