@@ -67,10 +67,9 @@ func TestHelpFunc(t *testing.T) {
 				"unknown (invalid)",
 			},
 		},
-		"the claude code plugin hint is emitted inside claude code": {
-			envVars:               map[string]string{"CLAUDECODE": "1"},
-			expectedErrorOutput:   []string{"claude-code-hint"},
-			unexpectedErrorOutput: []string{"Coding agents:"},
+		"both plugin hints are emitted on root help inside claude code": {
+			envVars:             map[string]string{"CLAUDECODE": "1"},
+			expectedErrorOutput: []string{"claude-code-hint", "Coding agents: If the Slack plugin isn't installed"},
 		},
 		"the agent plugin hint is emitted on root help inside other agents": {
 			envVars:               map[string]string{"CODEX_CI": "1"},

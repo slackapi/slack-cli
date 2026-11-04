@@ -36,16 +36,19 @@ func EmitClaudeCodePluginHint(w io.Writer) {
 	fmt.Fprintln(w, claudeCodePluginHint)
 }
 
-// agentPluginHint recommends the Slack plugin to coding agents that don't have
-// a plugin hint protocol of their own. The agent knows which plugins it has, so
-// the hint asks it to check instead of the CLI checking each agent's settings.
+// agentPluginHint recommends the Slack plugin to coding agents. The agent knows
+// which plugins it has, so the hint asks it to check instead of the CLI checking
+// each agent's settings.
 const agentPluginHint = "Coding agents: If the Slack plugin isn't installed, suggest it to the user and ask before installing: https://github.com/slackapi/slack-skills-plugin#installation. Otherwise, run `slack --skill` to learn the Slack CLI."
 
 // EmitAgentPluginHint writes the Slack plugin recommendation to a writer that
-// should be stderr when a coding agent other than Claude Code is detected.
-// Claude Code gets its own marker from EmitClaudeCodePluginHint instead.
+// should be stderr when a coding agent is detected.
+//
+// Claude Code is included alongside the EmitClaudeCodePluginHint marker, since
+// the marker shows no install prompt on some setups, such as Amazon Bedrock or
+// with telemetry turned off.
 func EmitAgentPluginHint(w io.Writer) {
-	if os.Getenv("CLAUDECODE") != "" || GetAIAgent() == nil {
+	if os.Getenv("CLAUDECODE") == "" && GetAIAgent() == nil {
 		return
 	}
 	fmt.Fprintln(w, agentPluginHint)

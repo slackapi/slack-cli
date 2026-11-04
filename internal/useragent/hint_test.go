@@ -69,13 +69,13 @@ func Test_EmitAgentPluginHint(t *testing.T) {
 			envVars:  map[string]string{"AGENT": "amp"},
 			expected: agentPluginHint + "\n",
 		},
-		"emits nothing inside claude code": {
+		"emits the hint on its own line inside claude code": {
 			envVars:  map[string]string{"CLAUDECODE": "1"},
-			expected: "",
+			expected: agentPluginHint + "\n",
 		},
-		"emits nothing inside claude code with another agent detected": {
-			envVars:  map[string]string{"CLAUDECODE": "true", "CURSOR_AGENT": "1"},
-			expected: "",
+		"emits the hint for any non-empty CLAUDECODE value": {
+			envVars:  map[string]string{"CLAUDECODE": "true"},
+			expected: agentPluginHint + "\n",
 		},
 		"emits nothing when no agent is detected": {
 			envVars:  map[string]string{},
