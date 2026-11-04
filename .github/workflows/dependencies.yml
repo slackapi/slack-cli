@@ -130,6 +130,6 @@ jobs:
             echo "Updated the open change request, exiting."
             exit 0
           fi
-          gh pr create --title "chore: sync the slack-cli skill from slack-skills-plugin" --body "Automatic update to the latest \`slack-cli\` skill in [slackapi/slack-skills-plugin](https://github.com/slackapi/slack-skills-plugin/blob/main/skills/slack-cli/SKILL.md)" --milestone "Next Release" --label "code health" --label "semver:patch"
+          gh pr create --title "chore: sync the slack-cli skill from slack-skills-plugin" --body "Automatic update to the latest \`slack-cli\` skill in [slackapi/slack-skills-plugin](https://github.com/slackapi/slack-skills-plugin/blob/main/skills/slack-cli/SKILL.md)" --milestone "Next Release" --label "code health" --label "docs" --label "semver:patch"
         env:
           GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
