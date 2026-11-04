@@ -79,6 +79,12 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 
 	// Recommend the official Slack plugin when running inside Claude Code
 	useragent.EmitClaudeCodePluginHint(cmd.ErrOrStderr())
+
+	// Recommend the Slack plugin to other coding agents on the root help only,
+	// since agents often start with it and subcommand help would repeat it
+	if !cmd.HasParent() {
+		useragent.EmitAgentPluginHint(cmd.ErrOrStderr(), cmd.Root().Name())
+	}
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
