@@ -73,6 +73,8 @@ If 1b fails or returns a different value, ask the developer using AskUserQuestio
 - `SLACK_CMD help` — lists all available command groups
 - `SLACK_CMD <command> --help` — shows subcommands, flags, and usage examples
 
+If a command or flag in this skill is missing from the help output, the installed CLI is older than this skill. Ask the developer to run `SLACK_CMD upgrade`, then check the help output again.
+
 ### Resolving `--app` and `--team` values
 
 When a command requires `--app` or `--team`:
