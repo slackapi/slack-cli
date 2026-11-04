@@ -16,6 +16,7 @@ package useragent
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -54,28 +55,34 @@ func Test_EmitClaudeCodePluginHint(t *testing.T) {
 
 func Test_EmitAgentPluginHint(t *testing.T) {
 	tests := map[string]struct {
-		envVars  map[string]string
-		expected string
+		envVars     map[string]string
+		processName string
+		expected    string
 	}{
 		"emits the hint on its own line inside codex": {
 			envVars:  map[string]string{"CODEX_CI": "1"},
-			expected: agentPluginHint + "\n",
+			expected: fmt.Sprintf(agentPluginHint, "slack") + "\n",
 		},
 		"emits the hint on its own line inside cursor": {
 			envVars:  map[string]string{"CURSOR_AGENT": "1"},
-			expected: agentPluginHint + "\n",
+			expected: fmt.Sprintf(agentPluginHint, "slack") + "\n",
 		},
 		"emits the hint for a generic agent": {
 			envVars:  map[string]string{"AGENT": "amp"},
-			expected: agentPluginHint + "\n",
+			expected: fmt.Sprintf(agentPluginHint, "slack") + "\n",
 		},
 		"emits the hint on its own line inside claude code": {
 			envVars:  map[string]string{"CLAUDECODE": "1"},
-			expected: agentPluginHint + "\n",
+			expected: fmt.Sprintf(agentPluginHint, "slack") + "\n",
 		},
 		"emits the hint for any non-empty CLAUDECODE value": {
 			envVars:  map[string]string{"CLAUDECODE": "true"},
-			expected: agentPluginHint + "\n",
+			expected: fmt.Sprintf(agentPluginHint, "slack") + "\n",
+		},
+		"emits the hint with the process name of the cli": {
+			envVars:     map[string]string{"CODEX_CI": "1"},
+			processName: "slack-dev",
+			expected:    fmt.Sprintf(agentPluginHint, "slack-dev") + "\n",
 		},
 		"emits nothing when no agent is detected": {
 			envVars:  map[string]string{},
@@ -89,8 +96,12 @@ func Test_EmitAgentPluginHint(t *testing.T) {
 				t.Setenv(key, value)
 			}
 
+			processName := tc.processName
+			if processName == "" {
+				processName = "slack"
+			}
 			var buf bytes.Buffer
-			EmitAgentPluginHint(&buf)
+			EmitAgentPluginHint(&buf, processName)
 
 			assert.Equal(t, tc.expected, buf.String())
 		})
