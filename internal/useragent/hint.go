@@ -39,7 +39,7 @@ func EmitClaudeCodePluginHint(w io.Writer) {
 // agentPluginHint recommends the Slack plugin to coding agents. The agent knows
 // which plugins it has, so the hint asks it to check instead of the CLI checking
 // each agent's settings.
-const agentPluginHint = "Coding agents: If the Slack plugin isn't installed, suggest it to the user and ask before installing: https://github.com/slackapi/slack-skills-plugin#installation. Otherwise, run `slack --skill` to learn the Slack CLI."
+const agentPluginHint = "Coding agents: If the Slack plugin isn't installed, suggest it to the user and ask before installing: https://github.com/slackapi/slack-skills-plugin#installation. If the user declines, run `slack --skill` to learn the Slack CLI."
 
 // EmitAgentPluginHint writes the Slack plugin recommendation to a writer that
 // should be stderr when a coding agent is detected.
