@@ -26,8 +26,8 @@ const docsURL = "https://docs.slack.dev"
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "docs",
-		Short: "Open Slack developer docs",
-		Long:  "Open the Slack developer docs in your browser or search them using the search subcommand",
+		Short: "Search and open Slack developer docs",
+		Long:  "Search the Slack developer docs from the terminal with the search subcommand, or open them in your browser",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Open Slack developer docs homepage",
