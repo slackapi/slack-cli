@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/cobra"
 )
 
@@ -50,6 +51,24 @@ func makeAbsoluteURL(relativeURL string) string {
 	return docsURL + relativeURL
 }
 
+// makeMarkdownURL returns the markdown version of a docs page URL, which a
+// coding agent can read without parsing HTML. Pages are served as markdown at
+// their path plus ".md". Generated reference pages ending in ".html" have no
+// markdown version, so those URLs are returned unchanged.
+func makeMarkdownURL(absoluteURL string) string {
+	u, err := url.Parse(absoluteURL)
+	if err != nil || strings.HasSuffix(u.Path, ".html") || strings.HasSuffix(u.Path, ".md") {
+		return absoluteURL
+	}
+	path := strings.TrimSuffix(u.Path, "/")
+	if path == "" {
+		return absoluteURL
+	}
+	u.Path = path + ".md"
+	u.Fragment = ""
+	return u.String()
+}
+
 func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 	cfg := &searchConfig{}
 
@@ -62,6 +81,9 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"Results can be filtered to a single category with the --category flag. Available",
 			"categories: " + strings.Join(api.DocsSearchCategories, ", ") + ".",
+			"",
+			"When a coding agent runs this command, text results link to the markdown",
+			"version of each page.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -150,8 +172,13 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 			},
 		}))
 
+		// Coding agents read pages as markdown, so link them to the markdown version
+		isAgent := useragent.GetAIAgent() != nil
 		for _, result := range searchResponse.Results {
 			absoluteURL := makeAbsoluteURL(result.URL)
+			if isAgent {
+				absoluteURL = makeMarkdownURL(absoluteURL)
+			}
 			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 				Emoji:     "book",
 				Text:      result.Title,
