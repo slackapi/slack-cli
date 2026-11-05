@@ -45,7 +45,9 @@ func Test_Login(t *testing.T) {
 				cm.Auth.On("IsAPIHostSlackProd", "https://slack.com").Return(true)
 				cm.Auth.On("AuthWithTeamDomain", mock.Anything, "example").
 					Return(types.SlackAuth{Token: "xoxp-existing"}, nil)
-				cm.Auth.On("SetAuth", mock.Anything, mock.Anything).
+				cm.Auth.On("SetAuth", mock.Anything, mock.MatchedBy(func(a types.SlackAuth) bool {
+					return a.Token == "xoxp-example" && a.TeamID == "T123" && a.UserID == "U123" && a.TeamDomain == "example" && a.APIHost == nil
+				})).
 					Return(types.SlackAuth{TeamDomain: "example"}, "/path/credentials.json", nil)
 			},
 			expectedAuth: types.SlackAuth{TeamDomain: "example"},
