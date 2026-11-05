@@ -32,12 +32,12 @@ slack <command> <subcommand> [flags]
 ## Examples
 
 ```
-$ slack login   # Log in to your Slack account
-$ slack create  # Create a new Slack app
-$ slack init    # Initialize an existing Slack app
-$ slack run     # Start a local development server
-$ slack deploy  # Deploy to the Slack Platform
-$ slack docs    # Open Slack developer docs
+$ slack login                    # Log in to your Slack account
+$ slack create                   # Create a new Slack app
+$ slack init                     # Initialize an existing Slack app
+$ slack run                      # Start a local development server
+$ slack deploy                   # Deploy to the Slack Platform
+$ slack docs search "Block Kit"  # Search Slack developer docs
 ```
 
 ## See also
@@ -52,7 +52,7 @@ $ slack docs    # Open Slack developer docs
 * [slack datastore](/tools/slack-cli/reference/commands/slack_datastore/)	 - Interact with an app's datastore
 * [slack delete](/tools/slack-cli/reference/commands/slack_delete/)	 - Delete the app
 * [slack deploy](/tools/slack-cli/reference/commands/slack_deploy/)	 - Deploy the app to the Slack Platform
-* [slack docs](/tools/slack-cli/reference/commands/slack_docs/)	 - Open Slack developer docs
+* [slack docs](/tools/slack-cli/reference/commands/slack_docs/)	 - Search and open Slack developer docs
 * [slack doctor](/tools/slack-cli/reference/commands/slack_doctor/)	 - Check and report on system and app information
 * [slack env](/tools/slack-cli/reference/commands/slack_env/)	 - Set, unset, or list environment variables
 * [slack external-auth](/tools/slack-cli/reference/commands/slack_external-auth/)	 - Adjust settings of external authentication providers

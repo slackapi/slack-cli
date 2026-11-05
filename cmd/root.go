@@ -102,7 +102,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			{Command: "init", Meaning: "Initialize an existing Slack app"},
 			{Command: "run", Meaning: "Start a local development server"},
 			{Command: "deploy", Meaning: "Deploy to the Slack Platform"},
-			{Command: "docs", Meaning: "Open Slack developer docs"},
+			{Command: "docs search \"Block Kit\"", Meaning: "Search Slack developer docs"},
 		}),
 		Long: strings.Join([]string{
 			`{{Emoji "sparkles"}}CLI to create, run, and deploy Slack apps`,

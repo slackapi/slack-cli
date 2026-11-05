@@ -59,5 +59,5 @@ $ slack docs search "chat.postMessage" --category=reference
 
 ## See also
 
-* [slack docs](/tools/slack-cli/reference/commands/slack_docs/)	 - Open Slack developer docs
+* [slack docs](/tools/slack-cli/reference/commands/slack_docs/)	 - Search and open Slack developer docs
 

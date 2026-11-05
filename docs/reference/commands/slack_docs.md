@@ -1,10 +1,10 @@
 # `slack docs`
 
-Open Slack developer docs
+Search and open Slack developer docs
 
 ## Description
 
-Open the Slack developer docs in your browser or search them using the search subcommand
+Search the Slack developer docs from the terminal with the search subcommand, or open them in your browser
 
 ```
 slack docs [flags]
