@@ -37,47 +37,6 @@ func clearAgentEnvVars(t *testing.T) {
 	}
 }
 
-func Test_Docs_makeMarkdownURL(t *testing.T) {
-	tests := map[string]struct {
-		url      string
-		expected string
-	}{
-		"appends .md to a page path": {
-			url:      "https://docs.slack.dev/block-kit",
-			expected: "https://docs.slack.dev/block-kit.md",
-		},
-		"drops a trailing slash before appending .md": {
-			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/",
-			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md",
-		},
-		"keeps an anchor": {
-			url:      "https://docs.slack.dev/tools/developer-sandboxes#basic",
-			expected: "https://docs.slack.dev/tools/developer-sandboxes.md#basic",
-		},
-		"keeps an anchor after a trailing slash": {
-			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/#custom-socketmode-receiver",
-			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md#custom-socketmode-receiver",
-		},
-		"keeps generated .html reference pages": {
-			url:      "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
-			expected: "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
-		},
-		"keeps a URL that is already markdown": {
-			url:      "https://docs.slack.dev/quickstart.md",
-			expected: "https://docs.slack.dev/quickstart.md",
-		},
-		"keeps the homepage": {
-			url:      "https://docs.slack.dev/",
-			expected: "https://docs.slack.dev/",
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, makeMarkdownURL(tc.url))
-		})
-	}
-}
-
 func Test_Docs_SearchCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"returns text results": {
@@ -349,4 +308,45 @@ func Test_Docs_SearchCommand(t *testing.T) {
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCommand(cf)
 	})
+}
+
+func Test_Docs_makeMarkdownURL(t *testing.T) {
+	tests := map[string]struct {
+		url      string
+		expected string
+	}{
+		"appends .md to a page path": {
+			url:      "https://docs.slack.dev/block-kit",
+			expected: "https://docs.slack.dev/block-kit.md",
+		},
+		"drops a trailing slash before appending .md": {
+			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/",
+			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md",
+		},
+		"keeps an anchor": {
+			url:      "https://docs.slack.dev/tools/developer-sandboxes#basic",
+			expected: "https://docs.slack.dev/tools/developer-sandboxes.md#basic",
+		},
+		"keeps an anchor after a trailing slash": {
+			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/#custom-socketmode-receiver",
+			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md#custom-socketmode-receiver",
+		},
+		"keeps generated .html reference pages": {
+			url:      "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
+			expected: "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
+		},
+		"keeps a URL that is already markdown": {
+			url:      "https://docs.slack.dev/quickstart.md",
+			expected: "https://docs.slack.dev/quickstart.md",
+		},
+		"keeps the homepage": {
+			url:      "https://docs.slack.dev/",
+			expected: "https://docs.slack.dev/",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, makeMarkdownURL(tc.url))
+		})
+	}
 }
