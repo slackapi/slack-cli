@@ -26,6 +26,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// getConfig holds the flag values of the get command
 type getConfig struct {
 	output string
 }
@@ -65,6 +66,8 @@ func resolvePageURL(page string) (string, error) {
 	return page, nil
 }
 
+// NewGetCommand returns the docs get command, which prints a docs page as
+// markdown or JSON, or opens it in the browser
 func NewGetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cfg := &getConfig{}
 
@@ -103,6 +106,8 @@ func NewGetCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
+// runDocsGetCommand resolves the page reference, then prints the page in the
+// chosen output format or opens it in the browser
 func runDocsGetCommand(clients *shared.ClientFactory, cmd *cobra.Command, page string, cfg *getConfig) error {
 	ctx := cmd.Context()
 
