@@ -16,6 +16,7 @@ package manifest
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -129,14 +130,7 @@ func isDevLocalSuffixDiff(d FieldDiff) bool {
 	if d.Type != DiffModified {
 		return false
 	}
-	matched := false
-	for _, p := range devLocalSuffixPaths {
-		if d.Path == p {
-			matched = true
-			break
-		}
-	}
-	if !matched {
+	if !slices.Contains(devLocalSuffixPaths, d.Path) {
 		return false
 	}
 	local, ok := d.LocalValue.(string)
