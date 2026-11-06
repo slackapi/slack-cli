@@ -83,7 +83,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 			"categories: " + strings.Join(api.DocsSearchCategories, ", ") + ".",
 			"",
 			"When a coding agent runs this command, text results link to the markdown",
-			"version of each page.",
+			"version of each page. Print a result's page with the get subcommand.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{

@@ -76,6 +76,7 @@ const (
 	DatastoreCountDatastore                = "SLACK_TRACE_DATASTORE_COUNT_DATASTORE"
 	DatastoreCountSuccess                  = "SLACK_TRACE_DATASTORE_COUNT_SUCCESS"
 	DatastoreCountTotal                    = "SLACK_TRACE_DATASTORE_COUNT_TOTAL"
+	DocsGetSuccess                         = "SLACK_TRACE_DOCS_GET_SUCCESS"
 	DocsSearchSuccess                      = "SLACK_TRACE_DOCS_SEARCH_SUCCESS"
 	DocsSuccess                            = "SLACK_TRACE_DOCS_SUCCESS"
 	EnvInitSuccess                         = "SLACK_TRACE_ENV_INIT_SUCCESS"
