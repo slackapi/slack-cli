@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -272,6 +273,47 @@ func TestTracef(t *testing.T) {
 /*
 * Example commands
  */
+
+func TestFlagUsages(t *testing.T) {
+	tests := map[string]struct {
+		setup    func(flags *pflag.FlagSet)
+		expected string
+	}{
+		"bool flags are shown without a value": {
+			setup: func(flags *pflag.FlagSet) {
+				flags.BoolP("force", "f", false, "ignore warnings")
+				flags.Bool("verbose", true, "print debug logging")
+			},
+			expected: "" +
+				"  -f, --force     ignore warnings\n" +
+				"      --verbose   print debug logging (default true)\n",
+		},
+		"value flags are shown with their type": {
+			setup: func(flags *pflag.FlagSet) {
+				flags.String("app", "", "use a specific app ID")
+				flags.Bool("cleanup", false, "uninstall the local app")
+			},
+			expected: "" +
+				"      --app string   use a specific app ID\n" +
+				"      --cleanup      uninstall the local app\n",
+		},
+		"hidden flags are not shown": {
+			setup: func(flags *pflag.FlagSet) {
+				flags.Bool("debug", false, "print internal details")
+				_ = flags.MarkHidden("debug")
+				flags.Bool("help", false, "help for this command")
+			},
+			expected: "      --help   help for this command\n",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
+			tc.setup(flags)
+			assert.Equal(t, tc.expected, FlagUsages(flags))
+		})
+	}
+}
 
 func TestStyleFlags(t *testing.T) {
 	tests := map[string]struct {

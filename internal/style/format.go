@@ -23,6 +23,8 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/spf13/pflag"
 )
 
 const LocalRunNameTag = "(local)"
@@ -268,6 +270,26 @@ func styleExampleCommand(cmd string) string {
 		return Yellow("$ ") + CommandText(cmd[2:])
 	}
 	return CommandText(cmd)
+}
+
+// hiddenBoolValue wraps a bool flag value without the IsBoolFlag method, so
+// pflag 1.1.0 and later print "--flag" in help instead of "--flag[=true|false]"
+type hiddenBoolValue struct {
+	pflag.Value
+}
+
+// FlagUsages returns the help text for flags with bool flags shown as "--flag"
+func FlagUsages(flags *pflag.FlagSet) string {
+	usages := pflag.NewFlagSet("", pflag.ContinueOnError)
+	usages.SortFlags = flags.SortFlags
+	flags.VisitAll(func(flag *pflag.Flag) {
+		clone := *flag
+		if flag.Value.Type() == "bool" {
+			clone.Value = hiddenBoolValue{flag.Value}
+		}
+		usages.AddFlag(&clone)
+	})
+	return usages.FlagUsages()
 }
 
 // StyleFlags post-processes Cobra's FlagUsages() output to colorize flag names and descriptions.
