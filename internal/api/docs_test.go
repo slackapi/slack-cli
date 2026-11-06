@@ -80,7 +80,7 @@ func Test_buildDocsSearchURL(t *testing.T) {
 	}
 }
 
-func Test_buildDocsSearchRequest(t *testing.T) {
+func Test_buildDocsRequest(t *testing.T) {
 	tests := map[string]struct {
 		url                   string
 		cliVersion            string
@@ -99,7 +99,7 @@ func Test_buildDocsSearchRequest(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			req, err := buildDocsSearchRequest(ctx, tc.url, tc.cliVersion)
+			req, err := buildDocsRequest(ctx, tc.url, tc.cliVersion)
 
 			if tc.expectedErrorContains != "" {
 				require.Error(t, err)
@@ -219,6 +219,52 @@ func Test_Client_DocsSearch(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expectedResponse, result)
+			}
+		})
+	}
+}
+
+func Test_Client_DocsGetPage(t *testing.T) {
+	tests := map[string]struct {
+		path                  string
+		response              string
+		statusCode            int
+		expectedContent       string
+		expectedErrorContains string
+	}{
+		"returns the page markdown": {
+			path:            "/tools/bolt-js/concepts/socket-mode.md",
+			response:        "# Using Socket Mode",
+			expectedContent: "# Using Socket Mode\n",
+		},
+		"returns error for non-OK status": {
+			path:                  "/missing.md",
+			statusCode:            404,
+			expectedErrorContains: slackerror.ErrHTTPRequestFailed,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod: tc.path,
+				Response:       tc.response,
+				StatusCode:     tc.statusCode,
+			})
+			defer teardown()
+
+			originalURL := docsBaseURL
+			docsBaseURL = c.Host()
+			defer func() { docsBaseURL = originalURL }()
+
+			content, err := c.DocsGetPage(ctx, tc.path)
+
+			if tc.expectedErrorContains != "" {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.expectedErrorContains)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedContent, content)
 			}
 		})
 	}
