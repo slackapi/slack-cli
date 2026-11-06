@@ -219,7 +219,6 @@ Certain things are common during development and require a few commands.
 - [Running](#running)
   - [Setting a global alias](#setting-a-global-alias)
 - [Generating documentation](#generating-documentation)
-  - [Synchronizing changes upstream](#synchronizing-changes-upstream)
 - [Versioning](#versioning)
 - [Updating](#updating)
   - [Bumping the Golang version](#bumping-the-golang-version)
@@ -452,26 +451,6 @@ You can generate documentation for all commands in the `docs/` directory with:
 ```zsh
 slack docgen
 ```
-
-#### Synchronizing changes upstream
-
-Automated workflows run on documentation changes to [sync][sync] files between
-this project and the documentation build.
-
-A GitHub application called [`@slackapi[bot]`][github-app-docs] mirrors changes
-to these files and requires certain permissions:
-
-- **Actions**: Read and write
-- **Contents**: Read and write
-- **Metadata**: Read
-- **Pull requests**: Read and write
-
-Access to both this project repo and documentation repo must also be granted.
-
-Credentials and secrets for the app can be stored as the following variables:
-
-- `GH_APP_ID_DOCS`
-- `GH_APP_PRIVATE_KEY_DOCS`
 
 ### Versioning
 
@@ -847,7 +826,6 @@ When in doubt, find the other maintainers and ask.
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
 [effective-go]: https://golang.org/doc/effective_go
-[github-app-docs]: https://github.com/apps/slackapi
 [github-app-releaser]: https://github.com/apps/slack-cli-releaser
 [goinstaller]: https://go.dev/doc/install
 [golang]: https://golang.org/
@@ -865,7 +843,6 @@ When in doubt, find the other maintainers and ask.
 [scripts]: ../scripts
 [semver]: https://semver.org/
 [style-guide]: ./STYLE_GUIDE.md
-[sync]: https://github.com/slackapi/slack-cli/blob/main/.github/workflows/sync-docs-from-cli-repo.yml
 [vscode]: https://github.com/slackapi/slack-cli/blob/main/.vscode/settings.json
 [wf-dependencies]: ./workflows/dependencies.yml
 [wf-milestone]: ./workflows/milestone.yml
