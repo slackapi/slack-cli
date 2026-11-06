@@ -274,6 +274,9 @@ func styleExampleCommand(cmd string) string {
 
 // hiddenBoolValue wraps a bool flag value without the IsBoolFlag method, so
 // pflag 1.1.0 and later print "--flag" in help instead of "--flag[=true|false]"
+//
+// TODO: Remove this wrapper if pflag adds an option to disable the suffix
+// https://github.com/spf13/pflag/issues/454
 type hiddenBoolValue struct {
 	pflag.Value
 }

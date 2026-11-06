@@ -274,7 +274,7 @@ func TestTracef(t *testing.T) {
 * Example commands
  */
 
-func TestFlagUsages(t *testing.T) {
+func Test_FlagUsages(t *testing.T) {
 	tests := map[string]struct {
 		setup    func(flags *pflag.FlagSet)
 		expected string
