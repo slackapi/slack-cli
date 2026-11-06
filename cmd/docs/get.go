@@ -48,7 +48,7 @@ func resolvePageURL(page string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if u.Host != "" && u.Host != docs.Host {
+	if u.Host != "" && !strings.EqualFold(u.Hostname(), docs.Hostname()) {
 		return "", slackerror.New(slackerror.ErrInvalidArgs).
 			WithMessage("The page %s is not on %s", page, docs.Host).
 			WithRemediation("Find the page with %s", style.Commandf("docs search", false))

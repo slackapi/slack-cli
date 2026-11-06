@@ -47,6 +47,13 @@ func Test_Docs_GetCommand(t *testing.T) {
 			},
 			ExpectedStdoutOutputs: []string{"# Using Socket Mode"},
 		},
+		"accepts a docs URL with an uppercase host": {
+			CmdArgs: []string{"get", "https://DOCS.SLACK.DEV/block-kit"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsGetPage", mock.Anything, "/block-kit.md").Return("# Block Kit\n", nil)
+			},
+			ExpectedStdoutOutputs: []string{"# Block Kit"},
+		},
 		"returns the page as JSON": {
 			CmdArgs: []string{"get", "docs.slack.dev/block-kit/", "--output=json"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
