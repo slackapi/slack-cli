@@ -50,9 +50,13 @@ func Test_Docs_makeMarkdownURL(t *testing.T) {
 			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/",
 			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md",
 		},
-		"drops an anchor": {
+		"keeps an anchor": {
 			url:      "https://docs.slack.dev/tools/developer-sandboxes#basic",
-			expected: "https://docs.slack.dev/tools/developer-sandboxes.md",
+			expected: "https://docs.slack.dev/tools/developer-sandboxes.md#basic",
+		},
+		"keeps an anchor after a trailing slash": {
+			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/#custom-socketmode-receiver",
+			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md#custom-socketmode-receiver",
 		},
 		"keeps generated .html reference pages": {
 			url:      "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",

@@ -53,8 +53,9 @@ func makeAbsoluteURL(relativeURL string) string {
 
 // makeMarkdownURL returns the markdown version of a docs page URL, which a
 // coding agent can read without parsing HTML. Pages are served as markdown at
-// their path plus ".md". Generated reference pages ending in ".html" have no
-// markdown version, so those URLs are returned unchanged.
+// their path plus ".md", and keep their heading anchors, so any "#section" is
+// kept. Generated reference pages ending in ".html" have no markdown version,
+// so those URLs are returned unchanged.
 func makeMarkdownURL(absoluteURL string) string {
 	u, err := url.Parse(absoluteURL)
 	if err != nil || strings.HasSuffix(u.Path, ".html") || strings.HasSuffix(u.Path, ".md") {
@@ -65,7 +66,6 @@ func makeMarkdownURL(absoluteURL string) string {
 		return absoluteURL
 	}
 	u.Path = path + ".md"
-	u.Fragment = ""
 	return u.String()
 }
 
