@@ -24,14 +24,25 @@ import (
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+// clearAgentEnvVars unsets the environment variables that identify a coding
+// agent, so tests behave the same when run from one
+func clearAgentEnvVars(t *testing.T) {
+	t.Helper()
+	for _, env := range []string{"CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CODEX_CI", "GEMINI_CLI", "CLINE_ACTIVE", "CURSOR_AGENT", "OPENCODE", "AGENT"} {
+		t.Setenv(env, "")
+	}
+}
 
 func Test_Docs_SearchCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"returns text results": {
 			CmdArgs: []string{"search", "Block Kit"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				clearAgentEnvVars(t)
 				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
 					TotalResults: 2,
 					Limit:        20,
@@ -47,6 +58,42 @@ func Test_Docs_SearchCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.DocsSearchSuccess, mock.Anything)
+			},
+		},
+		"returns text results without markdown links for people": {
+			CmdArgs: []string{"search", "Block Kit"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				clearAgentEnvVars(t)
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
+					TotalResults: 1,
+					Limit:        20,
+					Results: []api.DocsSearchItem{
+						{Title: "Block Kit", URL: "/block-kit/"},
+					},
+				}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				assert.Contains(t, cm.GetStdoutOutput(), "https://docs.slack.dev/block-kit/")
+				assert.NotContains(t, cm.GetStdoutOutput(), ".md")
+			},
+		},
+		"returns text results with markdown links for coding agents": {
+			CmdArgs: []string{"search", "Block Kit"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				clearAgentEnvVars(t)
+				t.Setenv("CLAUDECODE", "1")
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
+					TotalResults: 2,
+					Limit:        20,
+					Results: []api.DocsSearchItem{
+						{Title: "Block Kit", URL: "/block-kit/"},
+						{Title: "Base client", URL: "/tools/python-slack-sdk/reference/web/base_client.html"},
+					},
+				}, nil)
+			},
+			ExpectedStdoutOutputs: []string{
+				"https://docs.slack.dev/block-kit.md",
+				"https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
 			},
 		},
 		"returns JSON results": {
@@ -261,4 +308,45 @@ func Test_Docs_SearchCommand(t *testing.T) {
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCommand(cf)
 	})
+}
+
+func Test_Docs_makeMarkdownURL(t *testing.T) {
+	tests := map[string]struct {
+		url      string
+		expected string
+	}{
+		"appends .md to a page path": {
+			url:      "https://docs.slack.dev/block-kit",
+			expected: "https://docs.slack.dev/block-kit.md",
+		},
+		"drops a trailing slash before appending .md": {
+			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/",
+			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md",
+		},
+		"keeps an anchor": {
+			url:      "https://docs.slack.dev/tools/developer-sandboxes#basic",
+			expected: "https://docs.slack.dev/tools/developer-sandboxes.md#basic",
+		},
+		"keeps an anchor after a trailing slash": {
+			url:      "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode/#custom-socketmode-receiver",
+			expected: "https://docs.slack.dev/tools/bolt-js/concepts/socket-mode.md#custom-socketmode-receiver",
+		},
+		"keeps generated .html reference pages": {
+			url:      "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
+			expected: "https://docs.slack.dev/tools/python-slack-sdk/reference/web/base_client.html",
+		},
+		"keeps a URL that is already markdown": {
+			url:      "https://docs.slack.dev/quickstart.md",
+			expected: "https://docs.slack.dev/quickstart.md",
+		},
+		"keeps the homepage": {
+			url:      "https://docs.slack.dev/",
+			expected: "https://docs.slack.dev/",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, makeMarkdownURL(tc.url))
+		})
+	}
 }
