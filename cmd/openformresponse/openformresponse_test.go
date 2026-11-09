@@ -20,6 +20,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_NewCommand(t *testing.T) {
@@ -29,7 +30,7 @@ func Test_NewCommand(t *testing.T) {
 				"Export responses from the OpenForm Slack function",
 			},
 		},
-		"registers the hidden export subcommand": {
+		"registers the export subcommand": {
 			CmdArgs: []string{"export", "--help"},
 			ExpectedOutputs: []string{
 				"Export user responses to an OpenForm Slack function as a CSV file.",
@@ -38,4 +39,15 @@ func Test_NewCommand(t *testing.T) {
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCommand(cf)
 	})
+}
+
+func Test_NewCommand_Hidden(t *testing.T) {
+	clientsMock := shared.NewClientsMock()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	cmd := NewCommand(clients)
+
+	assert.True(t, cmd.Hidden)
+	exportCmd, _, err := cmd.Find([]string{"export"})
+	assert.NoError(t, err)
+	assert.True(t, exportCmd.Hidden)
 }
