@@ -159,6 +159,7 @@ func Test_AppManifest_ToRawJSON(t *testing.T) {
 
 func Test_AppManifest_AppFeatures(t *testing.T) {
 	truth := true
+	falsity := false
 	tests := map[string]struct {
 		features AppFeatures
 		want     string
@@ -174,6 +175,17 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 				},
 			},
 			want: `{"app_home":{"home_tab_enabled":true,"messages_tab_enabled":true},"bot_user":{"display_name":"slackbot"}}`,
+		},
+		"includes agent tasks enabled when provided": {
+			features: AppFeatures{
+				AppHome: ManifestAppHome{
+					AgentTasksEnabled: &falsity,
+				},
+				BotUser: BotUser{
+					DisplayName: "taskmaster",
+				},
+			},
+			want: `{"app_home":{"agent_tasks_enabled":false},"bot_user":{"display_name":"taskmaster"}}`,
 		},
 		"includes assistant view when provided": {
 			features: AppFeatures{
