@@ -249,6 +249,7 @@ func (r *RawJSON) convertData(val interface{}) interface{} {
 
 // ManifestAppHome
 type ManifestAppHome struct {
+	AgentTasksEnabled          *bool `json:"agent_tasks_enabled,omitempty" yaml:"agent_tasks_enabled,omitempty"`
 	HomeTabEnabled             *bool `json:"home_tab_enabled,omitempty" yaml:"home_tab_enabled,omitempty"`
 	MessagesTabEnabled         *bool `json:"messages_tab_enabled,omitempty" yaml:"messages_tab_enabled,omitempty"`
 	MessagesTabReadOnlyEnabled *bool `json:"messages_tab_read_only_enabled,omitempty" yaml:"messages_tab_read_only_enabled,omitempty"`
