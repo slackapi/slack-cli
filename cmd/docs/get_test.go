@@ -72,6 +72,13 @@ func Test_Docs_GetCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "DocsGetPage", mock.Anything, mock.Anything)
 			},
 		},
+		"prints a page with the read alias": {
+			CmdArgs: []string{"read", "/block-kit"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsGetPage", mock.Anything, "/block-kit.md").Return("# Block Kit\n", nil)
+			},
+			ExpectedStdoutOutputs: []string{"# Block Kit"},
+		},
 		"prints the homepage": {
 			CmdArgs: []string{"get", "https://docs.slack.dev"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

@@ -72,8 +72,9 @@ func NewGetCommand(clients *shared.ClientFactory) *cobra.Command {
 	cfg := &getConfig{}
 
 	cmd := &cobra.Command{
-		Use:   "get <page>",
-		Short: "Print a Slack developer docs page",
+		Use:     "get <page>",
+		Aliases: []string{"fetch", "read"},
+		Short:   "Print a Slack developer docs page",
 		Long: strings.Join([]string{
 			"Print a page of the Slack developer docs as markdown, return it as JSON, or open",
 			"it in your browser.",
