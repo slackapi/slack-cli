@@ -17,6 +17,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"maps"
 	"path/filepath"
 	"strings"
 
@@ -114,9 +115,7 @@ func (c *ManifestClient) getManifestFromHook(ctx context.Context, sdkConfig hook
 		Hook: sdkConfig.Hooks.GetManifest,
 	}
 
-	for name, val := range c.Env {
-		manifestHookOpts.Env[name] = val
-	}
+	maps.Copy(manifestHookOpts.Env, c.Env)
 
 	slackManifestInfo, err := hookExecutor.Execute(ctx, manifestHookOpts)
 	if err != nil {
