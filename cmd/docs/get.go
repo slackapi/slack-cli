@@ -47,7 +47,7 @@ func resolvePageURL(page string) (string, error) {
 	}
 	u, err := url.Parse(page)
 	if err != nil {
-		return "", err
+		return "", slackerror.Wrap(err, slackerror.ErrInvalidArgs)
 	}
 	if u.Host != "" && !strings.EqualFold(u.Hostname(), docs.Hostname()) {
 		return "", slackerror.New(slackerror.ErrInvalidArgs).
@@ -95,7 +95,14 @@ func NewGetCommand(clients *shared.ClientFactory) *cobra.Command {
 				Command: "docs get /block-kit --output=browser",
 			},
 		}),
-		Args: cobra.ExactArgs(1),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return slackerror.New(slackerror.ErrInvalidArgs).
+					WithMessage("A docs page path or URL is required").
+					WithRemediation("Find a page with %s", style.Commandf("docs search", false))
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDocsGetCommand(clients, cmd, args[0], cfg)
 		},

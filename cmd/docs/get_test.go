@@ -72,6 +72,17 @@ func Test_Docs_GetCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "DocsGetPage", mock.Anything, mock.Anything)
 			},
 		},
+		"prints the homepage": {
+			CmdArgs: []string{"get", "https://docs.slack.dev"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsGetPage", mock.Anything, "/index.md").Return("# Build an app with a coding agent\n", nil)
+			},
+			ExpectedStdoutOutputs: []string{"# Build an app with a coding agent"},
+		},
+		"errors when no page is given": {
+			CmdArgs:              []string{"get"},
+			ExpectedErrorStrings: []string{"A docs page path or URL is required", "docs search"},
+		},
 		"errors for a page with no markdown version": {
 			CmdArgs:              []string{"get", "/tools/python-slack-sdk/reference/web/base_client.html"},
 			ExpectedErrorStrings: []string{"has no markdown version", "--output=browser"},

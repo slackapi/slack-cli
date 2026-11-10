@@ -339,9 +339,9 @@ func Test_Docs_makeMarkdownURL(t *testing.T) {
 			url:      "https://docs.slack.dev/quickstart.md",
 			expected: "https://docs.slack.dev/quickstart.md",
 		},
-		"keeps the homepage": {
+		"maps the homepage to its index page": {
 			url:      "https://docs.slack.dev/",
-			expected: "https://docs.slack.dev/",
+			expected: "https://docs.slack.dev/index.md",
 		},
 	}
 	for name, tc := range tests {
