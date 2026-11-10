@@ -208,7 +208,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	// Note - we use DeveloperAppInstall endpoint for both local (dev) runs
 	// and hosted installs https://github.com/slackapi/slack-cli/pull/456#discussion_r830272175
 
-	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag || clients.Config.ForceFlag)
+	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)
 		return app, "", err
@@ -527,7 +527,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		},
 	})))
 	var installState types.InstallState
-	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag || clients.Config.ForceFlag)
+	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
 
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)

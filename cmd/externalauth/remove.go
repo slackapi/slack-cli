@@ -105,13 +105,18 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 	confirmMessage := "Are you sure you want to remove all tokens for this app relevant to the specified provider from your current team/org?"
 	if allProvidersFlag {
+		removeAllTokens := false
+
 		if providerFlag == "" {
-			confirmMessage = "Are you sure you want to remove all tokens for this app from your current team/org?"
+			confirmMessage := "Are you sure you want to remove all tokens for this app from your current team/org?"
+			removeAllTokens, err = clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
+				Default: false,
+			})
+		} else {
+			removeAllTokens, err = clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
+				Default: false,
+			})
 		}
-		removeAllTokens, err := clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
-			Default: false,
-			Flag:    clients.Config.Flags.Lookup("force"),
-		})
 		if err != nil {
 			return err
 		}
@@ -135,7 +140,6 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	} else if providerFlag != "" {
 		removeAllTokens, err := clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
 			Default: false,
-			Flag:    clients.Config.Flags.Lookup("force"),
 		})
 		if err != nil {
 			return err

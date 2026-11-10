@@ -203,7 +203,6 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 func promptShouldInstallAndRetry(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, selectedApp prompts.SelectedApp, token string, triggerArg api.TriggerRequest) (types.DeployedTrigger, bool, error) {
 	shouldRetry, err := clients.IO.ConfirmPrompt(ctx, "Re-install app to apply local file changes and try again?", iostreams.ConfirmPromptConfig{
 		Default: true,
-		Flag:    clients.Config.Flags.Lookup("force"),
 	})
 	if err != nil {
 		return types.DeployedTrigger{}, false, err
