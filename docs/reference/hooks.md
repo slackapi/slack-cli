@@ -207,7 +207,7 @@ Implementing the `start` hook with `config.sdk-managed-connection-enabled` set t
 
 ##### Input
 
-The application's app-level token and bot access token will be provided as environment variables to the hook process (`SLACK_CLI_XAPP` and `SLACK_CLI_XOXB` respectively, as well as `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN`). The SDK should use the app token to [create a socket connection](https://docs.slack.dev/apis/events-api/using-socket-mode/#call) with the Slack backend on behalf of the app. Additionally, the SDK may use the provided bot token to facilitate API calls to the Slack API.
+The application's app-level token and bot access token will be provided as environment variables to the hook process (`SLACK_CLI_XAPP` and `SLACK_CLI_XOXB` respectively, as well as `SLACK_APP_TOKEN` and `SLACK_BOT_TOKEN`). If the app requests user scopes, the installing user's token is also provided as `SLACK_USER_TOKEN`. The SDK should use the app token to [create a socket connection](https://docs.slack.dev/apis/events-api/using-socket-mode/#call) with the Slack backend on behalf of the app. Additionally, the SDK may use the provided bot or user token to facilitate API calls to the Slack API.
 
 All Bolt SDKs leverage this `start` hook operating mode.
 
