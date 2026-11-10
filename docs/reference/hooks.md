@@ -471,6 +471,15 @@ This format must be adhered to, in order of preference, either:
 1. As the response to `get-hooks`, or
 2. Comprising the contents of the `hooks.json` file
 
+A [JSON schema](https://raw.githubusercontent.com/slackapi/slack-cli/main/schemas/hooks.schema.json) of this format can validate the `hooks.json` file in editors that support the `$schema` keyword:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/slackapi/slack-cli/main/schemas/hooks.schema.json",
+  "hooks": {}
+}
+```
+
 ### Watch configurations {#watch-configurations}
 
 The `config.watch` setting looks for file changes during local development with the `slack run` command. The CLI supports separate file watchers for **manifest** changes and changes to **application code** as options for reinstalling the app or reloading the server.
@@ -560,7 +569,7 @@ The CLI will employ the following algorithm in order to resolve the command to b
         "filter-regex": "\\.(ts|js)$"
       }
     },
-    "sdk-managed-connection-enabled": "true"
+    "sdk-managed-connection-enabled": true
   }
 }
 ```
