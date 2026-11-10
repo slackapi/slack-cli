@@ -46,5 +46,6 @@ The Slack CLI provides an envelope of environment variables set automatically if
 |----------|--------|-----|
 | `SLACK_APP_TOKEN` | Set after a successful app installation when using Socket Mode. | Authenticate with Slack API as the app. Required for Socket Mode connections and API calls.
 | `SLACK_BOT_TOKEN` | Set after a successful app installation that requested bot scopes. | Authenticate with Slack API as the bot user. Used for making API calls on behalf of the app. 
+| `SLACK_USER_TOKEN` | Set after a successful app installation that requested user scopes. | Authenticate with Slack API as the installing user. Used for making API calls on behalf of that user.
 | `SLACK_APP_PATH` | Set when a custom start path is provided via `slack run` | Used to run from a non-root directory.
 | `SLACK_CLI_CUSTOM_FILE_PATH` | Set to the same value as `SLACK_APP_PATH` when a custom start path is provided via `slack run` | Used to run from a non-root directory.
