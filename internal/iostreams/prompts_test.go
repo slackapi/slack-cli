@@ -368,7 +368,7 @@ func TestConfirmPrompt(t *testing.T) {
 		"error if non-TTY suggests the flag substitute": {
 			flag:                true,
 			expectedError:       slackerror.ErrPrompt,
-			expectedRemediation: "Try running the command with the `--force` flag included",
+			expectedRemediation: "Try running the command with the `--example-force-flag` flag included",
 		},
 		"use the provided flag value": {
 			flag:          true,
@@ -396,11 +396,11 @@ func TestConfirmPrompt(t *testing.T) {
 			promptConfig := ConfirmPromptConfig{}
 			if tc.flag {
 				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
-				fs.Bool("force", false, "")
+				fs.Bool("example-force-flag", false, "")
 				if tc.flagChanged {
-					require.NoError(t, fs.Set("force", tc.flagValue))
+					require.NoError(t, fs.Set("example-force-flag", tc.flagValue))
 				}
-				promptConfig.Flag = fs.Lookup("force")
+				promptConfig.Flag = fs.Lookup("example-force-flag")
 			}
 
 			value, err := io.ConfirmPrompt(ctx, "Continue?", promptConfig)
