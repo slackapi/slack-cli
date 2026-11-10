@@ -19,6 +19,8 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -70,6 +72,54 @@ func TestExportCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "stepID")
+			},
+		},
+		"without --step-id, prompts for a step and exports it": {
+			CmdArgs:         []string{"--workflow", "#/workflows/my_workflow"},
+			ExpectedOutputs: []string{"Slackbot will DM you with a CSV file once it's ready"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
+				cm.API.On("StepsList", mock.Anything, token, "#/workflows/my_workflow", appID).Return([]api.StepVersion{
+					{StepID: "0", Title: "First form"},
+					{StepID: "1", Title: "Old form", IsDeleted: true},
+				}, nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose an OpenForm step from this workflow:", []string{"0 - First form", "1 - Old form (deleted)"}, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
+				cm.API.On("StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			Teardown: func() {
+				appSelectTeardown()
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "StepsResponsesExport", mock.Anything, token, "#/workflows/my_workflow", appID, "1")
+			},
+		},
+		"without --step-id, errors when the workflow has no steps": {
+			CmdArgs:              []string{"--workflow", "#/workflows/my_workflow"},
+			ExpectedErrorStrings: []string{"No OpenForm steps found in this workflow"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
+				cm.API.On("StepsList", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]api.StepVersion{}, nil)
+			},
+			Teardown: func() {
+				appSelectTeardown()
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"without --step-id, returns the error when listing steps fails": {
+			CmdArgs:              []string{"--workflow", "#/workflows/my_workflow"},
+			ExpectedErrorStrings: []string{"failed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				appSelectTeardown = setupMockCreateAppSelection(installedProdApp)
+				cm.API.On("StepsList", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]api.StepVersion{}, errors.New("failed"))
+			},
+			Teardown: func() {
+				appSelectTeardown()
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "StepsResponsesExport", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 	}, func(clients *shared.ClientFactory) *cobra.Command {
