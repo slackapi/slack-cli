@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -101,7 +102,9 @@ func UnlinkCommandRunE(ctx context.Context, clients *shared.ClientFactory, cmd *
 
 	// Confirm with user unless --force flag is used
 	if !clients.Config.ForceFlag {
-		proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to unlink this app?", false)
+		proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to unlink this app?", iostreams.ConfirmPromptConfig{
+			Flag: clients.Config.Flags.Lookup("force"),
+		})
 		if err != nil {
 			return types.App{}, err
 		}

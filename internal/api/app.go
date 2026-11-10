@@ -847,7 +847,7 @@ func (c *Client) handleAppRequestEligibleState(ctx context.Context, IO iostreams
 		shouldSendApprovalRequest = true
 	} else {
 		// prompt as to whether to sent AAA request
-		shouldSendApprovalRequest, err = c.io.ConfirmPrompt(ctx, "Request approval to install this app?", true)
+		shouldSendApprovalRequest, err = c.io.ConfirmPrompt(ctx, "Request approval to install this app?", iostreams.ConfirmPromptConfig{Default: true})
 		if err != nil {
 			return "", err
 		}
@@ -901,7 +901,7 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 	}))
 	fmt.Println(status)
 
-	shouldCancelRequest, err := c.io.ConfirmPrompt(ctx, "Cancel the current request to install this app?", false)
+	shouldCancelRequest, err := c.io.ConfirmPrompt(ctx, "Cancel the current request to install this app?", iostreams.ConfirmPromptConfig{})
 	if err != nil {
 		return "", err
 	}

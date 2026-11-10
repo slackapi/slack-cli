@@ -131,7 +131,10 @@ func attemptConnectorAppsApprovalRequests(ctx context.Context, clients *shared.C
 	}))
 	clients.IO.PrintInfo(ctx, false, "%s", administratorApprovalNotice)
 
-	sendApprovalRequests, err := clients.IO.ConfirmPrompt(ctx, "Request approval to install missing connectors?", true)
+	sendApprovalRequests, err := clients.IO.ConfirmPrompt(ctx, "Request approval to install missing connectors?", iostreams.ConfirmPromptConfig{
+		Default: true,
+		Flag:    clients.Config.Flags.Lookup("force"),
+	})
 	if err != nil {
 		return err
 	}

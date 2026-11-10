@@ -80,7 +80,7 @@ func RunUninstallCommand(ctx context.Context, clients *shared.ClientFactory, cmd
 	teamDomain := selection.Auth.TeamDomain
 
 	if !clients.Config.ForceFlag {
-		proceed, err := confirmUninstall(ctx, clients.IO, cmd, selection)
+		proceed, err := confirmUninstall(ctx, clients, cmd, selection)
 		if err != nil {
 			return types.App{}, err
 		}
@@ -103,7 +103,7 @@ func RunUninstallCommand(ctx context.Context, clients *shared.ClientFactory, cmd
 	return env, nil
 }
 
-func confirmUninstall(ctx context.Context, IO iostreams.IOStreamer, cmd *cobra.Command, selection prompts.SelectedApp) (bool, error) {
+func confirmUninstall(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, selection prompts.SelectedApp) (bool, error) {
 	cmd.Printf("\n%s\n", style.Sectionf(style.TextSection{
 		Emoji: "warning",
 		Text:  style.Bold("Warning"),
@@ -114,7 +114,9 @@ func confirmUninstall(ctx context.Context, IO iostreams.IOStreamer, cmd *cobra.C
 		},
 	}))
 
-	return IO.ConfirmPrompt(ctx, "Are you sure you want to uninstall?", false)
+	return clients.IO.ConfirmPrompt(ctx, "Are you sure you want to uninstall?", iostreams.ConfirmPromptConfig{
+		Flag: clients.Config.Flags.Lookup("force"),
+	})
 }
 
 // printUninstallApp displays info about removing app from API

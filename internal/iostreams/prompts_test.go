@@ -49,6 +49,13 @@ func TestPromptConfigs(t *testing.T) {
 			required: false,
 			flags:    0,
 		},
+		"ConfirmPromptConfig with flag": {
+			cfg: ConfirmPromptConfig{
+				Flag: mockFlag,
+			},
+			required: false,
+			flags:    1,
+		},
 		"InputPromptConfig required": {
 			cfg: InputPromptConfig{
 				Required:    true,
@@ -347,10 +354,33 @@ func TestPasswordPrompt(t *testing.T) {
 
 func TestConfirmPrompt(t *testing.T) {
 	tests := map[string]struct {
-		expectedError string
+		flag                bool
+		flagChanged         bool
+		flagValue           string
+		expectedError       string
+		expectedRemediation string
+		expectedValue       bool
 	}{
 		"error if non-TTY": {
-			expectedError: slackerror.ErrPrompt,
+			expectedError:       slackerror.ErrPrompt,
+			expectedRemediation: "Learn more about this command with `--help`",
+		},
+		"error if non-TTY suggests the flag substitute": {
+			flag:                true,
+			expectedError:       slackerror.ErrPrompt,
+			expectedRemediation: "Try running the command with the `--force` flag included",
+		},
+		"use the provided flag value": {
+			flag:          true,
+			flagChanged:   true,
+			flagValue:     "true",
+			expectedValue: true,
+		},
+		"use the provided false flag value": {
+			flag:          true,
+			flagChanged:   true,
+			flagValue:     "false",
+			expectedValue: false,
 		},
 	}
 	for name, tc := range tests {
@@ -363,10 +393,26 @@ func TestConfirmPrompt(t *testing.T) {
 			cfg := config.NewConfig(fsMock, osMock)
 			io := NewIOStreams(cfg, fsMock, osMock)
 
-			_, err := io.ConfirmPrompt(ctx, "Continue?", false)
+			promptConfig := ConfirmPromptConfig{}
+			if tc.flag {
+				fs := pflag.NewFlagSet("test", pflag.ContinueOnError)
+				fs.Bool("force", false, "")
+				if tc.flagChanged {
+					require.NoError(t, fs.Set("force", tc.flagValue))
+				}
+				promptConfig.Flag = fs.Lookup("force")
+			}
 
-			assert.Error(t, err)
-			assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+			value, err := io.ConfirmPrompt(ctx, "Continue?", promptConfig)
+
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+				assert.Contains(t, slackerror.ToSlackError(err).Remediation, tc.expectedRemediation)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedValue, value)
+			}
 		})
 	}
 }

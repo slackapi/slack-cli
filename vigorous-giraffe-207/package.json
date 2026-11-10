@@ -1,0 +1,36 @@
+{
+  "name": "vigorous-giraffe-207",
+  "version": "1.0.0",
+  "description": "A scaffold template for Slack apps",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "dev": "node --watch app.js",
+    "lint": "npx @biomejs/biome check .",
+    "lint:fix": "npx @biomejs/biome check --write .",
+    "start": "node app.js",
+    "test": "node --test tests/**/*.spec.js"
+  },
+  "author": "Slack Technologies, LLC",
+  "license": "MIT",
+  "keywords": [
+    "slack",
+    "bolt",
+    "slackapi"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/slack-samples/bolt-js-starter-template.git"
+  },
+  "bugs": {
+    "url": "https://github.com/slack-samples/bolt-js-starter-template/issues"
+  },
+  "dependencies": {
+    "@slack/bolt": "^5.1.0",
+    "dotenv": "~18.0.9"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.4",
+    "@slack/cli-hooks": "^2.0.0"
+  }
+}

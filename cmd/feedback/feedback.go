@@ -335,7 +335,7 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	var err error
 	var ok bool
 	if !noPromptFlag {
-		ok, err = clients.IO.ConfirmPrompt(ctx, "Open in browser?", true)
+		ok, err = clients.IO.ConfirmPrompt(ctx, "Open in browser?", iostreams.ConfirmPromptConfig{Default: true})
 		if err != nil {
 			return err
 		}

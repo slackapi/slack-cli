@@ -51,8 +51,8 @@ func DefaultSelectPromptConfig() SelectPromptConfig {
 }
 
 // ConfirmPrompt mocks the confirm prompt
-func (m *IOStreamsMock) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
-	args := m.Called(ctx, message, defaultValue)
+func (m *IOStreamsMock) ConfirmPrompt(ctx context.Context, message string, cfg ConfirmPromptConfig) (bool, error) {
+	args := m.Called(ctx, message, cfg)
 	return args.Bool(0), args.Error(1)
 }
 

@@ -84,7 +84,9 @@ func runDeleteCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 			},
 		}))
 
-		proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to delete the sandbox?", false)
+		proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to delete the sandbox?", iostreams.ConfirmPromptConfig{
+			Flag: cmd.Flags().Lookup("force"),
+		})
 		if err != nil {
 			if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
 				clients.IO.SetExitCode(iostreams.ExitCancel)

@@ -1694,7 +1694,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 				"ConfirmPrompt",
 				mock.Anything,
 				"Confirm changes?",
-				false,
+				mock.Anything,
 			).Return(tc.confirmPrompt, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
@@ -1702,7 +1702,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedResult, result)
 			if !tc.expectsPrompt {
-				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", mock.Anything)
 			}
 		})
 	}

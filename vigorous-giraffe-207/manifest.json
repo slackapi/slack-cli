@@ -1,0 +1,51 @@
+{
+  "_metadata": {
+    "major_version": 1,
+    "minor_version": 1
+  },
+  "display_information": {
+    "name": "vigorous-giraffe-207"
+  },
+  "features": {
+    "app_home": {
+      "home_tab_enabled": true,
+      "messages_tab_enabled": false,
+      "messages_tab_read_only_enabled": true
+    },
+    "bot_user": {
+      "display_name": "vigorous-giraffe-207",
+      "always_online": true
+    },
+    "shortcuts": [
+      {
+        "name": "Run sample shortcut",
+        "type": "global",
+        "callback_id": "sample_shortcut_id",
+        "description": "Runs a sample shortcut"
+      }
+    ],
+    "slash_commands": [
+      {
+        "command": "/sample-command",
+        "description": "Runs a sample command",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": ["channels:history", "chat:write", "commands"]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "bot_events": ["app_home_opened", "message.channels"]
+    },
+    "interactivity": {
+      "is_enabled": true
+    },
+    "org_deploy_enabled": true,
+    "socket_mode_enabled": true,
+    "token_rotation_enabled": false
+  }
+}

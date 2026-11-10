@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/icon"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -207,7 +208,7 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	// Note - we use DeveloperAppInstall endpoint for both local (dev) runs
 	// and hosted installs https://github.com/slackapi/slack-cli/pull/456#discussion_r830272175
 
-	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
+	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag || clients.Config.ForceFlag)
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)
 		return app, "", err
@@ -526,7 +527,7 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		},
 	})))
 	var installState types.InstallState
-	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag)
+	result, installState, err := apiInterface.DeveloperAppInstall(ctx, clients.IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, clients.Config.AutoRequestAAAFlag || clients.Config.ForceFlag)
 
 	if err != nil {
 		err = slackerror.Wrap(err, slackerror.ErrAppInstall)
@@ -785,7 +786,9 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 
 	if foundBreakingChange {
 		clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
-		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", false)
+		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", iostreams.ConfirmPromptConfig{
+			Flag: clients.Config.Flags.Lookup("force"),
+		})
 		if err != nil {
 			return false, err
 		}
