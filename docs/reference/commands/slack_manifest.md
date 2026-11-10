@@ -11,7 +11,8 @@ Subcommands unlock additional engagements and interactions with the manifest.
 
 The manifest on app settings represents the latest version of the manifest.
 
-Project configurations use the "get-manifest" hook from ".slack/hooks.json".
+Project configurations use the "get-manifest" hook from ".slack/hooks.json" if one is
+defined, otherwise the "manifest.json" file in the project root is used.
 
 ```
 slack manifest [flags]

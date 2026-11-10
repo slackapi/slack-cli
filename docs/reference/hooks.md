@@ -66,6 +66,18 @@ Hooks are entry points for the CLI to initiate inter-process communication with 
 
 A hook encapsulates an isolated piece of functionality that the SDK provides to app developers; the CLI delegates execution of the functionality to the SDK via hook invocation in a separate process. SDKs are responsible for ensuring that hook processes exit with a status code of 0; otherwise the CLI will surface the `sdk_hook_invocation_failed` error to the end-user and report the hook process’ `STDOUT` and `STDERR` to the CLI process’ `STDOUT`.
 
+### Hook arguments {#hook-arguments}
+
+The CLI runs each hook command in a shell and appends flags to the end of the command in the `--name=value` format. The shell is the one set by the `SHELL` environment variable, falling back to `sh`, or PowerShell on Windows.
+
+| Flag                       | Hooks                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `--source`                 | [`get-manifest`](#get-manifest), [`get-trigger`](#get-trigger), [`build`](#build)                       |
+| `--output`                 | [`build`](#build)                                                                                       |
+| `--protocol`, `--boundary` | All hooks except [`get-hooks`](#get-hooks), when the [`message-boundaries`](#protocol) protocol is used |
+
+Hooks must ignore flags they don't recognize, since new flags may be added. A command that doesn't accept flags, such as `cat`, can end with a `#` so the shell treats the appended flags as a comment.
+
 ## Hooks list {#hooks-list}
 
 The following Slack CLI commands invoke hooks:
@@ -105,9 +117,35 @@ This hook allows for the application under development to be created on `api.sla
 
 Implementing this hook signals to the CLI that the SDK manages the [application manifest](https://docs.slack.dev/app-manifests/).
 
+#### Input
+
+One command-line flag is provided as part of the hook invocation:
+
+- `--source`: the path to the root of the application project directory
+
 #### Output
 
 The [app manifest](https://docs.slack.dev/reference/app-manifest) in JSON format to `STDOUT`.
+
+#### Using a `manifest.json` file {#get-manifest-file}
+
+If the `get-manifest` hook isn't defined, the CLI reads the `manifest.json` file in the root of the project directory. A project that stores its manifest in this file doesn't need the hook:
+
+```json
+{
+  "hooks": {}
+}
+```
+
+The hook takes precedence over the `manifest.json` file when both exist. The hook can also be a command that prints the file to `STDOUT`, which is required for versions of the CLI before v4.8.0. End the command with a `#` so the [appended flags](#hook-arguments) are ignored:
+
+```json
+{
+  "hooks": {
+    "get-manifest": "cat manifest.json #"
+  }
+}
+```
 
 #### Support
 
@@ -508,7 +546,7 @@ The CLI will employ the following algorithm in order to resolve the command to b
 
 1. If the `hooks.json` file contains a key for the desired hook, then the CLI will use the command defined under this key directly and end resolution. This might occur in the case where a user has defined an override of an existing hook.
 2. If a key for the desired hook does not exist in `hooks.json`, the CLI will look for a key in the `get-hooks` response’s `hooks` key sub-object. If it exists, the CLI will execute the command for that hook and end resolution.
-3. If neither of the prior attempts succeed, then the CLI should error out with an `sdk_hook_not_found` error.
+3. If neither of the prior attempts succeed, then the CLI should error out with an `sdk_hook_not_found` error. The [`get-manifest`](#get-manifest) hook is an exception and [uses the `manifest.json` file](#get-manifest-file) instead.
 
 ### Examples
 

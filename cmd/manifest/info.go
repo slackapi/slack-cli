@@ -44,7 +44,8 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"The manifest on app settings represents the latest version of the manifest.",
 			"",
-			fmt.Sprintf("Project configurations use the \"get-manifest\" hook from \"%s\".", config.GetProjectHooksJSONFilePath()),
+			fmt.Sprintf("Project configurations use the \"get-manifest\" hook from \"%s\" if one is", config.GetProjectHooksJSONFilePath()),
+			"defined, otherwise the \"manifest.json\" file in the project root is used.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
