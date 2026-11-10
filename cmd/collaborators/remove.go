@@ -149,7 +149,10 @@ func promptCollaboratorsRemoveSlackUserPrompts(
 		confirm, err := clients.IO.ConfirmPrompt(
 			ctx,
 			"Are you sure you want to remove yourself?",
-			false,
+			iostreams.ConfirmPromptConfig{
+				Default: false,
+				Flag:    clients.Config.Flags.Lookup("force"),
+			},
 		)
 		if err != nil {
 			return types.SlackUser{}, err
