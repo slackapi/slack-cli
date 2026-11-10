@@ -114,7 +114,9 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 
 	// Prompt to add an existing app to the project
 	app.LinkAppHeaderSection(ctx, clients)
-	proceed, err := clients.IO.ConfirmPrompt(ctx, linkAppConfirmPromptText, iostreams.ConfirmPromptConfig{Default: true})
+	proceed, err := clients.IO.ConfirmPrompt(ctx, linkAppConfirmPromptText, iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 	if err != nil {
 		return err
 	}

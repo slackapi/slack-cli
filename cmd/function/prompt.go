@@ -124,7 +124,9 @@ func addCollaboratorsToNamedEntitiesPrompt(
 	app types.App,
 	token string,
 ) error {
-	shouldAddCollaborators, err := clients.IO.ConfirmPrompt(ctx, "Do you want your app collaborators to maintain their current access?", iostreams.ConfirmPromptConfig{Default: true})
+	shouldAddCollaborators, err := clients.IO.ConfirmPrompt(ctx, "Do you want your app collaborators to maintain their current access?", iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 	if err != nil {
 		return err
 	}

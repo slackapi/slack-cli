@@ -787,7 +787,8 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 	if foundBreakingChange {
 		clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
 		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", iostreams.ConfirmPromptConfig{
-			Flag: clients.Config.Flags.Lookup("force"),
+			Default: false,
+			Flag:    clients.Config.Flags.Lookup("force"),
 		})
 		if err != nil {
 			return false, err

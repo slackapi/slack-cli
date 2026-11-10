@@ -121,7 +121,8 @@ func confirmDeletion(ctx context.Context, clients *shared.ClientFactory, app pro
 	}))
 
 	proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to delete the app?", iostreams.ConfirmPromptConfig{
-		Flag: clients.Config.Flags.Lookup("force"),
+		Default: false,
+		Flag:    clients.Config.Flags.Lookup("force"),
 	})
 	return proceed, err
 }

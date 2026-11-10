@@ -166,7 +166,9 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 		Type:   listFlags.triggerType,
 	}
 
-	proceed, err := clients.IO.ConfirmPrompt(ctx, "Show more triggers?", iostreams.ConfirmPromptConfig{})
+	proceed, err := clients.IO.ConfirmPrompt(ctx, "Show more triggers?", iostreams.ConfirmPromptConfig{
+		Default: false,
+	})
 	if err != nil {
 		return err
 	}
@@ -186,7 +188,9 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 		cmd.Printf("%s\n", strings.Join(triggersList, "\n"))
 		cmd.Println()
 		if nextCursor != "" {
-			proceed, err = clients.IO.ConfirmPrompt(ctx, "Show more triggers?", iostreams.ConfirmPromptConfig{})
+			proceed, err = clients.IO.ConfirmPrompt(ctx, "Show more triggers?", iostreams.ConfirmPromptConfig{
+				Default: false,
+			})
 			if err != nil {
 				return err
 			}

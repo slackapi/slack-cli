@@ -115,7 +115,8 @@ func confirmUninstall(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	}))
 
 	return clients.IO.ConfirmPrompt(ctx, "Are you sure you want to uninstall?", iostreams.ConfirmPromptConfig{
-		Flag: clients.Config.Flags.Lookup("force"),
+		Default: false,
+		Flag:    clients.Config.Flags.Lookup("force"),
 	})
 }
 

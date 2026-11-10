@@ -287,7 +287,9 @@ func promptShouldRetryWithInteractivity(promptMsg string, cmd *cobra.Command, IO
 		},
 	}))
 
-	return IO.ConfirmPrompt(ctx, promptMsg, iostreams.ConfirmPromptConfig{Default: true})
+	return IO.ConfirmPrompt(ctx, promptMsg, iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 }
 
 func triggerRequestFromFlags(flags createCmdFlags, isDev bool) api.TriggerRequest {
