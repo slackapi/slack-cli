@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 
@@ -317,9 +318,7 @@ func triggerRequestViaHook(ctx context.Context, clients *shared.ClientFactory, p
 		Args: map[string]string{"source": path},
 		Env:  map[string]string{},
 	}
-	for name, val := range clients.Config.ManifestEnv {
-		hookExecOpts.Env[name] = val
-	}
+	maps.Copy(hookExecOpts.Env, clients.Config.ManifestEnv)
 	triggerDefAsStr, err := clients.HookExecutor.Execute(
 		ctx,
 		hookExecOpts,

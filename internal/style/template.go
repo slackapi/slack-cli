@@ -145,6 +145,7 @@ func getTemplateFuncs() template.FuncMap {
 			}
 			return Darken(text)
 		},
+		"FlagUsages": FlagUsages,
 		"ToFlags": func(text string) string {
 			if !isLipglossEnabled {
 				return text
