@@ -15,6 +15,13 @@
 package hooks
 
 import (
+	"encoding/json"
+	"maps"
+	"os"
+	"path/filepath"
+	"reflect"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -45,6 +52,45 @@ func Test_SDKCLIConfig_Exists(t *testing.T) {
 			require.Equal(t, tc.exists, exists)
 		})
 	}
+}
+
+func Test_SDKCLIConfig_JSONSchema(t *testing.T) {
+	// lookup returns the schema value at the path of nested object keys
+	lookup := func(t *testing.T, raw json.RawMessage, path ...string) json.RawMessage {
+		for _, key := range path {
+			var obj map[string]json.RawMessage
+			require.NoError(t, json.Unmarshal(raw, &obj))
+			require.Contains(t, obj, key)
+			raw = obj[key]
+		}
+		return raw
+	}
+	properties := func(t *testing.T, raw json.RawMessage) []string {
+		var props map[string]json.RawMessage
+		require.NoError(t, json.Unmarshal(lookup(t, raw, "properties"), &props))
+		return slices.Collect(maps.Keys(props))
+	}
+	jsonTags := func(v any) []string {
+		tags := []string{}
+		typ := reflect.TypeOf(v)
+		for i := range typ.NumField() {
+			if tag := typ.Field(i).Tag.Get("json"); tag != "" {
+				tags = append(tags, strings.Split(tag, ",")[0])
+			}
+		}
+		return tags
+	}
+
+	schema, err := os.ReadFile(filepath.Join("..", "..", "schemas", "hooks.schema.json"))
+	require.NoError(t, err)
+	var config SDKCLIConfig
+
+	assert.ElementsMatch(t, append(jsonTags(config), "$schema"), properties(t, schema))
+	assert.ElementsMatch(t, jsonTags(config.Hooks), properties(t, lookup(t, schema, "properties", "hooks")))
+	assert.ElementsMatch(t, jsonTags(config.Config), properties(t, lookup(t, schema, "properties", "config")))
+	assert.ElementsMatch(t, jsonTags(WatchOpts{}), properties(t, lookup(t, schema, "properties", "config", "properties", "watch")))
+	assert.ElementsMatch(t, jsonTags(ManifestWatchOpts{}), properties(t, lookup(t, schema, "definitions", "watcher")))
+	assert.ElementsMatch(t, jsonTags(AppWatchOpts{}), properties(t, lookup(t, schema, "definitions", "watcher")))
 }
 
 func Test_ProtocolResolution(t *testing.T) {
