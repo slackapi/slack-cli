@@ -166,7 +166,9 @@ func TestShowSurveyMessages(t *testing.T) {
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
 					msg := fmt.Sprintf("%s Would you like to take a minute to tell us about A?", style.Emoji("love_letter"))
-					return clients.IO.ConfirmPrompt(ctx, msg, false)
+					return clients.IO.ConfirmPrompt(ctx, msg, iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 			// Should be asked once; not yet asked
@@ -178,7 +180,9 @@ func TestShowSurveyMessages(t *testing.T) {
 					return clients.Config.ProjectConfig
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about B?", false)
+					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about B?", iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 			// Ask monthly; it's been over a month
@@ -190,7 +194,9 @@ func TestShowSurveyMessages(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about C?", false)
+					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about C?", iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 			// Ask monthly; it's only been a day since last asked
@@ -202,7 +208,9 @@ func TestShowSurveyMessages(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about D?", false)
+					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about D?", iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 		}

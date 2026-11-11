@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/icon"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -785,7 +786,10 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 
 	if foundBreakingChange {
 		clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
-		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", false)
+		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", iostreams.ConfirmPromptConfig{
+			Default: false,
+			Flag:    clients.Config.Flags.Lookup("force"),
+		})
 		if err != nil {
 			return false, err
 		}
@@ -809,7 +813,7 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 	return true, nil
 }
 
-// setAppEnvironmentTokens adds the app and bot token to the process environment
+// setAppEnvironmentTokens adds the app, bot, and user token to the process environment
 func setAppEnvironmentTokens(ctx context.Context, clients *shared.ClientFactory, result api.DeveloperAppInstallResult) error {
 	if token, ok := clients.Os.LookupEnv("SLACK_APP_TOKEN"); !ok {
 		if err := clients.Os.Setenv("SLACK_APP_TOKEN", result.APIAccessTokens.AppLevel); err != nil {
@@ -836,6 +840,21 @@ func setAppEnvironmentTokens(ctx context.Context, clients *shared.ClientFactory,
 				"Proceed with caution as this might be associated to an unexpected bot ID",
 			},
 		}))
+	}
+	if result.APIAccessTokens.User != "" {
+		if token, ok := clients.Os.LookupEnv("SLACK_USER_TOKEN"); !ok {
+			if err := clients.Os.Setenv("SLACK_USER_TOKEN", result.APIAccessTokens.User); err != nil {
+				return err
+			}
+		} else if token != result.APIAccessTokens.User {
+			clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
+				Text: fmt.Sprintf("The user token differs from the set %s environment variable", style.Highlight("SLACK_USER_TOKEN")),
+				Secondary: []string{
+					"The environment variable will continue to be used",
+					"Proceed with caution as this might be associated to an unexpected user ID",
+				},
+			}))
+		}
 	}
 	return nil
 }

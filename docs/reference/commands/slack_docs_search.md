@@ -10,6 +10,9 @@ format.
 Results can be filtered to a single category with the --category flag. Available
 categories: guides, reference, changelog, python, javascript, java, slack_cli, slack_github_action, deno_slack_sdk, legacy.
 
+When a coding agent runs this command, text results link to the markdown
+version of each page. Print a result's page with the get subcommand.
+
 ```
 slack docs search [query] [flags]
 ```
@@ -56,5 +59,5 @@ $ slack docs search "chat.postMessage" --category=reference
 
 ## See also
 
-* [slack docs](/tools/slack-cli/reference/commands/slack_docs/)	 - Open Slack developer docs
+* [slack docs](/tools/slack-cli/reference/commands/slack_docs/)	 - Search and open Slack developer docs
 

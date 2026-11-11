@@ -95,13 +95,13 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(false, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", mock.Anything).Return(false, nil)
 
 				cm.AddDefaultMocks()
 			},
 			ExpectedStdoutOutputs: []string{"Deletion cancelled"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false)
+				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", mock.Anything)
 				cm.API.AssertNotCalled(t, "DeleteSandbox", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
@@ -115,7 +115,7 @@ func TestDeleteCommand(t *testing.T) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://api.slack.com")
 				cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com/events/cli")
-				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false).Return(true, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", mock.Anything).Return(true, nil)
 				cm.API.On("DeleteSandbox", mock.Anything, testToken, "E0123456").Return(nil)
 				cm.API.On("ListSandboxes", mock.Anything, testToken, "").Return([]types.Sandbox{}, nil)
 				cm.API.On("UsersInfo", mock.Anything, mock.Anything, mock.Anything).Return(&types.UserInfo{Profile: types.UserProfile{}}, nil)
@@ -124,7 +124,7 @@ func TestDeleteCommand(t *testing.T) {
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Deleted", "E0123456"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", false)
+				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Are you sure you want to delete the sandbox?", mock.Anything)
 				cm.API.AssertCalled(t, "DeleteSandbox", mock.Anything, "xoxb-test-token", "E0123456")
 			},
 		},

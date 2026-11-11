@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"strings"
 
@@ -201,7 +202,9 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 // promptShouldInstallAndRetry will prompt to re-install the app to apply any local code changes before attempting to create the trigger
 func promptShouldInstallAndRetry(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, selectedApp prompts.SelectedApp, token string, triggerArg api.TriggerRequest) (types.DeployedTrigger, bool, error) {
-	shouldRetry, err := clients.IO.ConfirmPrompt(ctx, "Re-install app to apply local file changes and try again?", true)
+	shouldRetry, err := clients.IO.ConfirmPrompt(ctx, "Re-install app to apply local file changes and try again?", iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 	if err != nil {
 		return types.DeployedTrigger{}, false, err
 	}
@@ -284,7 +287,9 @@ func promptShouldRetryWithInteractivity(promptMsg string, cmd *cobra.Command, IO
 		},
 	}))
 
-	return IO.ConfirmPrompt(ctx, promptMsg, true)
+	return IO.ConfirmPrompt(ctx, promptMsg, iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 }
 
 func triggerRequestFromFlags(flags createCmdFlags, isDev bool) api.TriggerRequest {
@@ -317,9 +322,7 @@ func triggerRequestViaHook(ctx context.Context, clients *shared.ClientFactory, p
 		Args: map[string]string{"source": path},
 		Env:  map[string]string{},
 	}
-	for name, val := range clients.Config.ManifestEnv {
-		hookExecOpts.Env[name] = val
-	}
+	maps.Copy(hookExecOpts.Env, clients.Config.ManifestEnv)
 	triggerDefAsStr, err := clients.HookExecutor.Execute(
 		ctx,
 		hookExecOpts,

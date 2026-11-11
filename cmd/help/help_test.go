@@ -28,11 +28,13 @@ import (
 
 func TestHelpFunc(t *testing.T) {
 	tests := map[string]struct {
-		exampleCommands     []style.ExampleCommand
-		experiments         []string
-		envVars             map[string]string
-		expectedOutput      []string
-		expectedErrorOutput []string
+		exampleCommands       []style.ExampleCommand
+		experiments           []string
+		envVars               map[string]string
+		subcommand            bool
+		expectedOutput        []string
+		expectedErrorOutput   []string
+		unexpectedErrorOutput []string
 	}{
 		"basic command information is included": {
 			expectedOutput: []string{
@@ -65,9 +67,22 @@ func TestHelpFunc(t *testing.T) {
 				"unknown (invalid)",
 			},
 		},
-		"the claude code plugin hint is emitted inside claude code": {
+		"both plugin hints are emitted on root help inside claude code": {
 			envVars:             map[string]string{"CLAUDECODE": "1"},
-			expectedErrorOutput: []string{"claude-code-hint"},
+			expectedErrorOutput: []string{"claude-code-hint", "Coding agents: If the Slack plugin isn't installed"},
+		},
+		"the agent plugin hint is emitted on root help inside other agents": {
+			envVars:               map[string]string{"CODEX_CI": "1"},
+			expectedErrorOutput:   []string{"Coding agents: If the Slack plugin isn't installed"},
+			unexpectedErrorOutput: []string{"claude-code-hint"},
+		},
+		"the agent plugin hint is not emitted on subcommand help": {
+			envVars:               map[string]string{"CODEX_CI": "1"},
+			subcommand:            true,
+			unexpectedErrorOutput: []string{"Coding agents:"},
+		},
+		"no plugin hint is emitted outside coding agents": {
+			unexpectedErrorOutput: []string{"claude-code-hint", "Coding agents:"},
 		},
 	}
 
@@ -80,6 +95,9 @@ func TestHelpFunc(t *testing.T) {
 				// Restore original EnabledExperiments
 				experiment.EnabledExperiments = _EnabledExperiments
 			}()
+			for _, name := range []string{"CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT", "CODEX_CI", "GEMINI_CLI", "CLINE_ACTIVE", "CURSOR_AGENT", "OPENCODE", "AGENT"} {
+				t.Setenv(name, "")
+			}
 			for name, value := range tc.envVars {
 				t.Setenv(name, value)
 			}
@@ -101,18 +119,26 @@ func TestHelpFunc(t *testing.T) {
 			}
 			rootCmd.AddCommand(subCommand)
 			rootCmd.SetContext(ctx)
+			subCommand.SetContext(ctx)
 			rootCmd.Flags().Bool("help", true, "mock help flag")
 			clientsMock.Config.SetFlags(rootCmd)
 			testutil.MockCmdIO(clientsMock.IO, rootCmd)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			helpFunc := HelpFunc(clients, map[string]string{})
-			helpFunc(rootCmd, []string{})
+			if tc.subcommand {
+				helpFunc(subCommand, []string{})
+			} else {
+				helpFunc(rootCmd, []string{})
+			}
 			for _, expectedString := range tc.expectedOutput {
 				assert.Contains(t, clientsMock.GetStdoutOutput(), expectedString)
 			}
 			for _, expectedString := range tc.expectedErrorOutput {
 				assert.Contains(t, clientsMock.GetStderrOutput(), expectedString)
+			}
+			for _, unexpectedString := range tc.unexpectedErrorOutput {
+				assert.NotContains(t, clientsMock.GetStderrOutput(), unexpectedString)
 			}
 		})
 	}

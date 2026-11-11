@@ -1565,14 +1565,32 @@ func TestValidateManifestForInstall(t *testing.T) {
 
 func TestSetAppEnvironmentTokens(t *testing.T) {
 	tests := map[string]struct {
-		envAppToken      string
-		envBotToken      string
-		result           api.DeveloperAppInstallResult
-		expectedAppToken string
-		expectedBotToken string
-		expectedOutput   string
+		envAppToken       string
+		envBotToken       string
+		envUserToken      string
+		result            api.DeveloperAppInstallResult
+		expectedAppToken  string
+		expectedBotToken  string
+		expectedUserToken string
+		expectedOutput    string
 	}{
 		"defaults to resulting tokens": {
+			result: api.DeveloperAppInstallResult{
+				APIAccessTokens: struct {
+					Bot      string `json:"bot,omitempty"`
+					AppLevel string `json:"app_level,omitempty"`
+					User     string `json:"user,omitempty"`
+				}{
+					Bot:      "xoxb-1234",
+					AppLevel: "xapp-1-wf",
+					User:     "xoxp-5678",
+				},
+			},
+			expectedBotToken:  "xoxb-1234",
+			expectedAppToken:  "xapp-1-wf",
+			expectedUserToken: "xoxp-5678",
+		},
+		"does not set user token without user scopes": {
 			result: api.DeveloperAppInstallResult{
 				APIAccessTokens: struct {
 					Bot      string `json:"bot,omitempty"`
@@ -1618,6 +1636,24 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			expectedAppToken: "xapp-4-fn",
 			expectedOutput:   "The bot token differs from the set SLACK_BOT_TOKEN environment variable",
 		},
+		"does not override existing user token": {
+			envUserToken: "xoxp-custom",
+			result: api.DeveloperAppInstallResult{
+				APIAccessTokens: struct {
+					Bot      string `json:"bot,omitempty"`
+					AppLevel string `json:"app_level,omitempty"`
+					User     string `json:"user,omitempty"`
+				}{
+					Bot:      "xoxb-boop",
+					AppLevel: "xapp-5-ui",
+					User:     "xoxp-0000",
+				},
+			},
+			expectedBotToken:  "xoxb-boop",
+			expectedAppToken:  "xapp-5-ui",
+			expectedUserToken: "xoxp-custom",
+			expectedOutput:    "The user token differs from the set SLACK_USER_TOKEN environment variable",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -1631,12 +1667,18 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Unset()
 				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Return(tc.envBotToken)
 			}
+			if tc.envUserToken != "" {
+				clientsMock.Os.On("Getenv", "SLACK_USER_TOKEN").Return(tc.envUserToken)
+			}
 			clientsMock.Os.On("LookupEnv", "SLACK_APP_TOKEN").
 				Return(tc.envAppToken, tc.envAppToken != "")
 			clientsMock.Os.On("LookupEnv", "SLACK_BOT_TOKEN").
 				Return(tc.envBotToken, tc.envBotToken != "")
+			clientsMock.Os.On("LookupEnv", "SLACK_USER_TOKEN").
+				Return(tc.envUserToken, tc.envUserToken != "")
 			clientsMock.Os.On("Setenv", "SLACK_APP_TOKEN", mock.Anything).Return(nil)
 			clientsMock.Os.On("Setenv", "SLACK_BOT_TOKEN", mock.Anything).Return(nil)
+			clientsMock.Os.On("Setenv", "SLACK_USER_TOKEN", mock.Anything).Return(nil)
 			output := &bytes.Buffer{}
 			clientsMock.IO.Stdout.SetOutput(output)
 
@@ -1645,6 +1687,11 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedAppToken, clients.Os.Getenv("SLACK_APP_TOKEN"))
 			assert.Equal(t, tc.expectedBotToken, clients.Os.Getenv("SLACK_BOT_TOKEN"))
+			if tc.expectedUserToken != "" {
+				assert.Equal(t, tc.expectedUserToken, clients.Os.Getenv("SLACK_USER_TOKEN"))
+			} else {
+				clientsMock.Os.AssertNotCalled(t, "Setenv", "SLACK_USER_TOKEN", mock.Anything)
+			}
 			assert.Contains(t, output.String(), tc.expectedOutput)
 		})
 	}
@@ -1694,7 +1741,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 				"ConfirmPrompt",
 				mock.Anything,
 				"Confirm changes?",
-				false,
+				mock.Anything,
 			).Return(tc.confirmPrompt, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
@@ -1702,7 +1749,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedResult, result)
 			if !tc.expectsPrompt {
-				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", mock.Anything)
 			}
 		})
 	}

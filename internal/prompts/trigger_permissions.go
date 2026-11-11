@@ -202,5 +202,7 @@ func AddAppCollaboratorsToNamedEntitiesPrompt(ctx context.Context, IO iostreams.
 			"App collaborators will lose their current access if not included in the list of entities",
 		},
 	}))
-	return IO.ConfirmPrompt(ctx, "Include app collaborators?", true)
+	return IO.ConfirmPrompt(ctx, "Include app collaborators?", iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 }

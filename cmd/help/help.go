@@ -79,6 +79,12 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 
 	// Recommend the official Slack plugin when running inside Claude Code
 	useragent.EmitClaudeCodePluginHint(cmd.ErrOrStderr())
+
+	// Recommend the Slack plugin to other coding agents on the root help only,
+	// since agents often start with it and subcommand help would repeat it
+	if !cmd.HasParent() {
+		useragent.EmitAgentPluginHint(cmd.ErrOrStderr(), cmd.Root().Name())
+	}
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -100,13 +106,13 @@ const charmHelpTemplate string = `{{.Long | ToDescription}}
   {{(rpad .Name .NamePadding) | ToCommandText }} {{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{Header "Flags"}}
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces | ToFlags}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
+{{FlagUsages .LocalFlags | trimTrailingWhitespaces | ToFlags}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
 
 {{Header "Global aliases"}}{{range .Commands}}{{if and (IsAlias .Name $.Data.Aliases) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToGroupName }} {{rpad (AliasParent .Name $.Data.Aliases) AliasPadding | ToAliasParent}} {{ToPrompt "❱"}} {{.Name | ToGroupName}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 {{Header "Global flags"}}
-{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces | ToFlags}}{{end}}{{if .HasExample}}
+{{FlagUsages .InheritedFlags | trimTrailingWhitespaces | ToFlags}}{{end}}{{if .HasExample}}
 
 {{Header "Example"}}
 {{ Examples .Example}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}
@@ -143,13 +149,13 @@ const legacyHelpTemplate string = `{{.Long}}
   {{(rpad .Name .NamePadding) | ToCommandText }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{Header "Flags"}}
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
+{{FlagUsages .LocalFlags | trimTrailingWhitespaces}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
 
 {{Header "Global aliases"}}{{range .Commands}}{{if and (IsAlias .Name $.Data.Aliases) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToBold }} {{rpad (AliasParent .Name $.Data.Aliases) AliasPadding}} > {{.Name}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 {{Header "Global flags"}}
-{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasExample}}
+{{FlagUsages .InheritedFlags | trimTrailingWhitespaces}}{{end}}{{if .HasExample}}
 
 {{Header "Example"}}
 {{ Examples .Example}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}

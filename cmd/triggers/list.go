@@ -23,6 +23,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -165,7 +166,9 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 		Type:   listFlags.triggerType,
 	}
 
-	proceed, err := clients.IO.ConfirmPrompt(ctx, "Show more triggers?", false)
+	proceed, err := clients.IO.ConfirmPrompt(ctx, "Show more triggers?", iostreams.ConfirmPromptConfig{
+		Default: false,
+	})
 	if err != nil {
 		return err
 	}
@@ -185,7 +188,9 @@ func showMoreTriggers(ctx context.Context, cmd *cobra.Command, clients *shared.C
 		cmd.Printf("%s\n", strings.Join(triggersList, "\n"))
 		cmd.Println()
 		if nextCursor != "" {
-			proceed, err = clients.IO.ConfirmPrompt(ctx, "Show more triggers?", false)
+			proceed, err = clients.IO.ConfirmPrompt(ctx, "Show more triggers?", iostreams.ConfirmPromptConfig{
+				Default: false,
+			})
 			if err != nil {
 				return err
 			}

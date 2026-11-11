@@ -3,7 +3,7 @@ module github.com/slackapi/slack-cli
 go 1.27.3
 
 require (
-	charm.land/bubbletea/v2 v2.1.0
+	charm.land/bubbletea/v2 v2.1.1
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/briandowns/spinner v1.23.2
@@ -13,7 +13,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
-	github.com/kubescape/go-git-url v0.0.33
+	github.com/kubescape/go-git-url v0.0.34
 	github.com/kyokomi/emoji/v2 v2.2.14
 	github.com/logrusorgru/aurora/v4 v4.0.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
@@ -25,11 +25,11 @@ require (
 	github.com/radovskyb/watcher v1.0.7
 	github.com/spf13/afero v1.15.0
 	github.com/spf13/cobra v1.10.2
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/stretchr/testify v1.12.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/mod v0.42.0
-	golang.org/x/sys v0.49.0
+	golang.org/x/sys v0.50.0
 	golang.org/x/text v0.43.0
 	gopkg.in/yaml.v2 v2.4.0
 )

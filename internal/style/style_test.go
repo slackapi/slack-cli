@@ -219,7 +219,6 @@ func TestColorStyleFunctions(t *testing.T) {
 	testStyleFunc(t, "Selector", Selector)
 	testStyleFunc(t, "Error", Error)
 	testStyleFunc(t, "Warning", Warning)
-	testStyleFunc(t, "Input", Input)
 	testStyleFunc(t, "Green", Green)
 	testStyleFunc(t, "Red", Red)
 	testStyleFunc(t, "Yellow", Yellow)

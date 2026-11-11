@@ -93,7 +93,7 @@ type IOStreamer interface {
 
 	// ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value
 	// for the message
-	ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error)
+	ConfirmPrompt(ctx context.Context, message string, cfg ConfirmPromptConfig) (bool, error)
 	// InputPrompt prompts the user for a string value for the message, which
 	// can be required
 	InputPrompt(ctx context.Context, message string, cfg InputPromptConfig) (string, error)

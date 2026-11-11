@@ -238,17 +238,15 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 // Reference: https://github.com/spf13/cobra/blob/3f3b81882534a51628f3286e93c6842d9b2e29ea/doc/md_docs.go#L32-L49
 func genMarkdownCommandFlags(buf *bytes.Buffer, cmd *cobra.Command) error {
 	flags := cmd.NonInheritedFlags()
-	flags.SetOutput(buf)
 	if flags.HasAvailableFlags() {
 		fmt.Fprintf(buf, "## Flags\n\n```\n")
-		flags.PrintDefaults()
+		buf.WriteString(style.FlagUsages(flags))
 		fmt.Fprintf(buf, "```\n\n")
 	}
 	parentFlags := cmd.InheritedFlags()
-	parentFlags.SetOutput(buf)
 	if parentFlags.HasAvailableFlags() {
 		fmt.Fprintf(buf, "## Global flags\n\n```\n")
-		parentFlags.PrintDefaults()
+		buf.WriteString(style.FlagUsages(parentFlags))
 		fmt.Fprintf(buf, "```\n\n")
 	}
 	return nil
