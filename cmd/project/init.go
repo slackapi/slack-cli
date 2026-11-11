@@ -85,7 +85,6 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 // and configures flags
 func projectInitCommandPreRunE(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	clients.Config.SetFlags(cmd)
-	// --environment requires --app since no app is added without it
 	if clients.Config.Flags.Changed("environment") && !clients.Config.Flags.Changed("app") {
 		return slackerror.New(slackerror.ErrMismatchedFlags).
 			WithMessage("The --environment flag requires the --app flag when used with init")
