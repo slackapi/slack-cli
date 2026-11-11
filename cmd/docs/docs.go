@@ -27,7 +27,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "docs",
 		Short: "Search and open Slack developer docs",
-		Long:  "Search the Slack developer docs from the terminal with the search subcommand, or open them in your browser",
+		Long:  "Search the Slack developer docs and print their pages from the terminal with the search and get subcommands, or open them in your browser",
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Open Slack developer docs homepage",
@@ -50,7 +50,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		DisableSuggestions: true,
 	}
 
-	// Add the search subcommand
+	// Add the subcommands
+	cmd.AddCommand(NewGetCommand(clients))
 	cmd.AddCommand(NewSearchCommand(clients))
 
 	return cmd

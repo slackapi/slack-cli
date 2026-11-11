@@ -4,7 +4,7 @@ Search and open Slack developer docs
 
 ## Description
 
-Search the Slack developer docs from the terminal with the search subcommand, or open them in your browser
+Search the Slack developer docs and print their pages from the terminal with the search and get subcommands, or open them in your browser
 
 ```
 slack docs [flags]
@@ -47,5 +47,6 @@ $ slack docs search "Block Kit" --output=browser
 ## See also
 
 * [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack docs get](/tools/slack-cli/reference/commands/slack_docs_get/)	 - Print a Slack developer docs page
 * [slack docs search](/tools/slack-cli/reference/commands/slack_docs_search/)	 - Search Slack developer docs
 

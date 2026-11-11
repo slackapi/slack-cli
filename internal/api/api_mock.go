@@ -389,6 +389,12 @@ func (m *APIMock) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStream
 
 // DocsClient
 
+// DocsGetPage mocks fetching the markdown of a docs page
+func (m *APIMock) DocsGetPage(ctx context.Context, path string) (string, error) {
+	args := m.Called(ctx, path)
+	return args.String(0), args.Error(1)
+}
+
 func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error) {
 	args := m.Called(ctx, query, limit, category)
 	if args.Get(0) == nil {

@@ -47,6 +47,7 @@ var DocsSearchCategories = []string{
 }
 
 type DocsClient interface {
+	DocsGetPage(ctx context.Context, path string) (string, error)
 	DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error)
 }
 
@@ -73,7 +74,7 @@ func buildDocsSearchURL(baseURL, query string, limit int, category string) (stri
 	return sURL.String(), nil
 }
 
-func buildDocsSearchRequest(ctx context.Context, urlStr, cliVersion string) (*http.Request, error) {
+func buildDocsRequest(ctx context.Context, urlStr, cliVersion string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
 	if err != nil {
 		return nil, err
@@ -101,7 +102,7 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int, catego
 		return nil, err
 	}
 
-	req, err := buildDocsSearchRequest(ctx, urlStr, cliVersion)
+	req, err := buildDocsRequest(ctx, urlStr, cliVersion)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
@@ -119,4 +120,37 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int, catego
 	}
 
 	return &searchResponse, nil
+}
+
+// DocsGetPage returns the markdown of a Slack developer docs page, given its
+// site path ending in ".md"
+func (c *Client) DocsGetPage(ctx context.Context, path string) (string, error) {
+	var span opentracing.Span
+	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsGetPage")
+	defer span.Finish()
+
+	sURL, err := url.Parse(docsBaseURL + path)
+	if err != nil {
+		return "", errHTTPRequestFailed.WithRootCause(err)
+	}
+	span.SetTag("request_url", sURL)
+
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := buildDocsRequest(ctx, sURL.String(), cliVersion)
+	if err != nil {
+		return "", errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	c.printRequest(ctx, req, false)
+
+	respBytes, err := c.DoWithRetry(ctx, req, span, false, sURL)
+	if err != nil {
+		return "", errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	return string(respBytes), nil
 }

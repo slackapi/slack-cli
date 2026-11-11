@@ -53,9 +53,9 @@ func makeAbsoluteURL(relativeURL string) string {
 
 // makeMarkdownURL returns the markdown version of a docs page URL, which a
 // coding agent can read without parsing HTML. Pages are served as markdown at
-// their path plus ".md", and keep their heading anchors, so any "#section" is
-// kept. Generated reference pages ending in ".html" have no markdown version,
-// so those URLs are returned unchanged.
+// their path plus ".md", and the homepage at "/index.md". Pages keep their
+// heading anchors, so any "#section" is kept. Generated reference pages ending
+// in ".html" have no markdown version, so those URLs are returned unchanged.
 func makeMarkdownURL(absoluteURL string) string {
 	u, err := url.Parse(absoluteURL)
 	if err != nil || strings.HasSuffix(u.Path, ".html") || strings.HasSuffix(u.Path, ".md") {
@@ -63,7 +63,7 @@ func makeMarkdownURL(absoluteURL string) string {
 	}
 	path := strings.TrimSuffix(u.Path, "/")
 	if path == "" {
-		return absoluteURL
+		path = "/index"
 	}
 	u.Path = path + ".md"
 	return u.String()
@@ -83,7 +83,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 			"categories: " + strings.Join(api.DocsSearchCategories, ", ") + ".",
 			"",
 			"When a coding agent runs this command, text results link to the markdown",
-			"version of each page.",
+			"version of each page. Print a result's page with the get subcommand.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
