@@ -204,6 +204,75 @@ func Test_Project_InitCommand(t *testing.T) {
 				assert.Equal(t, expectedApp, actualApp)
 			},
 		},
+		"init a project and link an existing app with the environment flag": {
+			CmdArgs: []string{"--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				// Mocks auths to match against team and app
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+					mockLinkSlackAuth2,
+					mockLinkSlackAuth1,
+				}, nil)
+				// Default setup
+				setupProjectInitCommandMocks(t, ctx, cm, cf)
+				// Link an existing app
+				cm.IO.On("ConfirmPrompt", mock.Anything, linkAppConfirmPromptText, mock.Anything).Return(true, nil)
+				// Mock prompt for team
+				cm.IO.On("SelectPrompt",
+					mock.Anything,
+					"Select the existing app team",
+					mock.Anything,
+					mock.Anything,
+				).Return(iostreams.SelectPromptResponse{
+					Prompt: true,
+					Index:  1,
+					Option: mockLinkSlackAuth2.TeamDomain,
+				}, nil)
+				// Mock prompt for App ID
+				cm.IO.On("InputPrompt",
+					mock.Anything,
+					"Enter the existing app ID",
+					mock.Anything,
+				).Return(mockLinkAppID1, nil)
+				// Mock prompt for environment answered with the environment flag
+				cm.IO.On("SelectPrompt",
+					mock.Anything,
+					"Choose the app environment",
+					mock.Anything,
+					mock.MatchedBy(func(cfg iostreams.SelectPromptConfig) bool {
+						return cfg.Flag != nil && cfg.Flag.Name == "environment" && cfg.Flag.Value.String() == "deployed"
+					}),
+				).Return(iostreams.SelectPromptResponse{
+					Flag:   true,
+					Option: "deployed",
+				}, nil)
+				// Mock status of app for footer
+				cm.API.On("GetAppStatus",
+					mock.Anything,
+					mockLinkSlackAuth2.Token,
+					[]string{mockLinkAppID1},
+					mockLinkSlackAuth2.TeamID,
+				).Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedStdoutOutputs: []string{
+				"Project Initialization", // Assert section header
+				"App Link",               // Assert section header
+				"Next Steps",             // Assert section header
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// Assert app written to file
+				expectedApp := types.App{
+					AppID:      mockLinkAppID1,
+					TeamDomain: mockLinkSlackAuth2.TeamDomain,
+					TeamID:     mockLinkSlackAuth2.TeamID,
+				}
+				actualApp, err := cm.AppClient.GetDeployed(
+					ctx,
+					mockLinkSlackAuth2.TeamID,
+				)
+				require.NoError(t, err)
+				assert.Equal(t, expectedApp, actualApp)
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		cmd := NewInitCommand(cf)
 		return cmd

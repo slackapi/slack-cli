@@ -75,7 +75,7 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	// TODO - add --environment flag to be used by link
+	cmd.Flags().StringP("environment", "E", "", "environment to save existing app (local, deployed)")
 
 	return cmd
 }

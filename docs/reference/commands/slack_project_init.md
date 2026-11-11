@@ -33,7 +33,8 @@ slack project init [flags]
 ## Flags
 
 ```
-  -h, --help   help for init
+  -E, --environment string   environment to save existing app (local, deployed)
+  -h, --help                 help for init
 ```
 
 ## Global flags
