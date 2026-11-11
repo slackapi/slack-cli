@@ -395,8 +395,8 @@ func (m *APIMock) DocsGetPage(ctx context.Context, path string) (string, error) 
 	return args.String(0), args.Error(1)
 }
 
-func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error) {
-	args := m.Called(ctx, query, limit, category)
+func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int, category string, hidePinned bool) (*DocsSearchResponse, error) {
+	args := m.Called(ctx, query, limit, category, hidePinned)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

@@ -22,6 +22,7 @@ slack docs search [query] [flags]
 ```
       --category string   filter results by category: guides, reference, changelog, python, javascript, java, slack_cli, slack_github_action, deno_slack_sdk, legacy
   -h, --help              help for search
+      --hide-pinned       leave out pages pinned to the top of text or json results
       --limit int         maximum number of text or json search results to return (default 20)
       --output string     output format: text, json, browser (default "text")
 ```
@@ -55,6 +56,9 @@ $ slack docs search "api" --output=json --limit=5
 
 # Search only the API reference docs
 $ slack docs search "chat.postMessage" --category=reference
+
+# Search docs without the pages pinned to the top
+$ slack docs search "mcp" --hide-pinned
 ```
 
 ## See also

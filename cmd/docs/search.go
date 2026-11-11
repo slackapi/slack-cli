@@ -39,9 +39,10 @@ func buildDocsSearchURL(query, category string) string {
 }
 
 type searchConfig struct {
-	output   string
-	limit    int
-	category string
+	output     string
+	limit      int
+	category   string
+	hidePinned bool
 }
 
 func makeAbsoluteURL(relativeURL string) string {
@@ -102,6 +103,10 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 				Meaning: "Search only the API reference docs",
 				Command: "docs search \"chat.postMessage\" --category=reference",
 			},
+			{
+				Meaning: "Search docs without the pages pinned to the top",
+				Command: "docs search \"mcp\" --hide-pinned",
+			},
 		}),
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -112,6 +117,7 @@ func NewSearchCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&cfg.output, "output", "text", "output format: text, json, browser")
 	cmd.Flags().IntVar(&cfg.limit, "limit", 20, "maximum number of text or json search results to return")
 	cmd.Flags().StringVar(&cfg.category, "category", "", fmt.Sprintf("filter results by category: %s", strings.Join(api.DocsSearchCategories, ", ")))
+	cmd.Flags().BoolVar(&cfg.hidePinned, "hide-pinned", false, "leave out pages pinned to the top of text or json results")
 
 	return cmd
 }
@@ -123,7 +129,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 	switch cfg.output {
 	case "json":
-		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category, cfg.hidePinned)
 		if err != nil {
 			return err
 		}
@@ -142,7 +148,7 @@ func runDocsSearchCommand(clients *shared.ClientFactory, cmd *cobra.Command, arg
 
 		return nil
 	case "text":
-		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category)
+		searchResponse, err := clients.API().DocsSearch(ctx, query, cfg.limit, cfg.category, cfg.hidePinned)
 		if err != nil {
 			return err
 		}

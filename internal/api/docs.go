@@ -48,7 +48,7 @@ var DocsSearchCategories = []string{
 
 type DocsClient interface {
 	DocsGetPage(ctx context.Context, path string) (string, error)
-	DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error)
+	DocsSearch(ctx context.Context, query string, limit int, category string, hidePinned bool) (*DocsSearchResponse, error)
 }
 
 type DocsSearchResponse struct {
@@ -62,10 +62,13 @@ type DocsSearchItem struct {
 	Title string `json:"title"`
 }
 
-func buildDocsSearchURL(baseURL, query string, limit int, category string) (string, error) {
+func buildDocsSearchURL(baseURL, query string, limit int, category string, hidePinned bool) (string, error) {
 	endpoint := fmt.Sprintf("%s?query=%s&limit=%d", docsSearchMethod, url.QueryEscape(query), limit)
 	if category != "" {
 		endpoint += fmt.Sprintf("&category=%s", url.QueryEscape(category))
+	}
+	if hidePinned {
+		endpoint += "&pin=false"
 	}
 	sURL, err := url.Parse(baseURL + "/" + endpoint)
 	if err != nil {
@@ -83,13 +86,14 @@ func buildDocsRequest(ctx context.Context, urlStr, cliVersion string) (*http.Req
 	return req, nil
 }
 
-// DocsSearch searches the Slack developer docs API
-func (c *Client) DocsSearch(ctx context.Context, query string, limit int, category string) (*DocsSearchResponse, error) {
+// DocsSearch searches the Slack developer docs API. With hidePinned, the
+// results leave out pages the docs site pins to the top for some searches.
+func (c *Client) DocsSearch(ctx context.Context, query string, limit int, category string, hidePinned bool) (*DocsSearchResponse, error) {
 	var span opentracing.Span
 	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsSearch")
 	defer span.Finish()
 
-	urlStr, err := buildDocsSearchURL(docsBaseURL, query, limit, category)
+	urlStr, err := buildDocsSearchURL(docsBaseURL, query, limit, category, hidePinned)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}

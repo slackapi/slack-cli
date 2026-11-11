@@ -43,7 +43,7 @@ func Test_Docs_SearchCommand(t *testing.T) {
 			CmdArgs: []string{"search", "Block Kit"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				clearAgentEnvVars(t)
-				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 2,
 					Limit:        20,
 					Results: []api.DocsSearchItem{
@@ -64,7 +64,7 @@ func Test_Docs_SearchCommand(t *testing.T) {
 			CmdArgs: []string{"search", "Block Kit"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				clearAgentEnvVars(t)
-				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 1,
 					Limit:        20,
 					Results: []api.DocsSearchItem{
@@ -82,7 +82,7 @@ func Test_Docs_SearchCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				clearAgentEnvVars(t)
 				t.Setenv("CLAUDECODE", "1")
-				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 2,
 					Limit:        20,
 					Results: []api.DocsSearchItem{
@@ -99,7 +99,7 @@ func Test_Docs_SearchCommand(t *testing.T) {
 		"returns JSON results": {
 			CmdArgs: []string{"search", "Block Kit", "--output=json"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 2,
 					Limit:        20,
 					Results: []api.DocsSearchItem{
@@ -132,7 +132,7 @@ func Test_Docs_SearchCommand(t *testing.T) {
 		"returns JSON results with absolute URLs": {
 			CmdArgs: []string{"search", "test", "--output=json"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "test", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "test", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 1,
 					Limit:        20,
 					Results: []api.DocsSearchItem{
@@ -150,7 +150,7 @@ func Test_Docs_SearchCommand(t *testing.T) {
 		"returns empty results": {
 			CmdArgs: []string{"search", "nonexistent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "nonexistent", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "nonexistent", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 0,
 					Results:      []api.DocsSearchItem{},
 					Limit:        20,
@@ -163,47 +163,60 @@ func Test_Docs_SearchCommand(t *testing.T) {
 		"returns error on API failure": {
 			CmdArgs: []string{"search", "test"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "test", 20, "").Return(nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
+				cm.API.On("DocsSearch", mock.Anything, "test", 20, "", false).Return(nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrHTTPRequestFailed},
 		},
 		"returns error on API failure for JSON output": {
 			CmdArgs: []string{"search", "test", "--output=json"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "test", 20, "").Return(nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
+				cm.API.On("DocsSearch", mock.Anything, "test", 20, "", false).Return(nil, slackerror.New(slackerror.ErrHTTPRequestFailed))
 			},
 			ExpectedErrorStrings: []string{slackerror.ErrHTTPRequestFailed},
 		},
 		"passes custom limit": {
 			CmdArgs: []string{"search", "test", "--limit=5"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "test", 5, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "test", 5, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 0,
 					Results:      []api.DocsSearchItem{},
 					Limit:        5,
 				}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "test", 5, "")
+				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "test", 5, "", false)
 			},
 		},
 		"joins multiple arguments into query": {
 			CmdArgs: []string{"search", "Block", "Kit", "Element"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "Block Kit Element", 20, "").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "Block Kit Element", 20, "", false).Return(&api.DocsSearchResponse{
 					TotalResults: 0,
 					Results:      []api.DocsSearchItem{},
 					Limit:        20,
 				}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "Block Kit Element", 20, "")
+				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "Block Kit Element", 20, "", false)
 			},
+		},
+		"passes hide-pinned to API for text output": {
+			CmdArgs: []string{"search", "mcp", "--category=guides", "--hide-pinned"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.API.On("DocsSearch", mock.Anything, "mcp", 20, "guides", true).Return(&api.DocsSearchResponse{
+					TotalResults: 1,
+					Limit:        20,
+					Results: []api.DocsSearchItem{
+						{Title: "MCP server", URL: "/ai/slack-mcp-server"},
+					},
+				}, nil)
+			},
+			ExpectedStdoutOutputs: []string{"MCP server"},
 		},
 		"passes category to API for text output": {
 			CmdArgs: []string{"search", "chat.postMessage", "--category=reference"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "chat.postMessage", 20, "reference").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "chat.postMessage", 20, "reference", false).Return(&api.DocsSearchResponse{
 					TotalResults: 1,
 					Limit:        20,
 					Results: []api.DocsSearchItem{
@@ -215,13 +228,13 @@ func Test_Docs_SearchCommand(t *testing.T) {
 				`Displaying first 1 of 1 results for "chat.postMessage" in category "reference"`,
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "chat.postMessage", 20, "reference")
+				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "chat.postMessage", 20, "reference", false)
 			},
 		},
 		"includes category in zero results message": {
 			CmdArgs: []string{"search", "nonexistent", "--category=reference"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "nonexistent", 20, "reference").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "nonexistent", 20, "reference", false).Return(&api.DocsSearchResponse{
 					TotalResults: 0,
 					Results:      []api.DocsSearchItem{},
 					Limit:        20,
@@ -234,27 +247,27 @@ func Test_Docs_SearchCommand(t *testing.T) {
 		"passes category to API for json output": {
 			CmdArgs: []string{"search", "events", "--category=reference", "--output=json"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "events", 20, "reference").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "events", 20, "reference", false).Return(&api.DocsSearchResponse{
 					TotalResults: 0,
 					Results:      []api.DocsSearchItem{},
 					Limit:        20,
 				}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "events", 20, "reference")
+				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "events", 20, "reference", false)
 			},
 		},
 		"passes unknown category through to API": {
 			CmdArgs: []string{"search", "test", "--category=bogus"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.API.On("DocsSearch", mock.Anything, "test", 20, "bogus").Return(&api.DocsSearchResponse{
+				cm.API.On("DocsSearch", mock.Anything, "test", 20, "bogus", false).Return(&api.DocsSearchResponse{
 					TotalResults: 0,
 					Results:      []api.DocsSearchItem{},
 					Limit:        20,
 				}, nil)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "test", 20, "bogus")
+				cm.API.AssertCalled(t, "DocsSearch", mock.Anything, "test", 20, "bogus", false)
 			},
 		},
 		"opens browser with category filter": {
