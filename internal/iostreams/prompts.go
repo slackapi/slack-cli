@@ -19,6 +19,7 @@ package iostreams
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	lipgloss "charm.land/lipgloss/v2"
@@ -52,12 +53,17 @@ type PromptOptionsConfig interface {
 
 // ConfirmPromptConfig holds additional configs for a Confirm prompt
 type ConfirmPromptConfig struct {
-	Required bool // If a response is required
+	Default  bool        // The answer selected before any input
+	Flag     *pflag.Flag // The flag substitute for this prompt
+	Required bool        // If a response is required
 }
 
 // GetFlags returns all flags for the Confirm prompt
 func (cfg ConfirmPromptConfig) GetFlags() []*pflag.Flag {
-	return []*pflag.Flag{}
+	if cfg.Flag == nil {
+		return []*pflag.Flag{}
+	}
+	return []*pflag.Flag{cfg.Flag}
 }
 
 // IsRequired returns if a response is required
@@ -286,11 +292,14 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
 // the message
-func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, defaultValue bool) (bool, error) {
-	if !io.IsTTY() {
-		return false, errInteractivityFlags(ConfirmPromptConfig{}, message, nil)
+func (io *IOStreams) ConfirmPrompt(ctx context.Context, message string, cfg ConfirmPromptConfig) (bool, error) {
+	if cfg.Flag != nil && cfg.Flag.Changed {
+		return strconv.ParseBool(cfg.Flag.Value.String())
 	}
-	return confirmForm(io, ctx, message, defaultValue)
+	if !io.IsTTY() {
+		return false, errInteractivityFlags(cfg, message, nil)
+	}
+	return confirmForm(io, ctx, message, cfg.Default)
 }
 
 // InputPrompt prompts the user for a string value for the message, which can

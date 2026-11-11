@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/icon"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -785,7 +786,10 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 
 	if foundBreakingChange {
 		clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
-		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", false)
+		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", iostreams.ConfirmPromptConfig{
+			Default: false,
+			Flag:    clients.Config.Flags.Lookup("force"),
+		})
 		if err != nil {
 			return false, err
 		}
