@@ -215,6 +215,18 @@ func Test_Project_InitCommand(t *testing.T) {
 				assert.True(t, actualApp.IsNew())
 			},
 		},
+		"environment flag without app flag returns error": {
+			CmdArgs: []string{"--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupProjectInitCommandMocks(t, ctx, cm, cf)
+			},
+			ExpectedErrorStrings: []string{"The --environment flag requires the --app flag when used with init"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// Assert the project is not initialized
+				cm.Os.AssertNotCalled(t, "Getwd")
+				require.NotContains(t, cm.GetCombinedOutput(), "Project Initialization")
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		cmd := NewInitCommand(cf)
 		return cmd
