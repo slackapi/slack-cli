@@ -62,7 +62,7 @@ func NewLoginCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVarP(&deprecatedUserTokenArg, authFlagName, "", "", "provide a user token for pre-authenticated login")
 	_ = cmd.Flags().MarkHidden(authFlagName)
 
-	cmd.Flags().StringVarP(&tokenFlag, "token", "", "", "provide a token for a pre-authenticated login\n  use \"-\" to read the token from standard input")
+	cmd.Flags().StringVarP(&tokenFlag, "token", "", "", "provide a token for a pre-authenticated login\n  (use - to read from standard input)")
 
 	// Support login in promptless fashion
 	cmd.Flags().BoolVarP(&noPromptFlag, "no-prompt", "", false, "login without prompts using ticket and challenge code")

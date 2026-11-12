@@ -20,7 +20,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
-// stdinTokenValue is the --token value that reads the token from standard input
 const stdinTokenValue = "-"
 
 // ResolveTokenInput returns the token read from standard input when the value
@@ -33,7 +32,7 @@ func ResolveTokenInput(clients *shared.ClientFactory, value string) (string, err
 	if clients.IO.IsStdinTTY() {
 		return "", slackerror.New(slackerror.ErrMissingInput).
 			WithMessage("No token was provided on standard input").
-			WithRemediation("Pipe a token into the command, e.g. %s", style.Commandf("auth login --token - < token.txt", false))
+			WithRemediation("Pipe a token into the command, e.g. %s", style.Highlight("--token - < token.txt"))
 	}
 	token, err := clients.IO.ReadInAll()
 	if err != nil {

@@ -15,8 +15,11 @@
 package auth
 
 import (
-	"bytes"
+	"errors"
+	"io"
+	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -27,7 +30,7 @@ import (
 func Test_ResolveTokenInput(t *testing.T) {
 	tests := map[string]struct {
 		value         string
-		stdin         string
+		stdin         io.Reader
 		stdinTTY      bool
 		expectedToken string
 		expectedError string
@@ -42,7 +45,7 @@ func Test_ResolveTokenInput(t *testing.T) {
 		},
 		"reads the token from standard input": {
 			value:         "-",
-			stdin:         "xoxp-example\n",
+			stdin:         strings.NewReader("xoxp-example\n"),
 			expectedToken: "xoxp-example",
 		},
 		"errors when standard input is a terminal": {
@@ -50,9 +53,14 @@ func Test_ResolveTokenInput(t *testing.T) {
 			stdinTTY:      true,
 			expectedError: "No token was provided on standard input",
 		},
+		"errors when standard input cannot be read": {
+			value:         "-",
+			stdin:         iotest.ErrReader(errors.New("read failed")),
+			expectedError: "read failed",
+		},
 		"errors when standard input is empty": {
 			value:         "-",
-			stdin:         "  \n",
+			stdin:         strings.NewReader("  \n"),
 			expectedError: "No token was provided on standard input",
 		},
 	}
@@ -60,7 +68,9 @@ func Test_ResolveTokenInput(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("IsStdinTTY").Return(tc.stdinTTY)
-			clientsMock.IO.Stdin = bytes.NewBufferString(tc.stdin)
+			if tc.stdin != nil {
+				clientsMock.IO.Stdin = tc.stdin
+			}
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			token, err := ResolveTokenInput(clients, tc.value)
