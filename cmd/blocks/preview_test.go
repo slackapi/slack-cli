@@ -85,6 +85,16 @@ func Test_Blocks_PreviewCommand(t *testing.T) {
 			CmdArgs:              []string{"--blocks", ""},
 			ExpectedErrorStrings: []string{slackerror.ErrMissingInput, "No blocks were provided"},
 		},
+		"errors when the token is also read from stdin": {
+			CmdArgs: []string{"--blocks", "-"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cf.Config.TokenFromStdin = true
+			},
+			ExpectedErrorStrings: []string{slackerror.ErrMismatchedFlags, "cannot both read from standard input"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Browser.AssertNotCalled(t, "OpenURL", mock.Anything)
+			},
+		},
 		"errors when reading from stdin on an interactive terminal": {
 			CmdArgs: []string{"--blocks", "-"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

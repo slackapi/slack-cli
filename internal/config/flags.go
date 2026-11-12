@@ -44,7 +44,7 @@ func (c *Config) InitializeGlobalFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().BoolVarP(&c.SlackDevFlag, "slackdev", "", false, "shorthand for --apihost=https://dev.slack.com")
 	// TODO - next semver MAJOR can consider a new shorthand flag, right now -t and -T are used by other commands
 	cmd.PersistentFlags().StringVarP(&c.TeamFlag, "team", "w", "", "select workspace or organization by team name or ID")
-	cmd.PersistentFlags().StringVarP(&c.TokenFlag, "token", "", "", "set the access token associated with a team")
+	cmd.PersistentFlags().StringVarP(&c.TokenFlag, "token", "", "", "set the access token associated with a team\n  (use - to read from standard input)")
 	cmd.PersistentFlags().BoolVarP(&c.DebugEnabled, "verbose", "v", false, "print debug logging and additional info")
 	cmd.PersistentFlags().StringVarP(&c.DeprecatedWorkspaceFlag, "workspace", "", "", "select workspace or organization by domain name or team ID")
 

@@ -64,6 +64,7 @@ type Config struct {
 	SlackTestTraceFlag      bool
 	TeamFlag                string
 	TokenFlag               string
+	TokenFromStdin          bool
 
 	// Feature experiments
 	ExperimentsFlag []string
