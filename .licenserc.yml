@@ -20,6 +20,7 @@ header:
 
   paths-ignore:
     - '.circleci'
+    - '.gitattributes'
     - '.gitignore'
     - '.github'
     - '.vscode'
