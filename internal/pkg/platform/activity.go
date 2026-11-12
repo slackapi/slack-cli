@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -162,9 +163,7 @@ func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, tok
 	latestTimestamp := args.MinimumDateCreated
 
 	// process in reverse
-	for i := len(activities) - 1; i >= 0; i-- {
-		var activity = activities[i]
-
+	for _, activity := range slices.Backward(activities) {
 		if activity.Created > latestTimestamp {
 			latestTimestamp = activity.Created
 		}
