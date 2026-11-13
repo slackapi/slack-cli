@@ -121,6 +121,10 @@ func resolveTeamAuth(ctx context.Context, clients *shared.ClientFactory) (*types
 
 func resolveBlocksInput(clients *shared.ClientFactory, flagValue string, flagChanged bool) (string, error) {
 	switch {
+	case flagChanged && flagValue == "-" && clients.Config.TokenFromStdin:
+		return "", slackerror.New(slackerror.ErrMismatchedFlags).
+			WithMessage("The --blocks and --token flags cannot both read from standard input").
+			WithRemediation("Pass the blocks with the flag instead, e.g. %s", style.Highlight(`--blocks '[{"type":"divider"}]'`))
 	case flagChanged && flagValue == "-":
 		if clients.IO.IsStdinTTY() {
 			return "", slackerror.New(slackerror.ErrMissingInput).

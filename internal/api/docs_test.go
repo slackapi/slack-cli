@@ -29,6 +29,7 @@ func Test_buildDocsSearchURL(t *testing.T) {
 		query                 string
 		limit                 int
 		category              string
+		hidePinned            bool
 		expectedURL           string
 		expectedErrorContains string
 	}{
@@ -58,6 +59,14 @@ func Test_buildDocsSearchURL(t *testing.T) {
 			category:    "",
 			expectedURL: "https://docs.slack.dev/api/v1/search?query=test&limit=20",
 		},
+		"appends pin=false when hiding pinned results": {
+			baseURL:     "https://docs.slack.dev",
+			query:       "mcp",
+			limit:       5,
+			category:    "guides",
+			hidePinned:  true,
+			expectedURL: "https://docs.slack.dev/api/v1/search?query=mcp&limit=5&category=guides&pin=false",
+		},
 		"returns error for invalid base URL": {
 			baseURL:               "ht!tp://invalid",
 			query:                 "test",
@@ -67,7 +76,7 @@ func Test_buildDocsSearchURL(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			url, err := buildDocsSearchURL(tc.baseURL, tc.query, tc.limit, tc.category)
+			url, err := buildDocsSearchURL(tc.baseURL, tc.query, tc.limit, tc.category, tc.hidePinned)
 
 			if tc.expectedErrorContains != "" {
 				require.Error(t, err)
@@ -119,6 +128,7 @@ func Test_Client_DocsSearch(t *testing.T) {
 		query                 string
 		limit                 int
 		category              string
+		hidePinned            bool
 		response              string
 		statusCode            int
 		expectedQuerystring   string
@@ -160,6 +170,19 @@ func Test_Client_DocsSearch(t *testing.T) {
 						URL:   "/reference/methods/chat.postMessage",
 					},
 				},
+			},
+		},
+		"sends pin=false when hiding pinned results": {
+			query:               "mcp",
+			limit:               5,
+			category:            "guides",
+			hidePinned:          true,
+			response:            `{"total_results":0,"limit":5,"results":[]}`,
+			expectedQuerystring: "query=mcp&limit=5&category=guides&pin=false",
+			expectedResponse: &DocsSearchResponse{
+				TotalResults: 0,
+				Limit:        5,
+				Results:      []DocsSearchItem{},
 			},
 		},
 		"returns empty results": {
@@ -211,7 +234,7 @@ func Test_Client_DocsSearch(t *testing.T) {
 			docsBaseURL = c.Host()
 			defer func() { docsBaseURL = originalURL }()
 
-			result, err := c.DocsSearch(ctx, tc.query, tc.limit, tc.category)
+			result, err := c.DocsSearch(ctx, tc.query, tc.limit, tc.category, tc.hidePinned)
 
 			if tc.expectedErrorContains != "" {
 				require.Error(t, err)
