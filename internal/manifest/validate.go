@@ -100,9 +100,9 @@ func HandleConnectorApprovalRequired(ctx context.Context, clients *shared.Client
 	}
 
 	approvalRequiredErrors := slackerror.ErrorDetails{}
-	for i := len(slackError.Details) - 1; i >= 0; i-- { // Iterate in reverse to remove elements in place
-		if slackError.Details[i].Code == slackerror.ErrConnectorApprovalRequired {
-			approvalRequiredErrors = append(approvalRequiredErrors, slackError.Details[i])
+	for i, detail := range slices.Backward(slackError.Details) { // Iterate in reverse to remove elements in place
+		if detail.Code == slackerror.ErrConnectorApprovalRequired {
+			approvalRequiredErrors = append(approvalRequiredErrors, detail)
 			slackError.Details = slices.Delete(slackError.Details, i, i+1)
 		}
 	}
