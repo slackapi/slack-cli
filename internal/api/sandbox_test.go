@@ -141,6 +141,33 @@ func TestClient_ListSandboxes_WithStatusFilter(t *testing.T) {
 	require.Equal(t, "archived", sandboxes[0].Status)
 }
 
+func TestClient_SignupDeveloperProgramVerified_SendsAcceptTOS(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	c, teardown := NewFakeClient(t, FakeClientParams{
+		ExpectedMethod:  sandboxSignupVerifiedMethod,
+		ExpectedRequest: "accept_tos=true&country_option=US&first_name=Ada&last_name=Lovelace&token=token",
+		Response:        `{"ok":true,"developer_id":"D123","is_eligible_to_provision_sandboxes":true}`,
+	})
+	defer teardown()
+	resp, err := c.SignupDeveloperProgramVerified(ctx, "token", SignupRequest{
+		FirstName:            "Ada",
+		LastName:             "Lovelace",
+		CountryOption:        "US",
+		AcceptTermsOfService: true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "D123", resp.DeveloperID)
+	require.True(t, resp.IsEligibleToProvisionSandboxes)
+}
+
+func TestClient_SignupDeveloperProgramVerified_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	verifyCommonErrorCases(t, sandboxSignupVerifiedMethod, func(c *Client) error {
+		_, err := c.SignupDeveloperProgramVerified(ctx, "token", SignupRequest{AcceptTermsOfService: true})
+		return err
+	})
+}
+
 func TestClient_ListSandboxes_CommonErrors(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, sandboxListMethod, func(c *Client) error {
