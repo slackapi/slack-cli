@@ -33,7 +33,8 @@ slack project init [flags]
 ## Flags
 
 ```
-  -h, --help   help for init
+  -E, --environment string   environment to save existing app (local, deployed)
+  -h, --help                 help for init
 ```
 
 ## Global flags
@@ -48,6 +49,7 @@ slack project init [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 

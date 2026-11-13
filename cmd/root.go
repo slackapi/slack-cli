@@ -278,6 +278,15 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		return err
 	}
 
+	if clients.Config.TokenFlag == "-" {
+		token, err := auth.ResolveTokenInput(clients, clients.Config.TokenFlag)
+		if err != nil {
+			return err
+		}
+		clients.Config.TokenFlag = token
+		clients.Config.TokenFromStdin = true
+	}
+
 	// Set the preference
 	trustSources, err := clients.Config.SystemConfig.GetTrustUnknownSources(ctx)
 	if err != nil {

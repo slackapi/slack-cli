@@ -1,6 +1,6 @@
 # Slack CLI <img src="https://avatars.githubusercontent.com/t/6592032" alt="Slack CLI logo" style="height: 1em; max-width: 100%" /> 
 
-[![tests](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml)
+[![tests](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/slackapi/slack-cli/actions/workflows/tests.yml?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/slackapi/slack-cli/branch/main/graph/badge.svg?token=G5TU59IV9I)](https://codecov.io/gh/slackapi/slack-cli)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/slackapi/slack-cli/tree/main.svg?style=shield&circle-token=CCIPRJ_K7pGxh2PtW5AurUdJTKWpb_2845116e5a6f641726a73654f618e450b0c4e95b)](https://dl.circleci.com/status-badge/redirect/gh/slackapi/slack-cli/tree/main)
 

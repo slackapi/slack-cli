@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -156,6 +157,57 @@ func TestExecuteContext(t *testing.T) {
 			for _, unexpectedOutputs := range tc.unexpectedOutputs {
 				require.NotContains(t, output, unexpectedOutputs)
 			}
+		})
+	}
+}
+
+func Test_InitConfig(t *testing.T) {
+	tests := map[string]struct {
+		tokenFlag              string
+		stdin                  string
+		stdinTTY               bool
+		expectedToken          string
+		expectedTokenFromStdin bool
+		expectedError          string
+	}{
+		"keeps a token passed with the flag": {
+			tokenFlag:     "xoxp-example",
+			expectedToken: "xoxp-example",
+		},
+		"reads the token from standard input": {
+			tokenFlag:              "-",
+			stdin:                  "xoxp-example\n",
+			expectedToken:          "xoxp-example",
+			expectedTokenFromStdin: true,
+		},
+		"errors when the token is read from a terminal": {
+			tokenFlag:     "-",
+			stdinTTY:      true,
+			expectedError: slackerror.ErrMissingInput,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.On("IsStdinTTY").Return(tc.stdinTTY)
+			clientsMock.IO.Stdin = bytes.NewBufferString(tc.stdin)
+			clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slack.com")
+			clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com")
+			clientsMock.Auth.On("MapAuthTokensToDomains", mock.Anything).Return("")
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clients.Config.TokenFlag = tc.tokenFlag
+
+			err := InitConfig(ctx, clients, &cobra.Command{})
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedToken, clients.Config.TokenFlag)
+			assert.Equal(t, tc.expectedTokenFromStdin, clients.Config.TokenFromStdin)
 		})
 	}
 }
