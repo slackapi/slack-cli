@@ -50,6 +50,8 @@ type TrackingManager interface {
 	SetAppTeamID(id string)
 	SetAppUserID(id string)
 	SetAppTemplate(template string)
+	SetAppTemplateShortcut(shortcut string)
+	SetAppTemplateSubdir(subdir string)
 }
 
 type EventTracker struct {
@@ -146,6 +148,20 @@ func (e *EventTracker) SetAppTemplate(template string) {
 	e.setSessionData(data)
 }
 
+// SetAppTemplateShortcut sets the category shortcut used to select an app template in this CLI execution for metrics
+func (e *EventTracker) SetAppTemplateShortcut(shortcut string) {
+	data := e.getSessionData()
+	data.App.TemplateShortcut = shortcut
+	e.setSessionData(data)
+}
+
+// SetAppTemplateSubdir sets the subdirectory of the app template used in this CLI execution for metrics
+func (e *EventTracker) SetAppTemplateSubdir(subdir string) {
+	data := e.getSessionData()
+	data.App.TemplateSubdir = subdir
+	e.setSessionData(data)
+}
+
 // cleanSessionData ensures every string value the provided object has PII redacted
 func (e *EventTracker) cleanSessionData(data EventData) EventData {
 	if len(data.ErrorMessage) > 0 {
@@ -153,6 +169,9 @@ func (e *EventTracker) cleanSessionData(data EventData) EventData {
 	}
 	if len(data.App.Template) > 0 {
 		data.App.Template = goutils.RedactPII(data.App.Template)
+	}
+	if len(data.App.TemplateSubdir) > 0 {
+		data.App.TemplateSubdir = goutils.RedactPII(data.App.TemplateSubdir)
 	}
 
 	return data

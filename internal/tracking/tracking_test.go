@@ -64,6 +64,18 @@ func Test_Tracking_cleanSessionData(t *testing.T) {
 				},
 			},
 		},
+		"should redact app template subdir": {
+			input: EventData{
+				App: AppEventData{
+					TemplateSubdir: "apps/my-xapp-example",
+				},
+			},
+			expectedOutput: EventData{
+				App: AppEventData{
+					TemplateSubdir: "apps/my-...",
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -271,6 +283,24 @@ func Test_Tracking_SetSessionData(t *testing.T) {
 				return e.getSessionData().App.Template
 			},
 			value: "slack-samples/deno-hello-world",
+		},
+		"app template shortcut can be retrieved": {
+			setterFunc: func(e *EventTracker, value string) {
+				e.SetAppTemplateShortcut(value)
+			},
+			getterFunc: func(e *EventTracker) string {
+				return e.getSessionData().App.TemplateShortcut
+			},
+			value: "agent",
+		},
+		"app template subdir can be retrieved": {
+			setterFunc: func(e *EventTracker, value string) {
+				e.SetAppTemplateSubdir(value)
+			},
+			getterFunc: func(e *EventTracker) string {
+				return e.getSessionData().App.TemplateSubdir
+			},
+			value: "claude-agent-sdk",
 		},
 	}
 
