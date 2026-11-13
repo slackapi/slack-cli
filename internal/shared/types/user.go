@@ -73,4 +73,7 @@ type UserInfo struct {
 type UserProfile struct {
 	DisplayName string `json:"display_name"`
 	Email       string `json:"email,omitempty"`
+	FirstName   string `json:"first_name,omitempty"`
+	LastName    string `json:"last_name,omitempty"`
+	RealName    string `json:"real_name,omitempty"`
 }
