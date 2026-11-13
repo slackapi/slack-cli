@@ -292,6 +292,10 @@ jobs:
             fi
 
             binaries=$(find << parameters.artifact_dir >>/slack_* -maxdepth 1 -not -type d)
+            if [ "<< parameters.production >>" != "false" ]; then
+              # Production releases attach versioned archives only. The dev and latest archives still upload to S3 from the workspace.
+              binaries=$(find << parameters.artifact_dir >>/slack_* -maxdepth 1 -not -type d -not -name "slack_cli_dev_*" -not -name "slack_cli_latest_*")
+            fi
             for binary in $binaries; do
               curl -X POST \
                 -H "Authorization: token $GITHUB_RELEASE_TOKEN" \
