@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/cmd/app"
-	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -29,8 +28,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
-
-const linkAppConfirmPromptText = "Do you want to add an existing app?"
 
 // NewInitCommand returns a Cobra command to initialize projects with Slack CLI support
 func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -57,13 +54,17 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 			"- Python:  Supported",
 			"",
 			"Adds an existing app to your project (optional):",
-			"- Prompts to add an existing app from app settings",
+			"- Uses the --app flag to add an existing app from app settings",
 			"- Runs the command " + style.Commandf("app link", false),
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
 				Meaning: "Initialize a project",
 				Command: "init",
+			},
+			{
+				Meaning: "Initialize a project with an existing app",
+				Command: "init --app A0123456789 --team T0123456789 --environment local",
 			},
 		}),
 		Args: cobra.MaximumNArgs(0),
@@ -84,6 +85,10 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 // and configures flags
 func projectInitCommandPreRunE(clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
 	clients.Config.SetFlags(cmd)
+	if clients.Config.Flags.Changed("environment") && !clients.Config.Flags.Changed("app") {
+		return slackerror.New(slackerror.ErrMismatchedFlags).
+			WithMessage("The --environment flag requires the --app flag when used with init")
+	}
 	return nil
 }
 
@@ -112,15 +117,9 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	// Existing projects initialized always default to config.ManifestSourceLocal.
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
-	// Prompt to add an existing app to the project
-	app.LinkAppHeaderSection(ctx, clients)
-	proceed, err := clients.IO.ConfirmPrompt(ctx, linkAppConfirmPromptText, iostreams.ConfirmPromptConfig{
-		Default: true,
-	})
-	if err != nil {
-		return err
-	}
-	if proceed {
+	// Add an existing app to the project when the app flag is provided
+	if clients.Config.Flags.Changed("app") {
+		app.LinkAppHeaderSection(ctx, clients)
 		linkedApp := &types.App{}
 		err = app.LinkExistingApp(ctx, clients, linkedApp)
 		if err != nil {
@@ -153,7 +152,7 @@ func printNextStepSection(ctx context.Context, clients *shared.ClientFactory, pr
 
 	// Output about general usage
 	secondaryOutput = append(secondaryOutput,
-		"Add more existing apps to your project with "+style.Commandf("app link", true),
+		"Add existing apps to your project with "+style.Commandf("app link", true),
 		"Start developing and see changes in real-time with "+style.Commandf("run", true),
 		"When you're ready to deploy for production with "+style.Commandf("deploy", true),
 	)

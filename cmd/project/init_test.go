@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
@@ -55,14 +56,14 @@ func Test_Project_InitCommand(t *testing.T) {
 		"init a project and do not link an existing app": {
 			CmdArgs: []string{},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				// Prompts are possible but none are expected
+				cm.IO.On("IsTTY").Return(true)
 				setupProjectInitCommandMocks(t, ctx, cm, cf)
-				// Do not link an existing app
-				cm.IO.On("ConfirmPrompt", mock.Anything, linkAppConfirmPromptText, mock.Anything).Return(false, nil)
 			},
 			ExpectedStdoutOutputs: []string{
-				"Project Initialization", // Assert section header
-				"App Link",               // Assert section header
-				"Next Steps",             // Assert section header
+				"Project Initialization",                 // Assert section header
+				"Next Steps",                             // Assert section header
+				"Add existing apps to your project with", // Assert link hint
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				// Assert installing project dependencies
@@ -72,14 +73,11 @@ func Test_Project_InitCommand(t *testing.T) {
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", ".gitignore"))
 				require.Contains(t, output, "Added "+filepath.Join("project-name", ".slack", "hooks.json"))
 				require.Contains(t, output, `Updated app manifest source to "project" (local)`)
-				// Assert prompt to add existing apps was called
-				cm.IO.AssertCalled(
-					t,
-					"ConfirmPrompt",
-					mock.Anything,
-					linkAppConfirmPromptText,
-					mock.Anything,
-				)
+				// Assert no prompts to add existing apps
+				require.NotContains(t, output, "App Link")
+				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 				// Assert Trace
 				cm.IO.AssertCalled(
 					t,
@@ -88,17 +86,10 @@ func Test_Project_InitCommand(t *testing.T) {
 					slacktrace.ProjectInitSuccess,
 					mock.Anything,
 				)
-				cm.IO.AssertNotCalled(
-					t,
-					"PrintTrace",
-					mock.Anything,
-					slacktrace.AppLinkStart,
-					mock.Anything,
-				)
 			},
 		},
-		"init a project and link an existing app": {
-			CmdArgs: []string{},
+		"init a project and link an existing app from flags": {
+			CmdArgs: []string{"--app", mockLinkAppID1, "--team", mockLinkSlackAuth2.TeamID, "--environment", "local"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Mocks auths to match against team and app
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
@@ -107,35 +98,28 @@ func Test_Project_InitCommand(t *testing.T) {
 				}, nil)
 				// Default setup
 				setupProjectInitCommandMocks(t, ctx, cm, cf)
-				// Link an existing app
-				cm.IO.On("ConfirmPrompt", mock.Anything, linkAppConfirmPromptText, mock.Anything).Return(true, nil)
-				// Mock prompt for team
+				// Mock team prompt answered with the team flag
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Select the existing app team",
 					mock.Anything,
-					mock.Anything,
-					mock.Anything,
+					mock.MatchedBy(func(cfg iostreams.SelectPromptConfig) bool {
+						return cfg.Flag != nil && cfg.Flag.Name == "team" && cfg.Flag.Value.String() == mockLinkSlackAuth2.TeamID
+					}),
 				).Return(iostreams.SelectPromptResponse{
-					Prompt: true,
-					Index:  1,
-					Option: mockLinkSlackAuth2.TeamDomain,
+					Flag:   true,
+					Option: mockLinkSlackAuth2.TeamID,
 				}, nil)
-				// Mock prompt for App ID
-				cm.IO.On("InputPrompt",
-					mock.Anything,
-					"Enter the existing app ID",
-					mock.Anything,
-				).Return(mockLinkAppID1, nil)
-				// Mock prompt for environment
+				// Mock environment prompt answered with the environment flag
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Choose the app environment",
 					mock.Anything,
-					mock.Anything,
-					mock.Anything,
+					mock.MatchedBy(func(cfg iostreams.SelectPromptConfig) bool {
+						return cfg.Flag != nil && cfg.Flag.Name == "environment" && cfg.Flag.Value.String() == "local"
+					}),
 				).Return(iostreams.SelectPromptResponse{
-					Prompt: true,
+					Flag:   true,
 					Option: "local",
 				}, nil)
 				// Mock status of app for footer
@@ -152,34 +136,9 @@ func Test_Project_InitCommand(t *testing.T) {
 				"Next Steps",             // Assert section header
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				// Assert prompt to add existing apps was called
-				cm.IO.AssertCalled(t, "ConfirmPrompt",
-					mock.Anything,
-					linkAppConfirmPromptText,
-					mock.Anything,
-				)
-				// Assert prompt for team
-				cm.IO.AssertCalled(t, "SelectPrompt",
-					mock.Anything,
-					"Select the existing app team",
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-				)
-				// Assert prompt for app
-				cm.IO.AssertCalled(t, "InputPrompt",
-					mock.Anything,
-					"Enter the existing app ID",
-					mock.Anything,
-				)
-				// Assert prompt for environment
-				cm.IO.AssertCalled(t, "SelectPrompt",
-					mock.Anything,
-					"Choose the app environment",
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-				)
+				// Assert no prompts for input
+				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, mock.Anything, mock.Anything)
 				// Assert trace
 				cm.IO.AssertCalled(
 					t,
@@ -204,73 +163,68 @@ func Test_Project_InitCommand(t *testing.T) {
 				assert.Equal(t, expectedApp, actualApp)
 			},
 		},
-		"init a project and link an existing app with the environment flag": {
-			CmdArgs: []string{"--environment", "deployed"},
+		"init a project and continue after failing to link an existing app": {
+			CmdArgs: []string{"--app", mockLinkAppID1, "--environment", "local"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				// Mocks auths to match against team and app
+				// Mocks a single auth that is selected without a prompt
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
-					mockLinkSlackAuth2,
 					mockLinkSlackAuth1,
 				}, nil)
 				// Default setup
 				setupProjectInitCommandMocks(t, ctx, cm, cf)
-				// Link an existing app
-				cm.IO.On("ConfirmPrompt", mock.Anything, linkAppConfirmPromptText, mock.Anything).Return(true, nil)
-				// Mock prompt for team
-				cm.IO.On("SelectPrompt",
-					mock.Anything,
-					"Select the existing app team",
-					mock.Anything,
-					mock.Anything,
-				).Return(iostreams.SelectPromptResponse{
-					Prompt: true,
-					Index:  1,
-					Option: mockLinkSlackAuth2.TeamDomain,
-				}, nil)
-				// Mock prompt for App ID
-				cm.IO.On("InputPrompt",
-					mock.Anything,
-					"Enter the existing app ID",
-					mock.Anything,
-				).Return(mockLinkAppID1, nil)
-				// Mock prompt for environment answered with the environment flag
+				// Mock environment prompt answered with the environment flag
 				cm.IO.On("SelectPrompt",
 					mock.Anything,
 					"Choose the app environment",
 					mock.Anything,
-					mock.MatchedBy(func(cfg iostreams.SelectPromptConfig) bool {
-						return cfg.Flag != nil && cfg.Flag.Name == "environment" && cfg.Flag.Value.String() == "deployed"
-					}),
+					mock.Anything,
 				).Return(iostreams.SelectPromptResponse{
 					Flag:   true,
-					Option: "deployed",
+					Option: "local",
 				}, nil)
-				// Mock status of app for footer
+				// Mock an app that cannot be found
 				cm.API.On("GetAppStatus",
 					mock.Anything,
-					mockLinkSlackAuth2.Token,
+					mockLinkSlackAuth1.Token,
 					[]string{mockLinkAppID1},
-					mockLinkSlackAuth2.TeamID,
-				).Return(api.GetAppStatusResult{}, nil)
+					mockLinkSlackAuth1.TeamID,
+				).Return(api.GetAppStatusResult{}, slackerror.New(slackerror.ErrAppNotFound))
+			},
+			ExpectedOutputs: []string{
+				slackerror.ErrAppNotFound, // Assert error is displayed
 			},
 			ExpectedStdoutOutputs: []string{
-				"Project Initialization", // Assert section header
-				"App Link",               // Assert section header
-				"Next Steps",             // Assert section header
+				"App Link",   // Assert section header
+				"Next Steps", // Assert section header
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				// Assert app written to file
-				expectedApp := types.App{
-					AppID:      mockLinkAppID1,
-					TeamDomain: mockLinkSlackAuth2.TeamDomain,
-					TeamID:     mockLinkSlackAuth2.TeamID,
-				}
-				actualApp, err := cm.AppClient.GetDeployed(
+				// Assert init still succeeds
+				cm.IO.AssertCalled(
+					t,
+					"PrintTrace",
+					mock.Anything,
+					slacktrace.ProjectInitSuccess,
+					mock.Anything,
+				)
+				// Assert no app written to file
+				actualApp, err := cm.AppClient.GetLocal(
 					ctx,
-					mockLinkSlackAuth2.TeamID,
+					mockLinkSlackAuth1.TeamID,
 				)
 				require.NoError(t, err)
-				assert.Equal(t, expectedApp, actualApp)
+				assert.True(t, actualApp.IsNew())
+			},
+		},
+		"environment flag without app flag returns error": {
+			CmdArgs: []string{"--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupProjectInitCommandMocks(t, ctx, cm, cf)
+			},
+			ExpectedErrorStrings: []string{"The --environment flag requires the --app flag when used with init"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				// Assert the project is not initialized
+				cm.Os.AssertNotCalled(t, "Getwd")
+				require.NotContains(t, cm.GetCombinedOutput(), "Project Initialization")
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
