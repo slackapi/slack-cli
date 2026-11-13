@@ -92,6 +92,7 @@ func (c *ManifestClient) getManifestFromFile(sdkConfig hooks.SDKCLIConfig) (type
 	if err != nil {
 		return sl, slackerror.New("Failed to read manifest file").
 			WithRootCause(err).
+			WithRemediation("Add a \"%s\" file to the project root or define a \"get-manifest\" hook in \"%s\"", manifestFileName, config.GetProjectHooksJSONFilePath()).
 			WithCode(slackerror.ErrNoFile)
 	}
 	if err := json.Unmarshal(data, &sl); err != nil {
