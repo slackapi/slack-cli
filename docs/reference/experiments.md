@@ -7,11 +7,13 @@ The Slack CLI has an experiment (`-e`) flag behind which we put features current
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
 - `lipgloss`: shows pretty styles.
+- `sandbox-signup`: enables the `slack sandbox signup` command to join the Slack Developer Program with an existing login.
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
 
+- **November 2026**: Added the `sandbox-signup` experiment to sign up for the Slack Developer Program from the Slack CLI.
 - **September 2026**: Concluded the `manifest-sync` experiment with full support for two-way manifest sync now enabled by default in the Slack CLI.
 - **August 2026**: Concluded the `set-icon` experiment; The Slack CLI now offers full support for icon upload on all app types by default.
 - **July 2026**: Added the `manifest-sync` experiment to resolve changed app manifest values between a project and app settings.

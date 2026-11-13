@@ -26,16 +26,34 @@ import (
 )
 
 const (
-	sandboxCreateMethod = "enterprise.signup.createDevOrg"
-	sandboxDeleteMethod = "developer.sandbox.delete"
-	sandboxListMethod   = "developer.sandbox.list"
+	sandboxCreateMethod         = "enterprise.signup.createDevOrg"
+	sandboxDeleteMethod         = "developer.sandbox.delete"
+	sandboxListMethod           = "developer.sandbox.list"
+	sandboxSignupVerifiedMethod = "developer.account.createVerified"
 )
+
+// SignupRequest contains the fields for Developer Program signup
+type SignupRequest struct {
+	FirstName              string
+	LastName               string
+	PostalCode             string
+	CountryOption          string
+	NewsletterSubscription bool
+	AcceptTermsOfService   bool
+}
+
+// SignupVerifiedResponse contains the response from verified Developer Program signup
+type SignupVerifiedResponse struct {
+	DeveloperID                    string `json:"developer_id"`
+	IsEligibleToProvisionSandboxes bool   `json:"is_eligible_to_provision_sandboxes"`
+}
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
+	SignupDeveloperProgramVerified(ctx context.Context, token string, req SignupRequest) (*SignupVerifiedResponse, error)
 }
 
 type createSandboxResponse struct {
@@ -164,4 +182,49 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	}
 
 	return resp.Sandboxes, nil
+}
+
+type signupDeveloperProgramVerifiedResponse struct {
+	extendedBaseResponse
+	SignupVerifiedResponse
+}
+
+// SignupDeveloperProgramVerified signs the authenticated user up for the Slack Developer Program.
+// The email address of the developer account is derived from the token, so no email verification is needed.
+func (c *Client) SignupDeveloperProgramVerified(ctx context.Context, token string, req SignupRequest) (*SignupVerifiedResponse, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.SignupDeveloperProgramVerified")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("first_name", req.FirstName)
+	values.Add("last_name", req.LastName)
+	if req.PostalCode != "" {
+		values.Add("postal_code", req.PostalCode)
+	}
+	if req.CountryOption != "" {
+		values.Add("country_option", req.CountryOption)
+	}
+	if req.NewsletterSubscription {
+		values.Add("newsletter_subscription", "true")
+	}
+	values.Add("accept_tos", strconv.FormatBool(req.AcceptTermsOfService))
+
+	b, err := c.postForm(ctx, sandboxSignupVerifiedMethod, values)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := signupDeveloperProgramVerifiedResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxSignupVerifiedMethod)
+	}
+
+	if !resp.Ok {
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxSignupVerifiedMethod)
+	}
+
+	return &resp.SignupVerifiedResponse, nil
 }

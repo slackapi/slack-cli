@@ -230,6 +230,14 @@ func (m *APIMock) ListSandboxes(ctx context.Context, token string, status string
 	return args.Get(0).([]types.Sandbox), args.Error(1)
 }
 
+func (m *APIMock) SignupDeveloperProgramVerified(ctx context.Context, token string, req SignupRequest) (*SignupVerifiedResponse, error) {
+	args := m.Called(ctx, token, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*SignupVerifiedResponse), args.Error(1)
+}
+
 // DatastoresClient
 
 func (m *APIMock) AppsDatastorePut(ctx context.Context, token string, request types.AppDatastorePut) (types.AppDatastorePutResult, error) {
