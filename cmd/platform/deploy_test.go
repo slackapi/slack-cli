@@ -231,6 +231,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 				"./deployer.sh: No such file or directory",
 				"./deployer.sh: not found",
 				"no such file or directory: ./deployer.sh",
+				"Unknown command: ./deployer.sh",
 			},
 		},
 		"echos stdout output to standard out": {
@@ -238,7 +239,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 			expectedStdout: "example_output_goes_here",
 		},
 		"echos stderr output to standard err": {
-			command:        ">&2 echo 'uhoh'",
+			command:        "echo 'uhoh' >&2",
 			expectedStderr: []string{"uhoh"},
 		},
 		"works well with shell built ins": {
