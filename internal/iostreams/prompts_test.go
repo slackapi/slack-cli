@@ -194,10 +194,20 @@ func TestErrInteractivityFlags(t *testing.T) {
 			contains: []string{"not a TTY"},
 		},
 		"one flag suggests the flag name": {
+			cfg: SelectPromptConfig{
+				Flag: &pflag.Flag{Name: "team"},
+			},
+			contains: []string{"Try running the command with the `--team` flag included"},
+		},
+		"password flag suggests an interactive terminal first": {
 			cfg: PasswordPromptConfig{
 				Flag: &pflag.Flag{Name: "token"},
 			},
-			contains: []string{"--token"},
+			contains: []string{
+				"Run this command in an interactive terminal to enter the value with hidden input",
+				"The `--token` flag also works, but can leave the value in shell history",
+			},
+			excludes: []string{"Try running the command with"},
 		},
 		"multiple flags lists all flag names": {
 			cfg: SelectPromptConfig{Flags: []*pflag.Flag{
