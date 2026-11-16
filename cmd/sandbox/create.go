@@ -60,12 +60,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [flags]",
 		Short: "Create a developer sandbox",
-		Long: strings.Join([]string{
-			"Create a new Slack developer sandbox.",
-			"",
-			"To get started, log in to a Slack account that matches the",
-			"email address you used to sign up for the Slack Developer Program.",
-		}, "\n"),
+		Long:  `Create a new Slack developer sandbox`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox create --name test-box", Meaning: "Create a sandbox named test-box"},
 			{Command: "sandbox create --name test-box --password mypass", Meaning: "Create a sandbox using password sign-in"},
