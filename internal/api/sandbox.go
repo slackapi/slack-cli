@@ -42,10 +42,9 @@ type SignupRequest struct {
 	AcceptTermsOfService   bool
 }
 
-// SignupVerifiedResponse contains the response from verified Developer Program signup
-type SignupVerifiedResponse struct {
-	DeveloperID                    string `json:"developer_id"`
-	IsEligibleToProvisionSandboxes bool   `json:"is_eligible_to_provision_sandboxes"`
+// SignupResponse contains the response from Developer Program signup
+type SignupResponse struct {
+	DeveloperID string `json:"developer_id"`
 }
 
 // SandboxClient is the interface for sandbox-related API calls
@@ -53,7 +52,7 @@ type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
-	SignupDeveloperProgramVerified(ctx context.Context, token string, req SignupRequest) (*SignupVerifiedResponse, error)
+	Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error)
 }
 
 type createSandboxResponse struct {
@@ -184,16 +183,16 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	return resp.Sandboxes, nil
 }
 
-type signupDeveloperProgramVerifiedResponse struct {
+type signupAPIResponse struct {
 	extendedBaseResponse
-	SignupVerifiedResponse
+	SignupResponse
 }
 
-// SignupDeveloperProgramVerified signs the authenticated user up for the Slack Developer Program.
+// Signup signs the authenticated user up for the Slack Developer Program.
 // The email address of the developer account is derived from the token, so no email verification is needed.
-func (c *Client) SignupDeveloperProgramVerified(ctx context.Context, token string, req SignupRequest) (*SignupVerifiedResponse, error) {
+func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error) {
 	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.SignupDeveloperProgramVerified")
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.Signup")
 	defer span.Finish()
 
 	values := url.Values{}
@@ -216,7 +215,7 @@ func (c *Client) SignupDeveloperProgramVerified(ctx context.Context, token strin
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
 
-	resp := signupDeveloperProgramVerifiedResponse{}
+	resp := signupAPIResponse{}
 	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
 		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxSignupVerifiedMethod)
@@ -226,5 +225,5 @@ func (c *Client) SignupDeveloperProgramVerified(ctx context.Context, token strin
 		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxSignupVerifiedMethod)
 	}
 
-	return &resp.SignupVerifiedResponse, nil
+	return &resp.SignupResponse, nil
 }

@@ -4,7 +4,10 @@ Create a developer sandbox
 
 ## Description
 
-Create a new Slack developer sandbox
+Create a new Slack developer sandbox.
+
+To get started, log in to a Slack account that matches the
+email address you used to sign up for the Slack Developer Program.
 
 ```
 slack sandbox create [flags]

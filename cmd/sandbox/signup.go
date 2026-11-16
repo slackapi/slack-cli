@@ -27,6 +27,15 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+)
+
+// Links to the terms and policies accepted when signing up for the Developer Program
+const (
+	developerProgramAgreementURL  = "https://slack.com/terms-of-service/slack-developer-program"
+	apiTermsOfServiceURL          = "https://slack.com/terms-of-service/api"
+	slackPrivacyPolicyURL         = "https://slack.com/trust/privacy/privacy-policy"
+	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/privacy/"
 )
 
 type signupFlags struct {
@@ -47,14 +56,13 @@ func NewSignupCommand(clients *shared.ClientFactory) *cobra.Command {
 		Long: `Sign up for the Slack Developer Program!
 
 The developer program gives you access to sandbox environments for building
-and testing Slack apps isolated from your production workspace. To get started,
-log in to your production workspace via the 'login' command.
+and testing Slack apps isolated from your production workspace.
 
 Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox signup", Meaning: "Sign up for the Developer Program"},
-			{Command: "sandbox signup --first-name Anna --last-name Banana --postal-code 94105 --country US", Meaning: "Sign up with the provided details"},
-			{Command: "sandbox signup --team T0123456 --accept-tos", Meaning: "Sign up with a specific team and accept the terms"},
+			{Command: "sandbox signup --first-name Anna --last-name Banana --postal-code 94105 --country US", Meaning: "Sign up with the provided user details"},
+			{Command: "sandbox signup --team T0123456 --accept-tos", Meaning: "Sign up, authenticated as your user on the given team, accept the terms of service and acknowledge the privacy policies"},
 		}),
 		Args:   cobra.NoArgs,
 		Hidden: true,
@@ -78,27 +86,76 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 	cmd.Flags().StringVar(&signupCmdFlags.postalCode, "postal-code", "", "Your postal code")
 	cmd.Flags().StringVar(&signupCmdFlags.countryOption, "country", "", "Your country (ISO 3166-1 alpha-2 format, e.g. US)")
 	cmd.Flags().BoolVar(&signupCmdFlags.newsletterSubscription, "newsletter", false, "Subscribe to the developer newsletter")
-	cmd.Flags().BoolVar(&signupCmdFlags.acceptTermsOfService, "accept-tos", false, "Accept the Privacy Policy, API Terms of Service, and Developer Program Agreement")
+	cmd.Flags().BoolVar(&signupCmdFlags.acceptTermsOfService, "accept-tos", false, acceptTermsOfServiceUsage())
+
+	// Rebuild the flag usage when help is shown so the links are styled once styles are toggled
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
+		cmd.Flag("accept-tos").Usage = acceptTermsOfServiceUsage()
+		cmd.Parent().HelpFunc()(cmd, args)
+	})
 
 	return cmd
+}
+
+// acceptTermsOfServiceUsage returns the usage text for the --accept-tos flag
+func acceptTermsOfServiceUsage() string {
+	return "Confirm agreement to the Slack Developer Program Agreement\n" +
+		"  " + style.LinkText(developerProgramAgreementURL) + "\n" +
+		"  and API Terms of Service\n" +
+		"  " + style.LinkText(apiTermsOfServiceURL) + "\n" +
+		"  and acknowledge the Slack Privacy Policy\n" +
+		"  " + style.LinkText(slackPrivacyPolicyURL) + "\n" +
+		"  and Salesforce Privacy Statement.\n" +
+		"  " + style.LinkText(salesforcePrivacyStatementURL) + "\n" +
+		"  Pass this flag or confirm via the interactive prompt."
+}
+
+// termsOfServiceLinks returns a bulleted list of the terms and policies accepted at signup
+func termsOfServiceLinks() []string {
+	return []string{
+		fmt.Sprintf("• Developer Program Agreement: %s", style.LinkText(developerProgramAgreementURL)),
+		fmt.Sprintf("• API Terms of Service: %s", style.LinkText(apiTermsOfServiceURL)),
+		fmt.Sprintf("• Slack Privacy Policy: %s", style.LinkText(slackPrivacyPolicyURL)),
+		fmt.Sprintf("• Salesforce Privacy Statement: %s", style.LinkText(salesforcePrivacyStatementURL)),
+	}
 }
 
 func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	auth, err := selectAuthForSignup(ctx, clients)
+	// The --force flag skips prompts but never accepts the terms on its own
+	if clients.Config.ForceFlag && !signupCmdFlags.acceptTermsOfService {
+		return slackerror.New(slackerror.ErrMissingFlag).
+			WithMessage("The terms of service must be accepted to sign up for the Developer Program").
+			WithRemediation("Include the %s flag to agree to the following terms and acknowledge the privacy policies:\n%s",
+				style.Highlight("--accept-tos"),
+				strings.Join(termsOfServiceLinks(), "\n"),
+			)
+	}
+
+	auth, profile, err := selectAuthForSignup(ctx, clients)
 	if err != nil {
 		return err
 	}
 
-	// Prompt user to accept terms unless --accept-tos or --force flag is used
-	if !signupCmdFlags.acceptTermsOfService && !clients.Config.ForceFlag {
-		if err := promptTermsAcceptance(ctx, clients); err != nil {
+	// Prompt user to accept terms unless the --accept-tos flag is used
+	if !signupCmdFlags.acceptTermsOfService {
+		if err := promptTermsAcceptance(ctx, clients, cmd.Flag("accept-tos")); err != nil {
 			return err
 		}
 	}
 
-	email := prefillUserInfoFromAuth(ctx, clients, auth, &signupCmdFlags)
+	// Ask about the newsletter unless --newsletter or --force is used, or prompts aren't possible
+	if !cmd.Flags().Changed("newsletter") && !clients.Config.ForceFlag && clients.IO.IsTTY() {
+		subscribe, err := clients.IO.ConfirmPrompt(ctx, "Subscribe to the developer newsletter?", iostreams.ConfirmPromptConfig{Default: false})
+		if err != nil {
+			return handlePromptError(clients, err)
+		}
+		signupCmdFlags.newsletterSubscription = subscribe
+	}
+
+	email := prefillUserInfoFromAuth(ctx, clients, auth, profile, &signupCmdFlags)
 
 	info, err := collectUserInfo(ctx, clients, &signupCmdFlags)
 	if err != nil {
@@ -112,23 +169,31 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		PostalCode:             info.postalCode,
 		CountryOption:          info.countryOption,
 		NewsletterSubscription: signupCmdFlags.newsletterSubscription,
-		AcceptTermsOfService:   true, // Terms were accepted via the --accept-tos flag, --force flag, or prompt
+		AcceptTermsOfService:   true, // Terms were accepted via the --accept-tos flag or prompt
 	}
 
 	printSignupDetails(ctx, clients, info, signupCmdFlags.newsletterSubscription)
 
-	_, err = apiClientForAuth(clients, auth).SignupDeveloperProgramVerified(ctx, auth.Token, req)
+	_, err = apiClientForAuth(clients, auth).Signup(ctx, auth.Token, req)
 	if err != nil {
 		return err
 	}
 
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "tada",
 		Text:  "Welcome to the Slack Developer Program!",
 	}))
 
-	clients.IO.PrintInfo(ctx, false, "\nRun %s to create a developer sandbox", style.Commandf("sandbox create", false))
+	clients.IO.PrintInfo(ctx, false, "Run %s to create a developer sandbox", style.Commandf("sandbox create", false))
 	return nil
+}
+
+// handlePromptError sets the cancel exit code when a prompt is interrupted, such as with Ctrl+C
+func handlePromptError(clients *shared.ClientFactory, err error) error {
+	if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
+		clients.IO.SetExitCode(iostreams.ExitCancel)
+	}
+	return err
 }
 
 // apiClientForAuth returns an API client targeting the host for the given auth.
@@ -145,34 +210,49 @@ func apiClientForAuth(clients *shared.ClientFactory, auth *types.SlackAuth) api.
 	return apiClient
 }
 
-// selectAuthForSignup returns the auth to link to the Developer Program account.
+// selectAuthForSignup returns the auth to link to the Developer Program account and, when it
+// was already fetched for the prompt, the profile of that user.
 // Uses the global --token or --team flag if present, otherwise prompts the user to select an account.
-func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, error) {
+func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, *types.UserInfo, error) {
 	if clients.Config.TokenFlag != "" {
 		auth, err := clients.Auth().AuthWithToken(ctx, clients.Config.TokenFlag)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return &auth, nil
+		return &auth, nil, nil
 	}
 
 	allAuths, err := clients.Auth().Auths(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if len(allAuths) == 0 {
-		return nil, slackerror.New(slackerror.ErrNotAuthed).
+		return nil, nil, slackerror.New(slackerror.ErrNotAuthed).
 			WithMessage("You must be logged in to sign up for the Developer Program").
 			WithRemediation("Run %s to sign in to a workspace, then try again", style.Commandf("login", false))
+	}
+
+	// Match the --team flag without fetching profiles for the other logins
+	if clients.Config.TeamFlag != "" {
+		for i, auth := range allAuths {
+			if clients.Config.TeamFlag == auth.TeamID || clients.Config.TeamFlag == auth.TeamDomain {
+				return &allAuths[i], nil, nil
+			}
+		}
+		return nil, nil, slackerror.New(slackerror.ErrCredentialsNotFound)
 	}
 
 	teamFlag := clients.Config.Flags.Lookup("team")
 	labels := make([]string, 0, len(allAuths))
 	options := make([]iostreams.PromptOption, 0, len(allAuths))
-	for _, auth := range allAuths {
+	profiles := make([]*types.UserInfo, len(allAuths))
+	for i, auth := range allAuths {
 		label := style.TeamSelectLabel(auth.TeamDomain, auth.TeamID)
-		if userInfo, err := apiClientForAuth(clients, &auth).UsersInfo(ctx, auth.Token, auth.UserID); err == nil && userInfo.Profile.Email != "" {
-			label = fmt.Sprintf("%s %s", userInfo.Profile.Email, style.Faint(fmt.Sprintf("(%s %s)", auth.TeamDomain, auth.TeamID)))
+		if userInfo, err := apiClientForAuth(clients, &auth).UsersInfo(ctx, auth.Token, auth.UserID); err == nil {
+			profiles[i] = userInfo
+			if userInfo.Profile.Email != "" {
+				label = fmt.Sprintf("%s %s", userInfo.Profile.Email, style.Faint(fmt.Sprintf("(%s %s)", auth.TeamDomain, auth.TeamID)))
+			}
 		}
 		labels = append(labels, label)
 		options = append(options, iostreams.PromptOption{
@@ -186,35 +266,36 @@ func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*t
 		Required: true,
 		Flag:     teamFlag,
 		Options:  options,
-		Help:     "The selected login wil be used to fetch your user details and create your account",
+		Help:     "The selected login will be used to fetch your user details and create your account",
 	})
 	if err != nil {
-		if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
-			clients.IO.SetExitCode(iostreams.ExitCancel)
-		}
-		return nil, err
+		return nil, nil, handlePromptError(clients, err)
 	}
 
 	if selection.Prompt {
-		return &allAuths[selection.Index], nil
+		return &allAuths[selection.Index], profiles[selection.Index], nil
 	}
 	for i, auth := range allAuths {
 		if selection.Option == auth.TeamID || selection.Option == auth.TeamDomain {
-			return &allAuths[i], nil
+			return &allAuths[i], profiles[i], nil
 		}
 	}
-	return nil, slackerror.New(slackerror.ErrCredentialsNotFound)
+	return nil, nil, slackerror.New(slackerror.ErrCredentialsNotFound)
 }
 
-// prefillUserInfoFromAuth fetches the user's Slack profile and fills in any unset name flags.
+// prefillUserInfoFromAuth fills in any unset name flags from the user's Slack profile.
+// The profile is fetched when it wasn't already fetched while selecting the auth.
 // Returns the email address of the profile, if available.
-func prefillUserInfoFromAuth(ctx context.Context, clients *shared.ClientFactory, auth *types.SlackAuth, flags *signupFlags) string {
-	if auth.UserID == "" {
-		return ""
-	}
-	userInfo, err := apiClientForAuth(clients, auth).UsersInfo(ctx, auth.Token, auth.UserID)
-	if err != nil {
-		return ""
+func prefillUserInfoFromAuth(ctx context.Context, clients *shared.ClientFactory, auth *types.SlackAuth, userInfo *types.UserInfo, flags *signupFlags) string {
+	if userInfo == nil {
+		if auth.UserID == "" {
+			return ""
+		}
+		var err error
+		userInfo, err = apiClientForAuth(clients, auth).UsersInfo(ctx, auth.Token, auth.UserID)
+		if err != nil {
+			return ""
+		}
 	}
 
 	// Prefer the profile name fields, falling back to splitting the real name
@@ -254,25 +335,21 @@ type userInfo struct {
 	countryOption string
 }
 
-// promptTermsAcceptance shows the terms and prompts the user to accept them
-func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory) error {
+// promptTermsAcceptance shows the terms and prompts the user to accept them.
+// The acceptTermsFlag is suggested when prompts aren't possible.
+func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, acceptTermsFlag *pflag.Flag) error {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
-		Text:  "Terms and Conditions",
-		Secondary: []string{
-			"By signing up, you agree to the following:",
-			fmt.Sprintf("• Privacy Policy: %s", style.LinkText("https://slack.com/trust/privacy/privacy-policy")),
-			fmt.Sprintf("• API Terms of Service: %s", style.LinkText("https://slack.com/terms-of-service/api")),
-			fmt.Sprintf("• Developer Program Agreement: %s", style.LinkText("https://slack.com/terms-of-service/slack-developer-program")),
-		},
+		Text:  "Terms of service",
+		Secondary: append(
+			[]string{"By signing up, you agree to the following terms and acknowledge the privacy policies:"},
+			termsOfServiceLinks()...,
+		),
 	}))
 
-	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: true})
+	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: false, Flag: acceptTermsFlag})
 	if err != nil {
-		if slackerror.Is(err, slackerror.ErrProcessInterrupted) {
-			clients.IO.SetExitCode(iostreams.ExitCancel)
-		}
-		return err
+		return handlePromptError(clients, err)
 	}
 	if !acceptTerms {
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
@@ -289,29 +366,49 @@ func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory) e
 }
 
 // collectUserInfo prompts for a first and last name when not already set.
-// Postal code and country are optional for authenticated signups so are only read from flags.
+// Postal code and country are optional, so they are prompted for with the option to skip
+// only in an interactive terminal and when the --force flag isn't used.
 func collectUserInfo(ctx context.Context, clients *shared.ClientFactory, flags *signupFlags) (*userInfo, error) {
 	var err error
 	info := &userInfo{
 		firstName:     flags.firstName,
 		lastName:      flags.lastName,
 		postalCode:    flags.postalCode,
-		countryOption: strings.ToUpper(strings.TrimSpace(flags.countryOption)),
+		countryOption: flags.countryOption,
 	}
 
 	if info.firstName == "" {
 		info.firstName, err = clients.IO.InputPrompt(ctx, "Enter your first name", iostreams.InputPromptConfig{Required: true})
 		if err != nil {
-			return nil, err
+			return nil, handlePromptError(clients, err)
 		}
 	}
 
 	if info.lastName == "" {
 		info.lastName, err = clients.IO.InputPrompt(ctx, "Enter your last name", iostreams.InputPromptConfig{Required: true})
 		if err != nil {
-			return nil, err
+			return nil, handlePromptError(clients, err)
 		}
 	}
+
+	promptOptional := clients.IO.IsTTY() && !clients.Config.ForceFlag
+
+	if info.postalCode == "" && promptOptional {
+		info.postalCode, err = clients.IO.InputPrompt(ctx, "Enter your postal code (optional, press Enter to skip)", iostreams.InputPromptConfig{})
+		if err != nil {
+			return nil, handlePromptError(clients, err)
+		}
+	}
+
+	if info.countryOption == "" && promptOptional {
+		info.countryOption, err = clients.IO.InputPrompt(ctx, "Enter your 2-character country code, e.g. US (optional, press Enter to skip)", iostreams.InputPromptConfig{})
+		if err != nil {
+			return nil, handlePromptError(clients, err)
+		}
+	}
+
+	info.postalCode = strings.TrimSpace(info.postalCode)
+	info.countryOption = strings.ToUpper(strings.TrimSpace(info.countryOption))
 
 	return info, nil
 }
@@ -329,7 +426,7 @@ func printSignupDetails(ctx context.Context, clients *shared.ClientFactory, info
 		details = append(details, fmt.Sprintf("Postal Code: %s", info.postalCode))
 	}
 	details = append(details, fmt.Sprintf("Newsletter: %v", newsletter))
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
 		Text:      "Developer Program Signup",
 		Secondary: details,
