@@ -37,6 +37,9 @@ const (
 	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/privacy/"
 )
 
+// developerProfileSettingsURL is where developers can view or update their user data for their Developer Program profile
+const developerProfileSettingsURL = "https://api.slack.com/developer-program/settings/profile"
+
 type signupFlags struct {
 	firstName              string
 	lastName               string
@@ -142,15 +145,6 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		}
 	}
 
-	// Ask about the newsletter unless --newsletter or --force is used, or prompts aren't possible
-	if !cmd.Flags().Changed("newsletter") && !clients.Config.ForceFlag && clients.IO.IsTTY() {
-		subscribe, err := clients.IO.ConfirmPrompt(ctx, "Subscribe to the developer newsletter?", iostreams.ConfirmPromptConfig{Default: false})
-		if err != nil {
-			return handlePromptError(clients, err)
-		}
-		signupCmdFlags.newsletterSubscription = subscribe
-	}
-
 	email := prefillUserInfoFromAuth(ctx, clients, auth, profile, &signupCmdFlags)
 
 	info, err := collectUserInfo(ctx, clients, &signupCmdFlags)
@@ -178,6 +172,9 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "tada",
 		Text:  "Welcome to the Slack Developer Program!",
+		Secondary: []string{
+			fmt.Sprintf("Manage your profile details at %s", style.LinkText(developerProfileSettingsURL)),
+		},
 	}))
 
 	clients.IO.PrintInfo(ctx, false, "Run %s to create a developer sandbox", style.Commandf("sandbox create", false))
@@ -362,15 +359,14 @@ func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, a
 }
 
 // collectUserInfo prompts for a first and last name when not already set.
-// Postal code and country are optional, so they are prompted for with the option to skip
-// only in an interactive terminal and when the --force flag isn't used.
+// Postal code and country are optional flags.
 func collectUserInfo(ctx context.Context, clients *shared.ClientFactory, flags *signupFlags) (*userInfo, error) {
 	var err error
 	info := &userInfo{
 		firstName:     flags.firstName,
 		lastName:      flags.lastName,
-		postalCode:    flags.postalCode,
-		countryOption: flags.countryOption,
+		postalCode:    strings.TrimSpace(flags.postalCode),
+		countryOption: strings.ToUpper(strings.TrimSpace(flags.countryOption)),
 	}
 
 	if info.firstName == "" {
@@ -386,25 +382,6 @@ func collectUserInfo(ctx context.Context, clients *shared.ClientFactory, flags *
 			return nil, handlePromptError(clients, err)
 		}
 	}
-
-	promptOptional := clients.IO.IsTTY() && !clients.Config.ForceFlag
-
-	if info.postalCode == "" && promptOptional {
-		info.postalCode, err = clients.IO.InputPrompt(ctx, "Enter your postal code (optional, press Enter to skip)", iostreams.InputPromptConfig{})
-		if err != nil {
-			return nil, handlePromptError(clients, err)
-		}
-	}
-
-	if info.countryOption == "" && promptOptional {
-		info.countryOption, err = clients.IO.InputPrompt(ctx, "Enter your 2-character country code, e.g. US (optional, press Enter to skip)", iostreams.InputPromptConfig{})
-		if err != nil {
-			return nil, handlePromptError(clients, err)
-		}
-	}
-
-	info.postalCode = strings.TrimSpace(info.postalCode)
-	info.countryOption = strings.ToUpper(strings.TrimSpace(info.countryOption))
 
 	return info, nil
 }

@@ -16,7 +16,6 @@ package sandbox
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -188,61 +187,6 @@ func TestSignupCommand(t *testing.T) {
 				})
 			},
 		},
-		"prompts to subscribe to the newsletter in an interactive terminal": {
-			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--accept-tos"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("IsTTY").Return(true)
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
-				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
-				cm.IO.On("ConfirmPrompt", mock.Anything, "Subscribe to the developer newsletter?", iostreams.ConfirmPromptConfig{Default: false}).Return(true, nil)
-				cm.IO.On("InputPrompt", mock.Anything, mock.MatchedBy(isOptionalLocationPrompt), iostreams.InputPromptConfig{}).Return("", nil)
-				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(&api.SignupResponse{}, nil)
-				enableSandboxSignupExperiment(ctx, cm, cf)
-			},
-			ExpectedStdoutOutputs: []string{"Newsletter: true"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
-					FirstName:              "Ada",
-					LastName:               "Lovelace",
-					NewsletterSubscription: true,
-					AcceptTermsOfService:   true,
-				})
-			},
-		},
-		"skips the newsletter prompt when the newsletter flag is set": {
-			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--accept-tos", "--newsletter=false"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("IsTTY").Return(true)
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
-				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
-				cm.IO.On("InputPrompt", mock.Anything, mock.MatchedBy(isOptionalLocationPrompt), iostreams.InputPromptConfig{}).Return("", nil)
-				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(&api.SignupResponse{}, nil)
-				enableSandboxSignupExperiment(ctx, cm, cf)
-			},
-			ExpectedStdoutOutputs: []string{"Newsletter: false"},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
-			},
-		},
-		"skips the optional postal code and country when left empty": {
-			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--accept-tos", "--newsletter=false"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("IsTTY").Return(true)
-				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
-				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
-				cm.IO.On("InputPrompt", mock.Anything, mock.MatchedBy(isOptionalLocationPrompt), iostreams.InputPromptConfig{}).Return("", nil)
-				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(&api.SignupResponse{}, nil)
-				enableSandboxSignupExperiment(ctx, cm, cf)
-			},
-			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.IO.AssertNumberOfCalls(t, "InputPrompt", 2)
-				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
-					FirstName:            "Ada",
-					LastName:             "Lovelace",
-					AcceptTermsOfService: true,
-				})
-			},
-		},
 		"cancels when the terms are declined": {
 			CmdArgs: []string{"--token", testToken},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -265,7 +209,6 @@ func TestSignupCommand(t *testing.T) {
 				"The terms of service must be accepted",
 				"--accept-tos",
 				developerProgramAgreementURL,
-				apiTermsOfServiceURL,
 				slackPrivacyPolicyURL,
 				salesforcePrivacyStatementURL,
 			},
@@ -323,11 +266,6 @@ func TestSignupCommandHidden(t *testing.T) {
 var acceptTermsPromptConfig = mock.MatchedBy(func(cfg iostreams.ConfirmPromptConfig) bool {
 	return !cfg.Default && cfg.Flag != nil && cfg.Flag.Name == "accept-tos"
 })
-
-// isOptionalLocationPrompt matches the skippable postal code and country prompts
-func isOptionalLocationPrompt(message string) bool {
-	return strings.HasPrefix(message, "Enter your postal code") || strings.HasPrefix(message, "Enter your 2-character country code")
-}
 
 // enableSandboxSignupExperiment turns on the experiment that gates the signup command
 func enableSandboxSignupExperiment(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
