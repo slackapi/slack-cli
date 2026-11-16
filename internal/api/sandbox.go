@@ -208,6 +208,11 @@ func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*
 	if req.NewsletterSubscription {
 		values.Add("newsletter_subscription", "true")
 	}
+
+	// Setting this parameter to true indicates the user has agreed to the terms and acknowledges the privacy policies:
+	// - Developer Program Agreement: https://slack.com/terms-of-service/slack-developer-program
+	// - Slack Privacy Policy: https://slack.com/trust/privacy/privacy-policy
+	// - Salesforce Privacy Statement: https://www.salesforce.com/company/privacy/
 	values.Add("accept_tos", strconv.FormatBool(req.AcceptTermsOfService))
 
 	b, err := c.postForm(ctx, sandboxSignupVerifiedMethod, values)

@@ -138,7 +138,8 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
-	// Prompt user to accept terms unless the --accept-tos flag is used
+	// Always show the terms, but only prompt for acceptance if the --accept-tos flag is not set
+	printTermsOfService(ctx, clients)
 	if !signupCmdFlags.acceptTermsOfService {
 		if err := promptTermsAcceptance(ctx, clients, cmd.Flag("accept-tos")); err != nil {
 			return err
@@ -328,9 +329,8 @@ type userInfo struct {
 	countryOption string
 }
 
-// promptTermsAcceptance shows the terms and prompts the user to accept them.
-// The acceptTermsFlag is suggested when prompts aren't possible.
-func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, acceptTermsFlag *pflag.Flag) error {
+// printTermsOfService shows the terms and policies accepted at signup
+func printTermsOfService(ctx context.Context, clients *shared.ClientFactory) {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
 		Text:  "Terms of service",
@@ -339,7 +339,11 @@ func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, a
 			termsOfServiceLinks()...,
 		),
 	}))
+}
 
+// promptTermsAcceptance prompts the user to accept the terms.
+// The acceptTermsFlag is suggested when prompts aren't possible.
+func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, acceptTermsFlag *pflag.Flag) error {
 	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: false, Flag: acceptTermsFlag})
 	if err != nil {
 		return handlePromptError(clients, err)

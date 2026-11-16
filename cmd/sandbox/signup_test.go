@@ -67,6 +67,10 @@ func TestSignupCommand(t *testing.T) {
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedStdoutOutputs: []string{
+				"Terms of service",
+				developerProgramAgreementURL,
+				slackPrivacyPolicyURL,
+				salesforcePrivacyStatementURL,
 				"Name: Ada Lovelace",
 				"Email: ada@example.com",
 				"Country: US",
