@@ -111,6 +111,7 @@ func Test_CLIDependency_PrintUpdateNotification(t *testing.T) {
 			require.NoError(t, os.WriteFile(executablePath, []byte{}, 0o755))
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+			clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.Anything)
 			clientsMock.Os.On("Executable").Return(executablePath, nil)
 			clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())

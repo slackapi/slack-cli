@@ -17,10 +17,13 @@ package update
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -83,11 +86,18 @@ func Test_isInstallScript(t *testing.T) {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, filepath.Dir(link)), 0o755))
 				require.NoError(t, os.Symlink(filepath.Join(dir, target), filepath.Join(dir, link)))
 			}
+			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.Anything)
 			clientsMock.Os.On("Executable").Return(filepath.Join(dir, tc.executablePath), nil)
 			clientsMock.Os.On("UserHomeDir").Return(filepath.Join(dir, "home"), nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			assert.Equal(t, tc.expected, isInstallScript(clients))
+			assert.Equal(t, tc.expected, isInstallScript(ctx, clients))
+			if !tc.expected {
+				clientsMock.IO.AssertCalled(t, "PrintDebug", mock.Anything, mock.MatchedBy(func(format string) bool {
+					return strings.HasPrefix(format, "Skipping the self-update since")
+				}), mock.Anything)
+			}
 		})
 	}
 }

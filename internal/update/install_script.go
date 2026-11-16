@@ -15,6 +15,7 @@
 package update
 
 import (
+	"context"
 	"path/filepath"
 
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -23,17 +24,20 @@ import (
 // isInstallScript checks if the running binary resolves to a binary in a folder
 // that the installation scripts write to. Binaries placed by package managers or
 // other tools are managed by those tools and should not be replaced by a self-update.
-func isInstallScript(clients *shared.ClientFactory) bool {
+func isInstallScript(ctx context.Context, clients *shared.ClientFactory) bool {
 	executablePath, err := clients.Os.Executable()
 	if err != nil {
+		clients.IO.PrintDebug(ctx, "Skipping the self-update since the running binary was not found: %s", err)
 		return false
 	}
 	homeDir, err := clients.Os.UserHomeDir()
 	if err != nil {
+		clients.IO.PrintDebug(ctx, "Skipping the self-update since the home directory was not found: %s", err)
 		return false
 	}
 	binaryPath, err := filepath.EvalSymlinks(executablePath)
 	if err != nil {
+		clients.IO.PrintDebug(ctx, "Skipping the self-update since the binary path did not resolve: %s", err)
 		return false
 	}
 	installDirs := []string{
@@ -50,5 +54,6 @@ func isInstallScript(clients *shared.ClientFactory) bool {
 			return true
 		}
 	}
+	clients.IO.PrintDebug(ctx, "Skipping the self-update since %s is not in a folder that the installation scripts write to", binaryPath)
 	return false
 }
