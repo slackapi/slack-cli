@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
 	"sort"
 	"strings"
 
@@ -79,9 +80,7 @@ func (c *Config) GetExperiments() []experiment.Experiment {
 			result = append(result, name)
 		}
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i] < result[j]
-	})
+	slices.Sort(result)
 	return result
 }
 
