@@ -93,6 +93,9 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 			"\n   To manually update, visit the download page:\n   %s\n\n",
 			style.CommandText("https://docs.slack.dev/tools/slack-cli"),
 		)
+		if !isInstallScriptFunc(c.clients) {
+			return false, nil
+		}
 		selfUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest version now?", style.Emoji("rocket"))
 		return c.clients.IO.ConfirmPrompt(ctx, selfUpdatePrompt, iostreams.ConfirmPromptConfig{
 			Default: false,
