@@ -68,6 +68,11 @@ func (c *Os) UserHomeDir() (string, error) {
 	return os.UserHomeDir()
 }
 
+// Executable defaults to `os.Executable` and can be mocked to test
+func (c *Os) Executable() (string, error) {
+	return os.Executable()
+}
+
 // GetExecutionDir returns the absolute path where the process started execution
 func (c *Os) GetExecutionDir() string {
 	return c.executionDirPathAbs

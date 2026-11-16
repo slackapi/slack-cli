@@ -16,10 +16,17 @@ package update
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_NewCLIDependency(t *testing.T) {
@@ -77,6 +84,54 @@ func Test_CLIDependency_HasUpdate(t *testing.T) {
 			hasUpdate, err := cliDependency.HasUpdate()
 			assert.Equal(t, tc.expectedUpdate, hasUpdate)
 			assert.Equal(t, tc.expectedError, err)
+		})
+	}
+}
+
+func Test_CLIDependency_PrintUpdateNotification(t *testing.T) {
+	tests := map[string]struct {
+		executablePath     string
+		expectedSelfUpdate bool
+	}{
+		"offers a self-update to binaries placed by the install script": {
+			executablePath:     ".slack/bin/slack",
+			expectedSelfUpdate: true,
+		},
+		"skips the self-update for binaries placed elsewhere": {
+			executablePath:     ".slack/dev-build/bin/slack",
+			expectedSelfUpdate: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			homeDir := t.TempDir()
+			executablePath := filepath.Join(homeDir, tc.executablePath)
+			require.NoError(t, os.MkdirAll(filepath.Dir(executablePath), 0o755))
+			require.NoError(t, os.WriteFile(executablePath, []byte{}, 0o755))
+			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+			clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.Anything)
+			clientsMock.Os.On("Executable").Return(executablePath, nil)
+			clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			cmd := &cobra.Command{}
+			cmd.SetContext(ctx)
+			testutil.MockCmdIO(clients.IO, cmd)
+			cliDependency := CLIDependency{
+				clients:     clients,
+				version:     "v4.10.0",
+				releaseInfo: &LatestCLIRelease{Version: "4.11.0"},
+			}
+			selfUpdate, err := cliDependency.PrintUpdateNotification(cmd)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedSelfUpdate, selfUpdate)
+			assert.Contains(t, clientsMock.GetCombinedOutput(), "https://docs.slack.dev/tools/slack-cli")
+			if tc.expectedSelfUpdate {
+				clientsMock.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+			} else {
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+			}
 		})
 	}
 }
