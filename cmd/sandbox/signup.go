@@ -33,7 +33,6 @@ import (
 // Links to the terms and policies accepted when signing up for the Developer Program
 const (
 	developerProgramAgreementURL  = "https://slack.com/terms-of-service/slack-developer-program"
-	apiTermsOfServiceURL          = "https://slack.com/terms-of-service/api"
 	slackPrivacyPolicyURL         = "https://slack.com/trust/privacy/privacy-policy"
 	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/privacy/"
 )
@@ -102,8 +101,6 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 func acceptTermsOfServiceUsage() string {
 	return "Confirm agreement to the Slack Developer Program Agreement\n" +
 		"  " + style.LinkText(developerProgramAgreementURL) + "\n" +
-		"  and API Terms of Service\n" +
-		"  " + style.LinkText(apiTermsOfServiceURL) + "\n" +
 		"  and acknowledge the Slack Privacy Policy\n" +
 		"  " + style.LinkText(slackPrivacyPolicyURL) + "\n" +
 		"  and Salesforce Privacy Statement.\n" +
@@ -115,7 +112,6 @@ func acceptTermsOfServiceUsage() string {
 func termsOfServiceLinks() []string {
 	return []string{
 		fmt.Sprintf("• Developer Program Agreement: %s", style.LinkText(developerProgramAgreementURL)),
-		fmt.Sprintf("• API Terms of Service: %s", style.LinkText(apiTermsOfServiceURL)),
 		fmt.Sprintf("• Slack Privacy Policy: %s", style.LinkText(slackPrivacyPolicyURL)),
 		fmt.Sprintf("• Salesforce Privacy Statement: %s", style.LinkText(salesforcePrivacyStatementURL)),
 	}
