@@ -15,6 +15,8 @@
 package update
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -52,32 +54,33 @@ func Test_NewCLIDependency(t *testing.T) {
 
 func Test_CLIDependency_PrintUpdateNotification(t *testing.T) {
 	tests := map[string]struct {
-		isInstallScript    bool
+		executablePath     string
 		expectedSelfUpdate bool
 	}{
 		"offers a self-update to binaries placed by the install script": {
-			isInstallScript:    true,
+			executablePath:     ".slack/bin/slack",
 			expectedSelfUpdate: true,
 		},
 		"skips the self-update for binaries placed elsewhere": {
-			isInstallScript:    false,
+			executablePath:     ".slack/dev-build/bin/slack",
 			expectedSelfUpdate: false,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
+			homeDir := t.TempDir()
+			executablePath := filepath.Join(homeDir, tc.executablePath)
+			require.NoError(t, os.MkdirAll(filepath.Dir(executablePath), 0o755))
+			require.NoError(t, os.WriteFile(executablePath, []byte{}, 0o755))
 			clientsMock := shared.NewClientsMock()
 			clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+			clientsMock.Os.On("Executable").Return(executablePath, nil)
+			clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			cmd := &cobra.Command{}
 			cmd.SetContext(ctx)
 			testutil.MockCmdIO(clients.IO, cmd)
-			originalIsInstallScriptFunc := isInstallScriptFunc
-			isInstallScriptFunc = func(_ *shared.ClientFactory) bool {
-				return tc.isInstallScript
-			}
-			t.Cleanup(func() { isInstallScriptFunc = originalIsInstallScriptFunc })
 			cliDependency := CLIDependency{
 				clients:     clients,
 				version:     "v4.10.0",

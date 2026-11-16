@@ -21,6 +21,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func Test_Os_Executable(t *testing.T) {
+	o := NewOs()
+	path, err := o.Executable()
+	require.NoError(t, err)
+	require.NotEmpty(t, path)
+}
+
 func Test_Os_GetExecutionDir(t *testing.T) {
 	tests := map[string]struct {
 		executionDirPathAbs         string

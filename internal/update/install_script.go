@@ -15,16 +15,16 @@
 package update
 
 import (
-	"os"
 	"path/filepath"
-	"runtime"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 )
 
-// isInstallScriptFunc checks if the running binary was placed by an installation script
-var isInstallScriptFunc = func(clients *shared.ClientFactory) bool {
-	executablePath, err := os.Executable()
+// isInstallScript checks if the running binary resolves to a binary in a folder
+// that the installation scripts write to. Binaries placed by package managers or
+// other tools are managed by those tools and should not be replaced by a self-update.
+func isInstallScript(clients *shared.ClientFactory) bool {
+	executablePath, err := clients.Os.Executable()
 	if err != nil {
 		return false
 	}
@@ -32,18 +32,16 @@ var isInstallScriptFunc = func(clients *shared.ClientFactory) bool {
 	if err != nil {
 		return false
 	}
-	return isInstallScript(executablePath, homeDir, runtime.GOOS)
-}
-
-// isInstallScript checks if the executable resolves to a binary in a folder that
-// the installation scripts write to. Binaries placed by package managers or other
-// tools are managed by those tools and should not be replaced by a self-update.
-func isInstallScript(executablePath string, homeDir string, goos string) bool {
 	binaryPath, err := filepath.EvalSymlinks(executablePath)
 	if err != nil {
 		return false
 	}
-	for _, dir := range installScriptDirs(homeDir, goos) {
+	installDirs := []string{
+		filepath.Join(homeDir, ".slack", "bin"),                        // scripts/install.sh
+		filepath.Join(homeDir, ".slack-cli", "bin"),                    // scripts/install-windows.ps1 fallback
+		filepath.Join(homeDir, "AppData", "Local", "slack-cli", "bin"), // scripts/install-windows.ps1
+	}
+	for _, dir := range installDirs {
 		installDir, err := filepath.EvalSymlinks(dir)
 		if err != nil {
 			continue
@@ -53,19 +51,4 @@ func isInstallScript(executablePath string, homeDir string, goos string) bool {
 		}
 	}
 	return false
-}
-
-// installScriptDirs returns the folders where the installation scripts place the binary
-//
-// These match scripts/install.sh and scripts/install-windows.ps1
-func installScriptDirs(homeDir string, goos string) []string {
-	if goos == "windows" {
-		return []string{
-			filepath.Join(homeDir, "AppData", "Local", "slack-cli", "bin"),
-			filepath.Join(homeDir, ".slack-cli", "bin"),
-		}
-	}
-	return []string{
-		filepath.Join(homeDir, ".slack", "bin"),
-	}
 }

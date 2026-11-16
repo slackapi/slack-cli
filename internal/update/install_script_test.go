@@ -19,53 +19,45 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func Test_isInstallScript(t *testing.T) {
 	tests := map[string]struct {
-		goos           string
 		executablePath string
 		expected       bool
 	}{
 		"binary placed by the install script": {
-			goos:           "darwin",
 			executablePath: "home/.slack/bin/slack",
 			expected:       true,
 		},
 		"symbolic link to the binary placed by the install script": {
-			goos:           "darwin",
 			executablePath: "usr/local/bin/slack",
 			expected:       true,
 		},
 		"binary placed by the development install script": {
-			goos:           "darwin",
 			executablePath: "home/.slack/dev-build/bin/slack",
 			expected:       false,
 		},
 		"binary placed in a subfolder of the install script folder": {
-			goos:           "darwin",
 			executablePath: "home/.slack/bin/4.14.0/slack",
 			expected:       false,
 		},
 		"symbolic link to a binary placed by a package manager": {
-			goos:           "darwin",
 			executablePath: "opt/homebrew/bin/slack",
 			expected:       false,
 		},
 		"binary placed by the windows install script": {
-			goos:           "windows",
 			executablePath: "home/AppData/Local/slack-cli/bin/slack.exe",
 			expected:       true,
 		},
 		"binary placed in the fallback folder of the windows install script": {
-			goos:           "windows",
 			executablePath: "home/.slack-cli/bin/slack.exe",
 			expected:       true,
 		},
 		"binary that does not exist": {
-			goos:           "darwin",
 			executablePath: "home/.slack/bin/missing",
 			expected:       false,
 		},
@@ -91,8 +83,11 @@ func Test_isInstallScript(t *testing.T) {
 				require.NoError(t, os.MkdirAll(filepath.Join(dir, filepath.Dir(link)), 0o755))
 				require.NoError(t, os.Symlink(filepath.Join(dir, target), filepath.Join(dir, link)))
 			}
-			actual := isInstallScript(filepath.Join(dir, tc.executablePath), filepath.Join(dir, "home"), tc.goos)
-			assert.Equal(t, tc.expected, actual)
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Os.On("Executable").Return(filepath.Join(dir, tc.executablePath), nil)
+			clientsMock.Os.On("UserHomeDir").Return(filepath.Join(dir, "home"), nil)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			assert.Equal(t, tc.expected, isInstallScript(clients))
 		})
 	}
 }
