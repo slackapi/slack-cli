@@ -151,6 +151,12 @@ Otherwise start your app for local development with: `slack run`
 
 ---
 
+### app_manifest_compare_error {#app_manifest_compare_error}
+
+**Message**: Couldn't compare your app manifests
+
+---
+
 ### app_manifest_create_error {#app_manifest_create_error}
 
 **Message**: Couldn't create your app manifest
@@ -204,6 +210,16 @@ Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure
 
 ---
 
+### app_not_org_ready {#app_not_org_ready}
+
+**Message**: Apps installed on an organization must set "org_deploy_enabled" to true in the app manifest
+
+**Remediation**: Add "org_deploy_enabled": true to the "settings" of the app manifest and try again.
+
+Otherwise create the app on a workspace from app settings, then add it to this project with: `slack app link`
+
+---
+
 ### app_remove_error {#app_remove_error}
 
 **Message**: Couldn't remove your app
@@ -219,6 +235,12 @@ Read about ROSI: https://docs.slack.dev/workflows/run-on-slack-infrastructure
 ### apps_list_error {#apps_list_error}
 
 **Message**: Couldn't get a list of your apps
+
+---
+
+### at_active_sandbox_limit {#at_active_sandbox_limit}
+
+**Message**: You've reached the maximum number of active sandboxes
 
 ---
 
@@ -498,23 +520,69 @@ Approval is pending review
 
 ---
 
-### docs_search_flag_required {#docs_search_flag_required}
-
-**Message**: Invalid docs command. Did you mean to search?
-
-**Remediation**: Use --search flag: `slack docs --search "<query>"`
-
----
-
 ### documentation_generation_failed {#documentation_generation_failed}
 
 **Message**: Failed to generate documentation
 
 ---
 
+### domain_long {#domain_long}
+
+**Message**: Sandbox name or domain is too long
+
+---
+
+### domain_taken {#domain_taken}
+
+**Message**: This domain has been claimed by another sandbox
+
+---
+
+### dotenv_file_already_exists {#dotenv_file_already_exists}
+
+**Message**: A .env file already exists
+
+---
+
+### dotenv_file_parse_error {#dotenv_file_parse_error}
+
+**Message**: Failed to parse the .env file
+
+---
+
+### dotenv_file_read_error {#dotenv_file_read_error}
+
+**Message**: Failed to read the .env file
+
+---
+
+### dotenv_file_write_error {#dotenv_file_write_error}
+
+**Message**: Failed to write the .env file
+
+---
+
+### dotenv_placeholder_not_found {#dotenv_placeholder_not_found}
+
+**Message**: No .env template file was found for environment variables
+
+---
+
+### dotenv_var_marshal_error {#dotenv_var_marshal_error}
+
+**Message**: Failed to marshal the .env variable
+
+---
+
 ### enterprise_not_found {#enterprise_not_found}
 
 **Message**: The `enterprise` was not found
+
+---
+
+### experiment_required {#experiment_required}
+
+**Message**: This command requires an experiment to be enabled
 
 ---
 
@@ -565,6 +633,14 @@ Approval is pending review
 ### failed_to_save_extension_logs {#failed_to_save_extension_logs}
 
 **Message**: Couldn't save the logs
+
+---
+
+### feature_not_enabled {#feature_not_enabled}
+
+**Message**: This feature is not enabled for the team
+
+**Remediation**: Reach out to an admin for additional information
 
 ---
 
@@ -740,6 +816,14 @@ Or choose a specific app with `--app <app_id>`
 
 ---
 
+### invalid_archive_ttl {#invalid_archive_ttl}
+
+**Message**: Invalid TTL
+
+**Remediation**: Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo
+
+---
+
 ### invalid_args {#invalid_args}
 
 **Message**: Required arguments either were not provided or contain invalid values
@@ -763,6 +847,14 @@ Or choose a specific app with `--app <app_id>`
 **Message**: Your user account authorization isn't valid
 
 **Remediation**: Your user account authorization may be expired or does not have permission to access the resource. Try to login to the same user account again using `slack login`.
+
+---
+
+### invalid_blocks {#invalid_blocks}
+
+**Message**: The provided blocks are not valid Block Kit blocks
+
+**Remediation**: Provide a JSON array of blocks or a JSON object with a "blocks" array. Reference: https://docs.slack.dev/reference/block-kit/blocks
 
 ---
 
@@ -880,6 +972,14 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### invalid_sandbox_team_id {#invalid_sandbox_team_id}
+
+**Message**: The provided sandbox team ID is invalid
+
+**Remediation**: List your sandboxes with the `slack sandbox list` command to find the ID
+
+---
+
 ### invalid_scopes {#invalid_scopes}
 
 **Message**: Some of the provided scopes do not exist
@@ -897,6 +997,12 @@ Read about manifest sourcing with the `slack manifest info --help` command
 **Message**: Current directory is not a Slack project
 
 **Remediation**: Change in to a Slack project directory. A Slack project always includes the Slack hooks file (`.slack/hooks.json`).
+
+---
+
+### invalid_template_id {#invalid_template_id}
+
+**Message**: The provided sandbox template value is invalid
 
 ---
 
@@ -1088,6 +1194,12 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### no_app_selected {#no_app_selected}
+
+**Message**: No app selected
+
+---
+
 ### no_file {#no_file}
 
 **Message**: Couldn't upload your bundled code to server
@@ -1247,9 +1359,26 @@ Read about manifest sourcing with the `slack manifest info --help` command
 
 ---
 
+### restricted_action {#restricted_action}
+
+**Message**: The requested action is not allowed for a specified team
+
+**Remediation**: Check that each team belongs to the organization of the authenticated account
+
+---
+
 ### restricted_plan_level {#restricted_plan_level}
 
 **Message**: Your Slack plan does not have access to the requested feature
+
+---
+
+### restricted_scopes {#restricted_scopes}
+
+**Message**: You don't have permission to install an app that requests one or more of its scopes
+
+**Remediation**: Some scopes can only be granted by a workspace admin or owner, such as admin and audit scopes or the Slack Connect bot scopes `conversations.connect:manage` and `conversations.connect:write`.
+Ask a workspace admin or owner to install the app, or remove the restricted scopes from the app manifest.
 
 ---
 

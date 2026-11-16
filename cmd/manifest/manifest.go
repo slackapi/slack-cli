@@ -72,13 +72,17 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			clients.Config.SetFlags(cmd)
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
+		// DEPRECATED(semver:major): remove RunE so this command prints help like other parent commands
+		// and remove "manifest" from the ignore list in internal/update/update.go
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInfoCommand(cmd, clients)
 		},
 	}
 
 	// Add child commands
+	cmd.AddCommand(NewDiffCommand(clients))
 	cmd.AddCommand(NewInfoCommand(clients))
+	cmd.AddCommand(NewSyncCommand(clients))
 	cmd.AddCommand(NewValidateCommand(clients))
 
 	cmd.Flags().StringVar(

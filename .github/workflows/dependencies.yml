@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Collect metadata
         id: metadata
-        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a # v2.5.0
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Milestone
@@ -45,18 +45,21 @@ jobs:
     steps:
       - name: Gather credentials
         id: credentials
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
-          app-id: ${{ secrets.GH_APP_ID_RELEASER }}
+          client-id: ${{ secrets.GH_APP_CLIENT_ID_RELEASER }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
       - name: Checkout the repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: true
           ref: main
           token: ${{ steps.credentials.outputs.token }}
       - name: Install Golang
-        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "stable"
       - name: Get the latest version
@@ -87,3 +90,46 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}
           VERSION: ${{ steps.version.outputs.latest }}
+  skill:
+    name: Sync the agent skill
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: none # Permissions are set with an application token
+    steps:
+      - name: Gather credentials
+        id: credentials
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.GH_APP_CLIENT_ID_RELEASER }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY_RELEASER }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Checkout the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+          ref: main
+          token: ${{ steps.credentials.outputs.token }}
+      - name: Download the latest skill
+        run: |
+          curl -fsSL "https://raw.githubusercontent.com/slackapi/slack-skills-plugin/main/skills/slack-cli/SKILL.md" -o cmd/skill/SKILL.md
+      - name: Open a change request
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b chore-sync-skill
+          if git diff --quiet; then
+            echo "No changes to commit, exiting."
+            exit 0
+          fi
+          git commit --all -m "chore: sync the slack-cli skill from slack-skills-plugin"
+          # Replace the branch so an open change request has the latest skill and main
+          git push --force -u origin chore-sync-skill
+          if [ -n "$(gh pr list --head chore-sync-skill --state open --json number --jq '.[].number')" ]; then
+            echo "Updated the open change request, exiting."
+            exit 0
+          fi
+          gh pr create --title "chore: sync the slack-cli skill from slack-skills-plugin" --body "Automatic update to the latest \`slack-cli\` skill in [slackapi/slack-skills-plugin](https://github.com/slackapi/slack-skills-plugin/blob/main/skills/slack-cli/SKILL.md)" --milestone "Next Release" --label "code health" --label "docs" --label "semver:patch"
+        env:
+          GITHUB_TOKEN: ${{ steps.credentials.outputs.token }}

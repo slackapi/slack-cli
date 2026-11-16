@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 type CopyDirectoryOpts struct {
@@ -172,10 +173,8 @@ func CopySymLink(src, dst string) error {
 
 // ShouldIgnore returns true if a file or directory is in the exclusion list or ignore function
 func ShouldIgnore(val string, list []string, ignoreFunc func(string) bool) bool {
-	for _, listVal := range list {
-		if val == listVal {
-			return true
-		}
+	if slices.Contains(list, val) {
+		return true
 	}
 	if ignoreFunc != nil && ignoreFunc(val) {
 		return true

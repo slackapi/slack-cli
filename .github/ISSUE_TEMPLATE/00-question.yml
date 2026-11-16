@@ -1,0 +1,61 @@
+name: CLI Question
+description: Submit a question about the Slack CLI
+labels: ["untriaged"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about using the Slack CLI? We're here to help!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: Describe your question in detail
+    validations:
+      required: true
+
+  - type: input
+    id: cli-version
+    attributes:
+      label: CLI Version
+      description: Run `slack --version`
+      placeholder: e.g., slack-cli/2.35.0
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: |
+        macOS/Linux: `sw_vers && uname -v` or Windows: `ver`
+      placeholder: e.g., macOS 14.0, Ubuntu 22.04, Windows 11
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Share commands, source code, and project settings
+      placeholder: |
+        1. Run `slack ...`
+        2. ...
+        3. ...
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Result
+      description: What did you expect to happen?
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Result
+      description: What actually happened? Include logs, screenshots, or error messages.
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        For general questions about the Slack API platform, please [contact Slack support](https://slack.com/help/requests/new).
+
+        By submitting this issue, you agree to follow our [Contributing Guidelines](https://github.com/slackapi/slack-cli/blob/main/.github/CONTRIBUTING.md) and [Code of Conduct](https://slackhq.github.io/code-of-conduct).

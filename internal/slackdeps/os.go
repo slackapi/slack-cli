@@ -68,6 +68,11 @@ func (c *Os) UserHomeDir() (string, error) {
 	return os.UserHomeDir()
 }
 
+// Executable defaults to `os.Executable` and can be mocked to test
+func (c *Os) Executable() (string, error) {
+	return os.Executable()
+}
+
 // GetExecutionDir returns the absolute path where the process started execution
 func (c *Os) GetExecutionDir() string {
 	return c.executionDirPathAbs
@@ -92,6 +97,11 @@ func (c *Os) Glob(pattern string) (matches []string, err error) {
 // Exit exits the program with a return code
 func (c *Os) Exit(code int) {
 	os.Exit(code)
+}
+
+// Stdin returns the file descriptor for stdin
+func (c *Os) Stdin() types.File {
+	return os.Stdin
 }
 
 // Stdout returns the file descriptor for stdout

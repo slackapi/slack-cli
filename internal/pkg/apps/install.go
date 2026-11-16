@@ -17,14 +17,15 @@ package apps
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
-	"github.com/slackapi/slack-cli/internal/pkg/manifest"
+	"github.com/slackapi/slack-cli/internal/icon"
+	"github.com/slackapi/slack-cli/internal/iostreams"
+	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -36,6 +37,8 @@ const (
 	CreateAppManifestOnly       = true
 	CreateAppManifestAndInstall = false
 )
+
+var manifestSyncFunc = manifestpkg.Sync
 
 const additionalManifestInfoNotice = "App manifest contains some components that may require additional information"
 
@@ -99,6 +102,11 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 	manifest := slackManifest.AppManifest
 	if slackManifest.IsFunctionRuntimeSlackHosted() {
 		configureHostedManifest(ctx, clients, &manifest)
+	}
+
+	err = validateManifestOrgReady(app, auth, manifest)
+	if err != nil {
+		return app, "", err
 	}
 
 	err = validateManifestForInstall(ctx, clients, token, app, manifest)
@@ -217,18 +225,12 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		}
 	}
 
-	// upload icon, default to icon.png
-	var iconPath = slackManifest.Icon
-	if iconPath == "" {
-		if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
-			iconPath = "icon.png"
-		}
-	}
+	iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
 	if iconPath != "" {
-		err = updateIcon(ctx, clients, iconPath, app.AppID, token)
-		if err != nil {
-			clients.IO.PrintDebug(ctx, "icon error: %s", err)
-			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", err)))
+		_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
+		if iconErr != nil {
+			clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", iconErr)))
 		} else {
 			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
 		}
@@ -275,14 +277,29 @@ func printNonSuccessInstallState(ctx context.Context, clients *shared.ClientFact
 	clients.IO.PrintInfo(ctx, false, "%s", status)
 }
 
+// validateManifestOrgReady errors when an app would be created or reinstalled on
+// an organization without "org_deploy_enabled" set to true in the manifest. Such
+// an app installs on the organization but never receives events.
+func validateManifestOrgReady(app types.App, auth types.SlackAuth, appManifest types.AppManifest) error {
+	newOrgApp := app.AppID == "" && auth.IsEnterpriseInstall
+	uninstalledOrgApp := app.IsUninstalled() && types.IsEnterpriseTeamID(app.TeamID)
+	if !newOrgApp && !uninstalledOrgApp {
+		return nil
+	}
+	if appManifest.Settings != nil && appManifest.Settings.OrgDeployEnabled != nil && *appManifest.Settings.OrgDeployEnabled {
+		return nil
+	}
+	return slackerror.New(slackerror.ErrAppNotOrgReady)
+}
+
 func validateManifestForInstall(ctx context.Context, clients *shared.ClientFactory, token string, app types.App, appManifest types.AppManifest) error {
 	validationResult, err := clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 
-	if retryValidate := manifest.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
+	if retryValidate := manifestpkg.HandleConnectorNotInstalled(ctx, clients, token, err); retryValidate {
 		validationResult, err = clients.API().ValidateAppManifest(ctx, token, appManifest, app.AppID)
 	}
 
-	if err := manifest.HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
+	if err := manifestpkg.HandleConnectorApprovalRequired(ctx, clients, token, err); err != nil {
 		return err
 	}
 
@@ -406,6 +423,11 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		configureLocalManifest(ctx, clients, &manifest)
 	}
 
+	err = validateManifestOrgReady(app, auth, manifest)
+	if err != nil {
+		return app, api.DeveloperAppInstallResult{}, "", err
+	}
+
 	err = validateManifestForInstall(ctx, clients, token, app, manifest)
 	if err != nil {
 		return app, api.DeveloperAppInstallResult{}, "", err
@@ -521,30 +543,16 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		return app, result, installState, err
 	}
 
-	//
-	// TODO: Currently, cannot update the icon if app is not hosted.
-	//
-	// upload icon, default to icon.png
-	// var iconPath = slackYaml.Icon
-	// if iconPath == "" {
-	// 	if _, err := os.Stat("icon.png"); !os.IsNotExist(err) {
-	// 		iconPath = "icon.png"
-	// 	}
-	// }
-	// if iconPath != "" {
-	// 	clients.IO.PrintDebug(ctx, "uploading icon")
-	// 	err = updateIcon(ctx, clients, iconPath, env.AppID, token)
-	// 	if err != nil {
-	// 		clients.IO.PrintError(ctx, "An error occurred updating the Icon", err)
-	// 	}
-	// 	// Save a md5 hash of the icon in environments.yaml
-	// 	var iconHash string
-	// 	iconHash, err = getIconHash(iconPath)
-	// 	if err != nil {
-	// 		return env, api.DeveloperAppInstallResult{}, err
-	// 	}
-	// 	env.IconHash = iconHash
-	// }
+	iconPath := resolveIconPath(ctx, clients, slackManifest.Icon)
+	if iconPath != "" {
+		_, iconErr := clients.API().IconSet(ctx, clients.Fs, token, app.AppID, iconPath)
+		if iconErr != nil {
+			clients.IO.PrintDebug(ctx, "icon error: %s", iconErr)
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Error updating app icon: %s", iconErr)))
+		} else {
+			_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Updated app icon: %s", iconPath)))
+		}
+	}
 
 	// update config with latest yaml hash
 	// env.Hash = slackYaml.Hash
@@ -654,26 +662,26 @@ func appendLocalToDisplayName(manifest *types.AppManifest) {
 	}
 }
 
-// updateIcon will upload the new icon to the Slack API
-func updateIcon(ctx context.Context, clients *shared.ClientFactory, iconPath, appID string, token string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "updateIcon")
-	defer span.Finish()
-
-	clients.IO.PrintDebug(ctx, "uploading icon")
-
-	// var iconResp apiclient.IconResult
-	var err error
-	_, err = clients.API().Icon(ctx, clients.Fs, token, appID, iconPath)
-	if err != nil {
-		// TODO: separate the icon upload into a different function because if an error is returned
-		// the new app_id might be ignored and next time we'll create another app.
-		return fmt.Errorf("%s %s", err, iconPath)
+// resolveIconPath determines the icon file path using the priority chain:
+// SLACK_CLI_APP_ICON_PATH env var > manifest icon field > assets/ and root fallback
+func resolveIconPath(ctx context.Context, clients *shared.ClientFactory, manifestIcon string) string {
+	if envIconPath := clients.Config.AppIconPathFlag; envIconPath != "" {
+		if _, err := clients.Fs.Stat(envIconPath); err == nil {
+			return envIconPath
+		}
+		clients.IO.PrintDebug(ctx, "SLACK_CLI_APP_ICON_PATH file not found: %s", envIconPath)
+		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from SLACK_CLI_APP_ICON_PATH not found: %s", envIconPath)))
+		return ""
 	}
-
-	// Save a md5 hash of the icon in environments.yaml
-	// env.IconHash = iconResp.MD5Hash
-	return nil
+	if manifestIcon != "" {
+		if _, err := clients.Fs.Stat(manifestIcon); err == nil {
+			return manifestIcon
+		}
+		clients.IO.PrintDebug(ctx, "manifest icon file not found: %s", manifestIcon)
+		_, _ = clients.IO.WriteOut().Write([]byte(style.SectionSecondaryf("Warning: icon path from manifest not found: %s", manifestIcon)))
+		return ""
+	}
+	return icon.ResolveIconPath(clients.Fs)
 }
 
 // shouldCreateManifest decides if an app manifest needs to be created for an
@@ -720,6 +728,13 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
+	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
+	if flagSource.Equals(config.ManifestSourceRemote) {
+		return false, nil
+	}
+	if flagSource.Equals(config.ManifestSourceLocal) {
+		return true, nil
+	}
 	if manifestSource.Equals(config.ManifestSourceRemote) {
 		return false, nil
 	}
@@ -745,61 +760,15 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	if err != nil {
 		return false, err
 	}
-	notice := ""
-	switch {
-	case saved.Equals(hash):
+	if saved.Equals(hash) {
 		return true, nil
-	case saved.Equals(""):
-		notice = "Manifest values for this app are overwritten on reinstall"
-	default:
-		notice = style.Yellow("The manifest on app settings has been changed since last update")
 	}
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji:     "books",
-		Text:      "App Manifest",
-		Secondary: []string{notice},
-	}))
-	if !clients.IO.IsTTY() {
-		return false, errorAppManifestUpdate(app, true)
-	}
-	continues, err := clients.IO.ConfirmPrompt(
-		ctx,
-		"Overwrite manifest on app settings with the project's manifest file?",
-		false,
-	)
+
+	_, err = manifestSyncFunc(ctx, clients, app, auth)
 	if err != nil {
 		return false, err
 	}
-	if !continues {
-		return false, errorAppManifestUpdate(app, false)
-	}
-	return true, nil
-}
-
-// errorAppManifestUpdate formats an error message with app specific remediation
-func errorAppManifestUpdate(app types.App, forceOption bool) *slackerror.Error {
-	url := "https://api.slack.com/apps"
-	switch {
-	case app.AppID != "" && app.EnterpriseID != "":
-		url = fmt.Sprintf("https://app.slack.com/app-settings/%s/%s/app-manifest", app.EnterpriseID, app.AppID)
-	case app.AppID != "" && app.TeamID != "":
-		url = fmt.Sprintf("https://app.slack.com/app-settings/%s/%s/app-manifest", app.TeamID, app.AppID)
-	case app.AppID != "":
-		url = fmt.Sprintf("https://api.slack.com/apps/%s", app.AppID)
-	}
-	command := style.Commandf(fmt.Sprintf("manifest --source %s", config.ManifestSourceLocal.String()), false)
-	remediation := []string{
-		fmt.Sprintf("Check %s values with %s", config.ManifestSourceLocal.String(), command),
-		fmt.Sprintf("Compare app settings: %s", style.LinkText(url)),
-	}
-	if forceOption {
-		option := fmt.Sprintf("Write %s manifest values to app settings using `%s`",
-			config.ManifestSourceLocal.String(),
-			style.CommandText("--force"),
-		)
-		remediation = append(remediation, option)
-	}
-	return slackerror.New(slackerror.ErrAppManifestUpdate).WithRemediation("%s", strings.Join(remediation, "\n"))
+	return false, nil
 }
 
 // Displays warning message and details and then gives user a prompt on if they want to continue or not. Returns false
@@ -817,7 +786,10 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 
 	if foundBreakingChange {
 		clients.IO.PrintWarning(ctx, "%s", warn.Warning(clients.Config.DebugEnabled, "App manifest contains possible breaking changes"))
-		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", false)
+		saveManifestDespiteWarning, err := clients.IO.ConfirmPrompt(ctx, "Confirm changes?", iostreams.ConfirmPromptConfig{
+			Default: false,
+			Flag:    clients.Config.Flags.Lookup("force"),
+		})
 		if err != nil {
 			return false, err
 		}
@@ -841,7 +813,7 @@ func continueDespiteWarning(ctx context.Context, clients *shared.ClientFactory, 
 	return true, nil
 }
 
-// setAppEnvironmentTokens adds the app and bot token to the process environment
+// setAppEnvironmentTokens adds the app, bot, and user token to the process environment
 func setAppEnvironmentTokens(ctx context.Context, clients *shared.ClientFactory, result api.DeveloperAppInstallResult) error {
 	if token, ok := clients.Os.LookupEnv("SLACK_APP_TOKEN"); !ok {
 		if err := clients.Os.Setenv("SLACK_APP_TOKEN", result.APIAccessTokens.AppLevel); err != nil {
@@ -868,6 +840,21 @@ func setAppEnvironmentTokens(ctx context.Context, clients *shared.ClientFactory,
 				"Proceed with caution as this might be associated to an unexpected bot ID",
 			},
 		}))
+	}
+	if result.APIAccessTokens.User != "" {
+		if token, ok := clients.Os.LookupEnv("SLACK_USER_TOKEN"); !ok {
+			if err := clients.Os.Setenv("SLACK_USER_TOKEN", result.APIAccessTokens.User); err != nil {
+				return err
+			}
+		} else if token != result.APIAccessTokens.User {
+			clients.IO.PrintWarning(ctx, "%s", style.Sectionf(style.TextSection{
+				Text: fmt.Sprintf("The user token differs from the set %s environment variable", style.Highlight("SLACK_USER_TOKEN")),
+				Secondary: []string{
+					"The environment variable will continue to be used",
+					"Proceed with caution as this might be associated to an unexpected user ID",
+				},
+			}))
+		}
 	}
 	return nil
 }

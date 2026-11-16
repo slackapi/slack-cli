@@ -22,6 +22,7 @@ slack app unlink [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -30,6 +31,7 @@ slack app unlink [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -45,5 +47,5 @@ $ slack app unlink --app A0123456789
 
 ## See also
 
-* [slack app](slack_app)	 - Install, uninstall, and list teams with the app installed
+* [slack app](/tools/slack-cli/reference/commands/slack_app/)	 - Install, uninstall, and list teams with the app installed
 

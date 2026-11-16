@@ -45,7 +45,6 @@ type ClientFactory struct {
 	API          func() api.APIInterface
 	AppClient    func() *app.Client
 	Auth         func() auth.AuthInterface
-	CLIVersion   string
 	Config       *config.Config
 	EventTracker tracking.TrackingManager
 	HookExecutor hooks.HookExecutor
@@ -85,20 +84,13 @@ func NewClientFactory(options ...func(*ClientFactory)) *ClientFactory {
 	clients.IO = iostreams.NewIOStreams(clients.Config, clients.Fs, clients.Os)
 	clients.HookExecutor = &hooks.HookExecutorDefaultProtocol{
 		IO: clients.IO,
+		Fs: clients.Fs,
 	}
 	clients.EventTracker = tracking.NewEventTracker()
 	clients.API = clients.defaultAPIFunc
 	clients.AppClient = clients.defaultAppClientFunc
 	clients.Auth = clients.defaultAuthFunc
 	clients.Browser = clients.defaultBrowserFunc
-
-	// TODO: Temporary hack to get around circular dependency in internal/api/client.go since that imports version
-	// Follows pattern demonstrated by the GitHub CLI here https://github.com/cli/cli/blob/5a46c1cab601a3394caa8de85adb14f909b811e9/pkg/cmd/factory/default.go#L29
-	// Used by the APIClient for its userAgent
-	// Currently needed because trying to get the version of the CLI from pkg/version/version.go would cause a circular dependency
-	// We can get rid of this once we refactor the code relationship between pkg/ and internal/
-	// userAgent can get Slack CLI version from context which is defined in main.go, this approach bypass circular dependency. The clients.CLIVersion is retained for future code refactor purpose and serve SetVersion function
-	clients.CLIVersion = ""
 
 	// Custom values set by functional options
 	// Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
@@ -246,7 +238,7 @@ func (c *ClientFactory) InitSDKConfig(ctx context.Context, dirPath string) error
 	// TODO: this is a side-effect-y way of signaling to the rest of the codebase "we are in an app project directory now"
 	c.SDKConfig.WorkingDirectory = dirPath
 
-	c.HookExecutor = hooks.GetHookExecutor(c.IO, c.SDKConfig)
+	c.HookExecutor = hooks.GetHookExecutor(c.IO, c.Fs, c.SDKConfig)
 
 	return err
 }
@@ -286,6 +278,7 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 		}
 		defaultExecutor := hooks.HookExecutorDefaultProtocol{
 			IO: c.IO,
+			Fs: c.Fs,
 		}
 		if SDKHooksResponse, err = defaultExecutor.Execute(ctx, hookExecOpts); err != nil {
 			return err
@@ -321,12 +314,6 @@ func (c *ClientFactory) InitSDKConfigFromJSON(ctx context.Context, configFileByt
 // DebugMode is an example of defining a functional options helper
 func DebugMode(c *ClientFactory) {
 	c.Config.DebugEnabled = true
-}
-
-// SetVersion is a functional option that sets the Cli version that the API Client references
-// Learn more: https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis
-func SetVersion(version string) func(c *ClientFactory) {
-	return func(c *ClientFactory) { c.CLIVersion = version }
 }
 
 // getDevHostname returns the hostname of the given URL if it is dev or a numbered dev instance

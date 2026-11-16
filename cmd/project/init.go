@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/cmd/app"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -28,6 +29,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
+
+const linkAppConfirmPromptText = "Do you want to add an existing app?"
 
 // NewInitCommand returns a Cobra command to initialize projects with Slack CLI support
 func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -72,7 +75,7 @@ func NewInitCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 	}
 
-	// TODO - add --environment flag to be used by link
+	cmd.Flags().StringP("environment", "E", "", "environment to save existing app (local, deployed)")
 
 	return cmd
 }
@@ -109,11 +112,27 @@ func projectInitCommandRunE(clients *shared.ClientFactory, cmd *cobra.Command, a
 	// Existing projects initialized always default to config.ManifestSourceLocal.
 	_ = create.InstallProjectDependencies(ctx, clients, projectDirPath)
 
-	// Add an existing app to the project
-	err = app.LinkExistingApp(ctx, clients, &types.App{}, true)
+	// Prompt to add an existing app to the project
+	app.LinkAppHeaderSection(ctx, clients)
+	proceed, err := clients.IO.ConfirmPrompt(ctx, linkAppConfirmPromptText, iostreams.ConfirmPromptConfig{
+		Default: true,
+	})
 	if err != nil {
-		// Display the error but continue to init
-		clients.IO.PrintError(ctx, "%s", err.Error())
+		return err
+	}
+	if proceed {
+		linkedApp := &types.App{}
+		err = app.LinkExistingApp(ctx, clients, linkedApp)
+		if err != nil {
+			// Display the error but continue to init
+			clients.IO.PrintError(ctx, "%s", err.Error())
+		} else {
+			clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+				Emoji:     "house",
+				Text:      "App",
+				Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
+			}))
+		}
 	}
 
 	printNextStepSection(ctx, clients, projectDirPath)
@@ -141,7 +160,7 @@ func printNextStepSection(ctx context.Context, clients *shared.ClientFactory, pr
 
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
-		Text:      "Next steps to begin development",
+		Text:      "Next Steps",
 		Secondary: secondaryOutput,
 	}))
 }

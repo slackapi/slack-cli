@@ -37,6 +37,11 @@ func (ms ManifestSource) String() string {
 	return string(ms)
 }
 
+// IsValid returns true if the manifest source is a known valid value
+func (ms ManifestSource) IsValid() bool {
+	return ms.Equals(ManifestSourceLocal) || ms.Equals(ManifestSourceRemote)
+}
+
 // Human returns the string value as a human-friendly name
 func (ms ManifestSource) Human() string {
 	switch ms {

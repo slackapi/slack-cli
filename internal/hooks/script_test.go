@@ -65,7 +65,7 @@ func Test_HookScript_UnmarshalJSON(t *testing.T) {
 		"Unmarshal Error": {
 			blob:                `[1, 2, 3]`,
 			expectedErrorType:   &json.UnmarshalTypeError{},
-			expectedHookScripts: []HookScript{{Command: ""}},
+			expectedHookScripts: []HookScript{{Command: ""}, {Command: ""}, {Command: ""}},
 		},
 	}
 	for name, tc := range tests {

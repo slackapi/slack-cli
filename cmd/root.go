@@ -22,9 +22,10 @@ import (
 	"strings"
 	"syscall"
 
-	huh "charm.land/huh/v2"
+	apicmd "github.com/slackapi/slack-cli/cmd/api"
 	"github.com/slackapi/slack-cli/cmd/app"
 	"github.com/slackapi/slack-cli/cmd/auth"
+	"github.com/slackapi/slack-cli/cmd/blocks"
 	"github.com/slackapi/slack-cli/cmd/collaborators"
 	"github.com/slackapi/slack-cli/cmd/datastore"
 	"github.com/slackapi/slack-cli/cmd/docgen"
@@ -41,18 +42,20 @@ import (
 	"github.com/slackapi/slack-cli/cmd/platform"
 	"github.com/slackapi/slack-cli/cmd/project"
 	"github.com/slackapi/slack-cli/cmd/sandbox"
+	skillcmd "github.com/slackapi/slack-cli/cmd/skill"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/cmd/upgrade"
 	versioncmd "github.com/slackapi/slack-cli/cmd/version"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/internal/update"
+	"github.com/slackapi/slack-cli/internal/useragent"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -80,6 +83,7 @@ var AliasMap = map[string]*AliasInfo{
 	"logout":    {CommandFactory: auth.NewLogoutCommand, CanonicalName: "auth logout", ParentName: "auth"},
 	"run":       {CommandFactory: platform.NewRunCommand, CanonicalName: "platform run", ParentName: "platform"},
 	"samples":   {CommandFactory: project.NewSamplesCommand, CanonicalName: "project samples", ParentName: "project"},
+	"sync":      {CommandFactory: manifest.NewSyncCommand, CanonicalName: "manifest sync", ParentName: "manifest"},
 	"uninstall": {CommandFactory: app.NewUninstallCommand, CanonicalName: "app uninstall", ParentName: "app"},
 }
 var processName = cmdutil.GetProcessName()
@@ -98,7 +102,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			{Command: "init", Meaning: "Initialize an existing Slack app"},
 			{Command: "run", Meaning: "Start a local development server"},
 			{Command: "deploy", Meaning: "Deploy to the Slack Platform"},
-			{Command: "docs", Meaning: "Open Slack developer docs"},
+			{Command: "docs search \"Block Kit\"", Meaning: "Search Slack developer docs"},
 		}),
 		Long: strings.Join([]string{
 			`{{Emoji "sparkles"}}CLI to create, run, and deploy Slack apps`,
@@ -126,16 +130,22 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			})
 
 			// Check for an CLI update in the background while the command runs
-			updateNotification = update.New(clients, version.Get(), "SLACK_SKIP_UPDATE")
+			updateNotification = update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
 			updateNotification.CheckForUpdateInBackground(ctx, false)
+
+			// Recommend the official Slack plugin when running inside Claude Code
+			useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
 			return nil
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: since commands are moving to `*E` cobra lifecycle methods, this method may not be invoked if those earlier lifecycle methods return an error. Maybe move this to the cleanup() method below? but maybe this is OK, no need to prompt users to update if they encounter an error?
 			// when the command is `slack update`
-			return updateNotification.PrintAndPromptUpdates(cmd, version.Get())
+			return updateNotification.PrintAndPromptUpdates(cmd, version.Raw())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if skill, _ := cmd.Flags().GetBool("skill"); skill {
+				return skillcmd.RunSkillCommand(clients, cmd)
+			}
 			return cmd.Help()
 		},
 	}
@@ -149,23 +159,24 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// updateNotification will check for an update in the background and print a message after the command runs
 	var updateNotification *update.UpdateNotification
 
-	// Override huh's default user abort error with a Slack CLI error so that
-	// cancelled prompts are handled consistently as process interruptions.
-	huh.ErrUserAborted = slackerror.New(slackerror.ErrProcessInterrupted)
-
-	clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
+	clients = shared.NewClientFactory()
 	rootCmd := NewRootCommand(clients, updateNotification)
 
 	// Support `--version` by setting root command's `Version` and custom template.
 	// Add a newline to `SetVersionTemplate` to display correctly on terminals.
-	rootCmd.Version = version.Get()
+	rootCmd.Version = version.Raw()
 	rootCmd.SetVersionTemplate(versioncmd.Template() + "\n")
+
+	// Support `--skill` as a shortcut to the `skill` command, similar to `--version`
+	rootCmd.Flags().Bool("skill", false, "print the agent skill for the Slack CLI")
 
 	// Add subcommands (each subcommand may add their own child subcommands)
 	// Please keep these sorted
 	subCommands := []*cobra.Command{
+		apicmd.NewCommand(clients),
 		app.NewCommand(clients),
 		auth.NewCommand(clients),
+		blocks.NewCommand(clients),
 		collaborators.NewCommand(clients),
 		datastore.NewCommand(clients),
 		docgen.NewCommand(clients),
@@ -192,6 +203,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		docs.NewCommand(clients),
 		doctor.NewDoctorCommand(clients),
 		feedback.NewFeedbackCommand(clients),
+		skillcmd.NewCommand(clients),
 	}
 
 	for _, topLevelCommand := range topLevelCommands {
@@ -252,6 +264,11 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		clients.Config.SystemConfig.SetCustomConfigDirPath(clients.Config.ConfigDirFlag)
 	}
 
+	// Accessible mode implies no-color
+	if clients.Config.AccessibleFlag {
+		clients.Config.NoColor = true
+	}
+
 	// Init color and formatting
 	style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
 	style.ToggleSpinner(clients.IO.IsTTY() && !clients.Config.NoColor && !clients.Config.DebugEnabled)
@@ -259,6 +276,15 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 	// Find and replace deprecated flags
 	if err := clients.Config.DeprecatedFlagSubstitutions(rootCmd); err != nil {
 		return err
+	}
+
+	if clients.Config.TokenFlag == "-" {
+		token, err := auth.ResolveTokenInput(clients, clients.Config.TokenFlag)
+		if err != nil {
+			return err
+		}
+		clients.Config.TokenFlag = token
+		clients.Config.TokenFromStdin = true
 	}
 
 	// Set the preference
@@ -270,7 +296,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init clients that use flags
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.CLIVersion)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
 
 	// Init System ID
 	if systemID, err := clients.Config.SystemConfig.InitSystemID(ctx); err != nil {
@@ -284,6 +310,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		rootCmd.SetContext(ctx)
 		// Debug logging
 		clients.IO.PrintDebug(ctx, "system_id: %s", clients.Config.SystemID)
+		clients.IO.PrintDebug(ctx, "user_agent: %s", useragent.BuildUserAgent(version.Raw()))
 	}
 
 	// Init Project ID, if current directory is a project
@@ -300,9 +327,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 
 	// Init configurations
 	clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
-	style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
-	// TODO(slackcontext) Consolidate storing CLI version to slackcontext
-	clients.Config.Version = clients.CLIVersion
+	style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
 
 	// The domain auths (token->domain) shouldn't change for the execution of the CLI so preload them into config!
 	clients.Config.DomainAuthTokens = clients.Auth().MapAuthTokensToDomains(ctx)

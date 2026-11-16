@@ -1,10 +1,10 @@
 # `slack docs`
 
-Open Slack developer docs
+Search and open Slack developer docs
 
 ## Description
 
-Open the Slack developer docs in your browser, with optional search functionality
+Search the Slack developer docs and print their pages from the terminal with the search and get subcommands, or open them in your browser
 
 ```
 slack docs [flags]
@@ -13,13 +13,13 @@ slack docs [flags]
 ## Flags
 
 ```
-  -h, --help     help for docs
-      --search   open Slack docs search page or search with query
+  -h, --help   help for docs
 ```
 
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -28,20 +28,26 @@ slack docs [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
 ## Examples
 
 ```
-$ slack docs                       # Open Slack developer docs homepage
+# Open Slack developer docs homepage
+$ slack docs
 
 # Search Slack developer docs for Block Kit
-$ slack docs --search "Block Kit"
-$ slack docs --search              # Open Slack docs search page
+$ slack docs search "Block Kit"
+
+# Search docs and open results in browser
+$ slack docs search "Block Kit" --output=browser
 ```
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack docs get](/tools/slack-cli/reference/commands/slack_docs_get/)	 - Print a Slack developer docs page
+* [slack docs search](/tools/slack-cli/reference/commands/slack_docs_search/)	 - Search Slack developer docs
 

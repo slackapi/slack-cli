@@ -16,16 +16,6 @@ package goutils
 
 import "strings"
 
-// AppendStringIfNotMember only appends if not already a member
-func AppendStringIfNotMember(list []string, item string) []string {
-	for _, member := range list {
-		if member == item {
-			return list
-		}
-	}
-	return append(list, item)
-}
-
 // Contains returns true if a string can be found in a list of strings, false otherwise
 // isCaseSensitive defines whether the string needs to match capitalization to return true
 // case sensitivity based on Unicode case-folding, more general form of case-insensitivity

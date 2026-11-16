@@ -54,7 +54,7 @@ func Test_Hooks_GetHookExecutor(t *testing.T) {
 			io := iostreams.NewIOStreamsMock(config, fs, os)
 			sdkConfig := NewSDKConfigMock()
 			sdkConfig.Config.SupportedProtocols = tc.protocolVersions
-			hookExecutor := GetHookExecutor(io, sdkConfig)
+			hookExecutor := GetHookExecutor(io, fs, sdkConfig)
 			require.IsType(t, tc.expectedType, hookExecutor)
 		})
 	}

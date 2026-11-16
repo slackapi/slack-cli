@@ -16,16 +16,19 @@ package apps
 
 import (
 	"bytes"
+	"context"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/config"
+	manifestpkg "github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -50,13 +53,13 @@ func TestInstall(t *testing.T) {
 		mockAPIUpdateError      error
 		mockAuth                types.SlackAuth
 		mockAuthSession         api.AuthSession
-		mockConfirmPrompt       bool
 		mockIsTTY               bool
 		mockManifestAppLocal    types.SlackYaml
 		mockManifestAppRemote   types.SlackYaml
 		mockManifestHashInitial cache.Hash
 		mockManifestHashUpdated cache.Hash
 		mockManifestSource      config.ManifestSource
+		mockManifestSyncError   error
 		mockOrgGrantWorkspaceID string
 		expectedApp             types.App
 		expectedCreate          bool
@@ -177,7 +180,7 @@ func TestInstall(t *testing.T) {
 			},
 			expectedUpdate: true,
 		},
-		"avoid changing the manifest if a remote function runtime is specified": {
+		"manifest sync resolves differences for a remote function runtime app": {
 			mockApp: types.App{
 				AppID:  "A002",
 				TeamID: mockTeamID,
@@ -201,8 +204,6 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockConfirmPrompt:  true,
-			mockIsTTY:          true,
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -227,23 +228,8 @@ func TestInstall(t *testing.T) {
 				TeamID: mockTeamID,
 			},
 			expectedInstallState: types.InstallSuccess,
-			expectedManifest: types.AppManifest{
-				Metadata: &types.ManifestMetadata{
-					MajorVersion: 1,
-				},
-				DisplayInformation: types.DisplayInformation{
-					Name: "example-2",
-				},
-				Settings: &types.AppSettings{
-					FunctionRuntime: types.Remote,
-					EventSubscriptions: &types.ManifestEventSubscriptions{
-						RequestURL: "https://example.com",
-					},
-				},
-			},
-			expectedUpdate: true,
 		},
-		"avoid changing the manifest if no function runtime is specified": {
+		"manifest sync resolves differences for an app without function runtime": {
 			mockApp: types.App{
 				AppID:  "A003",
 				TeamID: mockTeamID,
@@ -266,8 +252,6 @@ func TestInstall(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockConfirmPrompt:  true,
-			mockIsTTY:          true,
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -286,15 +270,6 @@ func TestInstall(t *testing.T) {
 				TeamID: mockTeamID,
 			},
 			expectedInstallState: types.InstallSuccess,
-			expectedManifest: types.AppManifest{
-				DisplayInformation: types.DisplayInformation{
-					Name: "example-3",
-				},
-				Settings: &types.AppSettings{
-					SocketModeEnabled: &mockTrue,
-				},
-			},
-			expectedUpdate: true,
 		},
 		"create and install an app with a remote manifest": {
 			mockApp: types.App{},
@@ -398,12 +373,13 @@ func TestInstall(t *testing.T) {
 			mockManifestHashInitial: "pt1",
 			mockManifestHashUpdated: "pt2",
 			mockManifestSource:      config.ManifestSourceLocal,
+			mockManifestSyncError:   slackerror.New(slackerror.ErrAppManifestUpdate),
 			expectedCreate:          false,
 			expectedError:           slackerror.New(slackerror.ErrAppManifestUpdate),
 			expectedInstallState:    "",
 			expectedUpdate:          false,
 		},
-		"errors if the manifest cache is unset without confirmation": {
+		"errors if manifest sync fails": {
 			mockApp: types.App{
 				AppID:        "A005",
 				TeamID:       mockTeamID,
@@ -430,8 +406,6 @@ func TestInstall(t *testing.T) {
 				TeamName:     &mockTeamDomain,
 				UserID:       &mockUserID,
 			},
-			mockConfirmPrompt: false,
-			mockIsTTY:         true,
 			mockManifestAppLocal: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					Metadata: &types.ManifestMetadata{
@@ -444,6 +418,7 @@ func TestInstall(t *testing.T) {
 			},
 			mockManifestHashInitial: cache.Hash(""),
 			mockManifestHashUpdated: cache.Hash("abc"),
+			mockManifestSyncError:   slackerror.New(slackerror.ErrAppManifestUpdate),
 			expectedError:           slackerror.New(slackerror.ErrAppManifestUpdate),
 			expectedUpdate:          false,
 		},
@@ -570,17 +545,14 @@ func TestInstall(t *testing.T) {
 				tc.mockAuthSession,
 				nil,
 			)
-			if tc.mockIsTTY {
-				clientsMock.IO.On(
-					"ConfirmPrompt",
-					mock.Anything,
-					"Overwrite manifest on app settings with the project's manifest file?",
-					false,
-				).Return(
-					tc.mockConfirmPrompt,
-					nil,
-				)
+			originalSyncFunc := manifestSyncFunc
+			manifestSyncFunc = func(_ context.Context, _ *shared.ClientFactory, _ types.App, _ types.SlackAuth) (*manifestpkg.SyncResult, error) {
+				if tc.mockManifestSyncError != nil {
+					return nil, tc.mockManifestSyncError
+				}
+				return &manifestpkg.SyncResult{}, nil
 			}
+			t.Cleanup(func() { manifestSyncFunc = originalSyncFunc })
 			manifestMock := &app.ManifestMockObject{}
 			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifestAppLocal, nil)
 			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifestAppRemote, nil)
@@ -692,12 +664,12 @@ func TestInstallLocalApp(t *testing.T) {
 		mockAPIUpdateError      error
 		mockAuth                types.SlackAuth
 		mockAuthSession         api.AuthSession
-		mockConfirmPrompt       bool
 		mockIsTTY               bool
 		mockManifest            types.SlackYaml
 		mockManifestHashInitial cache.Hash
 		mockManifestHashUpdated cache.Hash
 		mockManifestSource      config.ManifestSource
+		mockManifestSyncError   error
 		mockOrgGrantWorkspaceID string
 		expectedApp             types.App
 		expectedCreate          bool
@@ -767,7 +739,7 @@ func TestInstallLocalApp(t *testing.T) {
 			expectedInstallState: types.InstallSuccess,
 			expectedUpdate:       false,
 		},
-		"update and install an existing local bolt app with a remote function runtime without manifest changes": {
+		"manifest sync resolves differences for existing local bolt app with remote runtime": {
 			mockApp: types.App{
 				AppID:  "A002",
 				TeamID: mockTeamID,
@@ -789,7 +761,6 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockConfirmPrompt:  true,
 			mockIsTTY:          true,
 			mockManifestSource: config.ManifestSourceLocal,
 			mockManifest: types.SlackYaml{
@@ -822,30 +793,11 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamID: mockTeamID,
 				UserID: mockUserID,
 			},
-			expectedManifest: types.AppManifest{
-				Metadata: &types.ManifestMetadata{
-					MajorVersion: 1,
-				},
-				DisplayInformation: types.DisplayInformation{
-					Name: "example-2 (local)",
-				},
-				Features: &types.AppFeatures{
-					BotUser: types.BotUser{
-						DisplayName: "example-2 (local)",
-					},
-				},
-				Settings: &types.AppSettings{
-					FunctionRuntime: types.Remote,
-					EventSubscriptions: &types.ManifestEventSubscriptions{
-						RequestURL: "https://example.com",
-					},
-				},
-			},
 			expectedCreate:       false,
 			expectedInstallState: types.InstallSuccess,
-			expectedUpdate:       true,
+			expectedUpdate:       false,
 		},
-		"update and install an existing local bolt app without a function runtime without manifest changes": {
+		"manifest sync resolves differences for existing local bolt app without function runtime": {
 			mockApp: types.App{
 				AppID:  "A003",
 				TeamID: mockTeamID,
@@ -869,7 +821,6 @@ func TestInstallLocalApp(t *testing.T) {
 			},
 			mockManifestSource:  config.ManifestSourceLocal,
 			mockAPIInstallState: types.InstallSuccess,
-			mockConfirmPrompt:   true,
 			mockIsTTY:           true,
 			mockManifest: types.SlackYaml{
 				AppManifest: types.AppManifest{
@@ -894,22 +845,9 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamID: mockTeamID,
 				UserID: mockUserID,
 			},
-			expectedManifest: types.AppManifest{
-				DisplayInformation: types.DisplayInformation{
-					Name: "example-3 (local)",
-				},
-				Features: &types.AppFeatures{
-					BotUser: types.BotUser{
-						DisplayName: "example-3 (local)",
-					},
-				},
-				Settings: &types.AppSettings{
-					SocketModeEnabled: &mockTrue,
-				},
-			},
 			expectedCreate:       false,
 			expectedInstallState: types.InstallSuccess,
-			expectedUpdate:       true,
+			expectedUpdate:       false,
 		},
 		"skip updating and allow installing an existing bolt app with a remote manifest": {
 			mockApp: types.App{
@@ -1187,7 +1125,6 @@ func TestInstallLocalApp(t *testing.T) {
 			mockManifestSource:      config.ManifestSourceLocal,
 			mockManifestHashInitial: cache.Hash("123"),
 			mockManifestHashUpdated: cache.Hash("789"),
-			mockConfirmPrompt:       true,
 			mockIsTTY:               true,
 			expectedApp: types.App{
 				AppID:  "A004",
@@ -1195,22 +1132,9 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamID: mockTeamID,
 				UserID: mockUserID,
 			},
-			expectedManifest: types.AppManifest{
-				DisplayInformation: types.DisplayInformation{
-					Name: "example-3 (local)",
-				},
-				Features: &types.AppFeatures{
-					BotUser: types.BotUser{
-						DisplayName: "example-3 (local)",
-					},
-				},
-				Settings: &types.AppSettings{
-					SocketModeEnabled: &mockTrue,
-				},
-			},
 			expectedCreate:       false,
 			expectedInstallState: types.InstallSuccess,
-			expectedUpdate:       true,
+			expectedUpdate:       false,
 		},
 		"create and install a new bolt app when manifest is remote": {
 			mockApp: types.App{},
@@ -1392,17 +1316,14 @@ func TestInstallLocalApp(t *testing.T) {
 				tc.mockAuthSession,
 				nil,
 			)
-			if tc.mockIsTTY {
-				clientsMock.IO.On(
-					"ConfirmPrompt",
-					mock.Anything,
-					"Overwrite manifest on app settings with the project's manifest file?",
-					false,
-				).Return(
-					tc.mockConfirmPrompt,
-					nil,
-				)
+			originalSyncFunc := manifestSyncFunc
+			manifestSyncFunc = func(_ context.Context, _ *shared.ClientFactory, _ types.App, _ types.SlackAuth) (*manifestpkg.SyncResult, error) {
+				if tc.mockManifestSyncError != nil {
+					return nil, tc.mockManifestSyncError
+				}
+				return &manifestpkg.SyncResult{}, nil
 			}
+			t.Cleanup(func() { manifestSyncFunc = originalSyncFunc })
 			manifestMock := &app.ManifestMockObject{}
 			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
 			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
@@ -1481,6 +1402,68 @@ func TestInstallLocalApp(t *testing.T) {
 					assert.Equal(t, tc.mockApp.AppID, args.Get(2))
 					assert.Equal(t, tc.expectedManifest, args.Get(3))
 				}
+			}
+		})
+	}
+}
+
+func TestValidateManifestOrgReady(t *testing.T) {
+	orgReady := types.AppManifest{Settings: &types.AppSettings{OrgDeployEnabled: new(true)}}
+	notOrgReady := types.AppManifest{Settings: &types.AppSettings{OrgDeployEnabled: new(false)}}
+	unset := types.AppManifest{}
+	orgAuth := types.SlackAuth{TeamID: "E123", IsEnterpriseInstall: true}
+	workspaceAuth := types.SlackAuth{TeamID: "T123"}
+	uninstalledOrgApp := types.App{AppID: "A123", TeamID: "E123", InstallStatus: types.AppStatusUninstalled}
+	installedOrgApp := types.App{AppID: "A123", TeamID: "E123", InstallStatus: types.AppStatusInstalled}
+
+	tests := map[string]struct {
+		app      types.App
+		auth     types.SlackAuth
+		manifest types.AppManifest
+		err      bool
+	}{
+		"new org app that is org ready": {
+			app:      types.NewApp(),
+			auth:     orgAuth,
+			manifest: orgReady,
+		},
+		"new org app with org deploy disabled": {
+			app:      types.NewApp(),
+			auth:     orgAuth,
+			manifest: notOrgReady,
+			err:      true,
+		},
+		"new org app with org deploy unset": {
+			app:      types.NewApp(),
+			auth:     orgAuth,
+			manifest: unset,
+			err:      true,
+		},
+		"uninstalled org app with org deploy disabled": {
+			app:      uninstalledOrgApp,
+			auth:     orgAuth,
+			manifest: notOrgReady,
+			err:      true,
+		},
+		"installed org app with org deploy disabled": {
+			app:      installedOrgApp,
+			auth:     orgAuth,
+			manifest: notOrgReady,
+		},
+		"new workspace app with org deploy unset": {
+			app:      types.NewApp(),
+			auth:     workspaceAuth,
+			manifest: unset,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := validateManifestOrgReady(tc.app, tc.auth, tc.manifest)
+			if tc.err {
+				require.Error(t, err)
+				assert.Equal(t, slackerror.ErrAppNotOrgReady, slackerror.ToSlackError(err).Code)
+			} else {
+				assert.NoError(t, err)
 			}
 		})
 	}
@@ -1582,14 +1565,32 @@ func TestValidateManifestForInstall(t *testing.T) {
 
 func TestSetAppEnvironmentTokens(t *testing.T) {
 	tests := map[string]struct {
-		envAppToken      string
-		envBotToken      string
-		result           api.DeveloperAppInstallResult
-		expectedAppToken string
-		expectedBotToken string
-		expectedOutput   string
+		envAppToken       string
+		envBotToken       string
+		envUserToken      string
+		result            api.DeveloperAppInstallResult
+		expectedAppToken  string
+		expectedBotToken  string
+		expectedUserToken string
+		expectedOutput    string
 	}{
 		"defaults to resulting tokens": {
+			result: api.DeveloperAppInstallResult{
+				APIAccessTokens: struct {
+					Bot      string `json:"bot,omitempty"`
+					AppLevel string `json:"app_level,omitempty"`
+					User     string `json:"user,omitempty"`
+				}{
+					Bot:      "xoxb-1234",
+					AppLevel: "xapp-1-wf",
+					User:     "xoxp-5678",
+				},
+			},
+			expectedBotToken:  "xoxb-1234",
+			expectedAppToken:  "xapp-1-wf",
+			expectedUserToken: "xoxp-5678",
+		},
+		"does not set user token without user scopes": {
 			result: api.DeveloperAppInstallResult{
 				APIAccessTokens: struct {
 					Bot      string `json:"bot,omitempty"`
@@ -1635,6 +1636,24 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			expectedAppToken: "xapp-4-fn",
 			expectedOutput:   "The bot token differs from the set SLACK_BOT_TOKEN environment variable",
 		},
+		"does not override existing user token": {
+			envUserToken: "xoxp-custom",
+			result: api.DeveloperAppInstallResult{
+				APIAccessTokens: struct {
+					Bot      string `json:"bot,omitempty"`
+					AppLevel string `json:"app_level,omitempty"`
+					User     string `json:"user,omitempty"`
+				}{
+					Bot:      "xoxb-boop",
+					AppLevel: "xapp-5-ui",
+					User:     "xoxp-0000",
+				},
+			},
+			expectedBotToken:  "xoxb-boop",
+			expectedAppToken:  "xapp-5-ui",
+			expectedUserToken: "xoxp-custom",
+			expectedOutput:    "The user token differs from the set SLACK_USER_TOKEN environment variable",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -1648,12 +1667,18 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Unset()
 				clientsMock.Os.On("Getenv", "SLACK_BOT_TOKEN").Return(tc.envBotToken)
 			}
+			if tc.envUserToken != "" {
+				clientsMock.Os.On("Getenv", "SLACK_USER_TOKEN").Return(tc.envUserToken)
+			}
 			clientsMock.Os.On("LookupEnv", "SLACK_APP_TOKEN").
 				Return(tc.envAppToken, tc.envAppToken != "")
 			clientsMock.Os.On("LookupEnv", "SLACK_BOT_TOKEN").
 				Return(tc.envBotToken, tc.envBotToken != "")
+			clientsMock.Os.On("LookupEnv", "SLACK_USER_TOKEN").
+				Return(tc.envUserToken, tc.envUserToken != "")
 			clientsMock.Os.On("Setenv", "SLACK_APP_TOKEN", mock.Anything).Return(nil)
 			clientsMock.Os.On("Setenv", "SLACK_BOT_TOKEN", mock.Anything).Return(nil)
+			clientsMock.Os.On("Setenv", "SLACK_USER_TOKEN", mock.Anything).Return(nil)
 			output := &bytes.Buffer{}
 			clientsMock.IO.Stdout.SetOutput(output)
 
@@ -1662,6 +1687,11 @@ func TestSetAppEnvironmentTokens(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedAppToken, clients.Os.Getenv("SLACK_APP_TOKEN"))
 			assert.Equal(t, tc.expectedBotToken, clients.Os.Getenv("SLACK_BOT_TOKEN"))
+			if tc.expectedUserToken != "" {
+				assert.Equal(t, tc.expectedUserToken, clients.Os.Getenv("SLACK_USER_TOKEN"))
+			} else {
+				clientsMock.Os.AssertNotCalled(t, "Setenv", "SLACK_USER_TOKEN", mock.Anything)
+			}
 			assert.Contains(t, output.String(), tc.expectedOutput)
 		})
 	}
@@ -1711,7 +1741,7 @@ func TestContinueDespiteWarning(t *testing.T) {
 				"ConfirmPrompt",
 				mock.Anything,
 				"Confirm changes?",
-				false,
+				mock.Anything,
 			).Return(tc.confirmPrompt, nil)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
@@ -1719,8 +1749,88 @@ func TestContinueDespiteWarning(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedResult, result)
 			if !tc.expectsPrompt {
-				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", false)
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, "Confirm changes?", mock.Anything)
 			}
+		})
+	}
+}
+
+func Test_resolveIconPath(t *testing.T) {
+	tests := map[string]struct {
+		envIconPath  string
+		manifestIcon string
+		setupFiles   func(t *testing.T, fs afero.Fs)
+		expected     string
+	}{
+		"env var takes priority over manifest icon": {
+			envIconPath:  "env-icon.png",
+			manifestIcon: "manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "env-icon.png", []byte("img"), 0o644))
+				require.NoError(t, afero.WriteFile(fs, "manifest-icon.png", []byte("img"), 0o644))
+			},
+			expected: "env-icon.png",
+		},
+		"env var takes priority over fallback": {
+			envIconPath: "env-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "env-icon.png", []byte("img"), 0o644))
+				require.NoError(t, afero.WriteFile(fs, "assets/icon.png", []byte("img"), 0o644))
+			},
+			expected: "env-icon.png",
+		},
+		"manifest icon used when no env var": {
+			manifestIcon: "manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "manifest-icon.png", []byte("img"), 0o644))
+			},
+			expected: "manifest-icon.png",
+		},
+		"falls back to assets/icon.png when no env var or manifest": {
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "assets/icon.png", []byte("img"), 0o644))
+			},
+			expected: "assets/icon.png",
+		},
+		"falls back to icon.png in root when no assets": {
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "icon.png", []byte("img"), 0o644))
+			},
+			expected: "icon.png",
+		},
+		"returns empty when no icon found": {
+			setupFiles: func(t *testing.T, fs afero.Fs) {},
+			expected:   "",
+		},
+		"env var file not found returns empty": {
+			envIconPath:  "missing-icon.png",
+			manifestIcon: "manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "manifest-icon.png", []byte("img"), 0o644))
+			},
+			expected: "",
+		},
+		"manifest icon file not found returns empty with warning": {
+			manifestIcon: "missing-manifest-icon.png",
+			setupFiles: func(t *testing.T, fs afero.Fs) {
+				require.NoError(t, afero.WriteFile(fs, "assets/icon.png", []byte("img"), 0o644))
+			},
+			expected: "",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.Config.AppIconPathFlag = tc.envIconPath
+			tc.setupFiles(t, clientsMock.Fs)
+			output := &bytes.Buffer{}
+			clientsMock.IO.Stdout.SetOutput(output)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			result := resolveIconPath(ctx, clients, tc.manifestIcon)
+			assert.Equal(t, tc.expected, result)
 		})
 	}
 }

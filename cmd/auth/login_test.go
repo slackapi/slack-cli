@@ -15,6 +15,7 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
@@ -71,6 +72,31 @@ func TestLoginCommand(t *testing.T) {
 				)
 				cm.AddDefaultMocks()
 			},
+		},
+		"reads the token from standard input": {
+			CmdArgs: []string{"--token", "-"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.Stdin = bytes.NewBufferString("xoxp-example\n")
+				cm.API.On("ValidateSession", mock.Anything, "xoxp-example").Return(api.AuthSession{
+					UserID:   &mockOrgAuth.UserID,
+					TeamID:   &mockOrgAuth.TeamID,
+					TeamName: &mockOrgAuth.TeamDomain,
+					URL:      &mockOrgAuthURL,
+				}, nil)
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				cm.Auth.On("AuthWithTeamDomain", mock.Anything, mock.Anything).Return(types.SlackAuth{}, nil)
+				cm.AddDefaultMocks()
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "ValidateSession", mock.Anything, "xoxp-example")
+			},
+		},
+		"errors when the token is read from a terminal": {
+			CmdArgs: []string{"--token", "-"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsStdinTTY").Return(true)
+			},
+			ExpectedErrorStrings: []string{"No token was provided on standard input"},
 		},
 		"deprecated auth flag errors with the token flag": {
 			CmdArgs: []string{"--auth", "xoxp-example", "--token", "xoxb-example"},

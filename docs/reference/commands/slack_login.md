@@ -18,11 +18,13 @@ slack login [flags]
       --no-prompt          login without prompts using ticket and challenge code
       --ticket string      provide an auth ticket value
       --token string       provide a token for a pre-authenticated login
+                             (use - to read from standard input)
 ```
 
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -47,9 +49,12 @@ $ slack auth login --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...
 
 # Login with a user token
 $ slack auth login --token xoxp-...
+
+# Login with a user token read from standard input
+$ slack auth login --token - < token.txt
 ```
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

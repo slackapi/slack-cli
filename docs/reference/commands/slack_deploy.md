@@ -15,6 +15,7 @@ slack deploy [flags]
 ```
   -h, --help                         help for deploy
       --hide-triggers                do not list triggers and skip trigger creation prompts
+      --manifest-source string       resolve manifest differences using this source (local or remote)
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)
 ```
@@ -22,6 +23,7 @@ slack deploy [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -30,6 +32,7 @@ slack deploy [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -43,5 +46,5 @@ $ slack platform deploy --team T0123456  # Deploy to a specific team
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

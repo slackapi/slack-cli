@@ -58,6 +58,10 @@ You'll also need to accommodate requests from your network to a variety of hosts
 
 In addition, you'll need to obtain a service token to authorize your CI/CD setup. Refer to [CI/CD authorization](/tools/slack-cli/guides/authorizing-the-slack-cli#ci-cd) for more details about obtaining, using, and revoking service tokens.
 
+### Disabling update checks {#disable-updates}
+
+In CI/CD pipelines, set a `SLACK_SKIP_UPDATE` environment variable to `1` (or pass `--skip-update` on each command) to prevent the CLI from checking for new versions on every run. See [Version update notifications](/tools/slack-cli/guides/authorizing-the-slack-cli#version-updates) for details.
+
 Once you've done those things, you're ready to get started! Let's walk through an example.
 
 Let's take a look at the [Virtual Running Buddies sample app](https://github.com/slack-samples/deno-virtual-running-buddies).

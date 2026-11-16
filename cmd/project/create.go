@@ -18,13 +18,18 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/slackapi/slack-cli/cmd/app"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -32,11 +37,12 @@ import (
 )
 
 // Flags
-var createTemplateURLFlag string
-var createGitBranchFlag string
 var createAppNameFlag string
+var createEnvironmentFlag string
+var createGitBranchFlag string
 var createListFlag bool
 var createSubdirFlag string
+var createTemplateURLFlag string
 
 // Handle to client's create function used for testing
 // TODO - Find best practice, such as using an Interface and Struct to create a client
@@ -47,6 +53,7 @@ type promptObject struct {
 	Title       string // "Reverse string"
 	Repository  string // "slack-samples/reverse-string"
 	Description string // "A function that reverses a given string"
+	Subdir      string // "agents/hello-world" - subdirectory within the repository
 }
 
 const viewMoreSamples = "slack-cli#view-more-samples"
@@ -66,6 +73,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 			{Command: "create my-project -t slack-samples/deno-hello-world", Meaning: "Start a new project from a specific template"},
 			{Command: "create --name my-project", Meaning: "Create a project named 'my-project'"},
 			{Command: "create my-project -t org/monorepo --subdir apps/my-app", Meaning: "Create from a subdirectory of a template"},
+			{Command: "create my-project -t slack-samples/bolt-js-starter-template --app A0123456789 --environment local", Meaning: "Create from template and link to an existing app"},
 		}),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -80,6 +88,7 @@ name your app 'agent' (not create an AI Agent), use the --name flag instead.`,
 	cmd.Flags().StringVarP(&createAppNameFlag, "name", "n", "", "name for your app (overrides the name argument)")
 	cmd.Flags().BoolVar(&createListFlag, "list", false, "list available app templates")
 	cmd.Flags().StringVar(&createSubdirFlag, "subdir", "", "subdirectory in the template to use as project")
+	cmd.Flags().StringVarP(&createEnvironmentFlag, "environment", "E", "", "environment to save existing app (local, deployed)")
 
 	return cmd
 }
@@ -88,7 +97,7 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 	ctx := cmd.Context()
 
 	// Get optional app name passed as an arg and check for category shortcuts
-	appNameArg := ""
+	appPathArg := ""
 	categoryShortcut := ""
 	templateFlagProvided := cmd.Flags().Changed("template")
 	nameFlagProvided := cmd.Flags().Changed("name")
@@ -104,21 +113,15 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 				categoryShortcut = "agent"
 				// Check if a second argument was provided as the app name
 				if len(args) > 1 {
-					appNameArg = args[1]
+					appPathArg = args[1]
 				}
 			} else {
 				// When --template is provided, "agent" is the app name
-				appNameArg = args[0]
+				appPathArg = args[0]
 			}
 		default:
-			appNameArg = args[0]
+			appPathArg = args[0]
 		}
-	}
-
-	// --name flag overrides any positional app name argument
-	// This allows users to name their app "agent" without triggering the AI Agent shortcut
-	if nameFlagProvided {
-		appNameArg = createAppNameFlag
 	}
 
 	// List templates and exit early if the --list flag is set
@@ -132,14 +135,51 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 			WithMessage("The --subdir flag requires the --template flag")
 	}
 
+	// --app must be an app ID when used with create
+	appFlagProvided := clients.Config.AppFlag != ""
+	if appFlagProvided && !types.IsAppID(clients.Config.AppFlag) {
+		return slackerror.New(slackerror.ErrInvalidAppFlag).
+			WithMessage("The --app flag requires an app ID when used with create")
+	}
+
+	// --app requires --template
+	if appFlagProvided && !templateFlagProvided {
+		return slackerror.New(slackerror.ErrMismatchedFlags).
+			WithMessage("The --app flag requires the --template flag when used with create")
+	}
+
+	// --environment requires --app and must be "local" or "deployed"
+	if cmd.Flags().Changed("environment") {
+		if !appFlagProvided {
+			return slackerror.New(slackerror.ErrMismatchedFlags).
+				WithMessage("The --environment flag requires the --app flag when used with create")
+		}
+		if !types.IsAppFlagEnvironment(createEnvironmentFlag) {
+			return slackerror.New(slackerror.ErrMismatchedFlags).
+				WithMessage("The --environment flag must be either 'local' or 'deployed'")
+		}
+	}
+
 	// Collect the template URL or select a starting template
 	template, err := promptTemplateSelection(cmd, clients, categoryShortcut)
 	if err != nil {
 		return err
 	}
 
+	// --name flag overrides the manifest display name but preserves any path
+	// from the positional argument. When no positional arg is given (e.g.
+	// "slack create --name APPPP"), the name flag also becomes the directory
+	// path since there's nothing else to derive it from.
+	displayName := ""
+	if nameFlagProvided {
+		displayName = createAppNameFlag
+		if appPathArg == "" {
+			appPathArg = createAppNameFlag
+		}
+	}
+
 	// Prompt for app name if not provided via flag or argument
-	if appNameArg == "" {
+	if appPathArg == "" {
 		if clients.IO.IsTTY() {
 			defaultName := generateRandomAppName()
 			name, err := clients.IO.InputPrompt(ctx, "Name your app:", iostreams.InputPromptConfig{
@@ -149,20 +189,25 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 				return err
 			}
 			if name != "" {
-				appNameArg = name
+				appPathArg = name
 			} else {
-				appNameArg = defaultName
+				appPathArg = defaultName
 			}
 		} else {
-			appNameArg = generateRandomAppName()
+			appPathArg = generateRandomAppName()
 		}
 	}
 
+	subdir := createSubdirFlag
+	if subdir == "" {
+		subdir = template.GetSubdir()
+	}
 	createArgs := create.CreateArgs{
-		AppName:   appNameArg,
-		Template:  template,
-		GitBranch: createGitBranchFlag,
-		Subdir:    createSubdirFlag,
+		AppPath:     appPathArg,
+		DisplayName: displayName,
+		Template:    template,
+		GitBranch:   createGitBranchFlag,
+		Subdir:      subdir,
 	}
 	clients.EventTracker.SetAppTemplate(template.GetTemplatePath())
 
@@ -171,8 +216,88 @@ func runCreateCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []
 		return err
 	}
 
+	if appFlagProvided {
+		absProjectPath, err := filepath.Abs(appDirPath)
+		if err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
+		originalDir, err := clients.Os.Getwd()
+		if err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
+		if err := os.Chdir(absProjectPath); err != nil {
+			return slackerror.Wrap(err, slackerror.ErrAppDirectoryAccess)
+		}
+		defer func() {
+			_ = os.Chdir(originalDir)
+		}()
+		linkedApp := &types.App{}
+		if err := app.LinkExistingApp(ctx, clients, linkedApp); err != nil {
+			return err
+		}
+		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+			Emoji:     "house",
+			Text:      "App",
+			Secondary: app.FormatListSuccess([]types.App{*linkedApp}),
+		}))
+
+		// Fetch remote manifest and write it to the local project.
+		// Only sync for local-source projects since others don't use manifest.json.
+		manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
+		if err != nil {
+			clients.IO.PrintDebug(ctx, "Failed to get manifest source for manifest sync: %s", err)
+		}
+		if manifestSource.Equals(config.ManifestSourceLocal) {
+			syncRemedy := "  Run %s to sync manually"
+			syncRemedyCmd := style.Commandf("manifest sync --manifest-source=remote", false)
+			if auth, err := clients.Auth().AuthWithTeamID(ctx, linkedApp.TeamID); err != nil {
+				clients.IO.PrintWarning(ctx, "Failed to resolve auth for manifest sync: %s", err)
+				clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
+			} else if remoteManifest, err := clients.AppClient().Manifest.GetManifestRemote(ctx, auth.Token, linkedApp.AppID); err != nil {
+				clients.IO.PrintWarning(ctx, "Failed to fetch manifest from app settings: %s", err)
+				clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
+			} else {
+				appManifest := remoteManifest.AppManifest
+				if linkedApp.IsDev {
+					appManifest = manifest.StripDevLocalSuffix(appManifest)
+				}
+				writeResult, err := manifest.WriteManifestLocal(clients.Fs, absProjectPath, appManifest)
+				if err != nil {
+					clients.IO.PrintWarning(ctx, "Failed to write manifest to project: %s", err)
+					clients.IO.PrintInfo(ctx, false, syncRemedy, syncRemedyCmd)
+				} else if writeResult.Written {
+					lines := []string{fmt.Sprintf("%s Updated manifest.json from app settings", style.Green("✓"))}
+					if writeResult.Warning != "" {
+						lines = append(lines, fmt.Sprintf("%s %s", style.Yellow("!"), writeResult.Warning))
+					}
+					printCreateManifestSection(ctx, clients, lines...)
+					// Hash the remote manifest as exported, since install compares against the export.
+					hash, err := clients.Config.ProjectConfig.Cache().NewManifestHash(ctx, remoteManifest.AppManifest)
+					if err != nil {
+						clients.IO.PrintDebug(ctx, "Failed to hash manifest for app %s: %s", linkedApp.AppID, err)
+					} else if err := clients.Config.ProjectConfig.Cache().SetManifestHash(ctx, linkedApp.AppID, hash); err != nil {
+						clients.IO.PrintDebug(ctx, "Failed to cache manifest hash for app %s: %s", linkedApp.AppID, err)
+					}
+				} else {
+					printCreateManifestSection(ctx, clients,
+						"Skipped copying app settings to the project: no manifest.json found in the project root",
+						"Your project manifest is managed elsewhere (e.g. manifest.ts), so no changes were made",
+					)
+				}
+			}
+		}
+	}
+
 	printCreateSuccess(ctx, clients, appDirPath)
 	return nil
+}
+
+func printCreateManifestSection(ctx context.Context, clients *shared.ClientFactory, lines ...string) {
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+		Emoji:     "books",
+		Text:      "App Manifest",
+		Secondary: lines,
+	}))
 }
 
 // printCreateSuccess outputs an informative message after creating a new app
@@ -219,7 +344,7 @@ func printCreateSuccess(ctx context.Context, clients *shared.ClientFactory, appP
 
 		clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 			Emoji:     "clipboard",
-			Text:      "Next steps to begin development",
+			Text:      "Next Steps",
 			Secondary: secondaryOutput,
 		}))
 	}

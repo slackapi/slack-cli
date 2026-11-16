@@ -188,7 +188,7 @@ func installRequirementsTxt(fs afero.Fs, projectDirPath string) (output string, 
 	fileData := string(file)
 
 	// Skip when slack-cli-hooks is already declared in requirements.txt
-	if strings.Contains(fileData, slackCLIHooksPackageName) {
+	if containsPackage(fileData, slackCLIHooksPackageName) {
 		return fmt.Sprintf("Found requirements.txt with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
@@ -228,7 +228,7 @@ func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afer
 	fileData := string(file)
 
 	// Check if slack-cli-hooks is already declared
-	if strings.Contains(fileData, slackCLIHooksPackageName) {
+	if containsPackage(fileData, slackCLIHooksPackageName) {
 		return fmt.Sprintf("Found pyproject.toml with %s", style.Highlight(slackCLIHooksPackageName)), nil
 	}
 
@@ -446,24 +446,4 @@ func IsRuntimeForProject(ctx context.Context, fs afero.Fs, dirPath string, sdkCo
 	}
 
 	return false
-}
-
-// getProjectDirRelPath returns the relative path from current working directory
-// to projectDirPath or an error. When an error occurs, the projectDirPath is
-// returned as the relative path.
-func getProjectDirRelPath(os types.Os, currentDirPath string, projectDirPath string) (string, error) {
-	// Get the current directory to use as the base for the project
-	if currentDirPath == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return projectDirPath, err
-		}
-		currentDirPath = cwd
-	}
-	// Find relative path between current directory and project directory
-	filePathRel, err := filepath.Rel(currentDirPath, projectDirPath)
-	if err != nil {
-		return projectDirPath, err
-	}
-	return filePathRel, nil
 }

@@ -45,9 +45,6 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "sandbox list", Meaning: "List developer sandboxes"},
 			{Command: "sandbox list --status active", Meaning: "List active sandboxes only"},
 		}),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return requireSandboxExperiment(clients)
-		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runListCommand(cmd, clients)
 		},
@@ -92,7 +89,7 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 
 	section := style.TextSection{
 		Emoji: "beach_with_umbrella",
-		Text:  " Developer Sandboxes",
+		Text:  "Developer Sandboxes",
 	}
 
 	// Some users' logins may not include the scope needed to access the email address from the `users.info` method, so it may not be set
@@ -110,14 +107,21 @@ func printSandboxes(cmd *cobra.Command, clients *shared.ClientFactory, token str
 
 	timeFormat := "2006-01-02" // We only support the granularity of the day for now, rather than a more precise datetime
 	for _, s := range sandboxes {
-		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.SandboxName), s.SandboxTeamID)
+		clients.IO.PrintInfo(ctx, false, "  %s (%s)", style.Bold(s.Name), s.TeamID)
 
-		if s.SandboxDomain != "" {
-			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.SandboxDomain)))
+		if s.Domain != "" {
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary(fmt.Sprintf("URL: https://%s.slack.com", s.Domain)))
+		}
+
+		switch s.Type {
+		case "basic":
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: basic"))
+		case "partner":
+			clients.IO.PrintInfo(ctx, false, "    %s", style.Secondary("Type: partner"))
 		}
 
 		if s.Status != "" {
-			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToTitle(s.Status)))
+			status := style.Secondary(fmt.Sprintf("Status: %s", strings.ToLower(s.Status)))
 			if strings.EqualFold(s.Status, "archived") {
 				clients.IO.PrintInfo(ctx, false, "    %s", style.Red(status))
 			} else {

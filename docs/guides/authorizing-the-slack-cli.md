@@ -55,13 +55,18 @@ Authorization Level: Workspace
 
 You should see an entry for the workspace you just authorized. If you don't, get a new authorization ticket with `slack login` to try again.
 
-You're now ready to begin building [Bolt](/tools/slack-cli/guides/using-slack-cli-with-bolt-frameworks) and [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started) apps!
+You're now ready to begin developing [Bolt](/quickstart) and [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started) apps!
 
 ### Version update notifications {#version-updates}
 
 Once a day, the Slack CLI checks for updates after running any command. When an update is available, a notification will be displayed with a link where you can find and download the new version.
 
 Update notifications can be disabled using a command-line flag or an environment variable. When running any command, you can append the `--skip-update` or `-s` flag. Alternatively, you can set the `SLACK_SKIP_UPDATE` environment variable and assign it any value.
+
+When the CLI runs in a non-interactive environment, such as inside a CI/CD pipeline or when the output is piped, the update check runs without the auto-update confirmation prompt. The notification text may still appear in command output, however. You can suppress the check entirely with the `--skip-update` flag or `SLACK_SKIP_UPDATE` environment variable to keep the automation output clean.
+
+:::info[The `--skip-update` flag and the `SLACK_SKIP_UPDATE` environment variable are intentionally ignored when running the `slack upgrade` command directly, since that command's purpose is to check for updates.]
+:::
 
 ## CI/CD authorization {#ci-cd}
 

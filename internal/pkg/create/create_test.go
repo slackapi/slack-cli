@@ -108,6 +108,85 @@ func TestGetProjectDirectoryName(t *testing.T) {
 	}
 }
 
+func TestParseAppPath(t *testing.T) {
+	tests := map[string]struct {
+		input           string
+		expectedPath    string
+		expectedDisplay string
+		hasError        bool
+	}{
+		"simple kebab-case name": {
+			input:           "my-app",
+			expectedPath:    "my-app",
+			expectedDisplay: "my-app",
+		},
+		"name with spaces": {
+			input:           "My Cool App",
+			expectedPath:    "my-cool-app",
+			expectedDisplay: "My Cool App",
+		},
+		"relative path with simple name": {
+			input:           "path/to/my-app",
+			expectedPath:    filepath.Join("path", "to", "my-app"),
+			expectedDisplay: "my-app",
+		},
+		"relative path with spaced name": {
+			input:           "path/to/My App",
+			expectedPath:    filepath.Join("path", "to", "my-app"),
+			expectedDisplay: "My App",
+		},
+		"dot-prefixed path": {
+			input:           "./my-app",
+			expectedPath:    "my-app",
+			expectedDisplay: "my-app",
+		},
+		"absolute path": {
+			input:           "/abs/path/app",
+			expectedPath:    filepath.Join("/abs", "path", "app"),
+			expectedDisplay: "app",
+		},
+		"single directory depth": {
+			input:           "projects/my-app",
+			expectedPath:    filepath.Join("projects", "my-app"),
+			expectedDisplay: "my-app",
+		},
+		"uppercase in nested path": {
+			input:           "projects/My Slack App",
+			expectedPath:    filepath.Join("projects", "my-slack-app"),
+			expectedDisplay: "My Slack App",
+		},
+		"trailing slash is trimmed": {
+			input:           "path/to/my-app/",
+			expectedPath:    filepath.Join("path", "to", "my-app"),
+			expectedDisplay: "my-app",
+		},
+		"empty string returns error": {
+			input:    "",
+			hasError: true,
+		},
+		"whitespace only returns error": {
+			input:    "   ",
+			hasError: true,
+		},
+		"basename with only special chars returns error": {
+			input:    "path/to/!!!",
+			hasError: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			appPath, displayName, err := parseAppPath(tc.input)
+			if tc.hasError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedPath, appPath)
+				assert.Equal(t, tc.expectedDisplay, displayName)
+			}
+		})
+	}
+}
+
 func TestGetAvailableDirectory(t *testing.T) {
 	var exists bool
 	var err error

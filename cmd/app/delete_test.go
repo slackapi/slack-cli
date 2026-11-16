@@ -164,7 +164,7 @@ func prepareCommonDeleteMocks(t *testing.T, cf *shared.ClientFactory, cm *shared
 
 	cm.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).
 		Return("api host")
-	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything, mock.Anything).
+	cm.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).
 		Return("logstash host")
 
 	// Mock list command

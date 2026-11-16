@@ -1,14 +1,16 @@
 # `slack env`
 
-Add, remove, or list environment variables
+Set, unset, or list environment variables
 
 ## Description
 
-Add, remove, or list environment variables for apps deployed to Slack managed
-infrastructure.
+Set, unset, or list environment variables for the project.
 
-This command is supported for apps deployed to Slack managed infrastructure but
-other apps can attempt to run the command with the --force flag.
+Commands that run in the context of a project source environment variables from
+the ".env" file. This includes the "run" command.
+
+The "deploy" command gathers environment variables from the ".env" file as well
+unless the app is using ROSI features.
 
 Explore more: [https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli](https://docs.slack.dev/tools/slack-cli/guides/using-environment-variables-with-the-slack-cli)
 
@@ -25,6 +27,7 @@ slack env <subcommand> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -33,25 +36,27 @@ slack env <subcommand> [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
 ## Examples
 
 ```
-$ slack env add MAGIC_PASSWORD abracadbra  # Add an environment variable
+# Initialize environment variables from a template file
+$ slack env init
+$ slack env set MAGIC_PASSWORD abracadbra  # Set an environment variable
 
 # List all environment variables
 $ slack env list
-
-# Remove an environment variable
-$ slack env remove MAGIC_PASSWORD
+$ slack env unset MAGIC_PASSWORD           # Unset an environment variable
 ```
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack env add](slack_env_add)	 - Add an environment variable to the app
-* [slack env list](slack_env_list)	 - List all environment variables for the app
-* [slack env remove](slack_env_remove)	 - Remove an environment variable from the app
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack env init](/tools/slack-cli/reference/commands/slack_env_init/)	 - Initialize environment variables from a template file
+* [slack env list](/tools/slack-cli/reference/commands/slack_env_list/)	 - List all environment variables of the project
+* [slack env set](/tools/slack-cli/reference/commands/slack_env_set/)	 - Set an environment variable for the project
+* [slack env unset](/tools/slack-cli/reference/commands/slack_env_unset/)	 - Unset an environment variable from the project
 

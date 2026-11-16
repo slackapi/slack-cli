@@ -26,9 +26,13 @@ import (
 	"github.com/slackapi/slack-cli/internal/style"
 )
 
+type PromptTeamSlackAuthConfig struct {
+	HelpText string
+}
+
 // PromptTeamSlackAuth prompts the user to select a team that they're logged in to and returns the auth information.
 // If the user is only logged in to one team, we return it by default.
-func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, promptText string) (*types.SlackAuth, error) {
+func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, promptText string, promptConfig *PromptTeamSlackAuthConfig) (*types.SlackAuth, error) {
 
 	allAuths, err := clients.Auth().Auths(ctx)
 	if err != nil {
@@ -36,6 +40,7 @@ func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, pro
 	}
 
 	if len(allAuths) == 1 {
+		clients.Auth().SetSelectedAuth(ctx, allAuths[0], clients.Config, clients.Os)
 		return &allAuths[0], nil
 	}
 
@@ -46,22 +51,33 @@ func PromptTeamSlackAuth(ctx context.Context, clients *shared.ClientFactory, pro
 		return strings.Compare(i.TeamDomain, j.TeamDomain)
 	})
 
+	teamFlag := clients.Config.Flags.Lookup("team")
 	var teamLabels []string
+	var teamOptions []iostreams.PromptOption
 	for _, auth := range allAuths {
-		teamLabels = append(
-			teamLabels,
-			style.TeamSelectLabel(auth.TeamDomain, auth.TeamID),
-		)
+		label := style.TeamSelectLabel(auth.TeamDomain, auth.TeamID)
+		teamLabels = append(teamLabels, label)
+		teamOptions = append(teamOptions, iostreams.PromptOption{
+			Label: label,
+			Flag:  teamFlag,
+			Value: auth.TeamID,
+		})
+	}
+
+	selectPromptConfig := iostreams.SelectPromptConfig{
+		Required: true,
+		Flag:     teamFlag,
+		Options:  teamOptions,
+	}
+	if promptConfig != nil && promptConfig.HelpText != "" {
+		selectPromptConfig.Help = promptConfig.HelpText
 	}
 
 	selection, err := clients.IO.SelectPrompt(
 		ctx,
 		promptText,
 		teamLabels,
-		iostreams.SelectPromptConfig{
-			Required: true,
-			Flag:     clients.Config.Flags.Lookup("team"),
-		},
+		selectPromptConfig,
 	)
 	if err != nil {
 		return &types.SlackAuth{}, err

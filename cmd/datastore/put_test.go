@@ -194,13 +194,13 @@ func TestPutCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task_id':", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("1234")
+				}).Return("1234", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'task':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("prompting for info")
+				}).Return("prompting for info", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for 'status':", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("promptful")
+				}).Return("promptful", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]

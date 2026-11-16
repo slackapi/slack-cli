@@ -21,6 +21,7 @@ slack collaborator add [email|user_id] [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -29,6 +30,7 @@ slack collaborator add [email|user_id] [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -42,5 +44,5 @@ $ slack collaborator add USLACKBOT      # Add a collaborator by user ID
 
 ## See also
 
-* [slack collaborator](slack_collaborator)	 - Manage app collaborators
+* [slack collaborator](/tools/slack-cli/reference/commands/slack_collaborator/)	 - Manage app collaborators
 

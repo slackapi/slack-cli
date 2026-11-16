@@ -31,6 +31,7 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/version"
 )
 
 // contextKey is an unexported type to avoid context key collisions.
@@ -45,17 +46,6 @@ const (
 	contextKeySystemID
 	contextKeyVersion
 )
-
-// OpenTracingSpan returns the `opentracing.Span“ associated with `ctx`, or
-// `nil` and `slackerror.ErrContextValueNotFound` if no `Span` could be found.
-func OpenTracingSpan(ctx context.Context) (opentracing.Span, error) {
-	span := opentracing.SpanFromContext(ctx)
-	if span == nil {
-		return nil, slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for OpenTracing Span could not be found")
-	}
-	return span, nil
-}
 
 // SetOpenTracingSpan returns a new `context.Context` that holds a reference to
 // the span. If span is nil, a new context without an active span is returned.
@@ -82,33 +72,11 @@ func SetOpenTracingTraceID(ctx context.Context, traceID string) context.Context 
 	return ctx
 }
 
-// OpenTracingTracer returns the `opentracing.Tracer` associated with `ctx`, or
-// `nil` and `slackerror.ErrContextValueNotFound` if no `Tracer` could be found.
-func OpenTracingTracer(ctx context.Context) (opentracing.Tracer, error) {
-	var tracer, ok = ctx.Value(contextKeyOpenTracingTracer).(opentracing.Tracer)
-	if !ok || tracer == nil {
-		return nil, slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for OpenTracing Tracer could not be found")
-	}
-	return tracer, nil
-}
-
 // SetOpenTracingSpan returns a new `context.Context` that holds a reference to
 // the `opentracing.Tracer`. If tracer is nil, a new context without a tracer returned.
 func SetOpenTracingTracer(ctx context.Context, tracer opentracing.Tracer) context.Context {
 	ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tracer)
 	return ctx
-}
-
-// ProjectID returns the project ID associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no project ID could be found.
-func ProjectID(ctx context.Context) (string, error) {
-	var projectID, ok = ctx.Value(contextKeyProjectID).(string)
-	if !ok || projectID == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for Project ID could not be found")
-	}
-	return projectID, nil
 }
 
 // SetProjectID returns a new `context.Context` that holds a reference to
@@ -144,17 +112,6 @@ func SetSessionID(ctx context.Context, sessionID string) context.Context {
 	return ctx
 }
 
-// SystemID returns the session ID associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no system ID could be found.
-func SystemID(ctx context.Context) (string, error) {
-	var systemID, ok = ctx.Value(contextKeySystemID).(string)
-	if !ok || systemID == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for System ID could not be found")
-	}
-	return systemID, nil
-}
-
 // SetSystemID returns a new `context.Context` that holds a reference to
 // the `systemID` and updates the `opentracing.Span` tag with the `systemID`.
 func SetSystemID(ctx context.Context, systemID string) context.Context {
@@ -170,15 +127,16 @@ func SetSystemID(ctx context.Context, systemID string) context.Context {
 	return ctx
 }
 
-// Version returns the CLI version associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no version could be found.
+// Version returns the CLI version associated with `ctx`. If the version is not
+// found in the context, it falls back to version.Raw() and returns an error to
+// signal that the context was not properly initialized.
 func Version(ctx context.Context) (string, error) {
-	var version, ok = ctx.Value(contextKeyVersion).(string)
-	if !ok || version == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for Version could not be found")
+	var v, ok = ctx.Value(contextKeyVersion).(string)
+	if !ok || v == "" {
+		return version.Raw(), slackerror.New(slackerror.ErrContextValueNotFound).
+			WithMessage("The value for version could not be found in context, falling back to the build version")
 	}
-	return version, nil
+	return v, nil
 }
 
 // SetVersion adds the slack-cli version to Golang context for trace logging

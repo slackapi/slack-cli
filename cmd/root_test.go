@@ -15,9 +15,11 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -159,6 +161,57 @@ func TestExecuteContext(t *testing.T) {
 	}
 }
 
+func Test_InitConfig(t *testing.T) {
+	tests := map[string]struct {
+		tokenFlag              string
+		stdin                  string
+		stdinTTY               bool
+		expectedToken          string
+		expectedTokenFromStdin bool
+		expectedError          string
+	}{
+		"keeps a token passed with the flag": {
+			tokenFlag:     "xoxp-example",
+			expectedToken: "xoxp-example",
+		},
+		"reads the token from standard input": {
+			tokenFlag:              "-",
+			stdin:                  "xoxp-example\n",
+			expectedToken:          "xoxp-example",
+			expectedTokenFromStdin: true,
+		},
+		"errors when the token is read from a terminal": {
+			tokenFlag:     "-",
+			stdinTTY:      true,
+			expectedError: slackerror.ErrMissingInput,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.On("IsStdinTTY").Return(tc.stdinTTY)
+			clientsMock.IO.Stdin = bytes.NewBufferString(tc.stdin)
+			clientsMock.Auth.On("ResolveAPIHost", mock.Anything, mock.Anything, mock.Anything).Return("https://slack.com")
+			clientsMock.Auth.On("ResolveLogstashHost", mock.Anything, mock.Anything).Return("https://slackb.com")
+			clientsMock.Auth.On("MapAuthTokensToDomains", mock.Anything).Return("")
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clients.Config.TokenFlag = tc.tokenFlag
+
+			err := InitConfig(ctx, clients, &cobra.Command{})
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedToken, clients.Config.TokenFlag)
+			assert.Equal(t, tc.expectedTokenFromStdin, clients.Config.TokenFromStdin)
+		})
+	}
+}
+
 func TestVersionFlags(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 
@@ -215,6 +268,20 @@ func Test_NewSuggestion(t *testing.T) {
 
 	require.Error(t, err, "should have error because command not found")
 	require.Regexp(t, `Did you mean this\?\s+create`, err.Error(), "should suggest the create command")
+}
+
+func Test_SkillFlag(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	cmd, clients := Init(ctx)
+	clientsMock := shared.NewClientsMock()
+	clients.IO = clientsMock.IO
+
+	// Call RunE directly since executing the command runs the global initializers of other tests
+	cmd.SetContext(ctx)
+	require.NoError(t, cmd.ParseFlags([]string{"--skill"}))
+	err := cmd.RunE(cmd, []string{})
+	require.NoError(t, err)
+	assert.True(t, strings.HasPrefix(clientsMock.GetStdoutOutput(), "---\nname: slack-cli\n"))
 }
 
 func Test_Aliases(t *testing.T) {
@@ -289,4 +356,30 @@ func testExecCmd(ctx context.Context, args []string) (string, error) {
 		return "", err
 	}
 	return clientsMock.GetCombinedOutput(), nil
+}
+
+func Test_CommandDescriptionsRenderForDocs(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	tmp, _ := os.MkdirTemp("", "")
+	_ = os.Chdir(tmp)
+	defer os.RemoveAll(tmp)
+
+	cmd, _ := Init(ctx)
+
+	// Matches a lone { that is not escaped (\{) and not part of a Go template ({{)
+	unescapedBrace := regexp.MustCompile(`[^\\{]\{[^{]`)
+
+	var walk func(*cobra.Command)
+	walk = func(c *cobra.Command) {
+		if c.Long != "" {
+			t.Run(c.CommandPath(), func(t *testing.T) {
+				assert.NotRegexp(t, unescapedBrace, c.Long,
+					"description contains unescaped '{' which breaks the MDX docs site; escape as \\{")
+			})
+		}
+		for _, child := range c.Commands() {
+			walk(child)
+		}
+	}
+	walk(cmd)
 }

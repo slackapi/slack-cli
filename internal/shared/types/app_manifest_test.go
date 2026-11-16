@@ -48,6 +48,34 @@ func Test_RawJSON_UnmarshalJSON(t *testing.T) {
 	}
 }
 
+func Test_RawJSON_MarshalJSON(t *testing.T) {
+	tests := map[string]struct {
+		rawJSON  RawJSON
+		expected string
+	}{
+		"marshals JSONData when present": {
+			rawJSON: func() RawJSON {
+				raw := json.RawMessage(`{"name":"foo"}`)
+				return RawJSON{JSONData: &raw}
+			}(),
+			expected: `{"name":"foo"}`,
+		},
+		"marshals from Data when JSONData is nil": {
+			rawJSON: RawJSON{Data: &yaml.MapSlice{
+				{Key: "name", Value: "bar"},
+			}},
+			expected: `{"name":"bar"}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result, err := tc.rawJSON.MarshalJSON()
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, string(result))
+		})
+	}
+}
+
 func Test_RawJSON_UnmarshalYAML(t *testing.T) {
 	rawJSON := RawJSON{Data: &yaml.MapSlice{
 		{Key: "name", Value: "foo"},
@@ -131,6 +159,7 @@ func Test_AppManifest_ToRawJSON(t *testing.T) {
 
 func Test_AppManifest_AppFeatures(t *testing.T) {
 	truth := true
+	falsity := false
 	tests := map[string]struct {
 		features AppFeatures
 		want     string
@@ -146,6 +175,17 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 				},
 			},
 			want: `{"app_home":{"home_tab_enabled":true,"messages_tab_enabled":true},"bot_user":{"display_name":"slackbot"}}`,
+		},
+		"includes agent tasks enabled when provided": {
+			features: AppFeatures{
+				AppHome: ManifestAppHome{
+					AgentTasksEnabled: &falsity,
+				},
+				BotUser: BotUser{
+					DisplayName: "taskmaster",
+				},
+			},
+			want: `{"app_home":{"agent_tasks_enabled":false},"bot_user":{"display_name":"taskmaster"}}`,
 		},
 		"includes assistant view when provided": {
 			features: AppFeatures{
@@ -163,6 +203,40 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 				},
 			},
 			want: `{"app_home":{},"assistant_view":{"assistant_description":"magic","suggested_prompts":[{"title":"visit the beach","message":"what is glass"}]},"bot_user":{"display_name":"einstein"}}`,
+		},
+		"includes agent view when provided": {
+			features: AppFeatures{
+				AgentView: &AgentView{
+					AgentDescription: "summarizes threads",
+					SuggestedPrompts: []SuggestedPrompts{
+						{
+							Title:   "summarize this thread",
+							Message: "please summarize the conversation",
+						},
+					},
+					Actions: []AgentViewAction{
+						{
+							Name:        "open_settings",
+							Description: "Open the agent settings panel.",
+						},
+					},
+				},
+				BotUser: BotUser{
+					DisplayName: "agent_smith",
+				},
+			},
+			want: `{"app_home":{},"agent_view":{"agent_description":"summarizes threads","suggested_prompts":[{"title":"summarize this thread","message":"please summarize the conversation"}],"actions":[{"name":"open_settings","description":"Open the agent settings panel."}]},"bot_user":{"display_name":"agent_smith"}}`,
+		},
+		"omits agent view fields when empty": {
+			features: AppFeatures{
+				AgentView: &AgentView{
+					AgentDescription: "minimal",
+				},
+				BotUser: BotUser{
+					DisplayName: "agent_smith",
+				},
+			},
+			want: `{"app_home":{},"agent_view":{"agent_description":"minimal"},"bot_user":{"display_name":"agent_smith"}}`,
 		},
 		"includes search when provided": {
 			features: AppFeatures{
@@ -188,12 +262,164 @@ func Test_AppManifest_AppFeatures(t *testing.T) {
 			},
 			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/file"]}}`,
 		},
+		"includes Work Objects embed settings when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "business_bot",
+				},
+				RichPreviews: &RichPreviews{
+					EntityTypes:     []string{"slack#/entities/task"},
+					IsActive:        new(true),
+					DomainAllowlist: []string{"example.com"},
+					AllowSameOrigin: new(true),
+					Slug:            &RichPreviewsSlug{HideDisplayID: new(true)},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"entity_types":["slack#/entities/task"],"is_active":true,"domain_allowlist":["example.com"],"allow_same_origin":true,"slug":{"hide_display_id":true}}}`,
+		},
+		"includes code channels when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "coding_agent",
+				},
+				CodeChannels: &CodeChannels{
+					Enabled:         new(true),
+					SlashCommandURL: "https://example.com/slack/code-channel-commands",
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"coding_agent"},"code_channels":{"enabled":true,"slash_command_url":"https://example.com/slack/code-channel-commands"}}`,
+		},
+		"serializes code channels disabled explicitly": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "coding_agent",
+				},
+				CodeChannels: &CodeChannels{
+					Enabled: new(false),
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"coding_agent"},"code_channels":{"enabled":false}}`,
+		},
+		"includes user connections when provided": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "connector",
+				},
+				UserConnections: &UserConnections{
+					IsEnabled: new(true),
+					AuthHosts: []string{"example.com", "auth.example.com"},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":true,"auth_hosts":["example.com","auth.example.com"]}}`,
+		},
+		"serializes user connections disabled explicitly": {
+			features: AppFeatures{
+				BotUser: BotUser{
+					DisplayName: "connector",
+				},
+				UserConnections: &UserConnections{
+					IsEnabled: new(false),
+					AuthHosts: []string{"example.com"},
+				},
+			},
+			want: `{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":false,"auth_hosts":["example.com"]}}`,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual, err := json.Marshal(tc.features)
 			require.NoError(t, err)
 			assert.Equal(t, tc.want, string(actual))
+		})
+	}
+}
+
+func Test_AppManifest_AppFeatures_RichPreviews(t *testing.T) {
+	tests := map[string]struct {
+		manifestJSON string
+		expected     *RichPreviews
+	}{
+		"undefined rich previews are omitted": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"}}}`,
+			expected:     nil,
+		},
+		"embed settings are preserved": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":true,"entity_types":["slack#/entities/task"],"domain_allowlist":["example.com","embed.example.com"],"allow_same_origin":true,"slug":{"hide_display_id":true}}}}`,
+			expected: &RichPreviews{
+				IsActive:        new(true),
+				EntityTypes:     []string{"slack#/entities/task"},
+				DomainAllowlist: []string{"example.com", "embed.example.com"},
+				AllowSameOrigin: new(true),
+				Slug:            &RichPreviewsSlug{HideDisplayID: new(true)},
+			},
+		},
+		"explicit inactive setting is preserved": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":false,"entity_types":["slack#/entities/task"]}}}`,
+			expected: &RichPreviews{
+				IsActive:    new(false),
+				EntityTypes: []string{"slack#/entities/task"},
+			},
+		},
+		"explicit false settings are preserved": {
+			manifestJSON: `{"display_information":{"name":"business_bot"},"features":{"app_home":{},"bot_user":{"display_name":"business_bot"},"rich_previews":{"is_active":true,"entity_types":["slack#/entities/task"],"allow_same_origin":false,"slug":{"hide_display_id":false}}}}`,
+			expected: &RichPreviews{
+				IsActive:        new(true),
+				EntityTypes:     []string{"slack#/entities/task"},
+				AllowSameOrigin: new(false),
+				Slug:            &RichPreviewsSlug{HideDisplayID: new(false)},
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var manifest AppManifest
+			err := json.Unmarshal([]byte(tc.manifestJSON), &manifest)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, manifest.Features.RichPreviews)
+			actualJSON, err := json.Marshal(manifest)
+			require.NoError(t, err)
+			assert.JSONEq(t, tc.manifestJSON, string(actualJSON))
+		})
+	}
+}
+
+func Test_AppManifest_AppFeatures_UserConnections(t *testing.T) {
+	tests := map[string]struct {
+		manifestJSON string
+		expected     *UserConnections
+	}{
+		"undefined user connections are omitted": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"}}}`,
+			expected:     nil,
+		},
+		"enabled user connections are preserved": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":true,"auth_hosts":["example.com","auth.example.com"]}}}`,
+			expected: &UserConnections{
+				IsEnabled: new(true),
+				AuthHosts: []string{"example.com", "auth.example.com"},
+			},
+		},
+		"disabled user connections keep their auth hosts": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{"is_enabled":false,"auth_hosts":["example.com"]}}}`,
+			expected: &UserConnections{
+				IsEnabled: new(false),
+				AuthHosts: []string{"example.com"},
+			},
+		},
+		"omitted user connections fields are not invented": {
+			manifestJSON: `{"display_information":{"name":"connector"},"features":{"app_home":{},"bot_user":{"display_name":"connector"},"user_connections":{}}}`,
+			expected:     &UserConnections{},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var manifest AppManifest
+			err := json.Unmarshal([]byte(tc.manifestJSON), &manifest)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, manifest.Features.UserConnections)
+			actualJSON, err := json.Marshal(manifest)
+			require.NoError(t, err)
+			assert.JSONEq(t, tc.manifestJSON, string(actualJSON))
 		})
 	}
 }
@@ -228,6 +454,76 @@ func Test_AppManifest_AppSettings_SiwsLinks(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, tc.expectedJSON, string(actualJSON))
 				assert.Equal(t, tc.expectedSiwsLinks, manifest.Settings.SiwsLinks)
+			} else {
+				assert.Nil(t, manifest.Settings)
+			}
+		})
+	}
+}
+
+func Test_AppManifest_AppSettings_IsMCPEnabled(t *testing.T) {
+	truth := true
+	tests := map[string]struct {
+		settings         *AppSettings
+		expectedMCPValue *bool
+		expectedJSON     string
+	}{
+		"undefined setting has no value": {
+			settings:         &AppSettings{},
+			expectedMCPValue: nil,
+			expectedJSON:     `{}`,
+		},
+		"defined setting has a value": {
+			settings:         &AppSettings{IsMCPEnabled: &truth},
+			expectedMCPValue: &truth,
+			expectedJSON:     `{"is_mcp_enabled":true}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			manifest := AppManifest{
+				Settings: tc.settings,
+			}
+			if tc.settings != nil {
+				actualJSON, err := json.Marshal(tc.settings)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+				assert.Equal(t, tc.expectedMCPValue, manifest.Settings.IsMCPEnabled)
+			} else {
+				assert.Nil(t, manifest.Settings)
+			}
+		})
+	}
+}
+
+func Test_AppManifest_AppSettings_AppLevelTokenRotationEnabled(t *testing.T) {
+	truth := true
+	tests := map[string]struct {
+		settings              *AppSettings
+		expectedRotationValue *bool
+		expectedJSON          string
+	}{
+		"undefined setting has no value": {
+			settings:              &AppSettings{},
+			expectedRotationValue: nil,
+			expectedJSON:          `{}`,
+		},
+		"defined setting has a value": {
+			settings:              &AppSettings{AppLevelTokenRotationEnabled: &truth},
+			expectedRotationValue: &truth,
+			expectedJSON:          `{"app_level_token_rotation_enabled":true}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			manifest := AppManifest{
+				Settings: tc.settings,
+			}
+			if tc.settings != nil {
+				actualJSON, err := json.Marshal(tc.settings)
+				require.NoError(t, err)
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+				assert.Equal(t, tc.expectedRotationValue, manifest.Settings.AppLevelTokenRotationEnabled)
 			} else {
 				assert.Nil(t, manifest.Settings)
 			}
@@ -273,45 +569,180 @@ func Test_AppManifest_AppSettings_IncomingWebhooks(t *testing.T) {
 	}
 }
 
+func Test_AppManifest_OAuthConfig_Scopes(t *testing.T) {
+	tests := map[string]struct {
+		oauthConfig  *OAuthConfig
+		expectedJSON string
+	}{
+		"undefined scopes are omitted": {
+			oauthConfig:  &OAuthConfig{},
+			expectedJSON: `{}`,
+		},
+		"empty scopes are included": {
+			oauthConfig:  &OAuthConfig{Scopes: &ManifestScopes{}},
+			expectedJSON: `{"scopes":{}}`,
+		},
+		"bot scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				Bot: []string{"chat:write", "channels:read"},
+			}},
+			expectedJSON: `{"scopes":{"bot":["chat:write","channels:read"]}}`,
+		},
+		"user scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				User: []string{"users:read"},
+			}},
+			expectedJSON: `{"scopes":{"user":["users:read"]}}`,
+		},
+		"bot optional scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				BotOptional: []string{"channels:history"},
+			}},
+			expectedJSON: `{"scopes":{"bot_optional":["channels:history"]}}`,
+		},
+		"user optional scopes are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				UserOptional: []string{"users:read.email"},
+			}},
+			expectedJSON: `{"scopes":{"user_optional":["users:read.email"]}}`,
+		},
+		"all scope types are included": {
+			oauthConfig: &OAuthConfig{Scopes: &ManifestScopes{
+				Bot:          []string{"chat:write"},
+				BotOptional:  []string{"channels:history"},
+				User:         []string{"users:read"},
+				UserOptional: []string{"users:read.email"},
+			}},
+			expectedJSON: `{"scopes":{"bot":["chat:write"],"bot_optional":["channels:history"],"user":["users:read"],"user_optional":["users:read.email"]}}`,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualJSON, err := json.Marshal(tc.oauthConfig)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedJSON, string(actualJSON))
+		})
+	}
+}
+
+func Test_AppManifest_MCPServers(t *testing.T) {
+	tests := map[string]struct {
+		manifest     AppManifest
+		expectedJSON string
+	}{
+		"undefined mcp_servers are omitted": {
+			manifest:     AppManifest{},
+			expectedJSON: `{"display_information":{"name":""}}`,
+		},
+		"nil mcp_servers are omitted": {
+			manifest:     AppManifest{MCPServers: nil},
+			expectedJSON: `{"display_information":{"name":""}}`,
+		},
+		"mcp_servers with url only": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {URL: "https://mcp.acme.com/mcp", AuthType: "no_auth"},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_type":"no_auth"}}}`,
+		},
+		"mcp_servers with auth_provider_key": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:             "https://mcp.acme.com/mcp",
+					AuthProviderKey: "acme",
+					AuthType:        "manual_auth",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme","auth_type":"manual_auth"}}}`,
+		},
+		"mcp_servers with auth_type": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:      "https://mcp.acme.com/mcp",
+					AuthType: "dynamic_client_registration",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_type":"dynamic_client_registration"}}}`,
+		},
+		"mcp_servers with all fields": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme": {
+					URL:             "https://mcp.acme.com/mcp",
+					AuthProviderKey: "acme",
+					AuthType:        "manual_auth",
+				},
+			}},
+			expectedJSON: `{"display_information":{"name":""},"mcp_servers":{"acme":{"url":"https://mcp.acme.com/mcp","auth_provider_key":"acme","auth_type":"manual_auth"}}}`,
+		},
+		"multiple mcp_servers": {
+			manifest: AppManifest{MCPServers: map[string]MCPServer{
+				"acme":  {URL: "https://mcp.acme.com/mcp", AuthType: "dynamic_client_registration"},
+				"other": {URL: "https://mcp.other.com/mcp", AuthType: "no_auth"},
+			}},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actualJSON, err := json.Marshal(tc.manifest)
+			require.NoError(t, err)
+			if tc.expectedJSON != "" {
+				assert.Equal(t, tc.expectedJSON, string(actualJSON))
+			}
+			// Verify round-trip unmarshaling
+			var unmarshaled AppManifest
+			err = json.Unmarshal(actualJSON, &unmarshaled)
+			require.NoError(t, err)
+			assert.Equal(t, tc.manifest.MCPServers, unmarshaled.MCPServers)
+		})
+	}
+}
+
 func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 	tests := map[string]struct {
 		settings        *AppSettings
 		expectedHosted  bool
+		expectedLocal   bool
 		expectedRuntime FunctionRuntime
 	}{
 		"undefined settings have no function runtime": {
 			settings:        nil,
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "",
 		},
 		"undefined function runtime has no function runtime": {
 			settings:        &AppSettings{},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "",
 		},
 		"setting the function runtime to slack is hosted": {
 			settings:        &AppSettings{FunctionRuntime: "slack"},
 			expectedHosted:  true,
+			expectedLocal:   false,
 			expectedRuntime: SlackHosted,
 		},
 		"setting the function runtime to remote is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "remote"},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: Remote,
 		},
-		"setting the function runtime to local is not hosted": {
+		"setting the function runtime to local is local": {
 			settings:        &AppSettings{FunctionRuntime: "local"},
 			expectedHosted:  false,
+			expectedLocal:   true,
 			expectedRuntime: LocallyRun,
 		},
 		"setting the function runtime to random is not hosted": {
 			settings:        &AppSettings{FunctionRuntime: "sparkling-butterflies"},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "sparkling-butterflies",
 		},
 		"setting the function runtime to padded string is possible": {
 			settings:        &AppSettings{FunctionRuntime: "    "},
 			expectedHosted:  false,
+			expectedLocal:   false,
 			expectedRuntime: "    ",
 		},
 	}
@@ -321,6 +752,7 @@ func Test_AppManifest_AppSettings_FunctionRuntime(t *testing.T) {
 				Settings: tc.settings,
 			}
 			assert.Equal(t, tc.expectedHosted, manifest.IsFunctionRuntimeSlackHosted())
+			assert.Equal(t, tc.expectedLocal, manifest.IsFunctionRuntimeLocal())
 			assert.Equal(t, tc.expectedRuntime, manifest.FunctionRuntime())
 			if tc.settings != nil {
 				assert.Equal(t, tc.expectedRuntime, manifest.Settings.FunctionRuntime)

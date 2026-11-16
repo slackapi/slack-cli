@@ -90,86 +90,18 @@ brew uninstall go
 
 Linters are used to help catch formatting strangeness and strange spellings.
 
-The CI runs linting via [golangci-lint][golangci-lint] and is configured in the
-`.golangci.yml` file.
-
-Install this tool to mimic CI environments and run linting with the `Makefile`:
+The CI runs linting with [golangci-lint][golangci-lint] and is installed in the
+project `go.mod` tools and separate `.golangci.yml` configuration file:
 
 ```sh
-curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+go tool golangci-lint run
 ```
-
-Confirm the installation worked right with:
-
-```sh
-golangci-lint --version
-```
-
-<details>
-<summary>Troubleshooting</summary>
-
-#### Error: command not found: golangci-lint
-
-If you receive the following error:
-
-```bash
-$ golangci-lint --version
-command not found: golangci-lint
-```
-
-You may need to update your `$PATH` environment variable with `$GOPATH/bin`:
-1. Open your terminal's configuration file (e.g. `~/.zshrc`):
-
-    ```bash
-    $ vim ~/.zshrc
-    ```
-
-2. Add the following:
-
-    ```bash
-    export PATH=$PATH:$(go env GOPATH)/bin
-    ```
-3. Open a new terminal session (tab) or source your configuration file (`source ~/.zshrc`).
-4. Run the following command:
-
-    ```bash
-    $ golangci-lint --version
-    ```
-</details>
 
 #### VSCode
 
 Settings are already defined in this project for using the VSCode editor with
 `golangci-lint` as the `go.lintTool`. Inspect [`.vscode/settings.json`][vscode]
 for more details.
-
-#### Troubleshooting
-
-Linting troubles can happen from unexpected formatting or a broken installation.
-Broken installations might be fixed by the below:
-
-<details>
-<summary>Matching versions that don't match</summary>
-
-The latest version of `golangci-lint` is used in testing and should be matched
-by the installation you have.
-
-Compare [the latest version][golangci-lint-release] to your current installation
-and try linting once more.
-
-</details>
-
-<details>
-<summary>Uninstalling a Homebrew installation</summary>
-
-Setting the correct version of `golangci-lint` can be difficult with Homebrew.
-If this is causing issues try uninstalling it with:
-
-```sh
-brew uninstall golangci-lint
-```
-
-</details>
 
 ### Makefile
 
@@ -227,9 +159,6 @@ cmd/
 The release build artifacts from `make build-snapshot` that includes binaries
 and archives for all platforms.
 
-An installation of [`goreleaser`][goreleaser] is required and the latest version
-is recommended.
-
 ### `internal/`
 
 A safe place to store private packages used by commands and this program. Shared
@@ -263,7 +192,8 @@ pkg/
 
 ### `scripts/`
 
-Installation and setup scripts for various operating systems are available here.
+Installation and setup scripts for various operating systems are available here,
+along with scripts that support the release process.
 
 ### `test/`
 
@@ -278,6 +208,7 @@ Certain things are common during development and require a few commands.
 **Task outline:**
 
 - [Cloning the project](#cloning-the-project)
+  - [Git hooks](#git-hooks)
 - [Initializing the project](#initializing-the-project)
 - [Testing](#testing)
   - [Module and unit tests](#module-and-unit-tests)
@@ -288,12 +219,11 @@ Certain things are common during development and require a few commands.
 - [Running](#running)
   - [Setting a global alias](#setting-a-global-alias)
 - [Generating documentation](#generating-documentation)
-  - [Synchronizing changes upstream](#synchronizing-changes-upstream)
 - [Versioning](#versioning)
 - [Updating](#updating)
   - [Bumping the Golang version](#bumping-the-golang-version)
   - [Bumping Go packages versions](#bumping-go-package-versions)
-  - [Bumping Goreleaser versions](#bumping-goreleaser-versions)
+- [Designing](#designing)
 - [Deprecating features and flags](#deprecating-features-and-flags)
 - [Allowlist configuration](#allowlist-configuration)
 
@@ -303,6 +233,19 @@ Certain things are common during development and require a few commands.
 git clone https://github.com/slackapi/slack-cli.git
 cd slack-cli/
 ```
+
+#### Git hooks
+
+Opt-in Git hooks are available in the `.githooks/` directory. To enable them:
+
+```zsh
+git config core.hooksPath .githooks
+```
+
+The pre-commit hook will:
+
+- Block commits directly to the `main` branch
+- Run `go tool golangci-lint run` to lint before committing
 
 ### Initializing the project
 
@@ -364,24 +307,11 @@ results directly.
 
 #### Continuous integration tests
 
-All tests are run during PRs, merges to `main`, and on nightly builds of `main`
-by our continuous integration systems: GitHub Action and CircleCI workflows.
+All tests are run during PRs and merges to `main` by our continuous integration
+systems: GitHub Actions and CircleCI workflows.
 
 The module tests that are used can be found alongside the modules in `*_test.go`
 files and edited as needed.
-
-The end-to-end tests are located in the
-[slackapi/platform-devxp-test][platform-devxp-test] repo and can be adjusted to
-new requirements by a maintainer.
-
-By default the tests execute with the `dev-build` GitHub Release of this repo.
-Branches on this repo will also create a related GitHub Release, and end-to-end
-tests will use the branch-specific Slack CLI release to execute tests.
-
-The branch name can also be set by changing
-[the `e2e_target_branch`](https://github.com/slackapi/slack-cli/blob/24048e34b30a1f1bed46f9d937ff0b02a3cb76b7/.circleci/config.yml#L950)
-for the `build-lint-test-e2e-test` workflow in the `.circleci/config.yml` file,
-but take care not to merge this change into `main`!
 
 #### Test naming conventions
 
@@ -522,26 +452,6 @@ You can generate documentation for all commands in the `docs/` directory with:
 slack docgen
 ```
 
-#### Synchronizing changes upstream
-
-Automated workflows run on documentation changes to [sync][sync] files between
-this project and the documentation build.
-
-A GitHub application called [`@slackapi[bot]`][github-app-docs] mirrors changes
-to these files and requires certain permissions:
-
-- **Actions**: Read and write
-- **Contents**: Read and write
-- **Metadata**: Read
-- **Pull requests**: Read and write
-
-Access to both this project repo and documentation repo must also be granted.
-
-Credentials and secrets for the app can be stored as the following variables:
-
-- `GH_APP_ID_DOCS`
-- `GH_APP_PRIVATE_KEY_DOCS`
-
 ### Versioning
 
 We use git tags and [semantic versioning][semver] to version this program. The
@@ -596,15 +506,20 @@ For these changes to complete, certain application permissions are needed:
 
 - **Actions**: Read and write
 - **Contents**: Read and write
+- **Issues**: Read and write
 - **Metadata**: Read
 - **Pull requests**: Read and write
 - **Workflows**: Read and write
+
+The **Issues** permission is needed to create, rename, and close milestones.
+Note that adding a permission to the app is not enough on its own, since each
+existing installation must also be granted the new permission.
 
 Access to this project is also required with the selected application scopes.
 
 Credentials and secrets for the app can be stored as the following variables:
 
-- `GH_APP_ID_RELEASER`
+- `GH_APP_CLIENT_ID_RELEASER`
 - `GH_APP_PRIVATE_KEY_RELEASER`
 
 #### Bumping Go package versions
@@ -622,15 +537,10 @@ tree of a transitive dependency, this command can be helpful:
 go mod graph | grep <module name>
 ```
 
-#### Bumping Goreleaser versions
+### Designing
 
-The [`goreleaser`][goreleaser] package we use to build release snapshots needs
-updates in the following files on occasion:
-
-- `.circleci/config.yml`
-- `.goreleaser.yml`
-
-Testing in our CI setup uses changes to these files when creating test builds.
+Conventions for how commands handle inputs and format outputs are documented in
+the [style guide][style-guide].
 
 ### Deprecating features and flags
 
@@ -699,7 +609,7 @@ The development build comes in 2 flavours:
 
 #### 1. Development build GitHub release
 
-A development build and recent changelog is generated each night from `main`
+A development build and recent changelog is generated on each merge to `main`
 with all of the latest changes. Builds are released with the `dev-build` tag and
 can be [reviewed from the releases][dev-release] page.
 
@@ -711,8 +621,9 @@ Each release page contains:
   version `v*.*.*` pattern
 - Assets for the macOS, Linux, and Windows binaries
 
-The development build and release automation is performed from the `deploy-dev`
-job in the [`.circleci/config.yml`][circleci] file.
+The development build and release automation is performed from the
+`dev-build-code-sign-deploy` workflow in the [`.circleci/config.yml`][circleci]
+file.
 
 #### 2. Development build install script
 
@@ -874,7 +785,16 @@ Steps to triage a pull request:
 4. **Milestone**:
    - A milestone should be assigned when possible, usually as the `Next Release`
    - After a release, the `Next Release` milestone is renamed to the tagged
-     version
+     version and closed, while a new `Next Release` milestone gathers the issues
+     and pull requests that remain open
+   - This happens automatically with [this workflow][wf-milestone] when a
+     production release is published, but can also be done by hand:
+     ```sh
+     $ DRY_RUN=true ./scripts/triage-milestone.sh v4.8.0
+     $ ./scripts/triage-milestone.sh v4.8.0
+     ```
+   - The `Next Release` milestone must keep this exact name because release and
+     dependency automation assigns pull requests to it by title
 
 #### Pull request: merge
 
@@ -883,10 +803,8 @@ Steps to merge a pull request:
 1. Tests must pass on the pull request using the continuous integration suite
    - Tests for development APIs are optional, but we recommend investigating why
      it's failing before merging
-   - End-to-end tests for pull requests from forks can be [started][e2e] if:
-     - The `workflow` from the **main** branch is used
-     - The `branch` contains the pull request number as: `pull/123/head`
-     - The `status` is reported with the commit checks
+   - End-to-end tests start from the [platform-devxp-test][platform-devxp-test]
+     project with custom options
 2. Code is reviewed and approved by another maintainer
 3. Title is descriptive
    - This becomes part of the CHANGELOG, so please make sure it's meaningful to
@@ -907,9 +825,7 @@ When in doubt, find the other maintainers and ask.
 [commit]: https://www.conventionalcommits.org/en/v1.0.0/
 [contributing]: ./CONTRIBUTING.md
 [dev-release]: https://github.com/slackapi/slack-cli/releases/tag/dev-build
-[e2e]: https://github.com/slackapi/slack-cli/actions/workflows/e2e_tests.yml
 [effective-go]: https://golang.org/doc/effective_go
-[github-app-docs]: https://github.com/apps/slackapi
 [github-app-releaser]: https://github.com/apps/slack-cli-releaser
 [goinstaller]: https://go.dev/doc/install
 [golang]: https://golang.org/
@@ -926,6 +842,7 @@ When in doubt, find the other maintainers and ask.
 [practical-go]: https://dave.cheney.net/practical-go/presentations/qcon-china.html
 [scripts]: ../scripts
 [semver]: https://semver.org/
-[sync]: https://github.com/slackapi/slack-cli/blob/main/.github/workflows/sync-docs-from-cli-repo.yml
+[style-guide]: ./STYLE_GUIDE.md
 [vscode]: https://github.com/slackapi/slack-cli/blob/main/.vscode/settings.json
 [wf-dependencies]: ./workflows/dependencies.yml
+[wf-milestone]: ./workflows/milestone.yml

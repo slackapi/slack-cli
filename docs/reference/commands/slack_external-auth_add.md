@@ -23,6 +23,7 @@ slack external-auth add [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -31,6 +32,7 @@ slack external-auth add [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -46,5 +48,5 @@ $ slack external-auth add -p github
 
 ## See also
 
-* [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
+* [slack external-auth](/tools/slack-cli/reference/commands/slack_external-auth/)	 - Adjust settings of external authentication providers
 

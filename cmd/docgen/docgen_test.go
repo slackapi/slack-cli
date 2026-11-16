@@ -15,6 +15,7 @@
 package docgen
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"path/filepath"
@@ -170,4 +171,48 @@ func TestNewDocsCommand(t *testing.T) {
 	}, func(clients *shared.ClientFactory) *cobra.Command {
 		return NewCommand(clients)
 	})
+}
+
+func Test_commandDocsURL(t *testing.T) {
+	tests := map[string]struct {
+		commandPath string
+		expected    string
+	}{
+		"root command": {
+			commandPath: "slack",
+			expected:    "/tools/slack-cli/reference/commands/slack/",
+		},
+		"subcommand replaces spaces with underscores": {
+			commandPath: "slack app",
+			expected:    "/tools/slack-cli/reference/commands/slack_app/",
+		},
+		"nested subcommand": {
+			commandPath: "slack app delete",
+			expected:    "/tools/slack-cli/reference/commands/slack_app_delete/",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, commandDocsURL(tc.commandPath))
+		})
+	}
+}
+
+func Test_genMarkdownCommand(t *testing.T) {
+	root := &cobra.Command{Use: "slack", Short: "Slack command-line tool"}
+	app := &cobra.Command{Use: "app", Short: "App management commands", Run: func(*cobra.Command, []string) {}}
+	del := &cobra.Command{Use: "delete", Short: "Delete the app", Run: func(*cobra.Command, []string) {}}
+	app.AddCommand(del)
+	root.AddCommand(app)
+
+	var buf bytes.Buffer
+	require.NoError(t, genMarkdownCommand(app, &buf))
+	output := buf.String()
+
+	assert.Contains(t, output, "## See also")
+	// Parent link uses the docs site path rather than a bare slug.
+	assert.Contains(t, output, "* [slack](/tools/slack-cli/reference/commands/slack/)")
+	// Child link uses the docs site path rather than a bare slug.
+	assert.Contains(t, output, "* [slack app delete](/tools/slack-cli/reference/commands/slack_app_delete/)")
+	assert.NotContains(t, output, "](slack_app_delete)")
 }

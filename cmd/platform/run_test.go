@@ -28,9 +28,11 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // Setup a mock for the package
@@ -54,6 +56,7 @@ func (m *RunPkgMock) Run(ctx context.Context, clients *shared.ClientFactory, run
 
 func TestRunCommand_Flags(t *testing.T) {
 	tests := map[string]struct {
+		setup           func(cm *shared.ClientsMock)
 		cmdArgs         []string
 		appFlag         string
 		tokenFlag       string
@@ -186,6 +189,35 @@ func TestRunCommand_Flags(t *testing.T) {
 			},
 			expectedErr: slackerror.New(slackerror.ErrProcessInterrupted),
 		},
+		"Positional arg sets AppFilePath": {
+			setup: func(cm *shared.ClientsMock) {
+				_ = afero.WriteFile(cm.Fs, "./src/app.py", []byte(""), 0644)
+			},
+			cmdArgs: []string{"./src/app.py"},
+			selectedAppAuth: prompts.SelectedApp{
+				App:  types.NewApp(),
+				Auth: types.SlackAuth{},
+			},
+			expectedRunArgs: platform.RunArgs{
+				Activity:      true,
+				ActivityLevel: "info",
+				App:           types.NewApp(),
+				AppFilePath:   "./src/app.py",
+				Auth:          types.SlackAuth{},
+				Cleanup:       false,
+				ShowTriggers:  true,
+			},
+		},
+		"Error if app file path does not exist": {
+			cmdArgs: []string{"./nonexistent/app.py"},
+			selectedAppAuth: prompts.SelectedApp{
+				App:  types.NewApp(),
+				Auth: types.SlackAuth{},
+			},
+			expectedErr: slackerror.New(slackerror.ErrNotFound).
+				WithMessage("The app file path %q could not be found", "./nonexistent/app.py").
+				WithRemediation("Check that the file exists and the path is correct"),
+		},
 		"Error if no apps are available when using a remote manifest source": {
 			selectedAppErr: slackerror.New(slackerror.ErrMissingOptions),
 			expectedErr: slackerror.New(slackerror.ErrAppNotFound).
@@ -214,6 +246,9 @@ func TestRunCommand_Flags(t *testing.T) {
 				clients.Config.AppFlag = tc.appFlag
 				clients.Config.TokenFlag = tc.tokenFlag
 			})
+			if tc.setup != nil {
+				tc.setup(clientsMock)
+			}
 
 			appSelectMock := prompts.NewAppSelectMock()
 			appSelectMock.On("AppSelectPrompt", mock.Anything, mock.Anything, prompts.ShowLocalOnly, prompts.ShowAllApps).Return(tc.selectedAppAuth, tc.selectedAppErr)
@@ -241,6 +276,24 @@ func TestRunCommand_Flags(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunCommand_ManifestSourceFlag_InvalidValue(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.IO.On("IsTTY").Return(true)
+	clientsMock.IO.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
+		clients.SDKConfig = hooks.NewSDKConfigMock()
+	})
+
+	cmd := NewRunCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--manifest-source", "invalid"})
+
+	err := cmd.ExecuteContext(ctx)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid")
 }
 
 func TestRunCommand_Help(t *testing.T) {

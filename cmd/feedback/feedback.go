@@ -68,9 +68,8 @@ const (
 
 // Supported survey names
 const (
-	SlackCLIFeedback                = "slack-cli"
-	SlackPlatformFeedback           = "slack-platform"
-	SlackPlatformFeedbackDeprecated = "platform-improvements" // DEPRECATED(semver:major)
+	SlackCLIFeedback      = "slack-cli"
+	SlackPlatformFeedback = "slack-platform"
 )
 
 type SurveyConfigInterface interface {
@@ -241,12 +240,6 @@ func runFeedbackCommand(ctx context.Context, clients *shared.ClientFactory, cmd 
 		return nil
 	}
 
-	// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
-	if surveyNameFlag == SlackPlatformFeedbackDeprecated {
-		surveyNameFlag = SlackPlatformFeedback
-		clients.IO.PrintWarning(ctx, "DEPRECATED: The '--name %s' flag is deprecated; use '--name %s' instead", SlackPlatformFeedbackDeprecated, SlackPlatformFeedback)
-	}
-
 	surveyNames, surveyPromptOptions := initSurveyOpts(ctx, clients, SurveyStore)
 
 	if _, ok := SurveyStore[surveyNameFlag]; !ok && surveyNameFlag != "" {
@@ -342,7 +335,9 @@ func executeSurvey(ctx context.Context, clients *shared.ClientFactory, s SlackSu
 	var err error
 	var ok bool
 	if !noPromptFlag {
-		ok, err = clients.IO.ConfirmPrompt(ctx, "Open in browser?", true)
+		ok, err = clients.IO.ConfirmPrompt(ctx, "Open in browser?", iostreams.ConfirmPromptConfig{
+			Default: true,
+		})
 		if err != nil {
 			return err
 		}

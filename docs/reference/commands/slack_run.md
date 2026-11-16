@@ -7,7 +7,7 @@ Start a local server to develop and run the app locally
 Start a local server to develop and run the app locally while watching for file changes
 
 ```
-slack run [flags]
+slack run [app-file-path] [flags]
 ```
 
 ## Flags
@@ -17,6 +17,7 @@ slack run [flags]
       --cleanup                      uninstall the local app after exiting
   -h, --help                         help for run
       --hide-triggers                do not list triggers and skip trigger creation prompts
+      --manifest-source string       resolve manifest differences using this source (local or remote)
       --no-activity                  hide Slack Platform log activity
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)
@@ -25,6 +26,7 @@ slack run [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -33,17 +35,17 @@ slack run [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
 ## Examples
 
 ```
-# Start a local development server
-$ slack platform run
+$ slack platform run               # Start a local development server
 
-# Run a local development server with debug activity
-$ slack platform run --activity-level debug
+# Run a local development server with a custom app entry point
+$ slack platform run ./src/app.py
 
 # Run a local development server with cleanup
 $ slack platform run --cleanup
@@ -51,5 +53,5 @@ $ slack platform run --cleanup
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

@@ -67,9 +67,6 @@ func TestClient_UploadPackageToS3(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "this is the package", string(contentBytes))
 
-		md5Header := r.Header["Content-Md5"][0]
-		require.Equal(t, "1B2M2Y8AsgTpgAmY7PhCfg==", md5Header)
-
 		w.WriteHeader(http.StatusNoContent)
 	}))
 	defer server.Close()

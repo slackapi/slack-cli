@@ -49,6 +49,7 @@ func NewLoginCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "auth login --no-prompt", Meaning: "Login to a Slack account without prompts, this returns a ticket"},
 			{Command: "auth login --challenge 6d0a31c9 --ticket ISQWLiZT0OtMLO3YWNTJO0...", Meaning: "Complete login using ticket and challenge code"},
 			{Command: "auth login --token xoxp-...", Meaning: "Login with a user token"},
+			{Command: "auth login --token - < token.txt", Meaning: "Login with a user token read from standard input"},
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			_, err := RunLoginCommand(clients, cmd)
@@ -61,7 +62,7 @@ func NewLoginCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVarP(&deprecatedUserTokenArg, authFlagName, "", "", "provide a user token for pre-authenticated login")
 	_ = cmd.Flags().MarkHidden(authFlagName)
 
-	cmd.Flags().StringVarP(&tokenFlag, "token", "", "", "provide a token for a pre-authenticated login")
+	cmd.Flags().StringVarP(&tokenFlag, "token", "", "", "provide a token for a pre-authenticated login\n  (use - to read from standard input)")
 
 	// Support login in promptless fashion
 	cmd.Flags().BoolVarP(&noPromptFlag, "no-prompt", "", false, "login without prompts using ticket and challenge code")
@@ -100,6 +101,12 @@ func RunLoginCommand(clients *shared.ClientFactory, cmd *cobra.Command) (types.S
 		proceedMessage := fmt.Sprintf("\n%s %s", "Proceeding with ", style.Highlight("--token <token>"))
 		cmd.Print(style.SectionSecondaryf("%s", proceedMessage))
 	}
+
+	resolvedToken, err := ResolveTokenInput(clients, tokenFlag)
+	if err != nil {
+		return types.SlackAuth{}, err
+	}
+	tokenFlag = resolvedToken
 
 	// When --no-prompt flag supplied OR --ticket and --challenge code flags provided
 	// attempt to login in a promptless fashion

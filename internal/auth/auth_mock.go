@@ -76,8 +76,8 @@ func (m *AuthMock) ResolveAPIHost(ctx context.Context, apiHostFlag string, custo
 	return args.String(0)
 }
 
-func (m *AuthMock) ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string {
-	args := m.Called(ctx, apiHost, cliVersion)
+func (m *AuthMock) ResolveLogstashHost(ctx context.Context, apiHost string) string {
+	args := m.Called(ctx, apiHost)
 	return args.String(0)
 }
 

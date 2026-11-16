@@ -15,6 +15,7 @@
 package tracking
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -80,6 +81,7 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 		assertOnRequest      func(t *testing.T, req *http.Request)
 		shouldNotSendRequest bool
 		setup                func(cfg *config.Config)
+		ctxSetup             func(ctx context.Context) context.Context
 	}{
 		"should always send an array to the event logging endpoint": {
 			exitCode: iostreams.ExitOK,
@@ -128,8 +130,8 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 			shouldNotSendRequest: true,
 		},
 		"should strip 'v' prefix from version string": {
-			setup: func(cfg *config.Config) {
-				cfg.Version = "v4.2.0"
+			ctxSetup: func(ctx context.Context) context.Context {
+				return slackcontext.SetVersion(ctx, "v4.2.0")
 			},
 			assertOnRequest: func(t *testing.T, req *http.Request) {
 				payload, err := io.ReadAll(req.Body)
@@ -150,6 +152,9 @@ func Test_Tracking_FlushToLogstash(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
+			if tc.ctxSetup != nil {
+				ctx = tc.ctxSetup(ctx)
+			}
 			et := NewEventTracker()
 			var requestSent = false
 			testServer := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {

@@ -38,8 +38,19 @@ var trustedTemplateSources = []string{
 // Template describes the app template's path and protocol
 type Template struct {
 	path    string // path can be a local path or remote git URL
+	subdir  string // subdirectory within the repository
 	isGit   bool
 	isLocal bool
+}
+
+// SetSubdir sets the subdirectory within the repository
+func (t *Template) SetSubdir(subdir string) {
+	t.subdir = subdir
+}
+
+// GetSubdir returns the subdirectory within the repository
+func (t Template) GetSubdir() string {
+	return t.subdir
 }
 
 // ResolveTemplateURL returns a git-clone compatible URL

@@ -17,6 +17,8 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"maps"
+	"path/filepath"
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -24,11 +26,15 @@ import (
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 )
+
+const manifestFileName = "manifest.json"
 
 // ManifestClient can manage the state of the project's app manifest file
 type ManifestClient struct {
 	apiClient        api.APIInterface
+	fs               afero.Fs
 	domainAuthTokens string
 	Env              map[string]string
 }
@@ -59,23 +65,45 @@ func SetManifestEnvTeamVars(manifestEnv map[string]string, appTeamDomain string,
 func NewManifestClient(
 	apiClient api.APIInterface,
 	config *config.Config,
+	fs afero.Fs,
 ) *ManifestClient {
 	client := &ManifestClient{
 		apiClient:        apiClient,
+		fs:               fs,
 		domainAuthTokens: config.DomainAuthTokens,
 		Env:              config.ManifestEnv,
 	}
 	return client
 }
 
-// GetManifestLocal gathers manifest content from the "get-manifest" hook
+// GetManifestLocal reads the local manifest, preferring the "get-manifest" hook
+// when available. Falls back to reading manifest.json from the project root.
 func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
-	var sl types.SlackYaml
-
-	if !sdkConfig.Hooks.GetManifest.IsAvailable() {
-		return sl, slackerror.New(slackerror.ErrSDKHookNotFound).
-			WithMessage("The `get-manifest` script was not found")
+	if sdkConfig.Hooks.GetManifest.IsAvailable() {
+		return c.getManifestFromHook(ctx, sdkConfig, hookExecutor)
 	}
+	return c.getManifestFromFile(sdkConfig)
+}
+
+func (c *ManifestClient) getManifestFromFile(sdkConfig hooks.SDKCLIConfig) (types.SlackYaml, error) {
+	var sl types.SlackYaml
+	manifestPath := filepath.Join(sdkConfig.WorkingDirectory, manifestFileName)
+	data, err := afero.ReadFile(c.fs, manifestPath)
+	if err != nil {
+		return sl, slackerror.New("Failed to read manifest file").
+			WithRootCause(err).
+			WithCode(slackerror.ErrNoFile)
+	}
+	if err := json.Unmarshal(data, &sl); err != nil {
+		return sl, slackerror.New("Failed to parse manifest file").
+			WithRootCause(err).
+			WithCode(slackerror.ErrInvalidManifest)
+	}
+	return sl, nil
+}
+
+func (c *ManifestClient) getManifestFromHook(ctx context.Context, sdkConfig hooks.SDKCLIConfig, hookExecutor hooks.HookExecutor) (types.SlackYaml, error) {
+	var sl types.SlackYaml
 
 	var manifestHookOpts = hooks.HookExecOpts{
 		Args: map[string]string{
@@ -87,9 +115,7 @@ func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.S
 		Hook: sdkConfig.Hooks.GetManifest,
 	}
 
-	for name, val := range c.Env {
-		manifestHookOpts.Env[name] = val
-	}
+	maps.Copy(manifestHookOpts.Env, c.Env)
 
 	slackManifestInfo, err := hookExecutor.Execute(ctx, manifestHookOpts)
 	if err != nil {
@@ -104,7 +130,6 @@ func (c *ManifestClient) GetManifestLocal(ctx context.Context, sdkConfig hooks.S
 	if start != -1 {
 		slackManifestInfo = slackManifestInfo[start:]
 	} else {
-		// the app manifest has to be a json so needs to have the character `{`
 		return sl, slackerror.New("Invalid app manifest format, must be valid JSON").
 			WithRootCause(err).
 			WithCode(slackerror.ErrInvalidManifest)

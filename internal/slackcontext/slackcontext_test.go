@@ -22,33 +22,9 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/tracer"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/stretchr/testify/require"
 )
-
-func Test_SlackContext_OpenTracingSpan(t *testing.T) {
-	tests := map[string]struct {
-		expectedSpan  opentracing.Span
-		expectedError error
-	}{
-		"returns span when span exists": {
-			expectedSpan:  opentracing.StartSpan("test.span"),
-			expectedError: nil,
-		},
-		"returns error when span not found": {
-			expectedSpan:  nil,
-			expectedError: slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Span could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = opentracing.ContextWithSpan(ctx, tc.expectedSpan)
-			actualSpan, actualError := OpenTracingSpan(ctx)
-			require.Equal(t, tc.expectedSpan, actualSpan)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
 
 func Test_SlackContext_SetOpenTracingSpan(t *testing.T) {
 	tests := map[string]struct {
@@ -111,33 +87,6 @@ func Test_SlackContext_SetOpenTracingTraceID(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_OpenTracingTracer(t *testing.T) {
-	_, _tracer := tracer.SetupTracer(true)
-
-	tests := map[string]struct {
-		expectedTracer opentracing.Tracer
-		expectedError  error
-	}{
-		"returns Tracer when it exists": {
-			expectedTracer: _tracer,
-			expectedError:  nil,
-		},
-		"returns error when Tracer not found": {
-			expectedTracer: nil,
-			expectedError:  slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Tracer could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tc.expectedTracer)
-			actualTracer, actualError := OpenTracingTracer(ctx)
-			require.Equal(t, tc.expectedTracer, actualTracer)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 	_, _tracer := tracer.SetupTracer(true)
 
@@ -154,31 +103,6 @@ func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 			ctx = SetOpenTracingTracer(ctx, tc.expectedTracer)
 			actualTracer := ctx.Value(contextKeyOpenTracingTracer).(opentracing.Tracer)
 			require.Equal(t, tc.expectedTracer, actualTracer)
-		})
-	}
-}
-
-func Test_SlackContext_ProjectID(t *testing.T) {
-	tests := map[string]struct {
-		expectedProjectID string
-		expectedError     error
-	}{
-		"returns Project ID when it exists": {
-			expectedProjectID: uuid.New().String(),
-			expectedError:     nil,
-		},
-		"returns error when Project ID not found": {
-			expectedProjectID: "",
-			expectedError:     slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Project ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyProjectID, tc.expectedProjectID)
-			actualProjectID, actualError := ProjectID(ctx)
-			require.Equal(t, tc.expectedProjectID, actualProjectID)
-			require.Equal(t, tc.expectedError, actualError)
 		})
 	}
 }
@@ -244,31 +168,6 @@ func Test_SlackContext_SetSessionID(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_SystemID(t *testing.T) {
-	tests := map[string]struct {
-		expectedSystemID string
-		expectedError    error
-	}{
-		"returns System ID when it exists": {
-			expectedSystemID: uuid.New().String(),
-			expectedError:    nil,
-		},
-		"returns error when System ID not found": {
-			expectedSystemID: "",
-			expectedError:    slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for System ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeySystemID, tc.expectedSystemID)
-			actualSystemID, actualError := SystemID(ctx)
-			require.Equal(t, tc.expectedSystemID, actualSystemID)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
 func Test_SlackContext_SetSystemID(t *testing.T) {
 	tests := map[string]struct {
 		expectedSystemID string
@@ -288,28 +187,20 @@ func Test_SlackContext_SetSystemID(t *testing.T) {
 }
 
 func Test_SlackContext_Version(t *testing.T) {
-	tests := map[string]struct {
-		expectedVersion string
-		expectedError   error
-	}{
-		"returns Version when it exists": {
-			expectedVersion: "v1.2.3",
-			expectedError:   nil,
-		},
-		"returns error when Version not found": {
-			expectedVersion: "",
-			expectedError:   slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Version could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyVersion, tc.expectedVersion)
-			actualVersion, actualError := Version(ctx)
-			require.Equal(t, tc.expectedVersion, actualVersion)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
+	t.Run("returns Version when it exists", func(t *testing.T) {
+		ctx := t.Context()
+		ctx = context.WithValue(ctx, contextKeyVersion, "v1.2.3")
+		actualVersion, actualError := Version(ctx)
+		require.Equal(t, "v1.2.3", actualVersion)
+		require.NoError(t, actualError)
+	})
+
+	t.Run("falls back to version.Raw() when Version not found", func(t *testing.T) {
+		ctx := t.Context()
+		actualVersion, actualError := Version(ctx)
+		require.Equal(t, version.Raw(), actualVersion)
+		require.ErrorContains(t, actualError, "falling back to the build version")
+	})
 }
 
 func Test_SlackContext_SetVersion(t *testing.T) {

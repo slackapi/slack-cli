@@ -27,7 +27,8 @@ const (
 	ErrAddAppToProject                               = "add_app_to_project_error"
 	ErrAlreadyLoggedOut                              = "already_logged_out"
 	ErrAlreadyResolved                               = "already_resolved"
-	ErrAppsList                                      = "apps_list_error"
+	ErrAPIFeatureNotEnabled                          = "feature_not_enabled"
+	ErrAPIRestrictedAction                           = "restricted_action"
 	ErrAppAdd                                        = "app_add_error"
 	ErrAppApprovalRequestDenied                      = "app_approval_request_denied"
 	ErrAppApprovalRequestEligible                    = "app_approval_request_eligible"
@@ -37,29 +38,38 @@ const (
 	ErrAppDelete                                     = "app_delete_error"
 	ErrAppDeploy                                     = "app_deploy_error"
 	ErrAppDeployNotSlackHosted                       = "app_deploy_function_runtime_not_slack"
-	ErrAppDirectoryAccess                            = "app_directory_access_error"
 	ErrAppDirOnlyFail                                = "app_dir_only_fail"
+	ErrAppDirectoryAccess                            = "app_directory_access_error"
 	ErrAppExists                                     = "app_add_exists"
 	ErrAppFlagRequired                               = "app_flag_required"
 	ErrAppFound                                      = "app_found"
 	ErrAppHosted                                     = "app_hosted"
 	ErrAppInstall                                    = "app_install_error"
 	ErrAppManifestAccess                             = "app_manifest_access_error"
+	ErrAppManifestCompare                            = "app_manifest_compare_error"
 	ErrAppManifestCreate                             = "app_manifest_create_error"
 	ErrAppManifestGenerate                           = "app_manifest_generate_error"
 	ErrAppManifestUpdate                             = "app_manifest_update_error"
 	ErrAppManifestValidate                           = "app_manifest_validate_error"
 	ErrAppNotEligible                                = "app_not_eligible"
-	ErrAppNotInstalled                               = "app_not_installed"
 	ErrAppNotFound                                   = "app_not_found"
 	ErrAppNotHosted                                  = "app_not_hosted"
+	ErrAppNotInstalled                               = "app_not_installed"
+	ErrAppNotOrgReady                                = "app_not_org_ready"
 	ErrAppRemove                                     = "app_remove_error"
 	ErrAppRenameApp                                  = "app_rename_app"
+	ErrAppsList                                      = "apps_list_error"
+	ErrAtActiveSandboxLimit                          = "at_active_sandbox_limit" // Slack API error code
 	ErrAuthProdTokenNotFound                         = "auth_prod_token_not_found"
 	ErrAuthTimeout                                   = "auth_timeout_error"
 	ErrAuthToken                                     = "auth_token_error"
 	ErrAuthVerification                              = "auth_verification_error"
 	ErrBotInviteRequired                             = "bot_invite_required" // Slack API error code
+	ErrCLIAutoUpdate                                 = "cli_autoupdate_error"
+	ErrCLIConfigInvalid                              = "cli_config_invalid"
+	ErrCLIConfigLocationError                        = "cli_config_location_error"
+	ErrCLIReadError                                  = "cli_read_error"
+	ErrCLIUpdateRequired                             = "cli_update_required" // Slack API error code
 	ErrCannotAbandonApp                              = "cannot_abandon_app"
 	ErrCannotAddOwner                                = "cannot_add_owner"
 	ErrCannotCountOwners                             = "cannot_count_owners"
@@ -69,25 +79,20 @@ const (
 	ErrCannotRemoveCollaborators                     = "cannot_remove_collaborators"
 	ErrCannotRemoveOwners                            = "cannot_remove_owner"
 	ErrCannotRevokeOrgBotToken                       = "cannot_revoke_org_bot_token"
+	ErrChannelNotFound                               = "channel_not_found"
+	ErrCommentRequired                               = "comment_required"
+	ErrConnectedOrgDenied                            = "connected_org_denied"
+	ErrConnectedTeamDenied                           = "connected_team_denied"
 	ErrConnectorApprovalPending                      = "connector_approval_pending"
 	ErrConnectorApprovalRequired                     = "connector_approval_required"
 	ErrConnectorDenied                               = "connector_denied"
 	ErrConnectorNotInstalled                         = "connector_not_installed"
-	ErrChannelNotFound                               = "channel_not_found"
-	ErrCLIAutoUpdate                                 = "cli_autoupdate_error"
-	ErrCLIConfigLocationError                        = "cli_config_location_error"
-	ErrCLIConfigInvalid                              = "cli_config_invalid"
-	ErrCLIReadError                                  = "cli_read_error"
-	ErrCLIUpdateRequired                             = "cli_update_required" // Slack API error code
-	ErrCommentRequired                               = "comment_required"
-	ErrConnectedOrgDenied                            = "connected_org_denied"
-	ErrConnectedTeamDenied                           = "connected_team_denied"
 	ErrContextValueNotFound                          = "context_value_not_found"
 	ErrCredentialsNotFound                           = "credentials_not_found"
 	ErrCustomizableInputMissingMatchingWorkflowInput = "customizable_input_missing_matching_workflow_input"
+	ErrCustomizableInputUnsupportedType              = "customizable_input_unsupported_type"
 	ErrCustomizableInputsNotAllowedOnOptionalInputs  = "customizable_inputs_not_allowed_on_optional_inputs"
 	ErrCustomizableInputsOnlyAllowedOnLinkTriggers   = "customizable_inputs_only_allowed_on_link_triggers"
-	ErrCustomizableInputUnsupportedType              = "customizable_input_unsupported_type"
 	ErrDatastore                                     = "datastore_error"
 	ErrDatastoreMissingPrimaryKey                    = "datastore_missing_primary_key"
 	ErrDatastoreNotFound                             = "datastore_not_found"
@@ -96,16 +101,22 @@ const (
 	ErrDenoNotFound                                  = "deno_not_found"
 	ErrDeployedAppNotSupported                       = "deployed_app_not_supported"
 	ErrDocumentationGenerationFailed                 = "documentation_generation_failed"
-	ErrDocsSearchFlagRequired                        = "docs_search_flag_required"
+	ErrDotEnvFileAlreadyExists                       = "dotenv_file_already_exists"
+	ErrDotEnvFileParse                               = "dotenv_file_parse_error"
+	ErrDotEnvFileRead                                = "dotenv_file_read_error"
+	ErrDotEnvFileWrite                               = "dotenv_file_write_error"
+	ErrDotEnvPlaceholderNotFound                     = "dotenv_placeholder_not_found"
+	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
+	ErrExperimentRequired                            = "experiment_required"
+	ErrFailForSomeRequests                           = "failed_for_some_requests"
+	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
 	ErrFailedAddingCollaborator                      = "failed_adding_collaborator"
 	ErrFailedCreatingApp                             = "failed_creating_app"
 	ErrFailedDatastoreOperation                      = "failed_datastore_operation"
 	ErrFailedExport                                  = "failed_export"
-	ErrFailForSomeRequests                           = "failed_for_some_requests"
 	ErrFailedToGetUser                               = "failed_to_get_user"
 	ErrFailedToSaveExtensionLogs                     = "failed_to_save_extension_logs"
-	ErrFailToGetTeamsForRestrictedUser               = "fail_to_get_teams_for_restricted_user"
 	ErrFeedbackNameInvalid                           = "feedback_name_invalid"
 	ErrFeedbackNameRequired                          = "feedback_name_required"
 	ErrFileRejected                                  = "file_rejected"
@@ -113,14 +124,14 @@ const (
 	ErrFreeTeamNotAllowed                            = "free_team_not_allowed"
 	ErrFunctionBelongsToAnotherApp                   = "function_belongs_to_another_app"
 	ErrFunctionNotFound                              = "function_not_found"
-	ErrGitNotFound                                   = "git_not_found"
 	ErrGitClone                                      = "git_clone_error"
+	ErrGitNotFound                                   = "git_not_found"
 	ErrGitZipDownload                                = "git_zip_download_error"
+	ErrHTTPRequestFailed                             = "http_request_failed"
+	ErrHTTPResponseInvalid                           = "http_response_invalid"
 	ErrHomeDirectoryAccessFailed                     = "home_directory_access_failed"
 	ErrHooksJSONLocation                             = "hooks_json_location_error"
 	ErrHostAppsDisallowUserScopes                    = "hosted_apps_disallow_user_scopes"
-	ErrHTTPRequestFailed                             = "http_request_failed"
-	ErrHTTPResponseInvalid                           = "http_response_invalid"
 	ErrInsecureRequest                               = "insecure_request"
 	ErrInstallationDenied                            = "installation_denied"
 	ErrInstallationFailed                            = "installation_failed"
@@ -131,12 +142,15 @@ const (
 	ErrInvalidAppFlag                                = "invalid_app_flag"
 	ErrInvalidAppID                                  = "invalid_app_id"
 	ErrInvalidArgs                                   = "invalid_args"
-	ErrInvalidArgumentsCustomizableInputs            = "invalid_arguments_customizable_inputs"
 	ErrInvalidArguments                              = "invalid_arguments"
+	ErrInvalidArgumentsCustomizableInputs            = "invalid_arguments_customizable_inputs"
 	ErrInvalidAuth                                   = "invalid_auth"
+	ErrInvalidBlocks                                 = "invalid_blocks"
 	ErrInvalidChallenge                              = "invalid_challenge"
 	ErrInvalidChannelID                              = "invalid_channel_id"
 	ErrInvalidCursor                                 = "invalid_cursor"
+	ErrInvalidDatastore                              = "invalid_datastore"
+	ErrInvalidDatastoreExpression                    = "invalid_datastore_expression"
 	ErrInvalidDistributionType                       = "invalid_distribution_type"
 	ErrInvalidFlag                                   = "invalid_flag"
 	ErrInvalidInteractiveTriggerInputs               = "invalid_interactive_trigger_inputs"
@@ -149,11 +163,12 @@ const (
 	ErrInvalidResourceID                             = "invalid_resource_id"
 	ErrInvalidResourceType                           = "invalid_resource_type"
 	ErrInvalidS3Key                                  = "invalid_s3_key"
+	ErrInvalidSandboxArchiveTTL                      = "invalid_archive_ttl"     // Slack API error code
+	ErrInvalidSandboxTeamID                          = "invalid_sandbox_team_id" // Slack API error code
+	ErrInvalidSandboxTemplateID                      = "invalid_template_id"
 	ErrInvalidScopes                                 = "invalid_scopes"
 	ErrInvalidSemVer                                 = "invalid_semver"
 	ErrInvalidSlackProjectDirectory                  = "invalid_slack_project_directory"
-	ErrInvalidDatastore                              = "invalid_datastore"
-	ErrInvalidDatastoreExpression                    = "invalid_datastore_expression"
 	ErrInvalidToken                                  = "invalid_token"
 	ErrInvalidTrigger                                = "invalid_trigger"
 	ErrInvalidTriggerAccess                          = "invalid_trigger_access"
@@ -178,27 +193,28 @@ const (
 	ErrMissingAppTeamID                              = "missing_app_team_id"
 	ErrMissingChallenge                              = "missing_challenge"
 	ErrMissingExperiment                             = "missing_experiment"
-	ErrMissingFunctionIdentifier                     = "missing_function_identifier"
 	ErrMissingFlag                                   = "missing_flag"
+	ErrMissingFunctionIdentifier                     = "missing_function_identifier"
 	ErrMissingInput                                  = "missing_input"
 	ErrMissingOptions                                = "missing_options"
 	ErrMissingScope                                  = "missing_scope"
 	ErrMissingScopes                                 = "missing_scopes"
 	ErrMissingUser                                   = "missing_user"
 	ErrMissingValue                                  = "missing_value"
-	ErrNotAuthed                                     = "not_authed"
-	ErrNotBearerToken                                = "not_bearer_token"
-	ErrNotFound                                      = "not_found"
+	ErrNoAppSelected                                 = "no_app_selected"
 	ErrNoFile                                        = "no_file"
 	ErrNoPendingRequest                              = "no_pending_request"
 	ErrNoPermission                                  = "no_permission"
 	ErrNoTokenFound                                  = "no_token_found"
 	ErrNoTriggers                                    = "no_triggers"
 	ErrNoValidNamedEntities                          = "no_valid_named_entities"
+	ErrNotAuthed                                     = "not_authed"
+	ErrNotBearerToken                                = "not_bearer_token"
+	ErrNotFound                                      = "not_found"
+	ErrOSNotSupported                                = "os_not_supported"
+	ErrOrgGrantExists                                = "org_grant_exists"
 	ErrOrgNotConnected                               = "org_not_connected"
 	ErrOrgNotFound                                   = "org_not_found"
-	ErrOrgGrantExists                                = "org_grant_exists"
-	ErrOSNotSupported                                = "os_not_supported"
 	ErrOverResourceLimit                             = "over_resource_limit"
 	ErrParameterValidationFailed                     = "parameter_validation_failed"
 	ErrProcessInterrupted                            = "process_interrupted"
@@ -206,25 +222,28 @@ const (
 	ErrProjectConfigIDNotFound                       = "project_config_id_not_found"
 	ErrProjectConfigManifestSource                   = "project_config_manifest_source_error"
 	ErrProjectFileUpdate                             = "project_file_update_error"
-	ErrProviderNotFound                              = "provider_not_found"
 	ErrPrompt                                        = "prompt_error"
+	ErrProviderNotFound                              = "provider_not_found"
 	ErrPublishedAppOnly                              = "published_app_only"
-	ErrRequestIDOrAppIDIsRequired                    = "request_id_or_app_id_is_required"
 	ErrRatelimited                                   = "ratelimited"
+	ErrRequestIDOrAppIDIsRequired                    = "request_id_or_app_id_is_required"
 	ErrRestrictedPlanLevel                           = "restricted_plan_level"
+	ErrRestrictedScopes                              = "restricted_scopes"
 	ErrRuntimeNotFound                               = "runtime_not_found"
 	ErrRuntimeNotSupported                           = "runtime_not_supported"
 	ErrSDKConfigLoad                                 = "sdk_config_load_error"
 	ErrSDKHookInvocationFailed                       = "sdk_hook_invocation_failed"
 	ErrSDKHookNotFound                               = "sdk_hook_not_found"
 	ErrSampleCreate                                  = "sample_create_error"
+	ErrSandboxDomainTaken                            = "domain_taken" // Slack API error code
+	ErrSandboxDomainTooLong                          = "domain_long"  // Slack API error code
+	ErrScopesExceedAppConfig                         = "scopes_exceed_app_config"
 	ErrServiceLimitsExceeded                         = "service_limits_exceeded"
 	ErrSharedChannelDenied                           = "shared_channel_denied"
 	ErrSlackAuth                                     = "slack_auth_error"
 	ErrSlackJSONLocation                             = "slack_json_location_error"
 	ErrSlackSlackJSONLocation                        = "slack_slack_json_location_error"
 	ErrSocketConnection                              = "socket_connection_error"
-	ErrScopesExceedAppConfig                         = "scopes_exceed_app_config"
 	ErrStreamingActivityLogs                         = "streaming_activity_logs_error"
 	ErrSubdirNotFound                                = "subdir_not_found"
 	ErrSurveyConfigNotFound                          = "survey_config_not_found"
@@ -258,8 +277,8 @@ const (
 	ErrUnknownMethod                                 = "unknown_method"
 	ErrUnknownWebhookSchemaRef                       = "unknown_webhook_schema_ref"
 	ErrUnknownWorkflowID                             = "unknown_workflow_id"
-	ErrUntrustedSource                               = "untrusted_source"
 	ErrUnsupportedFileName                           = "unsupported_file_name"
+	ErrUntrustedSource                               = "untrusted_source"
 	ErrUserAlreadyOwner                              = "user_already_owner"
 	ErrUserAlreadyRequested                          = "user_already_requested"
 	ErrUserCannotManageApp                           = "user_cannot_manage_app"
@@ -293,9 +312,16 @@ var ErrorCodeMap = map[string]Error{
 		Message: "The app already has a resolution and cannot be requested",
 	},
 
-	ErrAppsList: {
-		Code:    ErrAppsList,
-		Message: "Couldn't get a list of your apps",
+	ErrAPIFeatureNotEnabled: {
+		Code:        ErrAPIFeatureNotEnabled,
+		Message:     "This feature is not enabled for the team",
+		Remediation: "Reach out to an admin for additional information",
+	},
+
+	ErrAPIRestrictedAction: {
+		Code:        ErrAPIRestrictedAction,
+		Message:     "The requested action is not allowed for a specified team",
+		Remediation: "Check that each team belongs to the organization of the authenticated account",
 	},
 
 	ErrAppAdd: {
@@ -359,14 +385,14 @@ Otherwise start your app for local development with: %s`,
 		),
 	},
 
-	ErrAppDirectoryAccess: {
-		Code:    ErrAppDirectoryAccess,
-		Message: "Couldn't access app directory",
-	},
-
 	ErrAppDirOnlyFail: {
 		Code:    ErrAppDirOnlyFail,
 		Message: "The app was neither in the app directory nor created on this team/org, and cannot be requested",
+	},
+
+	ErrAppDirectoryAccess: {
+		Code:    ErrAppDirectoryAccess,
+		Message: "Couldn't access app directory",
 	},
 
 	ErrAppExists: {
@@ -400,6 +426,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "Couldn't access your app manifest",
 	},
 
+	ErrAppManifestCompare: {
+		Code:    ErrAppManifestCompare,
+		Message: "Couldn't compare your app manifests",
+	},
+
 	ErrAppManifestCreate: {
 		Code:    ErrAppManifestCreate,
 		Message: "Couldn't create your app manifest",
@@ -426,11 +457,6 @@ Otherwise start your app for local development with: %s`,
 		Message: "The specified app is not eligible for this API",
 	},
 
-	ErrAppNotInstalled: {
-		Code:    ErrAppNotInstalled,
-		Message: "The provided app must be installed on this team",
-	},
-
 	ErrAppNotFound: {
 		Code:    ErrAppNotFound,
 		Message: "The app was not found",
@@ -445,6 +471,21 @@ Otherwise start your app for local development with: %s`,
 		}, "\n"),
 	},
 
+	ErrAppNotInstalled: {
+		Code:    ErrAppNotInstalled,
+		Message: "The provided app must be installed on this team",
+	},
+
+	ErrAppNotOrgReady: {
+		Code:    ErrAppNotOrgReady,
+		Message: "Apps installed on an organization must set \"org_deploy_enabled\" to true in the app manifest",
+		Remediation: fmt.Sprintf(`Add "org_deploy_enabled": true to the "settings" of the app manifest and try again.
+
+Otherwise create the app on a workspace from app settings, then add it to this project with: %s`,
+			style.Commandf("app link", false),
+		),
+	},
+
 	ErrAppRemove: {
 		Code:    ErrAppRemove,
 		Message: "Couldn't remove your app",
@@ -453,6 +494,16 @@ Otherwise start your app for local development with: %s`,
 	ErrAppRenameApp: {
 		Code:    ErrAppRenameApp,
 		Message: "Couldn't rename your app",
+	},
+
+	ErrAppsList: {
+		Code:    ErrAppsList,
+		Message: "Couldn't get a list of your apps",
+	},
+
+	ErrAtActiveSandboxLimit: {
+		Code:    ErrAtActiveSandboxLimit,
+		Message: "You've reached the maximum number of active sandboxes",
 	},
 
 	ErrAuthProdTokenNotFound: {
@@ -475,6 +526,50 @@ Otherwise start your app for local development with: %s`,
 		Message: "Couldn't get a token with an active session",
 	},
 
+	ErrAuthVerification: {
+		Code:    ErrAuthVerification,
+		Message: "Couldn't verify your authorization",
+	},
+
+	ErrBotInviteRequired: {
+		Code:        ErrBotInviteRequired,
+		Message:     "Your app must be invited to the channel",
+		Remediation: "Try to find the channel declared the source code of a workflow or function.\n\nOpen Slack, join the channel, invite your app, and try the command again.\nLearn more: https://slack.com/help/articles/201980108-Add-people-to-a-channel",
+	},
+
+	ErrCLIAutoUpdate: {
+		Code:        ErrCLIAutoUpdate,
+		Message:     "Couldn't auto-update this command-line tool",
+		Remediation: "You can manually install the latest version from:\nhttps://docs.slack.dev/tools/slack-cli",
+	},
+
+	ErrCLIConfigInvalid: {
+		Code:        ErrCLIConfigInvalid,
+		Message:     "Configuration invalid",
+		Remediation: "Check your config.json file.",
+	},
+
+	ErrCLIConfigLocationError: {
+		Code:    ErrCLIConfigLocationError,
+		Message: fmt.Sprintf("The %s configuration file is not supported", filepath.Join(".slack", "cli.json")),
+		Remediation: strings.Join([]string{
+			"This version of the CLI no longer supports this configuration file.",
+			fmt.Sprintf("Move the %s file to %s and try again.", filepath.Join(".slack", "cli.json"), filepath.Join(".slack", "hooks.json")),
+		}, "\n"),
+	},
+
+	ErrCLIReadError: {
+		Code:        ErrCLIReadError,
+		Message:     "There was an error reading configuration",
+		Remediation: "Check your config.json file.",
+	},
+
+	ErrCLIUpdateRequired: {
+		Code:        ErrCLIUpdateRequired,
+		Message:     "Slack API requires the latest version of the Slack CLI",
+		Remediation: fmt.Sprintf("You can upgrade to the latest version of the Slack CLI using the command: %s", style.Commandf("upgrade", false)),
+	},
+
 	ErrCannotAbandonApp: {
 		Code:    ErrCannotAbandonApp,
 		Message: "The last owner cannot be removed",
@@ -488,41 +583,6 @@ Otherwise start your app for local development with: %s`,
 	ErrCannotCountOwners: {
 		Code:    ErrCannotCountOwners,
 		Message: "Unable to retrieve current app collaborators",
-	},
-
-	ErrConnectorApprovalPending: {
-		Code:        ErrConnectorApprovalPending,
-		Message:     "A connector requires admin approval before it can be installed\nApproval is pending review",
-		Remediation: "Contact your Slack admin about the status of your request",
-	},
-
-	ErrConnectorApprovalRequired: {
-		Code:        ErrConnectorApprovalRequired,
-		Message:     "A connector requires admin approval before it can be installed",
-		Remediation: "Request approval for the given connector from your Slack admin",
-	},
-
-	ErrConnectorDenied: {
-		Code:        ErrConnectorDenied,
-		Message:     "A connector has been denied for use by an admin",
-		Remediation: "Contact your Slack admin",
-	},
-
-	ErrConnectorNotInstalled: {
-		Code:        ErrConnectorNotInstalled,
-		Message:     "A connector requires installation before it can be used",
-		Remediation: "Request installation for the given connector",
-	},
-
-	ErrAuthVerification: {
-		Code:    ErrAuthVerification,
-		Message: "Couldn't verify your authorization",
-	},
-
-	ErrBotInviteRequired: {
-		Code:        ErrBotInviteRequired,
-		Message:     "Your app must be invited to the channel",
-		Remediation: "Try to find the channel declared the source code of a workflow or function.\n\nOpen Slack, join the channel, invite your app, and try the command again.\nLearn more: https://slack.com/help/articles/201980108-Add-people-to-a-channel",
 	},
 
 	ErrCannotDeleteApp: {
@@ -561,37 +621,9 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "Try adding your app as a member to the channel.",
 	},
 
-	ErrCLIAutoUpdate: {
-		Code:        ErrCLIAutoUpdate,
-		Message:     "Couldn't auto-update this command-line tool",
-		Remediation: "You can manually install the latest version from:\nhttps://docs.slack.dev/tools/slack-cli",
-	},
-
-	ErrCLIConfigLocationError: {
-		Code:    ErrCLIConfigLocationError,
-		Message: fmt.Sprintf("The %s configuration file is not supported", filepath.Join(".slack", "cli.json")),
-		Remediation: strings.Join([]string{
-			"This version of the CLI no longer supports this configuration file.",
-			fmt.Sprintf("Move the %s file to %s and try again.", filepath.Join(".slack", "cli.json"), filepath.Join(".slack", "hooks.json")),
-		}, "\n"),
-	},
-
-	ErrCLIReadError: {
-		Code:        ErrCLIReadError,
-		Message:     "There was an error reading configuration",
-		Remediation: "Check your config.json file.",
-	},
-
-	ErrCLIConfigInvalid: {
-		Code:        ErrCLIConfigInvalid,
-		Message:     "Configuration invalid",
-		Remediation: "Check your config.json file.",
-	},
-
-	ErrCLIUpdateRequired: {
-		Code:        ErrCLIUpdateRequired,
-		Message:     "Slack API requires the latest version of the Slack CLI",
-		Remediation: fmt.Sprintf("You can upgrade to the latest version of the Slack CLI using the command: %s", style.Commandf("upgrade", false)),
+	ErrCommentRequired: {
+		Code:    ErrCommentRequired,
+		Message: "Your admin is requesting a reason to approve installation of this app",
 	},
 
 	ErrConnectedOrgDenied: {
@@ -599,14 +631,33 @@ Otherwise start your app for local development with: %s`,
 		Message: "The admin does not allow connected organizations to be named_entities",
 	},
 
-	ErrCommentRequired: {
-		Code:    ErrCommentRequired,
-		Message: "Your admin is requesting a reason to approve installation of this app",
-	},
-
 	ErrConnectedTeamDenied: {
 		Code:    ErrConnectedTeamDenied,
 		Message: "The admin does not allow connected teams to be named_entities",
+	},
+
+	ErrConnectorApprovalPending: {
+		Code:        ErrConnectorApprovalPending,
+		Message:     "A connector requires admin approval before it can be installed\nApproval is pending review",
+		Remediation: "Contact your Slack admin about the status of your request",
+	},
+
+	ErrConnectorApprovalRequired: {
+		Code:        ErrConnectorApprovalRequired,
+		Message:     "A connector requires admin approval before it can be installed",
+		Remediation: "Request approval for the given connector from your Slack admin",
+	},
+
+	ErrConnectorDenied: {
+		Code:        ErrConnectorDenied,
+		Message:     "A connector has been denied for use by an admin",
+		Remediation: "Contact your Slack admin",
+	},
+
+	ErrConnectorNotInstalled: {
+		Code:        ErrConnectorNotInstalled,
+		Message:     "A connector requires installation before it can be used",
+		Remediation: "Request installation for the given connector",
 	},
 
 	ErrContextValueNotFound: {
@@ -625,6 +676,11 @@ Otherwise start your app for local development with: %s`,
 		Message: "Customizable input on the trigger must map to a workflow input of the same name",
 	},
 
+	ErrCustomizableInputUnsupportedType: {
+		Code:    ErrCustomizableInputUnsupportedType,
+		Message: "Customizable input has been mapped to a workflow input of an unsupported type. Only `UserID`, `ChannelId`, and `String` are supported for customizable inputs",
+	},
+
 	ErrCustomizableInputsNotAllowedOnOptionalInputs: {
 		Code:    ErrCustomizableInputsNotAllowedOnOptionalInputs,
 		Message: "Customizable trigger inputs must map to required workflow inputs",
@@ -633,11 +689,6 @@ Otherwise start your app for local development with: %s`,
 	ErrCustomizableInputsOnlyAllowedOnLinkTriggers: {
 		Code:    ErrCustomizableInputsOnlyAllowedOnLinkTriggers,
 		Message: "Customizable inputs are only allowed on link triggers",
-	},
-
-	ErrCustomizableInputUnsupportedType: {
-		Code:    ErrCustomizableInputUnsupportedType,
-		Message: "Customizable input has been mapped to a workflow input of an unsupported type. Only `UserID`, `ChannelId`, and `String` are supported for customizable inputs",
 	},
 
 	ErrDatastore: {
@@ -681,15 +732,54 @@ Otherwise start your app for local development with: %s`,
 		Message: "Failed to generate documentation",
 	},
 
-	ErrDocsSearchFlagRequired: {
-		Code:        ErrDocsSearchFlagRequired,
-		Message:     "Invalid docs command. Did you mean to search?",
-		Remediation: fmt.Sprintf("Use --search flag: %s", style.Commandf("docs --search \"<query>\"", false)),
+	ErrDotEnvFileAlreadyExists: {
+		Code:    ErrDotEnvFileAlreadyExists,
+		Message: "A .env file already exists",
+	},
+
+	ErrDotEnvFileParse: {
+		Code:    ErrDotEnvFileParse,
+		Message: "Failed to parse the .env file",
+	},
+
+	ErrDotEnvFileRead: {
+		Code:    ErrDotEnvFileRead,
+		Message: "Failed to read the .env file",
+	},
+
+	ErrDotEnvFileWrite: {
+		Code:    ErrDotEnvFileWrite,
+		Message: "Failed to write the .env file",
+	},
+
+	ErrDotEnvPlaceholderNotFound: {
+		Code:    ErrDotEnvPlaceholderNotFound,
+		Message: "No .env template file was found for environment variables",
+	},
+
+	ErrDotEnvVarMarshal: {
+		Code:    ErrDotEnvVarMarshal,
+		Message: "Failed to marshal the .env variable",
 	},
 
 	ErrEnterpriseNotFound: {
 		Code:    ErrEnterpriseNotFound,
 		Message: "The `enterprise` was not found",
+	},
+
+	ErrExperimentRequired: {
+		Code:    ErrExperimentRequired,
+		Message: "This command requires an experiment to be enabled",
+	},
+
+	ErrFailForSomeRequests: {
+		Code:    ErrFailForSomeRequests,
+		Message: "At least one request was not cancelled",
+	},
+
+	ErrFailToGetTeamsForRestrictedUser: {
+		Code:    ErrFailToGetTeamsForRestrictedUser,
+		Message: "Failed to get teams for restricted user",
 	},
 
 	ErrFailedAddingCollaborator: {
@@ -713,11 +803,6 @@ Otherwise start your app for local development with: %s`,
 		Message: "Couldn't export the app manifest",
 	},
 
-	ErrFailForSomeRequests: {
-		Code:    ErrFailForSomeRequests,
-		Message: "At least one request was not cancelled",
-	},
-
 	ErrFailedToGetUser: {
 		Code:    ErrFailedToGetUser,
 		Message: "Couldn't find the user to install the app",
@@ -726,11 +811,6 @@ Otherwise start your app for local development with: %s`,
 	ErrFailedToSaveExtensionLogs: {
 		Code:    ErrFailedToSaveExtensionLogs,
 		Message: "Couldn't save the logs",
-	},
-
-	ErrFailToGetTeamsForRestrictedUser: {
-		Code:    ErrFailToGetTeamsForRestrictedUser,
-		Message: "Failed to get teams for restricted user",
 	},
 
 	ErrFeedbackNameInvalid: {
@@ -774,20 +854,30 @@ Otherwise start your app for local development with: %s`,
 		Message: "The specified function couldn't be found",
 	},
 
+	ErrGitClone: {
+		Code:    ErrGitClone,
+		Message: "Git failed to clone repository",
+	},
+
 	ErrGitNotFound: {
 		Code:        ErrGitNotFound,
 		Message:     "Couldn't find Git installed on this system",
 		Remediation: "To install Git, visit https://github.com/git-guides/install-git.",
 	},
 
-	ErrGitClone: {
-		Code:    ErrGitClone,
-		Message: "Git failed to clone repository",
-	},
-
 	ErrGitZipDownload: {
 		Code:    ErrGitZipDownload,
 		Message: "Cannot download Git repository as a .zip archive",
+	},
+
+	ErrHTTPRequestFailed: {
+		Code:    ErrHTTPRequestFailed,
+		Message: "HTTP request failed",
+	},
+
+	ErrHTTPResponseInvalid: {
+		Code:    ErrHTTPResponseInvalid,
+		Message: "Received an invalid response from the server",
 	},
 
 	ErrHomeDirectoryAccessFailed: {
@@ -805,16 +895,6 @@ Otherwise start your app for local development with: %s`,
 	ErrHostAppsDisallowUserScopes: {
 		Code:    ErrHostAppsDisallowUserScopes,
 		Message: "Hosted apps do not support user scopes",
-	},
-
-	ErrHTTPRequestFailed: {
-		Code:    ErrHTTPRequestFailed,
-		Message: "HTTP request failed",
-	},
-
-	ErrHTTPResponseInvalid: {
-		Code:    ErrHTTPResponseInvalid,
-		Message: "Received an invalid response from the server",
 	},
 
 	ErrInsecureRequest: {
@@ -877,14 +957,14 @@ Otherwise start your app for local development with: %s`,
 		Message: "Required arguments either were not provided or contain invalid values",
 	},
 
-	ErrInvalidArgumentsCustomizableInputs: {
-		Code:    ErrInvalidArgumentsCustomizableInputs,
-		Message: "A trigger input parameter with customizable: true cannot be set as hidden or locked, nor have a value provided at trigger creation time",
-	},
-
 	ErrInvalidArguments: {
 		Code:    ErrInvalidArguments,
 		Message: "Slack API request parameters are invalid",
+	},
+
+	ErrInvalidArgumentsCustomizableInputs: {
+		Code:    ErrInvalidArgumentsCustomizableInputs,
+		Message: "A trigger input parameter with customizable: true cannot be set as hidden or locked, nor have a value provided at trigger creation time",
 	},
 
 	ErrInvalidAuth: {
@@ -894,6 +974,12 @@ Otherwise start your app for local development with: %s`,
 			"Your user account authorization may be expired or does not have permission to access the resource. Try to login to the same user account again using %s.",
 			style.Commandf("login", false),
 		),
+	},
+
+	ErrInvalidBlocks: {
+		Code:        ErrInvalidBlocks,
+		Message:     "The provided blocks are not valid Block Kit blocks",
+		Remediation: "Provide a JSON array of blocks or a JSON object with a \"blocks\" array. Reference: https://docs.slack.dev/reference/block-kit/blocks",
 	},
 
 	ErrInvalidChallenge: {
@@ -913,14 +999,28 @@ Otherwise start your app for local development with: %s`,
 		Message: "Value passed for `cursor` was not valid or is valid no longer",
 	},
 
-	ErrInvalidFlag: {
-		Code:    ErrInvalidFlag,
-		Message: "The provided flag value is invalid",
+	ErrInvalidDatastore: {
+		Code:    ErrInvalidDatastore,
+		Message: "Invalid datastore specified in your project",
+	},
+
+	ErrInvalidDatastoreExpression: {
+		Code:    ErrInvalidDatastoreExpression,
+		Message: "The provided expression is not valid",
+		Remediation: strings.Join([]string{
+			"Verify the expression you provided is valid JSON surrounded by quotations",
+			fmt.Sprintf("Use %s for examples", style.Commandf("datastore --help", false)),
+		}, "\n"),
 	},
 
 	ErrInvalidDistributionType: {
 		Code:    ErrInvalidDistributionType,
 		Message: "This function requires distribution_type to be set as named_entities before adding users",
+	},
+
+	ErrInvalidFlag: {
+		Code:    ErrInvalidFlag,
+		Message: "The provided flag value is invalid",
 	},
 
 	ErrInvalidInteractiveTriggerInputs: {
@@ -978,6 +1078,23 @@ Otherwise start your app for local development with: %s`,
 		Remediation: "Please reach out to feedback@slack.com if the problem persists.",
 	},
 
+	ErrInvalidSandboxArchiveTTL: {
+		Code:        ErrInvalidSandboxArchiveTTL,
+		Message:     "Invalid TTL",
+		Remediation: "Use days (1d), weeks (2w), or months (3mo); min 1d, max 6mo",
+	},
+
+	ErrInvalidSandboxTeamID: {
+		Code:        ErrInvalidSandboxTeamID,
+		Message:     "The provided sandbox team ID is invalid",
+		Remediation: fmt.Sprintf("List your sandboxes with the %s command to find the ID", style.Commandf("sandbox list", false)),
+	},
+
+	ErrInvalidSandboxTemplateID: {
+		Code:    ErrInvalidSandboxTemplateID,
+		Message: "The provided sandbox template value is invalid",
+	},
+
 	ErrInvalidScopes: {
 		Code:    ErrInvalidScopes,
 		Message: "Some of the provided scopes do not exist",
@@ -992,20 +1109,6 @@ Otherwise start your app for local development with: %s`,
 		Code:        ErrInvalidSlackProjectDirectory,
 		Message:     "Current directory is not a Slack project",
 		Remediation: fmt.Sprintf("Change in to a Slack project directory. A Slack project always includes the Slack hooks file (`%s`).", filepath.Join(".slack", "hooks.json")),
-	},
-
-	ErrInvalidDatastore: {
-		Code:    ErrInvalidDatastore,
-		Message: "Invalid datastore specified in your project",
-	},
-
-	ErrInvalidDatastoreExpression: {
-		Code:    ErrInvalidDatastoreExpression,
-		Message: "The provided expression is not valid",
-		Remediation: strings.Join([]string{
-			"Verify the expression you provided is valid JSON surrounded by quotations",
-			fmt.Sprintf("Use %s for examples", style.Commandf("datastore --help", false)),
-		}, "\n"),
 	},
 
 	ErrInvalidToken: {
@@ -1123,14 +1226,14 @@ Otherwise start your app for local development with: %s`,
 		Message: "The feature is behind an experiment not toggled on",
 	},
 
-	ErrMissingFunctionIdentifier: {
-		Code:    ErrMissingFunctionIdentifier,
-		Message: "Could not find the given workflow using the specified reference",
-	},
-
 	ErrMissingFlag: {
 		Code:    ErrMissingFlag,
 		Message: "An argument must be provided for the flag",
+	},
+
+	ErrMissingFunctionIdentifier: {
+		Code:    ErrMissingFunctionIdentifier,
+		Message: "Could not find the given workflow using the specified reference",
 	},
 
 	ErrMissingInput: {
@@ -1168,20 +1271,9 @@ Otherwise start your app for local development with: %s`,
 		Message: "Missing `value` property on an input. You must either provide the value now, or mark this input as `customizable`: `true` and provide the value at the time the trigger is executed.",
 	},
 
-	ErrNotAuthed: {
-		Code:        ErrNotAuthed,
-		Message:     "You are either not logged in or your login session has expired",
-		Remediation: fmt.Sprintf("Authorize your CLI with %s", style.Commandf("login", false)),
-	},
-
-	ErrNotBearerToken: {
-		Code:    ErrNotBearerToken,
-		Message: "Incompatible token type provided",
-	},
-
-	ErrNotFound: {
-		Code:    ErrNotFound,
-		Message: "Couldn't find row",
+	ErrNoAppSelected: {
+		Code:    ErrNoAppSelected,
+		Message: "No app selected",
 	},
 
 	ErrNoFile: {
@@ -1216,6 +1308,32 @@ Otherwise start your app for local development with: %s`,
 		Message: "None of the provided named entities were valid",
 	},
 
+	ErrNotAuthed: {
+		Code:        ErrNotAuthed,
+		Message:     "You are either not logged in or your login session has expired",
+		Remediation: fmt.Sprintf("Authorize your CLI with %s", style.Commandf("login", false)),
+	},
+
+	ErrNotBearerToken: {
+		Code:    ErrNotBearerToken,
+		Message: "Incompatible token type provided",
+	},
+
+	ErrNotFound: {
+		Code:    ErrNotFound,
+		Message: "Couldn't find row",
+	},
+
+	ErrOSNotSupported: {
+		Code:    ErrOSNotSupported,
+		Message: "This operating system is not supported",
+	},
+
+	ErrOrgGrantExists: {
+		Code:    ErrOrgGrantExists,
+		Message: "A different org workspace grant already exists for the installed app",
+	},
+
 	ErrOrgNotConnected: {
 		Code:    ErrOrgNotConnected,
 		Message: "One or more of the listed organizations was not connected",
@@ -1224,16 +1342,6 @@ Otherwise start your app for local development with: %s`,
 	ErrOrgNotFound: {
 		Code:    ErrOrgNotFound,
 		Message: "One or more of the listed organizations could not be found",
-	},
-
-	ErrOrgGrantExists: {
-		Code:    ErrOrgGrantExists,
-		Message: "A different org workspace grant already exists for the installed app",
-	},
-
-	ErrOSNotSupported: {
-		Code:    ErrOSNotSupported,
-		Message: "This operating system is not supported",
 	},
 
 	ErrOverResourceLimit: {
@@ -1275,14 +1383,14 @@ Otherwise start your app for local development with: %s`,
 		Message: "Failed to update project files",
 	},
 
-	ErrProviderNotFound: {
-		Code:    ErrProviderNotFound,
-		Message: "The provided provider_key is invalid",
-	},
-
 	ErrPrompt: {
 		Code:    ErrPrompt,
 		Message: "An error occurred while executing prompts",
+	},
+
+	ErrProviderNotFound: {
+		Code:    ErrProviderNotFound,
+		Message: "The provided provider_key is invalid",
 	},
 
 	ErrPublishedAppOnly: {
@@ -1290,19 +1398,25 @@ Otherwise start your app for local development with: %s`,
 		Message: "This action is only permitted for published app IDs",
 	},
 
-	ErrRequestIDOrAppIDIsRequired: {
-		Code:    ErrRequestIDOrAppIDIsRequired,
-		Message: "Must include a request_id or app_id",
-	},
-
 	ErrRatelimited: {
 		Code:    ErrRatelimited,
 		Message: "Too many calls in succession during a short period of time",
 	},
 
+	ErrRequestIDOrAppIDIsRequired: {
+		Code:    ErrRequestIDOrAppIDIsRequired,
+		Message: "Must include a request_id or app_id",
+	},
+
 	ErrRestrictedPlanLevel: {
 		Code:    ErrRestrictedPlanLevel,
 		Message: "Your Slack plan does not have access to the requested feature",
+	},
+
+	ErrRestrictedScopes: {
+		Code:        ErrRestrictedScopes,
+		Message:     "You don't have permission to install an app that requests one or more of its scopes",
+		Remediation: "Some scopes can only be granted by a workspace admin or owner, such as admin and audit scopes or the Slack Connect bot scopes `conversations.connect:manage` and `conversations.connect:write`.\nAsk a workspace admin or owner to install the app, or remove the restricted scopes from the app manifest.",
 	},
 
 	ErrRuntimeNotFound: {
@@ -1314,21 +1428,6 @@ Otherwise start your app for local development with: %s`,
 	ErrRuntimeNotSupported: {
 		Code:    ErrRuntimeNotSupported,
 		Message: "The SDK runtime is not supported by the CLI",
-	},
-
-	ErrSampleCreate: {
-		Code:    ErrSampleCreate,
-		Message: "Couldn't create app from sample",
-	},
-
-	ErrServiceLimitsExceeded: {
-		Code:    ErrServiceLimitsExceeded,
-		Message: "Your workspace has exhausted the 10 apps limit for free teams. To create more apps, upgrade your Slack plan at https://my.slack.com/plans",
-	},
-
-	ErrSharedChannelDenied: {
-		Code:    ErrSharedChannelDenied,
-		Message: "The team admin does not allow shared channels to be named_entities",
 	},
 
 	ErrSDKConfigLoad: {
@@ -1360,6 +1459,36 @@ Otherwise start your app for local development with: %s`,
 		}, "\n"),
 	},
 
+	ErrSampleCreate: {
+		Code:    ErrSampleCreate,
+		Message: "Couldn't create app from sample",
+	},
+
+	ErrSandboxDomainTaken: {
+		Code:    ErrSandboxDomainTaken,
+		Message: "This domain has been claimed by another sandbox",
+	},
+
+	ErrSandboxDomainTooLong: {
+		Code:    ErrSandboxDomainTooLong,
+		Message: "Sandbox name or domain is too long",
+	},
+
+	ErrScopesExceedAppConfig: {
+		Code:    ErrScopesExceedAppConfig,
+		Message: "Scopes requested exceed app configuration",
+	},
+
+	ErrServiceLimitsExceeded: {
+		Code:    ErrServiceLimitsExceeded,
+		Message: "Your workspace has exhausted the 10 apps limit for free teams. To create more apps, upgrade your Slack plan at https://my.slack.com/plans",
+	},
+
+	ErrSharedChannelDenied: {
+		Code:    ErrSharedChannelDenied,
+		Message: "The team admin does not allow shared channels to be named_entities",
+	},
+
 	ErrSlackAuth: {
 		Code:        ErrSlackAuth,
 		Message:     "You are not logged into a team or have not installed an app",
@@ -1387,11 +1516,6 @@ Otherwise start your app for local development with: %s`,
 	ErrSocketConnection: {
 		Code:    ErrSocketConnection,
 		Message: "Couldn't connect to Slack over WebSocket",
-	},
-
-	ErrScopesExceedAppConfig: {
-		Code:    ErrScopesExceedAppConfig,
-		Message: "Scopes requested exceed app configuration",
 	},
 
 	ErrStreamingActivityLogs: {
@@ -1558,25 +1682,20 @@ Otherwise start your app for local development with: %s`,
 		Message: "Unable to find the corresponding type based on the schema ref",
 	},
 
-	ErrUntrustedSource: {
-		Code:        ErrUntrustedSource,
-		Message:     "Source is by an unknown or untrusted author",
-		Remediation: "Use --force flag or set trust_unknown_sources: true in config.json file to disable warning",
-	},
-
 	ErrUnknownWorkflowID: {
 		Code:    ErrUnknownWorkflowID,
 		Message: "The provided workflow_id was not found for this app",
 	},
 
-	ErrUserIDIsRequired: {
-		Code:    ErrUserIDIsRequired,
-		Message: "Must include a user_id to cancel request for an app with app_id",
-	},
-
 	ErrUnsupportedFileName: {
 		Code:    ErrUnsupportedFileName,
 		Message: "File name is not supported",
+	},
+
+	ErrUntrustedSource: {
+		Code:        ErrUntrustedSource,
+		Message:     "Source is by an unknown or untrusted author",
+		Remediation: "Use --force flag or set trust_unknown_sources: true in config.json file to disable warning",
 	},
 
 	ErrUserAlreadyOwner: {
@@ -1593,6 +1712,11 @@ Otherwise start your app for local development with: %s`,
 		Code:        ErrUserCannotManageApp,
 		Message:     "You do not have permissions to install this app",
 		Remediation: "Reach out to one of your App Managers to request permissions to install apps.",
+	},
+
+	ErrUserIDIsRequired: {
+		Code:    ErrUserIDIsRequired,
+		Message: "Must include a user_id to cancel request for an app with app_id",
 	},
 
 	ErrUserNotFound: {

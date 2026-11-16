@@ -47,6 +47,9 @@ type Os interface {
 	// UserHomeDir returns the current user's home directory and can be mocked to test
 	UserHomeDir() (dir string, err error)
 
+	// Executable defaults to `os.Executable` and can be mocked to test
+	Executable() (path string, err error)
+
 	// GetExecutionDir returns the absolute path where the process started execution
 	GetExecutionDir() string
 
@@ -62,6 +65,9 @@ type Os interface {
 
 	// Exit causes the program to exit and return with the status code
 	Exit(code int)
+
+	// Stdin returns the file descriptor for stdin
+	Stdin() File
 
 	// Stdout returns the file descriptor for stdout
 	Stdout() File

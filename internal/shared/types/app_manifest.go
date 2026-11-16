@@ -41,6 +41,7 @@ type AppManifest struct {
 	Workflows             map[string]Workflow          `json:"workflows,omitempty" yaml:"workflows,flow,omitempty"`
 	OutgoingDomains       *[]string                    `json:"outgoing_domains,omitempty" yaml:"outgoing_domains,flow,omitempty"`
 	ExternalAuthProviders *ManifestAuthProviders       `json:"external_auth_providers,omitempty" yaml:"external_auth_providers,flow,omitempty"`
+	MCPServers            map[string]MCPServer         `json:"mcp_servers,omitempty" yaml:"mcp_servers,flow,omitempty"`
 }
 
 type ManifestMetadata struct {
@@ -69,6 +70,7 @@ type DisplayInformation struct {
 
 type AppFeatures struct {
 	AppHome                    ManifestAppHome             `json:"app_home,omitempty" yaml:"app_home,flow,omitempty"`
+	AgentView                  *AgentView                  `json:"agent_view,omitempty" yaml:"agent_view,omitempty"`
 	AssistantView              *AssistantView              `json:"assistant_view,omitempty" yaml:"assistant_view,omitempty"`
 	BotUser                    BotUser                     `json:"bot_user,omitempty" yaml:"bot_user,flow,omitempty"`
 	WorkflowSteps              []WorkflowStep              `json:"workflow_steps,omitempty" yaml:"workflow_steps,flow,omitempty"`
@@ -77,11 +79,26 @@ type AppFeatures struct {
 	ManifestSlashCommandsItems []ManifestSlashCommandsItem `json:"slash_commands,omitempty" yaml:"slash_commands,flow,omitempty"`
 	Search                     *Search                     `json:"search,omitempty" yaml:"search,flow,omitempty"`
 	RichPreviews               *RichPreviews               `json:"rich_previews,omitempty" yaml:"rich_previews,flow,omitempty"`
+	CodeChannels               *CodeChannels               `json:"code_channels,omitempty" yaml:"code_channels,flow,omitempty"`
+	UserConnections            *UserConnections            `json:"user_connections,omitempty" yaml:"user_connections,flow,omitempty"`
 }
 
+// RichPreviews contains the Work Objects settings. DomainAllowlist and
+// AllowSameOrigin configure the embeds an unfurl may show, and Slug how its
+// title is shown. IsActive and AllowSameOrigin are pointers so an explicit
+// `false` is distinguishable from an unset field.
 type RichPreviews struct {
-	EntityTypes []string `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
-	IsActive    bool     `json:"is_active,omitempty" yaml:"is_active,flow,omitempty"`
+	EntityTypes     []string          `json:"entity_types,omitempty" yaml:"entity_types,flow,omitempty"`
+	IsActive        *bool             `json:"is_active,omitempty" yaml:"is_active,omitempty"`
+	DomainAllowlist []string          `json:"domain_allowlist,omitempty" yaml:"domain_allowlist,flow,omitempty"`
+	AllowSameOrigin *bool             `json:"allow_same_origin,omitempty" yaml:"allow_same_origin,omitempty"`
+	Slug            *RichPreviewsSlug `json:"slug,omitempty" yaml:"slug,flow,omitempty"`
+}
+
+// RichPreviewsSlug contains how a Work Object's slug is shown. HideDisplayID
+// is a pointer so an explicit `false` is distinguishable from an unset field.
+type RichPreviewsSlug struct {
+	HideDisplayID *bool `json:"hide_display_id,omitempty" yaml:"hide_display_id,omitempty"`
 }
 
 type AssistantView struct {
@@ -94,6 +111,17 @@ type SuggestedPrompts struct {
 	Message string `json:"message,omitempty" yaml:"message,omitempty"`
 }
 
+type AgentView struct {
+	AgentDescription string             `json:"agent_description,omitempty" yaml:"agent_description,omitempty"`
+	SuggestedPrompts []SuggestedPrompts `json:"suggested_prompts,omitempty" yaml:"suggested_prompts,flow,omitempty"`
+	Actions          []AgentViewAction  `json:"actions,omitempty" yaml:"actions,flow,omitempty"`
+}
+
+type AgentViewAction struct {
+	Name        string `json:"name,omitempty" yaml:"name,omitempty"`
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+}
+
 type OAuthConfig struct {
 	RedirectURLs           []string        `json:"redirect_urls,omitempty" yaml:"redirect_urls,flow,omitempty"`
 	Scopes                 *ManifestScopes `json:"scopes,omitempty" yaml:"scopes,flow,omitempty"`
@@ -101,15 +129,17 @@ type OAuthConfig struct {
 }
 
 type AppSettings struct {
-	SocketModeEnabled      *bool                       `json:"socket_mode_enabled,omitempty" yaml:"socket_mode_enabled,omitempty"`
-	OrgDeployEnabled       *bool                       `json:"org_deploy_enabled,omitempty" yaml:"org_deploy_enabled,omitempty"`
-	Interactivity          *ManifestInteractivity      `json:"interactivity,omitempty" yaml:"interactivity,omitempty"`
-	IncomingWebhooks       *IncomingWebhooks           `json:"incoming_webhooks,omitempty" yaml:"incoming_webhooks,flow,omitempty"`
-	EventSubscriptions     *ManifestEventSubscriptions `json:"event_subscriptions,omitempty" yaml:"event_subscriptions,flow,omitempty"`
-	AllowedIPAddressRanges []string                    `json:"allowed_ip_address_ranges,omitempty" yaml:"allowed_ip_address_ranges,flow,omitempty"`
-	FunctionRuntime        FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
-	TokenRotationEnabled   *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
-	SiwsLinks              *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
+	SocketModeEnabled            *bool                       `json:"socket_mode_enabled,omitempty" yaml:"socket_mode_enabled,omitempty"`
+	OrgDeployEnabled             *bool                       `json:"org_deploy_enabled,omitempty" yaml:"org_deploy_enabled,omitempty"`
+	Interactivity                *ManifestInteractivity      `json:"interactivity,omitempty" yaml:"interactivity,omitempty"`
+	IncomingWebhooks             *IncomingWebhooks           `json:"incoming_webhooks,omitempty" yaml:"incoming_webhooks,flow,omitempty"`
+	EventSubscriptions           *ManifestEventSubscriptions `json:"event_subscriptions,omitempty" yaml:"event_subscriptions,flow,omitempty"`
+	AllowedIPAddressRanges       []string                    `json:"allowed_ip_address_ranges,omitempty" yaml:"allowed_ip_address_ranges,flow,omitempty"`
+	FunctionRuntime              FunctionRuntime             `json:"function_runtime,omitempty" yaml:"function_runtime,flow,omitempty"`
+	TokenRotationEnabled         *bool                       `json:"token_rotation_enabled,omitempty" yaml:"token_rotation_enabled,omitempty"`
+	AppLevelTokenRotationEnabled *bool                       `json:"app_level_token_rotation_enabled,omitempty" yaml:"app_level_token_rotation_enabled,omitempty"`
+	SiwsLinks                    *SiwsLinks                  `json:"siws_links,omitempty" yaml:"siws_links,flow,omitempty"`
+	IsMCPEnabled                 *bool                       `json:"is_mcp_enabled,omitempty" yaml:"is_mcp_enabled,omitempty"`
 }
 
 type WorkflowStep struct {
@@ -154,6 +184,13 @@ type ManifestFunction struct {
 
 type ManifestAuthProviders struct {
 	OAuth2 map[string]*RawJSON `json:"oauth2" yaml:"oauth2"`
+}
+
+// MCPServer defines the configuration of an MCP server in the app manifest.
+type MCPServer struct {
+	URL             string `json:"url" yaml:"url"`
+	AuthProviderKey string `json:"auth_provider_key,omitempty" yaml:"auth_provider_key,omitempty"`
+	AuthType        string `json:"auth_type,omitempty" yaml:"auth_type,omitempty"`
 }
 
 type RawJSON struct {
@@ -212,6 +249,7 @@ func (r *RawJSON) convertData(val interface{}) interface{} {
 
 // ManifestAppHome
 type ManifestAppHome struct {
+	AgentTasksEnabled          *bool `json:"agent_tasks_enabled,omitempty" yaml:"agent_tasks_enabled,omitempty"`
 	HomeTabEnabled             *bool `json:"home_tab_enabled,omitempty" yaml:"home_tab_enabled,omitempty"`
 	MessagesTabEnabled         *bool `json:"messages_tab_enabled,omitempty" yaml:"messages_tab_enabled,omitempty"`
 	MessagesTabReadOnlyEnabled *bool `json:"messages_tab_read_only_enabled,omitempty" yaml:"messages_tab_read_only_enabled,omitempty"`
@@ -238,8 +276,10 @@ type ManifestInteractivity struct {
 
 // ManifestScopes
 type ManifestScopes struct {
-	Bot  []string `json:"bot,omitempty" yaml:"bot,flow,omitempty"`
-	User []string `json:"user,omitempty" yaml:"user,flow,omitempty"`
+	Bot          []string `json:"bot,omitempty" yaml:"bot,flow,omitempty"`
+	BotOptional  []string `json:"bot_optional,omitempty" yaml:"bot_optional,flow,omitempty"`
+	User         []string `json:"user,omitempty" yaml:"user,flow,omitempty"`
+	UserOptional []string `json:"user_optional,omitempty" yaml:"user_optional,flow,omitempty"`
 }
 
 // ManifestShortcutsItem
@@ -264,6 +304,23 @@ type Search struct {
 	SearchFunctionCallbackID        string `json:"search_function_callback_id,omitempty" yaml:"search_function_callback_id,omitempty"`
 	SearchFiltersFunctionCallbackID string `json:"search_filters_function_callback_id,omitempty" yaml:"search_filters_function_callback_id,omitempty"`
 	EnableAIAnswers                 *bool  `json:"enable_ai_answers,omitempty" yaml:"enable_ai_answers,omitempty"`
+}
+
+// CodeChannels contains settings for apps that create code channels: dedicated
+// channels where an agent collaborates with a user on a task. Enabled is a
+// pointer so an explicit `false` (feature turned off) is distinguishable from
+// an unset field.
+type CodeChannels struct {
+	Enabled         *bool  `json:"enabled,omitempty" yaml:"enabled,omitempty"`
+	SlashCommandURL string `json:"slash_command_url,omitempty" yaml:"slash_command_url,omitempty"`
+}
+
+// UserConnections contains settings for apps that use the standardized user
+// connection flow. IsEnabled is a pointer so an explicit `false` (feature turned
+// off) is distinguishable from an unset field, which Slack rejects as missing.
+type UserConnections struct {
+	IsEnabled *bool    `json:"is_enabled,omitempty" yaml:"is_enabled,omitempty"`
+	AuthHosts []string `json:"auth_hosts,omitempty" yaml:"auth_hosts,flow,omitempty"`
 }
 
 // Workflow defines the structure of a workflow in the app manifest.
@@ -319,6 +376,12 @@ func (manifest *AppManifest) FunctionRuntime() FunctionRuntime {
 		return ""
 	}
 	return manifest.Settings.FunctionRuntime
+}
+
+// IsFunctionRuntimeLocal returns true when the function runtime setting
+// is local
+func (manifest *AppManifest) IsFunctionRuntimeLocal() bool {
+	return manifest.Settings != nil && manifest.Settings.FunctionRuntime == LocallyRun
 }
 
 // IsFunctionRuntimeSlackHosted returns true when the function runtime setting

@@ -6,7 +6,7 @@ ones, as well as a list of the errors the Slack CLI may raise, what they mean,
 and some ways to remediate them.
 
 ## Slack CLI errors list
-{{range $key, $err := . }}
+{{range $err := . }}
 ### {{ $err.Code }} {#{{ $err.Code }}}
 {{ if $err.Message }}
 **Message**: {{ $err.Message }}

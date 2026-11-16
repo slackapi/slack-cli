@@ -165,6 +165,30 @@ func Test_AppClient_ReadDeployedApps_BrokenAppsJSON(t *testing.T) {
 	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
 }
 
+// Test that a zero-byte or whitespace-only apps.json (e.g. from a truncated
+// write after a prior process interrupt) is treated as empty state, not a
+// parse error. This prevents a hot loop of unable_to_parse_json events on
+// every CLI invocation while the file remains empty on disk.
+func Test_AppClient_ReadDeployedApps_EmptyAppsJSON(t *testing.T) {
+	tests := map[string]string{
+		"zero-byte file":       "",
+		"whitespace-only file": "  \n\t\n",
+	}
+	for name, contents := range tests {
+		t.Run(name, func(t *testing.T) {
+			ac, _, _, pathToAppsJSON, _, teardown := setup(t)
+			defer teardown(t)
+			err := afero.WriteFile(ac.fs, pathToAppsJSON, []byte(contents), 0600)
+			require.NoError(t, err)
+			err = ac.readDeployedApps()
+			require.NoError(t, err)
+			// The empty file should be rewritten as a valid empty apps object.
+			f, _ := afero.ReadFile(ac.fs, pathToAppsJSON)
+			assert.Equal(t, "{}", string(f))
+		})
+	}
+}
+
 // Test that pre-existing dev app details get read from apps.dev.json
 func Test_AppClient_ReadDevApps_ExistingAppsJSON(t *testing.T) {
 	ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
@@ -205,6 +229,29 @@ func Test_AppClient_ReadDevApps_BrokenAppsJSON(t *testing.T) {
 	err = ac.readLocalApps()
 	require.Error(t, err)
 	assert.Equal(t, err.(*slackerror.Error).Code, slackerror.ErrUnableToParseJSON)
+}
+
+// Test that a zero-byte or whitespace-only apps.dev.json (e.g. from a
+// truncated write after a prior process interrupt) is treated as empty
+// state, not a parse error. See Test_AppClient_ReadDeployedApps_EmptyAppsJSON.
+func Test_AppClient_ReadDevApps_EmptyAppsJSON(t *testing.T) {
+	tests := map[string]string{
+		"zero-byte file":       "",
+		"whitespace-only file": "  \n\t\n",
+	}
+	for name, contents := range tests {
+		t.Run(name, func(t *testing.T) {
+			ac, _, _, _, pathToDevAppsJSON, teardown := setup(t)
+			defer teardown(t)
+			err := afero.WriteFile(ac.fs, pathToDevAppsJSON, []byte(contents), 0600)
+			require.NoError(t, err)
+			err = ac.readLocalApps()
+			require.NoError(t, err)
+			// The empty file should be rewritten as a valid empty apps object.
+			f, _ := afero.ReadFile(ac.fs, pathToDevAppsJSON)
+			assert.Equal(t, "{}", string(f))
+		})
+	}
 }
 
 // Test that a team flag config defines the default app name in an empty AppClient

@@ -25,12 +25,12 @@ import (
 	"github.com/slackapi/slack-cli/internal/auth"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/version"
 	"golang.org/x/mod/semver"
 )
 
@@ -147,7 +147,7 @@ func createNewAuth(ctx context.Context, apiClient api.APIInterface, authClient a
 		return types.SlackAuth{}, "", err
 	}
 
-	authExchangeRes, err := apiClient.ExchangeAuthTicket(ctx, authTicket, challengeCode, version.Get())
+	authExchangeRes, err := apiClient.ExchangeAuthTicket(ctx, authTicket, challengeCode, version.Raw())
 	if err != nil {
 		return types.SlackAuth{}, "", err
 	}
@@ -162,7 +162,7 @@ func requestAuthTicket(ctx context.Context, apiClient api.APIInterface, io iostr
 	span, ctx = opentracing.StartSpanFromContext(ctx, "requestAuthTicket")
 	defer span.Finish()
 
-	cliVersion := semver.MajorMinor(version.Get())
+	cliVersion := semver.MajorMinor(version.Raw())
 
 	// Get a ticket from Slack
 	if authTicketResult, err := apiClient.GenerateAuthTicket(ctx, cliVersion, noRotation); err != nil {
@@ -246,7 +246,7 @@ func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg
 
 	// existing ticket request, try to exchange
 	if ticketArg != "" && challengeCodeArg != "" {
-		authExchangeRes, err := clients.API().ExchangeAuthTicket(ctx, ticketArg, challengeCodeArg, version.Get())
+		authExchangeRes, err := clients.API().ExchangeAuthTicket(ctx, ticketArg, challengeCodeArg, version.Raw())
 		if err != nil || !authExchangeRes.IsReady {
 			return types.SlackAuth{}, "", err
 		}

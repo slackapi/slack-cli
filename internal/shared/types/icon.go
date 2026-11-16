@@ -14,7 +14,10 @@
 
 package types
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"maps"
+)
 
 type Icons map[string]string
 
@@ -44,9 +47,7 @@ func (i *Icons) UnmarshalJSON(data []byte) error {
 		*i = make(Icons)
 	}
 
-	for key, value := range tmp {
-		(*i)[key] = value
-	}
+	maps.Copy(*i, tmp)
 
 	return nil
 }

@@ -17,6 +17,7 @@ package update
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -52,7 +53,16 @@ func (m *mockDependency) InstallUpdate(ctx context.Context) error {
 	return args.Error(0)
 }
 
-func Test_Update_HasUpdate(t *testing.T) {
+func Test_UpdateNotification_Dependencies(t *testing.T) {
+	dep := &mockDependency{}
+	u := &UpdateNotification{
+		dependencies: []Dependency{dep},
+	}
+	require.Len(t, u.Dependencies(), 1)
+	require.Equal(t, dep, u.Dependencies()[0])
+}
+
+func Test_UpdateNotification_HasUpdate(t *testing.T) {
 	for name, tc := range map[string]struct {
 		dependencyHasUpdate []bool
 		expectedReturnValue bool
@@ -111,7 +121,7 @@ func Test_Update_HasUpdate(t *testing.T) {
 	}
 }
 
-func Test_Update_isIgnoredCommand(t *testing.T) {
+func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 	for name, tc := range map[string]struct {
 		command  string
 		expected bool
@@ -119,6 +129,22 @@ func Test_Update_isIgnoredCommand(t *testing.T) {
 		"No command": {
 			command:  "",
 			expected: false,
+		},
+		"api command": {
+			command:  "api",
+			expected: true,
+		},
+		"api command with method": {
+			command:  "api chat.postMessage",
+			expected: true,
+		},
+		"api command with method and args": {
+			command:  "api chat.postMessage channel=C123 text=hello",
+			expected: true,
+		},
+		"api command with flags": {
+			command:  "api chat.postMessage --json {}",
+			expected: true,
 		},
 		"fingerprint command": {
 			command:  "_fingerprint",
@@ -128,14 +154,50 @@ func Test_Update_isIgnoredCommand(t *testing.T) {
 			command:  "version",
 			expected: true,
 		},
+		"manifest command": {
+			command:  "manifest",
+			expected: true,
+		},
+		"manifest command with flags": {
+			command:  "manifest --source local",
+			expected: true,
+		},
+		"manifest info command": {
+			command:  "manifest info",
+			expected: true,
+		},
+		"manifest info command with flags": {
+			command:  "manifest info --source local",
+			expected: true,
+		},
+		"manifest validate command": {
+			command:  "manifest validate",
+			expected: false,
+		},
 		"auth command": {
 			command:  "auth",
 			expected: false,
 		},
+		"skill command": {
+			command:  "skill",
+			expected: true,
+		},
+		"skills alias": {
+			command:  "skills",
+			expected: true,
+		},
+		"skill flag": {
+			command:  "--skill",
+			expected: true,
+		},
+		"skill flag with flags": {
+			command:  "--skill --verbose",
+			expected: true,
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			if tc.command != "" {
-				os.Args = []string{"placeholder", tc.command}
+				os.Args = append([]string{"placeholder"}, strings.Split(tc.command, " ")...)
 			} else {
 				os.Args = []string{"placeholder"}
 			}

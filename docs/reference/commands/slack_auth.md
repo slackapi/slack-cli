@@ -19,6 +19,7 @@ slack auth <subcommand> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -27,6 +28,7 @@ slack auth <subcommand> [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -40,10 +42,10 @@ $ slack auth logout  # Log out of a team
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack auth list](slack_auth_list)	 - List all authorized accounts
-* [slack auth login](slack_auth_login)	 - Log in to a Slack account
-* [slack auth logout](slack_auth_logout)	 - Log out of a team
-* [slack auth revoke](slack_auth_revoke)	 - Revoke an authentication token
-* [slack auth token](slack_auth_token)	 - Collect a service token
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack auth list](/tools/slack-cli/reference/commands/slack_auth_list/)	 - List all authorized accounts
+* [slack auth login](/tools/slack-cli/reference/commands/slack_auth_login/)	 - Log in to a Slack account
+* [slack auth logout](/tools/slack-cli/reference/commands/slack_auth_logout/)	 - Log out of a team
+* [slack auth revoke](/tools/slack-cli/reference/commands/slack_auth_revoke/)	 - Revoke an authentication token
+* [slack auth token](/tools/slack-cli/reference/commands/slack_auth_token/)	 - Collect a service token
 

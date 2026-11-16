@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWorkspaceCommand(t *testing.T) {
+func TestAppCommand(t *testing.T) {
 	// Create mocks
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()

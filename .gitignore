@@ -19,7 +19,10 @@ environments.yaml
 # macOS
 .DS_Store
 
-# For GoLand users
+# Git
+.worktrees/
+
+# Goland project files
 .idea/
 
 # goreleaser
@@ -37,3 +40,6 @@ package-lock.json
 
 # End to End Test files
 test-e2e
+
+# VHS demo recordings
+demos/

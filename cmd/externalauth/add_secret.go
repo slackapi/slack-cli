@@ -38,9 +38,6 @@ func NewAddClientSecretCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Add the client secret for an external provider of a workflow app.",
 			"",
 			"This secret will be used when initiating the OAuth2 flow.",
-			"",
-			"This command is supported for apps deployed to Slack managed infrastructure but",
-			"other apps can attempt to run the command with the --force flag.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -67,18 +64,10 @@ func NewAddClientSecretCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunAddClientSecretCommand determines if the command is supported for a
-// project and configures flags
-func preRunAddClientSecretCommand(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
+// preRunAddClientSecretCommand configures flags and validates the project directory
+func preRunAddClientSecretCommand(_ context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
 	clients.Config.SetFlags(cmd)
-	err := cmdutil.IsValidProjectDirectory(clients)
-	if err != nil {
-		return err
-	}
-	if clients.Config.ForceFlag {
-		return nil
-	}
-	return cmdutil.IsSlackHostedProject(ctx, clients)
+	return cmdutil.IsValidProjectDirectory(clients)
 }
 
 // runAddClientSecretCommand adds a client secret to an authentication provider

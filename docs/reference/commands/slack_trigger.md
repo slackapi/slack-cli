@@ -19,6 +19,7 @@ slack trigger [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -27,6 +28,7 @@ slack trigger [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -52,11 +54,11 @@ $ slack trigger update --trigger-id Ft01234ABCD
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack trigger access](slack_trigger_access)	 - Manage who can use your triggers
-* [slack trigger create](slack_trigger_create)	 - Create a trigger for a workflow
-* [slack trigger delete](slack_trigger_delete)	 - Delete an existing trigger
-* [slack trigger info](slack_trigger_info)	 - Get details for a specific trigger
-* [slack trigger list](slack_trigger_list)	 - List details of existing triggers
-* [slack trigger update](slack_trigger_update)	 - Updates an existing trigger
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack trigger access](/tools/slack-cli/reference/commands/slack_trigger_access/)	 - Manage who can use your triggers
+* [slack trigger create](/tools/slack-cli/reference/commands/slack_trigger_create/)	 - Create a trigger for a workflow
+* [slack trigger delete](/tools/slack-cli/reference/commands/slack_trigger_delete/)	 - Delete an existing trigger
+* [slack trigger info](/tools/slack-cli/reference/commands/slack_trigger_info/)	 - Get details for a specific trigger
+* [slack trigger list](/tools/slack-cli/reference/commands/slack_trigger_list/)	 - List details of existing triggers
+* [slack trigger update](/tools/slack-cli/reference/commands/slack_trigger_update/)	 - Updates an existing trigger
 

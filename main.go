@@ -26,10 +26,11 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/ioutils"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/tracer"
+	"github.com/slackapi/slack-cli/internal/useragent"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/uber/jaeger-client-go"
 )
 
@@ -49,7 +50,7 @@ func main() {
 
 	// Set context values
 	sessionID := uuid.New().String()
-	cliVersion := version.Get()
+	cliVersion := version.Raw()
 	ctx = slackcontext.SetSessionID(ctx, sessionID)
 	ctx = slackcontext.SetVersion(ctx, cliVersion)
 
@@ -60,6 +61,9 @@ func main() {
 	span.SetTag("slack_cli_sessionID", sessionID)
 	span.SetTag("hashed_hostname", ioutils.GetHostname())
 	span.SetTag("slack_cli_process", processName)
+	if aiAgentName := useragent.GetAIAgentName(); aiAgentName != "" {
+		span.SetTag("ai_agent", aiAgentName)
+	}
 	// system_id is set in root.go initConfig()
 	// project_id is set in root.go initConfig()
 
@@ -80,13 +84,14 @@ func main() {
 func recoveryFunc() {
 	// in the event of a panic, log panic
 	if r := recover(); r != nil {
-		var clients = shared.NewClientFactory(shared.SetVersion(version.Raw()))
+		var clients = shared.NewClientFactory()
 
 		var ctx = context.Background()
 		ctx = slackcontext.SetSessionID(ctx, uuid.New().String())
+		ctx = slackcontext.SetVersion(ctx, version.Raw())
 
 		// set host for logging
-		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+		clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
 		clients.IO.PrintError(ctx, "Recovered from panic: %s\n%s", r, string(debug.Stack()))
 		os.Exit(int(iostreams.ExitError))
 	}

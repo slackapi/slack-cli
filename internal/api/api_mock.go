@@ -215,8 +215,18 @@ func (m *APIMock) FunctionDistributionRemoveUsers(ctx context.Context, callbackI
 
 // SandboxClient
 
-func (m *APIMock) ListSandboxes(ctx context.Context, token string, filter string) ([]types.Sandbox, error) {
-	args := m.Called(ctx, token, filter)
+func (m *APIMock) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (string, string, error) {
+	args := m.Called(ctx, token, name, domain, password, locale, owningOrgID, templateID, eventCode, archiveDate, isPartner, useEmailLogin)
+	return args.String(0), args.String(1), args.Error(2)
+}
+
+func (m *APIMock) DeleteSandbox(ctx context.Context, token, sandboxID string) error {
+	args := m.Called(ctx, token, sandboxID)
+	return args.Error(0)
+}
+
+func (m *APIMock) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
+	args := m.Called(ctx, token, status)
 	return args.Get(0).([]types.Sandbox), args.Error(1)
 }
 
@@ -305,6 +315,11 @@ func (m *APIMock) CertifiedAppInstall(ctx context.Context, token string, certifi
 	return args.Get(0).(CertifiedInstallResult), args.Error(1)
 }
 
+func (m *APIMock) ListAppApprovalRequests(ctx context.Context, token string, appID string, requestedTeams []string) (AppsApprovalsRequestsListResult, error) {
+	args := m.Called(ctx, token, appID, requestedTeams)
+	return args.Get(0).(AppsApprovalsRequestsListResult), args.Error(1)
+}
+
 func (m *APIMock) RequestAppApproval(ctx context.Context, token string, appID string, teamID string, reason string, scopes string, outgoingDomains []string) (AppsApprovalsRequestsCreateResult, error) {
 	args := m.Called(ctx, token, appID, teamID, reason, scopes, outgoingDomains)
 	return args.Get(0).(AppsApprovalsRequestsCreateResult), args.Error(1)
@@ -370,4 +385,20 @@ func (m *APIMock) UploadApp(ctx context.Context, token, runtime, appID string, f
 func (m *APIMock) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreamer, token string, app types.App, botScopes []string, outgoingDomains []string, orgGrantWorkspaceID string, autoAAARequest bool) (DeveloperAppInstallResult, types.InstallState, error) {
 	args := m.Called(ctx, IO, token, app, botScopes, outgoingDomains, orgGrantWorkspaceID, autoAAARequest)
 	return args.Get(0).(DeveloperAppInstallResult), args.Get(1).(types.InstallState), args.Error(2)
+}
+
+// DocsClient
+
+// DocsGetPage mocks fetching the markdown of a docs page
+func (m *APIMock) DocsGetPage(ctx context.Context, path string) (string, error) {
+	args := m.Called(ctx, path)
+	return args.String(0), args.Error(1)
+}
+
+func (m *APIMock) DocsSearch(ctx context.Context, query string, limit int, category string, hidePinned bool) (*DocsSearchResponse, error) {
+	args := m.Called(ctx, query, limit, category, hidePinned)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*DocsSearchResponse), args.Error(1)
 }

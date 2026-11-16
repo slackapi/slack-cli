@@ -21,6 +21,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -320,7 +321,9 @@ func (c *SDKDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 	// If `install-update` hook available, prompt to auto-update
 	if c.clients.SDKConfig.Hooks.InstallUpdate.IsAvailable() {
 		autoUpdatePrompt := fmt.Sprintf("%sDo you want to auto-update to the latest versions now?", style.Emoji("rocket"))
-		return c.clients.IO.ConfirmPrompt(ctx, autoUpdatePrompt, false)
+		return c.clients.IO.ConfirmPrompt(ctx, autoUpdatePrompt, iostreams.ConfirmPromptConfig{
+			Default: false,
+		})
 	}
 
 	return false, nil

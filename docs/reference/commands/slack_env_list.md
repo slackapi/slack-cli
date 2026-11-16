@@ -1,14 +1,16 @@
 # `slack env list`
 
-List all environment variables for the app
+List all environment variables of the project
 
 ## Description
 
-List all of the environment variables of an app deployed to Slack managed
-infrastructure.
+List the environment variables available to the project.
 
-This command is supported for apps deployed to Slack managed infrastructure but
-other apps can attempt to run the command with the --force flag.
+Commands that run in the context of a project source environment variables from
+the ".env" file. This includes the "run" command.
+
+The "deploy" command gathers environment variables from the ".env" file as well
+unless the app is using ROSI features.
 
 ```
 slack env list [flags]
@@ -23,6 +25,7 @@ slack env list [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -31,6 +34,7 @@ slack env list [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -42,5 +46,5 @@ $ slack env list  # List all environment variables
 
 ## See also
 
-* [slack env](slack_env)	 - Add, remove, or list environment variables
+* [slack env](/tools/slack-cli/reference/commands/slack_env/)	 - Set, unset, or list environment variables
 

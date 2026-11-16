@@ -63,7 +63,7 @@ func TestFeedbackCommand(t *testing.T) {
 		scm.On("SetSurveyConfig", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 		clientsMock.Config.SystemConfig = scm
 
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true, nil)
 		clientsMock.Browser.On("OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -133,7 +133,7 @@ func TestFeedbackCommand(t *testing.T) {
 			Index:  2,
 		}, nil)
 
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true, nil)
 		clientsMock.Browser.On("OpenURL", "https://survey.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil)
 
 		clients := shared.NewClientFactory(clientsMock.MockClientFactory())
@@ -166,7 +166,9 @@ func TestShowSurveyMessages(t *testing.T) {
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
 					msg := fmt.Sprintf("%s Would you like to take a minute to tell us about A?", style.Emoji("love_letter"))
-					return clients.IO.ConfirmPrompt(ctx, msg, false)
+					return clients.IO.ConfirmPrompt(ctx, msg, iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 			// Should be asked once; not yet asked
@@ -178,7 +180,9 @@ func TestShowSurveyMessages(t *testing.T) {
 					return clients.Config.ProjectConfig
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about B?", false)
+					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about B?", iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 			// Ask monthly; it's been over a month
@@ -190,7 +194,9 @@ func TestShowSurveyMessages(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about C?", false)
+					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about C?", iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 			// Ask monthly; it's only been a day since last asked
@@ -202,7 +208,9 @@ func TestShowSurveyMessages(t *testing.T) {
 					return clients.Config.SystemConfig
 				},
 				Ask: func(ctx context.Context, clients *shared.ClientFactory) (bool, error) {
-					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about D?", false)
+					return clients.IO.ConfirmPrompt(ctx, "Would you like to take a minute to tell us about D?", iostreams.ConfirmPromptConfig{
+						Default: false,
+					})
 				},
 			},
 		}
@@ -223,19 +231,19 @@ func TestShowSurveyMessages(t *testing.T) {
 
 		// B
 		pcm.On("GetSurveyConfig", mock.Anything, "B").Return(config.SurveyConfig{}, slackerror.New(slackerror.ErrSurveyConfigNotFound)).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about B?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about B?", mock.Anything).Return(true, nil)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil).Once()
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true).Once()
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true, nil).Once()
 		clientsMock.Browser.On("OpenURL", "https://B.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil).Once()
 		pcm.On("SetSurveyConfig", mock.Anything, "B", mock.Anything).Return(nil).Once()
 
 		// C
 		scm.On("GetSurveyConfig", mock.Anything, "C").Return(config.SurveyConfig{AskedAt: oneMonthAgoTimestamp}, nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about C?", mock.Anything).Return(true)
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Would you like to take a minute to tell us about C?", mock.Anything).Return(true, nil)
 		scm.On("GetSystemID", mock.Anything).Return("systemID", nil).Once()
 		pcm.On("GetProjectID", mock.Anything).Return("projectID", nil).Once()
-		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true).Once()
+		clientsMock.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(true, nil).Once()
 		clientsMock.Browser.On("OpenURL", "https://C.com?project_id=projectID&system_id=systemID&utm_medium=cli&utm_source=cli").Return(nil).Once()
 		scm.On("SetSurveyConfig", mock.Anything, "C", mock.Anything).Return(nil).Once()
 
@@ -263,17 +271,6 @@ func TestShowSurveyMessages(t *testing.T) {
 
 func Test_Feedback_FeedbackCommand(t *testing.T) {
 	testutil.TableTestCommand(t, testutil.CommandTests{
-		// DEPRECATED(semver:major): Support the deprecated survey name for backwards compatibility
-		"supports deprecated --name platform-improvements": {
-			CmdArgs: []string{"--name", "platform-improvements"},
-			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				setupFeedbackCommandMocks(t, ctx, cm, cf)
-			},
-			ExpectedOutputs: []string{
-				"feedback@slack.com",
-				"https://docs.slack.dev/developer-support",
-			},
-		},
 		"supports --name slack-cli": {
 			CmdArgs: []string{"--name", "slack-cli"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
@@ -315,5 +312,5 @@ func setupFeedbackCommandMocks(t *testing.T, ctx context.Context, cm *shared.Cli
 	pcm.On("GetProjectID", mock.Anything).Return("projectID", nil)
 	cm.Config.ProjectConfig = pcm
 
-	cm.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(false)
+	cm.IO.On("ConfirmPrompt", mock.Anything, "Open in browser?", mock.Anything).Return(false, nil)
 }

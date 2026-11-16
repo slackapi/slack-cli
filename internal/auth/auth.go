@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
@@ -33,6 +34,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
@@ -53,6 +55,11 @@ type Client struct {
 	config    *config.Config
 	io        iostreams.IOStreamer
 	fs        afero.Fs
+
+	// rotationAttempted tracks refresh tokens that were already used for token
+	// rotation during this process so each is attempted at most once
+	rotationAttempted   map[string]bool
+	rotationAttemptedMu sync.Mutex
 }
 
 type AuthInterface interface {
@@ -79,8 +86,8 @@ type AuthInterface interface {
 
 	// ResolveAPIHost returns the API Host based on the API Host Flag, Dev Flag, Project Config, and Stored Auth API Host.
 	ResolveAPIHost(ctx context.Context, apiHostFlag string, customAuth *types.SlackAuth) string
-	// ResolveLogstashHost returns the error log stash host based on API Host and CLI version
-	ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string
+	// ResolveLogstashHost returns the error log stash host based on API Host and CLI version from context
+	ResolveLogstashHost(ctx context.Context, apiHost string) string
 
 	// MapAuthTokensToDomains groups tokens by API host then delineates the host
 	MapAuthTokensToDomains(ctx context.Context) string
@@ -98,11 +105,12 @@ type AuthInterface interface {
 // NewClient returns a new, empty instance of the Client
 func NewClient(apiClient api.APIInterface, appClient *app.Client, config *config.Config, io iostreams.IOStreamer, fs afero.Fs) *Client {
 	var client = Client{
-		api:       apiClient,
-		appClient: appClient,
-		config:    config,
-		io:        io,
-		fs:        fs,
+		api:               apiClient,
+		appClient:         appClient,
+		config:            config,
+		io:                io,
+		fs:                fs,
+		rotationAttempted: map[string]bool{},
 	}
 
 	return &client
@@ -215,6 +223,16 @@ func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) 
 		return auths, err
 	}
 
+	// Treat an empty (or whitespace-only) credentials file as "no credentials
+	// stored" rather than a parse error. This state occurs when a prior write
+	// was truncated but not completed (e.g. a process was interrupted between
+	// afero.WriteFile's O_TRUNC and the actual write). Without this guard,
+	// every subsequent CLI invocation reads the same 0-byte file and logs
+	// ErrUnableToParseJSON in a hot loop.
+	if goutils.IsEmptyJSON(raw) {
+		return types.AuthByTeamID{}, nil
+	}
+
 	err = json.Unmarshal(raw, &auths)
 	if err != nil {
 		return auths, slackerror.New(slackerror.ErrUnableToParseJSON).
@@ -296,7 +314,14 @@ func (c *Client) rotateTokenAll(ctx context.Context, auths types.AuthByTeamDomai
 			// We also do not want to stop the entire process: so we will not return here.
 			// The user should go ahead with the bad token and the api will handle the
 			// return of the appropriate error to the user.
-			// We only want to warn the user about what we tried to do.
+			if slackerror.ToSlackError(err).Code == slackerror.ErrInvalidRefreshToken {
+				// The refresh token can never succeed again, so remove it to stop
+				// retrying token rotation on every command
+				auth.RefreshToken = ""
+				updatedAuths[authKey] = auth
+				updated = true
+				c.io.PrintWarning(ctx, "Your credentials for '%s' have expired and can no longer be refreshed. Run %s to authorize again.", auth.TeamDomain, style.Commandf("login", false))
+			}
 			c.io.PrintDebug(ctx, "Your auth token for '%s' is outdated. Tried refreshing the credentials but encountered the following error:\n%s", auth.TeamDomain, err.Error())
 		} else if tokenIsUpdated {
 			updated = true
@@ -314,10 +339,21 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 		return auth, false /* tokenIsUpdated */, nil
 	}
 
+	// Attempt rotation with a refresh token at most once per process to avoid
+	// repeated requests when rotation fails
+	c.rotationAttemptedMu.Lock()
+	if c.rotationAttempted[auth.RefreshToken] {
+		c.rotationAttemptedMu.Unlock()
+		return auth, false /* tokenIsUpdated */, nil
+	}
+	c.rotationAttempted[auth.RefreshToken] = true
+	c.rotationAttemptedMu.Unlock()
+
 	// Store the current apiHost before rotation
 	// We need this because we need to restore
 	// the apiHost to what it was before rotating each of the user's auths
 	activeAPIHostBeforeRotation := c.api.Host()
+	defer c.api.SetHost(activeAPIHostBeforeRotation)
 
 	if auth.APIHost != nil {
 		c.api.SetHost(*auth.APIHost)
@@ -328,7 +364,6 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 
 	var result, err = c.api.RotateToken(ctx, auth)
 	if err != nil {
-		// handle token rotation failure by sending meaningful messages to the users and remove already expired auth
 		return auth, false /* tokenIsUpdated */, err
 	}
 
@@ -336,9 +371,6 @@ func (c *Client) rotateToken(ctx context.Context, auth types.SlackAuth) (types.S
 	auth.ExpiresAt = result.ExpiresAt
 	auth.RefreshToken = result.RefreshToken
 	auth.LastUpdated = time.Now()
-
-	// now restore the previous default apiHost
-	c.api.SetHost(activeAPIHostBeforeRotation)
 
 	return auth, true /* tokenIsUpdated */, nil
 }
@@ -399,7 +431,7 @@ func (c *Client) SetSelectedAuth(ctx context.Context, auth types.SlackAuth, conf
 	// Often set after standard selections but custom authentication must set this
 	// unless the command is exiting right after, like 'login'.
 	config.APIHostResolved = c.ResolveAPIHost(ctx, config.APIHostFlag, &auth)
-	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved, config.Version)
+	config.LogstashHostResolved = c.ResolveLogstashHost(ctx, config.APIHostResolved)
 
 	// Set environment variables for app development configurations and processes.
 	if _, ok := os.LookupEnv("SLACK_API_URL"); !ok {
@@ -493,7 +525,7 @@ func (c *Client) ResolveAPIHost(ctx context.Context, apiHostFlag string, customA
 		c.io.PrintDebug(
 			ctx,
 			"You're using a custom apihost. Run %s to add it to your app's Run on Slack environment",
-			style.Commandf(fmt.Sprintf("var add SLACK_API_URL %s", apiHost), false),
+			style.Commandf(fmt.Sprintf("env set SLACK_API_URL %s", apiHost), false),
 		)
 	}
 
@@ -508,7 +540,11 @@ func (c *Client) ResolveAPIHost(ctx context.Context, apiHostFlag string, customA
 
 // TODO: how does this play together with ResolveAPIHost above?
 // ResolveLogstashHost returns the error log stash host based on API Host and CLI version
-func (c *Client) ResolveLogstashHost(ctx context.Context, apiHost string, cliVersion string) string {
+func (c *Client) ResolveLogstashHost(ctx context.Context, apiHost string) string {
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		c.io.PrintDebug(ctx, "Warning: %s", err.Error())
+	}
 	c.io.PrintDebug(ctx, "Resolving logstash host, %s, %s", apiHost, cliVersion)
 	if localBuildGitSHAInVersionRegex.Match([]byte(cliVersion)) {
 		return "https://dev.slackb.com/events/cli"

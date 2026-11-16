@@ -21,6 +21,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+// MockExecutablePath is the default returned by Executable().
+const MockExecutablePath = "/Users/user.name/.slack/bin/slack"
+
 // MockHomeDirectory is the default returned by UserHomeDir().
 const MockHomeDirectory = "/Users/user.name"
 
@@ -49,12 +52,14 @@ func (m *OsMock) AddDefaultMocks() {
 	m.On("Unsetenv", mock.Anything).Return(nil)
 	m.On("Getwd").Return(MockWorkingDirectory, nil)
 	m.On("UserHomeDir").Return(MockHomeDirectory, nil)
+	m.On("Executable").Return(MockExecutablePath, nil)
 	m.On("GetExecutionDir").Return(MockHomeDirectory, nil)
 	m.On("SetExecutionDir", mock.Anything)
 	m.On("IsNotExist", nil).Return(false)
 	m.On("IsNotExist", mock.Anything).Return(true)
 	m.On("Exit", mock.Anything).Return()
 	m.On("Stat", mock.Anything).Return()
+	m.On("Stdin").Return(os.Stdin)
 	m.On("Stdout").Return(os.Stdout)
 }
 
@@ -104,6 +109,12 @@ func (m *OsMock) UserHomeDir() (_dir string, _err error) {
 	return args.String(0), args.Error(1)
 }
 
+// Executable mocks returning the path of the running executable.
+func (m *OsMock) Executable() (_path string, _err error) {
+	args := m.Called()
+	return args.String(0), args.Error(1)
+}
+
 // GetExecutionDir mocks returning the absolute path where the process started execution
 func (m *OsMock) GetExecutionDir() string {
 	args := m.Called()
@@ -129,6 +140,12 @@ func (m *OsMock) Glob(pattern string) (matches []string, err error) {
 // Exit mocks exiting the program with a return code, but does not actually exit
 func (m *OsMock) Exit(code int) {
 	m.Called(code)
+}
+
+// Stdin mocks the stdin with a file that can be adjusted
+func (m *OsMock) Stdin() types.File {
+	args := m.Called()
+	return args.Get(0).(types.File)
 }
 
 // Stdout mocks the stdout with a file that can be adjusted

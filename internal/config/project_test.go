@@ -352,6 +352,38 @@ func Test_ProjectConfig_ReadProjectConfigFile(t *testing.T) {
 		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of project-level config file")
 	})
+
+	// A zero-byte or whitespace-only .slack/config.json (e.g. from a truncated
+	// write after a prior process interrupt) should be treated as empty state
+	// rather than a parse error, otherwise every CLI invocation would log
+	// ErrUnableToParseJSON in a hot loop.
+	t.Run("empty project config file returns default config, not a parse error", func(t *testing.T) {
+		cases := map[string]string{
+			"zero-byte file":       "",
+			"whitespace-only file": "  \n\t\n",
+		}
+		for name, contents := range cases {
+			t.Run(name, func(t *testing.T) {
+				ctx := slackcontext.MockContext(t.Context())
+				fs := slackdeps.NewFsMock()
+				os := slackdeps.NewOsMock()
+
+				os.AddDefaultMocks()
+				addProjectMocks(t, fs)
+
+				projectDirPath, err := GetProjectDirPath(fs, os)
+				require.NoError(t, err)
+				projectConfigFilePath := GetProjectConfigJSONFilePath(projectDirPath)
+
+				err = afero.WriteFile(fs, projectConfigFilePath, []byte(contents), 0600)
+				require.NoError(t, err)
+
+				got, err := ReadProjectConfigFile(ctx, fs, os)
+				require.NoError(t, err)
+				require.NotNil(t, got.Surveys)
+			})
+		}
+	})
 }
 
 func Test_ProjectConfig_WriteProjectConfigFile(t *testing.T) {

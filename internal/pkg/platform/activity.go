@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -108,9 +109,13 @@ func Activity(
 			// Try to grab new logs using the last logs timestamp
 			activityRequest.MinimumDateCreated = latestCreatedTimestamp + 1
 
-			// Avoid exit on error from the activity API when tailing logs
+			// Avoid exit on error from the activity API when tailing logs, unless
+			// the token can no longer be used and every later request would fail
 			newLatestCreatedTimestamp, count, err := printLatestActivity(ctx, clients, token, activityRequest, token)
 			if err != nil {
+				if isAuthError(err) {
+					return err
+				}
 				clients.IO.PrintDebug(ctx, "%s\n", err)
 			}
 
@@ -132,6 +137,18 @@ func Activity(
 	}
 }
 
+// isAuthError returns true if the error means the token is no longer valid
+func isAuthError(err error) bool {
+	switch slackerror.ToSlackError(err).Code {
+	case slackerror.ErrInvalidAuth,
+		slackerror.ErrNotAuthed,
+		slackerror.ErrTokenExpired,
+		slackerror.ErrTokenRevoked:
+		return true
+	}
+	return false
+}
+
 func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, token string, args types.ActivityRequest, xoxpToken string) (latestCreated int64, num int, e error) {
 	var span opentracing.Span
 	span, ctx = opentracing.StartSpanFromContext(ctx, "getLatestActivity")
@@ -146,9 +163,7 @@ func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, tok
 	latestTimestamp := args.MinimumDateCreated
 
 	// process in reverse
-	for i := len(activities) - 1; i >= 0; i-- {
-		var activity = activities[i]
-
+	for _, activity := range slices.Backward(activities) {
 		if activity.Created > latestTimestamp {
 			latestTimestamp = activity.Created
 		}

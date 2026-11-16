@@ -68,13 +68,31 @@ func Test_CLI_getUpdateFileName(t *testing.T) {
 			version:          "3.4.5",
 			operatingSystem:  "linux",
 			architecture:     "amd64",
-			expectedFilename: "slack_cli_3.4.5_linux_64-bit.tar.gz",
+			expectedFilename: "slack_cli_3.4.5_linux_amd64.tar.gz",
 		},
 		"linux development x86_64": {
 			version:          "3.4.5-6-badaabad",
 			operatingSystem:  "linux",
 			architecture:     "amd64",
-			expectedFilename: "slack_cli_3.4.5-6-badaabad_linux_64-bit.tar.gz",
+			expectedFilename: "slack_cli_3.4.5-6-badaabad_linux_amd64.tar.gz",
+		},
+		"linux production arm64": {
+			version:          "3.4.5",
+			operatingSystem:  "linux",
+			architecture:     "arm64",
+			expectedFilename: "slack_cli_3.4.5_linux_arm64.tar.gz",
+		},
+		"linux development arm64": {
+			version:          "3.4.5-6-badaabad",
+			operatingSystem:  "linux",
+			architecture:     "arm64",
+			expectedFilename: "slack_cli_3.4.5-6-badaabad_linux_arm64.tar.gz",
+		},
+		"linux production unknown arch fallback": {
+			version:          "3.4.5",
+			operatingSystem:  "linux",
+			architecture:     "riscv64",
+			expectedFilename: "slack_cli_3.4.5_linux_64-bit.tar.gz",
 		},
 		"windows production x86_64": {
 			version:          "3.4.5",

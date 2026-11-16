@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/slackapi/slack-cli/internal/cmdutil"
+	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -108,9 +109,13 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 
 		if providerFlag == "" {
 			confirmMessage := "Are you sure you want to remove all tokens for this app from your current team/org?"
-			removeAllTokens, err = clients.IO.ConfirmPrompt(ctx, confirmMessage, false)
+			removeAllTokens, err = clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
+				Default: false,
+			})
 		} else {
-			removeAllTokens, err = clients.IO.ConfirmPrompt(ctx, confirmMessage, false)
+			removeAllTokens, err = clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
+				Default: false,
+			})
 		}
 		if err != nil {
 			return err
@@ -133,7 +138,9 @@ func runRemoveCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		}
 
 	} else if providerFlag != "" {
-		removeAllTokens, err := clients.IO.ConfirmPrompt(ctx, confirmMessage, false)
+		removeAllTokens, err := clients.IO.ConfirmPrompt(ctx, confirmMessage, iostreams.ConfirmPromptConfig{
+			Default: false,
+		})
 		if err != nil {
 			return err
 		}

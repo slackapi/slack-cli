@@ -18,46 +18,8 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackdeps"
-	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 )
-
-func Test_DotEnv_GetDotEnvFileVariables(t *testing.T) {
-	tests := map[string]struct {
-		globalVariableName  string
-		globalVariableValue string
-		localEnvFile        string
-		expectedValues      map[string]string
-	}{
-		"environment file variables are read": {
-			localEnvFile:   "SLACK_VARIABLE=12\n",
-			expectedValues: map[string]string{"SLACK_VARIABLE": "12"},
-		},
-		"variable casing is preserved on load": {
-			localEnvFile:   "secret_Token=Key123!\n",
-			expectedValues: map[string]string{"secret_Token": "Key123!"},
-		},
-		"global environment variables are ignored": {
-			globalVariableName:  "SLACK_VARIABLE",
-			globalVariableValue: "12",
-			expectedValues:      map[string]string{},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			fs := slackdeps.NewFsMock()
-			os := slackdeps.NewOsMock()
-			os.AddDefaultMocks()
-			os.Setenv(tc.globalVariableName, tc.globalVariableValue)
-			err := afero.WriteFile(fs, ".env", []byte(tc.localEnvFile), 0600)
-			assert.NoError(t, err)
-			config := NewConfig(fs, os)
-			variables, err := config.GetDotEnvFileVariables()
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedValues, variables)
-		})
-	}
-}
 
 func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 	tableTests := map[string]struct {
@@ -191,6 +153,27 @@ func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 				assert.Equal(t, false, cfg.AutoRequestAAAFlag)
 			},
 		},
+		"SLACK_CLI_APP_ICON_PATH=/path/to/icon.png should set AppIconPathFlag": {
+			envName:  "SLACK_CLI_APP_ICON_PATH",
+			envValue: "/path/to/icon.png",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "/path/to/icon.png", cfg.AppIconPathFlag)
+			},
+		},
+		"SLACK_CLI_APP_ICON_PATH= should not set AppIconPathFlag": {
+			envName:  "SLACK_CLI_APP_ICON_PATH",
+			envValue: "",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "", cfg.AppIconPathFlag)
+			},
+		},
+		"SLACK_CLI_APP_ICON_PATH with whitespace should be trimmed": {
+			envName:  "SLACK_CLI_APP_ICON_PATH",
+			envValue: "  /path/to/icon.png  ",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, "/path/to/icon.png", cfg.AppIconPathFlag)
+			},
+		},
 		"SLACK_CONFIG_DIR=/path/to/config should set the config dir": {
 			envName:  "SLACK_CONFIG_DIR",
 			envValue: "/path/to/config",
@@ -203,6 +186,41 @@ func Test_DotEnv_LoadEnvironmentVariables(t *testing.T) {
 			envValue: "",
 			assertOnConfig: func(t *testing.T, cfg *Config) {
 				assert.Equal(t, "", cfg.ConfigDirFlag)
+			},
+		},
+		"ACCESSIBLE=true should set Accessible to true": {
+			envName:  "ACCESSIBLE",
+			envValue: "true",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, true, cfg.AccessibleFlag)
+			},
+		},
+		"ACCESSIBLE=1 should set Accessible to true": {
+			envName:  "ACCESSIBLE",
+			envValue: "1",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, true, cfg.AccessibleFlag)
+			},
+		},
+		"ACCESSIBLE=false should set Accessible to false": {
+			envName:  "ACCESSIBLE",
+			envValue: "false",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, false, cfg.AccessibleFlag)
+			},
+		},
+		"ACCESSIBLE=0 should set Accessible to false": {
+			envName:  "ACCESSIBLE",
+			envValue: "0",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, false, cfg.AccessibleFlag)
+			},
+		},
+		"empty ACCESSIBLE should set Accessible to false": {
+			envName:  "ACCESSIBLE",
+			envValue: "",
+			assertOnConfig: func(t *testing.T, cfg *Config) {
+				assert.Equal(t, false, cfg.AccessibleFlag)
 			},
 		},
 	}

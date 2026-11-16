@@ -15,6 +15,8 @@
 package hooks
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 	"strings"
@@ -25,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -41,6 +44,7 @@ func mockBoundaryStringGenerator() string {
 func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 	tests := map[string]struct {
 		opts  HookExecOpts
+		setup func(afero.Fs)
 		check func(*testing.T, string, error, ExecInterface)
 	}{
 		"error if hook command unavailable": {
@@ -55,8 +59,9 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Env: map[string]string{
-					"batman": "robin",
-					"yin":    "yang",
+					"BATMAN": "robin",
+					"WHOAMI": "lumpy space princess",
+					"YIN":    "yang",
 				},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
@@ -68,16 +73,17 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.Equal(t, `{"message": "hello world"}`, response)
 				require.Equal(t, nil, err)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `batman="robin"`)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `yin="yang"`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `BATMAN=robin`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `WHOAMI=lumpy space princess`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `YIN=yang`)
 			},
 		},
 		"successful execution with payload > 64kb": {
 			opts: HookExecOpts{
 				Hook: HookScript{Name: "happypath", Command: "echo {}"},
 				Env: map[string]string{
-					"batman": "robin",
-					"yin":    "yang",
+					"BATMAN": "robin",
+					"YIN":    "yang",
 				},
 				Exec: &MockExec{
 					mockCommand: &MockCommand{
@@ -89,8 +95,8 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
 				require.Equal(t, sixtyFourKBString, response)
 				require.Equal(t, nil, err)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `batman="robin"`)
-				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `yin="yang"`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `BATMAN=robin`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `YIN=yang`)
 			},
 		},
 		"successful execution with payload > 512kb": {
@@ -128,6 +134,29 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 					}),
 					err,
 				)
+			},
+		},
+		"dotenv vars and hook vars are loaded into the environment": {
+			opts: HookExecOpts{
+				Hook: HookScript{Name: "happypath", Command: "echo {}"},
+				Env: map[string]string{
+					"OPTS_VAR": "from_opts",
+				},
+				Exec: &MockExec{
+					mockCommand: &MockCommand{
+						MockStdout: []byte(mockBoundaryString + `{"ok": true}` + mockBoundaryString),
+						Err:        nil,
+					},
+				},
+			},
+			setup: func(fs afero.Fs) {
+				_ = afero.WriteFile(fs, ".env", []byte("DOTENV_VAR=from_dotenv\n"), 0600)
+			},
+			check: func(t *testing.T, response string, err error, mockExec ExecInterface) {
+				require.NoError(t, err)
+				require.Equal(t, `{"ok": true}`, response)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `DOTENV_VAR=from_dotenv`)
+				require.Contains(t, mockExec.(*MockExec).mockCommand.Env, `OPTS_VAR=from_opts`)
 			},
 		},
 		"fail to parse payload due to improper boundary strings": {
@@ -174,8 +203,13 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 			config := config.NewConfig(fs, os)
 			ios := iostreams.NewIOStreamsMock(config, fs, os)
 			ios.AddDefaultMocks()
+			memFs := afero.NewMemMapFs()
 			hookExecutor := &HookExecutorMessageBoundaryProtocol{
 				IO: ios,
+				Fs: memFs,
+			}
+			if tc.setup != nil {
+				tc.setup(memFs)
 			}
 			response, err := hookExecutor.Execute(ctx, tc.opts)
 			tc.check(t, response, err, tc.opts.Exec)
@@ -183,11 +217,18 @@ func Test_Hook_Execute_V2_Protocol(t *testing.T) {
 	}
 }
 
-func Test_Hook_Execute_V2_GenerateMD5FromRandomString(t *testing.T) {
-	randomString1 := generateMD5FromRandomString()
-	randomString2 := generateMD5FromRandomString()
+func Test_Hook_Execute_V2_GenerateRandomBoundary(t *testing.T) {
+	randomString1 := generateRandomBoundary()
+	randomString2 := generateRandomBoundary()
 
 	assert.NotEqual(t, randomString1, randomString2)
-	assert.GreaterOrEqual(t, len(randomString1), 10)
-	assert.GreaterOrEqual(t, len(randomString2), 10)
+	assert.Equal(t, 64, len(randomString1))
+	assert.Equal(t, 64, len(randomString2))
+}
+
+func Test_Hook_Execute_V2_GenerateRandomBoundary_UsesSHA256(t *testing.T) {
+	boundary := generateRandomBoundary()
+	_, err := hex.DecodeString(boundary)
+	assert.NoError(t, err)
+	assert.Equal(t, sha256.Size*2, len(boundary))
 }

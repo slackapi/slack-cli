@@ -32,7 +32,7 @@ func NewAppSelectMock() *AppSelectMock {
 }
 
 // AppSelectPrompt mocks the app selection prompt
-func (m *AppSelectMock) AppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env AppEnvironmentType, status AppInstallStatus) (SelectedApp, error) {
+func (m *AppSelectMock) AppSelectPrompt(ctx context.Context, clients *shared.ClientFactory, env AppEnvironmentType, status AppInstallStatus, opts ...AppSelectOption) (SelectedApp, error) {
 	args := m.Called(ctx, clients, env, status)
 	return args.Get(0).(SelectedApp), args.Error(1)
 }

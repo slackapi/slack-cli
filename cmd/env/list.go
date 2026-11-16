@@ -24,6 +24,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackdotenv"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
@@ -32,13 +33,15 @@ import (
 func NewEnvListCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [flags]",
-		Short: "List all environment variables for the app",
+		Short: "List all environment variables of the project",
 		Long: strings.Join([]string{
-			"List all of the environment variables of an app deployed to Slack managed",
-			"infrastructure.",
+			"List the environment variables available to the project.",
 			"",
-			"This command is supported for apps deployed to Slack managed infrastructure but",
-			"other apps can attempt to run the command with the --force flag.",
+			"Commands that run in the context of a project source environment variables from",
+			`the ".env" file. This includes the "run" command.`,
+			"",
+			`The "deploy" command gathers environment variables from the ".env" file as well`,
+			"unless the app is using ROSI features.",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{
@@ -58,17 +61,9 @@ func NewEnvListCommand(clients *shared.ClientFactory) *cobra.Command {
 	return cmd
 }
 
-// preRunEnvListCommandFunc determines if the command is supported for a project
-// and configures flags
-func preRunEnvListCommandFunc(ctx context.Context, clients *shared.ClientFactory) error {
-	err := cmdutil.IsValidProjectDirectory(clients)
-	if err != nil {
-		return err
-	}
-	if clients.Config.ForceFlag {
-		return nil
-	}
-	return cmdutil.IsSlackHostedProject(ctx, clients)
+// preRunEnvListCommandFunc determines if the command is run in a valid project
+func preRunEnvListCommandFunc(_ context.Context, clients *shared.ClientFactory) error {
+	return cmdutil.IsValidProjectDirectory(clients)
 }
 
 // runEnvListCommandFunc outputs environment variables for a selected app
@@ -78,56 +73,70 @@ func runEnvListCommandFunc(
 ) error {
 	ctx := cmd.Context()
 
-	selection, err := appSelectPromptFunc(
-		ctx,
-		clients,
-		prompts.ShowHostedOnly,
-		prompts.ShowInstalledAppsOnly,
-	)
-	if err != nil {
-		return err
+	// Hosted apps require selecting an app before gathering variables.
+	hosted := isHostedRuntime(ctx, clients)
+	var selection prompts.SelectedApp
+	if hosted {
+		var err error
+		selection, err = appSelectPromptFunc(
+			ctx,
+			clients,
+			prompts.ShowAllEnvironments,
+			prompts.ShowInstalledAppsOnly,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
-	variableNames, err := clients.API().ListVariables(
-		ctx,
-		selection.Auth.Token,
-		selection.App.AppID,
-	)
-	if err != nil {
-		return err
+	// Gather environment variables from the Slack API for deployed hosted apps
+	// or read from project files.
+	var variableNames []string
+	if hosted && !selection.App.IsDev {
+		var err error
+		variableNames, err = clients.API().ListVariables(
+			ctx,
+			selection.Auth.Token,
+			selection.App.AppID,
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		dotEnv, err := slackdotenv.Read(clients.Fs)
+		if err != nil {
+			return err
+		}
+		variableNames = make([]string, 0, len(dotEnv))
+		for k := range dotEnv {
+			variableNames = append(variableNames, k)
+		}
 	}
 
 	count := len(variableNames)
 	clients.IO.PrintTrace(ctx, slacktrace.EnvListCount, strconv.Itoa(count))
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "evergreen_tree",
-		Text:  "App Environment",
-		Secondary: []string{
-			fmt.Sprintf(
-				"There %s %d %s stored in this environment",
-				style.Pluralize("is", "are", count),
-				count,
-				style.Pluralize("variable", "variables", count),
-			),
-		},
-	}))
 
-	if len(variableNames) <= 0 {
-		return nil
+	details := []string{
+		fmt.Sprintf(
+			"There %s %d %s set in this environment",
+			style.Pluralize("is", "are", count),
+			count,
+			style.Pluralize("variable", "variables", count),
+		),
 	}
-	sort.Strings(variableNames)
-	variableLabel := []string{}
-	for _, v := range variableNames {
-		variableLabel = append(
-			variableLabel,
-			fmt.Sprintf("%s: %s", v, style.Secondary("***")),
-		)
+
+	if count > 0 {
+		sort.Strings(variableNames)
+		for _, v := range variableNames {
+			details = append(details, fmt.Sprintf("- %s: %s", v, style.Secondary("***")))
+		}
+		clients.IO.PrintTrace(ctx, slacktrace.EnvListVariables, variableNames...)
 	}
-	clients.IO.PrintTrace(ctx, slacktrace.EnvListVariables, variableNames...)
-	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
+
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "evergreen_tree",
-		Text:      "App Environment",
-		Secondary: variableLabel,
+		Text:      "Environment List",
+		Secondary: details,
 	}))
 
 	return nil

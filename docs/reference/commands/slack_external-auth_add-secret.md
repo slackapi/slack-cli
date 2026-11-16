@@ -8,9 +8,6 @@ Add the client secret for an external provider of a workflow app.
 
 This secret will be used when initiating the OAuth2 flow.
 
-This command is supported for apps deployed to Slack managed infrastructure but
-other apps can attempt to run the command with the --force flag.
-
 ```
 slack external-auth add-secret [flags]
 ```
@@ -26,6 +23,7 @@ slack external-auth add-secret [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -34,6 +32,7 @@ slack external-auth add-secret [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -49,5 +48,5 @@ $ slack external-auth add-secret -p github -x ghp_token
 
 ## See also
 
-* [slack external-auth](slack_external-auth)	 - Adjust settings of external authentication providers
+* [slack external-auth](/tools/slack-cli/reference/commands/slack_external-auth/)	 - Adjust settings of external authentication providers
 

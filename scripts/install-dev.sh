@@ -144,7 +144,21 @@ install_slack_cli() {
                         esac
                 fi
         elif [ "$(expr substr "$(uname -s)" 1 5)" == "Linux" ]; then
-                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_64-bit.tar.gz"
+                if version_lt "$SLACK_CLI_DEV_VERSION" "4.2.0"; then
+                        slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_64-bit.tar.gz"
+                else
+                        case "$(uname -m)" in
+                        x86_64)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_amd64.tar.gz"
+                                ;;
+                        aarch64 | arm64)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_arm64.tar.gz"
+                                ;;
+                        *)
+                                slack_cli_url="https://downloads.slack-edge.com/slack-cli/slack_cli_${SLACK_CLI_DEV_VERSION}_linux_64-bit.tar.gz"
+                                ;;
+                        esac
+                fi
         else
                 echo "🛑 Error: This installer is only supported on Linux and macOS"
                 echo "🔖 Try using a different installation method:"
@@ -166,7 +180,7 @@ install_slack_cli() {
         if [ "$SLACK_CLI_DEV_VERSION" == "dev" ]; then
                 delay 0.2 "💾 Successfully downloaded the latest build to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         else
-                delay 0.2 "💾 Successfully downloaded Slack CLI v$LATEST_SLACK_CLI_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
+                delay 0.2 "💾 Successfully downloaded Slack CLI v$SLACK_CLI_DEV_VERSION to $(home_path "$slack_cli_install_dir/slack-cli.tar.gz")"
         fi
 
         delay 0.3 "📦 Extracting the Slack CLI command binary to $(home_path "$slack_cli_bin_path")"
@@ -233,6 +247,7 @@ next_step_message() {
                 esac
         fi
         echo -e "🔐 Next, authorize your CLI in your workspace with \`$(bold "$SLACK_CLI_NAME login")\`"
+        echo -e "🤖 Create AI Agents in Slack with \`$(bold "$SLACK_CLI_NAME create agent")\`"
         sleep 0.2
 }
 

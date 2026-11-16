@@ -107,6 +107,37 @@ func Test_SystemConfig_UserConfig(t *testing.T) {
 		assert.Equal(t, slackerror.ToSlackError(err).Code, slackerror.ErrUnableToParseJSON)
 		assert.Equal(t, slackerror.ToSlackError(err).Message, "Failed to parse contents of system-level config file")
 	})
+
+	// A zero-byte or whitespace-only ~/.slack/config.json (e.g. from a truncated
+	// write after a prior process interrupt) should be treated as empty state
+	// rather than a parse error, otherwise every CLI invocation would log
+	// ErrUnableToParseJSON in a hot loop.
+	t.Run("empty configuration file returns default config, not a parse error", func(t *testing.T) {
+		cases := map[string]string{
+			"zero-byte file":       "",
+			"whitespace-only file": "  \n\t\n",
+		}
+		for name, contents := range cases {
+			t.Run(name, func(t *testing.T) {
+				ctx := slackcontext.MockContext(t.Context())
+				fs := slackdeps.NewFsMock()
+				os := slackdeps.NewOsMock()
+
+				os.AddDefaultMocks()
+
+				configFilePath := filepath.Join(slackdeps.MockHomeDirectory, configFolderName, configFileName)
+				err := afero.WriteFile(fs, configFilePath, []byte(contents), 0600)
+				require.NoError(t, err)
+
+				systemConfig := NewSystemConfig(fs, os)
+				got, err := systemConfig.UserConfig(ctx)
+
+				require.NoError(t, err)
+				require.NotNil(t, got)
+				require.NotNil(t, got.Surveys)
+			})
+		}
+	})
 }
 
 func Test_Config_SlackConfigDir(t *testing.T) {

@@ -7,9 +7,23 @@ slug: /tools/slack-cli/guides/installing-the-slack-cli-for-windows
 
 The Slack CLI is a useful tool for building Slack apps. This is your one-stop shop for installing this tool.
 
-:::warning[PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.]
+<details>
+<summary>Prerequisite: installing PowerShell </summary>
 
-:::
+PowerShell is required for installing the Slack CLI on Windows machines; an alternative shell will not work.
+
+Run the following command to install PowerShell 7 on your machine:
+
+```pwsh
+iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
+```
+
+The following articles may also be helpful should you run into any issues:
+
+- [Installing PowerShell on Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+- [How to install and update PowerShell 6](https://www.thomasmaurer.ch/2019/03/how-to-install-and-update-powershell-6/)
+
+</details>
 
 <Tabs groupId="installation">
 <TabItem value="Automated" label="Automated Installation">
@@ -24,8 +38,8 @@ This will install the Slack CLI and configure the command.
 
 Runtime installations are left to the developer and depend on the app being built. For more information and next steps, review the quickstart guides:
 
-- [Bolt for JavaScript](/tools/bolt-js/getting-started)
-- [Bolt for Python](/tools/bolt-python/getting-started)
+- [Bolt for JavaScript](/tools/bolt-js/creating-an-app)
+- [Bolt for Python](/tools/bolt-python/creating-an-app)
 - [Deno Slack SDK](/tools/deno-slack-sdk/guides/getting-started)
 
 <details>
@@ -88,7 +102,7 @@ Manual installation allows you to customize certain paths used when installing t
 
 **2\. Download the** `slack` **CLI installer for your environment.**
 
-<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_3.15.0_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
+<ts-icon class="ts_icon_windows"></ts-icon> &nbsp; <a href="https://downloads.slack-edge.com/slack-cli/slack_cli_4.14.0_windows_64-bit.zip"><strong>Windows (.zip)</strong></a>
 
 **3\. Add the** `slack` **CLI to your path.**
 
@@ -104,21 +118,8 @@ We recommend using an alias if another `slack` binary exists. To do this, change
 
 ```pwsh
 $ slack version
-Using slack v3.15.0
+Using slack v4.14.0
 ```
 
 </TabItem>
 </Tabs>
-
-## Installing PowerShell {#powershell}
-
-Run the following command to install PowerShell 7 on your machine:
-
-```pwsh
-iex "& { $(irm https://aka.ms/install-powershell.ps1) } -UseMSI"
-```
-
-The following articles may also be helpful should you run into any issues:
-
-- [Installing PowerShell on Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
-- [How to install and update PowerShell 6](https://www.thomasmaurer.ch/2019/03/how-to-install-and-update-powershell-6/)

@@ -1,6 +1,6 @@
 # Salesforce Open Source configuration
 #ECCN:Open Source
-#GUSINFO:Open Source,Open Source Workflow
+#GUSINFO:Slack Developer Experience,Open Source
 
 # * @slackapi/slack-cli-team will be added as code reviewers
 # to all files in this repo.

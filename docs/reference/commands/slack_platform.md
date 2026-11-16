@@ -19,6 +19,7 @@ slack platform <subcommand> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -27,6 +28,7 @@ slack platform <subcommand> [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -40,8 +42,8 @@ $ slack activity -t             # Continuously poll for new activity logs
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack platform activity](slack_platform_activity)	 - Display the app activity logs from the Slack Platform
-* [slack platform deploy](slack_platform_deploy)	 - Deploy the app to the Slack Platform
-* [slack platform run](slack_platform_run)	 - Start a local server to develop and run the app locally
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack platform activity](/tools/slack-cli/reference/commands/slack_platform_activity/)	 - Display the app activity logs from the Slack Platform
+* [slack platform deploy](/tools/slack-cli/reference/commands/slack_platform_deploy/)	 - Deploy the app to the Slack Platform
+* [slack platform run](/tools/slack-cli/reference/commands/slack_platform_run/)	 - Start a local server to develop and run the app locally
 

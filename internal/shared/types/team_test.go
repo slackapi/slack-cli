@@ -59,7 +59,4 @@ func Test_SlackTeam_Team_Workspace_Enterprise_Identifiers(t *testing.T) {
 
 	require.Equal(t, true, IsWorkspaceTeamID(validWorkspaceTeamID), "Workspace team ID should pass as workspace team ID")
 	require.Equal(t, false, IsWorkspaceTeamID(validEnterpriseID), "Enterprise ID should NOT pass as workspace team ID")
-
-	require.Equal(t, true, IsTeamID(validEnterpriseID), "Enterprise ID should pass as a team ID")
-	require.Equal(t, true, IsTeamID(validWorkspaceTeamID), "Workspace ID should pass as team ID")
 }

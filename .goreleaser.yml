@@ -32,6 +32,10 @@ builds:
       - windows
     goarch:
       - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
 
   - id: slack-macos
     binary: bin/slack
@@ -74,6 +78,8 @@ archives:
       {{- .Env.BUILD_VERSION }}_
       {{- if eq .Os "darwin" -}}
         macOS_{{ if eq .Arch "all" }}64-bit{{ else }}{{ .Arch }}{{ end }}
+      {{- else if eq .Os "linux" -}}
+        linux_{{ .Arch }}
       {{- else -}}
         {{ .Os }}_{{ if eq .Arch "amd64" }}64-bit{{ else }}{{ .Arch }}{{ end }}
       {{- end }}

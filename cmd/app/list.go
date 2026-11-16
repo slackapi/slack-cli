@@ -73,13 +73,13 @@ func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji:     "house_buildings",
 		Text:      "Apps",
-		Secondary: formatListSuccess(envs),
+		Secondary: FormatListSuccess(envs),
 	}))
 	return nil
 }
 
-// formatListSuccess formats details about the list of project apps
-func formatListSuccess(apps []types.App) (secondaryText []string) {
+// FormatListSuccess formats details about the list of project apps
+func FormatListSuccess(apps []types.App) (secondaryText []string) {
 	for _, app := range apps {
 		if app.AppID == "" {
 			continue

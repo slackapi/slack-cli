@@ -26,6 +26,7 @@ type APIInterface interface {
 	ChannelClient
 	CollaboratorsClient
 	DatastoresClient
+	DocsClient
 	ExternalAuthClient
 	FunctionDistributionClient
 	SandboxClient

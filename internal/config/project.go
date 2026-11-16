@@ -25,7 +25,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cache"
-	"github.com/slackapi/slack-cli/internal/experiment"
+	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
@@ -60,7 +60,7 @@ type ProjectConfigManager interface {
 
 // ProjectConfig is the project-level config file
 type ProjectConfig struct {
-	Experiments []experiment.Experiment `json:"experiments,omitempty"`
+	Experiments map[string]bool         `json:"experiments,omitempty"`
 	Manifest    *ManifestConfig         `json:"manifest,omitempty"`
 	ProjectID   string                  `json:"project_id,omitempty"`
 	Surveys     map[string]SurveyConfig `json:"surveys,omitempty"`
@@ -255,12 +255,27 @@ func ReadProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os) (Proje
 		return projectConfig, err
 	}
 
+	// Treat an empty (or whitespace-only) project config as "no project config
+	// saved yet" rather than a parse error. This state occurs when a prior
+	// write was truncated but not completed (e.g. a process was interrupted
+	// between afero.WriteFile's O_TRUNC and the actual write). Without this
+	// guard, every subsequent CLI invocation reads the same 0-byte file and
+	// logs ErrUnableToParseJSON in a hot loop.
+	if goutils.IsEmptyJSON(projectConfigFileBytes) {
+		projectConfig.Surveys = map[string]SurveyConfig{}
+		return projectConfig, nil
+	}
+
 	err = json.Unmarshal(projectConfigFileBytes, &projectConfig)
 	if err != nil {
 		return projectConfig, slackerror.New(slackerror.ErrUnableToParseJSON).
 			WithMessage("Failed to parse contents of project-level config file").
 			WithRootCause(err).
-			WithRemediation("Check that %s is valid JSON", style.HomePath(projectConfigFilePath))
+			WithRemediation(
+				"Check that %s is valid JSON. %s",
+				style.HomePath(projectConfigFilePath),
+				experimentsFormatHint,
+			)
 	}
 	if projectConfig.Surveys == nil {
 		projectConfig.Surveys = map[string]SurveyConfig{}

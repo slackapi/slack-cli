@@ -34,6 +34,15 @@ import (
 // defaultDocsDirPath is the default value for the <path> argument
 const defaultDocsDirPath = "docs"
 
+// commandsDocsURLPath is the docs site base path for command reference pages.
+// "See also" links must resolve against this path rather than a bare slug.
+const commandsDocsURLPath = "/tools/slack-cli/reference/commands/"
+
+// commandDocsURL returns the docs site link for a command path (e.g. "slack app").
+func commandDocsURL(commandPath string) string {
+	return commandsDocsURLPath + strings.ReplaceAll(commandPath, " ", "_") + "/"
+}
+
 //go:embed errors.tmpl
 var errorsMarkdownTemplate string
 
@@ -108,7 +117,7 @@ func runDocGenCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 		return slackerror.New(slackerror.ErrDocumentationGenerationFailed).WithRootCause(err)
 	}
 
-	// Generate errors reference
+	// Generate errors reference sorted alphabetically by error code
 	file, err := clients.Fs.Create(filepath.Join(docsDirPath, "errors.md"))
 	if err != nil {
 		return err
@@ -118,7 +127,14 @@ func runDocGenCommandFunc(clients *shared.ClientFactory, cmd *cobra.Command, arg
 	if err != nil {
 		return err
 	}
-	err = tmpl.Execute(file, slackerror.ErrorCodeMap)
+	errors := make([]slackerror.Error, 0, len(slackerror.ErrorCodeMap))
+	for _, e := range slackerror.ErrorCodeMap {
+		errors = append(errors, e)
+	}
+	slices.SortFunc(errors, func(a, b slackerror.Error) int {
+		return strings.Compare(a.Code, b.Code)
+	})
+	err = tmpl.Execute(file, errors)
 	if err != nil {
 		return err
 	}
@@ -189,8 +205,7 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 		if cmd.HasParent() {
 			parent := cmd.Parent()
 			pname := parent.CommandPath()
-			link := strings.ReplaceAll(pname, " ", "_")
-			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", pname, link, parent.Short)
+			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", pname, commandDocsURL(pname), parent.Short)
 			cmd.VisitParents(func(c *cobra.Command) {
 				if c.DisableAutoGenTag {
 					cmd.DisableAutoGenTag = c.DisableAutoGenTag
@@ -210,8 +225,7 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 				continue
 			}
 			cname := name + " " + child.Name()
-			link := strings.ReplaceAll(cname, " ", "_")
-			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", cname, link, child.Short)
+			fmt.Fprintf(buf, "* [%s](%s)\t - %s\n", cname, commandDocsURL(cname), child.Short)
 		}
 		fmt.Fprintf(buf, "\n")
 	}
@@ -224,17 +238,15 @@ func genMarkdownCommand(cmd *cobra.Command, w io.Writer) error {
 // Reference: https://github.com/spf13/cobra/blob/3f3b81882534a51628f3286e93c6842d9b2e29ea/doc/md_docs.go#L32-L49
 func genMarkdownCommandFlags(buf *bytes.Buffer, cmd *cobra.Command) error {
 	flags := cmd.NonInheritedFlags()
-	flags.SetOutput(buf)
 	if flags.HasAvailableFlags() {
 		fmt.Fprintf(buf, "## Flags\n\n```\n")
-		flags.PrintDefaults()
+		buf.WriteString(style.FlagUsages(flags))
 		fmt.Fprintf(buf, "```\n\n")
 	}
 	parentFlags := cmd.InheritedFlags()
-	parentFlags.SetOutput(buf)
 	if parentFlags.HasAvailableFlags() {
 		fmt.Fprintf(buf, "## Global flags\n\n```\n")
-		parentFlags.PrintDefaults()
+		buf.WriteString(style.FlagUsages(parentFlags))
 		fmt.Fprintf(buf, "```\n\n")
 	}
 	return nil

@@ -16,17 +16,19 @@ slack create [name | agent <name>] [flags]
 ## Flags
 
 ```
-  -b, --branch string     name of git branch to checkout
-  -h, --help              help for create
-      --list              list available app templates
-  -n, --name string       name for your app (overrides the name argument)
-      --subdir string     subdirectory in the template to use as project
-  -t, --template string   template URL for your app
+  -b, --branch string        name of git branch to checkout
+  -E, --environment string   environment to save existing app (local, deployed)
+  -h, --help                 help for create
+      --list                 list available app templates
+  -n, --name string          name for your app (overrides the name argument)
+      --subdir string        subdirectory in the template to use as project
+  -t, --template string      template URL for your app
 ```
 
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -35,6 +37,7 @@ slack create [name | agent <name>] [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -55,9 +58,12 @@ $ slack create --name my-project
 
 # Create from a subdirectory of a template
 $ slack create my-project -t org/monorepo --subdir apps/my-app
+
+# Create from template and link to an existing app
+$ slack create my-project -t slack-samples/bolt-js-starter-template --app A0123456789 --environment local
 ```
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
 

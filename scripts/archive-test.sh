@@ -59,8 +59,14 @@ main() {
 
     echo "Checking Linux archives"
     check_tar "$DIST_DIR/slack_cli_${VERSION}_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION}_linux_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_${VERSION}_linux_arm64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_dev_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_dev_linux_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_dev_linux_arm64.tar.gz"
     check_tar "$DIST_DIR/slack_cli_latest_linux_64-bit.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_latest_linux_amd64.tar.gz"
+    check_tar "$DIST_DIR/slack_cli_latest_linux_arm64.tar.gz"
 
     echo "Checking Windows archives"
     check_exe "$DIST_DIR/slack_cli_${VERSION}_windows_64-bit.zip"

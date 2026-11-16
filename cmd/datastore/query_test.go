@@ -245,7 +245,7 @@ func TestQueryCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter an expression", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("")
+				}).Return("", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]
@@ -269,7 +269,7 @@ func TestQueryCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter an expression", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("#task_id < :num AND #task_id <> :zero AND #notes = :progress")
+				}).Return("#task_id < :num AND #task_id <> :zero AND #notes = :progress", nil)
 				clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an attribute for '#notes'", mock.Anything, iostreams.MatchPromptConfig(iostreams.SelectPromptConfig{
 					Flag: clientsMock.Config.Flags.Lookup("attributes"),
 				})).Return(iostreams.SelectPromptResponse{
@@ -286,13 +286,13 @@ func TestQueryCommand(t *testing.T) {
 				}, nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for ':num'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("3")
+				}).Return("3", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for ':zero'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("0")
+				}).Return("0", nil)
 				clientsMock.IO.On("InputPrompt", mock.Anything, "Enter a value for ':progress'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("wip")
+				}).Return("wip", nil)
 			},
 			Teardown: func() {
 				os.Args = os.Args[:len(os.Args)-1]

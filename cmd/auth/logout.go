@@ -95,7 +95,7 @@ func handleAuthRemoval(ctx context.Context, clients *shared.ClientFactory, auth 
 
 	// Update the API Host and Logstash Host to be the selected/default auth
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
-	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
 
 	// First, try to revoke the xoxe-xoxp (auth) token credential
 	var xoxpToken = auth.Token
@@ -118,7 +118,7 @@ func handleAuthRemoval(ctx context.Context, clients *shared.ClientFactory, auth 
 
 	// Update the API Host and Logstash Host to be the selected/default auth
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, nil)
-	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved, clients.Config.Version)
+	clients.Config.LogstashHostResolved = clients.Auth().ResolveLogstashHost(ctx, clients.Config.APIHostResolved)
 
 	return nil
 }

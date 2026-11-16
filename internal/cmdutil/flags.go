@@ -17,6 +17,9 @@ package cmdutil
 import (
 	"fmt"
 
+	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
@@ -33,6 +36,20 @@ const (
 var OrgGrantWorkspaceDescription = func() string {
 	return fmt.Sprintf("grant access to a specific org workspace ID\n  %s",
 		style.Secondary("(or 'all' for all workspaces in the org)"))
+}
+
+// ValidateManifestSourceFlag checks that --manifest-source has a valid value if set
+func ValidateManifestSourceFlag(clients *shared.ClientFactory) error {
+	ms := config.ManifestSource(clients.Config.ManifestSourceFlag)
+	if ms.Exists() && !ms.IsValid() {
+		return slackerror.New(slackerror.ErrInvalidFlag).
+			WithMessage("Invalid value %q for %s flag", clients.Config.ManifestSourceFlag, style.CommandText("--manifest-source")).
+			WithRemediation("Valid values are %s or %s",
+				style.Highlight(string(config.ManifestSourceLocal)),
+				style.Highlight(string(config.ManifestSourceRemote)),
+			)
+	}
+	return nil
 }
 
 // IsFlagChanged checks if a certain flag has been set in the command

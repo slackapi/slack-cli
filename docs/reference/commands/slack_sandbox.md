@@ -14,7 +14,7 @@ New to the Developer Program? Sign up at
 [https://api.slack.com/developer-program/join](https://api.slack.com/developer-program/join)
 
 ```
-slack sandbox <subcommand> [flags] --experiment=sandboxes
+slack sandbox <subcommand> [flags]
 ```
 
 ## Flags
@@ -26,6 +26,7 @@ slack sandbox <subcommand> [flags] --experiment=sandboxes
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -34,11 +35,14 @@ slack sandbox <subcommand> [flags] --experiment=sandboxes
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack sandbox list](slack_sandbox_list)	 - List developer sandboxes
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack sandbox create](/tools/slack-cli/reference/commands/slack_sandbox_create/)	 - Create a developer sandbox
+* [slack sandbox delete](/tools/slack-cli/reference/commands/slack_sandbox_delete/)	 - Delete a developer sandbox
+* [slack sandbox list](/tools/slack-cli/reference/commands/slack_sandbox_list/)	 - List developer sandboxes
 

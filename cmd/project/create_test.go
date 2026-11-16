@@ -16,14 +16,21 @@ package project
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/pkg/create"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -46,7 +53,7 @@ func TestCreateCommand(t *testing.T) {
 		"creates a bolt application from prompts": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -54,7 +61,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -72,7 +79,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-app",
+					AppPath:  "my-app",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -83,7 +90,7 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"--template", "slack-samples/deno-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -91,7 +98,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -109,7 +116,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/deno-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-deno-app",
+					AppPath:  "my-deno-app",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -120,12 +127,28 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"agent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				// Should skip category prompt and go directly to language selection
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				// Should skip category prompt and go directly to template selection
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  0, // Select Node.js template
+							Index:  0, // Select Starter Agent
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Node.js
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an agent framework:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
 						},
 						nil,
 					)
@@ -136,27 +159,45 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-agent",
+					AppPath:  "my-agent",
 					Template: template,
+					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
 		},
 		"creates an agent app with app name using agent argument": {
 			CmdArgs: []string{"agent", "my-agent-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				// Should skip category prompt and go directly to language selection
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				// Should skip category prompt and go directly to template selection
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
-							Index:  1, // Select Python template
+							Index:  0, // Select Starter Agent
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  1, // Select Python
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an agent framework:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
 						},
 						nil,
 					)
@@ -165,23 +206,52 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-agent-app",
+					AppPath:  "my-agent-app",
 					Template: template,
+					Subdir:   "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since name was provided as arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
+			},
+		},
+		"creates a pydantic ai agent app": {
+			CmdArgs: []string{"my-pydantic-app"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Support Agent
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil) // Select Bolt for Python
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an agent framework:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 2}, nil) // Select Pydantic AI
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return("", nil)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-python-support-agent")
+				require.NoError(t, err)
+				template.SetSubdir("pydantic-ai")
+				expected := create.CreateArgs{
+					AppPath:  "my-pydantic-app",
+					Template: template,
+					Subdir:   "pydantic-ai",
+				}
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 			},
 		},
 		"creates an app named agent when template flag is provided": {
 			CmdArgs: []string{"agent", "--template", "slack-samples/bolt-js-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -189,7 +259,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -205,7 +275,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "agent",
+					AppPath:  "agent",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
@@ -217,7 +287,7 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"--name", "agent"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Should prompt for category since agent shortcut is NOT triggered
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -225,7 +295,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -241,12 +311,13 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "agent",
-					Template: template,
+					AppPath:     "agent",
+					DisplayName: "agent",
+					Template:    template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt WAS called (shortcut was not triggered)
-				cm.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since --name flag was provided
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -255,11 +326,27 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"agent", "--name", "my-custom-name"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Should skip category prompt due to agent shortcut
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Starter Agent
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
 							Index:  0, // Select Node.js
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an agent framework:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
 						},
 						nil,
 					)
@@ -268,21 +355,24 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-custom-name", // --name flag overrides
-					Template: template,
+					AppPath:     "my-custom-name", // --name flag used as path when no positional arg
+					DisplayName: "my-custom-name",
+					Template:    template,
+					Subdir:      "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (shortcut was triggered)
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 			},
 		},
 		"name flag overrides positional app name argument": {
 			CmdArgs: []string{"my-project", "--name", "my-name"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -290,7 +380,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -306,8 +396,9 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-name", // --name flag overrides "my-project" positional arg
-					Template: template,
+					AppPath:     "my-project", // positional arg preserved as path
+					DisplayName: "my-name",    // --name flag sets manifest display name
+					Template:    template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since --name flag was provided
@@ -318,11 +409,27 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"agent", "my-project", "--name", "my-name"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// Should skip category prompt due to agent shortcut
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a template:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Starter Agent
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a Bolt framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
 							Index:  0, // Select Node.js
+						},
+						nil,
+					)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select an agent framework:", mock.Anything, mock.Anything).
+					Return(
+						iostreams.SelectPromptResponse{
+							Prompt: true,
+							Index:  0, // Select Claude Agent SDK
 						},
 						nil,
 					)
@@ -331,15 +438,18 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-assistant-template")
+				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-agent")
 				require.NoError(t, err)
+				template.SetSubdir("claude-agent-sdk")
 				expected := create.CreateArgs{
-					AppName:  "my-name", // --name flag overrides "my-project" positional arg
-					Template: template,
+					AppPath:     "my-project", // positional arg preserved as path
+					DisplayName: "my-name",    // --name flag sets manifest display name
+					Template:    template,
+					Subdir:      "claude-agent-sdk",
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that category prompt was NOT called (agent shortcut was triggered)
-				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything)
+				cm.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything)
 				// Verify that name prompt was NOT called since --name flag was provided
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 			},
@@ -347,7 +457,7 @@ func TestCreateCommand(t *testing.T) {
 		"name prompt includes placeholder with generated name": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -355,7 +465,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -379,7 +489,7 @@ func TestCreateCommand(t *testing.T) {
 		"user accepts default name from prompt": {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -387,7 +497,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -406,7 +516,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 				// When the user accepts the default (empty return), the generated name is used
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
-					return args.AppName != ""
+					return args.AppPath != ""
 				}))
 			},
 		},
@@ -414,7 +524,7 @@ func TestCreateCommand(t *testing.T) {
 			CmdArgs: []string{"--template", "slack-samples/bolt-js-starter-template"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				// IsTTY defaults to false via AddDefaultMocks, simulating piped output
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -422,7 +532,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -439,14 +549,14 @@ func TestCreateCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
 				// Should still call Create with a non-empty generated name
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
-					return args.AppName != ""
+					return args.AppPath != ""
 				}))
 			},
 		},
 		"positional arg skips name prompt": {
 			CmdArgs: []string{"my-project"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -454,7 +564,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Prompt: true,
@@ -470,12 +580,32 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				expected := create.CreateArgs{
-					AppName:  "my-project",
+					AppPath:  "my-project",
 					Template: template,
 				}
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, expected)
 				// Verify that name prompt was NOT called since name was provided as positional arg
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, "Name your app:", mock.Anything)
+			},
+		},
+		"without app flag does not sync the manifest or print the app manifest section": {
+			CmdArgs: []string{"my-project", "--template", "slack-samples/bolt-js-starter-template"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				manifestMock := &app.ManifestMockObject{}
+				cf.AppClient().Manifest = manifestMock
+				createManifestMock = manifestMock
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				createManifestMock.AssertNotCalled(t, "GetManifestRemote", mock.Anything, mock.Anything, mock.Anything)
+				cm.Auth.AssertNotCalled(t, "AuthWithTeamID", mock.Anything, mock.Anything)
+				assert.NotContains(t, cm.GetCombinedOutput(), "App Manifest")
 			},
 		},
 		"subdir without template flag returns error": {
@@ -492,7 +622,7 @@ func TestCreateCommand(t *testing.T) {
 		"passes subdir flag to create function": {
 			CmdArgs: []string{"--template", "slack-samples/bolt-js-starter-template", "--subdir", "apps/my-app"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
-				cm.IO.On("SelectPrompt", mock.Anything, "Select an app:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -500,7 +630,7 @@ func TestCreateCommand(t *testing.T) {
 						},
 						nil,
 					)
-				cm.IO.On("SelectPrompt", mock.Anything, "Select a language:", mock.Anything, mock.Anything).
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a framework:", mock.Anything, mock.Anything).
 					Return(
 						iostreams.SelectPromptResponse{
 							Flag:   true,
@@ -516,7 +646,7 @@ func TestCreateCommand(t *testing.T) {
 				template, err := create.ResolveTemplateURL("slack-samples/bolt-js-starter-template")
 				require.NoError(t, err)
 				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.MatchedBy(func(args create.CreateArgs) bool {
-					return args.AppName != "" && args.Template == template && args.Subdir == "apps/my-app"
+					return args.AppPath != "" && args.Template == template && args.Subdir == "apps/my-app"
 				}))
 			},
 		},
@@ -541,12 +671,21 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedOutputs: []string{
 				"Getting started",
-				"AI Agent apps",
-				"Automation apps",
 				"slack-samples/bolt-js-starter-template",
 				"slack-samples/bolt-python-starter-template",
-				"slack-samples/bolt-js-assistant-template",
-				"slack-samples/bolt-python-assistant-template",
+				"Starter agent",
+				"slack-samples/bolt-js-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir pydantic-ai",
+				"Support agent",
+				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
+				"Automation apps",
 				"slack-samples/bolt-js-custom-function-template",
 				"slack-samples/bolt-python-custom-function-template",
 				"slack-samples/deno-starter-template",
@@ -562,9 +701,18 @@ func TestCreateCommand(t *testing.T) {
 				CreateFunc = createClientMock.Create
 			},
 			ExpectedOutputs: []string{
-				"AI Agent apps",
-				"slack-samples/bolt-js-assistant-template",
-				"slack-samples/bolt-python-assistant-template",
+				"Starter agent",
+				"slack-samples/bolt-js-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-starter-agent --subdir pydantic-ai",
+				"Support agent",
+				"slack-samples/bolt-js-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-js-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir claude-agent-sdk",
+				"slack-samples/bolt-python-support-agent --subdir openai-agents-sdk",
+				"slack-samples/bolt-python-support-agent --subdir pydantic-ai",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
@@ -732,3 +880,412 @@ func TestCreateCommand_confirmExternalTemplateSelection(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateCommand_AppFlag(t *testing.T) {
+	var createClientMock *CreateClientMock
+
+	testutil.TableTestCommand(t, testutil.CommandTests{
+		"app flag without template flag returns error": {
+			CmdArgs: []string{"my-app", "--app", "A0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires the --template flag when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with environment-style value returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires an app ID when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with lowercase id returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "a0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --app flag requires an app ID when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"environment flag without app flag returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --environment flag requires the --app flag when used with create"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"invalid environment flag returns error": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "invalid"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				CreateFunc = createClientMock.Create
+			},
+			ExpectedErrorStrings: []string{"The --environment flag must be either 'local' or 'deployed'"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertNotCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"app flag with template creates project and links a deployed app": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocks(t, ctx, cm, cf, nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "deployed"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetDeployed(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+				assert.Equal(t, mockCreateLinkAuth.TeamID, saved.TeamID)
+				assert.False(t, saved.IsDev)
+			},
+		},
+		"app flag without environment links a local app via prompt": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocks(t, ctx, cm, cf, nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+				assert.Equal(t, mockCreateLinkAuth.TeamID, saved.TeamID)
+				assert.True(t, saved.IsDev)
+			},
+		},
+		"app flag with manifest fetch error shows warning but succeeds": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource:    config.ManifestSourceLocal,
+					manifestRemoteErr: fmt.Errorf("network error"),
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+				cm.IO.AssertCalled(t, "PrintWarning", mock.Anything, "Failed to fetch manifest from app settings: %s", mock.Anything)
+				assert.Contains(t, cm.GetCombinedOutput(), "manifest sync --manifest-source=remote")
+				assert.NotContains(t, cm.GetCombinedOutput(), "App Manifest")
+			},
+		},
+		"app flag skips manifest sync for remote source of truth projects": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir := t.TempDir()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
+				CreateFunc = createClientMock.Create
+
+				original := []byte(`{"display_information": {"name": "Original"}}`)
+				require.NoError(t, afero.WriteFile(cm.Fs, filepath.Join(projectDir, "manifest.json"), original, 0644))
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource: config.ManifestSourceRemote,
+					remoteManifest: types.SlackYaml{
+						AppManifest: types.AppManifest{
+							DisplayInformation: types.DisplayInformation{Name: "Remote"},
+						},
+					},
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+
+				createManifestMock.AssertNotCalled(t, "GetManifestRemote", mock.Anything, mock.Anything, mock.Anything)
+				projectDir := createClientMock.Calls[0].ReturnArguments[0].(string)
+				written, err := afero.ReadFile(cm.Fs, filepath.Join(projectDir, "manifest.json"))
+				require.NoError(t, err)
+				assert.Contains(t, string(written), "Original")
+				output := cm.GetCombinedOutput()
+				assert.NotContains(t, output, "App Manifest")
+				assert.NotContains(t, output, "manifest sync --manifest-source=remote")
+				hash, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
+				require.NoError(t, err)
+				assert.Empty(t, hash)
+			},
+		},
+		"app flag does not strip local suffix for deployed apps": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "deployed"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir := t.TempDir()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
+				CreateFunc = createClientMock.Create
+
+				manifestJSON := []byte(`{"display_information": {"name": "Original"}}`)
+				require.NoError(t, afero.WriteFile(cm.Fs, filepath.Join(projectDir, "manifest.json"), manifestJSON, 0644))
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource: config.ManifestSourceLocal,
+					remoteManifest: types.SlackYaml{
+						AppManifest: types.AppManifest{
+							DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+						},
+					},
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "deployed"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				saved, err := cm.AppClient.GetDeployed(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.False(t, saved.IsDev)
+
+				projectDir := createClientMock.Calls[0].ReturnArguments[0].(string)
+				written, err := afero.ReadFile(cm.Fs, filepath.Join(projectDir, "manifest.json"))
+				require.NoError(t, err)
+				assert.Contains(t, string(written), "My App (local)")
+			},
+		},
+		"app flag writes manifest and strips local suffix for dev apps": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				projectDir := t.TempDir()
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(projectDir, nil)
+				CreateFunc = createClientMock.Create
+
+				// Seed a manifest.json so WriteManifestLocal can write to it
+				manifestJSON := []byte(`{"display_information": {"name": "My App"}}`)
+				require.NoError(t, afero.WriteFile(cm.Fs, filepath.Join(projectDir, "manifest.json"), manifestJSON, 0644))
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource: config.ManifestSourceLocal,
+					remoteManifest: types.SlackYaml{
+						AppManifest: types.AppManifest{
+							DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+							Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App (local)"}},
+						},
+					},
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+
+				// Verify the written manifest has the (local) suffix stripped
+				projectDir := createClientMock.Calls[0].ReturnArguments[0].(string)
+				written, err := afero.ReadFile(cm.Fs, filepath.Join(projectDir, "manifest.json"))
+				require.NoError(t, err)
+				assert.Contains(t, string(written), `"My App"`)
+				assert.NotContains(t, string(written), "(local)")
+				assert.Contains(t, cm.GetCombinedOutput(), "App Manifest")
+				assert.Contains(t, cm.GetCombinedOutput(), "Updated manifest.json from app settings")
+
+				// The cached hash must match the manifest as exported (with the suffix),
+				// which is what install compares against.
+				exported := types.AppManifest{
+					DisplayInformation: types.DisplayInformation{Name: "My App (local)"},
+					Features:           &types.AppFeatures{BotUser: types.BotUser{DisplayName: "My App (local)"}},
+				}
+				want, err := cm.Config.ProjectConfig.Cache().NewManifestHash(ctx, exported)
+				require.NoError(t, err)
+				got, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
+				require.NoError(t, err)
+				assert.Equal(t, want, got)
+			},
+		},
+		"app flag with no manifest.json shows warning": {
+			CmdArgs: []string{"my-app", "--template", "slack-samples/bolt-js-starter-template", "--app", "A0123456789", "--environment", "local"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				createClientMock = new(CreateClientMock)
+				createClientMock.On("Create", mock.Anything, mock.Anything, mock.Anything).Return(t.TempDir(), nil)
+				CreateFunc = createClientMock.Create
+
+				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{mockCreateLinkAuth}, nil)
+				cm.AddDefaultMocks()
+				setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+					manifestSource: config.ManifestSourceLocal,
+					remoteManifest: types.SlackYaml{
+						AppManifest: types.AppManifest{
+							DisplayInformation: types.DisplayInformation{Name: "My App"},
+						},
+					},
+				})
+				cm.IO.On("SelectPrompt", mock.Anything, "Select a category:", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Flag: true, Option: "slack-samples/bolt-js-starter-template"}, nil).Maybe()
+				cm.IO.On("SelectPrompt", mock.Anything, "Select the existing app team", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: mockCreateLinkAuth.TeamDomain}, nil)
+				cm.IO.On("InputPrompt", mock.Anything, "Enter the existing app ID", mock.Anything).
+					Return("A0123456789", nil)
+				cm.IO.On("SelectPrompt", mock.Anything, "Choose the app environment", mock.Anything, mock.Anything, mock.Anything).
+					Return(iostreams.SelectPromptResponse{Prompt: true, Option: "local"}, nil)
+				cm.API.On("GetAppStatus", mock.Anything, mockCreateLinkAuth.Token, []string{"A0123456789"}, mockCreateLinkAuth.TeamID).
+					Return(api.GetAppStatusResult{}, nil)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				createClientMock.AssertCalled(t, "Create", mock.Anything, mock.Anything, mock.Anything)
+				saved, err := cm.AppClient.GetLocal(ctx, mockCreateLinkAuth.TeamID)
+				require.NoError(t, err)
+				assert.Equal(t, "A0123456789", saved.AppID)
+				cm.IO.AssertNotCalled(t, "PrintWarning", mock.Anything, "Failed to write manifest to project: %s", mock.Anything)
+				output := cm.GetCombinedOutput()
+				assert.Contains(t, output, "App Manifest")
+				assert.Contains(t, output, "no manifest.json found in the project root")
+				assert.Contains(t, output, "manifest.ts")
+				assert.NotContains(t, output, "Updated manifest.json")
+				hash, err := cm.Config.ProjectConfig.Cache().GetManifestHash(ctx, "A0123456789")
+				require.NoError(t, err)
+				assert.Empty(t, hash)
+			},
+		},
+	}, func(cf *shared.ClientFactory) *cobra.Command {
+		return NewCreateCommand(cf)
+	})
+}
+
+var mockCreateLinkAuth = types.SlackAuth{
+	Token:        "xoxp-example",
+	TeamDomain:   "team1",
+	TeamID:       "T001",
+	EnterpriseID: "E001",
+	UserID:       "U001",
+}
+
+type createLinkMockOpts struct {
+	manifestSource    config.ManifestSource
+	manifestRemoteErr error
+	remoteManifest    types.SlackYaml
+}
+
+// setupCreateLinkMocks prepares the in-memory project config and manifest mocks
+// needed by app.LinkExistingApp when called from the create command.
+func setupCreateLinkMocks(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory, manifestRemoteErr error) {
+	setupCreateLinkMocksWithOpts(t, ctx, cm, cf, createLinkMockOpts{
+		manifestSource:    config.ManifestSourceRemote,
+		manifestRemoteErr: manifestRemoteErr,
+	})
+}
+
+func setupCreateLinkMocksWithOpts(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory, opts createLinkMockOpts) {
+	projectDirPath := slackdeps.MockWorkingDirectory
+	cm.Os.On("Getwd").Return(projectDirPath, nil)
+
+	if _, err := config.CreateProjectConfigDir(ctx, cm.Fs, projectDirPath); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to create the project config directory: %s", err))
+	}
+	if _, err := config.CreateProjectHooksJSONFile(cm.Fs, projectDirPath, []byte("{}")); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to create the hooks file: %s", err))
+	}
+	if err := config.SetManifestSource(ctx, cm.Fs, cm.Os, opts.manifestSource); err != nil {
+		require.FailNow(t, fmt.Sprintf("Failed to set the manifest source: %s", err))
+	}
+
+	cm.Auth.On("AuthWithTeamID", mock.Anything, mock.Anything).
+		Return(mockCreateLinkAuth, nil)
+
+	manifestMock := &app.ManifestMockObject{}
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).
+		Return(types.SlackYaml{}, nil)
+	manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).
+		Return(opts.remoteManifest, opts.manifestRemoteErr)
+	cf.AppClient().Manifest = manifestMock
+	createManifestMock = manifestMock
+}
+
+var createManifestMock *app.ManifestMockObject

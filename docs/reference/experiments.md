@@ -1,18 +1,24 @@
 # Experiments
 
-The Slack CLI has an experiment (`-e`) flag behind which we put features currently under development. These features may be fleeting, may not be perfectly polished, and many will not work without a development instance - but we have made them available for use "at your own risk."
+The Slack CLI has an experiment (`-e`) flag behind which we put features currently under development. These features may be fleeting, may not be perfectly polished, and many will not work without a development instance, but we've made them available for use "at your own risk."
 
 ## Available experiments
 
 The following is a list of currently available experiments. We'll remove experiments from this page if we decide they are no longer needed or once they are released, in which case we'll make an announcement about the feature's general availability in the [developer changelog](https://docs.slack.dev/changelog).
 
-- `charm`: shows beautiful prompts ([PR#348](https://github.com/slackapi/slack-cli/pull/348)).
-- `sandboxes`: enables users who have joined the Slack Developer Program to manage their sandboxes ([PR#379](https://github.com/slackapi/slack-cli/pull/379)).
+- `lipgloss`: shows pretty styles.
 
 ## Experiments changelog
 
 Below is a list of updates related to experiments.
 
+- **September 2026**: Concluded the `manifest-sync` experiment with full support for two-way manifest sync now enabled by default in the Slack CLI.
+- **August 2026**: Concluded the `set-icon` experiment; The Slack CLI now offers full support for icon upload on all app types by default.
+- **July 2026**: Added the `manifest-sync` experiment to resolve changed app manifest values between a project and app settings.
+- **April 2026**: Concluded the `sandboxes` experiment with full support in the Slack CLI. Refer to the [`slack sandbox create`](/tools/slack-cli/reference/commands/slack_sandbox_create/), [`slack sandbox delete`](/tools/slack-cli/reference/commands/slack_sandbox_delete/), and [`slack sandbox list`](/tools/slack-cli/reference/commands/slack_sandbox_list/) commands for more details.
+- **April 2026**: Added the `set-icon` experiment to enable icon upload for non-hosted apps.
+- **April 2026**: Concluded the `huh` experiment with full support now enabled by default in the Slack CLI.
+- **March 2026**: Split the `charm` experiment into more beautiful `huh` prompts and prettier `lipgloss` styles for ongoing change.
 - **March 2026**: Concluded the `bolt` and `bolt-install` experiments with full Bolt framework support now enabled by default in the Slack CLI. All Bolt project features including remote manifest management are now standard functionality. See the announcement [here](https://slack.dev/slackcli-supports-bolt-apps/).
 - **February 2026**: Added the `charm` experiment.
 - **December 2025**: Concluded the `read-only-collaborators` experiment with full support introduced to the Slack CLI. See the changelog announcement [here](https://docs.slack.dev/changelog/2025/12/04/slack-cli).

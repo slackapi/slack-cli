@@ -25,6 +25,7 @@ slack function <subcommand> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -33,6 +34,7 @@ slack function <subcommand> [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -51,6 +53,6 @@ $ slack function distribute --info
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack function access](slack_function_access)	 - Adjust who can access functions published from an app
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack function access](/tools/slack-cli/reference/commands/slack_function_access/)	 - Adjust who can access functions published from an app
 

@@ -25,6 +25,7 @@ slack project <subcommand> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -33,6 +34,7 @@ slack project <subcommand> [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -51,8 +53,8 @@ $ slack project samples
 
 ## See also
 
-* [slack](slack)	 - Slack command-line tool
-* [slack project create](slack_project_create)	 - Create a new Slack project
-* [slack project init](slack_project_init)	 - Initialize a project to work with the Slack CLI
-* [slack project samples](slack_project_samples)	 - List available sample apps
+* [slack](/tools/slack-cli/reference/commands/slack/)	 - Slack command-line tool
+* [slack project create](/tools/slack-cli/reference/commands/slack_project_create/)	 - Create a new Slack project
+* [slack project init](/tools/slack-cli/reference/commands/slack_project_init/)	 - Initialize a project to work with the Slack CLI
+* [slack project samples](/tools/slack-cli/reference/commands/slack_project_samples/)	 - List available sample apps
 

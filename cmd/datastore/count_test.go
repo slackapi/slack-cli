@@ -251,7 +251,7 @@ func TestCountCommand(t *testing.T) {
 				}, nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter an expression", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("")
+				}).Return("", nil)
 				cm.API.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "numbers", Count: 12}, nil)
 			},
@@ -298,16 +298,16 @@ func TestCountCommand(t *testing.T) {
 				}, nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter an expression", iostreams.InputPromptConfig{
 					Required: false,
-				}).Return("#n < :num AND #n <> :zero AND #prime = :bool")
+				}).Return("#n < :num AND #n <> :zero AND #prime = :bool", nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter a value for ':num'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("12")
+				}).Return("12", nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter a value for ':zero'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("0")
+				}).Return("0", nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter a value for ':bool'", iostreams.InputPromptConfig{
 					Required: true,
-				}).Return("true")
+				}).Return("true", nil)
 				cm.API.On("AppsDatastoreCount", mock.Anything, mock.Anything, mock.Anything).
 					Return(types.AppDatastoreCountResult{Datastore: "numbers", Count: 6}, nil)
 			},

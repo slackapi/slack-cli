@@ -84,10 +84,25 @@ type TeamApps struct {
 // if the installed workspace is left
 var appTransferDisclaimer = style.TextSection{
 	Emoji: "bell",
-	Text:  "If you leave this team, you can no longer manage the installed apps",
+	Text:  "App Create",
 	Secondary: []string{
+		"If you leave this team, you can no longer manage the installed apps",
 		"Installed apps will belong to the team if you leave the workspace",
 	},
+}
+
+// AppSelectOption configures optional behavior of AppSelectPrompt
+type AppSelectOption func(*appSelectConfig)
+
+type appSelectConfig struct {
+	includeNoApp bool
+}
+
+// WithNoAppOption adds a "No app" choice to the selection prompt
+func WithNoAppOption() AppSelectOption {
+	return func(c *appSelectConfig) {
+		c.includeNoApp = true
+	}
 }
 
 var SelectTeamPrompt = "Select a team"
@@ -387,17 +402,22 @@ func AppSelectPrompt(
 	clients *shared.ClientFactory,
 	environment AppEnvironmentType,
 	status AppInstallStatus,
+	opts ...AppSelectOption,
 ) (
 	selected SelectedApp,
 	err error,
 ) {
+	var cfg appSelectConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	switch {
 	case environment.Equals(ShowAllEnvironments) && types.IsAppFlagEnvironment(clients.Config.AppFlag):
 		switch {
 		case types.IsAppFlagDeploy(clients.Config.AppFlag):
-			return AppSelectPrompt(ctx, clients, ShowHostedOnly, status)
+			return AppSelectPrompt(ctx, clients, ShowHostedOnly, status, opts...)
 		case types.IsAppFlagLocal(clients.Config.AppFlag):
-			return AppSelectPrompt(ctx, clients, ShowLocalOnly, status)
+			return AppSelectPrompt(ctx, clients, ShowLocalOnly, status, opts...)
 		}
 	case environment.Equals(ShowLocalOnly) && types.IsAppFlagDeploy(clients.Config.AppFlag):
 		return SelectedApp{}, slackerror.New(slackerror.ErrDeployedAppNotSupported)
@@ -577,9 +597,23 @@ func AppSelectPrompt(
 			return SelectedApp{}, slackerror.New(slackerror.ErrTeamNotFound)
 		}
 	}
+	noApp := style.Secondary("No app")
+	if cfg.includeNoApp {
+		options = append(options, Selection{label: noApp})
+	}
+	appFlag := clients.Config.Flags.Lookup("app")
 	labels := []string{}
-	for _, label := range options {
-		labels = append(labels, label.label)
+	appOptions := []iostreams.PromptOption{}
+	for _, opt := range options {
+		labels = append(labels, opt.label)
+		// Synthetic entries ("Create a new app", "No app") have no AppID and
+		// are emitted as label-only so the option list stays 1:1 with labels.
+		promptOpt := iostreams.PromptOption{Label: opt.label}
+		if opt.app.App.AppID != "" {
+			promptOpt.Flag = appFlag
+			promptOpt.Value = opt.app.App.AppID
+		}
+		appOptions = append(appOptions, promptOpt)
 	}
 	switch {
 	case types.IsAppID(clients.Config.AppFlag):
@@ -609,17 +643,21 @@ func AppSelectPrompt(
 		labels,
 		iostreams.SelectPromptConfig{
 			Required: true,
+			Options:  appOptions,
 
-			// Flag is checked before since the value might be an app "environment" while
-			// an app ID is required in the return.
-			//
-			// Flag:  clients.Config.Flags.Lookup("app"),
+			// Flag is intentionally not set: --app may be an environment value
+			// ("local", "deployed") which must not be matched against an app
+			// ID. The IsAppID and IsAppFlagEnvironment branches above handle
+			// the cases where --app is set; Options provides per-option
+			// flag-substitute hints for the non-TTY error path.
 		})
 	if err != nil {
 		return SelectedApp{}, err
 	}
 	creation := style.Secondary("Create a new app")
 	switch {
+	case selection.Prompt && options[selection.Index].label == noApp:
+		return SelectedApp{}, slackerror.New(slackerror.ErrNoAppSelected)
 	case selection.Prompt && options[selection.Index].label != creation:
 		return options[selection.Index].app, nil
 	case selection.Prompt && options[selection.Index].label == creation:

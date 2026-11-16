@@ -24,12 +24,12 @@ import (
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/deputil"
 	"github.com/slackapi/slack-cli/internal/hooks"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/slackapi/slack-cli/test/slackmock"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ import (
 )
 
 func TestDoctorCommand(t *testing.T) {
-	expectedCLIVersion := version.Get()
+	expectedCLIVersion := version.Raw()
 	expectedCredentials := types.SlackAuth{
 		TeamDomain: "team123",
 		TeamID:     "T123",

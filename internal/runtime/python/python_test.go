@@ -150,6 +150,12 @@ func Test_installRequirementsTxt(t *testing.T) {
 			expectedOutput:  "Found requirements.txt with",
 			expectedError:   false,
 		},
+		"Skip when slack_cli_hooks already exists": {
+			existingContent: "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
+			expectedContent: "slack_bolt==1.30.0\nslack_cli_hooks==0.3.0\npytest==8.3.2",
+			expectedOutput:  "Found requirements.txt with",
+			expectedError:   false,
+		},
 		"Add after slack-bolt when it exists": {
 			existingContent: "slack-bolt==2.31.2\npytest==8.3.2\nruff==0.7.2",
 			expectedContent: "slack-bolt==2.31.2\nslack-cli-hooks<1.0.0\npytest==8.3.2\nruff==0.7.2",
@@ -207,6 +213,14 @@ func Test_installPyProjectToml(t *testing.T) {
 name = "my-app"
 dependencies = ["slack-cli-hooks<1.0.0", "pytest==8.3.2"]`,
 			shouldContain:  []string{"slack-cli-hooks"},
+			expectedOutput: "Found pyproject.toml with",
+			expectedError:  false,
+		},
+		"Skip when slack_cli_hooks already exists": {
+			existingContent: `[project]
+name = "my-app"
+dependencies = ["slack_bolt==1.30.0", "slack_cli_hooks==0.3.0"]`,
+			shouldContain:  []string{"slack_cli_hooks==0.3.0"},
 			expectedOutput: "Found pyproject.toml with",
 			expectedError:  false,
 		},
@@ -772,65 +786,6 @@ func Test_Python_IsRuntimeForProject(t *testing.T) {
 
 			// Assertions
 			require.Equal(t, tc.expectedBool, b)
-		})
-	}
-}
-
-func Test_Python_getProjectDirRelPath(t *testing.T) {
-	tests := map[string]struct {
-		currentDirPath  string
-		projectDirPath  string
-		getwdPath       string
-		getwdError      error
-		expectedRelPath string
-		expectedError   error
-	}{
-		"When currentDirPath missing and Getwd returns an error": {
-			currentDirPath:  "",
-			projectDirPath:  "path/to/my-project",
-			getwdPath:       "",
-			getwdError:      fmt.Errorf("Something went wrong"),
-			expectedRelPath: "path/to/my-project",
-			expectedError:   fmt.Errorf("Something went wrong"),
-		},
-		"When Rel returns an error": {
-			currentDirPath:  "//host/some/remote/volume",
-			projectDirPath:  "path/to/my-project",
-			getwdPath:       "",  // Not called
-			getwdError:      nil, // Not called
-			expectedRelPath: "path/to/my-project",
-			expectedError:   fmt.Errorf("Rel: can't make path/to/my-project relative to //host/some/remote/volume"),
-		},
-		"When current working directory outside the projectDirPath": {
-			currentDirPath:  "path/to",
-			projectDirPath:  "path/to/my-project",
-			getwdPath:       "",  // Not called
-			getwdError:      nil, // Not called
-			expectedRelPath: "my-project",
-			expectedError:   nil,
-		},
-		"When current working directory equals the projectDirPath": {
-			currentDirPath:  "path/to/my-project",
-			projectDirPath:  "path/to/my-project",
-			getwdPath:       "",  // Not called
-			getwdError:      nil, // Not called
-			expectedRelPath: ".",
-			expectedError:   nil,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Create mocks
-			osMock := slackdeps.NewOsMock()
-			osMock.On("Getwd").Return(tc.getwdPath, tc.getwdError)
-			osMock.AddDefaultMocks()
-
-			// Run the test
-			actualRelPath, actualErr := getProjectDirRelPath(osMock, tc.currentDirPath, tc.projectDirPath)
-
-			// Assertions
-			require.Equal(t, tc.expectedRelPath, actualRelPath)
-			require.Equal(t, tc.expectedError, actualErr)
 		})
 	}
 }

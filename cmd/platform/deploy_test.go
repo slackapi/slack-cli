@@ -106,6 +106,24 @@ func TestDeployCommand(t *testing.T) {
 	deployPkgMock.AssertCalled(t, "Deploy", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
+func TestDeployCommand_ManifestSourceFlag_InvalidValue(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
+		clients.Config.ProjectConfig = config.NewProjectConfigMock()
+		clients.SDKConfig = hooks.NewSDKConfigMock()
+	})
+
+	cmd := NewDeployCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--manifest-source", "invalid"})
+
+	err := cmd.ExecuteContext(ctx)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid")
+}
+
 func TestDeployCommand_HasValidDeploymentMethod(t *testing.T) {
 	tests := map[string]struct {
 		app                 types.App
@@ -279,7 +297,7 @@ func TestDeployCommand_DeployHook(t *testing.T) {
 
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory(), func(clients *shared.ClientFactory) {
 				clients.SDKConfig = sdkConfigMock
-				clients.HookExecutor = hooks.GetHookExecutor(clientsMock.IO, sdkConfigMock)
+				clients.HookExecutor = hooks.GetHookExecutor(clientsMock.IO, clients.Fs, sdkConfigMock)
 			})
 			cmd := NewDeployCommand(clients)
 			cmd.PreRunE = func(cmd *cobra.Command, args []string) error { return nil }

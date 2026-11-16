@@ -21,6 +21,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/cobra"
 )
 
@@ -35,7 +36,7 @@ func HelpFunc(
 		if help, _ := clients.Config.Flags.GetBool("help"); help {
 			clients.Config.LoadExperiments(ctx, clients.IO.PrintDebug)
 		}
-		style.ToggleCharm(clients.Config.WithExperimentOn(experiment.Charm))
+		style.ToggleLipgloss(clients.Config.WithExperimentOn(experiment.Lipgloss))
 		experiments := []string{}
 		for _, exp := range clients.Config.GetExperiments() {
 			if experiment.Includes(exp) {
@@ -68,12 +69,21 @@ func PrintHelpTemplate(cmd *cobra.Command, data style.TemplateData) {
 	}
 	cmd.Long = cmdLongF.String()
 	tmpl := legacyHelpTemplate
-	if style.IsCharmEnabled() {
+	if style.IsLipglossEnabled() {
 		tmpl = charmHelpTemplate
 	}
 	err = style.PrintTemplate(cmd.OutOrStdout(), tmpl, templateInfo{cmd, data})
 	if err != nil {
 		cmd.PrintErrln(err)
+	}
+
+	// Recommend the official Slack plugin when running inside Claude Code
+	useragent.EmitClaudeCodePluginHint(cmd.ErrOrStderr())
+
+	// Recommend the Slack plugin to other coding agents on the root help only,
+	// since agents often start with it and subcommand help would repeat it
+	if !cmd.HasParent() {
+		useragent.EmitAgentPluginHint(cmd.ErrOrStderr(), cmd.Root().Name())
 	}
 }
 
@@ -92,17 +102,17 @@ const charmHelpTemplate string = `{{.Long | ToDescription}}
 {{if eq .Name (GetProcessName)}}{{Header "Commands"}}{{range .Commands}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}
   {{.Name | ToGroupName }}{{range .Commands}}{{if (not .Hidden)}}
     {{rpad .Name .NamePadding | ToCommandText}} {{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}{{if not (IsAlias .Name $.Data.Aliases)}}
-  {{(rpad .Name .NamePadding) | ToGroupName }}{{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if not .HasAvailableSubCommands}}
+  {{(rpad .Name .NamePadding) | ToGroupName }}{{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToCommandText }} {{.Short | ToDescription}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{Header "Flags"}}
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces | ToFlags}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
+{{FlagUsages .LocalFlags | trimTrailingWhitespaces | ToFlags}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
 
 {{Header "Global aliases"}}{{range .Commands}}{{if and (IsAlias .Name $.Data.Aliases) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToGroupName }} {{rpad (AliasParent .Name $.Data.Aliases) AliasPadding | ToAliasParent}} {{ToPrompt "❱"}} {{.Name | ToGroupName}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 {{Header "Global flags"}}
-{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces | ToFlags}}{{end}}{{if .HasExample}}
+{{FlagUsages .InheritedFlags | trimTrailingWhitespaces | ToFlags}}{{end}}{{if .HasExample}}
 
 {{Header "Example"}}
 {{ Examples .Example}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}
@@ -121,7 +131,7 @@ const charmHelpTemplate string = `{{.Long | ToDescription}}
 // ════════════════════════════════════════════════════════════════════════════════
 // DEPRECATED: Legacy help template — aurora styling
 //
-// Delete this entire block when the charm experiment is permanently enabled.
+// Delete this entire block when the lipgloss experiment is permanently enabled.
 // ════════════════════════════════════════════════════════════════════════════════
 
 const legacyHelpTemplate string = `{{.Long}}
@@ -135,17 +145,17 @@ const legacyHelpTemplate string = `{{.Long}}
 {{if eq .Name (GetProcessName)}}{{Header "Commands"}}{{range .Commands}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}
   {{.Name | ToCommandText }}{{range .Commands}}{{if (not .Hidden)}}
     {{rpad .Name .NamePadding }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}{{if not (IsAlias .Name $.Data.Aliases)}}
-  {{(rpad .Name .NamePadding) | ToCommandText }}{{.Short}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if not .HasAvailableSubCommands}}
+  {{(rpad .Name .NamePadding) | ToCommandText }}{{.Short}}{{end}}{{end}}{{end}}{{end}}{{else}}{{Header "Subcommands"}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{range .Commands}}{{if and (not .HasAvailableSubCommands) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToCommandText }} {{.Short}}{{end}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableLocalFlags}}
 
 {{Header "Flags"}}
-{{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
+{{FlagUsages .LocalFlags | trimTrailingWhitespaces}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}{{if or (HasAliasSubcommands .Name .Data.Aliases) (eq .Name (GetProcessName))}}
 
 {{Header "Global aliases"}}{{range .Commands}}{{if and (IsAlias .Name $.Data.Aliases) (not .Hidden)}}
   {{(rpad .Name .NamePadding) | ToBold }} {{rpad (AliasParent .Name $.Data.Aliases) AliasPadding}} > {{.Name}}{{end}}{{end}}{{end}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 {{Header "Global flags"}}
-{{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasExample}}
+{{FlagUsages .InheritedFlags | trimTrailingWhitespaces}}{{end}}{{if .HasExample}}
 
 {{Header "Example"}}
 {{ Examples .Example}}{{end}}{{if and (.HasAvailableSubCommands) (not .Hidden)}}

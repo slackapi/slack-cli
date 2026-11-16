@@ -47,17 +47,20 @@ var runAppSelectPromptFunc = prompts.AppSelectPrompt
 
 func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "run",
+		Use:     "run [app-file-path]",
 		Aliases: []string{"dev", "start-dev"}, // Aliases a few proposed alternative names
 		Short:   "Start a local server to develop and run the app locally",
 		Long:    `Start a local server to develop and run the app locally while watching for file changes`,
+		Args:    cobra.MaximumNArgs(1),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "platform run", Meaning: "Start a local development server"},
-			{Command: "platform run --activity-level debug", Meaning: "Run a local development server with debug activity"},
+			{Command: "platform run ./src/app.py", Meaning: "Run a local development server with a custom app entry point"},
 			{Command: "platform run --cleanup", Meaning: "Run a local development server with cleanup"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			// Verify command is run in a project directory
+			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
+				return err
+			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -69,6 +72,7 @@ func NewRunCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().StringVar(&runFlags.activityLevel, "activity-level", platform.ActivityMinLevelDefault, "activity level to display")
 	cmd.Flags().BoolVar(&runFlags.noActivity, "no-activity", false, "hide Slack Platform log activity")
 	cmd.Flags().BoolVar(&runFlags.cleanup, "cleanup", false, "uninstall the local app after exiting")
+	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (local or remote)")
 	cmd.Flags().StringVar(&runFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 	cmd.Flags().BoolVar(&runFlags.hideTriggers, "hide-triggers", false, "do not list triggers and skip trigger creation prompts")
 
@@ -95,6 +99,16 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		return slackerror.New("command is nil")
 	}
 	ctx := cmd.Context()
+
+	var appFilePath string
+	if len(args) > 0 {
+		appFilePath = args[0]
+		if _, err := clients.Fs.Stat(appFilePath); err != nil {
+			return slackerror.New(slackerror.ErrNotFound).
+				WithMessage("The app file path %q could not be found", appFilePath).
+				WithRemediation("Check that the file exists and the path is correct")
+		}
+	}
 
 	// Get the workspace from the flag or prompt
 	selection, err := runAppSelectPromptFunc(ctx, clients, prompts.ShowLocalOnly, prompts.ShowAllApps)
@@ -125,7 +139,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		}
 	}
 
-	runFlags.orgGrantWorkspaceID, err = prompts.ValidateGetOrgWorkspaceGrant(ctx, clients, &selection, runFlags.orgGrantWorkspaceID, false /* top prompt option should be 'all workspaces' */)
+	runFlags.orgGrantWorkspaceID, err = prompts.ValidateGetOrgWorkspaceGrant(ctx, clients, &selection, runFlags.orgGrantWorkspaceID, true /* top prompt option should be 'all workspaces' */)
 	if err != nil {
 		return err
 	}
@@ -136,6 +150,7 @@ func RunRunCommand(clients *shared.ClientFactory, cmd *cobra.Command, args []str
 		Activity:            !runFlags.noActivity,
 		ActivityLevel:       runFlags.activityLevel,
 		App:                 selection.App,
+		AppFilePath:         appFilePath,
 		Auth:                selection.Auth,
 		Cleanup:             runFlags.cleanup,
 		ShowTriggers:        triggers.ShowTriggers(clients, runFlags.hideTriggers),

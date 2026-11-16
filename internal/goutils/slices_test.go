@@ -14,41 +14,7 @@
 
 package goutils
 
-import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-)
-
-func Test_AppendStringIfNotMember(t *testing.T) {
-	tests := map[string]struct {
-		newElement    string
-		originalSlice []string
-		expectedSlice []string
-	}{
-		"Append new element": {
-			newElement:    "four",
-			originalSlice: []string{"one", "two", "three"},
-			expectedSlice: []string{"one", "two", "three", "four"},
-		},
-		"Do not append existing element": {
-			newElement:    "two",
-			originalSlice: []string{"one", "two", "three"},
-			expectedSlice: []string{"one", "two", "three"},
-		},
-		"Append new element to empty list": {
-			newElement:    "one",
-			originalSlice: []string{},
-			expectedSlice: []string{"one"},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			actualSlice := AppendStringIfNotMember(tc.originalSlice, tc.newElement)
-			require.ElementsMatch(t, tc.expectedSlice, actualSlice)
-		})
-	}
-}
+import "testing"
 
 func Test_Contains(t *testing.T) {
 	tests := map[string]struct {

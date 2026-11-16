@@ -32,6 +32,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/ioutils"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/useragent"
 )
 
 // TrackingManager is an interface for tracking metrics and events related to CLI activity
@@ -168,7 +169,11 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		// In this case, the root command was not initialized, so none of the bootup routine executed (flags weren't parsed, config not initialized, etc.).
 		return nil
 	}
-	versionString, _ := strings.CutPrefix(cfg.Version, "v")
+	cliVersion, err := slackcontext.Version(ctx)
+	if err != nil {
+		ioStream.PrintDebug(ctx, "Warning: %s", err.Error())
+	}
+	versionString, _ := strings.CutPrefix(cliVersion, "v")
 	eventData := e.cleanSessionData(e.getSessionData())
 	sessionID, err := slackcontext.SessionID(ctx)
 	if err != nil {
@@ -190,6 +195,7 @@ func (e *EventTracker) FlushToLogstash(ctx context.Context, cfg *config.Config, 
 		Timestamp: time.Now().UnixMilli(),
 		Data:      eventData,
 		Context: EventContext{
+			AIAgent:          useragent.GetAIAgentName(),
 			CLIVersion:       versionString,
 			Host:             ioutils.GetHostname(),
 			OS:               runtime.GOOS,

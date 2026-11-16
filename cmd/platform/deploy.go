@@ -59,6 +59,9 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "platform deploy --team T0123456", Meaning: "Deploy to a specific team"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
+				return err
+			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -108,6 +111,7 @@ func NewDeployCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 
 	cmd.Flags().BoolVar(&deployFlags.hideTriggers, "hide-triggers", false, "do not list triggers and skip trigger creation prompts")
+	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (local or remote)")
 	cmd.Flags().StringVar(&deployFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 
 	return cmd
@@ -181,6 +185,7 @@ func deployHook(ctx context.Context, clients *shared.ClientFactory) error {
 	// so we instantiate the default here.
 	shell := hooks.HookExecutorDefaultProtocol{
 		IO: clients.IO,
+		Fs: clients.Fs,
 	}
 	if _, err := shell.Execute(ctx, hookExecOpts); err != nil {
 		return err

@@ -36,6 +36,7 @@ slack trigger update --trigger-id <id> [flags]
 ## Global flags
 
 ```
+      --accessible           use accessible prompts for screen readers
   -a, --app string           use a specific app ID or environment
       --config-dir string    use a custom path for system config directory
   -e, --experiment strings   use the experiment(s) in the command
@@ -44,6 +45,7 @@ slack trigger update --trigger-id <id> [flags]
   -s, --skip-update          skip checking for latest version of CLI
   -w, --team string          select workspace or organization by team name or ID
       --token string         set the access token associated with a team
+                               (use - to read from standard input)
   -v, --verbose              print debug logging and additional info
 ```
 
@@ -60,5 +62,5 @@ $ slack trigger update --trigger-id Ft01234ABCD \
 
 ## See also
 
-* [slack trigger](slack_trigger)	 - List details of existing triggers
+* [slack trigger](/tools/slack-cli/reference/commands/slack_trigger/)	 - List details of existing triggers
 

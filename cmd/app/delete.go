@@ -85,7 +85,7 @@ func RunDeleteCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	team := selection.Auth.TeamDomain
 
 	if !clients.Config.ForceFlag {
-		proceed, err := confirmDeletion(ctx, clients.IO, selection)
+		proceed, err := confirmDeletion(ctx, clients, selection)
 		if err != nil {
 			return types.App{}, err
 		}
@@ -108,8 +108,8 @@ func RunDeleteCommand(ctx context.Context, clients *shared.ClientFactory, cmd *c
 	return env, nil
 }
 
-func confirmDeletion(ctx context.Context, IO iostreams.IOStreamer, app prompts.SelectedApp) (bool, error) {
-	IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+func confirmDeletion(ctx context.Context, clients *shared.ClientFactory, app prompts.SelectedApp) (bool, error) {
+	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "warning",
 		Text:  style.Bold("Danger zone"),
 		Secondary: []string{
@@ -120,7 +120,10 @@ func confirmDeletion(ctx context.Context, IO iostreams.IOStreamer, app prompts.S
 		},
 	}))
 
-	proceed, err := IO.ConfirmPrompt(ctx, "Are you sure you want to delete the app?", false)
+	proceed, err := clients.IO.ConfirmPrompt(ctx, "Are you sure you want to delete the app?", iostreams.ConfirmPromptConfig{
+		Default: false,
+		Flag:    clients.Config.Flags.Lookup("force"),
+	})
 	return proceed, err
 }
 

@@ -30,11 +30,8 @@ type Experiment string
 // e.g. --experiment=first-toggle,second-toggle
 
 const (
-	// Charm experiment enables beautiful prompts.
-	Charm Experiment = "charm"
-
-	// Sandboxes experiment lets users who have joined the Slack Developer Program use the CLI to manage their sandboxes.
-	Sandboxes Experiment = "sandboxes"
+	// Lipgloss experiment shows pretty styles.
+	Lipgloss Experiment = "lipgloss"
 
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
@@ -43,9 +40,8 @@ const (
 // AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
 var AllExperiments = []Experiment{
-	Charm,
+	Lipgloss,
 	Placeholder,
-	Sandboxes,
 }
 
 // EnabledExperiments is a list of experiments that are permanently enabled

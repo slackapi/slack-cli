@@ -17,28 +17,20 @@ package config
 import (
 	"strings"
 
-	"github.com/joho/godotenv"
-	"github.com/slackapi/slack-cli/internal/pkg/version"
-	"github.com/spf13/afero"
+	"github.com/slackapi/slack-cli/internal/version"
 )
 
-// GetDotEnvFileVariables collects only the variables in the .env file
-func (c *Config) GetDotEnvFileVariables() (map[string]string, error) {
-	variables := map[string]string{}
-	file, err := afero.ReadFile(c.fs, ".env")
-	if err != nil && !c.os.IsNotExist(err) {
-		return variables, err
-	}
-	return godotenv.UnmarshalBytes(file)
-}
-
 // LoadEnvironmentVariables sets flags based on their environment variable value
-//
-// Note: Values are not loaded from the .env file. Use: `GetDotEnvFileVariables`
 func (c *Config) LoadEnvironmentVariables() error {
 	// Skip when dependencies are not configured
 	if c.os == nil {
 		return nil
+	}
+
+	// Load accessible mode from environment variables
+	var accessible = strings.TrimSpace(c.os.Getenv(slackAccessibleEnv))
+	if accessible != "" && accessible != "false" && accessible != "0" {
+		c.AccessibleFlag = true
 	}
 
 	// Load slackTestTraceFlag from environment variables
@@ -57,6 +49,12 @@ func (c *Config) LoadEnvironmentVariables() error {
 	var configDir = strings.TrimSpace(c.os.Getenv(slackConfigDirEnv))
 	if configDir != "" {
 		c.ConfigDirFlag = configDir
+	}
+
+	// Load app icon path from environment variables
+	var appIconPath = strings.TrimSpace(c.os.Getenv(slackCLIAppIconPathEnv))
+	if appIconPath != "" {
+		c.AppIconPathFlag = appIconPath
 	}
 
 	// Disable telemetry if either disable-telemetry or test-version environment variables

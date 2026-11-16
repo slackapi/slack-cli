@@ -15,7 +15,7 @@
 package goutils
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"fmt"
 	"net/url"
 	"os"
@@ -23,9 +23,9 @@ import (
 	"strings"
 )
 
-// HashString will compute a short sha1 identity for a text blob
+// HashString will compute a short sha256 identity for a text blob
 func HashString(s string) (string, error) {
-	var hash = sha1.New()
+	var hash = sha256.New()
 	_, err := hash.Write([]byte(s))
 	if err != nil {
 		return "", err
@@ -94,8 +94,8 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\w)*client_id(?:\=s*))(?P<values>(([\w\s.-]*)))`),
 		// Escape variables for 3p auth add client secrets
 		regexp.MustCompile(`(?P<keys>(?:\w)*secret(?:\ s*))(?P<values>(([\w\s.-]*)))`),
-		// Escape variables for env and it's alias for add/remove command
-		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
+		// Escape variables for env and its aliases for set/unset/add/remove commands
+		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (set|unset|add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
 		// Add more regex here
 	}
 	// regexListWithQuotes will find sensitive data within quotes and later we escape with "..."

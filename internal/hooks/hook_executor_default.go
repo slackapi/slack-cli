@@ -21,6 +21,7 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/spf13/afero"
 )
 
 // HookExecutorDefaultProtocol uses the original protocol between the CLI and the SDK where diagnostic info
@@ -28,11 +29,12 @@ import (
 // exception of the 'start' hook, for which it is printed.
 type HookExecutorDefaultProtocol struct {
 	IO iostreams.IOStreamer
+	Fs afero.Fs
 }
 
 // Execute processes the data received by the SDK.
 func (e *HookExecutorDefaultProtocol) Execute(ctx context.Context, opts HookExecOpts) (string, error) {
-	cmdArgs, cmdArgVars, cmdEnvVars, err := processExecOpts(opts)
+	cmdArgs, cmdArgVars, cmdEnvVars, err := processExecOpts(ctx, opts, e.Fs, e.IO)
 	if err != nil {
 		return "", err
 	}

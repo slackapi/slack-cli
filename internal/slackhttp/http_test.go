@@ -53,6 +53,27 @@ func Test_NewHTTPClient(t *testing.T) {
 			timeout:         120 * time.Second,
 			expectedTimeout: 120 * time.Second,
 		},
+		"Zero timeout uses default timeout": {
+			timeout:               0,
+			expectedTimeout:       defaultTotalTimeout,
+			expectedSkipTLSVerify: false,
+		},
+		"Custom timeout is used when non-zero": {
+			timeout:               60 * time.Second,
+			expectedTimeout:       60 * time.Second,
+			expectedSkipTLSVerify: false,
+		},
+		"SkipTLSVerify false keeps verification enabled": {
+			skipTLSVerify:         false,
+			expectedSkipTLSVerify: false,
+			expectedTimeout:       defaultTotalTimeout,
+		},
+		"Retries zero returns non-retrying transport": {
+			retries:               0,
+			expectedRetries:       0,
+			expectedTimeout:       defaultTotalTimeout,
+			expectedSkipTLSVerify: false,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {

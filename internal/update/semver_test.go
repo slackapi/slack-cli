@@ -63,6 +63,21 @@ func Test_Update_SemVerGreaterThan(t *testing.T) {
 			v2:       "2.0.1",
 			expected: false,
 		},
+		"same release of a development build is not greater": {
+			v1:       "v4.11.0",
+			v2:       "v4.11.0-9-g154975a",
+			expected: false,
+		},
+		"newer release of a development build is greater": {
+			v1:       "v4.12.0",
+			v2:       "v4.11.0-9-g154975a",
+			expected: true,
+		},
+		"same release of a feature build is not greater": {
+			v1:       "v4.11.0",
+			v2:       "v4.11.0-example-feature",
+			expected: false,
+		},
 		"invalid first version errors": {
 			v1:  "dev",
 			v2:  "2.0.1",
@@ -78,75 +93,6 @@ func Test_Update_SemVerGreaterThan(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual, err := SemVerGreaterThan(tc.v1, tc.v2)
-			if tc.err != nil {
-				expectedErr := slackerror.ToSlackError(tc.err)
-				actualErr := slackerror.ToSlackError(err)
-				assert.Equal(t, expectedErr.Code, actualErr.Code)
-			} else {
-				assert.NoError(t, err)
-			}
-			assert.Equal(t, tc.expected, actual)
-		})
-	}
-}
-
-func Test_Update_SemVerLessThan(t *testing.T) {
-	tests := map[string]struct {
-		v1       string
-		v2       string
-		expected bool
-		err      error
-	}{
-		"equal versions are not lesser": {
-			v1:       "1.2.3",
-			v2:       "1.2.3",
-			expected: false,
-		},
-		"greater than major is not lesser": {
-			v1:       "2.0.0",
-			v2:       "1.2.3",
-			expected: false,
-		},
-		"greater than minor is not lesser": {
-			v1:       "1.3.0",
-			v2:       "1.2.3",
-			expected: false,
-		},
-		"greater than patch is not lesser": {
-			v1:       "1.2.4",
-			v2:       "1.2.3",
-			expected: false,
-		},
-		"less than major is lesser": {
-			v1:       "1.2.3",
-			v2:       "2.0.0",
-			expected: true,
-		},
-		"less than minor is lesser": {
-			v1:       "2.0.3",
-			v2:       "2.1.0",
-			expected: true,
-		},
-		"less than patch is lesser": {
-			v1:       "2.0.0",
-			v2:       "2.0.1",
-			expected: true,
-		},
-		"invalid first version errors": {
-			v1:  "dev",
-			v2:  "2.0.1",
-			err: slackerror.New(slackerror.ErrInvalidSemVer),
-		},
-		"invalid second version errors": {
-			v1:  "2.0.0",
-			v2:  "dev",
-			err: slackerror.New(slackerror.ErrInvalidSemVer),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			actual, err := SemVerLessThan(tc.v1, tc.v2)
 			if tc.err != nil {
 				expectedErr := slackerror.ToSlackError(tc.err)
 				actualErr := slackerror.ToSlackError(err)
