@@ -574,6 +574,14 @@ Approval is pending review
 
 ---
 
+### email_already_in_use {#email_already_in_use}
+
+**Message**: An account already exists for this email address
+
+**Remediation**: Run `slack sandbox create` to create a developer sandbox with your existing account
+
+---
+
 ### enterprise_not_found {#enterprise_not_found}
 
 **Message**: The `enterprise` was not found

@@ -107,6 +107,7 @@ const (
 	ErrDotEnvFileWrite                               = "dotenv_file_write_error"
 	ErrDotEnvPlaceholderNotFound                     = "dotenv_placeholder_not_found"
 	ErrDotEnvVarMarshal                              = "dotenv_var_marshal_error"
+	ErrEmailAlreadyInUse                             = "email_already_in_use"
 	ErrEnterpriseNotFound                            = "enterprise_not_found"
 	ErrExperimentRequired                            = "experiment_required"
 	ErrFailForSomeRequests                           = "failed_for_some_requests"
@@ -760,6 +761,12 @@ Otherwise create the app on a workspace from app settings, then add it to this p
 	ErrDotEnvVarMarshal: {
 		Code:    ErrDotEnvVarMarshal,
 		Message: "Failed to marshal the .env variable",
+	},
+
+	ErrEmailAlreadyInUse: {
+		Code:        ErrEmailAlreadyInUse,
+		Message:     "An account already exists for this email address",
+		Remediation: fmt.Sprintf("Run %s to create a developer sandbox with your existing account", style.Commandf("sandbox create", false)),
 	},
 
 	ErrEnterpriseNotFound: {

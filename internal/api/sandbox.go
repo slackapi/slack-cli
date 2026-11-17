@@ -26,16 +26,33 @@ import (
 )
 
 const (
-	sandboxCreateMethod = "enterprise.signup.createDevOrg"
-	sandboxDeleteMethod = "developer.sandbox.delete"
-	sandboxListMethod   = "developer.sandbox.list"
+	sandboxCreateMethod         = "enterprise.signup.createDevOrg"
+	sandboxDeleteMethod         = "developer.sandbox.delete"
+	sandboxListMethod           = "developer.sandbox.list"
+	sandboxSignupVerifiedMethod = "developer.account.createVerified"
 )
+
+// SignupRequest contains the fields for Developer Program signup
+type SignupRequest struct {
+	FirstName              string
+	LastName               string
+	PostalCode             string
+	CountryOption          string
+	NewsletterSubscription bool
+	AcceptTermsOfService   bool
+}
+
+// SignupResponse contains the response from Developer Program signup
+type SignupResponse struct {
+	DeveloperID string `json:"developer_id"`
+}
 
 // SandboxClient is the interface for sandbox-related API calls
 type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
+	Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error)
 }
 
 type createSandboxResponse struct {
@@ -164,4 +181,54 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	}
 
 	return resp.Sandboxes, nil
+}
+
+type signupAPIResponse struct {
+	extendedBaseResponse
+	SignupResponse
+}
+
+// Signup signs the authenticated user up for the Slack Developer Program.
+// The email address of the developer account is derived from the token, so no email verification is needed.
+func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.Signup")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("first_name", req.FirstName)
+	values.Add("last_name", req.LastName)
+	if req.PostalCode != "" {
+		values.Add("postal_code", req.PostalCode)
+	}
+	if req.CountryOption != "" {
+		values.Add("country_option", req.CountryOption)
+	}
+	if req.NewsletterSubscription {
+		values.Add("newsletter_subscription", "true")
+	}
+
+	// Setting this parameter to true indicates the user has agreed to the terms and acknowledges the privacy policies:
+	// - Developer Program Agreement: https://slack.com/terms-of-service/slack-developer-program
+	// - Slack Privacy Policy: https://slack.com/trust/privacy/privacy-policy
+	// - Salesforce Privacy Statement: https://www.salesforce.com/company/privacy/
+	values.Add("accept_tos", strconv.FormatBool(req.AcceptTermsOfService))
+
+	b, err := c.postForm(ctx, sandboxSignupVerifiedMethod, values)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := signupAPIResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxSignupVerifiedMethod)
+	}
+
+	if !resp.Ok {
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxSignupVerifiedMethod)
+	}
+
+	return &resp.SignupResponse, nil
 }
