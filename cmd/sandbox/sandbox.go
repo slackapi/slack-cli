@@ -32,7 +32,7 @@ import (
 var (
 	sandboxLoginInitialDelay = 500 * time.Millisecond
 	sandboxLoginRetryDelay   = 1 * time.Second
-	sandboxLoginMaxAttempts  = 5
+	sandboxLoginMaxAttempts  = 3
 )
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -102,7 +102,7 @@ func loginAndSaveSandboxAuth(ctx context.Context, clients *shared.ClientFactory,
 		}
 		// Don't wait after the last attempt
 		if attempt < sandboxLoginMaxAttempts-1 {
-			delay := sandboxLoginRetryDelay * time.Duration(1<<attempt) // 1s, 2s, 4s, 8s
+			delay := sandboxLoginRetryDelay * time.Duration(1<<attempt) // 1s, 2s
 			clients.IO.PrintDebug(ctx, "Sandbox not yet available, retrying in %v (attempt %d/%d)", delay, attempt+1, sandboxLoginMaxAttempts)
 			time.Sleep(delay)
 		}
@@ -111,7 +111,6 @@ func loginAndSaveSandboxAuth(ctx context.Context, clients *shared.ClientFactory,
 		return err
 	}
 
-	// Sandboxes with E-prefixed IDs are organizations
 	isEnterprise := types.IsEnterpriseTeamID(result.SandboxTeamID)
 	sandboxAuth := types.SlackAuth{
 		Token:               result.AccessToken,
@@ -125,6 +124,11 @@ func loginAndSaveSandboxAuth(ctx context.Context, clients *shared.ClientFactory,
 	}
 	if isEnterprise {
 		sandboxAuth.EnterpriseID = result.SandboxTeamID
+	}
+	if !clients.Auth().IsAPIHostSlackProd(apiClient.Host()) {
+		// Save non-production API hosts so the sandbox auth keeps targeting the same host
+		apiHost := apiClient.Host()
+		sandboxAuth.APIHost = &apiHost
 	}
 
 	_, _, err = clients.Auth().SetAuth(ctx, sandboxAuth)
