@@ -25,9 +25,11 @@ import (
 	"testing"
 
 	"github.com/gorilla/websocket"
+	"github.com/radovskyb/watcher"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/stretchr/testify/assert"
@@ -438,4 +440,78 @@ func Test_sendWebSocketMessage(t *testing.T) {
 		require.ErrorIs(t, err, expectedError)
 		conn.AssertCalled(t, "WriteMessage", mock.Anything, mock.Anything)
 	})
+}
+
+func Test_LocalServer_watchAppEvents(t *testing.T) {
+	for name, tc := range map[string]struct {
+		unexpected string
+	}{
+		"should not restart the server after the context is canceled": {
+			unexpected: "App change detected",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			// A select picks at random between ready cases, so repeat to catch a regression
+			for range 20 {
+				ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+				clientsMock := shared.NewClientsMock()
+				clientsMock.AddDefaultMocks()
+				clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+				server := LocalServer{clients: clients}
+				w := watcher.New()
+				w.Event = make(chan watcher.Event, 1)
+				w.Event <- watcher.Event{Path: "app.js"}
+				cancel()
+				server.watchAppEvents(ctx, w)
+				assert.NotContains(t, clientsMock.GetStdoutOutput(), tc.unexpected)
+			}
+		})
+	}
+}
+
+func Test_LocalServer_watchManifestEvents(t *testing.T) {
+	for name, tc := range map[string]struct {
+		cancel         bool
+		expectedOutput string
+		unexpected     string
+	}{
+		"should log a remote manifest change": {
+			expectedOutput: "Manifest change detected: manifest.json, skipped reinstalling app because manifest.source=remote",
+		},
+		"should not reinstall the app after the context is canceled": {
+			cancel:     true,
+			unexpected: "Manifest change detected",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+			defer cancel()
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			server := LocalServer{clients: clients}
+			if !tc.cancel {
+				w := watcher.New()
+				done := make(chan struct{})
+				go func() {
+					server.watchManifestEvents(ctx, w, true, types.SlackAuth{}, types.App{})
+					close(done)
+				}()
+				w.Event <- watcher.Event{Path: "manifest.json"}
+				close(w.Closed)
+				<-done
+				assert.Contains(t, clientsMock.GetStdoutOutput(), tc.expectedOutput)
+				return
+			}
+			// A select picks at random between ready cases, so repeat to catch a regression
+			cancel()
+			for range 20 {
+				w := watcher.New()
+				w.Event = make(chan watcher.Event, 1)
+				w.Event <- watcher.Event{Path: "manifest.json"}
+				server.watchManifestEvents(ctx, w, false, types.SlackAuth{}, types.App{})
+			}
+			assert.NotContains(t, clientsMock.GetStdoutOutput(), tc.unexpected)
+		})
+	}
 }
