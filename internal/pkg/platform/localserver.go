@@ -397,34 +397,42 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 	}
 
 	// Begin watching for manifest file changes
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				r.clients.IO.PrintDebug(ctx, "Manifest file watcher context canceled, returning.")
-				return
-			case event := <-w.Event:
-				if isRemoteManifest {
-					r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, skipped reinstalling app because manifest.source=remote", event.Path)))
-				} else {
-					r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, reinstalling app...", event.Path)))
-
-					// Reinstall the app when manifest changes
-					if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", auth, app); err != nil {
-						r.clients.IO.PrintError(ctx, "Error: %s", err)
-					} else {
-						r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary("App successfully reinstalled"))
-					}
-				}
-			case err := <-w.Error:
-				r.clients.IO.PrintError(ctx, "Error: %s", err)
-			case <-w.Closed:
-				return
-			}
-		}
-	}()
+	go r.watchManifestEvents(ctx, w, isRemoteManifest, auth, app)
 
 	return w.Start(time.Millisecond * 100)
+}
+
+// watchManifestEvents reinstalls the app on each manifest change until the context is canceled or the watcher closes
+func (r *LocalServer) watchManifestEvents(ctx context.Context, w *watcher.Watcher, isRemoteManifest bool, auth types.SlackAuth, app types.App) {
+	for {
+		select {
+		case <-ctx.Done():
+			r.clients.IO.PrintDebug(ctx, "Manifest file watcher context canceled, returning.")
+			return
+		case event := <-w.Event:
+			// A select picks at random when a change and the canceled context are both ready
+			if ctx.Err() != nil {
+				r.clients.IO.PrintDebug(ctx, "Manifest file watcher context canceled, returning.")
+				return
+			}
+			if isRemoteManifest {
+				r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, skipped reinstalling app because manifest.source=remote", event.Path)))
+			} else {
+				r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("Manifest change detected: %s, reinstalling app...", event.Path)))
+
+				// Reinstall the app when manifest changes
+				if _, _, _, err := apps.InstallLocalApp(ctx, r.clients, "", auth, app); err != nil {
+					r.clients.IO.PrintError(ctx, "Error: %s", err)
+				} else {
+					r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary("App successfully reinstalled"))
+				}
+			}
+		case err := <-w.Error:
+			r.clients.IO.PrintError(ctx, "Error: %s", err)
+		case <-w.Closed:
+			return
+		}
+	}
 }
 
 // WatchApp starts the delegated server and watches for app/code file changes to trigger restarts (SDK-managed connections only)
@@ -475,33 +483,7 @@ func (r *LocalServer) WatchApp(ctx context.Context) error {
 	}
 
 	// Begin watching for app file changes
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				r.clients.IO.PrintDebug(ctx, "App file watcher context canceled, returning.")
-				return
-			case event := <-w.Event:
-				r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("App change detected: %s, restarting server...", event.Path)))
-
-				// Stop the previous process before starting a new one
-				r.stopDelegateProcess(ctx)
-
-				// Start new delegated server process
-				go func() {
-					err := r.StartDelegate(ctx)
-					if err != nil {
-						r.clients.IO.PrintDebug(ctx, "Delegated start hook failed on restart: %v", err)
-						return
-					}
-				}()
-			case err := <-w.Error:
-				r.clients.IO.PrintError(ctx, "Error: %s", err)
-			case <-w.Closed:
-				return
-			}
-		}
-	}()
+	go r.watchAppEvents(ctx, w)
 
 	// Start the watcher and wait for either the watcher or server to error
 	if err := w.Start(time.Millisecond * 100); err != nil {
@@ -510,6 +492,40 @@ func (r *LocalServer) WatchApp(ctx context.Context) error {
 
 	// Wait for the initial server to exit (if it does)
 	return <-serverErrChan
+}
+
+// watchAppEvents restarts the delegated server on each app change until the context is canceled or the watcher closes
+func (r *LocalServer) watchAppEvents(ctx context.Context, w *watcher.Watcher) {
+	for {
+		select {
+		case <-ctx.Done():
+			r.clients.IO.PrintDebug(ctx, "App file watcher context canceled, returning.")
+			return
+		case event := <-w.Event:
+			// A select picks at random when a change and the canceled context are both ready
+			if ctx.Err() != nil {
+				r.clients.IO.PrintDebug(ctx, "App file watcher context canceled, returning.")
+				return
+			}
+			r.clients.IO.PrintInfo(ctx, false, "%s", style.Secondary(fmt.Sprintf("App change detected: %s, restarting server...", event.Path)))
+
+			// Stop the previous process before starting a new one
+			r.stopDelegateProcess(ctx)
+
+			// Start new delegated server process
+			go func() {
+				err := r.StartDelegate(ctx)
+				if err != nil {
+					r.clients.IO.PrintDebug(ctx, "Delegated start hook failed on restart: %v", err)
+					return
+				}
+			}()
+		case err := <-w.Error:
+			r.clients.IO.PrintError(ctx, "Error: %s", err)
+		case <-w.Closed:
+			return
+		}
+	}
 }
 
 func (r *LocalServer) WatchActivityLogs(ctx context.Context, minLevel string) error {
