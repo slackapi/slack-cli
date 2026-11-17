@@ -474,7 +474,7 @@ func (c *Client) IsAPIHostSlackDev(host string) bool {
 		return false
 	}
 
-	subdomain := strings.Split(u.Hostname(), ".")[0]
+	subdomain, _, _ := strings.Cut(u.Hostname(), ".")
 	return strings.HasPrefix(subdomain, "dev")
 }
 
