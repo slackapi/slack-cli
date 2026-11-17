@@ -106,6 +106,11 @@ func Activity(
 			clients.IO.PrintDebug(ctx, "Activity watcher context canceled, returning.")
 			return nil
 		case <-ticker.C:
+			// A select picks at random when a tick and the canceled context are both ready
+			if ctx.Err() != nil {
+				clients.IO.PrintDebug(ctx, "Activity watcher context canceled, returning.")
+				return nil
+			}
 			// Try to grab new logs using the last logs timestamp
 			activityRequest.MinimumDateCreated = latestCreatedTimestamp + 1
 
