@@ -368,9 +368,6 @@ func shouldSkipDebugLog(endpoint string) bool {
 		"apps.connections.open",
 	}
 	// Sanitize endpoint to remove potential parameters
-	sanitizedEndpoint := endpoint
-	if idx := strings.IndexByte(endpoint, '?'); idx >= 0 {
-		sanitizedEndpoint = endpoint[:idx]
-	}
+	sanitizedEndpoint, _, _ := strings.Cut(endpoint, "?")
 	return goutils.Contains(skipDebuglogEndpoints, sanitizedEndpoint, false /*caseSensitive*/)
 }
