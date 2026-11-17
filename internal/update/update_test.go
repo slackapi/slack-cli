@@ -165,6 +165,38 @@ func Test_UpdateNotification_PrintAndPromptUpdates(t *testing.T) {
 	}
 }
 
+func Test_UpdateNotification_isEnabled(t *testing.T) {
+	tests := map[string]struct {
+		args     []string
+		command  string
+		expected bool
+	}{
+		"checks for updates on other commands": {
+			args:     []string{"auth", "list"},
+			command:  "auth list",
+			expected: true,
+		},
+		"skips the upgrade command with flags before it": {
+			args:     []string{"--verbose", "upgrade"},
+			command:  "upgrade",
+			expected: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			for _, env := range []string{envSkipUpdate, "CI", "BUILD_NUMBER", "RUN_ID"} {
+				t.Setenv(env, "")
+			}
+			os.Args = append([]string{"placeholder"}, tc.args...)
+			clientsMock := shared.NewClientsMock()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clients.Config.Command = tc.command
+			u := New(clients, "v4.10.0")
+			require.Equal(t, tc.expected, u.isEnabled())
+		})
+	}
+}
+
 func Test_UpdateNotification_isIgnoredCommand(t *testing.T) {
 	for name, tc := range map[string]struct {
 		command  string
