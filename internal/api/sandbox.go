@@ -38,6 +38,7 @@ type SandboxLoginResult struct {
 	SandboxTeamID string `json:"sandbox_team_id"`
 	SandboxName   string `json:"sandbox_name"`
 	SandboxDomain string `json:"sandbox_domain"`
+	SandboxUserID string `json:"sandbox_user_id"`
 	AccessToken   string `json:"access_token"`
 	RefreshToken  string `json:"refresh_token"`
 	ExpiresAt     int    `json:"exp"`

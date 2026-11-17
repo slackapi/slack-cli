@@ -119,6 +119,7 @@ func loginAndSaveSandboxAuth(ctx context.Context, clients *shared.ClientFactory,
 		ExpiresAt:           result.ExpiresAt,
 		TeamID:              result.SandboxTeamID,
 		TeamDomain:          result.SandboxDomain,
+		UserID:              result.SandboxUserID,
 		LastUpdated:         time.Now(),
 		IsEnterpriseInstall: isEnterprise,
 	}

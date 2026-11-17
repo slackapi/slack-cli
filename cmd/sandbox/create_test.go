@@ -286,6 +286,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").Return(&api.SandboxLoginResult{
 					SandboxTeamID: "E222",
 					SandboxDomain: "test-box",
+					SandboxUserID: "U222",
 					AccessToken:   "xoxe.xoxp-sandbox",
 					RefreshToken:  "xoxe-refresh",
 					ExpiresAt:     1700000000,
@@ -301,6 +302,7 @@ func TestCreateCommand(t *testing.T) {
 						auth.ExpiresAt == 1700000000 &&
 						auth.TeamID == "E222" &&
 						auth.TeamDomain == "test-box" &&
+						auth.UserID == "U222" &&
 						auth.EnterpriseID == "E222" &&
 						auth.IsEnterpriseInstall
 				}))
