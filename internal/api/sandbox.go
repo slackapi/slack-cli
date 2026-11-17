@@ -28,8 +28,8 @@ import (
 const (
 	sandboxCreateMethod         = "enterprise.signup.createDevOrg"
 	sandboxDeleteMethod         = "developer.sandbox.delete"
-	sandboxExchangeTokensMethod = "developer.sandbox.exchangeTokens"
 	sandboxListMethod           = "developer.sandbox.list"
+	sandboxLoginMethod          = "developer.sandbox.login"
 	sandboxSignupVerifiedMethod = "developer.account.createVerified"
 )
 
@@ -177,7 +177,7 @@ func (c *Client) ExchangeTokens(ctx context.Context, token, sandboxTeamID string
 	values.Add("token", token)
 	values.Add("sandbox_team_id", sandboxTeamID)
 
-	b, err := c.postForm(ctx, sandboxExchangeTokensMethod, values)
+	b, err := c.postForm(ctx, sandboxLoginMethod, values)
 	if err != nil {
 		return nil, errHTTPRequestFailed.WithRootCause(err)
 	}
@@ -185,11 +185,11 @@ func (c *Client) ExchangeTokens(ctx context.Context, token, sandboxTeamID string
 	resp := exchangeTokensResponse{}
 	err = goutils.JSONUnmarshal(b, &resp)
 	if err != nil {
-		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxExchangeTokensMethod)
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxLoginMethod)
 	}
 
 	if !resp.Ok {
-		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxExchangeTokensMethod)
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxLoginMethod)
 	}
 
 	return &resp.ExchangeTokensResult, nil

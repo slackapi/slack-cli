@@ -90,7 +90,7 @@ func TestClient_DeleteSandbox_CommonErrors(t *testing.T) {
 func TestClient_ExchangeTokens_Ok(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod:  sandboxExchangeTokensMethod,
+		ExpectedMethod:  sandboxLoginMethod,
 		ExpectedRequest: "sandbox_team_id=E123&token=token",
 		Response:        `{"ok":true,"sandbox_team_id":"E123","sandbox_name":"Sandbox","sandbox_domain":"sb","access_token":"xoxe.xoxp-access","refresh_token":"xoxe-refresh","exp":1700000000,"type":"user"}`,
 	})
@@ -110,7 +110,7 @@ func TestClient_ExchangeTokens_Ok(t *testing.T) {
 
 func TestClient_ExchangeTokens_CommonErrors(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
-	verifyCommonErrorCases(t, sandboxExchangeTokensMethod, func(c *Client) error {
+	verifyCommonErrorCases(t, sandboxLoginMethod, func(c *Client) error {
 		_, err := c.ExchangeTokens(ctx, "token", "E123")
 		return err
 	})
