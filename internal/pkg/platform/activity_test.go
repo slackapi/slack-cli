@@ -248,6 +248,30 @@ func TestPlatformActivity_StreamingLogs(t *testing.T) {
 				cm.API.AssertNumberOfCalls(t, "Activity", 1)
 			},
 		},
+		"should return nil without polling again if TailArg is set and context is canceled while a tick is waiting": {
+			Args: types.ActivityArgs{
+				TailArg:           true,
+				IdleTimeoutM:      1,
+				PollingIntervalMS: 20, // poll activity every 20 ms
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) context.Context {
+				var calls atomic.Int32
+				ctx, cancel := context.WithCancel(ctx)
+				cm.API.On("Activity", mock.Anything, mock.Anything, mock.Anything).
+					Run(func(args mock.Arguments) {
+						if calls.Add(1) >= 2 {
+							cancel()
+							time.Sleep(time.Millisecond * 50) // let the next tick wait alongside the canceled context
+						}
+					}).
+					Return(api.ActivityResult{}, nil)
+				return ctx
+			},
+			ExpectedError: nil,
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNumberOfCalls(t, "Activity", 2)
+			},
+		},
 		"should return error if TailArg is set and activity request fails with an auth error while polling": {
 			Args: types.ActivityArgs{
 				TailArg:           true,
