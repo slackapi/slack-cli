@@ -46,6 +46,7 @@ New to the Developer Program? Sign up at
 	cmd.AddCommand(NewCreateCommand(clients))
 	cmd.AddCommand(NewDeleteCommand(clients))
 	cmd.AddCommand(NewListCommand(clients))
+	cmd.AddCommand(NewSignupCommand(clients))
 
 	return cmd
 }

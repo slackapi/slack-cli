@@ -35,6 +35,9 @@ const (
 
 	// Placeholder experiment is a placeholder for testing and does nothing... or does it?
 	Placeholder Experiment = "placeholder"
+
+	// SandboxSignup experiment enables the sandbox signup command to join the Developer Program.
+	SandboxSignup Experiment = "sandbox-signup"
 )
 
 // AllExperiments is a list of all available experiments that can be enabled
@@ -42,6 +45,7 @@ const (
 var AllExperiments = []Experiment{
 	Lipgloss,
 	Placeholder,
+	SandboxSignup,
 }
 
 // EnabledExperiments is a list of experiments that are permanently enabled
