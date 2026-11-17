@@ -373,6 +373,13 @@ func collectUserInfo(ctx context.Context, clients *shared.ClientFactory, flags *
 		countryOption: strings.ToUpper(strings.TrimSpace(flags.countryOption)),
 	}
 
+	// Name the missing flags when run from a non-interactive terminal
+	if !clients.IO.IsTTY() && (info.firstName == "" || info.lastName == "") {
+		return nil, slackerror.New(slackerror.ErrMissingFlag).
+			WithMessage("A first and last name are required to sign up").
+			WithRemediation("Include the %s and %s flags", style.Highlight("--first-name"), style.Highlight("--last-name"))
+	}
+
 	if info.firstName == "" {
 		info.firstName, err = clients.IO.InputPrompt(ctx, "Enter your first name", iostreams.InputPromptConfig{Required: true})
 		if err != nil {

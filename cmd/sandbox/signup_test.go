@@ -177,6 +177,7 @@ func TestSignupCommand(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.IO.On("IsTTY").Return(true)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter your first name", mock.Anything).Return("Alan", nil)
 				cm.IO.On("InputPrompt", mock.Anything, "Enter your last name", mock.Anything).Return("Turing", nil)
 				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(&api.SignupResponse{}, nil)
