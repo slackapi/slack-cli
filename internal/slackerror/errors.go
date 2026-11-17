@@ -236,8 +236,9 @@ const (
 	ErrSDKHookInvocationFailed                       = "sdk_hook_invocation_failed"
 	ErrSDKHookNotFound                               = "sdk_hook_not_found"
 	ErrSampleCreate                                  = "sample_create_error"
-	ErrSandboxDomainTaken                            = "domain_taken" // Slack API error code
-	ErrSandboxDomainTooLong                          = "domain_long"  // Slack API error code
+	ErrSandboxDomainTaken                            = "domain_taken"      // Slack API error code
+	ErrSandboxDomainTooLong                          = "domain_long"       // Slack API error code
+	ErrSandboxNotFound                               = "sandbox_not_found" // Slack API error code
 	ErrScopesExceedAppConfig                         = "scopes_exceed_app_config"
 	ErrServiceLimitsExceeded                         = "service_limits_exceeded"
 	ErrSharedChannelDenied                           = "shared_channel_denied"
@@ -1479,6 +1480,11 @@ Otherwise create the app on a workspace from app settings, then add it to this p
 	ErrSandboxDomainTooLong: {
 		Code:    ErrSandboxDomainTooLong,
 		Message: "Sandbox name or domain is too long",
+	},
+
+	ErrSandboxNotFound: {
+		Code:    ErrSandboxNotFound,
+		Message: "The specified sandbox could not be found",
 	},
 
 	ErrScopesExceedAppConfig: {

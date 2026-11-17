@@ -16,12 +16,23 @@ package sandbox
 
 import (
 	"context"
+	"time"
 
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
+)
+
+// Delays used while a newly created sandbox becomes available to the token exchange API.
+// These are variables so tests can skip the waiting.
+var (
+	exchangeTokensInitialDelay = 500 * time.Millisecond
+	exchangeTokensRetryDelay   = 1 * time.Second
+	exchangeTokensMaxAttempts  = 5
 )
 
 func NewCommand(clients *shared.ClientFactory) *cobra.Command {
@@ -70,4 +81,51 @@ func getSandboxAuth(ctx context.Context, clients *shared.ClientFactory) (*types.
 	}
 
 	return auth, nil
+}
+
+// exchangeAndSaveSandboxAuth exchanges the user's token for tokens to the sandbox and saves
+// them as a new auth, so the user is logged in to the sandbox after it's created.
+// Newly created sandboxes can take a moment to become available, so the exchange is retried
+// with exponential backoff while the sandbox isn't found.
+func exchangeAndSaveSandboxAuth(ctx context.Context, clients *shared.ClientFactory, apiClient api.APIInterface, token, sandboxTeamID string) error {
+	time.Sleep(exchangeTokensInitialDelay)
+
+	var result *api.ExchangeTokensResult
+	var err error
+	for attempt := 0; attempt < exchangeTokensMaxAttempts; attempt++ {
+		result, err = apiClient.ExchangeTokens(ctx, token, sandboxTeamID)
+		if err == nil {
+			break
+		}
+		if !slackerror.Is(err, slackerror.ErrSandboxNotFound) {
+			return err
+		}
+		// Don't wait after the last attempt
+		if attempt < exchangeTokensMaxAttempts-1 {
+			delay := exchangeTokensRetryDelay * time.Duration(1<<attempt) // 1s, 2s, 4s, 8s
+			clients.IO.PrintDebug(ctx, "Sandbox not yet available, retrying in %v (attempt %d/%d)", delay, attempt+1, exchangeTokensMaxAttempts)
+			time.Sleep(delay)
+		}
+	}
+	if err != nil {
+		return err
+	}
+
+	// Sandboxes with E-prefixed IDs are organizations
+	isEnterprise := types.IsEnterpriseTeamID(result.SandboxTeamID)
+	sandboxAuth := types.SlackAuth{
+		Token:               result.AccessToken,
+		RefreshToken:        result.RefreshToken,
+		ExpiresAt:           result.ExpiresAt,
+		TeamID:              result.SandboxTeamID,
+		TeamDomain:          result.SandboxDomain,
+		LastUpdated:         time.Now(),
+		IsEnterpriseInstall: isEnterprise,
+	}
+	if isEnterprise {
+		sandboxAuth.EnterpriseID = result.SandboxTeamID
+	}
+
+	_, _, err = clients.Auth().SetAuth(ctx, sandboxAuth)
+	return err
 }

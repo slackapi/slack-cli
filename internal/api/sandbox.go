@@ -28,9 +28,21 @@ import (
 const (
 	sandboxCreateMethod         = "enterprise.signup.createDevOrg"
 	sandboxDeleteMethod         = "developer.sandbox.delete"
+	sandboxExchangeTokensMethod = "developer.sandbox.exchangeTokens"
 	sandboxListMethod           = "developer.sandbox.list"
 	sandboxSignupVerifiedMethod = "developer.account.createVerified"
 )
+
+// ExchangeTokensResult contains the tokens and team details for a sandbox
+type ExchangeTokensResult struct {
+	SandboxTeamID string `json:"sandbox_team_id"`
+	SandboxName   string `json:"sandbox_name"`
+	SandboxDomain string `json:"sandbox_domain"`
+	AccessToken   string `json:"access_token"`
+	RefreshToken  string `json:"refresh_token"`
+	ExpiresAt     int    `json:"exp"`
+	Type          string `json:"type"`
+}
 
 // SignupRequest contains the fields for Developer Program signup
 type SignupRequest struct {
@@ -51,8 +63,14 @@ type SignupResponse struct {
 type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
+	ExchangeTokens(ctx context.Context, token, sandboxTeamID string) (*ExchangeTokensResult, error)
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
 	Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error)
+}
+
+type exchangeTokensResponse struct {
+	extendedBaseResponse
+	ExchangeTokensResult
 }
 
 type createSandboxResponse struct {
@@ -147,6 +165,34 @@ func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) err
 	}
 
 	return nil
+}
+
+// ExchangeTokens exchanges the caller's token for access and refresh tokens for a sandbox
+func (c *Client) ExchangeTokens(ctx context.Context, token, sandboxTeamID string) (*ExchangeTokensResult, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ExchangeTokens")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("sandbox_team_id", sandboxTeamID)
+
+	b, err := c.postForm(ctx, sandboxExchangeTokensMethod, values)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := exchangeTokensResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxExchangeTokensMethod)
+	}
+
+	if !resp.Ok {
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxExchangeTokensMethod)
+	}
+
+	return &resp.ExchangeTokensResult, nil
 }
 
 // ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user

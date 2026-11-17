@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -156,6 +157,14 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	)
 	if err != nil {
 		return err
+	}
+
+	// Log in to the new sandbox by exchanging the user's token for sandbox tokens
+	if clients.Config.WithExperimentOn(experiment.SandboxSignup) {
+		if err := exchangeAndSaveSandboxAuth(ctx, clients, clients.API(), auth.Token, teamID); err != nil {
+			// The sandbox was created, so warn instead of failing the command
+			clients.IO.PrintWarning(ctx, "Sandbox created, but logging in to it failed: %s", err.Error())
+		}
 	}
 
 	printCreateSuccess(cmd, clients, name, teamID, sandboxURL)
