@@ -282,8 +282,8 @@ func TestCreateCommand(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupCreateMocks(t, ctx, cm, "test-box", "test-box", "mypass", int64(0), false)
-				setupFastTokenExchange(t)
-				cm.API.On("ExchangeTokens", mock.Anything, "xoxb-test-token", "T222").Return(&api.ExchangeTokensResult{
+				setupFastSandboxLogin(t)
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").Return(&api.SandboxLoginResult{
 					SandboxTeamID: "E222",
 					SandboxDomain: "test-box",
 					AccessToken:   "xoxe.xoxp-sandbox",
@@ -306,7 +306,7 @@ func TestCreateCommand(t *testing.T) {
 				}))
 			},
 		},
-		"retries the token exchange while the new sandbox is not found": {
+		"retries the sandbox login while the new sandbox is not found": {
 			CmdArgs: []string{
 				"--token", "xoxb-test-token",
 				"--name", "test-box",
@@ -315,22 +315,22 @@ func TestCreateCommand(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupCreateMocks(t, ctx, cm, "test-box", "test-box", "mypass", int64(0), false)
-				setupFastTokenExchange(t)
-				cm.API.On("ExchangeTokens", mock.Anything, "xoxb-test-token", "T222").
+				setupFastSandboxLogin(t)
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").
 					Return(nil, slackerror.New(slackerror.ErrSandboxNotFound)).Once()
-				cm.API.On("ExchangeTokens", mock.Anything, "xoxb-test-token", "T222").
-					Return(&api.ExchangeTokensResult{SandboxTeamID: "T222", AccessToken: "xoxe.xoxp-sandbox"}, nil).Once()
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").
+					Return(&api.SandboxLoginResult{SandboxTeamID: "T222", AccessToken: "xoxe.xoxp-sandbox"}, nil).Once()
 				cm.Auth.On("SetAuth", mock.Anything, mock.Anything).Return(types.SlackAuth{}, "", nil)
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNumberOfCalls(t, "ExchangeTokens", 2)
+				cm.API.AssertNumberOfCalls(t, "SandboxLogin", 2)
 				cm.Auth.AssertCalled(t, "SetAuth", mock.Anything, mock.MatchedBy(func(auth types.SlackAuth) bool {
 					return auth.TeamID == "T222" && !auth.IsEnterpriseInstall && auth.EnterpriseID == ""
 				}))
 			},
 		},
-		"warns without failing when the token exchange fails": {
+		"warns without failing when the sandbox login fails": {
 			CmdArgs: []string{
 				"--token", "xoxb-test-token",
 				"--name", "test-box",
@@ -339,19 +339,19 @@ func TestCreateCommand(t *testing.T) {
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				setupCreateMocks(t, ctx, cm, "test-box", "test-box", "mypass", int64(0), false)
-				setupFastTokenExchange(t)
-				cm.API.On("ExchangeTokens", mock.Anything, "xoxb-test-token", "T222").
+				setupFastSandboxLogin(t)
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").
 					Return(nil, slackerror.New(slackerror.ErrInvalidAuth))
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Created", "T222"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNumberOfCalls(t, "ExchangeTokens", 1)
+				cm.API.AssertNumberOfCalls(t, "SandboxLogin", 1)
 				cm.IO.AssertCalled(t, "PrintWarning", mock.Anything, "Sandbox created, but logging in to it failed: %s", mock.Anything)
 				cm.Auth.AssertNotCalled(t, "SetAuth", mock.Anything, mock.Anything)
 			},
 		},
-		"skips the token exchange when the sandbox-signup experiment is off": {
+		"skips the sandbox login when the sandbox-signup experiment is off": {
 			CmdArgs: []string{
 				"--token", "xoxb-test-token",
 				"--name", "test-box",
@@ -363,7 +363,7 @@ func TestCreateCommand(t *testing.T) {
 			},
 			ExpectedStdoutOutputs: []string{"Sandbox Created", "T222"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "ExchangeTokens", mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertNotCalled(t, "SandboxLogin", mock.Anything, mock.Anything, mock.Anything)
 				cm.Auth.AssertNotCalled(t, "SetAuth", mock.Anything, mock.Anything)
 			},
 		},
@@ -372,13 +372,13 @@ func TestCreateCommand(t *testing.T) {
 	})
 }
 
-// setupFastTokenExchange removes the waits between token exchange attempts for the test
-func setupFastTokenExchange(t *testing.T) {
+// setupFastSandboxLogin removes the waits between sandbox login attempts for the test
+func setupFastSandboxLogin(t *testing.T) {
 	t.Helper()
-	initialDelay, retryDelay := exchangeTokensInitialDelay, exchangeTokensRetryDelay
-	exchangeTokensInitialDelay, exchangeTokensRetryDelay = 0, 0
+	initialDelay, retryDelay := sandboxLoginInitialDelay, sandboxLoginRetryDelay
+	sandboxLoginInitialDelay, sandboxLoginRetryDelay = 0, 0
 	t.Cleanup(func() {
-		exchangeTokensInitialDelay, exchangeTokensRetryDelay = initialDelay, retryDelay
+		sandboxLoginInitialDelay, sandboxLoginRetryDelay = initialDelay, retryDelay
 	})
 }
 

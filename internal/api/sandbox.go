@@ -33,8 +33,8 @@ const (
 	sandboxSignupVerifiedMethod = "developer.account.createVerified"
 )
 
-// ExchangeTokensResult contains the tokens and team details for a sandbox
-type ExchangeTokensResult struct {
+// SandboxLoginResult contains the tokens and team details for a sandbox
+type SandboxLoginResult struct {
 	SandboxTeamID string `json:"sandbox_team_id"`
 	SandboxName   string `json:"sandbox_name"`
 	SandboxDomain string `json:"sandbox_domain"`
@@ -63,14 +63,14 @@ type SignupResponse struct {
 type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
-	ExchangeTokens(ctx context.Context, token, sandboxTeamID string) (*ExchangeTokensResult, error)
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
+	SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error)
 	Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error)
 }
 
-type exchangeTokensResponse struct {
+type sandboxLoginResponse struct {
 	extendedBaseResponse
-	ExchangeTokensResult
+	SandboxLoginResult
 }
 
 type createSandboxResponse struct {
@@ -167,34 +167,6 @@ func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) err
 	return nil
 }
 
-// ExchangeTokens exchanges the caller's token for access and refresh tokens for a sandbox
-func (c *Client) ExchangeTokens(ctx context.Context, token, sandboxTeamID string) (*ExchangeTokensResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ExchangeTokens")
-	defer span.Finish()
-
-	values := url.Values{}
-	values.Add("token", token)
-	values.Add("sandbox_team_id", sandboxTeamID)
-
-	b, err := c.postForm(ctx, sandboxLoginMethod, values)
-	if err != nil {
-		return nil, errHTTPRequestFailed.WithRootCause(err)
-	}
-
-	resp := exchangeTokensResponse{}
-	err = goutils.JSONUnmarshal(b, &resp)
-	if err != nil {
-		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxLoginMethod)
-	}
-
-	if !resp.Ok {
-		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxLoginMethod)
-	}
-
-	return &resp.ExchangeTokensResult, nil
-}
-
 // ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
 func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
 	var span opentracing.Span
@@ -227,6 +199,34 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	}
 
 	return resp.Sandboxes, nil
+}
+
+// SandboxLogin returns access and refresh tokens for a sandbox owned by the caller
+func (c *Client) SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.SandboxLogin")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("sandbox_team_id", sandboxTeamID)
+
+	b, err := c.postForm(ctx, sandboxLoginMethod, values)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := sandboxLoginResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxLoginMethod)
+	}
+
+	if !resp.Ok {
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxLoginMethod)
+	}
+
+	return &resp.SandboxLoginResult, nil
 }
 
 type signupAPIResponse struct {

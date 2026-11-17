@@ -225,17 +225,17 @@ func (m *APIMock) DeleteSandbox(ctx context.Context, token, sandboxID string) er
 	return args.Error(0)
 }
 
-func (m *APIMock) ExchangeTokens(ctx context.Context, token, sandboxTeamID string) (*ExchangeTokensResult, error) {
+func (m *APIMock) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
+	args := m.Called(ctx, token, status)
+	return args.Get(0).([]types.Sandbox), args.Error(1)
+}
+
+func (m *APIMock) SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error) {
 	args := m.Called(ctx, token, sandboxTeamID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*ExchangeTokensResult), args.Error(1)
-}
-
-func (m *APIMock) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
-	args := m.Called(ctx, token, status)
-	return args.Get(0).([]types.Sandbox), args.Error(1)
+	return args.Get(0).(*SandboxLoginResult), args.Error(1)
 }
 
 func (m *APIMock) Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error) {

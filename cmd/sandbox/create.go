@@ -161,7 +161,7 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 
 	// Log in to the new sandbox by exchanging the user's token for sandbox tokens
 	if clients.Config.WithExperimentOn(experiment.SandboxSignup) {
-		if err := exchangeAndSaveSandboxAuth(ctx, clients, clients.API(), auth.Token, teamID); err != nil {
+		if err := loginAndSaveSandboxAuth(ctx, clients, clients.API(), auth.Token, teamID); err != nil {
 			// The sandbox was created, so warn instead of failing the command
 			clients.IO.PrintWarning(ctx, "Sandbox created, but logging in to it failed: %s", err.Error())
 		}
