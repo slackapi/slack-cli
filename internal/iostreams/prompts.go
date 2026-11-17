@@ -271,6 +271,8 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 			}
 		}
 		remediation = fmt.Sprintf("Re-run with one of the `--%s` values shown above", flagName)
+	case len(flags) == 1 && isPasswordPrompt(cfg):
+		remediation = fmt.Sprintf("Run this command in an interactive terminal to enter the value with hidden input\nThe `--%s` flag also works, but can leave the value in shell history", flags[0].Name)
 	case len(flags) == 1:
 		remediation = fmt.Sprintf("Try running the command with the `--%s` flag included\nLearn more about this flag with `--help`", flags[0].Name)
 	case len(flags) > 1:
@@ -288,6 +290,13 @@ func errInteractivityFlags(cfg PromptConfig, message string, options []string) e
 			slackerror.ErrorDetail{Message: strings.Join(body, "\n")},
 		}).
 		WithRemediation("%s", remediation)
+}
+
+// isPasswordPrompt reports whether the prompt collects a secret, such as a
+// token or a password, that is safer typed than passed as a flag.
+func isPasswordPrompt(cfg PromptConfig) bool {
+	_, ok := cfg.(PasswordPromptConfig)
+	return ok
 }
 
 // ConfirmPrompt prompts the user for a "yes" or "no" (true or false) value for
