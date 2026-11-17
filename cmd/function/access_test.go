@@ -427,3 +427,56 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 		})
 	}
 }
+
+func Test_printEntityAccess(t *testing.T) {
+	tests := map[string]struct {
+		distType        types.Permission
+		users           []types.FunctionDistributionUser
+		listErr         error
+		expectedOutputs []string
+		expectedErr     error
+	}{
+		"prints each user with access, with an email when it is known": {
+			distType: types.PermissionNamedEntities,
+			users: []types.FunctionDistributionUser{
+				{ID: "U123", UserName: "alice", Email: "alice@example.com"},
+				{ID: "U456", UserName: "bob"},
+			},
+			expectedOutputs: []string{
+				"The following users currently have access",
+				"alice (U123, alice@example.com)",
+				"bob (U456)",
+			},
+		},
+		"prints that no one has access when the named entities list is empty": {
+			distType:        types.PermissionNamedEntities,
+			expectedOutputs: []string{"No one has access yet"},
+		},
+		"prints nothing when the distribution is not named entities": {
+			distType: types.PermissionEveryone,
+		},
+		"returns the error when listing the distribution fails": {
+			listErr:     slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr: slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, "A123").
+				Return(tc.distType, tc.users, tc.listErr)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			err := printEntityAccess(ctx, &cobra.Command{}, clients, types.App{AppID: "A123"})
+			assert.Equal(t, tc.expectedErr, err)
+			output := clientsMock.GetStdoutOutput()
+			if len(tc.expectedOutputs) == 0 {
+				assert.Empty(t, output)
+			}
+			for _, expected := range tc.expectedOutputs {
+				assert.Contains(t, output, expected)
+			}
+		})
+	}
+}
