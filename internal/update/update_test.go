@@ -19,10 +19,12 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
@@ -102,21 +104,63 @@ func Test_UpdateNotification_HasUpdate(t *testing.T) {
 				Config:    config.NewConfig(slackdeps.NewFsMock(), slackdeps.NewOsMock()),
 				SDKConfig: hooks.NewSDKConfigMock(),
 			}
-			var enabled = true
-			if clients.Config.SkipUpdateFlag || clients.Config.TokenFlag != "" {
-				enabled = false
-			}
 			// Create updateNotification
-			updateNotification = &UpdateNotification{
+			u := &UpdateNotification{
 				clients:      &clients,
-				enabled:      enabled,
-				envDisabled:  "SLACK_SKIP_UPDATE",
 				hoursToWait:  defaultHoursToWait,
 				dependencies: dependencies,
 			}
 
 			// Test
-			require.Equal(t, tc.expectedReturnValue, updateNotification.HasUpdate())
+			require.Equal(t, tc.expectedReturnValue, u.HasUpdate())
+		})
+	}
+}
+
+func Test_UpdateNotification_PrintAndPromptUpdates(t *testing.T) {
+	tests := map[string]struct {
+		hasUpdate        bool
+		shouldSelfUpdate bool
+		expectedInstalls int
+	}{
+		"returns without a background check": {
+			hasUpdate:        false,
+			expectedInstalls: 0,
+		},
+		"installs an accepted update": {
+			hasUpdate:        true,
+			shouldSelfUpdate: true,
+			expectedInstalls: 1,
+		},
+		"skips a declined update": {
+			hasUpdate:        true,
+			shouldSelfUpdate: false,
+			expectedInstalls: 0,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			cmd := &cobra.Command{}
+			cmd.SetContext(ctx)
+			dependency := &mockDependency{}
+			dependency.On("HasUpdate").Return(tc.hasUpdate, nil)
+			dependency.On("PrintUpdateNotification", cmd).Return(tc.shouldSelfUpdate, nil)
+			dependency.On("InstallUpdate", mock.Anything).Return(nil)
+			u := &UpdateNotification{
+				dependencies: []Dependency{dependency},
+			}
+			done := make(chan error)
+			go func() {
+				done <- u.PrintAndPromptUpdates(cmd)
+			}()
+			select {
+			case err := <-done:
+				require.NoError(t, err)
+			case <-time.After(time.Second):
+				require.Fail(t, "PrintAndPromptUpdates did not return")
+			}
+			dependency.AssertNumberOfCalls(t, "InstallUpdate", tc.expectedInstalls)
 		})
 	}
 }

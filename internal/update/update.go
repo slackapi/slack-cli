@@ -32,12 +32,10 @@ import (
 // UpdateNotification checks for an update (non-blocking in the background or blocking).
 // It provides the release information for the latest update of each dependency.
 type UpdateNotification struct {
-	clients         *shared.ClientFactory
-	enabled         bool
-	envDisabled     string
-	hoursToWait     float64
-	checkUpdateChan chan []Dependency
-	dependencies    []Dependency
+	clients      *shared.ClientFactory
+	hoursToWait  float64
+	wg           sync.WaitGroup
+	dependencies []Dependency
 }
 
 type Dependency interface {
@@ -50,34 +48,19 @@ type Dependency interface {
 // defaultHoursWaitInterval is the default number of hours to wait between checking for updates.
 const defaultHoursToWait = 24
 
-// We use the singleton pattern with UpdateNotification
-var updateNotification *UpdateNotification
-
-// Object that performs an action once. Used as a thread-safe way to implement the singleton pattern.
-var once sync.Once
+// envSkipUpdate is the environment variable that skips checking for updates.
+const envSkipUpdate = "SLACK_SKIP_UPDATE"
 
 // New is the constructor for UpdateNotification that sets good defaults.
-func New(clients *shared.ClientFactory, cliVersion string, envDisabled string) *UpdateNotification {
-	var enabled = true
-	if clients.Config.SkipUpdateFlag || clients.Config.TokenFlag != "" {
-		enabled = false
+func New(clients *shared.ClientFactory, cliVersion string) *UpdateNotification {
+	return &UpdateNotification{
+		clients:     clients,
+		hoursToWait: defaultHoursToWait,
+		dependencies: []Dependency{
+			NewCLIDependency(clients, cliVersion),
+			NewSDKDependency(clients),
+		},
 	}
-	// The native sync library provides a thread safe way to implement the Singleton pattern. We use this to ensure that only one instance of the UpdateNotification is running at a time.
-	// https://progolang.com/how-to-implement-singleton-pattern-in-go/ and https://medium.com/golang-issue/how-singleton-pattern-works-with-golang-2fdd61cd5a7f
-	once.Do(func() {
-		updateNotification = &UpdateNotification{
-			clients:     clients,
-			enabled:     enabled,
-			envDisabled: envDisabled,
-			hoursToWait: defaultHoursToWait,
-			dependencies: []Dependency{
-				NewCLIDependency(clients, cliVersion),
-				NewSDKDependency(clients),
-			},
-		}
-	})
-
-	return updateNotification
 }
 
 // Dependencies returns the dependencies to check for updates.
@@ -87,25 +70,26 @@ func (u *UpdateNotification) Dependencies() []Dependency {
 
 // PrintUpdates displays an update message after the command runs and prompts the user if they want to update, if applicable
 // Invoked from root command's post-run method. If an error occurs, we return it so it is raised to the user.
-func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command, cliVersion string) error {
+func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 
-	if updateNotification.WaitForCheckForUpdateInBackground() {
-		for _, dependency := range updateNotification.Dependencies() {
-			hasUpdate, err := dependency.HasUpdate()
-			if err != nil {
-				return slackerror.Wrap(err, "An error occurred while fetching a dependency")
-			}
+	// Wait for the background check, if one was started
+	u.wg.Wait()
 
-			if hasUpdate {
-				shouldSelfUpdate, err := dependency.PrintUpdateNotification(cmd)
-				if err != nil {
+	for _, dependency := range u.Dependencies() {
+		hasUpdate, err := dependency.HasUpdate()
+		if err != nil {
+			return slackerror.Wrap(err, "An error occurred while fetching a dependency")
+		}
+
+		if hasUpdate {
+			shouldSelfUpdate, err := dependency.PrintUpdateNotification(cmd)
+			if err != nil {
+				return err
+			}
+			if shouldSelfUpdate {
+				if err := dependency.InstallUpdate(ctx); err != nil {
 					return err
-				}
-				if shouldSelfUpdate {
-					if err := dependency.InstallUpdate(ctx); err != nil {
-						return err
-					}
 				}
 			}
 		}
@@ -114,26 +98,10 @@ func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command, cliVersio
 }
 
 // CheckForUpdateInBackground starts a Go routine that checks for an update every hoursSinceLastUpdateCheck (e.g. 24 hours).
-// The shouldForceUpdateCheck param can be used to force the update check, regardless of the time since the last check.
-func (u *UpdateNotification) CheckForUpdateInBackground(ctx context.Context, shouldForceUpdateCheck bool) {
-	// This function is run before every command as its used in the PersistentPreRun in root.go
-	// In that case, we must clear the existing updateNotification instance out of the channel
-	if u.checkUpdateChan != nil {
-		<-u.checkUpdateChan
-	}
-
-	u.checkUpdateChan = make(chan []Dependency)
-	go func() {
-		_ = u.CheckForUpdate(ctx, shouldForceUpdateCheck)
-		u.checkUpdateChan <- u.Dependencies()
-	}()
-}
-
-// WaitForCheckForUpdateInBackground must be called after CheckForUpdateInBackground and will block until the go routine finishes.
-// Returns boolean that indicates if updates have been retrieved.
-func (u *UpdateNotification) WaitForCheckForUpdateInBackground() bool {
-	dependencies := <-u.checkUpdateChan
-	return len(dependencies) > 0
+func (u *UpdateNotification) CheckForUpdateInBackground(ctx context.Context) {
+	u.wg.Go(func() {
+		_ = u.CheckForUpdate(ctx, false)
+	})
 }
 
 // HasUpdate returns true if any dependency has an update available.
@@ -172,7 +140,7 @@ func (u *UpdateNotification) shouldCheckForUpdate(ctx context.Context, shouldFor
 		return true
 	}
 
-	if (u.envDisabled != "" && os.Getenv(u.envDisabled) != "") || !u.enabled || u.isCI() || u.isIgnoredCommand() {
+	if !u.isEnabled() {
 		return false
 	}
 
@@ -183,9 +151,18 @@ func (u *UpdateNotification) shouldCheckForUpdate(ctx context.Context, shouldFor
 	return true
 }
 
+// isEnabled returns false when update checks are skipped by the environment, a flag, or the command.
+func (u *UpdateNotification) isEnabled() bool {
+	return os.Getenv(envSkipUpdate) == "" &&
+		!u.clients.Config.SkipUpdateFlag &&
+		u.clients.Config.TokenFlag == "" &&
+		!isCI() &&
+		!u.isIgnoredCommand()
+}
+
 // isCI returns true when running on a continuous integration service.
 // Borrowed from https://github.com/watson/ci-info/blob/HEAD/index.js
-func (u *UpdateNotification) isCI() bool {
+func isCI() bool {
 	return os.Getenv("CI") != "" || // GitHub Actions, Travis CI, CircleCI, Cirrus CI, GitLab CI, AppVeyor, CodeShip, dsari
 		os.Getenv("BUILD_NUMBER") != "" || // Jenkins, TeamCity
 		os.Getenv("RUN_ID") != "" // TaskCluster, dsari

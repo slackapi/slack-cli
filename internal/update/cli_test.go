@@ -15,7 +15,6 @@
 package update
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -48,18 +47,14 @@ func Test_NewCLIDependency(t *testing.T) {
 			assert.Same(t, clients, cliDependency.clients)
 			assert.Equal(t, tc.version, cliDependency.version)
 			assert.Nil(t, cliDependency.releaseInfo)
-			assert.Nil(t, cliDependency.releaseError)
 		})
 	}
 }
 
 func Test_CLIDependency_HasUpdate(t *testing.T) {
-	releaseError := errors.New("release check failed")
 	tests := map[string]struct {
 		releaseInfo    *LatestCLIRelease
-		releaseError   error
 		expectedUpdate bool
-		expectedError  error
 	}{
 		"returns false when no newer release was found": {
 			releaseInfo:    nil,
@@ -69,21 +64,15 @@ func Test_CLIDependency_HasUpdate(t *testing.T) {
 			releaseInfo:    &LatestCLIRelease{Version: "v4.0.0"},
 			expectedUpdate: true,
 		},
-		"returns the release error from the update check": {
-			releaseError:   releaseError,
-			expectedUpdate: false,
-			expectedError:  releaseError,
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			cliDependency := &CLIDependency{
-				releaseInfo:  tc.releaseInfo,
-				releaseError: tc.releaseError,
+				releaseInfo: tc.releaseInfo,
 			}
 			hasUpdate, err := cliDependency.HasUpdate()
 			assert.Equal(t, tc.expectedUpdate, hasUpdate)
-			assert.Equal(t, tc.expectedError, err)
+			assert.NoError(t, err)
 		})
 	}
 }

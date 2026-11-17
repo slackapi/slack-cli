@@ -88,7 +88,10 @@ var AliasMap = map[string]*AliasInfo{
 }
 var processName = cmdutil.GetProcessName()
 
-func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.UpdateNotification) *cobra.Command {
+func NewRootCommand(clients *shared.ClientFactory) *cobra.Command {
+	// updateNotification will check for an update in the background and print a message after the command runs
+	var updateNotification *update.UpdateNotification
+
 	// rootCmd is the base Cobra command and all subcommands, that are part of the cmd package,
 	// will be are added to the root command.
 	return &cobra.Command{
@@ -130,8 +133,8 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 			})
 
 			// Check for an CLI update in the background while the command runs
-			updateNotification = update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
-			updateNotification.CheckForUpdateInBackground(ctx, false)
+			updateNotification = update.New(clients, version.Raw())
+			updateNotification.CheckForUpdateInBackground(ctx)
 
 			// Recommend the official Slack plugin when running inside Claude Code
 			useragent.EmitClaudeCodePluginHint(clients.IO.WriteErr())
@@ -140,7 +143,7 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: since commands are moving to `*E` cobra lifecycle methods, this method may not be invoked if those earlier lifecycle methods return an error. Maybe move this to the cleanup() method below? but maybe this is OK, no need to prompt users to update if they encounter an error?
 			// when the command is `slack update`
-			return updateNotification.PrintAndPromptUpdates(cmd, version.Raw())
+			return updateNotification.PrintAndPromptUpdates(cmd)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if skill, _ := cmd.Flags().GetBool("skill"); skill {
@@ -155,12 +158,8 @@ func NewRootCommand(clients *shared.ClientFactory, updateNotification *update.Up
 // Init bootstraps the CLI process. Put things that do not rely on specific arguments or flags passed to the CLI in here. If you need flag/argument values, InitConfig below.
 func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 	// clients stores shared clients and configurations used across the commands and handlers
-	var clients *shared.ClientFactory
-	// updateNotification will check for an update in the background and print a message after the command runs
-	var updateNotification *update.UpdateNotification
-
-	clients = shared.NewClientFactory()
-	rootCmd := NewRootCommand(clients, updateNotification)
+	clients := shared.NewClientFactory()
+	rootCmd := NewRootCommand(clients)
 
 	// Support `--version` by setting root command's `Version` and custom template.
 	// Add a newline to `SetVersionTemplate` to display correctly on terminals.
