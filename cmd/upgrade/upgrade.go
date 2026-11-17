@@ -66,8 +66,11 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 		return err
 	}
 
+	if err := updateNotification.PrintAndPromptUpdates(cmd); err != nil {
+		return err
+	}
 	if updateNotification.HasUpdate() {
-		return updateNotification.PrintAndPromptUpdates(cmd)
+		return nil
 	}
 
 	if clients.SDKConfig.Hooks.CheckUpdate.IsAvailable() {
