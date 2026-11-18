@@ -236,9 +236,9 @@ const (
 	ErrSDKHookInvocationFailed                       = "sdk_hook_invocation_failed"
 	ErrSDKHookNotFound                               = "sdk_hook_not_found"
 	ErrSampleCreate                                  = "sample_create_error"
-	ErrSandboxDomainTaken                            = "domain_taken"
-	ErrSandboxDomainTooLong                          = "domain_long"
-	ErrSandboxNotFound                               = "sandbox_not_found"
+	ErrSandboxDomainTaken                            = "domain_taken"      // Slack API error code
+	ErrSandboxDomainTooLong                          = "domain_long"       // Slack API error code
+	ErrSandboxNotFound                               = "sandbox_not_found" // Slack API error code
 	ErrScopesExceedAppConfig                         = "scopes_exceed_app_config"
 	ErrServiceLimitsExceeded                         = "service_limits_exceeded"
 	ErrSharedChannelDenied                           = "shared_channel_denied"
