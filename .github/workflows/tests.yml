@@ -25,6 +25,14 @@ jobs:
         run: go tool golangci-lint run --timeout=5m
       - name: Unit Tests
         run: make test
+      - name: Check generated docs
+        run: |
+          make docs
+          if [ -n "$(git status --porcelain -- docs/reference)" ]; then
+            git status --short -- docs/reference
+            echo "::error::Generated docs in docs/reference are out of date or hand-edited. Run 'make docs' and commit the result."
+            exit 1
+          fi
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
