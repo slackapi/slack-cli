@@ -89,6 +89,70 @@ func Test_Login(t *testing.T) {
 	}
 }
 
+func Test_saveNewAuth(t *testing.T) {
+	tests := map[string]struct {
+		host            string
+		isProd          bool
+		noRotation      bool
+		setAuthErr      error
+		expectedAPIHost string
+		expectedPath    string
+		expectedErr     string
+	}{
+		"saves the auth without an api host for production": {
+			host:         "https://slack.com",
+			isProd:       true,
+			expectedPath: "/path/credentials.json",
+		},
+		"saves the auth with the api host for a development host": {
+			host:            "https://dev.slack.com",
+			expectedAPIHost: "https://dev.slack.com",
+			expectedPath:    "/path/credentials.json",
+		},
+		"skips saving credentials with no rotation": {
+			host:       "https://slack.com",
+			isProd:     true,
+			noRotation: true,
+		},
+		"returns the error from saving credentials": {
+			host:        "https://slack.com",
+			isProd:      true,
+			setAuthErr:  slackerror.New(slackerror.ErrCredentialsNotFound),
+			expectedErr: slackerror.ErrCredentialsNotFound,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			cm := shared.NewClientsMock()
+			cm.API.On("Host").Return(tc.host)
+			cm.Auth.On("IsAPIHostSlackProd", tc.host).Return(tc.isProd)
+			cm.Auth.On("SetAuth", mock.Anything, mock.Anything).
+				Return(types.SlackAuth{}, "/path/credentials.json", tc.setAuthErr)
+			authResult := api.ExchangeAuthTicketResult{Token: "xoxp-example", TeamID: "T123", UserID: "U123"}
+
+			auth, path, err := saveNewAuth(ctx, cm.API, cm.Auth, authResult, tc.noRotation)
+			if tc.expectedErr != "" {
+				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err).Code)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, "xoxp-example", auth.Token)
+			assert.Equal(t, "T123", auth.TeamID)
+			assert.Equal(t, "U123", auth.UserID)
+			if tc.expectedAPIHost != "" {
+				assert.Equal(t, tc.expectedAPIHost, *auth.APIHost)
+			} else {
+				assert.Nil(t, auth.APIHost)
+			}
+			assert.Equal(t, tc.expectedPath, path)
+			if tc.noRotation {
+				cm.Auth.AssertNotCalled(t, "SetAuth", mock.Anything, mock.Anything)
+			}
+		})
+	}
+}
+
 func Test_printAuthTicketSubmissionInstructions(t *testing.T) {
 	tests := map[string]struct {
 		authTicket      string
