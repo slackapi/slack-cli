@@ -59,6 +59,7 @@ func TestInstall(t *testing.T) {
 		mockManifestHashInitial cache.Hash
 		mockManifestHashUpdated cache.Hash
 		mockManifestSource      config.ManifestSource
+		mockManifestSourceFlag  string
 		mockManifestSyncError   error
 		mockOrgGrantWorkspaceID string
 		expectedApp             types.App
@@ -351,6 +352,58 @@ func TestInstall(t *testing.T) {
 			expectedInstallState: "",
 			expectedUpdate:       false,
 		},
+		"updates an app with the local manifest when the manifest source flag is local": {
+			mockApp: types.App{
+				AppID:  "A006",
+				TeamID: mockTeamID,
+			},
+			mockAPICreateError: slackerror.New(slackerror.ErrAppCreate),
+			mockAPIInstall: api.DeveloperAppInstallResult{
+				AppID: "A006",
+			},
+			mockAPIInstallState: types.InstallSuccess,
+			mockAPIUpdate: api.UpdateAppResult{
+				AppID: "A006",
+			},
+			mockAuth: types.SlackAuth{
+				TeamID:     mockTeamID,
+				TeamDomain: mockTeamDomain,
+				Token:      mockToken,
+				UserID:     mockUserID,
+			},
+			mockAuthSession: api.AuthSession{
+				TeamID:   &mockTeamID,
+				TeamName: &mockTeamDomain,
+				UserID:   &mockUserID,
+			},
+			mockManifestAppLocal: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{
+						Name: "example-local",
+					},
+				},
+			},
+			mockManifestAppRemote: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{
+						Name: "example-remote",
+					},
+				},
+			},
+			mockManifestSource:     config.ManifestSourceRemote,
+			mockManifestSourceFlag: string(config.ManifestSourceLocal),
+			expectedApp: types.App{
+				AppID:  "A006",
+				TeamID: mockTeamID,
+			},
+			expectedInstallState: types.InstallSuccess,
+			expectedManifest: types.AppManifest{
+				DisplayInformation: types.DisplayInformation{
+					Name: "example-local",
+				},
+			},
+			expectedUpdate: true,
+		},
 		"errors if the remote manifest has an unexpected cache": {
 			mockApp: types.App{
 				AppID:  "A005",
@@ -559,6 +612,7 @@ func TestInstall(t *testing.T) {
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
+			clientsMock.Config.ManifestSourceFlag = tc.mockManifestSourceFlag
 			mockProjectCache := cache.NewCacheMock()
 			mockProjectCache.On(
 				"GetManifestHash",
@@ -668,7 +722,9 @@ func TestInstallLocalApp(t *testing.T) {
 		mockManifest            types.SlackYaml
 		mockManifestHashInitial cache.Hash
 		mockManifestHashUpdated cache.Hash
+		mockManifestRemote      types.SlackYaml
 		mockManifestSource      config.ManifestSource
+		mockManifestSourceFlag  string
 		mockManifestSyncError   error
 		mockOrgGrantWorkspaceID string
 		expectedApp             types.App
@@ -1215,7 +1271,7 @@ func TestInstallLocalApp(t *testing.T) {
 				TeamName: &mockTeamDomain,
 				UserID:   &mockUserID,
 			},
-			mockManifest: types.SlackYaml{
+			mockManifestRemote: types.SlackYaml{
 				AppManifest: types.AppManifest{
 					DisplayInformation: types.DisplayInformation{
 						Name: "example-3",
@@ -1243,6 +1299,59 @@ func TestInstallLocalApp(t *testing.T) {
 			expectedCreate:       false,
 			expectedInstallState: types.InstallSuccess,
 			expectedUpdate:       false,
+		},
+		"updates an existing bolt app with the local manifest when the manifest source flag is local": {
+			mockApp: types.App{
+				AppID:  "A005",
+				IsDev:  true,
+				TeamID: mockTeamID,
+				UserID: mockUserID,
+			},
+			mockAuth: types.SlackAuth{
+				TeamID:     mockTeamID,
+				TeamDomain: mockTeamDomain,
+				Token:      mockToken,
+				UserID:     mockUserID,
+			},
+			mockAuthSession: api.AuthSession{
+				TeamID:   &mockTeamID,
+				TeamName: &mockTeamDomain,
+				UserID:   &mockUserID,
+			},
+			mockManifest: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{
+						Name: "example-local",
+					},
+				},
+			},
+			mockManifestRemote: types.SlackYaml{
+				AppManifest: types.AppManifest{
+					DisplayInformation: types.DisplayInformation{
+						Name: "example-remote",
+					},
+				},
+			},
+			mockAPICreateError:  slackerror.New(slackerror.ErrAppCreate),
+			mockAPIInstallState: types.InstallSuccess,
+			mockAPIUpdate: api.UpdateAppResult{
+				AppID: "A005",
+			},
+			mockManifestSource:     config.ManifestSourceRemote,
+			mockManifestSourceFlag: string(config.ManifestSourceLocal),
+			expectedApp: types.App{
+				AppID:  "A005",
+				IsDev:  true,
+				TeamID: mockTeamID,
+				UserID: mockUserID,
+			},
+			expectedInstallState: types.InstallSuccess,
+			expectedManifest: types.AppManifest{
+				DisplayInformation: types.DisplayInformation{
+					Name: "example-local (local)",
+				},
+			},
+			expectedUpdate: true,
 		},
 	}
 
@@ -1326,10 +1435,11 @@ func TestInstallLocalApp(t *testing.T) {
 			t.Cleanup(func() { manifestSyncFunc = originalSyncFunc })
 			manifestMock := &app.ManifestMockObject{}
 			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
-			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifest, nil)
+			manifestMock.On("GetManifestRemote", mock.Anything, mock.Anything, mock.Anything).Return(tc.mockManifestRemote, nil)
 			clientsMock.AppClient.Manifest = manifestMock
 			mockProjectConfig := config.NewProjectConfigMock()
 			mockProjectConfig.On("GetManifestSource", mock.Anything).Return(tc.mockManifestSource, nil)
+			clientsMock.Config.ManifestSourceFlag = tc.mockManifestSourceFlag
 			mockProjectCache := cache.NewCacheMock()
 			mockProjectCache.On(
 				"GetManifestHash",

@@ -79,15 +79,17 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// Get the manifest from the local file if the manifest source is local or if we are creating
-	// a new app. After an app is created, app settings becomes the source of truth for remote
-	// manifests, so updates and installs always get the latest manifest from app settings.
+	// Get the manifest from the local file if the manifest source or the --manifest-source flag
+	// is local, or if we are creating a new app. After an app is created, app settings becomes the
+	// source of truth for remote manifests, so installs otherwise get the latest manifest from app
+	// settings.
 	var slackManifest types.SlackYaml
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return app, "", err
 	}
-	if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
+	if manifestSource.Equals(config.ManifestSourceLocal) || flagSource.Equals(config.ManifestSourceLocal) || manifestCreates {
 		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return app, "", err
@@ -397,15 +399,17 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		// app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// Get the manifest from the local file if the manifest source is local or if we are creating
-	// a new app. After an app is created, app settings becomes the source of truth for remote
-	// manifests, so updates and installs always get the latest manifest from app settings.
+	// Get the manifest from the local file if the manifest source or the --manifest-source flag
+	// is local, or if we are creating a new app. After an app is created, app settings becomes the
+	// source of truth for remote manifests, so installs otherwise get the latest manifest from app
+	// settings.
 	var slackManifest types.SlackYaml
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
-	if manifestSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
+	if manifestSource.Equals(config.ManifestSourceLocal) || flagSource.Equals(config.ManifestSourceLocal) || manifestCreates {
 		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return app, api.DeveloperAppInstallResult{}, "", err
