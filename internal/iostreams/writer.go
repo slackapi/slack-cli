@@ -114,7 +114,7 @@ type FilteredWriter struct {
 // Write writes output not between bounds to the stream
 func (fw FilteredWriter) Write(p []byte) (n int, err error) {
 	if fw.Stream != nil && strings.Contains(string(p), fw.Bounds) {
-		for _, chunk := range strings.Split(string(p), fw.Bounds) {
+		for chunk := range strings.SplitSeq(string(p), fw.Bounds) {
 			if !fw.Active {
 				n, err := fw.Stream.Write([]byte(strings.TrimSpace(chunk)))
 				if err != nil {
@@ -148,8 +148,8 @@ type WriteDebugger struct {
 
 // Write splits an input and writes debug logs line by line
 func (wr WriteDebugger) Write(p []byte) (n int, err error) {
-	lines := strings.Split(strings.TrimSpace(string(p)), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(strings.TrimSpace(string(p)), "\n")
+	for line := range lines {
 		wr.io.PrintDebug(wr.ctx, "%s", line)
 	}
 	return len(p), nil
@@ -170,8 +170,8 @@ func (ws WriteIndenter) Write(p []byte) (n int, err error) {
 	if len(p) <= 0 {
 		return len(p), nil
 	}
-	lines := strings.Split(strings.TrimRight(string(p), "\n"), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(strings.TrimRight(string(p), "\n"), "\n")
+	for line := range lines {
 		_, err := ws.Writer.Write([]byte(style.Indent(line) + "\n"))
 		if err != nil {
 			return 0, err
@@ -195,8 +195,8 @@ func (ws WriteSecondarier) Write(p []byte) (n int, err error) {
 	if len(p) <= 0 {
 		return len(p), nil
 	}
-	lines := strings.Split(strings.TrimRight(string(p), "\n"), "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(strings.TrimRight(string(p), "\n"), "\n")
+	for line := range lines {
 		_, err := ws.Writer.Write([]byte(style.Secondary(line) + "\n"))
 		if err != nil {
 			return 0, err

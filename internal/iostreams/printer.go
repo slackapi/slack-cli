@@ -48,8 +48,8 @@ func (io *IOStreams) PrintDebug(ctx context.Context, format string, a ...any) {
 	message := strings.TrimSpace(style.RemoveANSI(sprintF(format, a...)))
 	span, _ := opentracing.StartSpanFromContext(ctx, "printDebug", opentracing.Tag{Key: "debug_log", Value: message})
 	defer span.Finish()
-	lines := strings.Split(message, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(message, "\n")
+	for line := range lines {
 		_ = io.FlushToLogFile(ctx, "debug", line)
 		io.FinishLogFile(ctx)
 		if io.config.DebugEnabled {
