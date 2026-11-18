@@ -62,28 +62,40 @@ func (m *mockDependency) InstallUpdate(ctx context.Context) error {
 
 func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
 	tests := map[string]struct {
-		forced      bool
-		status      int
-		unreachable bool
-		expectedErr string
+		forced            bool
+		status            int
+		unreachable       bool
+		hookErr           error
+		expectedErr       string
+		expectedNextCheck time.Duration
 	}{
 		"returns no error when a forced check succeeds": {
-			forced: true,
-			status: http.StatusOK,
+			forced:            true,
+			status:            http.StatusOK,
+			expectedNextCheck: 24 * time.Hour,
 		},
 		"returns the error when a forced check gets an error response": {
-			forced:      true,
-			status:      http.StatusInternalServerError,
-			expectedErr: slackerror.ErrCLIUpdateCheck,
+			forced:            true,
+			status:            http.StatusInternalServerError,
+			expectedErr:       slackerror.ErrCLIUpdateCheck,
+			expectedNextCheck: time.Hour,
 		},
 		"returns the error when a forced check can't reach the server": {
-			forced:      true,
-			unreachable: true,
-			expectedErr: slackerror.ErrCLIUpdateCheck,
+			forced:            true,
+			unreachable:       true,
+			expectedErr:       slackerror.ErrCLIUpdateCheck,
+			expectedNextCheck: time.Hour,
 		},
 		"returns no error when a background check gets an error response": {
-			forced: false,
-			status: http.StatusInternalServerError,
+			forced:            false,
+			status:            http.StatusInternalServerError,
+			expectedNextCheck: time.Hour,
+		},
+		"waits the full interval when only the check-update hook fails": {
+			forced:            false,
+			status:            http.StatusOK,
+			hookErr:           slackerror.New("The check-update hook failed"),
+			expectedNextCheck: 24 * time.Hour,
 		},
 	}
 	for name, tc := range tests {
@@ -111,7 +123,11 @@ func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
+			clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("", tc.hookErr)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			if tc.hookErr != nil {
+				clients.SDKConfig.Hooks.CheckUpdate = hooks.HookScript{Name: "CheckUpdate", Command: "check-update"}
+			}
 			u := New(clients, "v4.10.0")
 			err := u.CheckForUpdate(ctx, tc.forced)
 			if tc.expectedErr != "" {
@@ -120,6 +136,11 @@ func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+			lastUpdateCheckedAt, err := clients.Config.SystemConfig.GetLastUpdateCheckedAt(ctx)
+			require.NoError(t, err)
+			assert.WithinDuration(t, time.Now().Add(tc.expectedNextCheck), lastUpdateCheckedAt.Add(defaultHoursToWait*time.Hour), time.Minute)
+			// A background check right after is skipped
+			require.NoError(t, u.CheckForUpdate(ctx, false))
 			if !tc.unreachable {
 				assert.Equal(t, int32(1), requests.Load())
 			}

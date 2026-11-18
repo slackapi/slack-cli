@@ -48,6 +48,9 @@ type Dependency interface {
 // defaultHoursWaitInterval is the default number of hours to wait between checking for updates.
 const defaultHoursToWait = 24
 
+// retryHoursToWait is the number of hours to wait before checking again after the Slack CLI check fails.
+const retryHoursToWait = 1
+
 // envSkipUpdate is the environment variable that skips checking for updates.
 const envSkipUpdate = "SLACK_SKIP_UPDATE"
 
@@ -127,6 +130,7 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 
 	// Each dependency self-checks for an update
 	var checkErr error
+	checkedAt := time.Now()
 	for _, v := range u.Dependencies() {
 		err := v.CheckForUpdate(ctx)
 		if err != nil {
@@ -134,10 +138,14 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 			if checkErr == nil {
 				checkErr = err
 			}
+			// Check the Slack CLI again sooner than usual after a failed check, such as while offline
+			if _, ok := v.(*CLIDependency); ok {
+				checkedAt = time.Now().Add(time.Duration((retryHoursToWait - u.hoursToWait) * float64(time.Hour)))
+			}
 		}
 	}
 
-	_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
+	_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, checkedAt)
 
 	if shouldForceUpdateCheck {
 		return checkErr
