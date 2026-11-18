@@ -214,16 +214,36 @@ Run this command as a **background process** so the developer can continue worki
 **If an app ID was found:**
 
 ```bash
-cd <project-dir> && SLACK_CMD run --org-workspace-grant=all --app=<app_id>
+cd <project-dir> && SLACK_CMD run --app=<app_id>
 ```
 
 **If no apps — use the team ID:**
 
 ```bash
-cd <project-dir> && SLACK_CMD run --org-workspace-grant=all --team=<team_id>
+cd <project-dir> && SLACK_CMD run --team=<team_id>
 ```
 
-Tell the developer the app is running in the background. They can ask:
+### Ask before granting workspaces on an Enterprise organization
+
+The first time an app is installed to an Enterprise organization, the CLI asks which of the organization's workspaces the app can access. A background process cannot answer, so the CLI stops with `The input device is not a TTY or does not support interactivity` and prints the prompt it would have shown:
+
+```text
+› Choose a workspace to grant access:
+    All of them
+    Acme Sales T0123456789
+    Acme Support T0987654321
+```
+
+When you see this, **ask the developer the same question, with the choices in the same order**: all of the organization's workspaces first, then each workspace by name. Never choose for the developer. Granting all workspaces makes the app available to everyone in the organization, so it is the developer's decision. Then run the command again with their answer:
+
+- **All of them**: add `--org-workspace-grant=all`
+- **One workspace**: add `--org-workspace-grant=<workspace_team_id>`, using the `T` team ID printed next to that workspace
+
+If the CLI stops without listing the workspaces, ask the developer whether to grant all workspaces or just one, and for that workspace's team ID if they pick one.
+
+### Confirm the app is running
+
+Read the background process's output before saying anything to the developer. The workspace question above only shows up there, and the process has already exited when it does. Once the output shows the app has started, tell the developer the app is running in the background. They can ask:
 
 - "What's the status of the dev server?" — to check on it
 - "Show me the output from slack run" — to see activity logs
