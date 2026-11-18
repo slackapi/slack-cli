@@ -55,6 +55,7 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "app install", Meaning: "Install a production app to a team"},
 			{Command: "app install --team T0123456 --environment deployed", Meaning: "Install a production app to a specific team"},
 			{Command: "app install --team T0123456 --environment local", Meaning: "Install a local dev app to a specific team"},
+			{Command: "app install --manifest-source=local", Meaning: "Install with the project manifest when app settings differ"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
@@ -72,12 +73,16 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 
 	cmd.Flags().StringVar(&addFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
 	cmd.Flags().StringVarP(&addFlags.environmentFlag, "environment", "E", "", "environment of app (local, deployed)")
+	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (local or remote)")
 
 	return cmd
 }
 
 // preRunAddCommand confirms an app is available for installation
 func preRunAddCommand(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) error {
+	if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
+		return err
+	}
 	err := cmdutil.IsValidProjectDirectory(clients)
 	if err != nil {
 		return err
