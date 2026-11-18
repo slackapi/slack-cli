@@ -1410,6 +1410,12 @@ Ask a workspace admin or owner to install the app, or remove the restricted scop
 
 ---
 
+### sandbox_not_found {#sandbox_not_found}
+
+**Message**: Sandbox not found
+
+---
+
 ### scopes_exceed_app_config {#scopes_exceed_app_config}
 
 **Message**: Scopes requested exceed app configuration

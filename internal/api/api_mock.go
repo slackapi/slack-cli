@@ -230,6 +230,14 @@ func (m *APIMock) ListSandboxes(ctx context.Context, token string, status string
 	return args.Get(0).([]types.Sandbox), args.Error(1)
 }
 
+func (m *APIMock) SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error) {
+	args := m.Called(ctx, token, sandboxTeamID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*SandboxLoginResult), args.Error(1)
+}
+
 func (m *APIMock) Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error) {
 	args := m.Called(ctx, token, req)
 	if args.Get(0) == nil {

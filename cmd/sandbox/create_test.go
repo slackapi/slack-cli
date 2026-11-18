@@ -20,10 +20,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -271,8 +274,97 @@ func TestCreateCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "CreateSandbox", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
+		"logs in to the new sandbox when the sandbox-signup experiment is on": {
+			CmdArgs: []string{
+				"--token", "xoxb-test-token",
+				"--name", "test-box",
+				"--domain", "test-box",
+				"--password", "mypass",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "test-box", "test-box", "mypass", int64(0), false)
+				setupTestSandboxLogin(t)
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").Return(&api.SandboxLoginResult{
+					SandboxTeamID: "E222",
+					SandboxDomain: "test-box",
+					SandboxUserID: "U222",
+					AccessToken:   "xoxe.xoxp-sandbox",
+					RefreshToken:  "xoxe-refresh",
+					ExpiresAt:     1700000000,
+				}, nil)
+				cm.Auth.On("SetAuth", mock.Anything, mock.Anything).Return(types.SlackAuth{}, "", nil)
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created", "T222", "You're logged in and can start developing with slack run"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Auth.AssertCalled(t, "SetAuth", mock.Anything, mock.MatchedBy(func(auth types.SlackAuth) bool {
+					return auth.Token == "xoxe.xoxp-sandbox" &&
+						auth.RefreshToken == "xoxe-refresh" &&
+						auth.ExpiresAt == 1700000000 &&
+						auth.TeamID == "E222" &&
+						auth.TeamDomain == "test-box" &&
+						auth.UserID == "U222" &&
+						auth.EnterpriseID == "E222" &&
+						auth.IsEnterpriseInstall &&
+						auth.APIHost == nil
+				}))
+			},
+		},
+		"retries the sandbox login while the new sandbox is not found": {
+			CmdArgs: []string{
+				"--token", "xoxb-test-token",
+				"--name", "test-box",
+				"--domain", "test-box",
+				"--password", "mypass",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "test-box", "test-box", "mypass", int64(0), false)
+				setupTestSandboxLogin(t)
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").
+					Return(nil, slackerror.New(slackerror.ErrSandboxNotFound)).Once()
+				cm.API.On("SandboxLogin", mock.Anything, "xoxb-test-token", "T222").
+					Return(&api.SandboxLoginResult{SandboxTeamID: "T222", AccessToken: "xoxe.xoxp-sandbox"}, nil).Once()
+				cm.Auth.On("SetAuth", mock.Anything, mock.Anything).Return(types.SlackAuth{}, "", nil)
+				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNumberOfCalls(t, "SandboxLogin", 2)
+				cm.Auth.AssertCalled(t, "SetAuth", mock.Anything, mock.MatchedBy(func(auth types.SlackAuth) bool {
+					return auth.TeamID == "T222" && !auth.IsEnterpriseInstall && auth.EnterpriseID == ""
+				}))
+			},
+		},
+		"skips the sandbox login when the sandbox-signup experiment is off": {
+			CmdArgs: []string{
+				"--token", "xoxb-test-token",
+				"--name", "test-box",
+				"--domain", "test-box",
+				"--password", "mypass",
+			},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				setupCreateMocks(t, ctx, cm, "test-box", "test-box", "mypass", int64(0), false)
+			},
+			ExpectedStdoutOutputs: []string{"Sandbox Created", "T222"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNotCalled(t, "SandboxLogin", mock.Anything, mock.Anything, mock.Anything)
+				cm.Auth.AssertNotCalled(t, "SetAuth", mock.Anything, mock.Anything)
+				assert.NotContains(t, cm.GetStdoutOutput(), "You're logged in")
+			},
+		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
 		return NewCreateCommand(cf)
+	})
+}
+
+// setupTestSandboxLogin removes the waits between sandbox login attempts for the test
+func setupTestSandboxLogin(t *testing.T) {
+	t.Helper()
+	initialDelay, retryDelay := sandboxLoginInitialDelay, sandboxLoginRetryDelay
+	sandboxLoginInitialDelay, sandboxLoginRetryDelay = 0, 0
+	t.Cleanup(func() {
+		sandboxLoginInitialDelay, sandboxLoginRetryDelay = initialDelay, retryDelay
 	})
 }
 

@@ -29,8 +29,21 @@ const (
 	sandboxCreateMethod         = "enterprise.signup.createDevOrg"
 	sandboxDeleteMethod         = "developer.sandbox.delete"
 	sandboxListMethod           = "developer.sandbox.list"
+	sandboxLoginMethod          = "developer.sandbox.login"
 	sandboxSignupVerifiedMethod = "developer.account.createVerified"
 )
+
+// SandboxLoginResult contains the tokens and team details for a sandbox
+type SandboxLoginResult struct {
+	SandboxTeamID string `json:"sandbox_team_id"`
+	SandboxName   string `json:"sandbox_name"`
+	SandboxDomain string `json:"sandbox_domain"`
+	SandboxUserID string `json:"sandbox_user_id"`
+	AccessToken   string `json:"access_token"`
+	RefreshToken  string `json:"refresh_token"`
+	ExpiresAt     int    `json:"exp"`
+	Type          string `json:"type"`
+}
 
 // SignupRequest contains the fields for Developer Program signup
 type SignupRequest struct {
@@ -52,7 +65,13 @@ type SandboxClient interface {
 	CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error)
 	DeleteSandbox(ctx context.Context, token, sandboxID string) error
 	ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error)
+	SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error)
 	Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error)
+}
+
+type sandboxLoginResponse struct {
+	extendedBaseResponse
+	SandboxLoginResult
 }
 
 type createSandboxResponse struct {
@@ -181,6 +200,34 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 	}
 
 	return resp.Sandboxes, nil
+}
+
+// SandboxLogin returns access and refresh tokens for a sandbox owned by the caller
+func (c *Client) SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.SandboxLogin")
+	defer span.Finish()
+
+	values := url.Values{}
+	values.Add("token", token)
+	values.Add("sandbox_team_id", sandboxTeamID)
+
+	b, err := c.postForm(ctx, sandboxLoginMethod, values)
+	if err != nil {
+		return nil, errHTTPRequestFailed.WithRootCause(err)
+	}
+
+	resp := sandboxLoginResponse{}
+	err = goutils.JSONUnmarshal(b, &resp)
+	if err != nil {
+		return nil, errHTTPResponseInvalid.WithRootCause(err).AddAPIMethod(sandboxLoginMethod)
+	}
+
+	if !resp.Ok {
+		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxLoginMethod)
+	}
+
+	return &resp.SandboxLoginResult, nil
 }
 
 type signupAPIResponse struct {

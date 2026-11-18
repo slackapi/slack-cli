@@ -141,6 +141,36 @@ func TestClient_ListSandboxes_WithStatusFilter(t *testing.T) {
 	require.Equal(t, "archived", sandboxes[0].Status)
 }
 
+func TestClient_SandboxLogin_Ok(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	c, teardown := NewFakeClient(t, FakeClientParams{
+		ExpectedMethod:  sandboxLoginMethod,
+		ExpectedRequest: "sandbox_team_id=E123&token=token",
+		Response:        `{"ok":true,"sandbox_team_id":"E123","sandbox_name":"Sandbox","sandbox_domain":"sb","sandbox_user_id":"U123","access_token":"xoxe.xoxp-access","refresh_token":"xoxe-refresh","exp":1700000000,"type":"user"}`,
+	})
+	defer teardown()
+	result, err := c.SandboxLogin(ctx, "token", "E123")
+	require.NoError(t, err)
+	require.Equal(t, &SandboxLoginResult{
+		SandboxTeamID: "E123",
+		SandboxName:   "Sandbox",
+		SandboxDomain: "sb",
+		SandboxUserID: "U123",
+		AccessToken:   "xoxe.xoxp-access",
+		RefreshToken:  "xoxe-refresh",
+		ExpiresAt:     1700000000,
+		Type:          "user",
+	}, result)
+}
+
+func TestClient_SandboxLogin_CommonErrors(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	verifyCommonErrorCases(t, sandboxLoginMethod, func(c *Client) error {
+		_, err := c.SandboxLogin(ctx, "token", "E123")
+		return err
+	})
+}
+
 func TestClient_Signup_SendsAcceptTOS(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	c, teardown := NewFakeClient(t, FakeClientParams{

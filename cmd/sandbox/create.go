@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -158,7 +159,17 @@ func runCreateCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		return err
 	}
 
-	printCreateSuccess(cmd, clients, name, teamID, sandboxURL)
+	loggedIn := false
+	if clients.Config.WithExperimentOn(experiment.SandboxSignup) {
+		// Log in to the new sandbox
+		if err := loginAndSaveSandboxAuth(ctx, clients, clients.API(), auth.Token, teamID); err != nil {
+			clients.IO.PrintWarning(ctx, "Error logging in to the new sandbox: %s", err.Error())
+		} else {
+			loggedIn = true
+		}
+	}
+
+	printCreateSuccess(cmd, clients, name, teamID, sandboxURL, loggedIn)
 
 	return nil
 }
@@ -236,16 +247,21 @@ func getTemplateID(template string) (int, error) {
 		WithMessage("Invalid template: %q", template)
 }
 
-func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, name, teamID, url string) {
+// printCreateSuccess shows details about the created sandbox and if the CLI is logged in to it
+func printCreateSuccess(cmd *cobra.Command, clients *shared.ClientFactory, name, teamID, url string, loggedIn bool) {
 	ctx := cmd.Context()
+	details := []string{
+		fmt.Sprintf("Name: %s", name),
+		fmt.Sprintf("Team ID: %s", teamID),
+		fmt.Sprintf("URL: %s", url),
+	}
+	if loggedIn {
+		details = append(details, "You're logged in and can start developing with "+style.Highlight("slack run"))
+	}
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
-		Emoji: "beach_with_umbrella",
-		Text:  "Sandbox Created",
-		Secondary: []string{
-			fmt.Sprintf("Name: %s", name),
-			fmt.Sprintf("Team ID: %s", teamID),
-			fmt.Sprintf("URL: %s", url),
-		},
+		Emoji:     "beach_with_umbrella",
+		Text:      "Sandbox Created",
+		Secondary: details,
 	}))
 	clients.IO.PrintInfo(ctx, false, "Manage this sandbox from the CLI or visit\n%s", style.Secondary("https://api.slack.com/developer-program/sandboxes"))
 }
