@@ -25,11 +25,16 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 )
+
+// downloadTimeout limits how long a download of the CLI can take, so a stalled download
+// doesn't hold the update lock or keep a background update running
+const downloadTimeout = 10 * time.Minute
 
 type cliUpgrade struct {
 	// The path to the compressed file we've downloaded that contains the new CLI to install.
@@ -168,7 +173,7 @@ func UpgradeFromLocalFile(cliUpgradeData cliUpgrade) error {
 
 // download does an HTTP GET to the given url and places its response payload in dstFilePath
 func download(url string, dstFilePath string) error {
-	resp, err := http.Get(url)
+	resp, err := newDownloadClient().Get(url)
 	if err != nil {
 		return err
 	}
@@ -193,6 +198,11 @@ func download(url string, dstFilePath string) error {
 	}
 
 	return err
+}
+
+// newDownloadClient returns the HTTP client that downloads the CLI
+func newDownloadClient() *http.Client {
+	return &http.Client{Timeout: downloadTimeout}
 }
 
 // backupBinary copies the existing binary into a backups folder in binaryFolderPath, returning a path to the backed up binary

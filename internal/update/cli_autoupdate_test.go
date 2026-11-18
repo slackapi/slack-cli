@@ -16,6 +16,7 @@ package update
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -123,6 +124,22 @@ func Test_CLI_getUpdateFileName(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.expectedFilename, filename)
 			}
+		})
+	}
+}
+
+func Test_newDownloadClient(t *testing.T) {
+	tests := map[string]struct {
+		expectedTimeout time.Duration
+	}{
+		"stops a download that takes too long": {
+			expectedTimeout: 10 * time.Minute,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			client := newDownloadClient()
+			require.Equal(t, tc.expectedTimeout, client.Timeout)
 		})
 	}
 }
