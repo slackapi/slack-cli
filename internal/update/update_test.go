@@ -18,6 +18,7 @@ import (
 	"context"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -119,9 +121,10 @@ func Test_UpdateNotification_HasUpdate(t *testing.T) {
 
 func Test_UpdateNotification_PrintAndPromptUpdates(t *testing.T) {
 	tests := map[string]struct {
-		hasUpdate        bool
-		shouldSelfUpdate bool
-		expectedInstalls int
+		checkInBackground bool
+		hasUpdate         bool
+		shouldSelfUpdate  bool
+		expectedInstalls  int
 	}{
 		"returns without a background check": {
 			hasUpdate:        false,
@@ -137,20 +140,50 @@ func Test_UpdateNotification_PrintAndPromptUpdates(t *testing.T) {
 			shouldSelfUpdate: false,
 			expectedInstalls: 0,
 		},
+		"waits for a running background check": {
+			checkInBackground: true,
+			hasUpdate:         true,
+			shouldSelfUpdate:  true,
+			expectedInstalls:  1,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			for _, env := range []string{envSkipUpdate, "CI", "BUILD_NUMBER", "RUN_ID"} {
+				t.Setenv(env, "")
+			}
+			args := os.Args
+			t.Cleanup(func() { os.Args = args })
+			os.Args = []string{"placeholder"}
 			ctx := slackcontext.MockContext(t.Context())
 			cmd := &cobra.Command{}
 			cmd.SetContext(ctx)
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			release := make(chan struct{})
+			var checked atomic.Bool
 			dependency := &mockDependency{}
-			dependency.On("HasUpdate").Return(tc.hasUpdate, nil)
+			dependency.On("CheckForUpdate", mock.Anything).Run(func(mock.Arguments) {
+				<-release
+				checked.Store(true)
+			}).Return(nil)
+			dependency.On("HasUpdate").Run(func(mock.Arguments) {
+				assert.Equal(t, tc.checkInBackground, checked.Load(), "HasUpdate ran before the background check finished")
+			}).Return(tc.hasUpdate, nil)
 			dependency.On("PrintUpdateNotification", cmd).Return(tc.shouldSelfUpdate, nil)
 			dependency.On("InstallUpdate", mock.Anything).Return(nil)
 			u := &UpdateNotification{
+				clients:      clients,
+				hoursToWait:  defaultHoursToWait,
 				dependencies: []Dependency{dependency},
 			}
-			done := make(chan error)
+			if tc.checkInBackground {
+				u.CheckForUpdateInBackground(ctx)
+				// Finish the check after PrintAndPromptUpdates has started
+				time.AfterFunc(10*time.Millisecond, func() { close(release) })
+			}
+			done := make(chan error, 1)
 			go func() {
 				done <- u.PrintAndPromptUpdates(cmd)
 			}()
@@ -167,9 +200,12 @@ func Test_UpdateNotification_PrintAndPromptUpdates(t *testing.T) {
 
 func Test_UpdateNotification_isEnabled(t *testing.T) {
 	tests := map[string]struct {
-		args     []string
-		command  string
-		expected bool
+		args           []string
+		command        string
+		env            map[string]string
+		skipUpdateFlag bool
+		tokenFlag      string
+		expected       bool
 	}{
 		"checks for updates on other commands": {
 			args:     []string{"auth", "list"},
@@ -181,16 +217,49 @@ func Test_UpdateNotification_isEnabled(t *testing.T) {
 			command:  "upgrade",
 			expected: false,
 		},
+		"skips with the skip update flag": {
+			args:           []string{"auth", "list", "--skip-update"},
+			command:        "auth list",
+			skipUpdateFlag: true,
+			expected:       false,
+		},
+		"skips with a token flag": {
+			args:      []string{"auth", "list", "--token", "xoxb-test-token"},
+			command:   "auth list",
+			tokenFlag: "xoxb-test-token",
+			expected:  false,
+		},
+		"skips with the skip update environment variable": {
+			args:     []string{"auth", "list"},
+			command:  "auth list",
+			env:      map[string]string{envSkipUpdate: "true"},
+			expected: false,
+		},
+		"skips in continuous integration": {
+			args:     []string{"auth", "list"},
+			command:  "auth list",
+			env:      map[string]string{"CI": "true"},
+			expected: false,
+		},
+		"skips ignored commands": {
+			args:     []string{"version"},
+			command:  "version",
+			expected: false,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			for _, env := range []string{envSkipUpdate, "CI", "BUILD_NUMBER", "RUN_ID"} {
-				t.Setenv(env, "")
+				t.Setenv(env, tc.env[env])
 			}
+			args := os.Args
+			t.Cleanup(func() { os.Args = args })
 			os.Args = append([]string{"placeholder"}, tc.args...)
 			clientsMock := shared.NewClientsMock()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			clients.Config.Command = tc.command
+			clients.Config.SkipUpdateFlag = tc.skipUpdateFlag
+			clients.Config.TokenFlag = tc.tokenFlag
 			u := New(clients, "v4.10.0")
 			require.Equal(t, tc.expected, u.isEnabled())
 		})

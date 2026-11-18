@@ -142,7 +142,6 @@ func NewRootCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 			// TODO: since commands are moving to `*E` cobra lifecycle methods, this method may not be invoked if those earlier lifecycle methods return an error. Maybe move this to the cleanup() method below? but maybe this is OK, no need to prompt users to update if they encounter an error?
-			// when the command is `slack update`
 			return updateNotification.PrintAndPromptUpdates(cmd)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

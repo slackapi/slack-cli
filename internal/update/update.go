@@ -68,8 +68,8 @@ func (u *UpdateNotification) Dependencies() []Dependency {
 	return u.dependencies
 }
 
-// PrintUpdates displays an update message after the command runs and prompts the user if they want to update, if applicable
-// Invoked from root command's post-run method. If an error occurs, we return it so it is raised to the user.
+// PrintAndPromptUpdates displays an update message and prompts the user if they want to update, if applicable
+// Invoked from root command's post-run method and the upgrade command. If an error occurs, we return it so it is raised to the user.
 func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command) error {
 	ctx := cmd.Context()
 
