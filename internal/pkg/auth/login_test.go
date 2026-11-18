@@ -89,6 +89,40 @@ func Test_Login(t *testing.T) {
 	}
 }
 
+func Test_printAuthTicketSubmissionInstructions(t *testing.T) {
+	tests := map[string]struct {
+		authTicket      string
+		expectedOutputs []string
+	}{
+		"prints the slash command with the ticket on its own line without indentation": {
+			authTicket:      "ABC123",
+			expectedOutputs: []string{"\n/slackauthticket ABC123\n"},
+		},
+		"prints the steps to approve permissions and get a challenge code": {
+			authTicket: "XYZ789",
+			expectedOutputs: []string{
+				"Run the following slash command in any Slack channel or DM",
+				"This will open a modal with user permissions for you to approve",
+				"Once approved, a challenge code will be generated in Slack",
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			cm := shared.NewClientsMock()
+			cm.AddDefaultMocks()
+
+			printAuthTicketSubmissionInstructions(ctx, cm.IO, tc.authTicket)
+
+			for _, expected := range tc.expectedOutputs {
+				assert.Contains(t, cm.GetStdoutOutput(), expected)
+			}
+			cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AuthLoginStart, mock.Anything)
+		})
+	}
+}
+
 func Test_saveNewAuth(t *testing.T) {
 	tests := map[string]struct {
 		host            string
@@ -149,40 +183,6 @@ func Test_saveNewAuth(t *testing.T) {
 			if tc.noRotation {
 				cm.Auth.AssertNotCalled(t, "SetAuth", mock.Anything, mock.Anything)
 			}
-		})
-	}
-}
-
-func Test_printAuthTicketSubmissionInstructions(t *testing.T) {
-	tests := map[string]struct {
-		authTicket      string
-		expectedOutputs []string
-	}{
-		"prints the slash command with the ticket on its own line without indentation": {
-			authTicket:      "ABC123",
-			expectedOutputs: []string{"\n/slackauthticket ABC123\n"},
-		},
-		"prints the steps to approve permissions and get a challenge code": {
-			authTicket: "XYZ789",
-			expectedOutputs: []string{
-				"Run the following slash command in any Slack channel or DM",
-				"This will open a modal with user permissions for you to approve",
-				"Once approved, a challenge code will be generated in Slack",
-			},
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := slackcontext.MockContext(t.Context())
-			cm := shared.NewClientsMock()
-			cm.AddDefaultMocks()
-
-			printAuthTicketSubmissionInstructions(ctx, cm.IO, tc.authTicket)
-
-			for _, expected := range tc.expectedOutputs {
-				assert.Contains(t, cm.GetStdoutOutput(), expected)
-			}
-			cm.IO.AssertCalled(t, "PrintTrace", mock.Anything, slacktrace.AuthLoginStart, mock.Anything)
 		})
 	}
 }
