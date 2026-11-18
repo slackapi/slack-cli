@@ -78,6 +78,13 @@ func TestAppAddCommandPreRun(t *testing.T) {
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 			},
 		},
+		"errors if the manifest source flag is invalid": {
+			CmdArgs:              []string{"--manifest-source", "invalid"},
+			ExpectedErrorStrings: []string{`Invalid value "invalid" for --manifest-source flag`, slackerror.ErrInvalidFlag},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cf.SDKConfig.WorkingDirectory = "."
+			},
+		},
 		"proceeds if run in a project directory": {
 			ExpectedError: nil,
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
