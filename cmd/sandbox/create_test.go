@@ -26,6 +26,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -295,7 +296,7 @@ func TestCreateCommand(t *testing.T) {
 				cm.Auth.On("IsAPIHostSlackProd", mock.Anything).Return(true)
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
-			ExpectedStdoutOutputs: []string{"Sandbox Created", "T222"},
+			ExpectedStdoutOutputs: []string{"Sandbox Created", "T222", "You're logged in and can start developing with slack run"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.Auth.AssertCalled(t, "SetAuth", mock.Anything, mock.MatchedBy(func(auth types.SlackAuth) bool {
 					return auth.Token == "xoxe.xoxp-sandbox" &&
@@ -349,6 +350,7 @@ func TestCreateCommand(t *testing.T) {
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertNotCalled(t, "SandboxLogin", mock.Anything, mock.Anything, mock.Anything)
 				cm.Auth.AssertNotCalled(t, "SetAuth", mock.Anything, mock.Anything)
+				assert.NotContains(t, cm.GetStdoutOutput(), "You're logged in")
 			},
 		},
 	}, func(cf *shared.ClientFactory) *cobra.Command {
