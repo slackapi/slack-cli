@@ -151,7 +151,10 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Now())
 	} else {
 		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
-		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Time{})
+		// Clear a failed check only when one is set, to avoid writing the config file twice
+		if lastUpdateCheckFailedAt, err := u.clients.Config.SystemConfig.GetLastUpdateCheckFailedAt(ctx); err == nil && !lastUpdateCheckFailedAt.IsZero() {
+			_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Time{})
+		}
 	}
 
 	if shouldForceUpdateCheck {
