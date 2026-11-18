@@ -73,6 +73,12 @@ build-ci: clean
 build-snapshot: clean
 	BUILD_VERSION="$(BUILD_VERSION)" LDFLAGS="$(LDFLAGS)" go tool goreleaser --snapshot --clean --skip=publish --config .goreleaser.yml
 
+# Generate the reference docs for commands and errors
+.PHONY: docs
+docs: build-ci
+	rm -rf ./docs/reference/commands ./docs/reference/errors.md
+	./bin/slack docgen ./docs/reference --skip-update
+
 # Create a release candidate commit with updated docs
 # Usage: `make rc RELEASE_VERSION=3.7.0-example`
 .PHONY: rc
@@ -83,11 +89,8 @@ rc:
 		echo "Error: Release version should not begin with a version prefix."; \
 		exit 1; \
 	fi
-	@printf "$(FONT_BOLD)Building CLI$(FONT_RESET)\n"
-	$(MAKE) build-ci LDFLAGS="-X 'github.com/slackapi/slack-cli/internal/version.Version=v$(RELEASE_VERSION)'"
-	@printf "$(FONT_BOLD)Updating Docs$(FONT_RESET)\n"
-	rm -rf ./docs/reference/commands ./docs/reference/errors.md
-	./bin/slack docgen ./docs/reference --skip-update
+	@printf "$(FONT_BOLD)Building CLI and Updating Docs$(FONT_RESET)\n"
+	$(MAKE) docs LDFLAGS="-X 'github.com/slackapi/slack-cli/internal/version.Version=v$(RELEASE_VERSION)'"
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_arm64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_arm64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_macOS_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_macOS_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md
 	sed -i.bak -E "s#slack_cli_[0-9]+\.[0-9]+\.[0-9]+_linux_amd64\.tar\.gz#slack_cli_$(RELEASE_VERSION)_linux_amd64.tar.gz#" docs/guides/installing-the-slack-cli-for-mac-and-linux.md

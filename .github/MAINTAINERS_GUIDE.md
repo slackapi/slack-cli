@@ -446,10 +446,11 @@ slack-cli-local --version
 
 ### Generating documentation
 
-You can generate documentation for all commands in the `docs/` directory with:
+You can generate the reference docs for all commands and errors in the
+`docs/reference/` directory with:
 
 ```zsh
-slack docgen
+make docs
 ```
 
 ### Versioning

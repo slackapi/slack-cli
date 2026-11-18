@@ -40,7 +40,7 @@ Always run `gofmt -w` on changed Go files after making edits to ensure proper fo
 ```bash
 make init               # Initialize project (fetch tags, dependencies)
 make clean              # Remove build artifacts (bin/, dist/)
-slack docgen ./docs/reference  # Generate command documentation
+make docs               # Generate command and error reference docs
 ```
 
 ## Architecture
@@ -227,7 +227,7 @@ Use conventional commit format (feat:, fix:, chore:, etc.) for commit titles.
 2. Implement command using `NewXCommand(clients *shared.ClientFactory) *cobra.Command`
 3. Register in `cmd/root.go` `Init()` function
 4. Add tests in `cmd/<category>/<command>_test.go`
-5. Run `slack docgen ./docs/reference` to generate docs
+5. Run `make docs` to generate docs
 6. Consider adding command alias in `AliasMap` if appropriate
 
 ### Command Descriptions and Documentation
