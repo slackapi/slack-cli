@@ -58,17 +58,20 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // checkForUpdates will check for CLI/SDK updates and print a notice for each update, which can prompt to install it.
 // When no updates are available, it prints a message that everything is up-to-date.
+// When a check fails, it returns the error after printing the updates that were found.
 func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
 	updateNotification := update.New(clients, version.Raw())
 
 	// Force an update check that is blocking and synchronous
-	if err := updateNotification.CheckForUpdate(ctx, true); err != nil {
-		return err
-	}
+	checkErr := updateNotification.CheckForUpdate(ctx, true)
 
+	// Print the updates that were found before returning an error from another check
 	if err := updateNotification.PrintAndPromptUpdates(cmd); err != nil {
 		return err
+	}
+	if checkErr != nil {
+		return checkErr
 	}
 	if updateNotification.HasUpdate() {
 		return nil

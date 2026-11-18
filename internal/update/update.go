@@ -116,21 +116,32 @@ func (u *UpdateNotification) HasUpdate() bool {
 
 // CheckForUpdate has each dependency perform a self-check for available updates.
 // This is the synchronous version of CheckForUpdateInBackground
+//
+// A forced check returns the first error from a dependency, so the upgrade command
+// doesn't report the latest version when it couldn't check. Other checks only log
+// errors, so a command that runs offline doesn't fail.
 func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpdateCheck bool) error {
 	if !u.shouldCheckForUpdate(ctx, shouldForceUpdateCheck) {
 		return nil
 	}
 
 	// Each dependency self-checks for an update
+	var checkErr error
 	for _, v := range u.Dependencies() {
 		err := v.CheckForUpdate(ctx)
 		if err != nil {
 			u.clients.IO.PrintDebug(ctx, "CheckForUpdate for %s failed: %v", reflect.TypeOf(v), err)
+			if checkErr == nil {
+				checkErr = err
+			}
 		}
 	}
 
 	_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
 
+	if shouldForceUpdateCheck {
+		return checkErr
+	}
 	return nil
 }
 
