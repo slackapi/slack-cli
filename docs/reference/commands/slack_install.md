@@ -15,6 +15,7 @@ slack install [flags]
 ```
   -E, --environment string           environment of app (local, deployed)
   -h, --help                         help for install
+      --manifest-source string       resolve manifest differences using this source (local or remote)
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)
 ```
@@ -46,6 +47,9 @@ $ slack app install --team T0123456 --environment deployed
 
 # Install a local dev app to a specific team
 $ slack app install --team T0123456 --environment local
+
+# Install with the project manifest when app settings differ
+$ slack app install --manifest-source=local
 ```
 
 ## See also
