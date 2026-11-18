@@ -56,24 +56,20 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 	}
 }
 
-// checkForUpdates will check for CLI/SDK updates and print a message when no updates are available.
-// When there are updates, the function will *not* print a message because the root command handles printing update notifications.
+// checkForUpdates will check for CLI/SDK updates and print a notice for each update, which can prompt to install it.
+// When no updates are available, it prints a message that everything is up-to-date.
 func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-	updateNotification := update.New(clients, version.Raw(), "SLACK_SKIP_UPDATE")
+	updateNotification := update.New(clients, version.Raw())
 
-	// TODO(@mbrooks) This update check is happening at the same time as the root command's `CheckForUpdateInBackground`.
-	//                The difference between the two is that this update check is forced while the root command runs every 24 hours.
-	//                If both find an update, only 1 notification is displayed.
-	//                How can we improve this to avoid doing 2 update network requests/checks?
-	//
 	// Force an update check that is blocking and synchronous
 	if err := updateNotification.CheckForUpdate(ctx, true); err != nil {
 		return err
 	}
 
-	// Update notification messages are printed by the root command's persistent post-run (cmd/root.go).
-	// So this command only needs to print a message when everything is up-to-date.
+	if err := updateNotification.PrintAndPromptUpdates(cmd); err != nil {
+		return err
+	}
 	if updateNotification.HasUpdate() {
 		return nil
 	}

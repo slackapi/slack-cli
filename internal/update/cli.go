@@ -31,10 +31,9 @@ const metadataURL = "https://docs.slack.dev/tools/metadata.json"
 // current version and the latest CLI release version
 // from Slack CLI metadata
 type CLIDependency struct {
-	clients      *shared.ClientFactory
-	releaseError error
-	version      string
-	releaseInfo  *LatestCLIRelease
+	clients     *shared.ClientFactory
+	version     string
+	releaseInfo *LatestCLIRelease
 }
 
 // NewCLIDependency creates and returns a new instance of CLIDependency
@@ -65,7 +64,7 @@ func (c *CLIDependency) CheckForUpdate(ctx context.Context) error {
 }
 
 func (c *CLIDependency) HasUpdate() (bool, error) {
-	return c.releaseInfo != nil, c.releaseError
+	return c.releaseInfo != nil, nil
 }
 
 // PrintUpdateNotification notifies the user that a new version is available and provides upgrade instructions for Homebrew. Returns a bool representing whether the user wants the self-update to run
@@ -103,10 +102,4 @@ func (c *CLIDependency) PrintUpdateNotification(cmd *cobra.Command) (bool, error
 	}
 
 	return false, nil
-
-	// TODO: Uncomment when open sourced to display the latest release URL that includes release notes
-	// cmd.Printf(
-	// 	"\n%s\n\n",
-	// 	newRelease.URL,
-	// )
 }
