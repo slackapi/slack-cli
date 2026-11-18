@@ -1412,7 +1412,7 @@ Ask a workspace admin or owner to install the app, or remove the restricted scop
 
 ### sandbox_not_found {#sandbox_not_found}
 
-**Message**: The specified sandbox could not be found
+**Message**: Sandbox not found
 
 ---
 
