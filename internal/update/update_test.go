@@ -61,41 +61,67 @@ func (m *mockDependency) InstallUpdate(ctx context.Context) error {
 }
 
 func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
+	now := time.Now()
+	lastUpdateCheckedAt := now.Add(-48 * time.Hour)
 	tests := map[string]struct {
-		forced            bool
-		status            int
-		unreachable       bool
-		hookErr           error
-		expectedErr       string
-		expectedNextCheck time.Duration
+		forced                          bool
+		status                          int
+		unreachable                     bool
+		hookErr                         error
+		lastUpdateCheckFailedAt         time.Time
+		expectedErr                     string
+		expectedRequests                int32
+		expectedLastUpdateCheckedAt     time.Time
+		expectedLastUpdateCheckFailedAt time.Time
 	}{
 		"returns no error when a forced check succeeds": {
-			forced:            true,
-			status:            http.StatusOK,
-			expectedNextCheck: 24 * time.Hour,
+			forced:                          true,
+			status:                          http.StatusOK,
+			lastUpdateCheckFailedAt:         now.Add(-30 * time.Minute),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now,
+			expectedLastUpdateCheckFailedAt: time.Time{},
 		},
 		"returns the error when a forced check gets an error response": {
-			forced:            true,
-			status:            http.StatusInternalServerError,
-			expectedErr:       slackerror.ErrCLIUpdateCheck,
-			expectedNextCheck: time.Hour,
+			forced:                          true,
+			status:                          http.StatusInternalServerError,
+			expectedErr:                     slackerror.ErrCLIUpdateCheck,
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     lastUpdateCheckedAt,
+			expectedLastUpdateCheckFailedAt: now,
 		},
 		"returns the error when a forced check can't reach the server": {
-			forced:            true,
-			unreachable:       true,
-			expectedErr:       slackerror.ErrCLIUpdateCheck,
-			expectedNextCheck: time.Hour,
+			forced:                          true,
+			unreachable:                     true,
+			expectedErr:                     slackerror.ErrCLIUpdateCheck,
+			expectedRequests:                0,
+			expectedLastUpdateCheckedAt:     lastUpdateCheckedAt,
+			expectedLastUpdateCheckFailedAt: now,
 		},
 		"returns no error when a background check gets an error response": {
-			forced:            false,
-			status:            http.StatusInternalServerError,
-			expectedNextCheck: time.Hour,
+			forced:                          false,
+			status:                          http.StatusInternalServerError,
+			lastUpdateCheckFailedAt:         now.Add(-2 * time.Hour),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     lastUpdateCheckedAt,
+			expectedLastUpdateCheckFailedAt: now,
 		},
-		"waits the full interval when only the check-update hook fails": {
-			forced:            false,
-			status:            http.StatusOK,
-			hookErr:           slackerror.New("The check-update hook failed"),
-			expectedNextCheck: 24 * time.Hour,
+		"skips a background check within an hour of a failed check": {
+			forced:                          false,
+			status:                          http.StatusOK,
+			lastUpdateCheckFailedAt:         now.Add(-30 * time.Minute),
+			expectedRequests:                0,
+			expectedLastUpdateCheckedAt:     lastUpdateCheckedAt,
+			expectedLastUpdateCheckFailedAt: now.Add(-30 * time.Minute),
+		},
+		"counts a failed check-update hook as a successful check": {
+			forced:                          false,
+			status:                          http.StatusOK,
+			hookErr:                         slackerror.New("The check-update hook failed"),
+			lastUpdateCheckFailedAt:         now.Add(-2 * time.Hour),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now,
+			expectedLastUpdateCheckFailedAt: time.Time{},
 		},
 	}
 	for name, tc := range tests {
@@ -128,22 +154,27 @@ func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
 			if tc.hookErr != nil {
 				clients.SDKConfig.Hooks.CheckUpdate = hooks.HookScript{Name: "CheckUpdate", Command: "check-update"}
 			}
+			_, err := clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, lastUpdateCheckedAt)
+			require.NoError(t, err)
+			_, err = clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, tc.lastUpdateCheckFailedAt)
+			require.NoError(t, err)
 			u := New(clients, "v4.10.0")
-			err := u.CheckForUpdate(ctx, tc.forced)
+			err = u.CheckForUpdate(ctx, tc.forced)
 			if tc.expectedErr != "" {
 				require.Error(t, err)
 				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err).Code)
 			} else {
 				require.NoError(t, err)
 			}
-			lastUpdateCheckedAt, err := clients.Config.SystemConfig.GetLastUpdateCheckedAt(ctx)
+			actualLastUpdateCheckedAt, err := clients.Config.SystemConfig.GetLastUpdateCheckedAt(ctx)
 			require.NoError(t, err)
-			assert.WithinDuration(t, time.Now().Add(tc.expectedNextCheck), lastUpdateCheckedAt.Add(defaultHoursToWait*time.Hour), time.Minute)
+			assert.WithinDuration(t, tc.expectedLastUpdateCheckedAt, actualLastUpdateCheckedAt, time.Minute)
+			actualLastUpdateCheckFailedAt, err := clients.Config.SystemConfig.GetLastUpdateCheckFailedAt(ctx)
+			require.NoError(t, err)
+			assert.WithinDuration(t, tc.expectedLastUpdateCheckFailedAt, actualLastUpdateCheckFailedAt, time.Minute)
 			// A background check right after is skipped
 			require.NoError(t, u.CheckForUpdate(ctx, false))
-			if !tc.unreachable {
-				assert.Equal(t, int32(1), requests.Load())
-			}
+			assert.Equal(t, tc.expectedRequests, requests.Load())
 		})
 	}
 }

@@ -49,6 +49,7 @@ type Dependency interface {
 const defaultHoursToWait = 24
 
 // retryHoursToWait is the number of hours to wait before checking again after the Slack CLI check fails.
+// It keeps commands run while offline from each waiting on a check.
 const retryHoursToWait = 1
 
 // envSkipUpdate is the environment variable that skips checking for updates.
@@ -130,7 +131,7 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 
 	// Each dependency self-checks for an update
 	var checkErr error
-	checkedAt := time.Now()
+	var cliCheckFailed bool
 	for _, v := range u.Dependencies() {
 		err := v.CheckForUpdate(ctx)
 		if err != nil {
@@ -138,14 +139,20 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 			if checkErr == nil {
 				checkErr = err
 			}
-			// Check the Slack CLI again sooner than usual after a failed check, such as while offline
 			if _, ok := v.(*CLIDependency); ok {
-				checkedAt = time.Now().Add(time.Duration((retryHoursToWait - u.hoursToWait) * float64(time.Hour)))
+				cliCheckFailed = true
 			}
 		}
 	}
 
-	_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, checkedAt)
+	// A failed check of the Slack CLI is retried sooner than usual, such as after going offline.
+	// Errors from the check-update hook are specific to a project, so those wait as usual.
+	if cliCheckFailed {
+		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Now())
+	} else {
+		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
+		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Time{})
+	}
 
 	if shouldForceUpdateCheck {
 		return checkErr
@@ -160,6 +167,10 @@ func (u *UpdateNotification) shouldCheckForUpdate(ctx context.Context, shouldFor
 	}
 
 	if !u.isEnabled() {
+		return false
+	}
+
+	if u.isLastUpdateCheckFailedAtLessThan(ctx, retryHoursToWait) {
 		return false
 	}
 
@@ -227,6 +238,17 @@ func (u *UpdateNotification) isIgnoredCommand() bool {
 		}
 	}
 	return false
+}
+
+// isLastUpdateCheckFailedAtLessThan returns true when the last failed check of the Slack CLI happened
+// less than the hours parameter ago.
+func (u *UpdateNotification) isLastUpdateCheckFailedAtLessThan(ctx context.Context, hours float64) bool {
+	lastUpdateCheckFailedAt, err := u.clients.Config.SystemConfig.GetLastUpdateCheckFailedAt(ctx)
+	if err != nil || lastUpdateCheckFailedAt.IsZero() {
+		return false
+	}
+
+	return time.Since(lastUpdateCheckFailedAt).Hours() < hours
 }
 
 // isLastUpdateCheckedAtGreaterThan returns true when the time since the last update check is greater
