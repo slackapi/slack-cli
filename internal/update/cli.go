@@ -21,11 +21,12 @@ import (
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
 )
 
-const metadataURL = "https://docs.slack.dev/tools/metadata.json"
+var MetadataURL = "https://docs.slack.dev/tools/metadata.json"
 
 // CLIDependency contains information about the
 // current version and the latest CLI release version
@@ -55,9 +56,9 @@ func (c *CLIDependency) CheckForUpdate(ctx context.Context) error {
 	}
 
 	metadata := Metadata{httpClient: httpClient}
-	c.releaseInfo, err = metadata.CheckForUpdate(ctx, metadataURL, c.version)
+	c.releaseInfo, err = metadata.CheckForUpdate(ctx, MetadataURL, c.version)
 	if err != nil {
-		return err
+		return slackerror.New(slackerror.ErrCLIUpdateCheck).WithRootCause(err)
 	}
 
 	return nil
