@@ -116,10 +116,6 @@ func (u *UpdateNotification) HasUpdate() bool {
 
 // CheckForUpdate has each dependency perform a self-check for available updates.
 // This is the synchronous version of CheckForUpdateInBackground
-//
-// A forced check returns the first error from a dependency, so the upgrade command
-// doesn't report the latest version when it couldn't check. Other checks only log
-// errors, so a command that runs offline doesn't fail.
 func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpdateCheck bool) error {
 	if !u.shouldCheckForUpdate(ctx, shouldForceUpdateCheck) {
 		return nil
