@@ -1944,3 +1944,42 @@ func Test_resolveIconPath(t *testing.T) {
 		})
 	}
 }
+
+func Test_usesLocalManifest(t *testing.T) {
+	tests := map[string]struct {
+		manifestSource  config.ManifestSource
+		flagSource      config.ManifestSource
+		manifestCreates bool
+		expected        bool
+	}{
+		"creating an app uses the local manifest": {
+			manifestSource:  config.ManifestSourceRemote,
+			flagSource:      config.ManifestSourceRemote,
+			manifestCreates: true,
+			expected:        true,
+		},
+		"local flag uses the local manifest over a remote project source": {
+			manifestSource: config.ManifestSourceRemote,
+			flagSource:     config.ManifestSourceLocal,
+			expected:       true,
+		},
+		"remote flag uses the remote manifest over a local project source": {
+			manifestSource: config.ManifestSourceLocal,
+			flagSource:     config.ManifestSourceRemote,
+			expected:       false,
+		},
+		"local project source uses the local manifest without a flag": {
+			manifestSource: config.ManifestSourceLocal,
+			expected:       true,
+		},
+		"remote project source uses the remote manifest without a flag": {
+			manifestSource: config.ManifestSourceRemote,
+			expected:       false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, usesLocalManifest(tc.manifestSource, tc.flagSource, tc.manifestCreates))
+		})
+	}
+}

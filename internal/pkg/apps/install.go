@@ -79,17 +79,13 @@ func Install(ctx context.Context, clients *shared.ClientFactory, auth types.Slac
 		app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// Get the manifest from the local file if the manifest source or the --manifest-source flag
-	// is local, or if we are creating a new app. After an app is created, app settings becomes the
-	// source of truth for remote manifests, so installs otherwise get the latest manifest from app
-	// settings.
 	var slackManifest types.SlackYaml
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return app, "", err
 	}
 	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
-	if manifestSource.Equals(config.ManifestSourceLocal) || flagSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+	if usesLocalManifest(manifestSource, flagSource, manifestCreates) {
 		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return app, "", err
@@ -399,17 +395,13 @@ func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGran
 		// app.EnterpriseID = *authSession.EnterpriseID
 	}
 
-	// Get the manifest from the local file if the manifest source or the --manifest-source flag
-	// is local, or if we are creating a new app. After an app is created, app settings becomes the
-	// source of truth for remote manifests, so installs otherwise get the latest manifest from app
-	// settings.
 	var slackManifest types.SlackYaml
 	manifestSource, err := clients.Config.ProjectConfig.GetManifestSource(ctx)
 	if err != nil {
 		return app, api.DeveloperAppInstallResult{}, "", err
 	}
 	flagSource := config.ManifestSource(clients.Config.ManifestSourceFlag)
-	if manifestSource.Equals(config.ManifestSourceLocal) || flagSource.Equals(config.ManifestSourceLocal) || manifestCreates {
+	if usesLocalManifest(manifestSource, flagSource, manifestCreates) {
 		slackManifest, err = clients.AppClient().Manifest.GetManifestLocal(ctx, clients.SDKConfig, clients.HookExecutor)
 		if err != nil {
 			return app, api.DeveloperAppInstallResult{}, "", err
@@ -773,6 +765,17 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 		return false, err
 	}
 	return false, nil
+}
+
+// usesLocalManifest decides if the project manifest is used instead of app settings
+func usesLocalManifest(manifestSource config.ManifestSource, flagSource config.ManifestSource, manifestCreates bool) bool {
+	if manifestCreates {
+		return true
+	}
+	if flagSource.Exists() {
+		return flagSource.Equals(config.ManifestSourceLocal)
+	}
+	return manifestSource.Equals(config.ManifestSourceLocal)
 }
 
 // Displays warning message and details and then gives user a prompt on if they want to continue or not. Returns false
