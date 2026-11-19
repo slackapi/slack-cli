@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -440,6 +441,44 @@ func Test_sendWebSocketMessage(t *testing.T) {
 		require.ErrorIs(t, err, expectedError)
 		conn.AssertCalled(t, "WriteMessage", mock.Anything, mock.Anything)
 	})
+}
+
+func Test_LocalServer_stopDelegateProcess(t *testing.T) {
+	for name, tc := range map[string]struct {
+		delegateCmd func(t *testing.T) hooks.ShellCommand
+	}{
+		"does nothing when no delegated process is running": {
+			delegateCmd: func(t *testing.T) hooks.ShellCommand {
+				return nil
+			},
+		},
+		"clears a delegated command that has no process": {
+			delegateCmd: func(t *testing.T) hooks.ShellCommand {
+				return &hooks.MockCommand{}
+			},
+		},
+		"stops a running delegated process": {
+			delegateCmd: func(t *testing.T) hooks.ShellCommand {
+				cmd := hooks.ShellExec{}.Command(nil, nil, nil, nil, "sleep", "30")
+				require.NoError(t, cmd.Start())
+				return cmd
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			cmd := tc.delegateCmd(t)
+			server := LocalServer{clients: clients, delegateCmd: cmd}
+			server.stopDelegateProcess(ctx)
+			assert.Nil(t, server.delegateCmd)
+			if cmd != nil && cmd.GetProcess() != nil {
+				assert.ErrorIs(t, cmd.GetProcess().Signal(os.Kill), os.ErrProcessDone)
+			}
+		})
+	}
 }
 
 func Test_LocalServer_watchAppEvents(t *testing.T) {
