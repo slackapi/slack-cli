@@ -26,7 +26,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// MetadataURL is where the latest Slack CLI release is found. Tests can replace it.
 var MetadataURL = "https://docs.slack.dev/tools/metadata.json"
 
 // CLIDependency contains information about the
