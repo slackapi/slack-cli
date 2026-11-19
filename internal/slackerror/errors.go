@@ -69,6 +69,7 @@ const (
 	ErrCLIConfigInvalid                              = "cli_config_invalid"
 	ErrCLIConfigLocationError                        = "cli_config_location_error"
 	ErrCLIReadError                                  = "cli_read_error"
+	ErrCLIUpdateCheck                                = "cli_update_check_error"
 	ErrCLIUpdateRequired                             = "cli_update_required" // Slack API error code
 	ErrCannotAbandonApp                              = "cannot_abandon_app"
 	ErrCannotAddOwner                                = "cannot_add_owner"
@@ -564,6 +565,12 @@ Otherwise create the app on a workspace from app settings, then add it to this p
 		Code:        ErrCLIReadError,
 		Message:     "There was an error reading configuration",
 		Remediation: "Check your config.json file.",
+	},
+
+	ErrCLIUpdateCheck: {
+		Code:        ErrCLIUpdateCheck,
+		Message:     "Couldn't check for updates to this command-line tool",
+		Remediation: "Check your network connection and try again, or find the latest version at:\nhttps://docs.slack.dev/tools/slack-cli",
 	},
 
 	ErrCLIUpdateRequired: {

@@ -58,9 +58,14 @@ func Test_clearAutoUpdateResult(t *testing.T) {
 
 func Test_readAutoUpdateResult(t *testing.T) {
 	tests := map[string]struct {
+		savedContent   string
 		expectedResult *AutoUpdateResult
 	}{
 		"returns nil without a saved result": {
+			expectedResult: nil,
+		},
+		"clears a saved result that doesn't parse": {
+			savedContent:   `{"from":`,
 			expectedResult: nil,
 		},
 	}
@@ -70,9 +75,17 @@ func Test_readAutoUpdateResult(t *testing.T) {
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			resultPath := filepath.Join(slackdeps.MockHomeDirectory, ".slack", "autoupdate.json")
+			if tc.savedContent != "" {
+				require.NoError(t, clients.Fs.MkdirAll(filepath.Dir(resultPath), 0o755))
+				require.NoError(t, afero.WriteFile(clients.Fs, resultPath, []byte(tc.savedContent), 0o600))
+			}
 			result, err := readAutoUpdateResult(ctx, clients)
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedResult, result)
+			exists, err := afero.Exists(clients.Fs, resultPath)
+			require.NoError(t, err)
+			assert.False(t, exists)
 		})
 	}
 }
