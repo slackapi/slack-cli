@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 
 	"github.com/slackapi/slack-cli/internal/shared"
-	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 )
 
@@ -36,7 +35,8 @@ type AutoUpdateResult struct {
 	Error string `json:"error,omitempty"`
 }
 
-// readAutoUpdateResult returns the saved result of a background update, or nil without one
+// readAutoUpdateResult returns the saved result of a background update, or nil without one.
+// A result that doesn't parse is cleared and reads as nil, so a bad file never fails a command.
 func readAutoUpdateResult(ctx context.Context, clients *shared.ClientFactory) (*AutoUpdateResult, error) {
 	resultPath, err := autoUpdateResultPath(ctx, clients)
 	if err != nil {
@@ -51,7 +51,8 @@ func readAutoUpdateResult(ctx context.Context, clients *shared.ClientFactory) (*
 	}
 	var result AutoUpdateResult
 	if err := json.Unmarshal(resultBytes, &result); err != nil {
-		return nil, slackerror.Wrap(err, slackerror.ErrUnableToParseJSON)
+		clients.IO.PrintDebug(ctx, "Clearing an update result that doesn't parse: %s", err)
+		return nil, clients.Fs.Remove(resultPath)
 	}
 	return &result, nil
 }
@@ -72,6 +73,9 @@ func writeAutoUpdateResult(ctx context.Context, clients *shared.ClientFactory, r
 		return err
 	}
 	_, err = tempFile.Write(resultBytes)
+	if err == nil {
+		err = tempFile.Sync()
+	}
 	if closeErr := tempFile.Close(); err == nil {
 		err = closeErr
 	}
