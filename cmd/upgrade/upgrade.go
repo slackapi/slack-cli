@@ -63,12 +63,13 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	updateNotification := update.New(clients, version.Raw())
 
 	// Force an update check that is blocking and synchronous
-	if err := updateNotification.CheckForUpdate(ctx, true); err != nil {
-		return err
-	}
+	checkErr := updateNotification.CheckForUpdate(ctx, true)
 
 	if err := updateNotification.PrintAndPromptUpdates(cmd); err != nil {
 		return err
+	}
+	if checkErr != nil {
+		return checkErr
 	}
 	if updateNotification.HasUpdate() {
 		return nil

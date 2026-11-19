@@ -379,6 +379,15 @@ Move the .slack/cli.json file to .slack/hooks.json and try again.
 
 ---
 
+### cli_update_check_error {#cli_update_check_error}
+
+**Message**: Couldn't check for updates to this command-line tool
+
+**Remediation**: Check your network connection and try again, or find the latest version at:
+https://docs.slack.dev/tools/slack-cli
+
+---
+
 ### cli_update_required {#cli_update_required}
 
 **Message**: Slack API requires the latest version of the Slack CLI
