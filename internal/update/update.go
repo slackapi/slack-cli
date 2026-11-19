@@ -122,15 +122,22 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 	}
 
 	// Each dependency self-checks for an update
+	var checkErr error
 	for _, v := range u.Dependencies() {
 		err := v.CheckForUpdate(ctx)
 		if err != nil {
 			u.clients.IO.PrintDebug(ctx, "CheckForUpdate for %s failed: %v", reflect.TypeOf(v), err)
+			if checkErr == nil {
+				checkErr = err
+			}
 		}
 	}
 
 	_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
 
+	if shouldForceUpdateCheck {
+		return checkErr
+	}
 	return nil
 }
 

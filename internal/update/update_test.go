@@ -16,6 +16,8 @@ package update
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"sync/atomic"
@@ -27,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -55,6 +58,73 @@ func (m *mockDependency) HasUpdate() (bool, error) {
 func (m *mockDependency) InstallUpdate(ctx context.Context) error {
 	args := m.Called(ctx)
 	return args.Error(0)
+}
+
+func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
+	tests := map[string]struct {
+		forced      bool
+		status      int
+		unreachable bool
+		expectedErr string
+	}{
+		"returns no error when a forced check succeeds": {
+			forced: true,
+			status: http.StatusOK,
+		},
+		"returns the error when a forced check gets an error response": {
+			forced:      true,
+			status:      http.StatusInternalServerError,
+			expectedErr: slackerror.ErrCLIUpdateCheck,
+		},
+		"returns the error when a forced check can't reach the server": {
+			forced:      true,
+			unreachable: true,
+			expectedErr: slackerror.ErrCLIUpdateCheck,
+		},
+		"returns no error when a background check gets an error response": {
+			forced: false,
+			status: http.StatusInternalServerError,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			for _, env := range []string{envSkipUpdate, "CI", "BUILD_NUMBER", "RUN_ID"} {
+				t.Setenv(env, "")
+			}
+			args := os.Args
+			t.Cleanup(func() { os.Args = args })
+			os.Args = []string{"placeholder"}
+			var requests atomic.Int32
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				requests.Add(1)
+				w.WriteHeader(tc.status)
+				_, _ = w.Write([]byte(`{"slack-cli": {"releases": [{"version": "4.10.0"}]}}`))
+			}))
+			if tc.unreachable {
+				server.Close()
+			} else {
+				t.Cleanup(server.Close)
+			}
+			metadataURL := MetadataURL
+			t.Cleanup(func() { MetadataURL = metadataURL })
+			MetadataURL = server.URL
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			u := New(clients, "v4.10.0")
+			err := u.CheckForUpdate(ctx, tc.forced)
+			if tc.expectedErr != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err).Code)
+			} else {
+				require.NoError(t, err)
+			}
+			if !tc.unreachable {
+				assert.Equal(t, int32(1), requests.Load())
+			}
+		})
+	}
 }
 
 func Test_UpdateNotification_Dependencies(t *testing.T) {
