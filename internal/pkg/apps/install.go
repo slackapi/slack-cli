@@ -767,7 +767,6 @@ func shouldUpdateManifest(ctx context.Context, clients *shared.ClientFactory, ap
 	return false, nil
 }
 
-// usesLocalManifest decides if the project manifest is used instead of app settings
 func usesLocalManifest(manifestSource config.ManifestSource, flagSource config.ManifestSource, manifestCreates bool) bool {
 	if manifestCreates {
 		return true
