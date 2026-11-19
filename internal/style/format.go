@@ -105,7 +105,7 @@ func SectionHeaderf(emoji, text string) string {
 }
 
 // SectionSecondaryf returns a standard formatted section secondary text
-func SectionSecondaryf(format string, a ...interface{}) string {
+func SectionSecondaryf(format string, a ...any) string {
 	if format == "" {
 		return ""
 	}
@@ -118,7 +118,7 @@ func SectionSecondaryf(format string, a ...interface{}) string {
 
 	// Indent new lines of secondary output
 	lines := []string{}
-	for _, line := range strings.Split(text, "\n") {
+	for line := range strings.SplitSeq(text, "\n") {
 		if line != "" {
 			lines = append(lines, Indent(Secondary(line))+"\n")
 		} else {
