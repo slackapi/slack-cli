@@ -140,23 +140,17 @@ func (u *UpdateNotification) CheckForUpdate(ctx context.Context, shouldForceUpda
 		}
 	}
 
-	u.recordUpdateCheck(ctx, cliCheckFailed)
+	if cliCheckFailed {
+		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Now())
+	} else {
+		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
+		u.clearLastUpdateCheckFailedAt(ctx)
+	}
 
 	if shouldForceUpdateCheck {
 		return checkErr
 	}
 	return nil
-}
-
-// recordUpdateCheck saves the time of a check. A failed check of the Slack CLI is retried after retryHoursToWait,
-// while errors from the check-update hook wait as usual because those are specific to a project.
-func (u *UpdateNotification) recordUpdateCheck(ctx context.Context, cliCheckFailed bool) {
-	if cliCheckFailed {
-		_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Now())
-		return
-	}
-	_, _ = u.clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, time.Now())
-	u.clearLastUpdateCheckFailedAt(ctx)
 }
 
 // clearLastUpdateCheckFailedAt removes a failed check, and only writes the config file when one is set.
