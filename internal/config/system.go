@@ -47,6 +47,8 @@ type SystemConfigManager interface {
 	LogsDir(ctx context.Context) (string, error)
 	GetTrustUnknownSources(ctx context.Context) (bool, error)
 	SetTrustUnknownSources(ctx context.Context, value bool) error
+	GetLastUpdateCheckFailedAt(ctx context.Context) (time.Time, error)
+	SetLastUpdateCheckFailedAt(ctx context.Context, lastUpdateCheckFailedAt time.Time) (path string, err error)
 	GetLastUpdateCheckedAt(ctx context.Context) (time.Time, error)
 	SetLastUpdateCheckedAt(ctx context.Context, lastUpdateCheckedAt time.Time) (path string, err error)
 	InitSystemID(ctx context.Context) (string, error)
@@ -63,11 +65,12 @@ type SystemConfigManager interface {
 
 // SystemConfig contains the system-level config file
 type SystemConfig struct {
-	Experiments         map[string]bool         `json:"experiments,omitempty"`
-	LastUpdateCheckedAt time.Time               `json:"last_update_checked_at,omitempty"`
-	Surveys             map[string]SurveyConfig `json:"surveys,omitempty"`
-	SystemID            string                  `json:"system_id,omitempty"`
-	TrustUnknownSources bool                    `json:"trust_unknown_sources,omitempty"`
+	Experiments             map[string]bool         `json:"experiments,omitempty"`
+	LastUpdateCheckFailedAt time.Time               `json:"last_update_check_failed_at,omitzero"`
+	LastUpdateCheckedAt     time.Time               `json:"last_update_checked_at,omitempty"`
+	Surveys                 map[string]SurveyConfig `json:"surveys,omitempty"`
+	SystemID                string                  `json:"system_id,omitempty"`
+	TrustUnknownSources     bool                    `json:"trust_unknown_sources,omitempty"`
 
 	// fs is the file system module that's shared by all packages and enables testing & mock of the file system
 	fs afero.Fs
@@ -220,6 +223,53 @@ func (c *SystemConfig) LogsDir(ctx context.Context) (string, error) {
 		}
 	}
 	return logsdir, nil
+}
+
+// GetLastUpdateCheckFailedAt reads the time of the LastUpdateCheckFailedAt property in UserConfig file
+func (c *SystemConfig) GetLastUpdateCheckFailedAt(ctx context.Context) (time.Time, error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "GetLastUpdateCheckFailedAt")
+	defer span.Finish()
+
+	var userConfig, err = c.UserConfig(ctx)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return userConfig.LastUpdateCheckFailedAt, nil
+}
+
+// SetLastUpdateCheckFailedAt writes the lastUpdateCheckFailedAt time to the UserConfig file.
+// A zero time removes the property. When successful, the config file path is returned.
+func (c *SystemConfig) SetLastUpdateCheckFailedAt(ctx context.Context, lastUpdateCheckFailedAt time.Time) (path string, err error) {
+	var span opentracing.Span
+	span, ctx = opentracing.StartSpanFromContext(ctx, "SetLastUpdateCheckFailedAt")
+	defer span.Finish()
+
+	userConfig, err := c.UserConfig(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	userConfig.LastUpdateCheckFailedAt = lastUpdateCheckFailedAt
+
+	b, err := json.MarshalIndent(userConfig, "", "  ")
+	if err != nil {
+		return "", err
+	}
+
+	dir, err := c.SlackConfigDir(ctx)
+	if err != nil {
+		return "", err
+	}
+	path = filepath.Join(dir, configFileName)
+
+	err = c.writeConfigFile(path, b)
+	if err != nil {
+		return path, err
+	}
+
+	return path, nil
 }
 
 // GetLastUpdateCheckedAt reads the time of the LastUpdateCheckedAt property in UserConfig file

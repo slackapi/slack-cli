@@ -61,29 +61,91 @@ func (m *mockDependency) InstallUpdate(ctx context.Context) error {
 }
 
 func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
+	now := time.Now()
 	tests := map[string]struct {
-		forced      bool
-		status      int
-		unreachable bool
-		expectedErr string
+		forced                          bool
+		status                          int
+		unreachable                     bool
+		hookErr                         error
+		lastUpdateCheckedAt             time.Time
+		lastUpdateCheckFailedAt         time.Time
+		expectedErr                     string
+		expectedRequests                int32
+		expectedLastUpdateCheckedAt     time.Time
+		expectedLastUpdateCheckFailedAt time.Time
 	}{
 		"returns no error when a forced check succeeds": {
-			forced: true,
-			status: http.StatusOK,
+			forced:                          true,
+			status:                          http.StatusOK,
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			lastUpdateCheckFailedAt:         now.Add(-30 * time.Minute),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now,
+			expectedLastUpdateCheckFailedAt: time.Time{},
 		},
 		"returns the error when a forced check gets an error response": {
-			forced:      true,
-			status:      http.StatusInternalServerError,
-			expectedErr: slackerror.ErrCLIUpdateCheck,
+			forced:                          true,
+			status:                          http.StatusInternalServerError,
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			expectedErr:                     slackerror.ErrCLIUpdateCheck,
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now.Add(-48 * time.Hour),
+			expectedLastUpdateCheckFailedAt: now,
 		},
 		"returns the error when a forced check can't reach the server": {
-			forced:      true,
-			unreachable: true,
-			expectedErr: slackerror.ErrCLIUpdateCheck,
+			forced:                          true,
+			unreachable:                     true,
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			expectedErr:                     slackerror.ErrCLIUpdateCheck,
+			expectedRequests:                0,
+			expectedLastUpdateCheckedAt:     now.Add(-48 * time.Hour),
+			expectedLastUpdateCheckFailedAt: now,
 		},
 		"returns no error when a background check gets an error response": {
-			forced: false,
-			status: http.StatusInternalServerError,
+			forced:                          false,
+			status:                          http.StatusInternalServerError,
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			lastUpdateCheckFailedAt:         now.Add(-2 * time.Hour),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now.Add(-48 * time.Hour),
+			expectedLastUpdateCheckFailedAt: now,
+		},
+		"skips a background check within an hour of a failed check": {
+			forced:                          false,
+			status:                          http.StatusOK,
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			lastUpdateCheckFailedAt:         now.Add(-30 * time.Minute),
+			expectedRequests:                0,
+			expectedLastUpdateCheckedAt:     now.Add(-48 * time.Hour),
+			expectedLastUpdateCheckFailedAt: now.Add(-30 * time.Minute),
+		},
+		"checks again when a failed check is in the future": {
+			forced:                          false,
+			status:                          http.StatusInternalServerError,
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			lastUpdateCheckFailedAt:         now.Add(2 * time.Hour),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now.Add(-48 * time.Hour),
+			expectedLastUpdateCheckFailedAt: now,
+		},
+		"skips a background check within a day of a successful check after an earlier failure": {
+			forced:                          false,
+			status:                          http.StatusOK,
+			lastUpdateCheckedAt:             now.Add(-2 * time.Hour),
+			lastUpdateCheckFailedAt:         now.Add(-2 * time.Hour),
+			expectedRequests:                0,
+			expectedLastUpdateCheckedAt:     now.Add(-2 * time.Hour),
+			expectedLastUpdateCheckFailedAt: now.Add(-2 * time.Hour),
+		},
+		"counts a failed check-update hook as a successful check": {
+			forced:                          false,
+			status:                          http.StatusOK,
+			hookErr:                         slackerror.New("The check-update hook failed"),
+			lastUpdateCheckedAt:             now.Add(-48 * time.Hour),
+			lastUpdateCheckFailedAt:         now.Add(-2 * time.Hour),
+			expectedRequests:                1,
+			expectedLastUpdateCheckedAt:     now,
+			expectedLastUpdateCheckFailedAt: time.Time{},
 		},
 	}
 	for name, tc := range tests {
@@ -111,18 +173,31 @@ func Test_UpdateNotification_CheckForUpdate(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
 			clientsMock.AddDefaultMocks()
+			clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return("", tc.hookErr)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			if tc.hookErr != nil {
+				clients.SDKConfig.Hooks.CheckUpdate = hooks.HookScript{Name: "CheckUpdate", Command: "check-update"}
+			}
+			_, err := clients.Config.SystemConfig.SetLastUpdateCheckedAt(ctx, tc.lastUpdateCheckedAt)
+			require.NoError(t, err)
+			_, err = clients.Config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, tc.lastUpdateCheckFailedAt)
+			require.NoError(t, err)
 			u := New(clients, "v4.10.0")
-			err := u.CheckForUpdate(ctx, tc.forced)
+			err = u.CheckForUpdate(ctx, tc.forced)
 			if tc.expectedErr != "" {
 				require.Error(t, err)
 				assert.Equal(t, tc.expectedErr, slackerror.ToSlackError(err).Code)
 			} else {
 				require.NoError(t, err)
 			}
-			if !tc.unreachable {
-				assert.Equal(t, int32(1), requests.Load())
-			}
+			actualLastUpdateCheckedAt, err := clients.Config.SystemConfig.GetLastUpdateCheckedAt(ctx)
+			require.NoError(t, err)
+			assert.WithinDuration(t, tc.expectedLastUpdateCheckedAt, actualLastUpdateCheckedAt, time.Minute)
+			actualLastUpdateCheckFailedAt, err := clients.Config.SystemConfig.GetLastUpdateCheckFailedAt(ctx)
+			require.NoError(t, err)
+			assert.WithinDuration(t, tc.expectedLastUpdateCheckFailedAt, actualLastUpdateCheckFailedAt, time.Minute)
+			require.NoError(t, u.CheckForUpdate(ctx, false))
+			assert.Equal(t, tc.expectedRequests, requests.Load())
 		})
 	}
 }
