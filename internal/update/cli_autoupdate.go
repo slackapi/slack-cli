@@ -25,16 +25,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 )
-
-// downloadTimeout limits how long a download of the CLI can take, so a stalled download
-// doesn't hold the update lock or keep a background update running
-const downloadTimeout = 10 * time.Minute
 
 type cliUpgrade struct {
 	// The path to the compressed file we've downloaded that contains the new CLI to install.
@@ -82,7 +77,7 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 
 	c.clients.IO.PrintDebug(ctx, "Downloading cli from %s", link)
 	dstFilePath := path.Join(configDir, fileName)
-	err = download(link, dstFilePath)
+	err = download(ctx, link, dstFilePath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to download the binary")
 		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
@@ -172,8 +167,12 @@ func UpgradeFromLocalFile(cliUpgradeData cliUpgrade) error {
 }
 
 // download does an HTTP GET to the given url and places its response payload in dstFilePath
-func download(url string, dstFilePath string) error {
-	resp, err := newDownloadClient().Get(url)
+func download(ctx context.Context, url string, dstFilePath string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -198,11 +197,6 @@ func download(url string, dstFilePath string) error {
 	}
 
 	return err
-}
-
-// newDownloadClient returns the HTTP client that downloads the CLI
-func newDownloadClient() *http.Client {
-	return &http.Client{Timeout: downloadTimeout}
 }
 
 // backupBinary copies the existing binary into a backups folder in binaryFolderPath, returning a path to the backed up binary

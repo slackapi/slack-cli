@@ -15,6 +15,11 @@
 package update
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -128,18 +133,46 @@ func Test_CLI_getUpdateFileName(t *testing.T) {
 	}
 }
 
-func Test_newDownloadClient(t *testing.T) {
+func Test_download(t *testing.T) {
 	tests := map[string]struct {
-		expectedTimeout time.Duration
+		handler         http.HandlerFunc
+		timeout         time.Duration
+		expectedContent string
+		expectedErr     error
 	}{
-		"stops a download that takes too long": {
-			expectedTimeout: 10 * time.Minute,
+		"saves the downloaded file": {
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				_, _ = w.Write([]byte("example-archive"))
+			},
+			timeout:         time.Minute,
+			expectedContent: "example-archive",
+		},
+		"stops a stalled download once the context expires": {
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+				w.(http.Flusher).Flush()
+				<-r.Context().Done()
+			},
+			timeout:     10 * time.Millisecond,
+			expectedErr: context.DeadlineExceeded,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			client := newDownloadClient()
-			require.Equal(t, tc.expectedTimeout, client.Timeout)
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+			ctx, cancel := context.WithTimeout(t.Context(), tc.timeout)
+			defer cancel()
+			dstFilePath := filepath.Join(t.TempDir(), "slack.tar.gz")
+			err := download(ctx, server.URL, dstFilePath)
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
+				return
+			}
+			require.NoError(t, err)
+			content, err := os.ReadFile(dstFilePath)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedContent, string(content))
 		})
 	}
 }

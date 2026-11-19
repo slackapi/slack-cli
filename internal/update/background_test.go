@@ -17,6 +17,8 @@ package update
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -29,38 +31,58 @@ import (
 
 func Test_AutoUpdate(t *testing.T) {
 	tests := map[string]struct {
-		lockHeld       bool
-		installErr     error
-		expectedCalls  int
-		expectedResult *AutoUpdateResult
-		expectedErr    error
+		installedVersion string
+		lockHeld         bool
+		installErr       error
+		attempts         int
+		expectedCalls    int
+		expectedResult   *AutoUpdateResult
+		expectedErr      error
 	}{
 		"records the new version after installing": {
-			expectedCalls:  1,
-			expectedResult: &AutoUpdateResult{From: "v4.11.0", To: "v4.12.0"},
+			installedVersion: "v4.11.0",
+			attempts:         1,
+			expectedCalls:    1,
+			expectedResult:   &AutoUpdateResult{From: "v4.11.0", To: "v4.12.0"},
 		},
 		"records the error when the install fails": {
-			installErr:     errors.New("permission denied"),
-			expectedCalls:  1,
-			expectedResult: &AutoUpdateResult{From: "v4.11.0", To: "v4.12.0", Error: "permission denied"},
-			expectedErr:    errors.New("permission denied"),
+			installedVersion: "v4.11.0",
+			installErr:       errors.New("permission denied"),
+			attempts:         1,
+			expectedCalls:    1,
+			expectedResult:   &AutoUpdateResult{From: "v4.11.0", To: "v4.12.0", Error: "permission denied"},
+			expectedErr:      errors.New("permission denied"),
 		},
 		"skips while another update holds the lock": {
-			lockHeld:       true,
-			expectedCalls:  0,
-			expectedResult: nil,
+			installedVersion: "v4.11.0",
+			lockHeld:         true,
+			attempts:         1,
+			expectedCalls:    0,
+			expectedResult:   nil,
+		},
+		"skips an update that starts after another one installed": {
+			installedVersion: "v4.11.0",
+			attempts:         2,
+			expectedCalls:    1,
+			expectedResult:   &AutoUpdateResult{From: "v4.11.0", To: "v4.12.0"},
+		},
+		"skips when a newer version is installed": {
+			installedVersion: "v4.13.0",
+			attempts:         1,
+			expectedCalls:    0,
+			expectedResult:   nil,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			configDir := t.TempDir()
-			lockPath := filepath.Join(configDir, "autoupdate.lock")
+			binaryPath := filepath.Join(t.TempDir(), "slack")
+			require.NoError(t, os.WriteFile(binaryPath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.installedVersion), 0o755))
+			lockPath := filepath.Join(filepath.Dir(binaryPath), "autoupdate.lock")
 			clientsMock := shared.NewClientsMock()
+			clientsMock.Os.On("Executable").Return(binaryPath, nil)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-			require.NoError(t, clients.Fs.MkdirAll(configDir, 0o755))
-			clients.Config.SystemConfig.SetCustomConfigDirPath(configDir)
 			holder := flock.New(lockPath)
 			if tc.lockHeld {
 				locked, err := holder.TryLock()
@@ -76,12 +98,20 @@ func Test_AutoUpdate(t *testing.T) {
 				calls++
 				assert.Equal(t, "v4.11.0", c.version)
 				assert.Equal(t, "4.12.0", c.releaseInfo.Version)
+				_, hasDeadline := ctx.Deadline()
+				assert.True(t, hasDeadline, "the install has a deadline")
 				locked, err := flock.New(lockPath).TryLock()
 				require.NoError(t, err)
 				assert.False(t, locked, "the lock is held while installing")
-				return tc.installErr
+				if tc.installErr != nil {
+					return tc.installErr
+				}
+				return os.WriteFile(binaryPath, fmt.Appendf(nil, scriptTemplate, "Using slack v4.12.0"), 0o755)
 			}
-			err := AutoUpdate(ctx, clients, "v4.11.0", "4.12.0")
+			var err error
+			for range tc.attempts {
+				err = AutoUpdate(ctx, clients, "v4.11.0", "4.12.0")
+			}
 			if tc.expectedErr != nil {
 				assert.ErrorContains(t, err, tc.expectedErr.Error())
 			} else {
@@ -92,6 +122,7 @@ func Test_AutoUpdate(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tc.expectedResult, result)
 			require.NoError(t, holder.Unlock())
+			assert.FileExists(t, lockPath, "the lock file stays after unlocking")
 			locked, err := flock.New(lockPath).TryLock()
 			require.NoError(t, err)
 			assert.True(t, locked, "the lock is released afterwards")
