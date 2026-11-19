@@ -44,6 +44,16 @@ func (m *SystemConfigMock) LogsDir(ctx context.Context) (string, error) {
 	return args.String(0), args.Error(1)
 }
 
+func (m *SystemConfigMock) GetLastUpdateCheckFailedAt(ctx context.Context) (time.Time, error) {
+	args := m.Called(ctx)
+	return args.Get(0).(time.Time), args.Error(1)
+}
+
+func (m *SystemConfigMock) SetLastUpdateCheckFailedAt(ctx context.Context, lastUpdateCheckFailedAt time.Time) (path string, err error) {
+	args := m.Called(ctx, lastUpdateCheckFailedAt)
+	return args.String(0), args.Error(1)
+}
+
 func (m *SystemConfigMock) GetLastUpdateCheckedAt(ctx context.Context) (time.Time, error) {
 	args := m.Called(ctx)
 	return args.Get(0).(time.Time), args.Error(1)

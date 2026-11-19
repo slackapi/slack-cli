@@ -261,6 +261,65 @@ func Test_SystemConfig_LogsDir(t *testing.T) {
 	})
 }
 
+func Test_Config_GetLastUpdateCheckFailedAt(t *testing.T) {
+	tests := map[string]struct {
+		lastUpdateCheckFailedAt time.Time
+	}{
+		"returns zero without a failed check": {
+			lastUpdateCheckFailedAt: time.Time{},
+		},
+		"returns the time of the last failed check": {
+			lastUpdateCheckFailedAt: time.Date(2026, 11, 18, 12, 0, 0, 0, time.UTC),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			os.AddDefaultMocks()
+			config := NewConfig(fs, os)
+			_, err := config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, tc.lastUpdateCheckFailedAt)
+			require.NoError(t, err)
+			actual, err := config.SystemConfig.GetLastUpdateCheckFailedAt(ctx)
+			require.NoError(t, err)
+			assert.True(t, tc.lastUpdateCheckFailedAt.Equal(actual))
+		})
+	}
+}
+
+func Test_Config_SetLastUpdateCheckFailedAt(t *testing.T) {
+	tests := map[string]struct {
+		lastUpdateCheckFailedAt time.Time
+		expectedKey             bool
+	}{
+		"writes the time of a failed check": {
+			lastUpdateCheckFailedAt: time.Date(2026, 11, 18, 12, 0, 0, 0, time.UTC),
+			expectedKey:             true,
+		},
+		"removes the key when cleared": {
+			lastUpdateCheckFailedAt: time.Time{},
+			expectedKey:             false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			fs := slackdeps.NewFsMock()
+			os := slackdeps.NewOsMock()
+			os.AddDefaultMocks()
+			config := NewConfig(fs, os)
+			_, err := config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, time.Now())
+			require.NoError(t, err)
+			configFilePath, err := config.SystemConfig.SetLastUpdateCheckFailedAt(ctx, tc.lastUpdateCheckFailedAt)
+			require.NoError(t, err)
+			configFile, err := afero.ReadFile(fs, configFilePath)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedKey, strings.Contains(string(configFile), "last_update_check_failed_at"))
+		})
+	}
+}
+
 func Test_Config_GetLastUpdateCheckedAt(t *testing.T) {
 	t.Run("Error reading User Configuration file returns current time", func(t *testing.T) {
 		ctx := slackcontext.MockContext(t.Context())
