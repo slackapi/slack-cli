@@ -18,6 +18,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
@@ -80,4 +81,28 @@ func TraceID(span opentracing.Span) string {
 		return ""
 	}
 	return spanContext.TraceID().String()
+}
+
+var (
+	flushMu   sync.Mutex
+	flushFunc func()
+)
+
+// SetFlush sets the function that Flush calls to finish and send spans.
+func SetFlush(f func()) {
+	flushMu.Lock()
+	defer flushMu.Unlock()
+	flushFunc = f
+}
+
+// Flush calls the function from SetFlush once and then forgets it, so every
+// exit path can call Flush without sending spans twice. A concurrent caller
+// waits for the first flush to finish before it returns.
+func Flush() {
+	flushMu.Lock()
+	defer flushMu.Unlock()
+	if flushFunc != nil {
+		flushFunc()
+		flushFunc = nil
+	}
 }
