@@ -24,32 +24,6 @@ import (
 	"github.com/uber/jaeger-client-go"
 )
 
-func Test_SetTraceHeaders(t *testing.T) {
-	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
-	defer closer.Close()
-	parent := tracer.StartSpan("parent")
-	span := tracer.StartSpan("child", opentracing.ChildOf(parent.Context()))
-	header := http.Header{}
-	SetTraceHeaders(span, header)
-	spanContext := span.Context().(jaeger.SpanContext)
-	assert.Equal(t, "0", header.Get("x-b3-sampled"))
-	assert.Equal(t, spanContext.SpanID().String(), header.Get("x-b3-spanid"))
-	assert.Equal(t, spanContext.TraceID().String(), header.Get("x-b3-traceid"))
-	assert.Equal(t, parent.Context().(jaeger.SpanContext).SpanID().String(), header.Get("x-b3-parentspanid"))
-
-	noopHeader := http.Header{}
-	SetTraceHeaders(opentracing.NoopTracer{}.StartSpan("noop"), noopHeader)
-	assert.Empty(t, noopHeader)
-}
-
-func Test_TraceID(t *testing.T) {
-	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
-	defer closer.Close()
-	span := tracer.StartSpan("span")
-	assert.Equal(t, span.Context().(jaeger.SpanContext).TraceID().String(), TraceID(span))
-	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
-}
-
 func Test_Flush(t *testing.T) {
 	calls := 0
 	SetFlush(func() { calls++ })
@@ -75,4 +49,30 @@ func Test_Flush(t *testing.T) {
 	}
 	close(release)
 	<-done
+}
+
+func Test_SetTraceHeaders(t *testing.T) {
+	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
+	defer closer.Close()
+	parent := tracer.StartSpan("parent")
+	span := tracer.StartSpan("child", opentracing.ChildOf(parent.Context()))
+	header := http.Header{}
+	SetTraceHeaders(span, header)
+	spanContext := span.Context().(jaeger.SpanContext)
+	assert.Equal(t, "0", header.Get("x-b3-sampled"))
+	assert.Equal(t, spanContext.SpanID().String(), header.Get("x-b3-spanid"))
+	assert.Equal(t, spanContext.TraceID().String(), header.Get("x-b3-traceid"))
+	assert.Equal(t, parent.Context().(jaeger.SpanContext).SpanID().String(), header.Get("x-b3-parentspanid"))
+
+	noopHeader := http.Header{}
+	SetTraceHeaders(opentracing.NoopTracer{}.StartSpan("noop"), noopHeader)
+	assert.Empty(t, noopHeader)
+}
+
+func Test_TraceID(t *testing.T) {
+	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
+	defer closer.Close()
+	span := tracer.StartSpan("span")
+	assert.Equal(t, span.Context().(jaeger.SpanContext).TraceID().String(), TraceID(span))
+	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
 }
