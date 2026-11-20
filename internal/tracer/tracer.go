@@ -16,6 +16,7 @@ package tracer
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"log"
 	"net/http"
@@ -35,27 +36,15 @@ import (
 
 // SetupTracer sets up the tracer to send data to honeycomb with OpenTelemetry
 func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
-	var collectorEndpoint = "slackb.com"
+	var collectorEndpoint = "https://slackb.com/traces/v1/otlp"
 	if isDev {
-		collectorEndpoint = "dev.slackb.com"
+		collectorEndpoint = "https://dev.slackb.com/traces/v1/otlp"
 	}
-	exporter, err := otlptracehttp.New(context.Background(),
-		otlptracehttp.WithEndpoint(collectorEndpoint),
-		otlptracehttp.WithURLPath("/traces/v1/otlp"),
-	)
+	exporter, err := otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
 	if err != nil {
 		log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
 	}
-	provider := sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exporter),
-		// No host detector: spans must not carry the raw hostname or IP
-		sdktrace.WithResource(resource.NewSchemaless(
-			// Don't change these. Required to distinguish logs & traces coming from the CLI
-			attribute.String("service.name", "slack-cli"),
-			// The slackb.com Jaeger endpoint set this tag, so Honeycomb queries use it
-			attribute.String("service_name", "slack-cli"),
-		)),
-	)
+	provider := newProvider(exporter)
 	// Like the Jaeger reporter, don't print export errors from a blocked network
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
 	bridge := newBridgeTracer(provider)
@@ -66,6 +55,57 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 		return provider.Shutdown(ctx)
 	}), bridge
 }
+
+// exporterOptions sets every value that OTEL_EXPORTER_OTLP_* environment
+// variables can change, so a developer's own collector headers or settings are
+// never sent to Slack
+func exporterOptions(endpointURL string) []otlptracehttp.Option {
+	return []otlptracehttp.Option{
+		otlptracehttp.WithEndpointURL(endpointURL),
+		otlptracehttp.WithHeaders(map[string]string{}),
+		otlptracehttp.WithTLSClientConfig(&tls.Config{}),
+		otlptracehttp.WithCompression(otlptracehttp.NoCompression),
+		otlptracehttp.WithTimeout(10 * time.Second),
+	}
+}
+
+// newProvider returns a tracer provider that batches spans to exporter. It
+// ignores OTEL_RESOURCE_ATTRIBUTES and OTEL_TRACES_SAMPLER from the environment.
+func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
+	// No host detector: spans must not carry the raw hostname or IP
+	res := resource.NewSchemaless(
+		// Don't change these. Required to distinguish logs & traces coming from the CLI
+		attribute.String("service.name", "slack-cli"),
+		// The slackb.com Jaeger endpoint set this tag, so Honeycomb queries use it
+		attribute.String("service_name", "slack-cli"),
+	)
+	return sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(resourceExporter{exporter, res}),
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+	)
+}
+
+// resourceExporter exports spans with a fixed resource, because the provider's
+// own resource always merges in OTEL_RESOURCE_ATTRIBUTES
+type resourceExporter struct {
+	sdktrace.SpanExporter
+	resource *resource.Resource
+}
+
+func (e resourceExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
+	fixed := make([]sdktrace.ReadOnlySpan, len(spans))
+	for i, span := range spans {
+		fixed[i] = resourceSpan{span, e.resource}
+	}
+	return e.SpanExporter.ExportSpans(ctx, fixed)
+}
+
+type resourceSpan struct {
+	sdktrace.ReadOnlySpan
+	resource *resource.Resource
+}
+
+func (s resourceSpan) Resource() *resource.Resource { return s.resource }
 
 // newBridgeTracer returns an OpenTracing tracer that records spans with provider
 func newBridgeTracer(provider trace.TracerProvider) *otelbridge.BridgeTracer {
