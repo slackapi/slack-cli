@@ -44,7 +44,6 @@ func main() {
 	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveAPIHost`
 	// var isDevTarget = shared.NewClientFactory().AuthClient().UserDefaultAuthIsProd(ctx) // TODO - hack, remove shared.clients
 	var jaegerCloser, jaegerTracer = tracer.SetupTracer(false) // Always setup open tracing on prod
-	defer jaegerCloser.Close()
 	ctx = slackcontext.SetOpenTracingTracer(ctx, jaegerTracer)
 
 	// Set context values
@@ -70,7 +69,12 @@ func main() {
 		ctx = slackcontext.SetOpenTracingTraceID(ctx, traceID)
 	}
 
-	defer span.Finish()
+	// Flush on return here, and before each exit in cmd/root.go, which skips these defers
+	tracer.SetFlush(func() {
+		span.Finish()
+		_ = jaegerCloser.Close()
+	})
+	defer tracer.Flush()
 
 	// add root span to context
 	ctx = slackcontext.SetOpenTracingSpan(ctx, span)
