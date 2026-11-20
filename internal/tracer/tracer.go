@@ -119,10 +119,17 @@ func (s resourceSpan) Resource() *resource.Resource { return s.resource }
 // newBridgeTracer returns an OpenTracing tracer that records spans with provider
 func newBridgeTracer(provider trace.TracerProvider) *otelbridge.BridgeTracer {
 	bridge := otelbridge.NewBridgeTracer()
-	bridge.SetOpenTelemetryTracer(provider.Tracer("slack-cli"))
+	// A wrapper tracer lets OpenTelemetry spans see OpenTracing parents in a context
+	bridge.SetOpenTelemetryTracer(otelbridge.NewWrapperTracer(bridge, provider.Tracer("slack-cli")))
 	bridge.SetTextMapPropagator(b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader)))
 	otel.SetTracerProvider(otelbridge.NewTracerProvider(bridge, provider))
 	return bridge
+}
+
+// Start starts an OpenTelemetry span named name as a child of the span in ctx,
+// and returns a context that holds the new span. End the span when done.
+func Start(ctx context.Context, name string) (context.Context, trace.Span) {
+	return otel.Tracer("slack-cli").Start(ctx, name)
 }
 
 type closerFunc func() error
