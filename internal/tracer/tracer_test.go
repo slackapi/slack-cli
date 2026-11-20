@@ -17,11 +17,39 @@ package tracer
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/uber/jaeger-client-go"
 )
+
+func Test_Flush(t *testing.T) {
+	calls := 0
+	SetFlush(func() { calls++ })
+	Flush()
+	Flush()
+	assert.Equal(t, 1, calls)
+
+	started, release, done := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	SetFlush(func() {
+		close(started)
+		<-release
+	})
+	go Flush()
+	<-started
+	go func() {
+		Flush()
+		close(done)
+	}()
+	select {
+	case <-done:
+		t.Fatal("second Flush returned before the first one finished")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(release)
+	<-done
+}
 
 func Test_SetTraceHeaders(t *testing.T) {
 	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
