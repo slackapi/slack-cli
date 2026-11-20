@@ -74,6 +74,18 @@ func (u *UpdateNotification) Dependencies() []Dependency {
 // PrintAndPromptUpdates displays an update message and prompts the user if they want to update, if applicable
 // Invoked from root command's post-run method and the upgrade command. If an error occurs, we return it so it is raised to the user.
 func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command) error {
+	return u.installUpdates(cmd, func(context.Context, Dependency) bool { return false })
+}
+
+// InstallUpdates is PrintAndPromptUpdates without the notice or prompt for a Slack CLI that
+// the installation scripts placed. Invoked from the upgrade command with the auto-update experiment.
+func (u *UpdateNotification) InstallUpdates(cmd *cobra.Command) error {
+	return u.installUpdates(cmd, u.installsWithoutPrompt)
+}
+
+// installUpdates installs each update that installsWithoutPrompt allows, and prints the update
+// notice for the others, installing those that the notice prompts for and the user accepts.
+func (u *UpdateNotification) installUpdates(cmd *cobra.Command, installsWithoutPrompt func(context.Context, Dependency) bool) error {
 	ctx := cmd.Context()
 
 	// Wait for the background check, if one was started
@@ -86,9 +98,12 @@ func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command) error {
 		}
 
 		if hasUpdate {
-			shouldSelfUpdate, err := dependency.PrintUpdateNotification(cmd)
-			if err != nil {
-				return err
+			shouldSelfUpdate := installsWithoutPrompt(ctx, dependency)
+			if !shouldSelfUpdate {
+				shouldSelfUpdate, err = dependency.PrintUpdateNotification(cmd)
+				if err != nil {
+					return err
+				}
 			}
 			if shouldSelfUpdate {
 				if err := dependency.InstallUpdate(ctx); err != nil {
@@ -100,39 +115,10 @@ func (u *UpdateNotification) PrintAndPromptUpdates(cmd *cobra.Command) error {
 	return nil
 }
 
-// InstallUpdates installs a Slack CLI update without a prompt when the installation scripts placed
-// the binary. Other Slack CLI installs print the update notice, and SDK updates prompt as before.
-// Invoked from the upgrade command with the auto-update experiment.
-func (u *UpdateNotification) InstallUpdates(cmd *cobra.Command) error {
-	ctx := cmd.Context()
-
-	u.wg.Wait()
-
-	for _, dependency := range u.Dependencies() {
-		hasUpdate, err := dependency.HasUpdate()
-		if err != nil {
-			return slackerror.Wrap(err, "An error occurred while fetching a dependency")
-		}
-		if !hasUpdate {
-			continue
-		}
-		if cli, ok := dependency.(*CLIDependency); ok && isInstallScript(ctx, u.clients) {
-			if err := cli.InstallUpdate(ctx); err != nil {
-				return err
-			}
-			continue
-		}
-		shouldSelfUpdate, err := dependency.PrintUpdateNotification(cmd)
-		if err != nil {
-			return err
-		}
-		if shouldSelfUpdate {
-			if err := dependency.InstallUpdate(ctx); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+// installsWithoutPrompt is true for a Slack CLI that the installation scripts placed.
+func (u *UpdateNotification) installsWithoutPrompt(ctx context.Context, dependency Dependency) bool {
+	_, ok := dependency.(*CLIDependency)
+	return ok && isInstallScript(ctx, u.clients)
 }
 
 // CheckForUpdateInBackground starts a Go routine that checks for an update every hoursSinceLastUpdateCheck (e.g. 24 hours).

@@ -52,8 +52,7 @@ type cliUpgrade struct {
 }
 
 // InstallUpdate waits for another update to finish, then installs the latest version of the CLI
-// unless the binary already reports it. A lock that can't be taken doesn't block the install, but
-// a running binary that another update moved out of the installation folder returns an error.
+// unless the binary already reports it. A lock that can't be taken doesn't block the install.
 func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 	lock, binaryPath, err := newUpdateLock(ctx, c.clients)
 	if err != nil {

@@ -84,10 +84,7 @@ func AutoUpdate(ctx context.Context, clients *shared.ClientFactory, currentVersi
 	return errors.Join(installErr, writeErr)
 }
 
-// newUpdateLock returns the lock that an update holds while it installs, next to the binary in
-// the folder that the installation scripts write to, and the path to that binary. It errors when
-// the running binary resolves outside of those folders, as it does on Linux after another update
-// moved the running binary to the backups folder.
+// newUpdateLock returns the lock next to the binary in the installation folder, and that binary.
 func newUpdateLock(ctx context.Context, clients *shared.ClientFactory) (*flock.Flock, string, error) {
 	binaryPath, ok := installScriptPath(ctx, clients)
 	if !ok {
