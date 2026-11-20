@@ -15,6 +15,7 @@
 package tracer
 
 import (
+	"context"
 	"io"
 	"log"
 	"net/http"
@@ -22,65 +23,83 @@ import (
 	"time"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
-	jaegercfg "github.com/uber/jaeger-client-go/config"
+	"go.opentelemetry.io/contrib/propagators/b3"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	otelbridge "go.opentelemetry.io/otel/bridge/opentracing"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
-// SetupTracer sets up the tracer to send data to honeycomb
+// SetupTracer sets up the tracer to send data to honeycomb with OpenTelemetry
 func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
-	var collectorEndpoint = "https://slackb.com/traces/v1/jaeger"
+	var collectorEndpoint = "slackb.com"
 	if isDev {
-		collectorEndpoint = "https://dev.slackb.com/traces/v1/jaeger"
+		collectorEndpoint = "dev.slackb.com"
 	}
-
-	// Recommended configuration for production.
-	var jCfg = jaegercfg.Configuration{
-		ServiceName: "slack-cli", // Don't change this.  Required to distinguish logs & traces coming from the CLI
-		Disabled:    false,
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans:            false,
-			CollectorEndpoint:   collectorEndpoint,
-			BufferFlushInterval: 100 * time.Millisecond,
-			// Having a larger value here results in longer execution of every single CLI command
-			// We may need to adjust the size here if we observe lost data in metrics.
-			QueueSize: 1,
-		},
-		Sampler: &jaegercfg.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
+	exporter, err := otlptracehttp.New(context.Background(),
+		otlptracehttp.WithEndpoint(collectorEndpoint),
+		otlptracehttp.WithURLPath("/traces/v1/otlp"),
+	)
+	if err != nil {
+		log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
 	}
-
-	// Initialize tracer with a logger and a metrics factory
-	var tracer, jaegerCloser, traceErr = jCfg.NewTracer()
-	if traceErr != nil {
-		log.Fatalf("Could not initialize jaeger tracer: %s", traceErr.Error())
-	}
-
-	opentracing.SetGlobalTracer(tracer)
-	return jaegerCloser, tracer
+	provider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+		// No host detector: spans must not carry the raw hostname or IP
+		sdktrace.WithResource(resource.NewSchemaless(
+			// Don't change these. Required to distinguish logs & traces coming from the CLI
+			attribute.String("service.name", "slack-cli"),
+			// The slackb.com Jaeger endpoint set this tag, so Honeycomb queries use it
+			attribute.String("service_name", "slack-cli"),
+		)),
+	)
+	// Like the Jaeger reporter, don't print export errors from a blocked network
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
+	bridge := newBridgeTracer(provider)
+	opentracing.SetGlobalTracer(bridge)
+	return closerFunc(func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		return provider.Shutdown(ctx)
+	}), bridge
 }
+
+// newBridgeTracer returns an OpenTracing tracer that records spans with provider
+func newBridgeTracer(provider trace.TracerProvider) *otelbridge.BridgeTracer {
+	bridge := otelbridge.NewBridgeTracer()
+	bridge.SetOpenTelemetryTracer(provider.Tracer("slack-cli"))
+	bridge.SetTextMapPropagator(b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader)))
+	otel.SetTracerProvider(otelbridge.NewTracerProvider(bridge, provider))
+	return bridge
+}
+
+type closerFunc func() error
+
+func (f closerFunc) Close() error { return f() }
 
 // SetTraceHeaders adds the x-b3 headers for span to header. The sampled header
 // is always "0" so the Slack API doesn't sample requests from the CLI.
 func SetTraceHeaders(span opentracing.Span, header http.Header) {
-	spanContext, ok := span.Context().(jaeger.SpanContext)
-	if !ok {
+	carrier := opentracing.HTTPHeadersCarrier(http.Header{})
+	if err := span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier); err != nil {
 		return
 	}
-	header.Set("x-b3-sampled", "0")
-	header.Set("x-b3-spanid", spanContext.SpanID().String())
-	header.Set("x-b3-traceid", spanContext.TraceID().String())
-	header.Set("x-b3-parentspanid", spanContext.ParentID().String())
+	for key, values := range carrier {
+		header[key] = values
+	}
+	if header.Get("x-b3-traceid") != "" {
+		header.Set("x-b3-sampled", "0")
+	}
 }
 
 // TraceID returns the trace ID of span, or "" if span has no trace ID.
 func TraceID(span opentracing.Span) string {
-	spanContext, ok := span.Context().(jaeger.SpanContext)
-	if !ok {
-		return ""
-	}
-	return spanContext.TraceID().String()
+	header := http.Header{}
+	SetTraceHeaders(span, header)
+	return header.Get("x-b3-traceid")
 }
 
 var (
