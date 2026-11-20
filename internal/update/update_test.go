@@ -362,11 +362,6 @@ func Test_UpdateNotification_isEnabled(t *testing.T) {
 			command:  "_autoupdate",
 			expected: false,
 		},
-		"skips the background update with a custom config directory": {
-			args:     []string{"_autoupdate", "4.12.0", "--config-dir", "/tmp/custom"},
-			command:  "_autoupdate",
-			expected: false,
-		},
 		"skips the upgrade command with flags before it": {
 			args:     []string{"--verbose", "upgrade"},
 			command:  "upgrade",

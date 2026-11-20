@@ -30,6 +30,8 @@ const AutoUpdateCommandName = "_autoupdate"
 
 const autoUpdateLogFileName = "autoupdate.log"
 
+const slackConfigDirEnv = "SLACK_CONFIG_DIR"
+
 // startBackgroundUpdate starts a detached process that installs the targetVersion and returns
 // without waiting for it. The process runs the binary only from a folder that the installation
 // scripts write to, so nothing starts when the running path follows a binary that an update
@@ -41,7 +43,7 @@ func startBackgroundUpdate(ctx context.Context, clients *shared.ClientFactory, t
 	if !ok {
 		return errors.New("the running binary is not in a folder that the installation scripts write to")
 	}
-	args, err := backgroundUpdateArgs(clients, targetVersion)
+	configDir, err := backgroundUpdateConfigDir(clients)
 	if err != nil {
 		return err
 	}
@@ -49,16 +51,16 @@ func startBackgroundUpdate(ctx context.Context, clients *shared.ClientFactory, t
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(logsDir, 0o755); err != nil {
-		return err
-	}
 	logFile, err := os.OpenFile(filepath.Join(logsDir, autoUpdateLogFileName), os.O_APPEND|os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
 	if err != nil {
 		return err
 	}
 	defer logFile.Close()
-	command := exec.Command(binaryPath, args...)
+	command := exec.Command(binaryPath, backgroundUpdateArgs(targetVersion, configDir)...)
 	command.Dir = filepath.Dir(binaryPath)
+	if configDir != "" {
+		command.Env = append(os.Environ(), slackConfigDirEnv+"="+configDir)
+	}
 	command.Stdout = logFile
 	command.Stderr = logFile
 	detach(command)
@@ -71,18 +73,24 @@ func startBackgroundUpdate(ctx context.Context, clients *shared.ClientFactory, t
 	return nil
 }
 
-// backgroundUpdateArgs returns the arguments of the command that installs the targetVersion.
-// A custom config directory is kept as an absolute path so the update is recorded where the
-// next command reads it.
-func backgroundUpdateArgs(clients *shared.ClientFactory, targetVersion string) ([]string, error) {
+// backgroundUpdateArgs returns the arguments of the command that installs the targetVersion,
+// with the custom config directory when one is set.
+func backgroundUpdateArgs(targetVersion string, configDir string) []string {
 	args := []string{AutoUpdateCommandName, targetVersion}
+	if configDir == "" {
+		return args
+	}
+	return append(args, "--config-dir", configDir)
+}
+
+// backgroundUpdateConfigDir returns the custom config directory as an absolute path, so the
+// update is recorded where the next command reads it, or an empty string when none is set.
+// The process also gets it as SLACK_CONFIG_DIR, since that variable overrides the flag and a
+// relative value would resolve from the folder the process runs in.
+func backgroundUpdateConfigDir(clients *shared.ClientFactory) (string, error) {
 	configDirFlag := strings.TrimSpace(clients.Config.ConfigDirFlag)
 	if configDirFlag == "" {
-		return args, nil
+		return "", nil
 	}
-	configDir, err := filepath.Abs(configDirFlag)
-	if err != nil {
-		return nil, err
-	}
-	return append(args, "--config-dir", configDir), nil
+	return filepath.Abs(configDirFlag)
 }

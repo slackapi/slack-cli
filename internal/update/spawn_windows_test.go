@@ -31,9 +31,3 @@ func Test_detach(t *testing.T) {
 	require.NotNil(t, command.SysProcAttr)
 	assert.Equal(t, uint32(windows.CREATE_NO_WINDOW|windows.CREATE_NEW_PROCESS_GROUP), command.SysProcAttr.CreationFlags)
 }
-
-// isDetached returns true when the process has no console window.
-func isDetached() bool {
-	window, _, _ := windows.NewLazySystemDLL("kernel32.dll").NewProc("GetConsoleWindow").Call()
-	return window == 0
-}

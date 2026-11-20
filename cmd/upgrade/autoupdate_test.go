@@ -43,6 +43,11 @@ func Test_NewAutoUpdateCommand(t *testing.T) {
 			expectedCalls: 1,
 			expectedErr:   "permission denied",
 		},
+		"rejects a target that is not a semantic version": {
+			args:          []string{"../../4.12.0"},
+			expectedCalls: 0,
+			expectedErr:   "Value ../../4.12.0 is not a semantic version",
+		},
 		"requires a target version": {
 			args:          []string{},
 			expectedCalls: 0,

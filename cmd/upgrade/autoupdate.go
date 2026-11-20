@@ -15,10 +15,14 @@
 package upgrade
 
 import (
+	"strings"
+
 	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/update"
 	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 )
 
 // autoUpdateFunc is a function pointer for tests to mock the update.AutoUpdate function
@@ -34,6 +38,10 @@ func NewAutoUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 		Args:   cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.DisableTelemetryFlag = true
+			if !semver.IsValid("v" + strings.TrimPrefix(args[0], "v")) {
+				return slackerror.New(slackerror.ErrInvalidSemVer).
+					WithMessage("Value %s is not a semantic version", args[0])
+			}
 			return autoUpdateFunc(cmd.Context(), clients, version.Raw(), args[0])
 		},
 	}
