@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/slackapi/slack-cli/main/schemas/hooks.schema.json",
+  "title": "Slack CLI hooks",
+  "description": "The CLI-SDK interface used for the \".slack/hooks.json\" project file and the \"get-hooks\" hook response. Read more: https://docs.slack.dev/tools/slack-cli/reference/hooks",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "runtime": {
+      "description": "The target runtime for app functions. For apps deployed to Slack's managed infrastructure, the only accepted value is \"deno\".",
+      "type": "string"
+    },
+    "hooks": {
+      "description": "Commands for each hook. The CLI runs each command in a shell and appends flags in the \"--name=value\" format, so commands must ignore unknown flags or end with \"#\".",
+      "type": "object",
+      "properties": {
+        "build": {
+          "$ref": "#/definitions/hook",
+          "description": "Bundles the app for deployment to Slack's managed infrastructure. Receives the \"--source\" and \"--output\" flags."
+        },
+        "check-update": {
+          "$ref": "#/definitions/hook",
+          "description": "Checks for updates to the SDK and project dependencies."
+        },
+        "deploy": {
+          "$ref": "#/definitions/hook",
+          "description": "Deploys the app when running the \"deploy\" command."
+        },
+        "doctor": {
+          "$ref": "#/definitions/hook",
+          "description": "Returns runtime and dependency versions for the \"doctor\" command."
+        },
+        "get-hooks": {
+          "$ref": "#/definitions/hook",
+          "description": "Returns the default CLI-SDK interface. Values in the \"hooks.json\" file override the response."
+        },
+        "get-manifest": {
+          "$ref": "#/definitions/hook",
+          "description": "Prints the app manifest as JSON. Receives the \"--source\" flag. If this hook isn't defined, the \"manifest.json\" file in the project root is used."
+        },
+        "get-trigger": {
+          "$ref": "#/definitions/hook",
+          "description": "Prints a trigger definition as JSON. Receives the \"--source\" flag."
+        },
+        "install-update": {
+          "$ref": "#/definitions/hook",
+          "description": "Installs updates to the SDK and project dependencies."
+        },
+        "start": {
+          "$ref": "#/definitions/hook",
+          "description": "Starts the app server when running the \"run\" command."
+        }
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/hook"
+      }
+    },
+    "config": {
+      "description": "Settings for the CLI-SDK interface.",
+      "type": "object",
+      "properties": {
+        "protocol-version": {
+          "description": "Protocols supported by the SDK in order of preference. The default protocol is used if not provided.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["message-boundaries", "default"]
+          }
+        },
+        "sdk-managed-connection-enabled": {
+          "description": "If true, the SDK manages the Socket Mode connection during the \"run\" command. Otherwise the CLI manages the connection.",
+          "type": "boolean"
+        },
+        "trigger-paths": {
+          "description": "Paths to files of trigger definitions.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "watch": {
+          "description": "File watching during the \"run\" command.",
+          "type": "object",
+          "properties": {
+            "manifest": {
+              "$ref": "#/definitions/watcher",
+              "description": "Files that reinstall the app when changed."
+            },
+            "app": {
+              "$ref": "#/definitions/watcher",
+              "description": "Files that restart the app server when changed."
+            },
+            "filter-regex": {
+              "description": "Deprecated: use \"manifest.filter-regex\" instead.",
+              "type": "string"
+            },
+            "paths": {
+              "description": "Deprecated: use \"manifest.paths\" instead.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "hook": {
+      "description": "A command to run in a shell.",
+      "type": "string"
+    },
+    "watcher": {
+      "type": "object",
+      "properties": {
+        "paths": {
+          "description": "File paths or directories to watch.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filter-regex": {
+          "description": "A regular expression of file names that trigger changes.",
+          "type": "string"
+        }
+      },
+      "required": ["paths"],
+      "additionalProperties": false
+    }
+  }
+}
