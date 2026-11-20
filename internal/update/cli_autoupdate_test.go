@@ -37,8 +37,9 @@ func Test_CLIDependency_InstallUpdate(t *testing.T) {
 		installedVersion string
 		lockHeld         bool
 		lockUnavailable  bool
+		movedBinary      bool
 		releasedVersion  string
-		expectedErr      error
+		expectedErr      string
 		expectedInstalls int
 		expectedOutput   []string
 	}{
@@ -57,7 +58,14 @@ func Test_CLIDependency_InstallUpdate(t *testing.T) {
 			canceled:         true,
 			expectedInstalls: 0,
 			expectedOutput:   []string{"Waiting for another update to finish"},
-			expectedErr:      context.Canceled,
+			expectedErr:      "context canceled",
+		},
+		"returns without installing when another update moved the binary": {
+			installedVersion: "v4.11.0",
+			lockHeld:         true,
+			movedBinary:      true,
+			expectedInstalls: 0,
+			expectedErr:      "the running binary is not in a folder that the installation scripts write to",
 		},
 		"skips the install when the binary reports the target": {
 			installedVersion: "v4.12.0",
@@ -76,8 +84,14 @@ func Test_CLIDependency_InstallUpdate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
 			defer cancel()
-			binaryPath := filepath.Join(t.TempDir(), "slack")
-			require.NoError(t, os.WriteFile(binaryPath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.installedVersion), 0o755))
+			homeDir := t.TempDir()
+			binaryPath := filepath.Join(homeDir, ".slack", "bin", "slack")
+			executablePath := binaryPath
+			if tc.movedBinary {
+				executablePath = filepath.Join(homeDir, ".slack", "bin", "backups", "v4.11.0", "slack")
+			}
+			require.NoError(t, os.MkdirAll(filepath.Dir(executablePath), 0o755))
+			require.NoError(t, os.WriteFile(executablePath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.installedVersion), 0o755))
 			lockPath := filepath.Join(filepath.Dir(binaryPath), "autoupdate.lock")
 			if tc.lockUnavailable {
 				require.NoError(t, os.Symlink(filepath.Join(t.TempDir(), "missing", "autoupdate.lock"), lockPath))
@@ -99,7 +113,8 @@ func Test_CLIDependency_InstallUpdate(t *testing.T) {
 				time.AfterFunc(100*time.Millisecond, cancel)
 			}
 			clientsMock := shared.NewClientsMock()
-			clientsMock.Os.On("Executable").Return(binaryPath, nil)
+			clientsMock.Os.On("Executable").Return(executablePath, nil)
+			clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			installs := 0
@@ -119,8 +134,8 @@ func Test_CLIDependency_InstallUpdate(t *testing.T) {
 			cli := NewCLIDependency(clients, "v4.11.0")
 			cli.releaseInfo = &LatestCLIRelease{Version: "4.12.0"}
 			err := cli.InstallUpdate(ctx)
-			if tc.expectedErr != nil {
-				assert.ErrorIs(t, err, tc.expectedErr)
+			if tc.expectedErr != "" {
+				assert.ErrorContains(t, err, tc.expectedErr)
 			} else {
 				assert.NoError(t, err)
 			}

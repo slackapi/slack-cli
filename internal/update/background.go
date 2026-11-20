@@ -47,7 +47,7 @@ var versionPattern = regexp.MustCompile(`v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?`)
 func AutoUpdate(ctx context.Context, clients *shared.ClientFactory, currentVersion string, targetVersion string) error {
 	ctx, cancel := context.WithTimeout(ctx, downloadTimeout)
 	defer cancel()
-	lock, binaryPath, err := newUpdateLock(clients)
+	lock, binaryPath, err := newUpdateLock(ctx, clients)
 	if err != nil {
 		return err
 	}
@@ -84,16 +84,14 @@ func AutoUpdate(ctx context.Context, clients *shared.ClientFactory, currentVersi
 	return errors.Join(installErr, writeErr)
 }
 
-// newUpdateLock returns the lock that an update holds while it installs, next to the resolved
-// binary, and the path to that binary.
-func newUpdateLock(clients *shared.ClientFactory) (*flock.Flock, string, error) {
-	executablePath, err := clients.Os.Executable()
-	if err != nil {
-		return nil, "", err
-	}
-	binaryPath, err := filepath.EvalSymlinks(executablePath)
-	if err != nil {
-		return nil, "", err
+// newUpdateLock returns the lock that an update holds while it installs, next to the binary in
+// the folder that the installation scripts write to, and the path to that binary. It errors when
+// the running binary resolves outside of those folders, as it does on Linux after another update
+// moved the running binary to the backups folder.
+func newUpdateLock(ctx context.Context, clients *shared.ClientFactory) (*flock.Flock, string, error) {
+	binaryPath, ok := installScriptPath(ctx, clients)
+	if !ok {
+		return nil, "", errors.New("the running binary is not in a folder that the installation scripts write to")
 	}
 	return flock.New(filepath.Join(filepath.Dir(binaryPath), autoUpdateLockFileName)), binaryPath, nil
 }
