@@ -17,9 +17,11 @@ package tracer
 import (
 	"io"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	jaegercfg "github.com/uber/jaeger-client-go/config"
 )
 
@@ -56,4 +58,26 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 
 	opentracing.SetGlobalTracer(tracer)
 	return jaegerCloser, tracer
+}
+
+// SetTraceHeaders adds the x-b3 headers for span to header. The sampled header
+// is always "0" so the Slack API doesn't sample requests from the CLI.
+func SetTraceHeaders(span opentracing.Span, header http.Header) {
+	spanContext, ok := span.Context().(jaeger.SpanContext)
+	if !ok {
+		return
+	}
+	header.Set("x-b3-sampled", "0")
+	header.Set("x-b3-spanid", spanContext.SpanID().String())
+	header.Set("x-b3-traceid", spanContext.TraceID().String())
+	header.Set("x-b3-parentspanid", spanContext.ParentID().String())
+}
+
+// TraceID returns the trace ID of span, or "" if span has no trace ID.
+func TraceID(span opentracing.Span) string {
+	spanContext, ok := span.Context().(jaeger.SpanContext)
+	if !ok {
+		return ""
+	}
+	return spanContext.TraceID().String()
 }
