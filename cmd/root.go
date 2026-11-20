@@ -188,6 +188,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		project.NewCommand(clients),
 		sandbox.NewCommand(clients),
 		triggers.NewCommand(clients),
+		upgrade.NewAutoUpdateCommand(clients),
 		upgrade.NewCommand(clients),
 		versioncmd.NewCommand(clients),
 	}

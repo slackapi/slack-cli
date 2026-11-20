@@ -185,9 +185,11 @@ func (u *UpdateNotification) shouldCheckForUpdate(ctx context.Context, shouldFor
 
 // isEnabled returns false when update checks are skipped by the environment, a flag, or the command.
 func (u *UpdateNotification) isEnabled() bool {
-	// The upgrade command runs its own check. This matches the parsed command because
-	// os.Args can't tell "slack --verbose upgrade" apart from other commands.
-	if u.clients.Config.Command == "upgrade" {
+	// The upgrade command runs its own check and the background update installs one. This
+	// matches the parsed command because os.Args can't tell "slack --verbose upgrade" apart
+	// from other commands.
+	switch u.clients.Config.Command {
+	case AutoUpdateCommandName, "upgrade":
 		return false
 	}
 	return os.Getenv(envSkipUpdate) == "" &&
