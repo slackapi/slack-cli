@@ -58,29 +58,37 @@ func TestGetProjectDirectoryName(t *testing.T) {
 			input:    "  my-app  ",
 			expected: "my-app",
 		},
-		"uppercase converted to lowercase": {
+		"uppercase preserved with spaces replaced": {
 			input:    "My Slack App",
-			expected: "my-slack-app",
+			expected: "My-Slack-App",
 		},
-		"mixed case normalized": {
+		"mixed case preserved": {
 			input:    "My-Slack-App",
-			expected: "my-slack-app",
+			expected: "My-Slack-App",
 		},
-		"special characters replaced with dashes": {
-			input:    "my_app!@#test",
-			expected: "my-app-test",
+		"unsafe characters removed": {
+			input:    "my_App!@#Test",
+			expected: "my_AppTest",
 		},
-		"consecutive special characters collapsed to single dash": {
+		"consecutive dashes collapsed to single dash": {
 			input:    "my---app",
 			expected: "my-app",
 		},
-		"leading and trailing special characters trimmed": {
+		"leading and trailing dashes preserved": {
 			input:    "---my-app---",
-			expected: "my-app",
+			expected: "-my-app-",
 		},
-		"dots converted to dashes": {
+		"underscores preserved": {
+			input:    "my_app",
+			expected: "my_app",
+		},
+		"dots preserved": {
+			input:    "my.app",
+			expected: "my.app",
+		},
+		"leading dots preserved": {
 			input:    ".my-app",
-			expected: "my-app",
+			expected: ".my-app",
 		},
 		"only special characters returns error": {
 			input:    "!!!",
@@ -92,7 +100,7 @@ func TestGetProjectDirectoryName(t *testing.T) {
 		},
 		"complex mixed input": {
 			input:    "  My Cool App! (v2)  ",
-			expected: "my-cool-app-v2",
+			expected: "My-Cool-App-v2",
 		},
 	}
 	for name, tc := range tests {
@@ -122,7 +130,7 @@ func TestParseAppPath(t *testing.T) {
 		},
 		"name with spaces": {
 			input:           "My Cool App",
-			expectedPath:    "my-cool-app",
+			expectedPath:    "My-Cool-App",
 			expectedDisplay: "My Cool App",
 		},
 		"relative path with simple name": {
@@ -132,7 +140,7 @@ func TestParseAppPath(t *testing.T) {
 		},
 		"relative path with spaced name": {
 			input:           "path/to/My App",
-			expectedPath:    filepath.Join("path", "to", "my-app"),
+			expectedPath:    filepath.Join("path", "to", "My-App"),
 			expectedDisplay: "My App",
 		},
 		"dot-prefixed path": {
@@ -152,7 +160,7 @@ func TestParseAppPath(t *testing.T) {
 		},
 		"uppercase in nested path": {
 			input:           "projects/My Slack App",
-			expectedPath:    filepath.Join("projects", "my-slack-app"),
+			expectedPath:    filepath.Join("projects", "My-Slack-App"),
 			expectedDisplay: "My Slack App",
 		},
 		"trailing slash is trimmed": {

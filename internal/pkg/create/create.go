@@ -171,21 +171,20 @@ func Create(ctx context.Context, clients *shared.ClientFactory, createArgs Creat
 // multiDashRe matches consecutive dashes.
 var multiDashRe = regexp.MustCompile(`-{2,}`)
 
-// nonAlphanumericRe matches any character that is not a lowercase letter, digit, or dash.
-var nonAlphanumericRe = regexp.MustCompile(`[^a-z0-9-]+`)
+// nonPathSafeRe matches characters that are not safe for file paths (not alphanumeric, dash, underscore, or dot).
+var nonPathSafeRe = regexp.MustCompile(`[^a-zA-Z0-9._-]+`)
 
-// getAppDirName will validate and return the app's directory name in kebab-case
+// getAppDirName will validate and return the app's directory name safe for file paths
 func getAppDirName(appName string) (string, error) {
 	if len(appName) <= 0 {
 		return "", fmt.Errorf("app name is required")
 	}
 
-	// Normalize to a variation of kebab-case: replace non-alphanumeric with dashes, collapse, and trim
+	// Normalize: trim whitespace, replace spaces with dashes, remove unsafe characters
 	appName = strings.TrimSpace(appName)
-	appName = strings.ToLower(appName)
-	appName = nonAlphanumericRe.ReplaceAllString(appName, "-")
+	appName = strings.ReplaceAll(appName, " ", "-")
+	appName = nonPathSafeRe.ReplaceAllString(appName, "")
 	appName = multiDashRe.ReplaceAllString(appName, "-")
-	appName = strings.Trim(appName, "-")
 
 	if len(appName) == 0 {
 		return "", fmt.Errorf("app name must contain at least one alphanumeric character")
@@ -198,7 +197,7 @@ func getAppDirName(appName string) (string, error) {
 	return appName, nil
 }
 
-// parseAppPath splits user input into a directory path (with kebab-cased basename)
+// parseAppPath splits user input into a directory path (with path-safe basename)
 // and a display name (the raw basename preserving original casing/spacing).
 func parseAppPath(input string) (appPath string, displayName string, err error) {
 	input = strings.TrimSpace(input)
