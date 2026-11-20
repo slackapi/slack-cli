@@ -48,3 +48,11 @@ func Test_TraceID(t *testing.T) {
 	assert.Equal(t, span.Context().(jaeger.SpanContext).TraceID().String(), TraceID(span))
 	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
 }
+
+func Test_Flush(t *testing.T) {
+	calls := 0
+	SetFlush(func() { calls++ })
+	Flush()
+	Flush()
+	assert.Equal(t, 1, calls)
+}
