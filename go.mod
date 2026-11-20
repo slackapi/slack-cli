@@ -10,6 +10,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.11.9
 	github.com/cli/safeexec v1.0.1
 	github.com/go-git/go-git/v5 v5.19.3
+	github.com/go-logr/logr v1.4.3
 	github.com/gofrs/flock v0.13.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
@@ -228,7 +229,6 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.2 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
-	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.25.2 // indirect
 	github.com/go-openapi/errors v0.22.7 // indirect

@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/opentracing/opentracing-go"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/otel"
@@ -40,13 +41,15 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 	if isDev {
 		collectorEndpoint = "https://dev.slackb.com/traces/v1/otlp"
 	}
+	// Like the Jaeger reporter, print nothing: not export errors from a blocked
+	// network, and not diagnostics about the developer's own OTEL_* variables
+	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
+	otel.SetLogger(logr.Discard())
 	exporter, err := otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
 	if err != nil {
 		log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
 	}
 	provider := newProvider(exporter)
-	// Like the Jaeger reporter, don't print export errors from a blocked network
-	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
 	bridge := newBridgeTracer(provider)
 	opentracing.SetGlobalTracer(bridge)
 	return closerFunc(func() error {
