@@ -70,7 +70,7 @@ func exporterOptions(endpointURL string) []otlptracehttp.Option {
 }
 
 // newProvider returns a tracer provider that batches spans to exporter. It
-// ignores OTEL_RESOURCE_ATTRIBUTES and OTEL_TRACES_SAMPLER from the environment.
+// ignores OTEL_RESOURCE_ATTRIBUTES, OTEL_TRACES_SAMPLER, and OTEL_BSP_* from the environment.
 func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	// No host detector: spans must not carry the raw hostname or IP
 	res := resource.NewSchemaless(
@@ -80,7 +80,13 @@ func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
 		attribute.String("service_name", "slack-cli"),
 	)
 	return sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(resourceExporter{exporter, res}),
+		sdktrace.WithBatcher(resourceExporter{exporter, res},
+			// The defaults, set here so OTEL_BSP_* environment variables can't change them
+			sdktrace.WithMaxQueueSize(sdktrace.DefaultMaxQueueSize),
+			sdktrace.WithMaxExportBatchSize(sdktrace.DefaultMaxExportBatchSize),
+			sdktrace.WithBatchTimeout(sdktrace.DefaultScheduleDelay*time.Millisecond),
+			sdktrace.WithExportTimeout(sdktrace.DefaultExportTimeout*time.Millisecond),
+		),
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 	)
 }

@@ -64,6 +64,7 @@ func Test_newProvider(t *testing.T) {
 	t.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
 	t.Setenv("OTEL_RESOURCE_ATTRIBUTES", "host.name=leaked-hostname")
 	t.Setenv("OTEL_TRACES_SAMPLER", "always_off")
+	t.Setenv("OTEL_BSP_MAX_QUEUE_SIZE", "0")
 	type request struct {
 		header http.Header
 		body   []byte
