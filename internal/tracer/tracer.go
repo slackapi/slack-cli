@@ -96,13 +96,13 @@ func SetFlush(f func()) {
 }
 
 // Flush calls the function from SetFlush once and then forgets it, so every
-// exit path can call Flush without sending spans twice.
+// exit path can call Flush without sending spans twice. A concurrent caller
+// waits for the first flush to finish before it returns.
 func Flush() {
 	flushMu.Lock()
-	f := flushFunc
-	flushFunc = nil
-	flushMu.Unlock()
-	if f != nil {
-		f()
+	defer flushMu.Unlock()
+	if flushFunc != nil {
+		flushFunc()
+		flushFunc = nil
 	}
 }
