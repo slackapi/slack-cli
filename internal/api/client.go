@@ -34,8 +34,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
-	"github.com/uber/jaeger-client-go"
 )
 
 // Client provides an http connection for communicating with the Slack API.
@@ -131,13 +131,7 @@ func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.V
 
 	request.Header.Add("content-type", "application/x-www-form-urlencoded")
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
-	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
-		request.Header.Add("x-b3-sampled", "0")
-		request.Header.Add("x-b3-spanid", jaegerSpanContext.SpanID().String())
-		// Use the custom trace_id from context
-		request.Header.Add("x-b3-traceid", jaegerSpanContext.TraceID().String())
-		request.Header.Add("x-b3-parentspanid", jaegerSpanContext.ParentID().String())
-	}
+	tracer.SetTraceHeaders(span, request.Header)
 
 	// Log request to verbose output
 	skipDebugLog := shouldSkipDebugLog(endpoint)
@@ -179,13 +173,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint, token string, cookie st
 		return nil, err
 	}
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
-	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
-		request.Header.Add("x-b3-sampled", "0")
-		request.Header.Add("x-b3-spanid", jaegerSpanContext.SpanID().String())
-		// Use the custom trace_id from context
-		request.Header.Add("x-b3-traceid", jaegerSpanContext.TraceID().String())
-		request.Header.Add("x-b3-parentspanid", jaegerSpanContext.ParentID().String())
-	}
+	tracer.SetTraceHeaders(span, request.Header)
 
 	if cookie != "" {
 		// this is a xoxc request
@@ -232,13 +220,7 @@ func (c *Client) get(ctx context.Context, endpoint, token string, cookie string)
 	}
 
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
-	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
-		request.Header.Add("x-b3-sampled", "0")
-		request.Header.Add("x-b3-spanid", jaegerSpanContext.SpanID().String())
-		// Use the custom trace_id from context
-		request.Header.Add("x-b3-traceid", jaegerSpanContext.TraceID().String())
-		request.Header.Add("x-b3-parentspanid", jaegerSpanContext.ParentID().String())
-	}
+	tracer.SetTraceHeaders(span, request.Header)
 
 	if cookie != "" {
 		// this is a xoxc request
