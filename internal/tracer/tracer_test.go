@@ -57,34 +57,6 @@ func Test_Flush(t *testing.T) {
 	<-done
 }
 
-func Test_SetTraceHeaders(t *testing.T) {
-	recorder := tracetest.NewSpanRecorder()
-	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	span := tracer.StartSpan("child", opentracing.ChildOf(tracer.StartSpan("parent").Context()))
-	header := http.Header{}
-	SetTraceHeaders(span, header)
-	span.Finish()
-	spanContext := recorder.Ended()[0].SpanContext()
-	assert.Equal(t, "0", header.Get("x-b3-sampled"))
-	assert.Equal(t, spanContext.SpanID().String(), header.Get("x-b3-spanid"))
-	assert.Equal(t, spanContext.TraceID().String(), header.Get("x-b3-traceid"))
-
-	noopHeader := http.Header{}
-	SetTraceHeaders(opentracing.NoopTracer{}.StartSpan("noop"), noopHeader)
-	assert.Empty(t, noopHeader)
-}
-
-func Test_TraceID(t *testing.T) {
-	recorder := tracetest.NewSpanRecorder()
-	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	span := tracer.StartSpan("span")
-	traceID := TraceID(span)
-	span.Finish()
-	assert.Len(t, traceID, 32)
-	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
-	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
-}
-
 func Test_newProvider(t *testing.T) {
 	t.Setenv("OTEL_EXPORTER_OTLP_HEADERS", "authorization=secret")
 	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_HEADERS", "authorization=secret")
@@ -118,4 +90,32 @@ func Test_newProvider(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("no export reached the TLS server")
 	}
+}
+
+func Test_SetTraceHeaders(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	span := tracer.StartSpan("child", opentracing.ChildOf(tracer.StartSpan("parent").Context()))
+	header := http.Header{}
+	SetTraceHeaders(span, header)
+	span.Finish()
+	spanContext := recorder.Ended()[0].SpanContext()
+	assert.Equal(t, "0", header.Get("x-b3-sampled"))
+	assert.Equal(t, spanContext.SpanID().String(), header.Get("x-b3-spanid"))
+	assert.Equal(t, spanContext.TraceID().String(), header.Get("x-b3-traceid"))
+
+	noopHeader := http.Header{}
+	SetTraceHeaders(opentracing.NoopTracer{}.StartSpan("noop"), noopHeader)
+	assert.Empty(t, noopHeader)
+}
+
+func Test_TraceID(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	span := tracer.StartSpan("span")
+	traceID := TraceID(span)
+	span.Finish()
+	assert.Len(t, traceID, 32)
+	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
+	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
 }
