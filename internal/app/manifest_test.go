@@ -15,6 +15,7 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/api"
@@ -70,13 +71,14 @@ func Test_AppManifest_SetManifestEnvTeamVars(t *testing.T) {
 
 func Test_AppManifest_GetManifestLocal(t *testing.T) {
 	tests := map[string]struct {
-		hookCommand      string
-		hookOutput       string
-		hookErr          error
-		manifestFile     string
-		expectedManifest types.SlackYaml
-		expectedErrCode  string
-		expectHookCall   bool
+		hookCommand       string
+		hookOutput        string
+		hookErr           error
+		manifestFile      string
+		expectedManifest  types.SlackYaml
+		expectedErrCode   string
+		expectedErrRemedy string
+		expectHookCall    bool
 	}{
 		"prefers hook over manifest.json when hook is available": {
 			hookCommand:  "echo manifest",
@@ -98,7 +100,8 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			},
 		},
 		"errors if no hook and no manifest.json": {
-			expectedErrCode: slackerror.ErrNoFile,
+			expectedErrCode:   slackerror.ErrNoFile,
+			expectedErrRemedy: fmt.Sprintf(`Add a "manifest.json" file to the project root or define a "get-manifest" hook in "%s"`, config.GetProjectHooksJSONFilePath()),
 		},
 		"errors if manifest.json contains invalid JSON": {
 			manifestFile:    `not json`,
@@ -172,6 +175,9 @@ func Test_AppManifest_GetManifestLocal(t *testing.T) {
 			if tc.expectedErrCode != "" {
 				require.Error(t, err)
 				assert.Equal(t, tc.expectedErrCode, err.(*slackerror.Error).Code)
+				if tc.expectedErrRemedy != "" {
+					assert.Equal(t, tc.expectedErrRemedy, err.(*slackerror.Error).Remediation)
+				}
 			} else {
 				require.NoError(t, err)
 				assert.Equal(t, tc.expectedManifest, result)
