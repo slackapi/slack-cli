@@ -31,7 +31,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/version"
-	"github.com/uber/jaeger-client-go"
 )
 
 func main() {
@@ -44,9 +43,9 @@ func main() {
 	//      - This would allow us to choose the correct API host based on flags
 	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveAPIHost`
 	// var isDevTarget = shared.NewClientFactory().AuthClient().UserDefaultAuthIsProd(ctx) // TODO - hack, remove shared.clients
-	var jaegerCloser, tracer = tracer.SetupTracer(false) // Always setup open tracing on prod
+	var jaegerCloser, jaegerTracer = tracer.SetupTracer(false) // Always setup open tracing on prod
 	defer jaegerCloser.Close()
-	ctx = slackcontext.SetOpenTracingTracer(ctx, tracer)
+	ctx = slackcontext.SetOpenTracingTracer(ctx, jaegerTracer)
 
 	// Set context values
 	sessionID := uuid.New().String()
@@ -57,7 +56,7 @@ func main() {
 	osStr := os.Args[0:]
 	processName := goutils.RedactPII(strings.Join(osStr, " "))
 
-	var span = tracer.StartSpan("main", opentracing.Tag{Key: "version", Value: cliVersion})
+	var span = jaegerTracer.StartSpan("main", opentracing.Tag{Key: "version", Value: cliVersion})
 	span.SetTag("slack_cli_sessionID", sessionID)
 	span.SetTag("hashed_hostname", ioutils.GetHostname())
 	span.SetTag("slack_cli_process", processName)
@@ -67,8 +66,8 @@ func main() {
 	// system_id is set in root.go initConfig()
 	// project_id is set in root.go initConfig()
 
-	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
-		ctx = slackcontext.SetOpenTracingTraceID(ctx, jaegerSpanContext.TraceID().String())
+	if traceID := tracer.TraceID(span); traceID != "" {
+		ctx = slackcontext.SetOpenTracingTraceID(ctx, traceID)
 	}
 
 	defer span.Finish()
