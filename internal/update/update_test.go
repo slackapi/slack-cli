@@ -16,9 +16,11 @@ package update
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -30,6 +32,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -260,6 +263,91 @@ func Test_UpdateNotification_HasUpdate(t *testing.T) {
 
 			// Test
 			require.Equal(t, tc.expectedReturnValue, u.HasUpdate())
+		})
+	}
+}
+
+func Test_UpdateNotification_InstallUpdates(t *testing.T) {
+	tests := map[string]struct {
+		executablePath      string
+		cliUpdate           bool
+		sdkUpdate           bool
+		sdkSelfUpdate       bool
+		expectedCLIInstalls int
+		expectedSDKInstalls int
+		expectedOutput      string
+	}{
+		"installs the CLI without a prompt": {
+			executablePath:      ".slack/bin/slack",
+			cliUpdate:           true,
+			expectedCLIInstalls: 1,
+		},
+		"prints the notice instead": {
+			executablePath:      ".slack/dev-build/bin/slack",
+			cliUpdate:           true,
+			expectedCLIInstalls: 0,
+			expectedOutput:      "https://docs.slack.dev/tools/slack-cli",
+		},
+		"still prompts for SDK updates": {
+			executablePath:      ".slack/bin/slack",
+			sdkUpdate:           true,
+			sdkSelfUpdate:       false,
+			expectedSDKInstalls: 0,
+		},
+		"installs an accepted SDK update": {
+			executablePath:      ".slack/bin/slack",
+			sdkUpdate:           true,
+			sdkSelfUpdate:       true,
+			expectedSDKInstalls: 1,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			homeDir := t.TempDir()
+			executablePath := filepath.Join(homeDir, tc.executablePath)
+			require.NoError(t, os.MkdirAll(filepath.Dir(executablePath), 0o755))
+			require.NoError(t, os.WriteFile(executablePath, fmt.Appendf(nil, scriptTemplate, "Using slack v4.10.0"), 0o755))
+			clientsMock := shared.NewClientsMock()
+			clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+			clientsMock.Os.On("Executable").Return(executablePath, nil)
+			clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			cmd := &cobra.Command{}
+			cmd.SetContext(ctx)
+			testutil.MockCmdIO(clients.IO, cmd)
+			cliInstalls := 0
+			originalInstallUpdateFunc := installUpdateFunc
+			t.Cleanup(func() {
+				installUpdateFunc = originalInstallUpdateFunc
+			})
+			installUpdateFunc = func(ctx context.Context, c *CLIDependency) error {
+				cliInstalls++
+				return nil
+			}
+			cli := NewCLIDependency(clients, "v4.10.0")
+			if tc.cliUpdate {
+				cli.releaseInfo = &LatestCLIRelease{Version: "4.11.0"}
+			}
+			sdk := &mockDependency{}
+			sdk.On("HasUpdate").Return(tc.sdkUpdate, nil)
+			sdk.On("PrintUpdateNotification", cmd).Return(tc.sdkSelfUpdate, nil)
+			sdk.On("InstallUpdate", mock.Anything).Return(nil)
+			u := &UpdateNotification{
+				clients:      clients,
+				hoursToWait:  defaultHoursToWait,
+				dependencies: []Dependency{cli, sdk},
+			}
+			err := u.InstallUpdates(cmd)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedCLIInstalls, cliInstalls)
+			clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+			if tc.sdkUpdate {
+				sdk.AssertCalled(t, "PrintUpdateNotification", cmd)
+			}
+			sdk.AssertNumberOfCalls(t, "InstallUpdate", tc.expectedSDKInstalls)
+			assert.Contains(t, clientsMock.GetCombinedOutput(), tc.expectedOutput)
 		})
 	}
 }

@@ -30,6 +30,9 @@ type Experiment string
 // e.g. --experiment=first-toggle,second-toggle
 
 const (
+	// AutoUpdate experiment installs Slack CLI updates without a prompt.
+	AutoUpdate Experiment = "auto-update"
+
 	// Lipgloss experiment shows pretty styles.
 	Lipgloss Experiment = "lipgloss"
 
@@ -43,6 +46,7 @@ const (
 // AllExperiments is a list of all available experiments that can be enabled
 // Please also add here 👇
 var AllExperiments = []Experiment{
+	AutoUpdate,
 	Lipgloss,
 	Placeholder,
 	SandboxSignup,

@@ -33,8 +33,10 @@ const autoUpdateLockFileName = "autoupdate.lock"
 
 const downloadTimeout = 10 * time.Minute
 
+const lockRetryDelay = 250 * time.Millisecond
+
 var installUpdateFunc = func(ctx context.Context, c *CLIDependency) error {
-	return c.InstallUpdate(ctx)
+	return c.installUpdate(ctx)
 }
 
 var versionPattern = regexp.MustCompile(`v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?`)
@@ -45,15 +47,10 @@ var versionPattern = regexp.MustCompile(`v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?`)
 func AutoUpdate(ctx context.Context, clients *shared.ClientFactory, currentVersion string, targetVersion string) error {
 	ctx, cancel := context.WithTimeout(ctx, downloadTimeout)
 	defer cancel()
-	executablePath, err := clients.Os.Executable()
+	lock, binaryPath, err := newUpdateLock(clients)
 	if err != nil {
 		return err
 	}
-	binaryPath, err := filepath.EvalSymlinks(executablePath)
-	if err != nil {
-		return err
-	}
-	lock := flock.New(filepath.Join(filepath.Dir(binaryPath), autoUpdateLockFileName))
 	locked, err := lock.TryLock()
 	if err != nil {
 		return err
@@ -85,6 +82,20 @@ func AutoUpdate(ctx context.Context, clients *shared.ClientFactory, currentVersi
 	}
 	writeErr := writeAutoUpdateResult(ctx, clients, result)
 	return errors.Join(installErr, writeErr)
+}
+
+// newUpdateLock returns the lock that an update holds while it installs, next to the resolved
+// binary, and the path to that binary.
+func newUpdateLock(clients *shared.ClientFactory) (*flock.Flock, string, error) {
+	executablePath, err := clients.Os.Executable()
+	if err != nil {
+		return nil, "", err
+	}
+	binaryPath, err := filepath.EvalSymlinks(executablePath)
+	if err != nil {
+		return nil, "", err
+	}
+	return flock.New(filepath.Join(filepath.Dir(binaryPath), autoUpdateLockFileName)), binaryPath, nil
 }
 
 // isInstalled reports whether the binary is at the targetVersion or newer, so an update that

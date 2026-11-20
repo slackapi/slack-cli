@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/slackapi/slack-cli/internal/update"
@@ -65,7 +66,13 @@ func checkForUpdates(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	// Force an update check that is blocking and synchronous
 	checkErr := updateNotification.CheckForUpdate(ctx, true)
 
-	if err := updateNotification.PrintAndPromptUpdates(cmd); err != nil {
+	var err error
+	if clients.Config.WithExperimentOn(experiment.AutoUpdate) {
+		err = updateNotification.InstallUpdates(cmd)
+	} else {
+		err = updateNotification.PrintAndPromptUpdates(cmd)
+	}
+	if err != nil {
 		return err
 	}
 	if checkErr != nil {

@@ -17,8 +17,11 @@ package upgrade
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
@@ -70,8 +73,11 @@ func Test_checkForUpdates(t *testing.T) {
 		release        string
 		hookResponse   string
 		hookErr        error
+		installScript  bool
+		experiments    []string
 		expectedErr    string
 		expectedOutput string
+		expectedPrompt bool
 	}{
 		"prints the latest version when no update is found": {
 			status:         http.StatusOK,
@@ -89,6 +95,21 @@ func Test_checkForUpdates(t *testing.T) {
 			hookErr:        slackerror.New("The check-update hook failed"),
 			expectedErr:    "The check-update hook failed",
 			expectedOutput: "A new version of the Slack CLI is available",
+		},
+		"prompts to install the update without the auto-update experiment": {
+			status:         http.StatusOK,
+			release:        "99.0.0",
+			installScript:  true,
+			expectedOutput: "A new version of the Slack CLI is available",
+			expectedPrompt: true,
+		},
+		"skips the prompt with the auto-update experiment": {
+			status:         http.StatusOK,
+			release:        "99.0.0",
+			installScript:  true,
+			experiments:    []string{string(experiment.AutoUpdate)},
+			expectedOutput: "You are using the latest Slack CLI version",
+			expectedPrompt: false,
 		},
 		"returns the error from the check-update hook": {
 			status:       http.StatusOK,
@@ -109,9 +130,19 @@ func Test_checkForUpdates(t *testing.T) {
 			update.MetadataURL = server.URL
 			ctx := slackcontext.MockContext(t.Context())
 			clientsMock := shared.NewClientsMock()
+			if tc.installScript {
+				homeDir := t.TempDir()
+				executablePath := filepath.Join(homeDir, ".slack", "bin", "slack")
+				require.NoError(t, os.MkdirAll(filepath.Dir(executablePath), 0o755))
+				require.NoError(t, os.WriteFile(executablePath, []byte("#!/bin/bash\necho Using slack v"+tc.release+"\n"), 0o755))
+				clientsMock.Os.On("Executable").Return(executablePath, nil)
+				clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
+			}
 			clientsMock.AddDefaultMocks()
 			clientsMock.IO.On("ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything).Return(false, nil)
 			clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(tc.hookResponse, tc.hookErr)
+			clientsMock.Config.ExperimentsFlag = tc.experiments
+			clientsMock.Config.LoadExperiments(ctx, clientsMock.IO.PrintDebug)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			if tc.hookResponse != "" || tc.hookErr != nil {
 				clients.SDKConfig.Hooks.CheckUpdate = hooks.HookScript{Name: "CheckUpdate", Command: "check-update"}
@@ -128,6 +159,11 @@ func Test_checkForUpdates(t *testing.T) {
 				require.NoError(t, err)
 			}
 			assert.Contains(t, clientsMock.GetCombinedOutput(), tc.expectedOutput)
+			if tc.expectedPrompt {
+				clientsMock.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+			} else {
+				clientsMock.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+			}
 		})
 	}
 }

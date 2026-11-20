@@ -16,6 +16,7 @@ package update
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -23,8 +24,113 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/flock"
+	"github.com/slackapi/slack-cli/internal/shared"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func Test_CLIDependency_InstallUpdate(t *testing.T) {
+	tests := map[string]struct {
+		installedVersion string
+		lockHeld         bool
+		lockUnavailable  bool
+		releasedVersion  string
+		canceled         bool
+		expectedInstalls int
+		expectedOutput   []string
+		expectedErr      error
+	}{
+		"installs the update while holding the lock": {
+			installedVersion: "v4.11.0",
+			expectedInstalls: 1,
+		},
+		"installs when the lock can't be created": {
+			installedVersion: "v4.11.0",
+			lockUnavailable:  true,
+			expectedInstalls: 1,
+		},
+		"returns without installing when canceled while waiting": {
+			installedVersion: "v4.11.0",
+			lockHeld:         true,
+			canceled:         true,
+			expectedInstalls: 0,
+			expectedOutput:   []string{"Waiting for another update to finish"},
+			expectedErr:      context.Canceled,
+		},
+		"skips the install when the binary reports the target": {
+			installedVersion: "v4.12.0",
+			expectedInstalls: 0,
+			expectedOutput:   []string{"You are using the latest Slack CLI version"},
+		},
+		"waits for another update and skips the install after it finishes": {
+			installedVersion: "v4.11.0",
+			lockHeld:         true,
+			releasedVersion:  "v4.12.0",
+			expectedInstalls: 0,
+			expectedOutput:   []string{"Waiting for another update to finish", "You are using the latest Slack CLI version"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+			defer cancel()
+			binaryPath := filepath.Join(t.TempDir(), "slack")
+			require.NoError(t, os.WriteFile(binaryPath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.installedVersion), 0o755))
+			lockPath := filepath.Join(filepath.Dir(binaryPath), "autoupdate.lock")
+			if tc.lockUnavailable {
+				require.NoError(t, os.Symlink(filepath.Join(t.TempDir(), "missing", "autoupdate.lock"), lockPath))
+			}
+			holder := flock.New(lockPath)
+			if tc.lockHeld {
+				locked, err := holder.TryLock()
+				require.NoError(t, err)
+				require.True(t, locked)
+				t.Cleanup(func() { _ = holder.Unlock() })
+			}
+			if tc.releasedVersion != "" {
+				time.AfterFunc(100*time.Millisecond, func() {
+					assert.NoError(t, os.WriteFile(binaryPath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.releasedVersion), 0o755))
+					assert.NoError(t, holder.Unlock())
+				})
+			}
+			if tc.canceled {
+				time.AfterFunc(100*time.Millisecond, cancel)
+			}
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Os.On("Executable").Return(binaryPath, nil)
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			installs := 0
+			originalInstallUpdateFunc := installUpdateFunc
+			t.Cleanup(func() {
+				installUpdateFunc = originalInstallUpdateFunc
+			})
+			installUpdateFunc = func(ctx context.Context, c *CLIDependency) error {
+				installs++
+				if !tc.lockUnavailable {
+					locked, err := flock.New(lockPath).TryLock()
+					require.NoError(t, err)
+					assert.False(t, locked, "the lock is held while installing")
+				}
+				return nil
+			}
+			cli := NewCLIDependency(clients, "v4.11.0")
+			cli.releaseInfo = &LatestCLIRelease{Version: "4.12.0"}
+			err := cli.InstallUpdate(ctx)
+			if tc.expectedErr != nil {
+				assert.ErrorIs(t, err, tc.expectedErr)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tc.expectedInstalls, installs)
+			for _, expectedOutput := range tc.expectedOutput {
+				assert.Contains(t, clientsMock.GetCombinedOutput(), expectedOutput)
+			}
+		})
+	}
+}
 
 func Test_CLI_getUpdateFileName(t *testing.T) {
 	tests := map[string]struct {
