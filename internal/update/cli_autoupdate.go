@@ -77,7 +77,7 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 
 	c.clients.IO.PrintDebug(ctx, "Downloading cli from %s", link)
 	dstFilePath := path.Join(configDir, fileName)
-	err = download(link, dstFilePath)
+	err = download(ctx, link, dstFilePath)
 	if err != nil {
 		err = slackerror.Wrapf(err, "failed to download the binary")
 		return slackerror.Wrapf(err, slackerror.ErrCLIAutoUpdate)
@@ -167,8 +167,12 @@ func UpgradeFromLocalFile(cliUpgradeData cliUpgrade) error {
 }
 
 // download does an HTTP GET to the given url and places its response payload in dstFilePath
-func download(url string, dstFilePath string) error {
-	resp, err := http.Get(url)
+func download(ctx context.Context, url string, dstFilePath string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}

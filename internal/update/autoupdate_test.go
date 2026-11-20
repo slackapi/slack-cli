@@ -45,7 +45,7 @@ func TestDownload(t *testing.T) {
 	badCLIDownloadURL := "https://downloads.slack-edge.com/slack-cli/fake.zip"
 	dir := t.TempDir()
 	dstFilePath := filepath.Join(dir, "slack")
-	err := download(badCLIDownloadURL, dstFilePath)
+	err := download(t.Context(), badCLIDownloadURL, dstFilePath)
 	require.Error(t, err, "Should return an error")
 }
 

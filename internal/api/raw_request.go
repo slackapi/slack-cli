@@ -25,8 +25,8 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
-	"github.com/uber/jaeger-client-go"
 )
 
 // RawResponse holds the full HTTP response from a generic API call.
@@ -69,12 +69,7 @@ func (c *Client) RawRequest(ctx context.Context, httpMethod, endpoint, token str
 	}
 	request.Header.Set("User-Agent", useragent.BuildUserAgent(cliVersion))
 
-	if jaegerSpanContext, ok := span.Context().(jaeger.SpanContext); ok {
-		request.Header.Set("x-b3-sampled", "0")
-		request.Header.Set("x-b3-spanid", jaegerSpanContext.SpanID().String())
-		request.Header.Set("x-b3-traceid", jaegerSpanContext.TraceID().String())
-		request.Header.Set("x-b3-parentspanid", jaegerSpanContext.ParentID().String())
-	}
+	tracer.SetTraceHeaders(span, request.Header)
 
 	for k, v := range headers {
 		request.Header.Set(k, v)
