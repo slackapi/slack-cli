@@ -30,6 +30,68 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
+func Test_Flush(t *testing.T) {
+	calls := 0
+	SetFlush(func() { calls++ })
+	Flush()
+	Flush()
+	assert.Equal(t, 1, calls)
+
+	started, release, done := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	SetFlush(func() {
+		close(started)
+		<-release
+	})
+	go Flush()
+	<-started
+	go func() {
+		Flush()
+		close(done)
+	}()
+	select {
+	case <-done:
+		t.Fatal("second Flush returned before the first one finished")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(release)
+	<-done
+}
+
+func Test_newProvider(t *testing.T) {
+	t.Setenv("OTEL_EXPORTER_OTLP_HEADERS", "authorization=secret")
+	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_HEADERS", "authorization=secret")
+	t.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
+	t.Setenv("OTEL_RESOURCE_ATTRIBUTES", "host.name=leaked-hostname")
+	t.Setenv("OTEL_TRACES_SAMPLER", "always_off")
+	t.Setenv("OTEL_BSP_MAX_QUEUE_SIZE", "0")
+	type request struct {
+		header http.Header
+		body   []byte
+	}
+	received := make(chan request, 1)
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		received <- request{r.Header, body}
+	}))
+	defer server.Close()
+	options := append(exporterOptions(server.URL+"/traces/v1/otlp"),
+		otlptracehttp.WithTLSClientConfig(server.Client().Transport.(*http.Transport).TLSClientConfig))
+	exporter, err := otlptracehttp.New(context.Background(), options...)
+	require.NoError(t, err)
+	provider := newProvider(exporter)
+	_, span := provider.Tracer("test").Start(context.Background(), "span")
+	span.End()
+	require.NoError(t, provider.ForceFlush(context.Background()))
+	select {
+	case r := <-received:
+		assert.Empty(t, r.header.Get("authorization"))
+		assert.Contains(t, string(r.body), "service_name")
+		assert.NotContains(t, string(r.body), "leaked-hostname")
+	case <-time.After(5 * time.Second):
+		t.Fatal("no export reached the TLS server")
+	}
+}
+
 func Test_SetTraceHeaders(t *testing.T) {
 	recorder := tracetest.NewSpanRecorder()
 	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
@@ -77,66 +139,4 @@ func Test_TraceID(t *testing.T) {
 	assert.Len(t, traceID, 32)
 	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
 	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
-}
-
-func Test_newProvider(t *testing.T) {
-	t.Setenv("OTEL_EXPORTER_OTLP_HEADERS", "authorization=secret")
-	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_HEADERS", "authorization=secret")
-	t.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
-	t.Setenv("OTEL_RESOURCE_ATTRIBUTES", "host.name=leaked-hostname")
-	t.Setenv("OTEL_TRACES_SAMPLER", "always_off")
-	t.Setenv("OTEL_BSP_MAX_QUEUE_SIZE", "0")
-	type request struct {
-		header http.Header
-		body   []byte
-	}
-	received := make(chan request, 1)
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		received <- request{r.Header, body}
-	}))
-	defer server.Close()
-	options := append(exporterOptions(server.URL+"/traces/v1/otlp"),
-		otlptracehttp.WithTLSClientConfig(server.Client().Transport.(*http.Transport).TLSClientConfig))
-	exporter, err := otlptracehttp.New(context.Background(), options...)
-	require.NoError(t, err)
-	provider := newProvider(exporter)
-	_, span := provider.Tracer("test").Start(context.Background(), "span")
-	span.End()
-	require.NoError(t, provider.ForceFlush(context.Background()))
-	select {
-	case r := <-received:
-		assert.Empty(t, r.header.Get("authorization"))
-		assert.Contains(t, string(r.body), "service_name")
-		assert.NotContains(t, string(r.body), "leaked-hostname")
-	case <-time.After(5 * time.Second):
-		t.Fatal("no export reached the TLS server")
-	}
-}
-
-func Test_Flush(t *testing.T) {
-	calls := 0
-	SetFlush(func() { calls++ })
-	Flush()
-	Flush()
-	assert.Equal(t, 1, calls)
-
-	started, release, done := make(chan struct{}), make(chan struct{}), make(chan struct{})
-	SetFlush(func() {
-		close(started)
-		<-release
-	})
-	go Flush()
-	<-started
-	go func() {
-		Flush()
-		close(done)
-	}()
-	select {
-	case <-done:
-		t.Fatal("second Flush returned before the first one finished")
-	case <-time.After(50 * time.Millisecond):
-	}
-	close(release)
-	<-done
 }
