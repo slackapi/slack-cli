@@ -60,16 +60,15 @@ func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
 		return installUpdateFunc(ctx, c)
 	}
 	locked, err := lock.TryLock()
-	if err == nil && !locked {
-		c.clients.IO.PrintInfo(ctx, false, "%s", style.Indent(style.Secondary("Waiting for another update to finish...")))
-		_, err = lock.TryLockContext(ctx, lockRetryDelay)
-	}
 	if err != nil {
-		if ctx.Err() != nil {
-			return slackerror.Wrap(ctx.Err(), slackerror.ErrCLIAutoUpdate)
-		}
 		c.clients.IO.PrintDebug(ctx, "Installing without the update lock: %s", err)
 		return installUpdateFunc(ctx, c)
+	}
+	if !locked {
+		c.clients.IO.PrintInfo(ctx, false, "%s", style.Indent(style.Secondary("Waiting for another update to finish...")))
+		if _, err := lock.TryLockContext(ctx, lockRetryDelay); err != nil {
+			return slackerror.Wrap(err, slackerror.ErrCLIAutoUpdate)
+		}
 	}
 	defer func() {
 		if err := lock.Unlock(); err != nil {

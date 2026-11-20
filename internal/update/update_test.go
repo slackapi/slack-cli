@@ -269,13 +269,13 @@ func Test_UpdateNotification_HasUpdate(t *testing.T) {
 
 func Test_UpdateNotification_InstallUpdates(t *testing.T) {
 	tests := map[string]struct {
-		executablePath      string
 		cliUpdate           bool
-		sdkUpdate           bool
+		executablePath      string
 		sdkSelfUpdate       bool
+		sdkUpdate           bool
 		expectedCLIInstalls int
-		expectedSDKInstalls int
 		expectedOutput      string
+		expectedSDKInstalls int
 	}{
 		"installs the CLI without a prompt": {
 			executablePath:      ".slack/bin/slack",

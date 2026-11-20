@@ -73,8 +73,8 @@ func Test_checkForUpdates(t *testing.T) {
 		release        string
 		hookResponse   string
 		hookErr        error
-		installScript  bool
 		experiments    []string
+		installScript  bool
 		expectedErr    string
 		expectedOutput string
 		expectedPrompt bool

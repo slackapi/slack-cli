@@ -33,14 +33,14 @@ import (
 
 func Test_CLIDependency_InstallUpdate(t *testing.T) {
 	tests := map[string]struct {
+		canceled         bool
 		installedVersion string
 		lockHeld         bool
 		lockUnavailable  bool
 		releasedVersion  string
-		canceled         bool
+		expectedErr      error
 		expectedInstalls int
 		expectedOutput   []string
-		expectedErr      error
 	}{
 		"installs the update while holding the lock": {
 			installedVersion: "v4.11.0",
