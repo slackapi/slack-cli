@@ -323,6 +323,21 @@ func TestTriggersCreateCommand(t *testing.T) {
 	})
 }
 
+func TestTriggersCreateCommand_ManifestSourceFlag_InvalidValue(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	cmd := NewCreateCommand(clients)
+	testutil.MockCmdIO(clients.IO, cmd)
+	cmd.SetArgs([]string{"--manifest-source", "invalid"})
+
+	err := cmd.ExecuteContext(ctx)
+	require.Error(t, err)
+	assert.Equal(t, slackerror.ErrInvalidFlag, slackerror.ToSlackError(err).Code)
+}
+
 func TestTriggersCreateCommand_MissingParameters(t *testing.T) {
 	var appSelectTeardown func()
 	var promptForInteractivityTeardown func()
