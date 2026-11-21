@@ -73,7 +73,7 @@ func exporterOptions(endpointURL string) []otlptracehttp.Option {
 }
 
 // newProvider returns a tracer provider that batches spans to exporter. It
-// ignores OTEL_RESOURCE_ATTRIBUTES, OTEL_TRACES_SAMPLER, and OTEL_BSP_* from the environment.
+// ignores OTEL_RESOURCE_ATTRIBUTES, OTEL_TRACES_SAMPLER, OTEL_BSP_*, and OTEL_*_LIMIT from the environment.
 func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	// No host detector: spans must not carry the raw hostname or IP
 	res := resource.NewSchemaless(
@@ -91,6 +91,15 @@ func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
 			sdktrace.WithExportTimeout(sdktrace.DefaultExportTimeout*time.Millisecond),
 		),
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		// The defaults, set here so OTEL_*_LIMIT environment variables can't change them
+		sdktrace.WithRawSpanLimits(sdktrace.SpanLimits{
+			AttributeValueLengthLimit:   sdktrace.DefaultAttributeValueLengthLimit,
+			AttributeCountLimit:         sdktrace.DefaultAttributeCountLimit,
+			EventCountLimit:             sdktrace.DefaultEventCountLimit,
+			LinkCountLimit:              sdktrace.DefaultLinkCountLimit,
+			AttributePerEventCountLimit: sdktrace.DefaultAttributePerEventCountLimit,
+			AttributePerLinkCountLimit:  sdktrace.DefaultAttributePerLinkCountLimit,
+		}),
 	)
 }
 
