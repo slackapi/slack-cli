@@ -34,10 +34,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// envHelperProcess is the folder a test binary started by startBackgroundUpdate reports to.
 const envHelperProcess = "SLACK_TEST_HELPER_PROCESS"
 
-// helperProcessReport is what a started test binary writes after the test lets it finish.
 type helperProcessReport struct {
 	Args         []string `json:"args"`
 	ConfigDirEnv string   `json:"config_dir_env"`
@@ -163,7 +161,6 @@ func Test_startBackgroundUpdate(t *testing.T) {
 	}
 }
 
-// copyFile copies the file at source to a new executable file at destination.
 func copyFile(t *testing.T, source string, destination string) {
 	require.NoError(t, os.MkdirAll(filepath.Dir(destination), 0o755))
 	in, err := os.Open(source)
@@ -214,7 +211,6 @@ func runHelperProcess(dir string) int {
 	return 0
 }
 
-// isDetached returns true when the process leads its own session.
 func isDetached() bool {
 	sid, err := unix.Getsid(0)
 	return err == nil && sid == os.Getpid()

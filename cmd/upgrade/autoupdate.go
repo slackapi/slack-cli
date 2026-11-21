@@ -25,7 +25,6 @@ import (
 	"golang.org/x/mod/semver"
 )
 
-// autoUpdateFunc is a function pointer for tests to mock the update.AutoUpdate function
 var autoUpdateFunc = update.AutoUpdate
 
 // NewAutoUpdateCommand returns the hidden command that installs an update of the CLI in a

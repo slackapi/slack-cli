@@ -25,7 +25,6 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 )
 
-// AutoUpdateCommandName is the hidden command that installs an update in the background.
 const AutoUpdateCommandName = "_autoupdate"
 
 const autoUpdateLogFileName = "autoupdate.log"
