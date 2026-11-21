@@ -53,6 +53,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/update"
 	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/version"
@@ -229,6 +230,7 @@ func Init(ctx context.Context) (*cobra.Command, *shared.ClientFactory) {
 		err := InitConfig(ctx, clients, rootCmd)
 		if err != nil {
 			clients.IO.PrintError(ctx, "%s", err.Error())
+			tracer.Flush()
 			clients.Os.Exit(int(iostreams.ExitError))
 		}
 	})
@@ -392,6 +394,7 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 				clients.IO.PrintDebug(ctx, "... root cleanup waitgroup done.")
 				cleanup(ctx, clients)
 				clients.IO.PrintDebug(ctx, "Exiting with cancel exit code.")
+				tracer.Flush()
 				clients.Os.Exit(int(iostreams.ExitCancel))
 			}()
 		// Received completed execution, so exit the process successfully
@@ -425,7 +428,11 @@ func ExecuteContext(ctx context.Context, rootCmd *cobra.Command, clients *shared
 		if slackErr, ok := err.(*slackerror.Error); ok {
 			clients.EventTracker.SetErrorCode(slackErr.Code)
 		}
-		defer clients.Os.Exit(int(clients.IO.GetExitCode()))
+		exitCode := int(clients.IO.GetExitCode())
+		defer func() {
+			tracer.Flush()
+			clients.Os.Exit(exitCode)
+		}()
 		completedChan <- true
 	} else {
 		completedChan <- true
