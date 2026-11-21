@@ -45,8 +45,8 @@ func (c *Config) LoadEnvironmentVariables() error {
 		c.AutoRequestAAAFlag = true
 	}
 
-	// Load slackConfigDirEnv from environment variables
-	var configDir = strings.TrimSpace(c.os.Getenv(slackConfigDirEnv))
+	// Load SlackConfigDirEnv from environment variables
+	var configDir = strings.TrimSpace(c.os.Getenv(SlackConfigDirEnv))
 	if configDir != "" {
 		c.ConfigDirFlag = configDir
 	}

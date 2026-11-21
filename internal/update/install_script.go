@@ -25,20 +25,27 @@ import (
 // that the installation scripts write to. Binaries placed by package managers or
 // other tools are managed by those tools and should not be replaced by a self-update.
 func isInstallScript(ctx context.Context, clients *shared.ClientFactory) bool {
+	_, ok := installScriptPath(ctx, clients)
+	return ok
+}
+
+// installScriptPath returns the resolved path of the running binary when it is in a folder
+// that the installation scripts write to, and false when it resolves outside of those folders.
+func installScriptPath(ctx context.Context, clients *shared.ClientFactory) (string, bool) {
 	executablePath, err := clients.Os.Executable()
 	if err != nil {
 		clients.IO.PrintDebug(ctx, "Skipping the self-update since the running binary was not found: %s", err)
-		return false
+		return "", false
 	}
 	homeDir, err := clients.Os.UserHomeDir()
 	if err != nil {
 		clients.IO.PrintDebug(ctx, "Skipping the self-update since the home directory was not found: %s", err)
-		return false
+		return "", false
 	}
 	binaryPath, err := filepath.EvalSymlinks(executablePath)
 	if err != nil {
 		clients.IO.PrintDebug(ctx, "Skipping the self-update since the binary path did not resolve: %s", err)
-		return false
+		return "", false
 	}
 	installDirs := []string{
 		filepath.Join(homeDir, ".slack", "bin"),                        // scripts/install.sh
@@ -51,9 +58,9 @@ func isInstallScript(ctx context.Context, clients *shared.ClientFactory) bool {
 			continue
 		}
 		if filepath.Dir(binaryPath) == installDir {
-			return true
+			return binaryPath, true
 		}
 	}
 	clients.IO.PrintDebug(ctx, "Skipping the self-update since %s is not in a folder that the installation scripts write to", binaryPath)
-	return false
+	return "", false
 }

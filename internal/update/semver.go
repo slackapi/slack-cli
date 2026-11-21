@@ -22,6 +22,12 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 )
 
+// IsReleaseVersion returns true when the version is a full semantic version without a "v"
+// prefix, like the versions of releases that are downloaded.
+func IsReleaseVersion(version string) bool {
+	return semver.Canonical("v"+version) == "v"+version
+}
+
 // SemVerGreaterThan returns true if release is greater than current, ignoring
 // prerelease and development suffixes of current
 func SemVerGreaterThan(release string, current string) (bool, error) {
