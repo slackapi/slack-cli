@@ -89,7 +89,7 @@ Commands receive the `ClientFactory` and use it to access functionality.
 
 **Context-Based State**: The codebase uses `context.Context` extensively to pass runtime state (session IDs, trace IDs, versions) through the call stack via `internal/slackcontext`.
 
-**Tracing**: OpenTracing (Jaeger) is initialized in `main.go` for observability.
+**Tracing**: OpenTelemetry is initialized in `main.go` for observability, sending over OTLP. Spans still use the OpenTracing API, through the OpenTelemetry bridge.
 
 **Hook System**: `internal/hooks/` implements a lifecycle hook system that allows SDK projects to inject custom behavior at key points. The specification exists in `docs/reference/hooks` files.
 
