@@ -51,8 +51,38 @@ type cliUpgrade struct {
 	PrintDebug func(format string, a ...interface{})
 }
 
-// InstallUpdate grabs the latest version of the CLI binary and installs it onto the system
+// InstallUpdate waits for another update to finish, then installs the latest version of the CLI
+// unless the binary already reports it. A lock that can't be taken doesn't block the install.
 func (c *CLIDependency) InstallUpdate(ctx context.Context) error {
+	lock, binaryPath, err := newUpdateLock(ctx, c.clients)
+	if err != nil {
+		return slackerror.Wrap(err, slackerror.ErrCLIAutoUpdate)
+	}
+	locked, err := lock.TryLock()
+	if err != nil {
+		c.clients.IO.PrintDebug(ctx, "Installing without the update lock: %s", err)
+		return installUpdateFunc(ctx, c)
+	}
+	if !locked {
+		c.clients.IO.PrintInfo(ctx, false, "%s", style.Indent(style.Secondary("Waiting for another update to finish...")))
+		if _, err := lock.TryLockContext(ctx, lockRetryDelay); err != nil {
+			return slackerror.Wrap(err, slackerror.ErrCLIAutoUpdate)
+		}
+	}
+	defer func() {
+		if err := lock.Unlock(); err != nil {
+			c.clients.IO.PrintDebug(ctx, "Failed to release the update lock: %s", err)
+		}
+	}()
+	if isInstalled(ctx, binaryPath, c.releaseInfo.Version) {
+		c.clients.IO.PrintInfo(ctx, false, "%s You are using the latest Slack CLI version", style.Green("✔"))
+		return nil
+	}
+	return installUpdateFunc(ctx, c)
+}
+
+// installUpdate grabs the latest version of the CLI binary and installs it onto the system
+func (c *CLIDependency) installUpdate(ctx context.Context) error {
 	fmt.Print(style.SectionSecondaryf("Starting the auto-update..."))
 
 	fmt.Print(style.SectionSecondaryf("Downloading version %s...", c.releaseInfo.Version))
