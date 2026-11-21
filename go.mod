@@ -11,7 +11,7 @@ require (
 	github.com/cli/safeexec v1.0.1
 	github.com/go-git/go-git/v5 v5.19.3
 	github.com/go-logr/logr v1.4.3
-	github.com/gofrs/flock v0.13.0
+	github.com/gofrs/flock v0.13.2
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
