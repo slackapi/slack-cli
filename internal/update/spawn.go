@@ -22,14 +22,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 )
 
 const AutoUpdateCommandName = "_autoupdate"
 
 const autoUpdateLogFileName = "autoupdate.log"
-
-const slackConfigDirEnv = "SLACK_CONFIG_DIR"
 
 // startBackgroundUpdate starts a detached process that installs the targetVersion and returns
 // without waiting for it. The process runs the binary only from a folder that the installation
@@ -58,7 +57,7 @@ func startBackgroundUpdate(ctx context.Context, clients *shared.ClientFactory, t
 	command := exec.Command(binaryPath, backgroundUpdateArgs(targetVersion, configDir)...)
 	command.Dir = filepath.Dir(binaryPath)
 	if configDir != "" {
-		command.Env = append(os.Environ(), slackConfigDirEnv+"="+configDir)
+		command.Env = append(os.Environ(), config.SlackConfigDirEnv+"="+configDir)
 	}
 	command.Stdout = logFile
 	command.Stderr = logFile
