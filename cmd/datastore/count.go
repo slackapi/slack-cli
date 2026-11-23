@@ -230,7 +230,7 @@ func promptDatastoreCountRequest(
 	}
 
 	if len(attributes) > 0 {
-		count.ExpressionAttributes = make(map[string]interface{})
+		count.ExpressionAttributes = make(map[string]any)
 	}
 
 	// Prompt for individual attribute selections or gather from the flag
@@ -260,7 +260,7 @@ func promptDatastoreCountRequest(
 	}
 
 	if len(values) > 0 {
-		count.ExpressionValues = make(map[string]interface{})
+		count.ExpressionValues = make(map[string]any)
 	}
 	for _, value := range values {
 		field := strings.TrimPrefix(value, ":")

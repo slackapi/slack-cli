@@ -15,13 +15,19 @@
 package tracer
 
 import (
+	"context"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
-	"github.com/uber/jaeger-client-go"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func Test_Flush(t *testing.T) {
@@ -51,28 +57,86 @@ func Test_Flush(t *testing.T) {
 	<-done
 }
 
+func Test_newProvider(t *testing.T) {
+	t.Setenv("OTEL_EXPORTER_OTLP_HEADERS", "authorization=secret")
+	t.Setenv("OTEL_EXPORTER_OTLP_TRACES_HEADERS", "authorization=secret")
+	t.Setenv("OTEL_EXPORTER_OTLP_INSECURE", "true")
+	t.Setenv("OTEL_RESOURCE_ATTRIBUTES", "host.name=leaked-hostname")
+	t.Setenv("OTEL_TRACES_SAMPLER", "always_off")
+	t.Setenv("OTEL_BSP_MAX_QUEUE_SIZE", "0")
+	type request struct {
+		header http.Header
+		body   []byte
+	}
+	received := make(chan request, 1)
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		received <- request{r.Header, body}
+	}))
+	defer server.Close()
+	options := append(exporterOptions(server.URL+"/traces/v1/otlp"),
+		otlptracehttp.WithTLSClientConfig(server.Client().Transport.(*http.Transport).TLSClientConfig))
+	exporter, err := otlptracehttp.New(context.Background(), options...)
+	require.NoError(t, err)
+	provider := newProvider(exporter)
+	_, span := provider.Tracer("test").Start(context.Background(), "span")
+	span.End()
+	require.NoError(t, provider.ForceFlush(context.Background()))
+	select {
+	case r := <-received:
+		assert.Empty(t, r.header.Get("authorization"))
+		assert.Contains(t, string(r.body), "service_name")
+		assert.NotContains(t, string(r.body), "leaked-hostname")
+	case <-time.After(5 * time.Second):
+		t.Fatal("no export reached the TLS server")
+	}
+}
+
 func Test_SetTraceHeaders(t *testing.T) {
-	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
-	defer closer.Close()
-	parent := tracer.StartSpan("parent")
-	span := tracer.StartSpan("child", opentracing.ChildOf(parent.Context()))
+	recorder := tracetest.NewSpanRecorder()
+	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	span := tracer.StartSpan("child", opentracing.ChildOf(tracer.StartSpan("parent").Context()))
 	header := http.Header{}
 	SetTraceHeaders(span, header)
-	spanContext := span.Context().(jaeger.SpanContext)
+	span.Finish()
+	spanContext := recorder.Ended()[0].SpanContext()
 	assert.Equal(t, "0", header.Get("x-b3-sampled"))
 	assert.Equal(t, spanContext.SpanID().String(), header.Get("x-b3-spanid"))
 	assert.Equal(t, spanContext.TraceID().String(), header.Get("x-b3-traceid"))
-	assert.Equal(t, parent.Context().(jaeger.SpanContext).SpanID().String(), header.Get("x-b3-parentspanid"))
 
 	noopHeader := http.Header{}
 	SetTraceHeaders(opentracing.NoopTracer{}.StartSpan("noop"), noopHeader)
 	assert.Empty(t, noopHeader)
 }
 
+func Test_Start(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	opentracing.SetGlobalTracer(tracer)
+	defer opentracing.SetGlobalTracer(opentracing.NoopTracer{})
+	parent := tracer.StartSpan("opentracing-parent")
+	ctx := opentracing.ContextWithSpan(context.Background(), parent)
+	ctx, child := Start(ctx, "otel-child")
+	grandchild, _ := opentracing.StartSpanFromContext(ctx, "opentracing-grandchild")
+	grandchild.Finish()
+	child.End()
+	parent.Finish()
+	spans := map[string]sdktrace.ReadOnlySpan{}
+	for _, span := range recorder.Ended() {
+		spans[span.Name()] = span
+	}
+	require.Len(t, spans, 3)
+	assert.Equal(t, spans["opentracing-parent"].SpanContext().SpanID(), spans["otel-child"].Parent().SpanID())
+	assert.Equal(t, spans["otel-child"].SpanContext().SpanID(), spans["opentracing-grandchild"].Parent().SpanID())
+}
+
 func Test_TraceID(t *testing.T) {
-	tracer, closer := jaeger.NewTracer("test", jaeger.NewConstSampler(true), jaeger.NewNullReporter())
-	defer closer.Close()
+	recorder := tracetest.NewSpanRecorder()
+	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
 	span := tracer.StartSpan("span")
-	assert.Equal(t, span.Context().(jaeger.SpanContext).TraceID().String(), TraceID(span))
+	traceID := TraceID(span)
+	span.Finish()
+	assert.Len(t, traceID, 32)
+	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
 	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
 }
