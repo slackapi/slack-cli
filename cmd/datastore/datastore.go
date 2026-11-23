@@ -156,7 +156,7 @@ func datastoreExpressionRemediation(command string, isEmpty bool) string {
 }
 
 // printDatastoreExpressionMarshal displays a message with the query encoded as JSON
-func printDatastoreExpressionMarshal(ctx context.Context, clients *shared.ClientFactory, query interface{}) error {
+func printDatastoreExpressionMarshal(ctx context.Context, clients *shared.ClientFactory, query any) error {
 	expression, err := goutils.JSONMarshalUnescaped(query)
 	if err != nil {
 		return err
