@@ -15,6 +15,7 @@
 package hooks
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/slackerror"
@@ -54,7 +55,7 @@ func Test_ProtocolResolution(t *testing.T) {
 	}{
 		"Returns the first valid protocol version": {
 			config: SDKCLIConfig{Config: struct {
-				Watch                WatchOpts        `json:"watch,omitempty"`
+				Watch                *WatchOpts       `json:"watch,omitempty"`
 				SDKManagedConnection bool             `json:"sdk-managed-connection-enabled,omitempty"`
 				TriggerPaths         []string         `json:"trigger-paths,omitempty"`
 				SupportedProtocols   ProtocolVersions `json:"protocol-version,omitempty"`
@@ -72,7 +73,7 @@ func Test_ProtocolResolution(t *testing.T) {
 		},
 		"Returns default config if no valid protocols are present": {
 			config: SDKCLIConfig{Config: struct {
-				Watch                WatchOpts        `json:"watch,omitempty"`
+				Watch                *WatchOpts       `json:"watch,omitempty"`
 				SDKManagedConnection bool             `json:"sdk-managed-connection-enabled,omitempty"`
 				TriggerPaths         []string         `json:"trigger-paths,omitempty"`
 				SupportedProtocols   ProtocolVersions `json:"protocol-version,omitempty"`
@@ -118,6 +119,29 @@ func Test_WatchOpts_IsAvailable(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			returnedIsAvailable := tc.watchOpts.IsAvailable()
 			require.Equal(t, tc.expectedIsAvailable, returnedIsAvailable)
+		})
+	}
+}
+
+func Test_SDKCLIConfig_WatchIsAvailable(t *testing.T) {
+	tests := map[string]struct {
+		hooksJSON           string
+		expectedIsAvailable bool
+	}{
+		"watch config is provided": {
+			hooksJSON:           `{"config":{"watch":{"manifest":{"paths":["manifest.json"]}}}}`,
+			expectedIsAvailable: true,
+		},
+		"watch config is not provided": {
+			hooksJSON:           `{"config":{}}`,
+			expectedIsAvailable: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var sdkCLIConfig SDKCLIConfig
+			require.NoError(t, json.Unmarshal([]byte(tc.hooksJSON), &sdkCLIConfig))
+			require.Equal(t, tc.expectedIsAvailable, sdkCLIConfig.Config.Watch.IsAvailable())
 		})
 	}
 }
