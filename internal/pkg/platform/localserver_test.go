@@ -24,6 +24,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/radovskyb/watcher"
@@ -532,7 +533,7 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
-			cancel()
+			defer cancel()
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Config.DebugEnabled = true
 			projectConfigMock := config.NewProjectConfigMock()
@@ -541,12 +542,31 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			server := LocalServer{clients: clients}
-			err := server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
+			errChan := make(chan error, 1)
+			go func() {
+				errChan <- server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
+			}()
 			if tc.expectedErr != nil {
-				assert.Equal(t, tc.expectedErr, err)
+				select {
+				case err := <-errChan:
+					assert.Equal(t, tc.expectedErr, err)
+				case <-time.After(time.Second):
+					require.FailNow(t, "WatchManifest did not return the error")
+				}
 				return
 			}
-			require.NoError(t, err)
+			select {
+			case err := <-errChan:
+				require.FailNow(t, "WatchManifest returned before the context ended", "err: %v", err)
+			case <-time.After(50 * time.Millisecond):
+			}
+			cancel()
+			select {
+			case err := <-errChan:
+				require.NoError(t, err)
+			case <-time.After(time.Second):
+				require.FailNow(t, "WatchManifest did not return after the context ended")
+			}
 			for _, expected := range tc.expectedOutput {
 				assert.Contains(t, clientsMock.GetStdoutOutput(), expected)
 			}
