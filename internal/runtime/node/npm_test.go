@@ -26,6 +26,11 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func Test_NPMClient_InstallAllPackages(t *testing.T) {
@@ -107,6 +112,7 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 		expectedVerboseArgs   []any
 		expectedValue         string
 		expectedError         error
+		expectedSpanError     string
 	}{
 		"When npm install package is successful": {
 			hookExecuteStdout: "npm install stdout",
@@ -127,11 +133,15 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 			expectedVerboseArgs:   []any{"npm install --save-dev --no-audit --progress=false --loglevel=verbose @slack/cli-hooks", errors.New("super error")},
 			expectedValue:         "",
 			expectedError:         errors.New("super error"),
+			expectedSpanError:     "npm install stdout",
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			recorder := tracetest.NewSpanRecorder()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			t.Cleanup(func() { otel.SetTracerProvider(noop.NewTracerProvider()) })
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
@@ -161,6 +171,10 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 			require.Equal(t, tc.expectedError, err)
 			if tc.expectedVerboseOutput != "" {
 				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, tc.expectedVerboseArgs)
+			}
+			if tc.expectedSpanError != "" {
+				require.Len(t, recorder.Ended(), 1)
+				require.Contains(t, recorder.Ended()[0].Attributes(), attribute.String("error", tc.expectedSpanError))
 			}
 		})
 	}

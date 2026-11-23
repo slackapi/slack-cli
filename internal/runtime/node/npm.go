@@ -21,9 +21,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/iostreams"
+	"github.com/slackapi/slack-cli/internal/tracer"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // NPM defines the npm commands to interact with a node project
@@ -73,8 +74,8 @@ func (n *NPMClient) InstallAllPackages(ctx context.Context, dirPath string, hook
 // InstallDevPackage installs the specified package and saves it as a "devDependency"
 // by running a command similar to `npm install --save-dev <package>`
 func (n *NPMClient) InstallDevPackage(ctx context.Context, pkgName string, dirPath string, hookExecutor hooks.HookExecutor, ios iostreams.IOStreamer) (string, error) {
-	npmSpan, _ := opentracing.StartSpanFromContext(ctx, "npm.install.slack-cli-hooks")
-	defer npmSpan.Finish()
+	_, npmSpan := tracer.Start(ctx, "npm.install.slack-cli-hooks")
+	defer npmSpan.End()
 
 	hookScript := hooks.HookScript{
 		Name:    "InstallProjectDependencies",
@@ -95,7 +96,7 @@ func (n *NPMClient) InstallDevPackage(ctx context.Context, pkgName string, dirPa
 
 	if err != nil {
 		ios.PrintDebug(ctx, "Error executing '%s': %s", hookScript.Command, err)
-		npmSpan.SetTag("error", output)
+		npmSpan.SetAttributes(attribute.String("error", output))
 		return "", err
 	}
 
@@ -104,8 +105,8 @@ func (n *NPMClient) InstallDevPackage(ctx context.Context, pkgName string, dirPa
 
 // ListPackage lists the installed version of a provided package
 func (n *NPMClient) ListPackage(ctx context.Context, pkgName string, dirPath string, hookExecutor hooks.HookExecutor, ios iostreams.IOStreamer) (pkgNameVersion string, exists bool) {
-	npmSpan, _ := opentracing.StartSpanFromContext(ctx, "npm.list")
-	defer npmSpan.Finish()
+	_, npmSpan := tracer.Start(ctx, "npm.list")
+	defer npmSpan.End()
 
 	hookScript := hooks.HookScript{
 		Name:    "InstallProjectDependencies",
@@ -126,7 +127,7 @@ func (n *NPMClient) ListPackage(ctx context.Context, pkgName string, dirPath str
 
 	if err != nil {
 		ios.PrintDebug(ctx, "Error executing '%s': %s", hookScript.Command, err)
-		npmSpan.SetTag("error", output)
+		npmSpan.SetAttributes(attribute.String("error", output))
 		return "", false
 	}
 
