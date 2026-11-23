@@ -550,9 +550,11 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			server := LocalServer{clients: clients}
 			if tc.watchManifest {
-				server.cliConfig.Config.Watch.Manifest = &hooks.ManifestWatchOpts{
-					Paths:       []string{t.TempDir()},
-					FilterRegex: `manifest\.json$`,
+				server.cliConfig.Config.Watch = &hooks.WatchOpts{
+					Manifest: &hooks.ManifestWatchOpts{
+						Paths:       []string{t.TempDir()},
+						FilterRegex: `manifest\.json$`,
+					},
 				}
 			}
 			errChan := make(chan error, 1)
