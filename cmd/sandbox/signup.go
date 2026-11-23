@@ -91,6 +91,8 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 	cmd.Flags().StringVar(&signupCmdFlags.countryOption, "country", "", "Your country (ISO 3166-1 alpha-2 format, e.g. US)")
 	cmd.Flags().BoolVar(&signupCmdFlags.newsletterSubscription, "newsletter", false, "Subscribe to the developer newsletter")
 	cmd.Flags().StringVar(&signupCmdFlags.acceptTermsOfServiceVersion, "accept-terms", "", acceptTermsOfServiceUsage())
+	// The flag without a value accepts the version of the terms that this CLI knows
+	cmd.Flag("accept-terms").NoOptDefVal = developerProgramTermsOfServiceVersion
 
 	// Rebuild the flag usage when help is shown so the links are styled once styles are toggled
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
@@ -104,15 +106,11 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 
 // acceptTermsOfServiceUsage returns the usage text for the --accept-terms flag
 func acceptTermsOfServiceUsage() string {
-	return "Confirm agreement to this version of the Slack Developer\n" +
-		"  Program Agreement " + style.LinkText(developerProgramAgreementURL) + "\n" +
-		"  and Slack API Terms of Service\n" +
+	return "Agree to the terms and acknowledge the privacy policies:\n" +
+		"  " + style.LinkText(developerProgramAgreementURL) + "\n" +
 		"  " + style.LinkText(slackAPITermsOfServiceURL) + "\n" +
-		"  and acknowledge the Slack Privacy Policy\n" +
 		"  " + style.LinkText(slackPrivacyPolicyURL) + "\n" +
-		"  and Salesforce Privacy Statement.\n" +
-		"  " + style.LinkText(salesforcePrivacyStatementURL) + "\n" +
-		"  The current version is shown if the terms must be accepted."
+		"  " + style.LinkText(salesforcePrivacyStatementURL) + "\n"
 }
 
 // termsOfServiceLinks returns a bulleted list of the terms and policies accepted at signup.
@@ -136,12 +134,11 @@ func termsOfServiceLinks(policies []api.TermsAndPolicy) []string {
 func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	// The --accept-terms flag must name a version so agreement is never given to unseen terms
+	// A version passed with --accept-terms is sent as is, so a newer version can be accepted if this
+	// CLI is outdated. The flag without a version sets the value to developerProgramTermsOfServiceVersion.
 	acceptedVersion := strings.TrimSpace(signupCmdFlags.acceptTermsOfServiceVersion)
 	if cmd.Flag("accept-terms").Changed && acceptedVersion == "" {
-		return slackerror.New(slackerror.ErrMissingFlag).
-			WithMessage("The %s flag requires the version of the terms of service being accepted", style.Highlight("--accept-terms")).
-			WithRemediation("Run %s without the flag to review the current terms and version", style.Commandf("sandbox signup", false))
+		acceptedVersion = developerProgramTermsOfServiceVersion
 	}
 
 	auth, profile, err := selectAuthForSignup(ctx, clients)
@@ -374,7 +371,7 @@ func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, pol
 // outdated if the terms must still be accepted, so it errors instead of agreeing to terms that changed.
 func acceptTermsOfService(ctx context.Context, clients *shared.ClientFactory, version string, policies []api.TermsAndPolicy, flagVersion string) (string, error) {
 	acceptTermsRemediation := fmt.Sprintf("Include %s to agree to the following terms and acknowledge the privacy policies:\n%s",
-		style.Highlight(fmt.Sprintf("--accept-terms %s", version)),
+		style.Highlight(fmt.Sprintf("--accept-terms=%s", version)),
 		strings.Join(termsOfServiceLinks(policies), "\n"),
 	)
 
