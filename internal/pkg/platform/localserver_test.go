@@ -24,10 +24,12 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/radovskyb/watcher"
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -506,6 +508,41 @@ func Test_LocalServer_watchAppEvents(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_LocalServer_WatchManifest_returnsWhenTheContextEnds(t *testing.T) {
+	ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+	defer cancel()
+	clientsMock := shared.NewClientsMock()
+	clientsMock.Config.DebugEnabled = true
+	projectConfigMock := config.NewProjectConfigMock()
+	projectConfigMock.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceRemote, nil)
+	clientsMock.Config.ProjectConfig = projectConfigMock
+	clientsMock.AddDefaultMocks()
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	cliConfig := hooks.SDKCLIConfig{}
+	cliConfig.Config.Watch.Manifest = &hooks.ManifestWatchOpts{
+		Paths:       []string{t.TempDir()},
+		FilterRegex: `manifest\.json$`,
+	}
+	server := LocalServer{clients: clients, cliConfig: cliConfig}
+	errChan := make(chan error, 1)
+	go func() {
+		errChan <- server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
+	}()
+	select {
+	case err := <-errChan:
+		require.FailNow(t, "WatchManifest returned before the context ended", "err: %v", err)
+	case <-time.After(250 * time.Millisecond):
+	}
+	cancel()
+	select {
+	case err := <-errChan:
+		require.NoError(t, err)
+	case <-time.After(time.Second):
+		require.FailNow(t, "WatchManifest did not return after the context ended")
+	}
+	assert.Contains(t, clientsMock.GetStdoutOutput(), "Watching manifest changes to file paths matching")
 }
 
 func Test_LocalServer_watchManifestEvents(t *testing.T) {

@@ -399,7 +399,25 @@ func (r *LocalServer) WatchManifest(ctx context.Context, auth types.SlackAuth, a
 	// Begin watching for manifest file changes
 	go r.watchManifestEvents(ctx, w, isRemoteManifest, auth, app)
 
+	// Stop the watcher when the context ends so Start returns
+	go closeWatcherOnDone(ctx, w)
+
 	return w.Start(time.Millisecond * 100)
+}
+
+// closeWatcherOnDone closes the watcher after it starts and the context ends, draining events and errors until it closes
+func closeWatcherOnDone(ctx context.Context, w *watcher.Watcher) {
+	<-ctx.Done()
+	w.Wait()
+	go w.Close()
+	for {
+		select {
+		case <-w.Event:
+		case <-w.Error:
+		case <-w.Closed:
+			return
+		}
+	}
 }
 
 // watchManifestEvents reinstalls the app on each manifest change until the context is canceled or the watcher closes
