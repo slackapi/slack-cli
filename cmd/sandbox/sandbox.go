@@ -92,7 +92,7 @@ func loginAndSaveSandboxAuth(ctx context.Context, clients *shared.ClientFactory,
 
 	var result *api.SandboxLoginResult
 	var err error
-	for attempt := 0; attempt < sandboxLoginMaxAttempts; attempt++ {
+	for attempt := range sandboxLoginMaxAttempts {
 		result, err = apiClient.SandboxLogin(ctx, token, sandboxTeamID)
 		if err == nil {
 			break
