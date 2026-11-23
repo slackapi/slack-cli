@@ -200,7 +200,7 @@ func promptDatastorePutRequest(
 	// Gather necessary information for the expression
 	fields := yaml.Datastores[query.Datastore].Attributes
 	if len(fields) > 0 {
-		query.Item = make(map[string]interface{})
+		query.Item = make(map[string]any)
 	}
 
 	// Prompt for the primary key first

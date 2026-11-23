@@ -3,11 +3,11 @@ module github.com/slackapi/slack-cli
 go 1.27.4
 
 require (
-	charm.land/bubbletea/v2 v2.1.1
+	charm.land/bubbletea/v2 v2.1.2
 	charm.land/huh/v2 v2.0.3
 	charm.land/lipgloss/v2 v2.0.5
 	github.com/briandowns/spinner v1.23.2
-	github.com/charmbracelet/x/ansi v0.11.9
+	github.com/charmbracelet/x/ansi v0.11.10
 	github.com/cli/safeexec v1.0.1
 	github.com/go-git/go-git/v5 v5.19.3
 	github.com/go-logr/logr v1.4.3
