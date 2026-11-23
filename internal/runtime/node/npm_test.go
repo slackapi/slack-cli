@@ -30,7 +30,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
-	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func Test_NPMClient_InstallAllPackages(t *testing.T) {
@@ -140,8 +139,9 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
 			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-			t.Cleanup(func() { otel.SetTracerProvider(noop.NewTracerProvider()) })
+			t.Cleanup(func() { otel.SetTracerProvider(previous) })
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
