@@ -18,10 +18,10 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -40,9 +40,8 @@ type CollaboratorsClient interface {
 
 // AddCollaborator adds an app collaborator
 func (c *Client) AddCollaborator(ctx context.Context, token, appID string, slackUser types.SlackUser) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AddCollaborator")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AddCollaborator")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -84,9 +83,8 @@ type listCollaboratorsResponse struct {
 
 // ListCollaborators lists app collaborators
 func (c *Client) ListCollaborators(ctx context.Context, token, appID string) ([]types.SlackUser, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListCollaborators")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.ListCollaborators")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -117,9 +115,8 @@ func (c *Client) ListCollaborators(ctx context.Context, token, appID string) ([]
 
 // RemoveCollaborator removes an app collaborator
 func (c *Client) RemoveCollaborator(ctx context.Context, token, appID string, slackUser types.SlackUser) (slackerror.Warnings, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.RemoveCollaborator")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.RemoveCollaborator")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -155,9 +152,8 @@ func (c *Client) RemoveCollaborator(ctx context.Context, token, appID string, sl
 
 // UpdateCollaborator updates an app collaborator
 func (c *Client) UpdateCollaborator(ctx context.Context, token, appID string, slackUser types.SlackUser) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.UpdateCollaborator")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.UpdateCollaborator")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
