@@ -104,6 +104,7 @@ func Test_ProtocolResolution(t *testing.T) {
 func Test_WatchOpts_IsAvailable(t *testing.T) {
 	tests := map[string]struct {
 		watchOpts           *WatchOpts
+		hooksJSON           string
 		expectedIsAvailable bool
 	}{
 		"WatchOpts exists": {
@@ -114,34 +115,24 @@ func Test_WatchOpts_IsAvailable(t *testing.T) {
 			watchOpts:           nil,
 			expectedIsAvailable: false,
 		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			returnedIsAvailable := tc.watchOpts.IsAvailable()
-			require.Equal(t, tc.expectedIsAvailable, returnedIsAvailable)
-		})
-	}
-}
-
-func Test_SDKCLIConfig_WatchIsAvailable(t *testing.T) {
-	tests := map[string]struct {
-		hooksJSON           string
-		expectedIsAvailable bool
-	}{
-		"watch config is provided": {
+		"Hooks config with watch options": {
 			hooksJSON:           `{"config":{"watch":{"manifest":{"paths":["manifest.json"]}}}}`,
 			expectedIsAvailable: true,
 		},
-		"watch config is not provided": {
+		"Hooks config without watch options": {
 			hooksJSON:           `{"config":{}}`,
 			expectedIsAvailable: false,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			var sdkCLIConfig SDKCLIConfig
-			require.NoError(t, json.Unmarshal([]byte(tc.hooksJSON), &sdkCLIConfig))
-			require.Equal(t, tc.expectedIsAvailable, sdkCLIConfig.Config.Watch.IsAvailable())
+			if tc.hooksJSON != "" {
+				var sdkCLIConfig SDKCLIConfig
+				require.NoError(t, json.Unmarshal([]byte(tc.hooksJSON), &sdkCLIConfig))
+				tc.watchOpts = sdkCLIConfig.Config.Watch
+			}
+			returnedIsAvailable := tc.watchOpts.IsAvailable()
+			require.Equal(t, tc.expectedIsAvailable, returnedIsAvailable)
 		})
 	}
 }
