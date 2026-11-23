@@ -27,26 +27,29 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // Links to the terms and policies accepted when signing up for the Developer Program
 const (
 	developerProgramAgreementURL  = "https://slack.com/terms-of-service/slack-developer-program"
+	slackAPITermsOfServiceURL     = "https://slack.com/terms-of-service/api"
 	slackPrivacyPolicyURL         = "https://slack.com/trust/privacy/privacy-policy"
-	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/privacy/"
+	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/legal/privacy/"
 )
 
 // developerProfileSettingsURL is where developers can view or update their user data for their Developer Program profile
 const developerProfileSettingsURL = "https://api.slack.com/developer-program/settings/profile"
 
+// developerProgramTermsOfServiceVersion is the current version of the terms of service links
+const developerProgramTermsOfServiceVersion = "may2024"
+
 type signupFlags struct {
-	firstName              string
-	lastName               string
-	postalCode             string
-	countryOption          string
-	newsletterSubscription bool
-	acceptTermsOfService   bool
+	firstName                   string
+	lastName                    string
+	postalCode                  string
+	countryOption               string
+	newsletterSubscription      bool
+	acceptTermsOfServiceVersion string
 }
 
 var signupCmdFlags signupFlags
@@ -64,7 +67,7 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox signup", Meaning: "Sign up for the Developer Program"},
 			{Command: "sandbox signup --first-name Anna --last-name Banana --postal-code 94105 --country US", Meaning: "Sign up with the provided user details"},
-			{Command: "sandbox signup --team T0123456 --accept-tos", Meaning: "Sign up, authenticated as your user on the given team, accept the terms of service and acknowledge the privacy policies"},
+			{Command: "sandbox signup --team T0123456 --accept-tos may2024", Meaning: "Sign up, authenticated as your user on the given team, agreeing to a version of the terms of service"},
 		}),
 		Args:   cobra.NoArgs,
 		Hidden: true,
@@ -88,7 +91,7 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 	cmd.Flags().StringVar(&signupCmdFlags.postalCode, "postal-code", "", "Your postal code")
 	cmd.Flags().StringVar(&signupCmdFlags.countryOption, "country", "", "Your country (ISO 3166-1 alpha-2 format, e.g. US)")
 	cmd.Flags().BoolVar(&signupCmdFlags.newsletterSubscription, "newsletter", false, "Subscribe to the developer newsletter")
-	cmd.Flags().BoolVar(&signupCmdFlags.acceptTermsOfService, "accept-tos", false, acceptTermsOfServiceUsage())
+	cmd.Flags().StringVar(&signupCmdFlags.acceptTermsOfServiceVersion, "accept-tos", "", acceptTermsOfServiceUsage())
 
 	// Rebuild the flag usage when help is shown so the links are styled once styles are toggled
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
@@ -102,19 +105,30 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 
 // acceptTermsOfServiceUsage returns the usage text for the --accept-tos flag
 func acceptTermsOfServiceUsage() string {
-	return "Confirm agreement to the Slack Developer Program Agreement\n" +
-		"  " + style.LinkText(developerProgramAgreementURL) + "\n" +
+	return "Confirm agreement to this version of the Slack Developer\n" +
+		"  Program Agreement " + style.LinkText(developerProgramAgreementURL) + "\n" +
+		"  and Slack API Terms of Service\n" +
+		"  " + style.LinkText(slackAPITermsOfServiceURL) + "\n" +
 		"  and acknowledge the Slack Privacy Policy\n" +
 		"  " + style.LinkText(slackPrivacyPolicyURL) + "\n" +
 		"  and Salesforce Privacy Statement.\n" +
 		"  " + style.LinkText(salesforcePrivacyStatementURL) + "\n" +
-		"  Pass this flag or confirm via the interactive prompt."
+		"  The current version is shown if the terms must be accepted."
 }
 
-// termsOfServiceLinks returns a bulleted list of the terms and policies accepted at signup
-func termsOfServiceLinks() []string {
+// termsOfServiceLinks returns a bulleted list of the terms and policies accepted at signup.
+// The terms and policies from the API are preferred, with known links used as a fallback.
+func termsOfServiceLinks(policies []api.TermsAndPolicy) []string {
+	if len(policies) > 0 {
+		links := make([]string, 0, len(policies))
+		for _, policy := range policies {
+			links = append(links, fmt.Sprintf("• %s: %s", policy.Name, style.LinkText(policy.URL)))
+		}
+		return links
+	}
 	return []string{
 		fmt.Sprintf("• Developer Program Agreement: %s", style.LinkText(developerProgramAgreementURL)),
+		fmt.Sprintf("• Slack API Terms of Service: %s", style.LinkText(slackAPITermsOfServiceURL)),
 		fmt.Sprintf("• Slack Privacy Policy: %s", style.LinkText(slackPrivacyPolicyURL)),
 		fmt.Sprintf("• Salesforce Privacy Statement: %s", style.LinkText(salesforcePrivacyStatementURL)),
 	}
@@ -123,27 +137,17 @@ func termsOfServiceLinks() []string {
 func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	// The --force flag skips prompts but never accepts the terms on its own
-	if clients.Config.ForceFlag && !signupCmdFlags.acceptTermsOfService {
+	// The --accept-tos flag must name a version so agreement is never given to unseen terms
+	acceptedVersion := strings.TrimSpace(signupCmdFlags.acceptTermsOfServiceVersion)
+	if cmd.Flag("accept-tos").Changed && acceptedVersion == "" {
 		return slackerror.New(slackerror.ErrMissingFlag).
-			WithMessage("The terms of service must be accepted to sign up for the Developer Program").
-			WithRemediation("Include the %s flag to agree to the following terms and acknowledge the privacy policies:\n%s",
-				style.Highlight("--accept-tos"),
-				strings.Join(termsOfServiceLinks(), "\n"),
-			)
+			WithMessage("The %s flag requires the version of the terms of service being accepted", style.Highlight("--accept-tos")).
+			WithRemediation("Run %s without the flag to review the current terms and version", style.Commandf("sandbox signup", false))
 	}
 
 	auth, profile, err := selectAuthForSignup(ctx, clients)
 	if err != nil {
 		return err
-	}
-
-	// Always show the terms, but only prompt for acceptance if the --accept-tos flag is not set
-	printTermsOfService(ctx, clients)
-	if !signupCmdFlags.acceptTermsOfService {
-		if err := promptTermsAcceptance(ctx, clients, cmd.Flag("accept-tos")); err != nil {
-			return err
-		}
 	}
 
 	email := prefillUserInfoFromAuth(ctx, clients, auth, profile, &signupCmdFlags)
@@ -155,17 +159,37 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	info.email = email
 
 	req := api.SignupRequest{
-		FirstName:              info.firstName,
-		LastName:               info.lastName,
-		PostalCode:             info.postalCode,
-		CountryOption:          info.countryOption,
-		NewsletterSubscription: signupCmdFlags.newsletterSubscription,
-		AcceptTermsOfService:   true, // Terms were accepted via the --accept-tos flag or prompt
+		FirstName:                   info.firstName,
+		LastName:                    info.lastName,
+		PostalCode:                  info.postalCode,
+		CountryOption:               info.countryOption,
+		NewsletterSubscription:      signupCmdFlags.newsletterSubscription,
+		AcceptTermsOfServiceVersion: acceptedVersion,
 	}
 
 	printSignupDetails(ctx, clients, info, signupCmdFlags.newsletterSubscription)
 
-	_, err = apiClientForAuth(clients, auth).Signup(ctx, auth.Token, req)
+	apiClient := apiClientForAuth(clients, auth)
+
+	// Terms that were accepted before are used when no version is included in the request,
+	// otherwise the current terms are returned to be accepted before signing up again
+	resp, err := apiClient.Signup(ctx, auth.Token, req)
+	if err != nil && slackerror.Is(err, slackerror.ErrTosNotAccepted) {
+		termsVersion := developerProgramTermsOfServiceVersion
+		var policies []api.TermsAndPolicy
+		if resp != nil {
+			if resp.TermsOfServiceVersion != "" {
+				termsVersion = resp.TermsOfServiceVersion
+			}
+			policies = resp.TermsAndPolicies
+		}
+		version, termsErr := acceptTermsOfService(ctx, clients, termsVersion, policies, acceptedVersion)
+		if termsErr != nil {
+			return termsErr
+		}
+		req.AcceptTermsOfServiceVersion = version
+		_, err = apiClient.Signup(ctx, auth.Token, req)
+	}
 	if err != nil {
 		return err
 	}
@@ -329,24 +353,44 @@ type userInfo struct {
 	countryOption string
 }
 
-// printTermsOfService shows the terms and policies accepted at signup
-func printTermsOfService(ctx context.Context, clients *shared.ClientFactory) {
+// printTermsOfService shows the terms and policies that must be accepted at signup
+func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, policies []api.TermsAndPolicy) {
 	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
 		Text:  "Terms of service",
 		Secondary: append(
 			[]string{"By signing up, you agree to the following terms and acknowledge the privacy policies:"},
-			termsOfServiceLinks()...,
+			termsOfServiceLinks(policies)...,
 		),
 	}))
 }
 
-// promptTermsAcceptance prompts the user to accept the terms.
-// The acceptTermsFlag is suggested when prompts aren't possible.
-func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, acceptTermsFlag *pflag.Flag) error {
-	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: false, Flag: acceptTermsFlag})
+// acceptTermsOfService confirms agreement to the current version of the terms of service and returns
+// the version that was accepted. A version that was already provided with the --accept-tos flag is
+// outdated if the terms must still be accepted, so it errors instead of agreeing to terms that changed.
+func acceptTermsOfService(ctx context.Context, clients *shared.ClientFactory, version string, policies []api.TermsAndPolicy, flagVersion string) (string, error) {
+	acceptTermsRemediation := fmt.Sprintf("Include %s to agree to the following terms and acknowledge the privacy policies:\n%s",
+		style.Highlight(fmt.Sprintf("--accept-tos %s", version)),
+		strings.Join(termsOfServiceLinks(policies), "\n"),
+	)
+
+	if flagVersion != "" {
+		return "", slackerror.New(slackerror.ErrTosNotAccepted).
+			WithMessage("The accepted terms of service version %s does not match the current version %s", flagVersion, version).
+			WithRemediation("%s", acceptTermsRemediation)
+	}
+
+	// The --force flag skips prompts but never accepts the terms on its own
+	if clients.Config.ForceFlag || !clients.IO.IsTTY() {
+		return "", slackerror.New(slackerror.ErrMissingFlag).
+			WithMessage("The terms of service must be accepted to sign up for the Developer Program").
+			WithRemediation("%s", acceptTermsRemediation)
+	}
+
+	printTermsOfService(ctx, clients, policies)
+	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: false})
 	if err != nil {
-		return handlePromptError(clients, err)
+		return "", handlePromptError(clients, err)
 	}
 	if !acceptTerms {
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
@@ -357,9 +401,9 @@ func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, a
 			},
 		}))
 		clients.IO.SetExitCode(iostreams.ExitCancel)
-		return slackerror.New(slackerror.ErrProcessInterrupted)
+		return "", slackerror.New(slackerror.ErrProcessInterrupted)
 	}
-	return nil
+	return version, nil
 }
 
 // collectUserInfo prompts for a first and last name when not already set.

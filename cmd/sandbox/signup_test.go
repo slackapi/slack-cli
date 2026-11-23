@@ -33,10 +33,22 @@ import (
 
 func TestSignupCommand(t *testing.T) {
 	testToken := "xoxb-test-token"
+	// The version differs from developerProgramTermsOfServiceVersion to confirm the returned version is accepted
+	testTermsVersion := "nov2026"
+	testTermsResponse := &api.SignupResponse{
+		TermsOfServiceVersion: testTermsVersion,
+		TermsAndPolicies: []api.TermsAndPolicy{
+			{Name: "Developer Program Agreement", URL: "https://slack.com/terms-of-service/slack-developer-program"},
+			{Name: "Slack API Terms of Service", URL: "https://slack.com/terms-of-service/api"},
+			{Name: "Slack Privacy Policy", URL: "https://slack.com/trust/privacy/privacy-policy"},
+			{Name: "Salesforce Privacy Statement", URL: "https://www.salesforce.com/company/legal/privacy/"},
+		},
+	}
+	errTosNotAccepted := slackerror.NewAPIError(slackerror.ErrTosNotAccepted, "", nil, "developer.account.createVerified")
 
 	testutil.TableTestCommand(t, testutil.CommandTests{
 		"errors when the sandbox-signup experiment is off": {
-			CmdArgs: []string{"--token", testToken, "--accept-tos"},
+			CmdArgs: []string{"--token", testToken, "--accept-tos", testTermsVersion},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.AddDefaultMocks()
 				cf.Config.LoadExperiments(ctx, cf.IO.PrintDebug)
@@ -55,7 +67,7 @@ func TestSignupCommand(t *testing.T) {
 				"--postal-code", "94105",
 				"--country", "us",
 				"--newsletter",
-				"--accept-tos",
+				"--accept-tos", testTermsVersion,
 			},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
@@ -67,10 +79,6 @@ func TestSignupCommand(t *testing.T) {
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedStdoutOutputs: []string{
-				"Terms of service",
-				developerProgramAgreementURL,
-				slackPrivacyPolicyURL,
-				salesforcePrivacyStatementURL,
 				"Name: Ada Lovelace",
 				"Email: ada@example.com",
 				"Country: US",
@@ -81,15 +89,34 @@ func TestSignupCommand(t *testing.T) {
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
-					FirstName:              "Ada",
-					LastName:               "Lovelace",
-					PostalCode:             "94105",
-					CountryOption:          "US",
-					NewsletterSubscription: true,
-					AcceptTermsOfService:   true,
+					FirstName:                   "Ada",
+					LastName:                    "Lovelace",
+					PostalCode:                  "94105",
+					CountryOption:               "US",
+					NewsletterSubscription:      true,
+					AcceptTermsOfServiceVersion: testTermsVersion,
 				})
+				cm.API.AssertNumberOfCalls(t, "Signup", 1)
 				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"signs up without the terms when these were accepted before": {
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(&api.SignupResponse{DeveloperID: "D123"}, nil)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedStdoutOutputs: []string{"Welcome to the Slack Developer Program!"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
+					FirstName: "Ada",
+					LastName:  "Lovelace",
+				})
+				cm.API.AssertNumberOfCalls(t, "Signup", 1)
+				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"prompts for auth and terms then prefills the name from the profile": {
@@ -111,29 +138,33 @@ func TestSignupCommand(t *testing.T) {
 					"grace@example.com " + style.Secondary("(two T2)"),
 				}, mock.Anything).
 					Return(iostreams.SelectPromptResponse{Prompt: true, Index: 1}, nil)
-				cm.IO.On("ConfirmPrompt", mock.Anything, "Do you agree to these terms?", acceptTermsPromptConfig).Return(true, nil)
-				cm.API.On("Signup", mock.Anything, "xoxp-two", mock.Anything).Return(&api.SignupResponse{DeveloperID: "D456"}, nil)
+				cm.IO.On("IsTTY").Return(true)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Do you agree to these terms?", mock.Anything).Return(true, nil)
+				cm.API.On("Signup", mock.Anything, "xoxp-two", api.SignupRequest{FirstName: "Grace", LastName: "Brewster Hopper"}).
+					Return(testTermsResponse, errTosNotAccepted)
+				cm.API.On("Signup", mock.Anything, "xoxp-two", api.SignupRequest{FirstName: "Grace", LastName: "Brewster Hopper", AcceptTermsOfServiceVersion: testTermsVersion}).
+					Return(&api.SignupResponse{DeveloperID: "D456"}, nil)
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedStdoutOutputs: []string{
 				"Terms of service",
+				"Developer Program Agreement: https://slack.com/terms-of-service/slack-developer-program",
+				"Slack API Terms of Service: https://slack.com/terms-of-service/api",
+				"Slack Privacy Policy: https://slack.com/trust/privacy/privacy-policy",
+				"Salesforce Privacy Statement: https://www.salesforce.com/company/legal/privacy/",
 				"Name: Grace Brewster Hopper",
 				"Email: grace@example.com",
 				"Newsletter: false",
 				"Welcome to the Slack Developer Program!",
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertCalled(t, "Signup", mock.Anything, "xoxp-two", api.SignupRequest{
-					FirstName:            "Grace",
-					LastName:             "Brewster Hopper",
-					AcceptTermsOfService: true,
-				})
+				cm.API.AssertNumberOfCalls(t, "Signup", 2)
 				cm.API.AssertNumberOfCalls(t, "UsersInfo", 2)
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"uses the team flag without fetching profiles for other logins": {
-			CmdArgs: []string{"--team", "T2", "--accept-tos", "--newsletter=false"},
+			CmdArgs: []string{"--team", "T2", "--accept-tos", testTermsVersion, "--newsletter=false"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					{Token: "xoxp-one", TeamID: "T1", TeamDomain: "one", UserID: "U1"},
@@ -152,14 +183,14 @@ func TestSignupCommand(t *testing.T) {
 				cm.API.AssertNotCalled(t, "UsersInfo", mock.Anything, "xoxp-one", "U1")
 				cm.API.AssertNumberOfCalls(t, "UsersInfo", 1)
 				cm.API.AssertCalled(t, "Signup", mock.Anything, "xoxp-two", api.SignupRequest{
-					FirstName:            "Grace",
-					LastName:             "Hopper",
-					AcceptTermsOfService: true,
+					FirstName:                   "Grace",
+					LastName:                    "Hopper",
+					AcceptTermsOfServiceVersion: testTermsVersion,
 				})
 			},
 		},
 		"errors when the team flag does not match a login": {
-			CmdArgs: []string{"--team", "T9", "--accept-tos"},
+			CmdArgs: []string{"--team", "T9", "--accept-tos", testTermsVersion},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
 					{Token: "xoxp-one", TeamID: "T1", TeamDomain: "one", UserID: "U1"},
@@ -173,7 +204,7 @@ func TestSignupCommand(t *testing.T) {
 			},
 		},
 		"prompts for name when we cannot fetch it from the user's profile": {
-			CmdArgs: []string{"--token", testToken, "--accept-tos"},
+			CmdArgs: []string{"--token", testToken, "--accept-tos", testTermsVersion},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
@@ -186,44 +217,145 @@ func TestSignupCommand(t *testing.T) {
 			ExpectedStdoutOutputs: []string{"Name: Alan Turing"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
-					FirstName:            "Alan",
-					LastName:             "Turing",
-					AcceptTermsOfService: true,
+					FirstName:                   "Alan",
+					LastName:                    "Turing",
+					AcceptTermsOfServiceVersion: testTermsVersion,
 				})
 			},
 		},
 		"cancels when the terms are declined": {
-			CmdArgs: []string{"--token", testToken},
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
-				cm.IO.On("ConfirmPrompt", mock.Anything, "Do you agree to these terms?", acceptTermsPromptConfig).Return(false, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(testTermsResponse, errTosNotAccepted)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Do you agree to these terms?", mock.Anything).Return(false, nil)
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedError: slackerror.New(slackerror.ErrProcessInterrupted),
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
-				cm.API.AssertNotCalled(t, "Signup", mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertNumberOfCalls(t, "Signup", 1)
 			},
 		},
-		"errors when the force flag is used without accepting the terms": {
-			CmdArgs: []string{"--token", testToken, "--force"},
+		"prompts with the known terms links when the terms and policies are not returned": {
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, api.SignupRequest{FirstName: "Ada", LastName: "Lovelace"}).
+					Return(&api.SignupResponse{TermsOfServiceVersion: testTermsVersion}, errTosNotAccepted)
+				cm.API.On("Signup", mock.Anything, testToken, api.SignupRequest{FirstName: "Ada", LastName: "Lovelace", AcceptTermsOfServiceVersion: testTermsVersion}).
+					Return(&api.SignupResponse{}, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Do you agree to these terms?", mock.Anything).Return(true, nil)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedStdoutOutputs: []string{
+				developerProgramAgreementURL,
+				slackAPITermsOfServiceURL,
+				slackPrivacyPolicyURL,
+				salesforcePrivacyStatementURL,
+				"Welcome to the Slack Developer Program!",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertNumberOfCalls(t, "Signup", 2)
+			},
+		},
+		"prompts to accept the default terms version when the version is not returned": {
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, api.SignupRequest{FirstName: "Ada", LastName: "Lovelace"}).
+					Return(&api.SignupResponse{}, errTosNotAccepted)
+				cm.API.On("Signup", mock.Anything, testToken, api.SignupRequest{FirstName: "Ada", LastName: "Lovelace", AcceptTermsOfServiceVersion: developerProgramTermsOfServiceVersion}).
+					Return(&api.SignupResponse{}, nil)
+				cm.IO.On("ConfirmPrompt", mock.Anything, "Do you agree to these terms?", mock.Anything).Return(true, nil)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedStdoutOutputs: []string{
+				developerProgramAgreementURL,
+				"Welcome to the Slack Developer Program!",
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertCalled(t, "ConfirmPrompt", mock.Anything, "Do you agree to these terms?", mock.Anything)
+				cm.API.AssertNumberOfCalls(t, "Signup", 2)
+			},
+		},
+		"errors without prompts when the terms must be accepted with the force flag": {
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--force"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(testTermsResponse, errTosNotAccepted)
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedErrorStrings: []string{
 				"missing_flag",
 				"The terms of service must be accepted",
-				"--accept-tos",
+				"--accept-tos " + testTermsVersion,
 				developerProgramAgreementURL,
 				slackPrivacyPolicyURL,
-				salesforcePrivacyStatementURL,
 			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertNumberOfCalls(t, "Signup", 1)
+			},
+		},
+		"errors without prompts when the terms must be accepted in a non-interactive terminal": {
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(testTermsResponse, errTosNotAccepted)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedErrorStrings: []string{"missing_flag", "--accept-tos " + testTermsVersion},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+				cm.API.AssertNumberOfCalls(t, "Signup", 1)
+			},
+		},
+		"errors without prompts when the accepted terms version is outdated": {
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--accept-tos", "dev_tos_jan2023"},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				cm.IO.On("IsTTY").Return(true)
+				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
+				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
+				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(testTermsResponse, errTosNotAccepted)
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedErrorStrings: []string{
+				slackerror.ErrTosNotAccepted,
+				"version dev_tos_jan2023 does not match the current version " + testTermsVersion,
+				"--accept-tos " + testTermsVersion,
+			},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
+					FirstName:                   "Ada",
+					LastName:                    "Lovelace",
+					AcceptTermsOfServiceVersion: "dev_tos_jan2023",
+				})
+				cm.API.AssertNumberOfCalls(t, "Signup", 1)
+				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
+			},
+		},
+		"errors when the accept-tos flag is missing a version": {
+			CmdArgs: []string{"--token", testToken, "--accept-tos", " "},
+			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
+				enableSandboxSignupExperiment(ctx, cm, cf)
+			},
+			ExpectedErrorStrings: []string{"missing_flag", "requires the version of the terms of service"},
+			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
+				cm.Auth.AssertNotCalled(t, "AuthWithToken", mock.Anything, mock.Anything)
 				cm.API.AssertNotCalled(t, "Signup", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"signs up without prompts when the force and accept-tos flags are used": {
-			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--force", "--accept-tos"},
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--force", "--accept-tos", testTermsVersion},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.IO.On("IsTTY").Return(true)
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
@@ -234,16 +366,16 @@ func TestSignupCommand(t *testing.T) {
 			ExpectedStdoutOutputs: []string{"Welcome to the Slack Developer Program!"},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
-					FirstName:            "Ada",
-					LastName:             "Lovelace",
-					AcceptTermsOfService: true,
+					FirstName:                   "Ada",
+					LastName:                    "Lovelace",
+					AcceptTermsOfServiceVersion: testTermsVersion,
 				})
 				cm.IO.AssertNotCalled(t, "ConfirmPrompt", mock.Anything, mock.Anything, mock.Anything)
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
 		"returns an API error": {
-			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--accept-tos", "--newsletter=false"},
+			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace", "--accept-tos", testTermsVersion, "--newsletter=false"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
 				cm.API.On("UsersInfo", mock.Anything, testToken, "U123").Return(&types.UserInfo{}, nil)
@@ -266,11 +398,6 @@ func TestSignupCommandHidden(t *testing.T) {
 	clients := shared.NewClientFactory(shared.NewClientsMock().MockClientFactory())
 	assert.True(t, NewSignupCommand(clients).Hidden)
 }
-
-// acceptTermsPromptConfig matches the terms prompt config that suggests the --accept-tos flag
-var acceptTermsPromptConfig = mock.MatchedBy(func(cfg iostreams.ConfirmPromptConfig) bool {
-	return !cfg.Default && cfg.Flag != nil && cfg.Flag.Name == "accept-tos"
-})
 
 // enableSandboxSignupExperiment turns on the experiment that gates the signup command
 func enableSandboxSignupExperiment(ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {

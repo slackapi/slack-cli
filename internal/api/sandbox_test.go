@@ -19,6 +19,8 @@ import (
 
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -171,28 +173,91 @@ func TestClient_SandboxLogin_CommonErrors(t *testing.T) {
 	})
 }
 
-func TestClient_Signup_SendsAcceptTOS(t *testing.T) {
-	ctx := slackcontext.MockContext(t.Context())
-	c, teardown := NewFakeClient(t, FakeClientParams{
-		ExpectedMethod:  sandboxSignupVerifiedMethod,
-		ExpectedRequest: "accept_tos=true&country_option=US&first_name=Ada&last_name=Lovelace&token=token",
-		Response:        `{"ok":true,"developer_id":"D123"}`,
-	})
-	defer teardown()
-	resp, err := c.Signup(ctx, "token", SignupRequest{
-		FirstName:            "Ada",
-		LastName:             "Lovelace",
-		CountryOption:        "US",
-		AcceptTermsOfService: true,
-	})
-	require.NoError(t, err)
-	require.Equal(t, "D123", resp.DeveloperID)
+func Test_Client_Signup(t *testing.T) {
+	tests := map[string]struct {
+		request          SignupRequest
+		expectedRequest  string
+		response         string
+		expectedResponse *SignupResponse
+		expectedError    string
+	}{
+		"omits the terms version when not accepted in the request": {
+			request:          SignupRequest{FirstName: "Ada", LastName: "Lovelace", CountryOption: "US"},
+			expectedRequest:  "country_option=US&first_name=Ada&last_name=Lovelace&token=token",
+			response:         `{"ok":true,"developer_id":"D123"}`,
+			expectedResponse: &SignupResponse{DeveloperID: "D123"},
+		},
+		"sends the accepted terms version": {
+			request:          SignupRequest{FirstName: "Ada", LastName: "Lovelace", AcceptTermsOfServiceVersion: "may2024"},
+			expectedRequest:  "accept_tos_version=may2024&first_name=Ada&last_name=Lovelace&token=token",
+			response:         `{"ok":true,"developer_id":"D123"}`,
+			expectedResponse: &SignupResponse{DeveloperID: "D123"},
+		},
+		"returns the current terms with the terms not accepted error": {
+			request:         SignupRequest{FirstName: "Ada", LastName: "Lovelace"},
+			expectedRequest: "first_name=Ada&last_name=Lovelace&token=token",
+			response: `{
+				"ok": false,
+				"error": "tos_not_accepted",
+				"details": "Terms of service for the Slack Developer program have not been accepted. By signing up, you agree to the terms and acknowledge the privacy policies. Retry the request with accept_tos_version set to the latest version.",
+				"tos_version": "may2024",
+				"terms_and_policies": [
+					{"name": "Developer Program Agreement", "url": "https://slack.com/terms-of-service/slack-developer-program"},
+					{"name": "Slack API Terms of Service", "url": "https://slack.com/terms-of-service/api"},
+					{"name": "Slack Privacy Policy", "url": "https://slack.com/trust/privacy/privacy-policy"},
+					{"name": "Salesforce Privacy Statement", "url": "https://www.salesforce.com/company/legal/privacy/"}
+				]
+			}`,
+			expectedResponse: &SignupResponse{
+				TermsOfServiceVersion: "may2024",
+				TermsAndPolicies: []TermsAndPolicy{
+					{Name: "Developer Program Agreement", URL: "https://slack.com/terms-of-service/slack-developer-program"},
+					{Name: "Slack API Terms of Service", URL: "https://slack.com/terms-of-service/api"},
+					{Name: "Slack Privacy Policy", URL: "https://slack.com/trust/privacy/privacy-policy"},
+					{Name: "Salesforce Privacy Statement", URL: "https://www.salesforce.com/company/legal/privacy/"},
+				},
+			},
+			expectedError: slackerror.ErrTosNotAccepted,
+		},
+		"returns an empty response with the terms not accepted error": {
+			request:          SignupRequest{FirstName: "Ada", LastName: "Lovelace"},
+			expectedRequest:  "first_name=Ada&last_name=Lovelace&token=token",
+			response:         `{"ok":false,"error":"tos_not_accepted"}`,
+			expectedResponse: &SignupResponse{},
+			expectedError:    slackerror.ErrTosNotAccepted,
+		},
+		"returns no response with other errors": {
+			request:         SignupRequest{FirstName: "Ada", LastName: "Lovelace"},
+			expectedRequest: "first_name=Ada&last_name=Lovelace&token=token",
+			response:        `{"ok":false,"error":"email_already_in_use"}`,
+			expectedError:   slackerror.ErrEmailAlreadyInUse,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			c, teardown := NewFakeClient(t, FakeClientParams{
+				ExpectedMethod:  sandboxSignupVerifiedMethod,
+				ExpectedRequest: tc.expectedRequest,
+				Response:        tc.response,
+			})
+			defer teardown()
+			resp, err := c.Signup(ctx, "token", tc.request)
+			if tc.expectedError != "" {
+				require.Error(t, err)
+				assert.Equal(t, tc.expectedError, slackerror.ToSlackError(err).Code)
+			} else {
+				require.NoError(t, err)
+			}
+			assert.Equal(t, tc.expectedResponse, resp)
+		})
+	}
 }
 
 func TestClient_Signup_CommonErrors(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	verifyCommonErrorCases(t, sandboxSignupVerifiedMethod, func(c *Client) error {
-		_, err := c.Signup(ctx, "token", SignupRequest{AcceptTermsOfService: true})
+		_, err := c.Signup(ctx, "token", SignupRequest{})
 		return err
 	})
 }
