@@ -66,8 +66,7 @@ and testing Slack apps isolated from your production workspace.
 Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox signup", Meaning: "Sign up for the Developer Program"},
-			{Command: "sandbox signup --first-name Anna --last-name Banana --postal-code 94105 --country US", Meaning: "Sign up with the provided user details"},
-			{Command: "sandbox signup --team T0123456 --accept-tos may2024", Meaning: "Sign up, authenticated as your user on the given team, agreeing to a version of the terms of service"},
+			{Command: "sandbox signup --team T0123456 --postal-code 90210 --country US --newsletter", Meaning: "Sign up, authenticated as your user on the given team with the provided details"},
 		}),
 		Args:   cobra.NoArgs,
 		Hidden: true,
@@ -91,19 +90,19 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 	cmd.Flags().StringVar(&signupCmdFlags.postalCode, "postal-code", "", "Your postal code")
 	cmd.Flags().StringVar(&signupCmdFlags.countryOption, "country", "", "Your country (ISO 3166-1 alpha-2 format, e.g. US)")
 	cmd.Flags().BoolVar(&signupCmdFlags.newsletterSubscription, "newsletter", false, "Subscribe to the developer newsletter")
-	cmd.Flags().StringVar(&signupCmdFlags.acceptTermsOfServiceVersion, "accept-tos", "", acceptTermsOfServiceUsage())
+	cmd.Flags().StringVar(&signupCmdFlags.acceptTermsOfServiceVersion, "accept-terms", "", acceptTermsOfServiceUsage())
 
 	// Rebuild the flag usage when help is shown so the links are styled once styles are toggled
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
-		cmd.Flag("accept-tos").Usage = acceptTermsOfServiceUsage()
+		cmd.Flag("accept-terms").Usage = acceptTermsOfServiceUsage()
 		cmd.Parent().HelpFunc()(cmd, args)
 	})
 
 	return cmd
 }
 
-// acceptTermsOfServiceUsage returns the usage text for the --accept-tos flag
+// acceptTermsOfServiceUsage returns the usage text for the --accept-terms flag
 func acceptTermsOfServiceUsage() string {
 	return "Confirm agreement to this version of the Slack Developer\n" +
 		"  Program Agreement " + style.LinkText(developerProgramAgreementURL) + "\n" +
@@ -137,11 +136,11 @@ func termsOfServiceLinks(policies []api.TermsAndPolicy) []string {
 func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	// The --accept-tos flag must name a version so agreement is never given to unseen terms
+	// The --accept-terms flag must name a version so agreement is never given to unseen terms
 	acceptedVersion := strings.TrimSpace(signupCmdFlags.acceptTermsOfServiceVersion)
-	if cmd.Flag("accept-tos").Changed && acceptedVersion == "" {
+	if cmd.Flag("accept-terms").Changed && acceptedVersion == "" {
 		return slackerror.New(slackerror.ErrMissingFlag).
-			WithMessage("The %s flag requires the version of the terms of service being accepted", style.Highlight("--accept-tos")).
+			WithMessage("The %s flag requires the version of the terms of service being accepted", style.Highlight("--accept-terms")).
 			WithRemediation("Run %s without the flag to review the current terms and version", style.Commandf("sandbox signup", false))
 	}
 
@@ -198,7 +197,7 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		Emoji: "tada",
 		Text:  "Welcome to the Slack Developer Program!",
 		Secondary: []string{
-			fmt.Sprintf("Manage your profile details at %s", style.LinkText(developerProfileSettingsURL)),
+			fmt.Sprintf("Manage your profile at %s", style.LinkText(developerProfileSettingsURL)),
 		},
 	}))
 
@@ -258,6 +257,11 @@ func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*t
 			}
 		}
 		return nil, nil, slackerror.New(slackerror.ErrCredentialsNotFound)
+	}
+
+	// If only one login is present, default to that auth without prompting
+	if len(allAuths) == 1 {
+		return &allAuths[0], nil, nil
 	}
 
 	teamFlag := clients.Config.Flags.Lookup("team")
@@ -355,7 +359,7 @@ type userInfo struct {
 
 // printTermsOfService shows the terms and policies that must be accepted at signup
 func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, policies []api.TermsAndPolicy) {
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
 		Text:  "Terms of service",
 		Secondary: append(
@@ -366,11 +370,11 @@ func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, pol
 }
 
 // acceptTermsOfService confirms agreement to the current version of the terms of service and returns
-// the version that was accepted. A version that was already provided with the --accept-tos flag is
+// the version that was accepted. A version that was already provided with the --accept-terms flag is
 // outdated if the terms must still be accepted, so it errors instead of agreeing to terms that changed.
 func acceptTermsOfService(ctx context.Context, clients *shared.ClientFactory, version string, policies []api.TermsAndPolicy, flagVersion string) (string, error) {
 	acceptTermsRemediation := fmt.Sprintf("Include %s to agree to the following terms and acknowledge the privacy policies:\n%s",
-		style.Highlight(fmt.Sprintf("--accept-tos %s", version)),
+		style.Highlight(fmt.Sprintf("--accept-terms %s", version)),
 		strings.Join(termsOfServiceLinks(policies), "\n"),
 	)
 
@@ -453,7 +457,11 @@ func printSignupDetails(ctx context.Context, clients *shared.ClientFactory, info
 	if info.postalCode != "" {
 		details = append(details, fmt.Sprintf("Postal Code: %s", info.postalCode))
 	}
-	details = append(details, fmt.Sprintf("Newsletter: %v", newsletter))
+	newsletterStatus := "opted out"
+	if newsletter {
+		newsletterStatus = "opted in"
+	}
+	details = append(details, fmt.Sprintf("Newsletter: %s", newsletterStatus))
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
 		Text:      "Developer Program Signup",
