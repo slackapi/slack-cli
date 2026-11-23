@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -584,6 +585,33 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_closeWatcherOnDone(t *testing.T) {
+	// Start blocks sending an event that nobody reads after the context ends, so closing must drain it
+	dir := t.TempDir()
+	manifest := filepath.Join(dir, "manifest.json")
+	require.NoError(t, os.WriteFile(manifest, []byte("{}"), 0o600))
+	w := watcher.New()
+	require.NoError(t, w.AddRecursive(dir))
+	later := time.Now().Add(time.Hour)
+	require.NoError(t, os.Chtimes(manifest, later, later))
+	started := make(chan error, 1)
+	go func() { started <- w.Start(time.Millisecond) }()
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	done := make(chan struct{})
+	go func() {
+		closeWatcherOnDone(ctx, w)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		require.FailNow(t, "closeWatcherOnDone did not return with an unread event")
+	}
+	require.NoError(t, <-started)
 }
 
 func Test_LocalServer_watchManifestEvents(t *testing.T) {
