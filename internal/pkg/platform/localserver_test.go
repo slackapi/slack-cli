@@ -515,21 +515,29 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 	for name, tc := range map[string]struct {
 		manifestSource config.ManifestSource
 		manifestErr    error
+		watch          *hooks.WatchOpts
 		watchManifest  bool
 		expectedErr    error
 		expectedOutput []string
 	}{
+		"asks for watch configuration when the hooks omit it": {
+			manifestSource: config.ManifestSourceLocal,
+			expectedOutput: []string{"provide watch configuration"},
+		},
 		"returns the error when the manifest source cannot be read": {
 			manifestSource: config.ManifestSourceLocal,
+			watch:          &hooks.WatchOpts{},
 			manifestErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
 			expectedErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
 		},
 		"waits for the context to end when manifest watching is not enabled": {
 			manifestSource: config.ManifestSourceLocal,
+			watch:          &hooks.WatchOpts{},
 			expectedOutput: []string{"Manifest watching is not enabled"},
 		},
 		"notes a remote manifest source before checking the watch config": {
 			manifestSource: config.ManifestSourceRemote,
+			watch:          &hooks.WatchOpts{},
 			expectedOutput: []string{"Manifest source is remote", "Manifest watching is not enabled"},
 		},
 		"watches manifest paths until the context ends": {
@@ -549,6 +557,7 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			server := LocalServer{clients: clients}
+			server.cliConfig.Config.Watch = tc.watch
 			if tc.watchManifest {
 				server.cliConfig.Config.Watch = &hooks.WatchOpts{
 					Manifest: &hooks.ManifestWatchOpts{
