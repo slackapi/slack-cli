@@ -115,7 +115,7 @@ func acceptTermsOfServiceUsage() string {
 
 // termsOfServiceLinks returns a bulleted list of the terms and policies accepted at signup.
 // The terms and policies from the API are preferred, with known links used as a fallback.
-func termsOfServiceLinks(policies []api.TermsAndPolicy) []string {
+func termsOfServiceLinks(policies api.TermsAndPolicies) []string {
 	if len(policies) > 0 {
 		links := make([]string, 0, len(policies))
 		for _, policy := range policies {
@@ -172,7 +172,7 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	resp, err := apiClient.Signup(ctx, auth.Token, req)
 	if err != nil && slackerror.Is(err, slackerror.ErrTosNotAccepted) {
 		termsVersion := developerProgramTermsOfServiceVersion
-		var policies []api.TermsAndPolicy
+		var policies api.TermsAndPolicies
 		if resp != nil {
 			if resp.TermsOfServiceVersion != "" {
 				termsVersion = resp.TermsOfServiceVersion
@@ -355,7 +355,7 @@ type userInfo struct {
 }
 
 // printTermsOfService shows the terms and policies that must be accepted at signup
-func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, policies []api.TermsAndPolicy) {
+func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, policies api.TermsAndPolicies) {
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
 		Text:  "Terms of service",
@@ -369,7 +369,7 @@ func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, pol
 // acceptTermsOfService confirms agreement to the current version of the terms of service and returns
 // the version that was accepted. A version that was already provided with the --accept-terms flag is
 // outdated if the terms must still be accepted, so it errors instead of agreeing to terms that changed.
-func acceptTermsOfService(ctx context.Context, clients *shared.ClientFactory, version string, policies []api.TermsAndPolicy, flagVersion string) (string, error) {
+func acceptTermsOfService(ctx context.Context, clients *shared.ClientFactory, version string, policies api.TermsAndPolicies, flagVersion string) (string, error) {
 	acceptTermsRemediation := fmt.Sprintf("Include %s to agree to the following terms and acknowledge the privacy policies:\n%s",
 		style.Highlight(fmt.Sprintf("--accept-terms=%s", version)),
 		strings.Join(termsOfServiceLinks(policies), "\n"),

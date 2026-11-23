@@ -53,23 +53,23 @@ type SignupRequest struct {
 	CountryOption          string
 	NewsletterSubscription bool
 	// AcceptTermsOfServiceVersion is the version of the terms of service the user has agreed to.
-	// Left empty to sign up with terms that were accepted before, which errors with the current
-	// terms when these terms haven't been accepted or are outdated.
+	// If empty, signup relies on terms the user already accepted. When the current terms haven't
+	// been accepted, a tos_not_accepted error is returned with the current version.
 	AcceptTermsOfServiceVersion string
 }
 
 // SignupResponse contains the response from Developer Program signup
 type SignupResponse struct {
 	DeveloperID string `json:"developer_id"`
-	// TermsOfServiceVersion is included with a tos_not_accepted error as the current version of the
-	// terms of service, to be sent as accept_tos_version when retrying the request
+	// TermsOfServiceVersion is the current version of the terms, returned with a tos_not_accepted error.
+	// Retry with this value as accept_tos_version to accept the terms.
 	TermsOfServiceVersion string `json:"tos_version,omitempty"`
-	// TermsAndPolicies is included with a tos_not_accepted error as the terms and policies to accept
-	TermsAndPolicies []TermsAndPolicy `json:"terms_and_policies,omitempty"`
+	// TermsAndPolicies lists the terms and policies to accept, returned with a tos_not_accepted error
+	TermsAndPolicies TermsAndPolicies `json:"terms_and_policies,omitempty"`
 }
 
-// TermsAndPolicy is a single term or policy that is accepted with the terms of service
-type TermsAndPolicy struct {
+// TermsAndPolicies are the terms and policies that are accepted with the terms of service
+type TermsAndPolicies []struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }

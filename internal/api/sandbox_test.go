@@ -210,7 +210,7 @@ func Test_Client_Signup(t *testing.T) {
 			}`,
 			expectedResponse: &SignupResponse{
 				TermsOfServiceVersion: "may2024",
-				TermsAndPolicies: []TermsAndPolicy{
+				TermsAndPolicies: TermsAndPolicies{
 					{Name: "Developer Program Agreement", URL: "https://slack.com/terms-of-service/slack-developer-program"},
 					{Name: "Slack API Terms of Service", URL: "https://slack.com/terms-of-service/api"},
 					{Name: "Slack Privacy Policy", URL: "https://slack.com/trust/privacy/privacy-policy"},
