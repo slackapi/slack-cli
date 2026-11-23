@@ -28,6 +28,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/radovskyb/watcher"
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -503,6 +504,51 @@ func Test_LocalServer_watchAppEvents(t *testing.T) {
 				cancel()
 				server.watchAppEvents(ctx, w)
 				assert.NotContains(t, clientsMock.GetStdoutOutput(), tc.unexpected)
+			}
+		})
+	}
+}
+
+func Test_LocalServer_WatchManifest(t *testing.T) {
+	for name, tc := range map[string]struct {
+		manifestSource config.ManifestSource
+		manifestErr    error
+		expectedErr    error
+		expectedOutput []string
+	}{
+		"returns the error when the manifest source cannot be read": {
+			manifestSource: config.ManifestSourceLocal,
+			manifestErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
+			expectedErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
+		},
+		"waits for the context to end when manifest watching is not enabled": {
+			manifestSource: config.ManifestSourceLocal,
+			expectedOutput: []string{"Manifest watching is not enabled"},
+		},
+		"notes a remote manifest source before checking the watch config": {
+			manifestSource: config.ManifestSourceRemote,
+			expectedOutput: []string{"Manifest source is remote", "Manifest watching is not enabled"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+			cancel()
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Config.DebugEnabled = true
+			projectConfigMock := config.NewProjectConfigMock()
+			projectConfigMock.On("GetManifestSource", mock.Anything).Return(tc.manifestSource, tc.manifestErr)
+			clientsMock.Config.ProjectConfig = projectConfigMock
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			server := LocalServer{clients: clients}
+			err := server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
+			if tc.expectedErr != nil {
+				assert.Equal(t, tc.expectedErr, err)
+				return
+			}
+			require.NoError(t, err)
+			for _, expected := range tc.expectedOutput {
+				assert.Contains(t, clientsMock.GetStdoutOutput(), expected)
 			}
 		})
 	}
