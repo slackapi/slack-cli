@@ -101,7 +101,7 @@ func TestSignupCommand(t *testing.T) {
 				cm.IO.AssertNotCalled(t, "InputPrompt", mock.Anything, mock.Anything, mock.Anything)
 			},
 		},
-		"signs up without the terms when these were accepted before": {
+		"shows the terms without prompting when these were accepted before": {
 			CmdArgs: []string{"--token", testToken, "--first-name", "Ada", "--last-name", "Lovelace"},
 			Setup: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock, cf *shared.ClientFactory) {
 				cm.Auth.On("AuthWithToken", mock.Anything, testToken).Return(types.SlackAuth{Token: testToken, UserID: "U123"}, nil)
@@ -109,7 +109,14 @@ func TestSignupCommand(t *testing.T) {
 				cm.API.On("Signup", mock.Anything, testToken, mock.Anything).Return(&api.SignupResponse{DeveloperID: "D123"}, nil)
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
-			ExpectedStdoutOutputs: []string{"Welcome to the Slack Developer Program!"},
+			ExpectedStdoutOutputs: []string{
+				"Terms of Service",
+				developerProgramAgreementURL,
+				slackAPITermsOfServiceURL,
+				slackPrivacyPolicyURL,
+				salesforcePrivacyStatementURL,
+				"Welcome to the Slack Developer Program!",
+			},
 			ExpectedAsserts: func(t *testing.T, ctx context.Context, cm *shared.ClientsMock) {
 				cm.API.AssertCalled(t, "Signup", mock.Anything, testToken, api.SignupRequest{
 					FirstName: "Ada",
@@ -147,7 +154,7 @@ func TestSignupCommand(t *testing.T) {
 				enableSandboxSignupExperiment(ctx, cm, cf)
 			},
 			ExpectedStdoutOutputs: []string{
-				"Terms of service",
+				"Terms of Service",
 				"Developer Program Agreement: https://slack.com/terms-of-service/slack-developer-program",
 				"Slack API Terms of Service: https://slack.com/terms-of-service/api",
 				"Slack Privacy Policy: https://slack.com/trust/privacy/privacy-policy",

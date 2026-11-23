@@ -37,7 +37,7 @@ const (
 	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/legal/privacy/"
 )
 
-// developerProfileSettingsURL is where developers can view or update their user data for their Developer Program profile
+// developerProfileSettingsURL is where developers can view or update their user data for their developer program profile
 const developerProfileSettingsURL = "https://api.slack.com/developer-program/settings/profile"
 
 // developerProgramTermsOfServiceVersion is the current version of the terms of service links
@@ -60,7 +60,7 @@ func NewSignupCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short: "Sign up for the Slack Developer Program",
 		Long: `Sign up for the Slack Developer Program!
 
-The developer program gives you access to sandbox environments for building
+The Developer Program gives you access to sandbox environments for building
 and testing Slack apps isolated from your production workspace.
 
 Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
@@ -170,6 +170,7 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	// Terms that were accepted before are used when no version is included in the request,
 	// otherwise the current terms are returned to be accepted before signing up again
 	resp, err := apiClient.Signup(ctx, auth.Token, req)
+	termsShown := false
 	if err != nil && slackerror.Is(err, slackerror.ErrTosNotAccepted) {
 		termsVersion := developerProgramTermsOfServiceVersion
 		var policies api.TermsAndPolicies
@@ -183,11 +184,17 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 		if termsErr != nil {
 			return termsErr
 		}
+		termsShown = true
 		req.AcceptTermsOfServiceVersion = version
 		_, err = apiClient.Signup(ctx, auth.Token, req)
 	}
 	if err != nil {
 		return err
+	}
+
+	// Show the terms that apply to the account even when these were already accepted
+	if !termsShown {
+		printTermsOfService(ctx, clients, nil)
 	}
 
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
@@ -224,7 +231,7 @@ func apiClientForAuth(clients *shared.ClientFactory, auth *types.SlackAuth) api.
 	return apiClient
 }
 
-// selectAuthForSignup returns the auth to link to the Developer Program account and, when it
+// selectAuthForSignup returns the auth to link to the developer program account and, when it
 // was already fetched for the prompt, the profile of that user.
 // Uses the global --token or --team flag if present, otherwise prompts the user to select an account.
 func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, *types.UserInfo, error) {
@@ -358,7 +365,7 @@ type userInfo struct {
 func printTermsOfService(ctx context.Context, clients *shared.ClientFactory, policies api.TermsAndPolicies) {
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
-		Text:  "Terms of service",
+		Text:  "Terms of Service",
 		Secondary: append(
 			[]string{"By signing up, you agree to the following terms and acknowledge the privacy policies:"},
 			termsOfServiceLinks(policies)...,
@@ -461,7 +468,7 @@ func printSignupDetails(ctx context.Context, clients *shared.ClientFactory, info
 	details = append(details, fmt.Sprintf("Newsletter: %s", newsletterStatus))
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
-		Text:      "Developer Program Signup",
+		Text:      "Developer Profile",
 		Secondary: details,
 	}))
 }
