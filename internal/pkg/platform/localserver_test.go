@@ -510,39 +510,80 @@ func Test_LocalServer_watchAppEvents(t *testing.T) {
 	}
 }
 
-func Test_LocalServer_WatchManifest_returnsWhenTheContextEnds(t *testing.T) {
-	ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
-	defer cancel()
-	clientsMock := shared.NewClientsMock()
-	clientsMock.Config.DebugEnabled = true
-	projectConfigMock := config.NewProjectConfigMock()
-	projectConfigMock.On("GetManifestSource", mock.Anything).Return(config.ManifestSourceRemote, nil)
-	clientsMock.Config.ProjectConfig = projectConfigMock
-	clientsMock.AddDefaultMocks()
-	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
-	cliConfig := hooks.SDKCLIConfig{}
-	cliConfig.Config.Watch.Manifest = &hooks.ManifestWatchOpts{
-		Paths:       []string{t.TempDir()},
-		FilterRegex: `manifest\.json$`,
+func Test_LocalServer_WatchManifest(t *testing.T) {
+	for name, tc := range map[string]struct {
+		manifestSource config.ManifestSource
+		manifestErr    error
+		watchManifest  bool
+		expectedErr    error
+		expectedOutput []string
+	}{
+		"returns the error when the manifest source cannot be read": {
+			manifestSource: config.ManifestSourceLocal,
+			manifestErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
+			expectedErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
+		},
+		"waits for the context to end when manifest watching is not enabled": {
+			manifestSource: config.ManifestSourceLocal,
+			expectedOutput: []string{"Manifest watching is not enabled"},
+		},
+		"notes a remote manifest source before checking the watch config": {
+			manifestSource: config.ManifestSourceRemote,
+			expectedOutput: []string{"Manifest source is remote", "Manifest watching is not enabled"},
+		},
+		"watches manifest paths until the context ends": {
+			manifestSource: config.ManifestSourceRemote,
+			watchManifest:  true,
+			expectedOutput: []string{"Watching manifest changes to file paths matching"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+			defer cancel()
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Config.DebugEnabled = true
+			projectConfigMock := config.NewProjectConfigMock()
+			projectConfigMock.On("GetManifestSource", mock.Anything).Return(tc.manifestSource, tc.manifestErr)
+			clientsMock.Config.ProjectConfig = projectConfigMock
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			server := LocalServer{clients: clients}
+			if tc.watchManifest {
+				server.cliConfig.Config.Watch.Manifest = &hooks.ManifestWatchOpts{
+					Paths:       []string{t.TempDir()},
+					FilterRegex: `manifest\.json$`,
+				}
+			}
+			errChan := make(chan error, 1)
+			go func() {
+				errChan <- server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
+			}()
+			if tc.expectedErr != nil {
+				select {
+				case err := <-errChan:
+					assert.Equal(t, tc.expectedErr, err)
+				case <-time.After(time.Second):
+					require.FailNow(t, "WatchManifest did not return the error")
+				}
+				return
+			}
+			select {
+			case err := <-errChan:
+				require.FailNow(t, "WatchManifest returned before the context ended", "err: %v", err)
+			case <-time.After(50 * time.Millisecond):
+			}
+			cancel()
+			select {
+			case err := <-errChan:
+				require.NoError(t, err)
+			case <-time.After(time.Second):
+				require.FailNow(t, "WatchManifest did not return after the context ended")
+			}
+			for _, expected := range tc.expectedOutput {
+				assert.Contains(t, clientsMock.GetStdoutOutput(), expected)
+			}
+		})
 	}
-	server := LocalServer{clients: clients, cliConfig: cliConfig}
-	errChan := make(chan error, 1)
-	go func() {
-		errChan <- server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
-	}()
-	select {
-	case err := <-errChan:
-		require.FailNow(t, "WatchManifest returned before the context ended", "err: %v", err)
-	case <-time.After(250 * time.Millisecond):
-	}
-	cancel()
-	select {
-	case err := <-errChan:
-		require.NoError(t, err)
-	case <-time.After(time.Second):
-		require.FailNow(t, "WatchManifest did not return after the context ended")
-	}
-	assert.Contains(t, clientsMock.GetStdoutOutput(), "Watching manifest changes to file paths matching")
 }
 
 func Test_LocalServer_watchManifestEvents(t *testing.T) {
