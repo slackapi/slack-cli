@@ -92,6 +92,33 @@ func Test_newProvider(t *testing.T) {
 	}
 }
 
+func Test_newTracerProvider(t *testing.T) {
+	tests := map[string]struct {
+		env           map[string]string
+		expectedCalls int
+	}{
+		"builds the exporter when telemetry is on":        {env: map[string]string{}, expectedCalls: 1},
+		"never builds the exporter when telemetry is off": {env: map[string]string{"SLACK_DISABLE_TELEMETRY": "true"}, expectedCalls: 0},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			calls := 0
+			exporter := tracetest.NewInMemoryExporter()
+			provider, err := newTracerProvider(func(key string) string { return tc.env[key] }, func() (sdktrace.SpanExporter, error) {
+				calls++
+				return exporter, nil
+			})
+			require.NoError(t, err)
+			_, span := provider.Tracer("test").Start(context.Background(), "span")
+			span.End()
+			require.NoError(t, provider.ForceFlush(context.Background()))
+			assert.Equal(t, tc.expectedCalls, calls)
+			assert.Len(t, exporter.GetSpans(), tc.expectedCalls)
+			assert.True(t, span.SpanContext().IsValid())
+		})
+	}
+}
+
 func Test_SetTraceHeaders(t *testing.T) {
 	recorder := tracetest.NewSpanRecorder()
 	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
@@ -129,24 +156,6 @@ func Test_Start(t *testing.T) {
 	require.Len(t, spans, 3)
 	assert.Equal(t, spans["opentracing-parent"].SpanContext().SpanID(), spans["otel-child"].Parent().SpanID())
 	assert.Equal(t, spans["otel-child"].SpanContext().SpanID(), spans["opentracing-grandchild"].Parent().SpanID())
-}
-
-func Test_telemetryDisabled(t *testing.T) {
-	tests := map[string]struct {
-		env      map[string]string
-		expected bool
-	}{
-		"enabled by default":                  {env: map[string]string{}, expected: false},
-		"disabled by SLACK_DISABLE_TELEMETRY": {env: map[string]string{"SLACK_DISABLE_TELEMETRY": "true"}, expected: true},
-		"enabled when set to false":           {env: map[string]string{"SLACK_DISABLE_TELEMETRY": "false"}, expected: false},
-		"enabled when set to 0":               {env: map[string]string{"SLACK_DISABLE_TELEMETRY": " 0 "}, expected: false},
-		"disabled by any SLACK_TEST_VERSION":  {env: map[string]string{"SLACK_TEST_VERSION": "v1.0.0"}, expected: true},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.expected, telemetryDisabled(func(key string) string { return tc.env[key] }))
-		})
-	}
 }
 
 func Test_TraceID(t *testing.T) {

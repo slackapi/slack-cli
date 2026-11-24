@@ -21,13 +21,12 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/opentracing/opentracing-go"
-	"github.com/slackapi/slack-cli/internal/version"
+	"github.com/slackapi/slack-cli/internal/telemetry"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -49,16 +48,11 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 	// network, and not diagnostics about the developer's own OTEL_* variables
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
 	otel.SetLogger(logr.Discard())
-	var provider *sdktrace.TracerProvider
-	if telemetryDisabled(os.Getenv) {
-		// Spans still get IDs for the debug log and request headers, but none are sent
-		provider = sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.AlwaysSample()))
-	} else {
-		exporter, err := otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
-		if err != nil {
-			log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
-		}
-		provider = newProvider(exporter)
+	provider, err := newTracerProvider(os.Getenv, func() (sdktrace.SpanExporter, error) {
+		return otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
+	})
+	if err != nil {
+		log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
 	}
 	bridge := newBridgeTracer(provider)
 	opentracing.SetGlobalTracer(bridge)
@@ -69,12 +63,21 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 	}), bridge
 }
 
-// telemetryDisabled reports whether SLACK_DISABLE_TELEMETRY or SLACK_TEST_VERSION
-// turn telemetry off, with the same parsing as internal/config/dotenv.go
-func telemetryDisabled(getenv func(string) string) bool {
-	disable := strings.TrimSpace(getenv("SLACK_DISABLE_TELEMETRY"))
-	testVersion := strings.TrimSpace(getenv(version.EnvTestVersion))
-	return (disable != "" && disable != "false" && disable != "0") || testVersion != ""
+// newTracerProvider returns a provider that sends spans with the exporter from
+// newExporter, unless telemetry is disabled
+func newTracerProvider(getenv func(string) string, newExporter func() (sdktrace.SpanExporter, error)) (*sdktrace.TracerProvider, error) {
+	if telemetry.Disabled(getenv) {
+		return newUnexportedProvider(), nil
+	}
+	exporter, err := newExporter()
+	if err != nil {
+		return nil, err
+	}
+	return newProvider(exporter), nil
+}
+
+func newUnexportedProvider() *sdktrace.TracerProvider {
+	return sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.AlwaysSample()))
 }
 
 // exporterOptions sets every value that OTEL_EXPORTER_OTLP_* environment
