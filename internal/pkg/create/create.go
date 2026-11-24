@@ -539,7 +539,6 @@ func InstallProjectDependencies(
 		// Used by Logstash
 		clients.Config.ProjectID = projectID
 
-		// Used by tracing
 		trace.SpanFromContext(ctx).SetAttributes(attribute.String("project_id", clients.Config.ProjectID))
 	}
 
