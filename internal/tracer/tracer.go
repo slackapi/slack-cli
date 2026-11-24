@@ -63,8 +63,6 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 	}), bridge
 }
 
-// newTracerProvider returns a provider that sends spans with the exporter from
-// newExporter, unless telemetry is disabled
 func newTracerProvider(getenv func(string) string, newExporter func() (sdktrace.SpanExporter, error)) (*sdktrace.TracerProvider, error) {
 	if telemetry.Disabled(getenv) {
 		return newUnexportedProvider(), nil

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package telemetry decides whether the CLI sends telemetry.
 package telemetry
 
 import (
@@ -21,10 +20,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/version"
 )
 
-// EnvDisable is the environment variable that turns telemetry off
 const EnvDisable = "SLACK_DISABLE_TELEMETRY"
 
-// Disabled reports whether SLACK_DISABLE_TELEMETRY or SLACK_TEST_VERSION turn telemetry off
 func Disabled(getenv func(string) string) bool {
 	disable := strings.TrimSpace(getenv(EnvDisable))
 	testVersion := strings.TrimSpace(getenv(version.EnvTestVersion))
