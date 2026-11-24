@@ -16,6 +16,7 @@ package iostreams
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -27,6 +28,10 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func Test_PrintDebug(t *testing.T) {
@@ -173,6 +178,63 @@ func Test_PrintInfo(t *testing.T) {
 			io.Stdout = &stdoutLogger
 			io.PrintInfo(ctx, false, tc.format, tc.arguments...)
 			assert.Equal(t, tc.expected, stdoutBuffer.String())
+		})
+	}
+}
+
+func Test_IOStreams_printSpans(t *testing.T) {
+	tests := map[string]struct {
+		print         func(ctx context.Context, io *IOStreams)
+		expectedName  string
+		expectedKey   string
+		expectedValue string
+	}{
+		"PrintDebug": {
+			print:         func(ctx context.Context, io *IOStreams) { io.PrintDebug(ctx, "debug %d", 1) },
+			expectedName:  "printDebug",
+			expectedKey:   "debug_log",
+			expectedValue: "debug 1",
+		},
+		"PrintError": {
+			print:         func(ctx context.Context, io *IOStreams) { io.PrintError(ctx, "error %d", 2) },
+			expectedName:  "printError",
+			expectedKey:   "error_log",
+			expectedValue: "error 2",
+		},
+		"PrintWarning": {
+			print:         func(ctx context.Context, io *IOStreams) { io.PrintWarning(ctx, "warning %d", 3) },
+			expectedName:  "printWarning",
+			expectedKey:   "warning_log",
+			expectedValue: "warning 3",
+		},
+		"PrintInfo when tracing": {
+			print:         func(ctx context.Context, io *IOStreams) { io.PrintInfo(ctx, true, "info %d", 4) },
+			expectedName:  "printInfo",
+			expectedKey:   "printInfo",
+			expectedValue: "info 4",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			t.Cleanup(func() { otel.SetTracerProvider(previous) })
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.AddDefaultMocks()
+			io := NewIOStreams(config.NewConfig(fsMock, osMock), fsMock, osMock)
+			io.Stdout = log.New(&bytes.Buffer{}, "", 0)
+			io.Stderr = log.New(&bytes.Buffer{}, "", 0)
+			tc.print(slackcontext.MockContext(t.Context()), io)
+			var found sdktrace.ReadOnlySpan
+			for _, span := range recorder.Ended() {
+				if span.Name() == tc.expectedName {
+					found = span
+				}
+			}
+			require.NotNil(t, found)
+			assert.Contains(t, found.Attributes(), attribute.String(tc.expectedKey, tc.expectedValue))
 		})
 	}
 }
