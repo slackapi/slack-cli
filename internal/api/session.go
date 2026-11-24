@@ -18,9 +18,9 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -41,9 +41,8 @@ type authCheckResponse struct {
 // ValidateSession ensures that a given token has a valid session with the Slack API.
 // cookie only required if token is a xoxc token otherwise "" is okay
 func (c *Client) ValidateSession(ctx context.Context, token string) (AuthSession, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ValidateSesson")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.ValidateSesson")
+	defer span.End()
 
 	b, err := c.postForm(ctx, sessionValidateMethod, url.Values{"token": []string{token}})
 	if err != nil {
@@ -89,9 +88,8 @@ type authRevokeResponse struct {
 
 // RevokeToken sends a given token to the Slack API for revocation
 func (c *Client) RevokeToken(ctx context.Context, token string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.RevokeToken")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.RevokeToken")
+	defer span.End()
 
 	b, err := c.postForm(ctx, revokeTokenMethod, url.Values{"token": []string{token}})
 	if err != nil {
