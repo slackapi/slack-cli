@@ -18,16 +18,16 @@ import (
 	"context"
 	"sort"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // List returns a list of the authenticated Slack accounts.
 func List(ctx context.Context, clients *shared.ClientFactory) ([]types.SlackAuth, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.auth.list")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "pkg.auth.list")
+	defer span.End()
 
 	// Get a sorted list of userAuths
 	auths, err := clients.Auth().Auths(ctx)

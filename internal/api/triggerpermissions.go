@@ -20,10 +20,10 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -51,9 +51,8 @@ type TriggerPermissionsListResponse struct {
 
 // TriggerPermissionsList returns the access type. If type is 'named_entities', the IDs of entities that have access are also returned.
 func (c *Client) TriggerPermissionsList(ctx context.Context, token, triggerID string) (types.Permission, []string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.TriggerPermissionsList")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.TriggerPermissionsList")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -110,9 +109,8 @@ type TriggerPermissionsSetResponse struct {
 // TriggerPermissionsSet sets the access type for the given trigger.
 // One can also pass in a list of entities to assign access to if access type is named_entities.
 func (c *Client) TriggerPermissionsSet(ctx context.Context, token, triggerID, entities string, permissionType types.Permission, entityType string) ([]string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.TriggerPermissionsSet")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.TriggerPermissionsSet")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -161,9 +159,8 @@ type TriggerPermissionsAddEntitiesResponse struct {
 // TriggerPermissionsAddEntities adds the given entities to the access list for triggers with access type 'named_entities'.
 func (c *Client) TriggerPermissionsAddEntities(ctx context.Context, token, triggerID, entities string, entityType string) error {
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.TriggerPermissionsAddEntities")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.TriggerPermissionsAddEntities")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -209,9 +206,8 @@ type TriggerPermissionsRemoveEntitiesResponse struct {
 // TriggerPermissionsRemoveEntities removes the given entities from the access list for triggers with access type 'named_entities'.
 func (c *Client) TriggerPermissionsRemoveEntities(ctx context.Context, token, triggerID, entities string, entityType string) error {
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.TriggerPermissionsRemoveEntities")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.TriggerPermissionsRemoveEntities")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)

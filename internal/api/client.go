@@ -26,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
@@ -36,6 +35,8 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Client provides an http connection for communicating with the Slack API.
@@ -99,9 +100,8 @@ func NewClient(client *http.Client, host string, io iostreams.IOStreamer) *Clien
 }
 
 func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.Values) ([]byte, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "postForm")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "postForm")
+	defer span.End()
 
 	var sURL *url.URL
 	var err error
@@ -111,7 +111,7 @@ func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.V
 		return nil, err
 	}
 
-	span.SetTag("request_url", sURL)
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	// TODO: what happens if we don't have this?
 	if formValues == nil {
@@ -131,7 +131,7 @@ func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.V
 
 	request.Header.Add("content-type", "application/x-www-form-urlencoded")
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
-	tracer.SetTraceHeaders(span, request.Header)
+	tracer.SetTraceHeaders(ctx, request.Header)
 
 	// Log request to verbose output
 	skipDebugLog := shouldSkipDebugLog(endpoint)
@@ -148,15 +148,14 @@ func (c *Client) postForm(ctx context.Context, endpoint string, formValues url.V
 // postJSON sends a JSON payload to the given endpoint, and returns the response bytes from the server. The
 // response bytes are never nil.
 func (c *Client) postJSON(ctx context.Context, endpoint, token string, cookie string, body []byte) ([]byte, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "postJSON")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "postJSON")
+	defer span.End()
 
 	var sURL, err = url.Parse(c.host + "/api/" + endpoint)
 	if err != nil {
 		return nil, err
 	}
-	span.SetTag("request_url", sURL)
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	var request *http.Request
 	request, err = http.NewRequest("POST", sURL.String(), bytes.NewReader(body))
@@ -173,7 +172,7 @@ func (c *Client) postJSON(ctx context.Context, endpoint, token string, cookie st
 		return nil, err
 	}
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
-	tracer.SetTraceHeaders(span, request.Header)
+	tracer.SetTraceHeaders(ctx, request.Header)
 
 	if cookie != "" {
 		// this is a xoxc request
@@ -193,16 +192,15 @@ func (c *Client) postJSON(ctx context.Context, endpoint, token string, cookie st
 }
 
 func (c *Client) get(ctx context.Context, endpoint, token string, cookie string) ([]byte, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "get")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "get")
+	defer span.End()
 
 	var sURL, err = url.Parse(c.host + "/api/" + endpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	span.SetTag("request_url", sURL)
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	var request *http.Request
 	request, err = http.NewRequest("GET", sURL.String(), nil)
@@ -220,7 +218,7 @@ func (c *Client) get(ctx context.Context, endpoint, token string, cookie string)
 	}
 
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
-	tracer.SetTraceHeaders(span, request.Header)
+	tracer.SetTraceHeaders(ctx, request.Header)
 
 	if cookie != "" {
 		// this is a xoxc request
@@ -241,7 +239,7 @@ func (c *Client) get(ctx context.Context, endpoint, token string, cookie string)
 
 // DoWithRetry will execute the request and retry failed requests if the status
 // indicates the request may be retryable and a Retry-After header is present.
-func (c *Client) DoWithRetry(ctx context.Context, request *http.Request, span opentracing.Span, skipDebugLog bool, sURL *url.URL) ([]byte, error) {
+func (c *Client) DoWithRetry(ctx context.Context, request *http.Request, span trace.Span, skipDebugLog bool, sURL *url.URL) ([]byte, error) {
 
 	var data []byte
 	var err error
@@ -279,7 +277,7 @@ func (c *Client) DoWithRetry(ctx context.Context, request *http.Request, span op
 
 	c.printResponse(ctx, r, skipDebugLog)
 
-	span.SetTag("status_code", r.StatusCode)
+	span.SetAttributes(attribute.Int("status_code", r.StatusCode))
 
 	if r.StatusCode != http.StatusOK {
 		return nil, errors.WithStack(fmt.Errorf("unexpected status code %d returned from url %s", r.StatusCode, sURL))
@@ -294,14 +292,14 @@ func (c *Client) DoWithRetry(ctx context.Context, request *http.Request, span op
 	var baseResp baseResponse
 	_ = json.Unmarshal(bytes, &baseResp)
 
-	span.SetTag("ok", baseResp.Ok)
+	span.SetAttributes(attribute.Bool("ok", baseResp.Ok))
 	if !baseResp.Ok {
 		// Response is not ok, log the error into debug.log if skipDebugLog is true
 		if skipDebugLog {
 			c.printRequest(ctx, request, false /* don't skipDebugLog */)
 			c.printResponse(ctx, r, false /* don't skipDebugLog */)
 		}
-		span.SetTag("error", baseResp.Error)
+		span.SetAttributes(attribute.String("error", baseResp.Error))
 	}
 
 	if bytes == nil {
