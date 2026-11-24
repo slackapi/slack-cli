@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -49,8 +49,8 @@ func Activity(
 	clients *shared.ClientFactory,
 	args types.ActivityArgs,
 ) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.activity")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.activity")
+	defer span.End()
 
 	// Get Auth Token
 	var token = config.GetContextToken(ctx)
@@ -155,9 +155,8 @@ func isAuthError(err error) bool {
 }
 
 func printLatestActivity(ctx context.Context, clients *shared.ClientFactory, token string, args types.ActivityRequest, xoxpToken string) (latestCreated int64, num int, e error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "getLatestActivity")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "getLatestActivity")
+	defer span.End()
 
 	var result, err = clients.API().Activity(ctx, xoxpToken, args)
 	if err != nil {

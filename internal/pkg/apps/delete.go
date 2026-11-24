@@ -17,18 +17,18 @@ package apps
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // Delete will delete the app for this teamDomain both remotely (API) and locally (project)
 func Delete(ctx context.Context, clients *shared.ClientFactory, teamDomain string, app types.App, auth types.SlackAuth) (types.App, string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.delete")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pkg.apps.delete")
+	defer span.End()
 
 	// Set selected team as the current team
 	clients.Config.TeamFlag = teamDomain
