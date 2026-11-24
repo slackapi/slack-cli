@@ -57,6 +57,7 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	defer errorLogFile.Close()
 
 	logger := log.New(errorLogFile, "INFO ", log.Ldate|log.Ltime|log.Lmicroseconds)
 
@@ -90,7 +91,6 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 		"Project ID":            io.config.ProjectID,
 	})
 
-	defer errorLogFile.Close()
 	return nil
 }
 
