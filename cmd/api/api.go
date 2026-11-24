@@ -266,8 +266,8 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	// A map keeps the key match exact, since struct fields match any case.
 	var result map[string]json.RawMessage
 	if json.Unmarshal(resp.Body, &result) == nil {
-		var ok bool
-		if raw, exists := result["ok"]; exists && json.Unmarshal(raw, &ok) == nil && !ok {
+		var ok *bool
+		if json.Unmarshal(result["ok"], &ok) == nil && ok != nil && !*ok {
 			return apiResponseError(result["error"])
 		}
 	}

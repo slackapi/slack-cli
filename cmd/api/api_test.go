@@ -353,7 +353,7 @@ func Test_runAPICommand_OKField(t *testing.T) {
 			flags:         cmdFlags{method: "POST", include: true},
 			body:          `{"ok":false,"error":"not_authed"}`,
 			expectedError: `API request failed with error "not_authed"`,
-			expectedOut:   []string{"HTTP 200", `{"ok":false,"error":"not_authed"}`},
+			expectedOut:   []string{"HTTP 200", "X-Custom: test-value", `{"ok":false,"error":"not_authed"}`},
 		},
 		"ok false with a non-string error returns the error": {
 			flags:         cmdFlags{method: "POST"},
@@ -366,6 +366,11 @@ func Test_runAPICommand_OKField(t *testing.T) {
 			body:          `{"ok":false,"error":null}`,
 			expectedError: `API request failed with "ok": false`,
 			expectedOut:   []string{`{"ok":false,"error":null}`},
+		},
+		"ok null succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"ok":null}`,
+			expectedOut: []string{`{"ok":null}`},
 		},
 		"uppercase OK key succeeds": {
 			flags:       cmdFlags{method: "POST"},
@@ -396,6 +401,7 @@ func Test_runAPICommand_OKField(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("X-Custom", "test-value")
 				fmt.Fprint(w, tc.body)
 			}))
 			defer server.Close()
