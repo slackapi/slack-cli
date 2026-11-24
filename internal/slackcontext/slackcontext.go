@@ -87,8 +87,6 @@ func SetSystemID(ctx context.Context, systemID string) context.Context {
 	return ctx
 }
 
-// TraceID returns the trace ID associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no trace ID could be found.
 func TraceID(ctx context.Context) (string, error) {
 	traceID, ok := ctx.Value(contextKeyTraceID).(string)
 	if !ok || traceID == "" {
@@ -98,8 +96,6 @@ func TraceID(ctx context.Context) (string, error) {
 	return traceID, nil
 }
 
-// SetTraceID returns a new `context.Context` that holds a reference to
-// the `traceID`.
 func SetTraceID(ctx context.Context, traceID string) context.Context {
 	ctx = context.WithValue(ctx, contextKeyTraceID, traceID)
 	return ctx
