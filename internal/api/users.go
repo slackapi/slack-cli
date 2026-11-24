@@ -18,10 +18,10 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -39,9 +39,8 @@ type UserInfoResponse struct {
 
 // UsersInfo returns information about the user such as email address
 func (c *Client) UsersInfo(ctx context.Context, token, userID string) (*types.UserInfo, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.usersInfo")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.usersInfo")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
