@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
@@ -26,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -44,8 +44,8 @@ func NewLogoutCommand(clients *shared.ClientFactory) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			clients.IO.PrintTrace(ctx, slacktrace.AuthLogoutStart)
-			span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.logout")
-			defer span.Finish()
+			ctx, span := tracer.Start(ctx, "cmd.logout")
+			defer span.End()
 
 			if allFlag && clients.Config.TeamFlag != "" {
 				return slackerror.New(slackerror.ErrMismatchedFlags).
@@ -75,9 +75,8 @@ func NewLogoutCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // logout revokes the user and refresh tokens for the provided auths
 func logout(ctx context.Context, clients *shared.ClientFactory, auths []types.SlackAuth) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "logout")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "logout")
+	defer span.End()
 
 	for _, auth := range auths {
 		if err := handleAuthRemoval(ctx, clients, auth); err != nil {
@@ -89,9 +88,8 @@ func logout(ctx context.Context, clients *shared.ClientFactory, auths []types.Sl
 
 // handleAuthRemoval revokes the passed authorization and removes it from the credentials file
 func handleAuthRemoval(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "handleAuthRemoval")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "handleAuthRemoval")
+	defer span.End()
 
 	// Update the API Host and Logstash Host to be the selected/default auth
 	clients.Config.APIHostResolved = clients.Auth().ResolveAPIHost(ctx, clients.Config.APIHostFlag, &auth)
@@ -125,9 +123,8 @@ func handleAuthRemoval(ctx context.Context, clients *shared.ClientFactory, auth 
 
 // promptUserLogout collects the authorizations to revoke
 func promptUserLogout(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command) ([]types.SlackAuth, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "promptUserLogout")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "promptUserLogout")
+	defer span.End()
 
 	if clients.Config.TeamFlag == "" && cmd.Flag("team").Changed {
 		// Handle usage of empty --team flag

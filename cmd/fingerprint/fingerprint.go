@@ -17,9 +17,9 @@ package fingerprint
 import (
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -44,8 +44,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			var span, _ = opentracing.StartSpanFromContext(ctx, "cmd._fingerprint")
-			defer span.Finish()
+			_, span := tracer.Start(ctx, "cmd._fingerprint")
+			defer span.End()
 
 			clients.IO.PrintInfo(ctx, false, fingerprintHash)
 			return nil
