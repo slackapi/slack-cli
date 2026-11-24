@@ -80,6 +80,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Use --no-auth to skip authentication entirely and send the request without",
 			"a token.",
 			"",
+			"The response body is always printed. The command exits with an error when the",
+			"HTTP status is outside 2xx or the JSON response has \"ok\": false.",
+			"",
 			"See all methods at: https://docs.slack.dev/reference/methods",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
@@ -257,6 +260,20 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return slackerror.New("api_request_failed").
 			WithMessage("API request failed with status %d", resp.StatusCode)
+	}
+
+	// Slack returns HTTP 200 for most failures, with "ok": false in the body
+	var result struct {
+		OK    *bool  `json:"ok"`
+		Error string `json:"error"`
+	}
+	if json.Unmarshal(resp.Body, &result) == nil && result.OK != nil && !*result.OK {
+		if result.Error == "" {
+			return slackerror.New("api_request_failed").
+				WithMessage("API request failed with \"ok\": false")
+		}
+		return slackerror.New("api_request_failed").
+			WithMessage("API request failed with error %q", result.Error)
 	}
 
 	return nil
