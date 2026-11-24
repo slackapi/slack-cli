@@ -24,10 +24,12 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/radovskyb/watcher"
 	"github.com/slackapi/slack-cli/internal/api"
+	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
@@ -503,6 +505,79 @@ func Test_LocalServer_watchAppEvents(t *testing.T) {
 				cancel()
 				server.watchAppEvents(ctx, w)
 				assert.NotContains(t, clientsMock.GetStdoutOutput(), tc.unexpected)
+			}
+		})
+	}
+}
+
+func Test_LocalServer_WatchManifest(t *testing.T) {
+	for name, tc := range map[string]struct {
+		manifestSource config.ManifestSource
+		manifestErr    error
+		watch          *hooks.WatchOpts
+		expectedErr    error
+		expectedOutput []string
+	}{
+		"asks for watch configuration when the hooks omit it": {
+			manifestSource: config.ManifestSourceLocal,
+			expectedOutput: []string{"provide watch configuration"},
+		},
+		"returns the error when the manifest source cannot be read": {
+			manifestSource: config.ManifestSourceLocal,
+			watch:          &hooks.WatchOpts{},
+			manifestErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
+			expectedErr:    slackerror.New(slackerror.ErrInvalidManifestSource),
+		},
+		"waits for the context to end when manifest watching is not enabled": {
+			manifestSource: config.ManifestSourceLocal,
+			watch:          &hooks.WatchOpts{},
+			expectedOutput: []string{"Manifest watching is not enabled"},
+		},
+		"notes a remote manifest source before checking the watch config": {
+			manifestSource: config.ManifestSourceRemote,
+			watch:          &hooks.WatchOpts{},
+			expectedOutput: []string{"Manifest source is remote", "Manifest watching is not enabled"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
+			defer cancel()
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Config.DebugEnabled = true
+			projectConfigMock := config.NewProjectConfigMock()
+			projectConfigMock.On("GetManifestSource", mock.Anything).Return(tc.manifestSource, tc.manifestErr)
+			clientsMock.Config.ProjectConfig = projectConfigMock
+			clientsMock.AddDefaultMocks()
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			server := LocalServer{clients: clients}
+			server.cliConfig.Config.Watch = tc.watch
+			errChan := make(chan error, 1)
+			go func() {
+				errChan <- server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
+			}()
+			if tc.expectedErr != nil {
+				select {
+				case err := <-errChan:
+					assert.Equal(t, tc.expectedErr, err)
+				case <-time.After(time.Second):
+					require.FailNow(t, "WatchManifest did not return the error")
+				}
+				return
+			}
+			select {
+			case err := <-errChan:
+				require.FailNow(t, "WatchManifest returned before the context ended", "err: %v", err)
+			case <-time.After(50 * time.Millisecond):
+			}
+			cancel()
+			select {
+			case err := <-errChan:
+				require.NoError(t, err)
+			case <-time.After(time.Second):
+				require.FailNow(t, "WatchManifest did not return after the context ended")
+			}
+			for _, expected := range tc.expectedOutput {
+				assert.Contains(t, clientsMock.GetStdoutOutput(), expected)
 			}
 		})
 	}
