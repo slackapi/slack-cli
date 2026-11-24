@@ -25,11 +25,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
 )
 
@@ -110,9 +110,8 @@ func (c *SystemConfig) SetCustomConfigDirPath(customConfigDirPath string) {
 
 // UserConfig returns the system-level config.json file contents
 func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "ReadUserConfig")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "ReadUserConfig")
+	defer span.End()
 
 	var config SystemConfig
 
@@ -165,9 +164,8 @@ func (c *SystemConfig) UserConfig(ctx context.Context) (*SystemConfig, error) {
 // auth credentials and other config info.  It should return a
 // new hidden folder in the home directory where possible.
 func (c *SystemConfig) SlackConfigDir(ctx context.Context) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SlackConfigDir")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SlackConfigDir")
+	defer span.End()
 
 	var configDirPath = ""
 
@@ -206,9 +204,8 @@ func (c *SystemConfig) SlackConfigDir(ctx context.Context) (string, error) {
 // LogsDir returns the logs directory path stored in the system configuration directory
 // When the directory doesn't exist, then it will create it
 func (c *SystemConfig) LogsDir(ctx context.Context) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "LogsDir")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "LogsDir")
+	defer span.End()
 
 	dotSlackFolder, err := c.SlackConfigDir(ctx)
 	if err != nil {
@@ -227,9 +224,8 @@ func (c *SystemConfig) LogsDir(ctx context.Context) (string, error) {
 
 // GetLastUpdateCheckFailedAt reads the time of the LastUpdateCheckFailedAt property in UserConfig file
 func (c *SystemConfig) GetLastUpdateCheckFailedAt(ctx context.Context) (time.Time, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetLastUpdateCheckFailedAt")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetLastUpdateCheckFailedAt")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -242,9 +238,8 @@ func (c *SystemConfig) GetLastUpdateCheckFailedAt(ctx context.Context) (time.Tim
 // SetLastUpdateCheckFailedAt writes the lastUpdateCheckFailedAt time to the UserConfig file.
 // A zero time removes the property. When successful, the config file path is returned.
 func (c *SystemConfig) SetLastUpdateCheckFailedAt(ctx context.Context, lastUpdateCheckFailedAt time.Time) (path string, err error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetLastUpdateCheckFailedAt")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetLastUpdateCheckFailedAt")
+	defer span.End()
 
 	userConfig, err := c.UserConfig(ctx)
 	if err != nil {
@@ -274,9 +269,8 @@ func (c *SystemConfig) SetLastUpdateCheckFailedAt(ctx context.Context, lastUpdat
 
 // GetLastUpdateCheckedAt reads the time of the LastUpdateCheckedAt property in UserConfig file
 func (c *SystemConfig) GetLastUpdateCheckedAt(ctx context.Context) (time.Time, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "LastUpdateCheckedAt")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "LastUpdateCheckedAt")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -289,9 +283,8 @@ func (c *SystemConfig) GetLastUpdateCheckedAt(ctx context.Context) (time.Time, e
 // SetLastUpdateCheckedAt writes the lastUpdateCheckAt time to the UserConfig file.
 // When successful, the config file path is returned.
 func (c *SystemConfig) SetLastUpdateCheckedAt(ctx context.Context, lastUpdateCheckedAt time.Time) (path string, err error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetLastUpdateCheckedAt")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetLastUpdateCheckedAt")
+	defer span.End()
 
 	userConfig, err := c.UserConfig(ctx)
 	if err != nil {
@@ -321,9 +314,8 @@ func (c *SystemConfig) SetLastUpdateCheckedAt(ctx context.Context, lastUpdateChe
 
 // InitSystemID sets the system_id in the user-level config to a random SHA256 string when it's currently unset
 func (c *SystemConfig) InitSystemID(ctx context.Context) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "InitSystemID")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "InitSystemID")
+	defer span.End()
 
 	systemID, err := c.GetSystemID(ctx)
 	if err != nil {
@@ -339,9 +331,8 @@ func (c *SystemConfig) InitSystemID(ctx context.Context) (string, error) {
 
 // GetSystemID reads the system_id from the user-level config file
 func (c *SystemConfig) GetSystemID(ctx context.Context) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSystemID")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetSystemID")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -353,9 +344,8 @@ func (c *SystemConfig) GetSystemID(ctx context.Context) (string, error) {
 
 // SetSystemID sets the system_id to a random SHA256 string in the user-level config file
 func (c *SystemConfig) SetSystemID(ctx context.Context, systemID string) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetSystemID")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetSystemID")
+	defer span.End()
 
 	userConfig, err := c.UserConfig(ctx)
 	if err != nil {
@@ -385,9 +375,8 @@ func (c *SystemConfig) SetSystemID(ctx context.Context, systemID string) (string
 
 // GetSurveyConfig reads the survey for the given survey ID from the project-level config file
 func (c *SystemConfig) GetSurveyConfig(ctx context.Context, name string) (SurveyConfig, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSurveyConfig")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetSurveyConfig")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -404,9 +393,8 @@ func (c *SystemConfig) GetSurveyConfig(ctx context.Context, name string) (Survey
 
 // SetSurveyConfig writes the survey for the given survey ID from the system-level config file
 func (c *SystemConfig) SetSurveyConfig(ctx context.Context, name string, surveyConfig SurveyConfig) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetSurveyConfig")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetSurveyConfig")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -439,9 +427,8 @@ func (c *SystemConfig) SetSurveyConfig(ctx context.Context, name string, surveyC
 
 // GetTrustUnknownSources reads the TrustUnknownSources property from the user-level config file
 func (c *SystemConfig) GetTrustUnknownSources(ctx context.Context) (bool, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetTrustUnknownSources")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetTrustUnknownSources")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -452,9 +439,8 @@ func (c *SystemConfig) GetTrustUnknownSources(ctx context.Context) (bool, error)
 
 // SetTrustUnknownSources sets the trust_unknown_sources property to a the user-level config file
 func (c *SystemConfig) SetTrustUnknownSources(ctx context.Context, value bool) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetTrustUnknownSources")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetTrustUnknownSources")
+	defer span.End()
 
 	var userConfig, err = c.UserConfig(ctx)
 	if err != nil {
@@ -484,9 +470,8 @@ func (c *SystemConfig) SetTrustUnknownSources(ctx context.Context, value bool) e
 // initializeConfigFolder creates the required files (credentials.json and config.json)
 // in the /.slack/ folder if they do not yet exist
 func (c *SystemConfig) initializeConfigFiles(ctx context.Context, dir string) error {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "initializeConfigFolder")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "initializeConfigFolder")
+	defer span.End()
 
 	// ensure the credentials.json file exists
 	var credentialsPath = filepath.Join(dir, credentialsFileName)
