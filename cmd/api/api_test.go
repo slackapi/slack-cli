@@ -523,43 +523,50 @@ func Test_resolveToken_AppFlag_ByID(t *testing.T) {
 
 func Test_resolveToken_AppFlag_InstallErrors(t *testing.T) {
 	tests := map[string]struct {
-		settings      *types.AppSettings
-		installResult internalapi.DeveloperAppInstallResult
-		installState  types.InstallState
-		installErr    error
-		installCalls  int
-		expectedErr   string
+		settings        *types.AppSettings
+		installResult   internalapi.DeveloperAppInstallResult
+		installState    types.InstallState
+		installErr      error
+		installCalls    int
+		expectedErr     string
+		expectedMessage string
 	}{
 		"deployed slack hosted app errors before installing": {
-			settings:     &types.AppSettings{FunctionRuntime: types.SlackHosted},
-			installCalls: 0,
-			expectedErr:  slackerror.ErrAppHosted,
+			settings:        &types.AppSettings{FunctionRuntime: types.SlackHosted},
+			installCalls:    0,
+			expectedErr:     slackerror.ErrAppHosted,
+			expectedMessage: "doesn't share its bot token",
 		},
 		"install error is returned": {
-			installErr:   slackerror.New(slackerror.ErrInvalidAppID),
-			installCalls: 1,
-			expectedErr:  slackerror.ErrInvalidAppID,
+			installErr:      slackerror.New(slackerror.ErrInvalidAppID),
+			installCalls:    1,
+			expectedErr:     slackerror.ErrInvalidAppID,
+			expectedMessage: "app_id",
 		},
 		"install with no bot token errors": {
-			installResult: internalapi.DeveloperAppInstallResult{AppID: "A111"},
-			installState:  types.InstallSuccess,
-			installCalls:  1,
-			expectedErr:   slackerror.ErrAppInstall,
+			installResult:   internalapi.DeveloperAppInstallResult{AppID: "A111"},
+			installState:    types.InstallSuccess,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppInstall,
+			expectedMessage: "no bot token was returned",
 		},
 		"install needing approval with a cancelled request errors": {
-			installState: types.InstallRequestCancelled,
-			installCalls: 1,
-			expectedErr:  slackerror.ErrAppInstall,
+			installState:    types.InstallRequestCancelled,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppInstall,
+			expectedMessage: "approval request was cancelled",
 		},
 		"install needing approval with no request sent errors": {
-			installState: types.InstallRequestNotSent,
-			installCalls: 1,
-			expectedErr:  slackerror.ErrAppInstall,
+			installState:    types.InstallRequestNotSent,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppInstall,
+			expectedMessage: "no approval request was sent",
 		},
 		"install needing approval with a pending request errors": {
-			installState: types.InstallRequestPending,
-			installCalls: 1,
-			expectedErr:  slackerror.ErrAppApprovalRequestPending,
+			installState:    types.InstallRequestPending,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppApprovalRequestPending,
+			expectedMessage: "awaiting review",
 		},
 	}
 	for name, tc := range tests {
@@ -605,6 +612,7 @@ func Test_resolveToken_AppFlag_InstallErrors(t *testing.T) {
 			token, err := resolveToken(ctx, clients)
 			assert.Empty(t, token)
 			assert.True(t, slackerror.Is(err, tc.expectedErr), "expected %s, got %v", tc.expectedErr, err)
+			assert.Contains(t, err.Error(), tc.expectedMessage)
 			clientsMock.API.AssertNumberOfCalls(t, "DeveloperAppInstall", tc.installCalls)
 		})
 	}
