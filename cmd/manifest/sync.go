@@ -15,7 +15,6 @@
 package manifest
 
 import (
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
@@ -23,6 +22,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -47,8 +47,8 @@ func NewSyncCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.manifest.sync")
-			defer span.Finish()
+			ctx, span := tracer.Start(ctx, "cmd.manifest.sync")
+			defer span.End()
 
 			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 			if err != nil {

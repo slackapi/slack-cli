@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -69,8 +69,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 		}),
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := cmd.Context()
-			span, _ := opentracing.StartSpanFromContext(ctx, "cmd.version")
-			defer span.Finish()
+			_, span := tracer.Start(ctx, "cmd.version")
+			defer span.End()
 
 			cmd.Println(Template())
 		},
