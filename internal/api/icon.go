@@ -25,12 +25,13 @@ import (
 	"net/textproto"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/image"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -64,10 +65,9 @@ func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, icon
 	var (
 		iconBytes []byte
 		err       error
-		span      opentracing.Span
 	)
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.Icon")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.Icon")
+	defer span.End()
 
 	if iconFilePath == "" || appID == "" {
 		return IconResult{}, slackerror.New("missing required args")
@@ -119,7 +119,7 @@ func (c *Client) uploadIcon(ctx context.Context, fs afero.Fs, token, appID, icon
 		return IconResult{}, err
 	}
 
-	span.SetTag("request_url", sURL)
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	var request *http.Request
 	request, err = http.NewRequestWithContext(ctx, "POST", sURL.String(), body)
