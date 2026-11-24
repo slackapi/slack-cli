@@ -26,6 +26,10 @@ import (
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func Test_Login(t *testing.T) {
@@ -35,6 +39,7 @@ func Test_Login(t *testing.T) {
 		expectedAuth types.SlackAuth
 		expectedPath string
 		expectedErr  string
+		expectedSpan []attribute.KeyValue
 	}{
 		"saves the auth for a valid user token": {
 			userToken: "xoxp-example",
@@ -53,6 +58,7 @@ func Test_Login(t *testing.T) {
 			},
 			expectedAuth: types.SlackAuth{TeamDomain: "example"},
 			expectedPath: "/path/credentials.json",
+			expectedSpan: []attribute.KeyValue{attribute.String("user", "U123"), attribute.String("team", "T123")},
 		},
 		"returns an invalid auth error when the user token fails validation": {
 			userToken: "xoxp-invalid",
@@ -72,6 +78,10 @@ func Test_Login(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			t.Cleanup(func() { otel.SetTracerProvider(previous) })
 			ctx := slackcontext.MockContext(t.Context())
 			cm := shared.NewClientsMock()
 			cm.AddDefaultMocks()
@@ -85,6 +95,15 @@ func Test_Login(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedAuth, auth)
 			assert.Equal(t, tc.expectedPath, path)
+			if tc.expectedSpan != nil {
+				var attributes []attribute.KeyValue
+				for _, span := range recorder.Ended() {
+					if span.Name() == "createNewLoginWithUserToken" {
+						attributes = span.Attributes()
+					}
+				}
+				assert.Subset(t, attributes, tc.expectedSpan)
+			}
 		})
 	}
 }
