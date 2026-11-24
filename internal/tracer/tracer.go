@@ -20,11 +20,14 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/opentracing/opentracing-go"
+	"github.com/slackapi/slack-cli/internal/version"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -46,11 +49,17 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 	// network, and not diagnostics about the developer's own OTEL_* variables
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
 	otel.SetLogger(logr.Discard())
-	exporter, err := otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
-	if err != nil {
-		log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
+	var provider *sdktrace.TracerProvider
+	if telemetryDisabled(os.Getenv) {
+		// Spans still get IDs for the debug log and request headers, but none are sent
+		provider = sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.AlwaysSample()))
+	} else {
+		exporter, err := otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
+		if err != nil {
+			log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
+		}
+		provider = newProvider(exporter)
 	}
-	provider := newProvider(exporter)
 	bridge := newBridgeTracer(provider)
 	opentracing.SetGlobalTracer(bridge)
 	return closerFunc(func() error {
@@ -58,6 +67,14 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 		defer cancel()
 		return provider.Shutdown(ctx)
 	}), bridge
+}
+
+// telemetryDisabled reports whether SLACK_DISABLE_TELEMETRY or SLACK_TEST_VERSION
+// turn telemetry off, with the same parsing as internal/config/dotenv.go
+func telemetryDisabled(getenv func(string) string) bool {
+	disable := strings.TrimSpace(getenv("SLACK_DISABLE_TELEMETRY"))
+	testVersion := strings.TrimSpace(getenv(version.EnvTestVersion))
+	return (disable != "" && disable != "false" && disable != "0") || testVersion != ""
 }
 
 // exporterOptions sets every value that OTEL_EXPORTER_OTLP_* environment
