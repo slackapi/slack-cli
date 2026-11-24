@@ -333,8 +333,6 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 	}
 
 	manifest := slackManifest.AppManifest
-	// A deployed Run on Slack app keeps its bot token on Slack, so installing
-	// it would return no token and the request would be sent unauthenticated.
 	if !selected.App.IsDev && manifest.IsFunctionRuntimeSlackHosted() {
 		return "", slackerror.New(slackerror.ErrAppHosted).
 			WithMessage("A deployed app that runs on Slack doesn't share its bot token with the CLI").
@@ -353,15 +351,18 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 	if err != nil {
 		return "", err
 	}
-	// An install that needs admin approval returns no token and no error
 	switch installState {
 	case "", types.InstallSuccess:
 	case types.InstallRequestPending:
 		return "", slackerror.New(slackerror.ErrAppApprovalRequestPending).
 			WithRemediation("Ask an admin to approve the app, or pass a token with --token")
+	case types.InstallRequestCancelled:
+		return "", slackerror.New(slackerror.ErrAppInstall).
+			WithMessage("The app needs admin approval and its approval request was cancelled").
+			WithRemediation("Request approval again with `slack install`, or pass a token with --token")
 	default:
 		return "", slackerror.New(slackerror.ErrAppInstall).
-			WithMessage("The app needs admin approval before it can be installed").
+			WithMessage("The app needs admin approval and no approval request was sent").
 			WithRemediation("Request approval with `slack install`, or pass a token with --token")
 	}
 	if result.APIAccessTokens.Bot == "" {
