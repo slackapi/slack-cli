@@ -94,18 +94,19 @@ func Test_newProvider(t *testing.T) {
 
 func Test_SetTraceHeaders(t *testing.T) {
 	recorder := tracetest.NewSpanRecorder()
-	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	span := tracer.StartSpan("child", opentracing.ChildOf(tracer.StartSpan("parent").Context()))
+	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	ctx, parent := provider.Tracer("test").Start(context.Background(), "parent")
+	ctx, span := provider.Tracer("test").Start(ctx, "child")
 	header := http.Header{}
-	SetTraceHeaders(span, header)
-	span.Finish()
-	spanContext := recorder.Ended()[0].SpanContext()
+	SetTraceHeaders(ctx, header)
+	span.End()
+	parent.End()
 	assert.Equal(t, "0", header.Get("x-b3-sampled"))
-	assert.Equal(t, spanContext.SpanID().String(), header.Get("x-b3-spanid"))
-	assert.Equal(t, spanContext.TraceID().String(), header.Get("x-b3-traceid"))
+	assert.Equal(t, span.SpanContext().SpanID().String(), header.Get("x-b3-spanid"))
+	assert.Equal(t, span.SpanContext().TraceID().String(), header.Get("x-b3-traceid"))
 
 	noopHeader := http.Header{}
-	SetTraceHeaders(opentracing.NoopTracer{}.StartSpan("noop"), noopHeader)
+	SetTraceHeaders(context.Background(), noopHeader)
 	assert.Empty(t, noopHeader)
 }
 

@@ -30,6 +30,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	otelbridge "go.opentelemetry.io/otel/bridge/opentracing"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -145,26 +146,22 @@ type closerFunc func() error
 
 func (f closerFunc) Close() error { return f() }
 
-// SetTraceHeaders adds the x-b3 headers for span to header. The sampled header
-// is always "0" so the Slack API doesn't sample requests from the CLI.
-func SetTraceHeaders(span opentracing.Span, header http.Header) {
-	carrier := opentracing.HTTPHeadersCarrier(http.Header{})
-	if err := span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier); err != nil {
+// The sampled header is always "0" so the Slack API doesn't sample requests from the CLI.
+func SetTraceHeaders(ctx context.Context, header http.Header) {
+	if !trace.SpanContextFromContext(ctx).IsValid() {
 		return
 	}
-	for key, values := range carrier {
-		header[key] = values
-	}
-	if header.Get("x-b3-traceid") != "" {
-		header.Set("x-b3-sampled", "0")
-	}
+	b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader)).Inject(ctx, propagation.HeaderCarrier(header))
+	header.Set("x-b3-sampled", "0")
 }
 
 // TraceID returns the trace ID of span, or "" if span has no trace ID.
 func TraceID(span opentracing.Span) string {
-	header := http.Header{}
-	SetTraceHeaders(span, header)
-	return header.Get("x-b3-traceid")
+	carrier := opentracing.HTTPHeadersCarrier(http.Header{})
+	if err := span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier); err != nil {
+		return ""
+	}
+	return http.Header(carrier).Get("x-b3-traceid")
 }
 
 var (
