@@ -20,8 +20,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
 )
 
@@ -44,8 +44,8 @@ type ManifestCacheApp struct {
 
 // GetManifestHash loads the saved manifest hash from cache
 func (c *Cache) GetManifestHash(ctx context.Context, appID string) (Hash, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "GetManifestHash")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "GetManifestHash")
+	defer span.End()
 	cache, err := c.readManifestCache(ctx)
 	if err != nil {
 		return "", err
@@ -58,8 +58,8 @@ func (c *Cache) GetManifestHash(ctx context.Context, appID string) (Hash, error)
 // The source of the manifest provided should be noted since values from hooks
 // might not be the same as the API response.
 func (c *Cache) NewManifestHash(ctx context.Context, manifest types.AppManifest) (Hash, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "NewManifestHash")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "NewManifestHash")
+	defer span.End()
 	bytes, err := json.Marshal(manifest)
 	if err != nil {
 		return "", err
@@ -69,8 +69,8 @@ func (c *Cache) NewManifestHash(ctx context.Context, manifest types.AppManifest)
 
 // SetManifestHash saves the manifest hash for an app ID
 func (c *Cache) SetManifestHash(ctx context.Context, appID string, hash Hash) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "SetManifestHash")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "SetManifestHash")
+	defer span.End()
 	cache, err := c.readManifestCache(ctx)
 	if err != nil {
 		return err
@@ -84,8 +84,8 @@ func (c *Cache) SetManifestHash(ctx context.Context, appID string, hash Hash) er
 
 // readManifestCache loads the manifest cache from file
 func (c *Cache) readManifestCache(ctx context.Context) (cache map[string]ManifestCacheApp, err error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "readManifestCache")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "readManifestCache")
+	defer span.End()
 
 	// Prefer "manifests.json" over "manifest.json" to avoid updating the manifest
 	// when changing files included in the "watch.filter-regex" hook configuration.
@@ -106,8 +106,8 @@ func (c *Cache) readManifestCache(ctx context.Context) (cache map[string]Manifes
 
 // writeManifestCache saves the manifest cache to file
 func (c *Cache) writeManifestCache(ctx context.Context) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "writeManifestCache")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "writeManifestCache")
+	defer span.End()
 	err := c.createCacheDir()
 	if err != nil && !os.IsExist(err) {
 		return err
