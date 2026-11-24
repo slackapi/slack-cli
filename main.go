@@ -66,7 +66,7 @@ func main() {
 	// project_id is set in root.go initConfig()
 
 	if traceID := tracer.TraceID(span); traceID != "" {
-		ctx = slackcontext.SetOpenTracingTraceID(ctx, traceID)
+		ctx = slackcontext.SetTraceID(ctx, traceID)
 	}
 
 	// Flush on return here, and before each exit in cmd/root.go, which skips these defers
