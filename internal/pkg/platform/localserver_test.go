@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -515,6 +516,7 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 		manifestSource config.ManifestSource
 		manifestErr    error
 		watch          *hooks.WatchOpts
+		watchManifest  bool
 		expectedErr    error
 		expectedOutput []string
 	}{
@@ -538,6 +540,11 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			watch:          &hooks.WatchOpts{},
 			expectedOutput: []string{"Manifest source is remote", "Manifest watching is not enabled"},
 		},
+		"watches manifest paths until the context ends": {
+			manifestSource: config.ManifestSourceRemote,
+			watchManifest:  true,
+			expectedOutput: []string{"Watching manifest changes to file paths matching"},
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(slackcontext.MockContext(t.Context()))
@@ -551,6 +558,14 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			server := LocalServer{clients: clients}
 			server.cliConfig.Config.Watch = tc.watch
+			if tc.watchManifest {
+				server.cliConfig.Config.Watch = &hooks.WatchOpts{
+					Manifest: &hooks.ManifestWatchOpts{
+						Paths:       []string{t.TempDir()},
+						FilterRegex: `manifest\.json$`,
+					},
+				}
+			}
 			errChan := make(chan error, 1)
 			go func() {
 				errChan <- server.WatchManifest(ctx, types.SlackAuth{}, types.App{})
@@ -581,6 +596,32 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_closeWatcherOnDone_drainsAnUnreadEvent(t *testing.T) {
+	dir := t.TempDir()
+	manifest := filepath.Join(dir, "manifest.json")
+	require.NoError(t, os.WriteFile(manifest, []byte("{}"), 0o600))
+	w := watcher.New()
+	require.NoError(t, w.AddRecursive(dir))
+	later := time.Now().Add(time.Hour)
+	require.NoError(t, os.Chtimes(manifest, later, later))
+	started := make(chan error, 1)
+	go func() { started <- w.Start(time.Millisecond) }()
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	time.Sleep(50 * time.Millisecond)
+	done := make(chan struct{})
+	go func() {
+		closeWatcherOnDone(ctx, w)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		require.FailNow(t, "closeWatcherOnDone did not return with an unread event")
+	}
+	require.NoError(t, <-started)
 }
 
 func Test_LocalServer_watchManifestEvents(t *testing.T) {
