@@ -18,9 +18,9 @@ import (
 	_ "embed"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/spf13/cobra"
 )
@@ -75,8 +75,8 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 // RunSkillCommand writes the agent skill to stdout without formatting
 func RunSkillCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-	span, _ := opentracing.StartSpanFromContext(ctx, "cmd.skill")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.skill")
+	defer span.End()
 
 	_, err := clients.IO.WriteOut().Write([]byte(stampVersion(skillFile, version.Raw())))
 	return err

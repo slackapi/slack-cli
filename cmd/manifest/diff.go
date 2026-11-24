@@ -15,13 +15,13 @@
 package manifest
 
 import (
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/manifest"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -42,8 +42,8 @@ func NewDiffCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.manifest.diff")
-			defer span.Finish()
+			ctx, span := tracer.Start(ctx, "cmd.manifest.diff")
+			defer span.End()
 
 			selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 			if err != nil {

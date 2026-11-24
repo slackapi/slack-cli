@@ -57,13 +57,14 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	defer errorLogFile.Close()
 
 	logger := log.New(errorLogFile, "INFO ", log.Ldate|log.Ltime|log.Lmicroseconds)
 
 	// Added line break for each session
 	logger.Println("------------------------------------")
 
-	traceID, err := slackcontext.OpenTracingTraceID(ctx)
+	traceID, err := slackcontext.TraceID(ctx)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,6 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 		"Project ID":            io.config.ProjectID,
 	})
 
-	defer errorLogFile.Close()
 	return nil
 }
 

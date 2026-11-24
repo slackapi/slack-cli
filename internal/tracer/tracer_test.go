@@ -16,6 +16,7 @@ package tracer
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -92,6 +93,44 @@ func Test_newProvider(t *testing.T) {
 	}
 }
 
+func Test_newTracerProvider(t *testing.T) {
+	tests := map[string]struct {
+		env           map[string]string
+		exporterErr   error
+		expectedCalls int
+	}{
+		"builds the exporter when telemetry is on":        {env: map[string]string{}, expectedCalls: 1},
+		"never builds the exporter when telemetry is off": {env: map[string]string{"SLACK_DISABLE_TELEMETRY": "true"}, expectedCalls: 0},
+		"returns the exporter error with no provider":     {env: map[string]string{}, exporterErr: errors.New("exporter failed"), expectedCalls: 1},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			calls := 0
+			exporter := tracetest.NewInMemoryExporter()
+			provider, err := newTracerProvider(func(key string) string { return tc.env[key] }, func() (sdktrace.SpanExporter, error) {
+				calls++
+				if tc.exporterErr != nil {
+					return nil, tc.exporterErr
+				}
+				return exporter, nil
+			})
+			if tc.exporterErr != nil {
+				assert.Equal(t, tc.exporterErr, err)
+				assert.Nil(t, provider)
+				assert.Equal(t, tc.expectedCalls, calls)
+				return
+			}
+			require.NoError(t, err)
+			_, span := provider.Tracer("test").Start(context.Background(), "span")
+			span.End()
+			require.NoError(t, provider.ForceFlush(context.Background()))
+			assert.Equal(t, tc.expectedCalls, calls)
+			assert.Len(t, exporter.GetSpans(), tc.expectedCalls)
+			assert.True(t, span.SpanContext().IsValid())
+		})
+	}
+}
+
 func Test_SetTraceHeaders(t *testing.T) {
 	recorder := tracetest.NewSpanRecorder()
 	provider := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
@@ -129,15 +168,19 @@ func Test_Start(t *testing.T) {
 	require.Len(t, spans, 3)
 	assert.Equal(t, spans["opentracing-parent"].SpanContext().SpanID(), spans["otel-child"].Parent().SpanID())
 	assert.Equal(t, spans["otel-child"].SpanContext().SpanID(), spans["opentracing-grandchild"].Parent().SpanID())
-}
 
-func Test_TraceID(t *testing.T) {
-	recorder := tracetest.NewSpanRecorder()
-	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	span := tracer.StartSpan("span")
-	traceID := TraceID(span)
-	span.Finish()
-	assert.Len(t, traceID, 32)
-	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
-	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
+	recorder = tracetest.NewSpanRecorder()
+	tracer = newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	opentracing.SetGlobalTracer(tracer)
+	ctx, root := Start(context.Background(), "otel-root")
+	child2, _ := opentracing.StartSpanFromContext(ctx, "opentracing-child")
+	child2.Finish()
+	root.End()
+	spans = map[string]sdktrace.ReadOnlySpan{}
+	for _, span := range recorder.Ended() {
+		spans[span.Name()] = span
+	}
+	require.Len(t, spans, 2)
+	assert.False(t, spans["otel-root"].Parent().IsValid())
+	assert.Equal(t, spans["otel-root"].SpanContext().SpanID(), spans["opentracing-child"].Parent().SpanID())
 }
