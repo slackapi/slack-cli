@@ -146,8 +146,7 @@ type closerFunc func() error
 
 func (f closerFunc) Close() error { return f() }
 
-// SetTraceHeaders adds the x-b3 headers for the span in ctx to header. The
-// sampled header is always "0" so the Slack API doesn't sample requests from the CLI.
+// The sampled header is always "0" so the Slack API doesn't sample requests from the CLI.
 func SetTraceHeaders(ctx context.Context, header http.Header) {
 	if !trace.SpanContextFromContext(ctx).IsValid() {
 		return

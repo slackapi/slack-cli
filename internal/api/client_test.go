@@ -15,10 +15,41 @@
 package api
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
+
+func Test_Client_DoWithRetry(t *testing.T) {
+	recorder := tracetest.NewSpanRecorder()
+	previous := otel.GetTracerProvider()
+	otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	t.Cleanup(func() { otel.SetTracerProvider(previous) })
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"ok":false,"error":"invalid_auth"}`)
+	}))
+	defer server.Close()
+	client := NewClient(nil, server.URL, newTestIO())
+	_, _ = client.ChannelsInfo(slackcontext.MockContext(t.Context()), "xoxb", "C1")
+	var postForm sdktrace.ReadOnlySpan
+	for _, span := range recorder.Ended() {
+		if span.Name() == "postForm" {
+			postForm = span
+		}
+	}
+	require.NotNil(t, postForm)
+	assert.Contains(t, postForm.Attributes(), attribute.String("error", "invalid_auth"))
+	assert.Contains(t, postForm.Attributes(), attribute.Bool("ok", false))
+}
 
 func Test_Client_Host(t *testing.T) {
 	tests := map[string]struct {
