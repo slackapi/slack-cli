@@ -158,7 +158,7 @@ func TestBulkPutCommand(t *testing.T) {
 			Query: types.AppDatastoreBulkPut{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Items: []map[string]interface{}{
+				Items: []map[string]any{
 					{
 						"task_id": "0002",
 						"task":    "counting",
@@ -177,7 +177,7 @@ func TestBulkPutCommand(t *testing.T) {
 			Query: types.AppDatastoreBulkPut{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Items: []map[string]interface{}{
+				Items: []map[string]any{
 					{
 						"task_id": "0101",
 						"task":    "write code",
@@ -351,7 +351,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 				cm.API.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
 					Datastore: "Todos",
 					App:       "A0123456",
-					Items: []map[string]interface{}{
+					Items: []map[string]any{
 						{"task_id": "0001", "task": "counting", "status": "ongoing"},
 						{"task_id": "0002", "task": "counting", "status": "ongoing"},
 					},
@@ -359,7 +359,7 @@ func TestBulkPutCommandImport(t *testing.T) {
 				cm.API.AssertCalled(t, "AppsDatastoreBulkPut", mock.Anything, mock.Anything, types.AppDatastoreBulkPut{
 					Datastore: "Todos",
 					App:       "A0123456",
-					Items: []map[string]interface{}{
+					Items: []map[string]any{
 						{"task_id": "0001", "task": "counting", "status": "ongoing"},
 					},
 				})
@@ -372,10 +372,10 @@ func TestBulkPutCommandImport(t *testing.T) {
 	})
 }
 
-func prepareImportMockData(file afero.File, numberOfValidRows int, numberOfInvalidRows int) ([]map[string]interface{}, error) {
-	data := []map[string]interface{}{}
+func prepareImportMockData(file afero.File, numberOfValidRows int, numberOfInvalidRows int) ([]map[string]any, error) {
+	data := []map[string]any{}
 	for i := 1; i <= numberOfValidRows+numberOfInvalidRows; i++ {
-		item := map[string]interface{}{
+		item := map[string]any{
 			"task_id": fmt.Sprintf("%04d", i),
 			"task":    "counting",
 			"status":  "ongoing",
@@ -387,11 +387,11 @@ func prepareImportMockData(file afero.File, numberOfValidRows int, numberOfInval
 		}
 		stringItem, err := goutils.JSONMarshalUnescaped(item)
 		if err != nil {
-			return []map[string]interface{}{}, err
+			return []map[string]any{}, err
 		}
 		_, err = file.WriteString(stringItem)
 		if err != nil {
-			return []map[string]interface{}{}, err
+			return []map[string]any{}, err
 		}
 	}
 	return data, nil

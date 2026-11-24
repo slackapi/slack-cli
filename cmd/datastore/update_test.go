@@ -157,7 +157,7 @@ func TestUpdateCommand(t *testing.T) {
 			Query: types.AppDatastoreUpdate{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "0002",
 					"task":    "counting",
 					"status":  "ongoing",
@@ -174,7 +174,7 @@ func TestUpdateCommand(t *testing.T) {
 			Query: types.AppDatastoreUpdate{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "0101",
 					"task":    "write code",
 					"status":  "wip",
@@ -204,7 +204,7 @@ func TestUpdateCommand(t *testing.T) {
 			Query: types.AppDatastoreUpdate{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "8888",
 				},
 			},
@@ -238,7 +238,7 @@ func TestUpdateCommand(t *testing.T) {
 			Query: types.AppDatastoreUpdate{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "0000",
 					"task":    "",
 					"status":  "",
@@ -271,7 +271,7 @@ func TestUpdateCommand(t *testing.T) {
 			Query: types.AppDatastoreUpdate{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "1234",
 					"status":  "getting closer",
 				},
@@ -306,7 +306,7 @@ func TestUpdateCommand(t *testing.T) {
 			Query: types.AppDatastoreUpdate{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "9999",
 					"task":    "relax",
 					"status":  "always",
