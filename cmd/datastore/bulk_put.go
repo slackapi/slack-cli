@@ -185,7 +185,7 @@ func printDatastoreBulkPutSuccess(cmd *cobra.Command) {
 }
 
 func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, query types.AppDatastoreBulkPut, primaryKey string) error {
-	currentBatch := []map[string]interface{}{}
+	currentBatch := []map[string]any{}
 	totalSuccessfulItems := 0
 	totalFailedItems := 0
 	totalPutItems := 0
@@ -240,7 +240,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 			if nextItem == "" {
 				continue
 			}
-			var parsedNextItem map[string]interface{}
+			var parsedNextItem map[string]any
 			err = goutils.JSONUnmarshal([]byte(nextItem), &parsedNextItem)
 			if err != nil {
 				err = logBulkPutImportError(errorLogFile, nextItem, "item couldn't be parsed as JSON")
@@ -259,7 +259,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 				continue
 			}
 
-			idx := slices.IndexFunc(currentBatch, func(item map[string]interface{}) bool { return item[primaryKey] == parsedNextItem[primaryKey] })
+			idx := slices.IndexFunc(currentBatch, func(item map[string]any) bool { return item[primaryKey] == parsedNextItem[primaryKey] })
 			if idx != -1 {
 				err = logBulkPutImportError(errorLogFile, nextItem, "item with the same primary key already exists")
 				if err != nil {
@@ -286,7 +286,7 @@ func startBulkPutImport(ctx context.Context, clients *shared.ClientFactory, cmd 
 				return err
 			}
 			for _, errorDetail := range err.(*slackerror.Error).Details {
-				idx := slices.IndexFunc(currentBatch, func(item map[string]interface{}) bool { return item[primaryKey] == errorDetail.Item[primaryKey] })
+				idx := slices.IndexFunc(currentBatch, func(item map[string]any) bool { return item[primaryKey] == errorDetail.Item[primaryKey] })
 				if idx == -1 {
 					return err //defensive coding, this shouldn't happen
 				}

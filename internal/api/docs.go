@@ -21,9 +21,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var docsBaseURL = "https://docs.slack.dev"
@@ -89,9 +90,8 @@ func buildDocsRequest(ctx context.Context, urlStr, cliVersion string) (*http.Req
 // DocsSearch searches the Slack developer docs API. With hidePinned, the
 // results leave out pages the docs site pins to the top for some searches.
 func (c *Client) DocsSearch(ctx context.Context, query string, limit int, category string, hidePinned bool) (*DocsSearchResponse, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsSearch")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.DocsSearch")
+	defer span.End()
 
 	urlStr, err := buildDocsSearchURL(docsBaseURL, query, limit, category, hidePinned)
 	if err != nil {
@@ -99,7 +99,7 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int, catego
 	}
 
 	sURL, _ := url.Parse(urlStr)
-	span.SetTag("request_url", sURL)
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	cliVersion, err := slackcontext.Version(ctx)
 	if err != nil {
@@ -129,15 +129,14 @@ func (c *Client) DocsSearch(ctx context.Context, query string, limit int, catego
 // DocsGetPage returns the markdown of a Slack developer docs page, given its
 // site path ending in ".md"
 func (c *Client) DocsGetPage(ctx context.Context, path string) (string, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "apiclient.DocsGetPage")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.DocsGetPage")
+	defer span.End()
 
 	sURL, err := url.Parse(docsBaseURL + path)
 	if err != nil {
 		return "", errHTTPRequestFailed.WithRootCause(err)
 	}
-	span.SetTag("request_url", sURL)
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	cliVersion, err := slackcontext.Version(ctx)
 	if err != nil {

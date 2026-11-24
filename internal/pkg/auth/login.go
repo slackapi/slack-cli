@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/auth"
 	"github.com/slackapi/slack-cli/internal/config"
@@ -30,7 +29,9 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/version"
+	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/mod/semver"
 )
 
@@ -43,8 +44,8 @@ func LoginWithClients(ctx context.Context, clients *shared.ClientFactory, userTo
 
 // Login takes the user through the Slack CLI login process
 func Login(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, config *config.Config, io iostreams.IOStreamer, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.login")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.login")
+	defer span.End()
 
 	// An XOXP token was provided via the "--token" flag
 	if userToken != "" {
@@ -58,9 +59,8 @@ func Login(ctx context.Context, apiClient api.APIInterface, authClient auth.Auth
 // createNewLoginWithUserToken function takes in an User Token (XOXP) and uses it to grab an existing auth
 // TODO (@Sarah) Remove this command
 func createNewLoginWithUserToken(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, userToken string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "createNewLoginWithUserToken")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "createNewLoginWithUserToken")
+	defer span.End()
 
 	var authSession api.AuthSession
 
@@ -124,8 +124,8 @@ func createNewLoginWithUserToken(ctx context.Context, apiClient api.APIInterface
 		return types.SlackAuth{}, "", slackerror.Wrap(err, "Error saving credentials")
 	}
 
-	span.SetTag("user", authSession.UserID)
-	span.SetTag("team", authSession.TeamID)
+	span.SetAttributes(attribute.String("user", newAuth.UserID))
+	span.SetAttributes(attribute.String("team", newAuth.TeamID))
 	return auth, location, nil
 }
 
@@ -158,9 +158,8 @@ func createNewAuth(ctx context.Context, apiClient api.APIInterface, authClient a
 // requestAuthTicket requests an auth ticket from Slack. The ticket must be submitted
 // by a valid user within their Slack workspace, then permissions must be granted
 func requestAuthTicket(ctx context.Context, apiClient api.APIInterface, io iostreams.IOStreamer, noRotation bool) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "requestAuthTicket")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "requestAuthTicket")
+	defer span.End()
 
 	cliVersion := semver.MajorMinor(version.Raw())
 
@@ -199,9 +198,8 @@ func printAuthTicketSubmissionInstructions(ctx context.Context, IO iostreams.IOS
 
 // saveNewAuth saves a new auth to the credentials and returns the auth
 func saveNewAuth(ctx context.Context, apiClient api.APIInterface, authClient auth.AuthInterface, authResult api.ExchangeAuthTicketResult, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "saveNewAuth")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "saveNewAuth")
+	defer span.End()
 
 	// Add new auth
 	newAuth := types.SlackAuth{
@@ -232,17 +230,16 @@ func saveNewAuth(ctx context.Context, apiClient api.APIInterface, authClient aut
 		filePath = credentialsLocation
 	}
 	// utility logging
-	span.SetTag("user", authResult.UserID)
-	span.SetTag("team", authResult.TeamID)
+	span.SetAttributes(attribute.String("user", authResult.UserID))
+	span.SetAttributes(attribute.String("team", authResult.TeamID))
 
 	return newAuth, filePath, nil
 }
 
 // LoginNoPrompt initiates a login flow with no prompts
 func LoginNoPrompt(ctx context.Context, clients *shared.ClientFactory, ticketArg string, challengeCodeArg string, noRotation bool) (auth types.SlackAuth, credentialsPath string, err error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "authNoPrompt")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "authNoPrompt")
+	defer span.End()
 
 	// existing ticket request, try to exchange
 	if ticketArg != "" && challengeCodeArg != "" {

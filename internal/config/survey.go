@@ -16,8 +16,7 @@ package config
 
 import (
 	"context"
-
-	"github.com/opentracing/opentracing-go"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // SurveyConfig tracks information related to user surveys in the system-level or project-level config
@@ -30,9 +29,8 @@ type SurveyConfig struct {
 // It combines survey config at the project-level and system-level.
 // If the survey ID does not exist, an error is returned.
 func (c *Config) GetSurveyConfig(ctx context.Context, name string) (SurveyConfig, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSurveyConfig")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetSurveyConfig")
+	defer span.End()
 
 	// First check project config
 	survey, err := c.ProjectConfig.GetSurveyConfig(ctx, name)
