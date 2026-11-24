@@ -1630,6 +1630,14 @@ Move the .slack/slack.json file to .slack/hooks.json and proceed again.
 
 ---
 
+### tos_not_accepted {#tos_not_accepted}
+
+**Message**: The current terms of service must be accepted to continue
+
+**Remediation**: Run `slack sandbox signup` to review and accept the current terms
+
+---
+
 ### trigger_create_error {#trigger_create_error}
 
 **Message**: Couldn't create a trigger
