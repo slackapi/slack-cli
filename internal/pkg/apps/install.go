@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/icon"
@@ -30,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // Constants for onlyCreateUpdateAppManifest parameter
@@ -44,8 +44,8 @@ const additionalManifestInfoNotice = "App manifest contains some components that
 
 // Install installs the app to a team
 func Install(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, onlyCreateUpdateAppManifest bool, app types.App, orgGrantWorkspaceID string) (types.App, types.InstallState, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.apps.install")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "pkg.apps.install")
+	defer span.End()
 
 	manifestUpdates, err := shouldUpdateManifest(ctx, clients, app, auth)
 	if err != nil {
@@ -360,8 +360,8 @@ func validateManifestForInstall(ctx context.Context, clients *shared.ClientFacto
 
 // InstallLocalApp installs a non-hosted local app to a workspace.
 func InstallLocalApp(ctx context.Context, clients *shared.ClientFactory, orgGrantWorkspaceID string, auth types.SlackAuth, app types.App) (types.App, api.DeveloperAppInstallResult, types.InstallState, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "installLocalApp")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "installLocalApp")
+	defer span.End()
 
 	manifestUpdates, err := shouldUpdateManifest(ctx, clients, app, auth)
 	if err != nil {

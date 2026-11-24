@@ -18,16 +18,16 @@ import (
 	"context"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // Add will add an app
 func Add(ctx context.Context, clients *shared.ClientFactory, auth types.SlackAuth, app types.App, orgGrantWorkspaceID string) (types.InstallState, types.App, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.add")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pkg.apps.add")
+	defer span.End()
 
 	// Validate the auth
 	ctx, _, err := getAuthSession(ctx, clients, auth)

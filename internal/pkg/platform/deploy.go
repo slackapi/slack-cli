@@ -31,14 +31,13 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
-
-	"github.com/opentracing/opentracing-go"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // Deploy will package and upload an app to the Slack Platform
 func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers bool, app types.App) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.deploy")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.deploy")
+	defer span.End()
 
 	// Get auth token
 	token := config.GetContextToken(ctx)
@@ -103,9 +102,8 @@ func Deploy(ctx context.Context, clients *shared.ClientFactory, showTriggers boo
 }
 
 func deployApp(ctx context.Context, clients *shared.ClientFactory, app types.App, manifest types.SlackYaml, authSession api.AuthSession) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "deployApp")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "deployApp")
+	defer span.End()
 
 	var token = config.GetContextToken(ctx)
 
@@ -246,11 +244,10 @@ func packageArchive(ctx context.Context, clients *shared.ClientFactory, projectR
 	var (
 		tmpDir string
 		err    error
-		span   opentracing.Span
 	)
 
-	span, ctx = opentracing.StartSpanFromContext(ctx, "packageArchive")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "packageArchive")
+	defer span.End()
 
 	clients.IO.PrintDebug(ctx, "packaging archive")
 
@@ -293,9 +290,8 @@ func packageArchive(ctx context.Context, clients *shared.ClientFactory, projectR
 
 // bundleArchive zips up the directory and provides the path to a file in a temp directory
 func bundleArchive(ctx context.Context, clients *shared.ClientFactory, dir, appID string) (packageResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "bundleArchive")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "bundleArchive")
+	defer span.End()
 
 	clients.IO.PrintDebug(ctx, "bundleArchive")
 	var err error
