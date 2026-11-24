@@ -289,10 +289,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 				return "", err
 			}
 			if selected.App.AppID != "" {
-				token, err := installAndGetBotToken(ctx, clients, selected)
-				if err == nil && token != "" {
-					return token, nil
-				}
+				return installAndGetBotToken(ctx, clients, selected)
 			}
 		}
 	}
@@ -314,10 +311,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 			return "", err
 		}
 		if selected.App.AppID != "" {
-			token, err := installAndGetBotToken(ctx, clients, selected)
-			if err == nil && token != "" {
-				return token, nil
-			}
+			return installAndGetBotToken(ctx, clients, selected)
 		}
 	}
 
@@ -339,6 +333,13 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 	}
 
 	manifest := slackManifest.AppManifest
+	// A deployed Run on Slack app keeps its bot token on Slack, so installing
+	// it would return no token and the request would be sent unauthenticated.
+	if !selected.App.IsDev && manifest.IsFunctionRuntimeSlackHosted() {
+		return "", slackerror.New(slackerror.ErrAppHosted).
+			WithMessage("A deployed app that runs on Slack doesn't share its bot token with the CLI").
+			WithRemediation("Choose the local app with --app local, or pass a token with --token")
+	}
 	botScopes := []string{}
 	if manifest.OAuthConfig != nil && manifest.OAuthConfig.Scopes != nil {
 		botScopes = manifest.OAuthConfig.Scopes.Bot
@@ -351,6 +352,11 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 	result, _, err := clients.API().DeveloperAppInstall(ctx, clients.IO, selected.Auth.Token, selected.App, botScopes, outgoingDomains, "", false)
 	if err != nil {
 		return "", err
+	}
+	if result.APIAccessTokens.Bot == "" {
+		return "", slackerror.New(slackerror.ErrAppInstall).
+			WithMessage("The app was installed but no bot token was returned").
+			WithRemediation("Pass a token with --token")
 	}
 
 	return result.APIAccessTokens.Bot, nil
