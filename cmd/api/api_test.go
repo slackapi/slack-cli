@@ -474,6 +474,50 @@ func Test_resolveToken_AppOverridesEnv(t *testing.T) {
 	assert.Equal(t, "xoxb-app-bot-token", token)
 }
 
+func Test_resolveToken_AppFlag_ApprovalRequired(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.Os.AddDefaultMocks()
+	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
+	clientsMock.Config.AppFlag = "A111"
+
+	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+		{Token: "xoxp-tooling", TeamID: "T111", TeamDomain: "team-a"},
+	}, nil)
+	clientsMock.Auth.On("SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+
+	appClientMock := &app.AppClientMock{}
+	appClientMock.On("GetDeployedAll", mock.Anything).Return([]types.App{
+		{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"},
+	}, "", nil)
+	appClientMock.On("GetLocalAll", mock.Anything).Return([]types.App{}, nil)
+	appClientMock.On("GetDeployed", mock.Anything, "T111").Return(types.App{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"}, nil)
+	appClientMock.On("GetLocal", mock.Anything, "T111").Return(types.App{}, nil)
+	clientsMock.AppClient.AppClientInterface = appClientMock
+
+	clientsMock.API.On("GetAppStatus", mock.Anything, "xoxp-tooling", []string{"A111"}, "T111").
+		Return(internalapi.GetAppStatusResult{Apps: []internalapi.AppStatusResultAppInfo{{AppID: "A111", Installed: true}}}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, "xoxp-tooling").Return(internalapi.AuthSession{}, nil)
+
+	manifestMock := clientsMock.AppClient.Manifest.(*app.ManifestMockObject)
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
+		AppManifest: types.AppManifest{
+			OAuthConfig: &types.OAuthConfig{Scopes: &types.ManifestScopes{Bot: []string{"chat:write"}}},
+		},
+	}, nil)
+
+	clientsMock.API.On("DeveloperAppInstall", mock.Anything, mock.Anything, "xoxp-tooling", mock.Anything, []string{"chat:write"}, []string{}, "", false).
+		Return(internalapi.DeveloperAppInstallResult{}, types.InstallRequestPending, nil)
+
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	clients.SDKConfig.WorkingDirectory = "/fake/project"
+
+	token, err := resolveToken(ctx, clients)
+	assert.Empty(t, token)
+	assert.True(t, slackerror.Is(err, slackerror.ErrAppApprovalRequestPending))
+	clientsMock.API.AssertNumberOfCalls(t, "DeveloperAppInstall", 1)
+}
+
 func Test_resolveToken_AppFlag_ByID(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
@@ -593,6 +637,8 @@ func Test_resolveToken_AppFlag_Local(t *testing.T) {
 	manifestMock := clientsMock.AppClient.Manifest.(*app.ManifestMockObject)
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 		AppManifest: types.AppManifest{
+			// A local Deno app keeps the "slack" runtime in its manifest
+			Settings:    &types.AppSettings{FunctionRuntime: types.SlackHosted},
 			OAuthConfig: &types.OAuthConfig{Scopes: &types.ManifestScopes{Bot: []string{"commands"}}},
 		},
 	}, nil)
