@@ -18,13 +18,13 @@ import (
 	"fmt"
 	"net/mail"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -66,8 +66,8 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 // runUpdateCommand will execute the update command
 func runUpdateCommand(cmd *cobra.Command, clients *shared.ClientFactory, args []string) error {
 	ctx := cmd.Context()
-	span, _ := opentracing.StartSpanFromContext(ctx, "cmd.Collaborators.Update")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.Collaborators.Update")
+	defer span.End()
 
 	var slackUser types.SlackUser
 	parsedEmail, err := mail.ParseAddress(args[0])

@@ -17,13 +17,13 @@ package triggers
 import (
 	"fmt"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -62,8 +62,8 @@ func NewDeleteCommand(clients *shared.ClientFactory) *cobra.Command {
 
 func runDeleteCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.delete")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.triggers.delete")
+	defer span.End()
 
 	// Get the app from the flag or prompt
 	selection, err := deleteAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)

@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -26,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -65,8 +65,8 @@ func NewExportCommand(clients *shared.ClientFactory) *cobra.Command {
 
 func runExportCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	var ctx = cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.open-form-response.export")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.open-form-response.export")
+	defer span.End()
 
 	selection, err := exportAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
 	if err != nil {
