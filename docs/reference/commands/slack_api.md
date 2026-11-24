@@ -22,7 +22,7 @@ is still sent as given.
 
 Token resolution (in priority order):
   1. --token flag              Explicit token value
-  2. --app flag                Install app and use bot token (in project)
+  2. --app flag                Install app and use bot token (requires a project)
   3. SLACK_BOT_TOKEN env var   Bot token (set during slack deploy)
   4. SLACK_USER_TOKEN env var  User token
   5. App prompt (in project)   Select installed app or "No app"

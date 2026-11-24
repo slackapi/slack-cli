@@ -71,7 +71,7 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"",
 			"Token resolution (in priority order):",
 			"  1. --token flag              Explicit token value",
-			"  2. --app flag                Install app and use bot token (in project)",
+			"  2. --app flag                Install app and use bot token (requires a project)",
 			"  3. SLACK_BOT_TOKEN env var   Bot token (set during slack deploy)",
 			"  4. SLACK_USER_TOKEN env var  User token",
 			"  5. App prompt (in project)   Select installed app or \"No app\"",
@@ -283,16 +283,19 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 	}
 
 	if clients.Config.AppFlag != "" {
-		if sdkConfigExists, _ := clients.SDKConfig.Exists(); sdkConfigExists {
-			selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
-			if err != nil {
-				return "", err
-			}
-			if selected.App.AppID != "" {
-				token, err := installAndGetBotToken(ctx, clients, selected)
-				if err == nil && token != "" {
-					return token, nil
-				}
+		if _, err := clients.SDKConfig.Exists(); err != nil {
+			return "", slackerror.New(slackerror.ErrInvalidSlackProjectDirectory).
+				WithMessage("The --app flag needs a Slack project directory").
+				WithRemediation("Run the command in a Slack project directory, or pass a token with --token")
+		}
+		selected, err := prompts.AppSelectPrompt(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
+		if err != nil {
+			return "", err
+		}
+		if selected.App.AppID != "" {
+			token, err := installAndGetBotToken(ctx, clients, selected)
+			if err == nil && token != "" {
+				return token, nil
 			}
 		}
 	}

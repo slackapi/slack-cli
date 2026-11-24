@@ -28,9 +28,11 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_NewCommand(t *testing.T) {
@@ -567,6 +569,21 @@ func Test_resolveToken_AppFlag_Local(t *testing.T) {
 	token, err := resolveToken(ctx, clients)
 	assert.NoError(t, err)
 	assert.Equal(t, "xoxb-local-bot-token", token)
+}
+
+func Test_resolveToken_AppFlag_NoProject(t *testing.T) {
+	t.Setenv("SLACK_BOT_TOKEN", "xoxb-env-bot-token")
+
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.Config.AppFlag = "A111"
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+	token, err := resolveToken(ctx, clients)
+	require.Error(t, err)
+	assert.Equal(t, slackerror.ErrInvalidSlackProjectDirectory, slackerror.ToSlackError(err).Code)
+	assert.Empty(t, token)
+	clientsMock.IO.AssertNotCalled(t, "SelectPrompt", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func Test_resolveToken_AppFlag_NotFound(t *testing.T) {
