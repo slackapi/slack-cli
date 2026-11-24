@@ -20,7 +20,6 @@ import (
 	"net/mail"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -29,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -71,9 +71,8 @@ func NewAddCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // runAddCommandFunc adds a user as an app collaborator using inputs and the API
 func runAddCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "cmd.Collaborators.Add")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.Collaborators.Add")
+	defer span.End()
 
 	// Get the app auth selection from the flag or prompt
 	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps)
