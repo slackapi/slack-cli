@@ -191,3 +191,52 @@ func Test_FlushToLogFile(t *testing.T) {
 		})
 	}
 }
+
+func Test_IOStreams_InitLogFile(t *testing.T) {
+	tests := map[string]struct {
+		missingTraceID bool
+		expectedErr    bool
+	}{
+		"writes the session details to the log file and removes week old logs": {},
+		"returns an error when the trace ID is missing from the context": {
+			missingTraceID: true,
+			expectedErr:    true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			if tc.missingTraceID {
+				ctx = slackcontext.SetOpenTracingTraceID(ctx, "")
+			}
+			logsDir := t.TempDir()
+			oldLogFilePath := filepath.Join(logsDir, "slack-debug-20000101.log")
+			require.NoError(t, os.WriteFile(oldLogFilePath, []byte("old"), 0600))
+			oldTime := time.Now().AddDate(0, 0, -8)
+			require.NoError(t, os.Chtimes(oldLogFilePath, oldTime, oldTime))
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.AddDefaultMocks()
+			var systemConfigMock config.SystemConfigMock
+			systemConfigMock.On("LogsDir", mock.Anything).Return(logsDir, nil)
+			config := config.NewConfig(fsMock, osMock)
+			config.SystemConfig = &systemConfigMock
+			io := NewIOStreams(config, fsMock, osMock)
+
+			err := io.InitLogFile(ctx)
+			if tc.expectedErr {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			logFile, err := os.ReadFile(filepath.Join(logsDir, filename))
+			require.NoError(t, err)
+			sessionID, _ := slackcontext.SessionID(ctx)
+			traceID, _ := slackcontext.OpenTracingTraceID(ctx)
+			assert.Contains(t, string(logFile), "------------------------------------")
+			assert.Contains(t, string(logFile), sessionID)
+			assert.Contains(t, string(logFile), traceID)
+			assert.NoFileExists(t, oldLogFilePath)
+		})
+	}
+}
