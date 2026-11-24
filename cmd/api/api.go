@@ -262,32 +262,29 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 			WithMessage("API request failed with status %d", resp.StatusCode)
 	}
 
-	// Slack returns HTTP 200 for most failures, with "ok": false in the body.
-	// A map keeps the key match exact, since struct fields match any case.
 	var result map[string]json.RawMessage
 	if json.Unmarshal(resp.Body, &result) == nil {
 		var ok *bool
 		if json.Unmarshal(result["ok"], &ok) == nil && ok != nil && !*ok {
-			return apiResponseError(result["error"])
+			return apiResponseError(result["error"], method)
 		}
 	}
 
 	return nil
 }
 
-// apiResponseError returns the error for a response with "ok": false
-func apiResponseError(rawError json.RawMessage) error {
-	var message string
+func apiResponseError(rawError json.RawMessage, method string) error {
 	rawError = bytes.TrimSpace(rawError)
-	if len(rawError) > 0 && !bytes.Equal(rawError, []byte("null")) && json.Unmarshal(rawError, &message) != nil {
-		message = string(rawError)
+	var code string
+	if json.Unmarshal(rawError, &code) == nil && code != "" {
+		return slackerror.NewAPIError(code, "", nil, method)
 	}
-	if message == "" {
+	if len(rawError) == 0 || bytes.Equal(rawError, []byte("null")) || bytes.Equal(rawError, []byte(`""`)) {
 		return slackerror.New("api_request_failed").
 			WithMessage("API request failed with \"ok\": false")
 	}
 	return slackerror.New("api_request_failed").
-		WithMessage("API request failed with error %q", message)
+		WithMessage("API request failed with error %s", rawError)
 }
 
 // parseParams converts key=value arguments into url.Values
