@@ -20,14 +20,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -81,9 +82,8 @@ type certifiedInstallResponse struct {
 
 // CertifiedAppInstall requests the installation of a certified app in order for its connectors to be usable
 func (c *Client) CertifiedAppInstall(ctx context.Context, token string, certifiedAppID string) (CertifiedInstallResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CertifiedAppInstall")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.CertifiedAppInstall")
+	defer span.End()
 
 	args := struct {
 		AppID string `json:"app_id,omitempty"` // the app id of the certified app
@@ -154,9 +154,8 @@ var appApprovalErrorMessages = []string{
 
 // CreateApp creates a new Slack app
 func (c *Client) CreateApp(ctx context.Context, token string, manifest types.AppManifest, enableDistribution bool) (CreateAppResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateApp")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.CreateApp")
+	defer span.End()
 
 	args := struct {
 		Manifest           types.AppManifest `json:"manifest,omitempty"`
@@ -201,10 +200,9 @@ type ExportAppResponse struct {
 
 // ExportAppManifest calls "apps.manifest.export" to gather manifest details
 func (c *Client) ExportAppManifest(ctx context.Context, token, appID string) (ExportAppResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsManifestExport")
-	span.SetTag("app", appID)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsManifestExport")
+	span.SetAttributes(attribute.String("app", appID))
+	defer span.End()
 
 	args := struct {
 		AppID string `json:"app_id"`
@@ -239,9 +237,8 @@ type ValidateAppManifestResult struct {
 
 // ValidateAppManifest validates a new Slack app
 func (c *Client) ValidateAppManifest(ctx context.Context, token string, manifest types.AppManifest, appID string) (ValidateAppManifestResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ValidateAppManifest")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.ValidateAppManifest")
+	defer span.End()
 
 	// We send in an app_id if it exists so that the validation can be more robust - currently
 	// it allows us to check for breaking changes since we have an existing app to compare
@@ -299,10 +296,9 @@ type updateAppResponse struct {
 
 // UpdateApp updates a Slack app
 func (c *Client) UpdateApp(ctx context.Context, token string, appID string, manifest types.AppManifest, forceUpdate bool, continueWithBreakingChanges bool) (UpdateAppResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.UpdateApp")
-	span.SetTag("app", appID)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.UpdateApp")
+	span.SetAttributes(attribute.String("app", appID))
+	defer span.End()
 
 	args := struct {
 		Manifest               types.AppManifest `json:"manifest,omitempty"`
@@ -352,10 +348,9 @@ type generateS3PresignedPostResponse struct {
 }
 
 func (c *Client) GetPresignedS3PostParams(ctx context.Context, token string, appID string) (GenerateS3PresignedPostResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.GetPresignedS3PostParams")
-	span.SetTag("app", appID)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.GetPresignedS3PostParams")
+	span.SetAttributes(attribute.String("app", appID))
+	defer span.End()
 
 	args := struct {
 		AppID string `json:"app_id,omitempty"`
@@ -398,10 +393,9 @@ type uploadAppResponse struct {
 
 // UploadApp takes a manifest and creates a new app
 func (c *Client) UploadApp(ctx context.Context, token, runtime, appID string, fileName string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.UploadApp")
-	span.SetTag("app", appID)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.UploadApp")
+	span.SetAttributes(attribute.String("app", appID))
+	defer span.End()
 
 	args := struct {
 		AppID    string `json:"app_id"`
@@ -443,10 +437,9 @@ type deleteAppResponse struct {
 
 // DeleteApp fully deletes the Slack app identified by appID
 func (c *Client) DeleteApp(ctx context.Context, token string, appID string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.DeleteApp")
-	span.SetTag("app", appID)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.DeleteApp")
+	span.SetAttributes(attribute.String("app", appID))
+	defer span.End()
 	args := struct {
 		AppID string `json:"app_id,omitempty"`
 	}{
@@ -479,9 +472,8 @@ func (c *Client) DeleteApp(ctx context.Context, token string, appID string) erro
 
 // UninstallApp uninstalls a Slack app from its team
 func (c *Client) UninstallApp(ctx context.Context, token string, appID, teamID string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.UninstallApp")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.UninstallApp")
+	defer span.End()
 
 	args := struct {
 		AppID  string `json:"app_id,omitempty"`
@@ -540,9 +532,8 @@ type GetAppStatusResponse struct {
 
 // GetAppStatus fetches information about the given apps's installation
 func (c *Client) GetAppStatus(ctx context.Context, token string, appIDs []string, teamID string) (GetAppStatusResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.GetAppStatus")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.GetAppStatus")
+	defer span.End()
 
 	args := struct {
 		AppIDs []string `json:"app_ids,omitempty"`
@@ -656,9 +647,8 @@ type appsApprovalsRequestsListResponse struct {
 // if the token is scoped to a workspace of one, and any workspace of that
 // organization named in requestedTeams.
 func (c *Client) ListAppApprovalRequests(ctx context.Context, token string, appID string, requestedTeams []string) (AppsApprovalsRequestsListResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListAppApprovalRequests")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.ListAppApprovalRequests")
+	defer span.End()
 
 	args := struct {
 		AppID          string   `json:"app_id"`
@@ -809,9 +799,8 @@ func (c *Client) DeveloperAppInstall(ctx context.Context, IO iostreams.IOStreame
 // handleAppApprovalStates handles responses from the developerInstall API when admin apps approval (AAA) is on
 // AAA can be toggled on in standalone workspaces and is always on for Enterprise Grid organizations
 func (c *Client) handleAppApprovalStates(ctx context.Context, IO iostreams.IOStreamer, resp, token, appID, teamID, scopes string, outgoingDomains []string, autoRequestAAA bool) (types.InstallState, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.handleAppApprovalStates")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.handleAppApprovalStates")
+	defer span.End()
 
 	var alternativeSuggestion = "Alternatively, retry on a workspace without administrator approval turned on"
 	if resp == slackerror.ErrAppApprovalRequestEligible {
@@ -827,9 +816,8 @@ func (c *Client) handleAppApprovalStates(ctx context.Context, IO iostreams.IOStr
 }
 
 func (c *Client) handleAppRequestEligibleState(ctx context.Context, IO iostreams.IOStreamer, resp, token, appID, teamID, scopes string, outgoingDomains []string, alternativeSuggestion string, autoRequestAAA bool) (types.InstallState, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.handleAppRequestEligibleState")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.handleAppRequestEligibleState")
+	defer span.End()
 
 	var administratorApprovalNotice = fmt.Sprintf("\n%s", style.Sectionf(style.TextSection{
 		Emoji: "bell",
@@ -855,8 +843,8 @@ func (c *Client) handleAppRequestEligibleState(ctx context.Context, IO iostreams
 		}
 	}
 
-	span.SetTag("app_approval_prompt_response", shouldSendApprovalRequest)
-	span.SetTag("app_id", appID)
+	span.SetAttributes(attribute.Bool("app_approval_prompt_response", shouldSendApprovalRequest))
+	span.SetAttributes(attribute.String("app_id", appID))
 
 	// Create an app approval request
 	var reason string
@@ -888,9 +876,8 @@ func (c *Client) handleAppRequestEligibleState(ctx context.Context, IO iostreams
 }
 
 func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.IOStreamer, resp, token, appID, teamID, scopes string, outgoingDomains []string, alternativeSuggestion string, autoRequestAAA bool) (types.InstallState, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.handleAppRequestPendingState")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.handleAppRequestPendingState")
+	defer span.End()
 
 	// Output current status
 	var requestPendingErr = slackerror.New(resp)
@@ -910,8 +897,8 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 		return "", err
 	}
 
-	span.SetTag("app_request_cancellation_prompt_response", shouldCancelRequest)
-	span.SetTag("app_id", appID)
+	span.SetAttributes(attribute.Bool("app_request_cancellation_prompt_response", shouldCancelRequest))
+	span.SetAttributes(attribute.String("app_id", appID))
 
 	// Create an app approval request
 	if shouldCancelRequest {
@@ -964,9 +951,8 @@ func (c *Client) handleAppRequestPendingState(ctx context.Context, IO iostreams.
 
 // RequestAppApproval creates a new app approval request to slack
 func (c *Client) RequestAppApproval(ctx context.Context, token string, appID string, teamID string, reason string, scopes string, outgoingDomains []string) (AppsApprovalsRequestsCreateResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "RequestAppApproval")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "RequestAppApproval")
+	defer span.End()
 
 	args := struct {
 		AppID   string   `json:"app,omitempty"`
