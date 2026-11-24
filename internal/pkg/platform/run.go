@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/cmd/feedback"
 	"github.com/slackapi/slack-cli/cmd/triggers"
 	"github.com/slackapi/slack-cli/internal/config"
@@ -30,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // RunArgs are the arguments passed into the Run function
@@ -46,8 +46,8 @@ type RunArgs struct {
 
 // Run locally runs your app.
 func Run(ctx context.Context, clients *shared.ClientFactory, runArgs RunArgs) (types.InstallState, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.create")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.create")
+	defer span.End()
 
 	// Save token for use later on
 	ctx = config.SetContextToken(ctx, runArgs.Auth.Token)

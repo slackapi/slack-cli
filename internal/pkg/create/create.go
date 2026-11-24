@@ -27,7 +27,6 @@ import (
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/cmd/doctor"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/archiveutil"
@@ -39,7 +38,10 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // copyIgnoreDirectories are directories to skip when copying a template.
@@ -59,8 +61,8 @@ type CreateArgs struct {
 
 // Create will create a new Slack app on the file system and app manifest on the Slack API.
 func Create(ctx context.Context, clients *shared.ClientFactory, createArgs CreateArgs) (appDirPath string, err error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.create")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.create")
+	defer span.End()
 
 	// Get the current directory to use as the base for the project
 	workingDirPath, err := os.Getwd()
@@ -224,8 +226,8 @@ func parseAppPath(input string) (appPath string, displayName string, err error) 
 // getAvailableDir will return a unique directory path.
 // If dirPath already exists, then a unique numbered path will be appended to the path.
 func getAvailableDir(ctx context.Context, dirPath string) (string, error) {
-	var span, _ = opentracing.StartSpanFromContext(ctx, "getAvailableDirectory")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "getAvailableDirectory")
+	defer span.End()
 
 	// Verify that the parent directory path exists (we will not create missing directories)
 	if exists, err := parentDirExists(dirPath); err != nil {
@@ -537,11 +539,7 @@ func InstallProjectDependencies(
 		// Used by Logstash
 		clients.Config.ProjectID = projectID
 
-		// Used by OpenTracing
-		if span := opentracing.SpanFromContext(ctx); span != nil {
-			span.SetTag("project_id", clients.Config.ProjectID)
-			ctx = opentracing.ContextWithSpan(ctx, span)
-		}
+		trace.SpanFromContext(ctx).SetAttributes(attribute.String("project_id", clients.Config.ProjectID))
 	}
 
 	// Get the manifest source from the project-level config

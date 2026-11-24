@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -60,13 +60,10 @@ type ActivityClient interface {
 
 // Get the recent activity for an app
 func (c *Client) Activity(ctx context.Context, token string, activityRequest types.ActivityRequest) (ActivityResult, error) {
-	var (
-		err  error
-		span opentracing.Span
-	)
+	var err error
 
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.Activity")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.Activity")
+	defer span.End()
 
 	if activityRequest.AppID == "" {
 		return ActivityResult{}, slackerror.New("app is not deployed")

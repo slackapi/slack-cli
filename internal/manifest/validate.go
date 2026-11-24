@@ -21,19 +21,19 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // ManifestValidate validates the manifest from the project "get-manifest" hook
 func ManifestValidate(ctx context.Context, clients *shared.ClientFactory, app types.App, token string) (bool, slackerror.Warnings, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.ManifestValidate")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "pkg.ManifestValidate")
+	defer span.End()
 
 	if strings.TrimSpace(token) == "" {
 		return false, nil, slackerror.New(slackerror.ErrAuthToken)

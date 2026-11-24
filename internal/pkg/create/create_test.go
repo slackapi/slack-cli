@@ -30,6 +30,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestCreate(t *testing.T) {
@@ -547,7 +550,8 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 			projectDirPath := "/path/to/project-name"
 
 			// Create mocks
-			ctx := slackcontext.MockContext(t.Context())
+			recorder := tracetest.NewSpanRecorder()
+			ctx, span := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test").Start(slackcontext.MockContext(t.Context()), "parent")
 			clientsMock := shared.NewClientsMock()
 			clientsMock.Os.On("Getwd").Return(projectDirPath, nil)
 			clientsMock.HookExecutor.On("Execute", mock.Anything, mock.Anything).Return(`{}`, nil)
@@ -612,6 +616,8 @@ func Test_Create_installProjectDependencies(t *testing.T) {
 				assert.Equal(t, tc.expectedManifestSource, actualManifestSource)
 			}
 			assert.NotEmpty(t, clients.Config.ProjectID, "config.project_id")
+			span.End()
+			assert.Contains(t, recorder.Ended()[0].Attributes(), attribute.String("project_id", clients.Config.ProjectID))
 			// output := clientsMock.GetCombinedOutput()
 			// assert.Contains(t, output, tc.expectedOutputs)
 		})
