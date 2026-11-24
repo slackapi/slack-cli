@@ -354,10 +354,15 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 		return "", err
 	}
 	// An install that needs admin approval returns no token and no error
-	if installState != "" && installState != types.InstallSuccess {
+	switch installState {
+	case "", types.InstallSuccess:
+	case types.InstallRequestPending:
 		return "", slackerror.New(slackerror.ErrAppApprovalRequestPending).
-			WithMessage("The app needs admin approval before it can be installed").
 			WithRemediation("Ask an admin to approve the app, or pass a token with --token")
+	default:
+		return "", slackerror.New(slackerror.ErrAppInstall).
+			WithMessage("The app needs admin approval before it can be installed").
+			WithRemediation("Request approval with `slack install`, or pass a token with --token")
 	}
 	if result.APIAccessTokens.Bot == "" {
 		return "", slackerror.New(slackerror.ErrAppInstall).
