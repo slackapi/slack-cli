@@ -21,6 +21,39 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_Update_IsReleaseVersion(t *testing.T) {
+	tests := map[string]struct {
+		version  string
+		expected bool
+	}{
+		"full version is a release version": {
+			version:  "4.12.0",
+			expected: true,
+		},
+		"prerelease version is a release version": {
+			version:  "4.12.0-beta.1",
+			expected: true,
+		},
+		"version with a v prefix is not a release version": {
+			version:  "v4.12.0",
+			expected: false,
+		},
+		"short version is not a release version": {
+			version:  "4.12",
+			expected: false,
+		},
+		"path is not a release version": {
+			version:  "../../4.12.0",
+			expected: false,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, IsReleaseVersion(tc.version))
+		})
+	}
+}
+
 func Test_Update_SemVerGreaterThan(t *testing.T) {
 	tests := map[string]struct {
 		v1       string
