@@ -168,15 +168,19 @@ func Test_Start(t *testing.T) {
 	require.Len(t, spans, 3)
 	assert.Equal(t, spans["opentracing-parent"].SpanContext().SpanID(), spans["otel-child"].Parent().SpanID())
 	assert.Equal(t, spans["otel-child"].SpanContext().SpanID(), spans["opentracing-grandchild"].Parent().SpanID())
-}
 
-func Test_TraceID(t *testing.T) {
-	recorder := tracetest.NewSpanRecorder()
-	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	span := tracer.StartSpan("span")
-	traceID := TraceID(span)
-	span.Finish()
-	assert.Len(t, traceID, 32)
-	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
-	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
+	recorder = tracetest.NewSpanRecorder()
+	tracer = newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+	opentracing.SetGlobalTracer(tracer)
+	ctx, root := Start(context.Background(), "otel-root")
+	child2, _ := opentracing.StartSpanFromContext(ctx, "opentracing-child")
+	child2.Finish()
+	root.End()
+	spans = map[string]sdktrace.ReadOnlySpan{}
+	for _, span := range recorder.Ended() {
+		spans[span.Name()] = span
+	}
+	require.Len(t, spans, 2)
+	assert.False(t, spans["otel-root"].Parent().IsValid())
+	assert.Equal(t, spans["otel-root"].SpanContext().SpanID(), spans["opentracing-child"].Parent().SpanID())
 }

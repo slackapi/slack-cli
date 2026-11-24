@@ -29,9 +29,10 @@ package slackcontext
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/version"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // contextKey is an unexported type to avoid context key collisions.
@@ -39,39 +40,20 @@ import (
 type contextKey int
 
 const (
-	contextKeyOpenTracingTracer contextKey = iota
-	contextKeyProjectID
+	contextKeyProjectID contextKey = iota
 	contextKeySessionID
 	contextKeySystemID
 	contextKeyTraceID
 	contextKeyVersion
 )
 
-// SetOpenTracingSpan returns a new `context.Context` that holds a reference to
-// the span. If span is nil, a new context without an active span is returned.
-func SetOpenTracingSpan(ctx context.Context, span opentracing.Span) context.Context {
-	ctx = opentracing.ContextWithSpan(ctx, span)
-	return ctx
-}
-
-// SetOpenTracingSpan returns a new `context.Context` that holds a reference to
-// the `opentracing.Tracer`. If tracer is nil, a new context without a tracer returned.
-func SetOpenTracingTracer(ctx context.Context, tracer opentracing.Tracer) context.Context {
-	ctx = context.WithValue(ctx, contextKeyOpenTracingTracer, tracer)
-	return ctx
-}
-
 // SetProjectID returns a new `context.Context` that holds a reference to
-// the `projectID` and updates the `opentracing.Span` tag with the `projectID`.
+// the `projectID` and sets the `project_id` attribute on the span in `ctx`.
 func SetProjectID(ctx context.Context, projectID string) context.Context {
 	// Set projectID in the context
 	ctx = context.WithValue(ctx, contextKeyProjectID, projectID)
 
-	// Set projectID in OpenTracing by extracting the span and updating the tag
-	if span := opentracing.SpanFromContext(ctx); span != nil {
-		span.SetTag("project_id", projectID)
-		ctx = opentracing.ContextWithSpan(ctx, span)
-	}
+	trace.SpanFromContext(ctx).SetAttributes(attribute.String("project_id", projectID))
 
 	return ctx
 }
@@ -95,16 +77,12 @@ func SetSessionID(ctx context.Context, sessionID string) context.Context {
 }
 
 // SetSystemID returns a new `context.Context` that holds a reference to
-// the `systemID` and updates the `opentracing.Span` tag with the `systemID`.
+// the `systemID` and sets the `system_id` attribute on the span in `ctx`.
 func SetSystemID(ctx context.Context, systemID string) context.Context {
 	// Set systemID in the context
 	ctx = context.WithValue(ctx, contextKeySystemID, systemID)
 
-	// Set projectID in OpenTracing by extracting the span and updating the tag
-	if span := opentracing.SpanFromContext(ctx); span != nil {
-		span.SetTag("system_id", systemID)
-		ctx = opentracing.ContextWithSpan(ctx, span)
-	}
+	trace.SpanFromContext(ctx).SetAttributes(attribute.String("system_id", systemID))
 
 	return ctx
 }

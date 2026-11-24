@@ -19,50 +19,13 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackerror"
-	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/version"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
-
-func Test_SlackContext_SetOpenTracingSpan(t *testing.T) {
-	tests := map[string]struct {
-		expectedSpan opentracing.Span
-	}{
-		"sets the span in the context": {
-			expectedSpan: opentracing.StartSpan("test.span"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = SetOpenTracingSpan(ctx, tc.expectedSpan)
-			actualSpan := opentracing.SpanFromContext(ctx)
-			require.Equal(t, tc.expectedSpan, actualSpan)
-		})
-	}
-}
-
-func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
-	_, _tracer := tracer.SetupTracer(true)
-
-	tests := map[string]struct {
-		expectedTracer opentracing.Tracer
-	}{
-		"sets the Tracer in the context": {
-			expectedTracer: _tracer,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = SetOpenTracingTracer(ctx, tc.expectedTracer)
-			actualTracer := ctx.Value(contextKeyOpenTracingTracer).(opentracing.Tracer)
-			require.Equal(t, tc.expectedTracer, actualTracer)
-		})
-	}
-}
 
 func Test_SlackContext_SetProjectID(t *testing.T) {
 	tests := map[string]struct {
@@ -74,8 +37,11 @@ func Test_SlackContext_SetProjectID(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
+			recorder := tracetest.NewSpanRecorder()
+			ctx, span := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test").Start(t.Context(), "span")
 			ctx = SetProjectID(ctx, tc.expectedProjectID)
+			span.End()
+			require.Contains(t, recorder.Ended()[0].Attributes(), attribute.String("project_id", tc.expectedProjectID))
 			actualProjectID := ctx.Value(contextKeyProjectID).(string)
 			require.Equal(t, tc.expectedProjectID, actualProjectID)
 		})
@@ -135,8 +101,11 @@ func Test_SlackContext_SetSystemID(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
+			recorder := tracetest.NewSpanRecorder()
+			ctx, span := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)).Tracer("test").Start(t.Context(), "span")
 			ctx = SetSystemID(ctx, tc.expectedSystemID)
+			span.End()
+			require.Contains(t, recorder.Ended()[0].Attributes(), attribute.String("system_id", tc.expectedSystemID))
 			actualSystemID := ctx.Value(contextKeySystemID).(string)
 			require.Equal(t, tc.expectedSystemID, actualSystemID)
 		})
