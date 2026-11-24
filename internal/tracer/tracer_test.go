@@ -16,6 +16,7 @@ package tracer
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -89,6 +90,44 @@ func Test_newProvider(t *testing.T) {
 		assert.NotContains(t, string(r.body), "leaked-hostname")
 	case <-time.After(5 * time.Second):
 		t.Fatal("no export reached the TLS server")
+	}
+}
+
+func Test_newTracerProvider(t *testing.T) {
+	tests := map[string]struct {
+		env           map[string]string
+		exporterErr   error
+		expectedCalls int
+	}{
+		"builds the exporter when telemetry is on":        {env: map[string]string{}, expectedCalls: 1},
+		"never builds the exporter when telemetry is off": {env: map[string]string{"SLACK_DISABLE_TELEMETRY": "true"}, expectedCalls: 0},
+		"returns the exporter error with no provider":     {env: map[string]string{}, exporterErr: errors.New("exporter failed"), expectedCalls: 1},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			calls := 0
+			exporter := tracetest.NewInMemoryExporter()
+			provider, err := newTracerProvider(func(key string) string { return tc.env[key] }, func() (sdktrace.SpanExporter, error) {
+				calls++
+				if tc.exporterErr != nil {
+					return nil, tc.exporterErr
+				}
+				return exporter, nil
+			})
+			if tc.exporterErr != nil {
+				assert.Equal(t, tc.exporterErr, err)
+				assert.Nil(t, provider)
+				assert.Equal(t, tc.expectedCalls, calls)
+				return
+			}
+			require.NoError(t, err)
+			_, span := provider.Tracer("test").Start(context.Background(), "span")
+			span.End()
+			require.NoError(t, provider.ForceFlush(context.Background()))
+			assert.Equal(t, tc.expectedCalls, calls)
+			assert.Len(t, exporter.GetSpans(), tc.expectedCalls)
+			assert.True(t, span.SpanContext().IsValid())
+		})
 	}
 }
 

@@ -20,11 +20,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/opentracing/opentracing-go"
+	"github.com/slackapi/slack-cli/internal/telemetry"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -46,11 +48,12 @@ func SetupTracer(isDev bool) io.Closer {
 	// network, and not diagnostics about the developer's own OTEL_* variables
 	otel.SetErrorHandler(otel.ErrorHandlerFunc(func(error) {}))
 	otel.SetLogger(logr.Discard())
-	exporter, err := otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
+	provider, err := newTracerProvider(os.Getenv, func() (sdktrace.SpanExporter, error) {
+		return otlptracehttp.New(context.Background(), exporterOptions(collectorEndpoint)...)
+	})
 	if err != nil {
 		log.Fatalf("Could not initialize the trace exporter: %s", err.Error())
 	}
-	provider := newProvider(exporter)
 	bridge := newBridgeTracer(provider)
 	opentracing.SetGlobalTracer(bridge)
 	return closerFunc(func() error {
@@ -58,6 +61,21 @@ func SetupTracer(isDev bool) io.Closer {
 		defer cancel()
 		return provider.Shutdown(ctx)
 	})
+}
+
+func newTracerProvider(getenv func(string) string, newExporter func() (sdktrace.SpanExporter, error)) (*sdktrace.TracerProvider, error) {
+	if telemetry.Disabled(getenv) {
+		return newUnexportedProvider(), nil
+	}
+	exporter, err := newExporter()
+	if err != nil {
+		return nil, err
+	}
+	return newProvider(exporter), nil
+}
+
+func newUnexportedProvider() *sdktrace.TracerProvider {
+	return sdktrace.NewTracerProvider(sdktrace.WithSampler(sdktrace.AlwaysSample()))
 }
 
 // exporterOptions sets every value that OTEL_EXPORTER_OTLP_* environment
