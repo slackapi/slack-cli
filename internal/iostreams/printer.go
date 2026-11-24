@@ -20,8 +20,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // Printer contains implementations of printers that output to the display or
@@ -46,8 +47,9 @@ type Printer interface {
 // PrintDebug prints a debug message to stdout if debug is enabled
 func (io *IOStreams) PrintDebug(ctx context.Context, format string, a ...any) {
 	message := strings.TrimSpace(style.RemoveANSI(sprintF(format, a...)))
-	span, _ := opentracing.StartSpanFromContext(ctx, "printDebug", opentracing.Tag{Key: "debug_log", Value: message})
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "printDebug")
+	span.SetAttributes(attribute.String("debug_log", message))
+	defer span.End()
 	lines := strings.SplitSeq(message, "\n")
 	for line := range lines {
 		_ = io.FlushToLogFile(ctx, "debug", line)
@@ -62,8 +64,9 @@ func (io *IOStreams) PrintDebug(ctx context.Context, format string, a ...any) {
 // PrintError logs and prints an error message to stderr
 func (io *IOStreams) PrintError(ctx context.Context, format string, a ...any) {
 	message := sprintF(format, a...)
-	span, _ := opentracing.StartSpanFromContext(ctx, "printError", opentracing.Tag{Key: "error_log", Value: message})
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "printError")
+	span.SetAttributes(attribute.String("error_log", message))
+	defer span.End()
 	_ = io.FlushToLogFile(ctx, "error", message)
 	io.FinishLogFile(ctx)
 	if !strings.Contains(message, style.Emoji("prohibited")) {
@@ -76,8 +79,9 @@ func (io *IOStreams) PrintError(ctx context.Context, format string, a ...any) {
 // PrintWarning logs and prints a warning message to stdout
 func (io *IOStreams) PrintWarning(ctx context.Context, format string, a ...any) {
 	message := sprintF(format, a...)
-	span, _ := opentracing.StartSpanFromContext(ctx, "printWarning", opentracing.Tag{Key: "warning_log", Value: message})
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "printWarning")
+	span.SetAttributes(attribute.String("warning_log", message))
+	defer span.End()
 	_ = io.FlushToLogFile(ctx, "warning", message)
 	io.Stderr.Println("\n" + style.Emoji("warning") + message)
 }
@@ -86,8 +90,9 @@ func (io *IOStreams) PrintWarning(ctx context.Context, format string, a ...any) 
 func (io *IOStreams) PrintInfo(ctx context.Context, shouldTrace bool, format string, a ...any) {
 	message := sprintF(format, a...)
 	if shouldTrace {
-		span, _ := opentracing.StartSpanFromContext(ctx, "printInfo", opentracing.Tag{Key: "printInfo", Value: message})
-		defer span.Finish()
+		_, span := tracer.Start(ctx, "printInfo")
+		span.SetAttributes(attribute.String("printInfo", message))
+		defer span.End()
 	}
 	if style.IsLipglossEnabled() {
 		io.Stdout.Println(message)

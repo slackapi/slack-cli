@@ -80,6 +80,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Use --no-auth to skip authentication entirely and send the request without",
 			"a token.",
 			"",
+			"The response body is always printed. The command exits with an error when the",
+			"HTTP status is outside 2xx or the JSON response has \"ok\": false.",
+			"",
 			"See all methods at: https://docs.slack.dev/reference/methods",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
@@ -259,7 +262,29 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 			WithMessage("API request failed with status %d", resp.StatusCode)
 	}
 
+	var result map[string]json.RawMessage
+	if json.Unmarshal(resp.Body, &result) == nil {
+		var ok *bool
+		if json.Unmarshal(result["ok"], &ok) == nil && ok != nil && !*ok {
+			return apiResponseError(result["error"], method)
+		}
+	}
+
 	return nil
+}
+
+func apiResponseError(rawError json.RawMessage, method string) error {
+	rawError = bytes.TrimSpace(rawError)
+	var code string
+	if json.Unmarshal(rawError, &code) == nil && code != "" {
+		return slackerror.NewAPIError(code, "", nil, method)
+	}
+	if len(rawError) == 0 || bytes.Equal(rawError, []byte("null")) || bytes.Equal(rawError, []byte(`""`)) {
+		return slackerror.New("api_request_failed").
+			WithMessage("API request failed with \"ok\": false")
+	}
+	return slackerror.New("api_request_failed").
+		WithMessage("API request failed with error %s", rawError)
 }
 
 // parseParams converts key=value arguments into url.Values
@@ -289,10 +314,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 				return "", err
 			}
 			if selected.App.AppID != "" {
-				token, err := installAndGetBotToken(ctx, clients, selected)
-				if err == nil && token != "" {
-					return token, nil
-				}
+				return installAndGetBotToken(ctx, clients, selected)
 			}
 		}
 	}
@@ -314,10 +336,7 @@ func resolveToken(ctx context.Context, clients *shared.ClientFactory) (string, e
 			return "", err
 		}
 		if selected.App.AppID != "" {
-			token, err := installAndGetBotToken(ctx, clients, selected)
-			if err == nil && token != "" {
-				return token, nil
-			}
+			return installAndGetBotToken(ctx, clients, selected)
 		}
 	}
 
@@ -339,6 +358,11 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 	}
 
 	manifest := slackManifest.AppManifest
+	if !selected.App.IsDev && manifest.IsFunctionRuntimeSlackHosted() {
+		return "", slackerror.New(slackerror.ErrAppHosted).
+			WithMessage("A deployed app that runs on Slack doesn't share its bot token with the CLI").
+			WithRemediation("Choose the local app with --app local, or pass a token with --token")
+	}
 	botScopes := []string{}
 	if manifest.OAuthConfig != nil && manifest.OAuthConfig.Scopes != nil {
 		botScopes = manifest.OAuthConfig.Scopes.Bot
@@ -348,9 +372,28 @@ func installAndGetBotToken(ctx context.Context, clients *shared.ClientFactory, s
 		outgoingDomains = *manifest.OutgoingDomains
 	}
 
-	result, _, err := clients.API().DeveloperAppInstall(ctx, clients.IO, selected.Auth.Token, selected.App, botScopes, outgoingDomains, "", false)
+	result, installState, err := clients.API().DeveloperAppInstall(ctx, clients.IO, selected.Auth.Token, selected.App, botScopes, outgoingDomains, "", false)
 	if err != nil {
 		return "", err
+	}
+	switch installState {
+	case "", types.InstallSuccess:
+	case types.InstallRequestPending:
+		return "", slackerror.New(slackerror.ErrAppApprovalRequestPending).
+			WithRemediation("Ask an admin to approve the app, or pass a token with --token")
+	case types.InstallRequestCancelled:
+		return "", slackerror.New(slackerror.ErrAppInstall).
+			WithMessage("The app needs admin approval and its approval request was cancelled").
+			WithRemediation("Request approval again with `slack install`, or pass a token with --token")
+	default:
+		return "", slackerror.New(slackerror.ErrAppInstall).
+			WithMessage("The app needs admin approval and no approval request was sent").
+			WithRemediation("Request approval with `slack install`, or pass a token with --token")
+	}
+	if result.APIAccessTokens.Bot == "" {
+		return "", slackerror.New(slackerror.ErrAppInstall).
+			WithMessage("The app was installed but no bot token was returned").
+			WithRemediation("Pass a token with --token")
 	}
 
 	return result.APIAccessTokens.Bot, nil

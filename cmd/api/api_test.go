@@ -28,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -330,6 +331,128 @@ func Test_runAPICommand_NonOKStatus(t *testing.T) {
 	assert.Contains(t, output, `"ok":false`)
 }
 
+func Test_runAPICommand_OKField(t *testing.T) {
+	tests := map[string]struct {
+		flags         cmdFlags
+		body          string
+		expectedError string
+		expectedOut   []string
+	}{
+		"ok false with error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"invalid_auth"}`,
+			expectedError: "Your user account authorization isn't valid (invalid_auth)",
+			expectedOut:   []string{`{"ok":false,"error":"invalid_auth"}`},
+		},
+		"ok false without error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false}`},
+		},
+		"ok false with --include keeps the headers": {
+			flags:         cmdFlags{method: "POST", include: true},
+			body:          `{"ok":false,"error":"not_authed"}`,
+			expectedError: "(not_authed)",
+			expectedOut:   []string{"HTTP 200", "X-Custom: test-value", `{"ok":false,"error":"not_authed"}`},
+		},
+		"ok false with an unknown error returns the error code": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"some_new_error"}`,
+			expectedError: "(some_new_error)",
+			expectedOut:   []string{`{"ok":false,"error":"some_new_error"}`},
+		},
+		"ok false with an empty error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":""}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false,"error":""}`},
+		},
+		"ok false with a non-string error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":{"code":"invalid_auth"}}`,
+			expectedError: `API request failed with error {"code":"invalid_auth"}`,
+			expectedOut:   []string{`{"ok":false,"error":{"code":"invalid_auth"}}`},
+		},
+		"ok false with a \"null\" string error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"null"}`,
+			expectedError: "(null)",
+			expectedOut:   []string{`{"ok":false,"error":"null"}`},
+		},
+		"ok false with a null error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":null}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false,"error":null}`},
+		},
+		"ok null succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"ok":null}`,
+			expectedOut: []string{`{"ok":null}`},
+		},
+		"uppercase OK key succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"OK":false}`,
+			expectedOut: []string{`{"OK":false}`},
+		},
+		"ok true succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"ok":true,"user_id":"U123"}`,
+			expectedOut: []string{`{"ok":true,"user_id":"U123"}`},
+		},
+		"JSON without ok succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"error":"not_an_ok_field"}`,
+			expectedOut: []string{`{"error":"not_an_ok_field"}`},
+		},
+		"JSON array succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `[{"ok":false}]`,
+			expectedOut: []string{`[{"ok":false}]`},
+		},
+		"non-JSON body succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        "ok=false",
+			expectedOut: []string{"ok=false"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("X-Custom", "test-value")
+				fmt.Fprint(w, tc.body)
+			}))
+			defer server.Close()
+
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.Config.TokenFlag = "xoxb-test-token"
+			clientsMock.Config.APIHostResolved = server.URL
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			cmd := NewCommand(clients)
+			testutil.MockCmdIO(clients.IO, cmd)
+
+			flags = tc.flags
+			cmd.SetArgs([]string{"auth.test"})
+			err := cmd.ExecuteContext(ctx)
+
+			if tc.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+			output := clientsMock.GetStdoutOutput()
+			for _, expected := range tc.expectedOut {
+				assert.Contains(t, output, expected)
+			}
+		})
+	}
+}
+
 func Test_runAPICommand_InvalidParam(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
@@ -520,7 +643,104 @@ func Test_resolveToken_AppFlag_ByID(t *testing.T) {
 	assert.Equal(t, "xoxb-app-bot-token", token)
 }
 
-func Test_resolveToken_AppFlag_Local(t *testing.T) {
+func Test_resolveToken_AppFlag_InstallErrors(t *testing.T) {
+	tests := map[string]struct {
+		settings        *types.AppSettings
+		installResult   internalapi.DeveloperAppInstallResult
+		installState    types.InstallState
+		installErr      error
+		installCalls    int
+		expectedErr     string
+		expectedMessage string
+	}{
+		"deployed slack hosted app errors before installing": {
+			settings:        &types.AppSettings{FunctionRuntime: types.SlackHosted},
+			installCalls:    0,
+			expectedErr:     slackerror.ErrAppHosted,
+			expectedMessage: "doesn't share its bot token",
+		},
+		"install error is returned": {
+			installErr:      slackerror.New(slackerror.ErrInvalidAppID),
+			installCalls:    1,
+			expectedErr:     slackerror.ErrInvalidAppID,
+			expectedMessage: "app_id",
+		},
+		"install with no bot token errors": {
+			installResult:   internalapi.DeveloperAppInstallResult{AppID: "A111"},
+			installState:    types.InstallSuccess,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppInstall,
+			expectedMessage: "no bot token was returned",
+		},
+		"install needing approval with a cancelled request errors": {
+			installState:    types.InstallRequestCancelled,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppInstall,
+			expectedMessage: "approval request was cancelled",
+		},
+		"install needing approval with no request sent errors": {
+			installState:    types.InstallRequestNotSent,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppInstall,
+			expectedMessage: "no approval request was sent",
+		},
+		"install needing approval with a pending request errors": {
+			installState:    types.InstallRequestPending,
+			installCalls:    1,
+			expectedErr:     slackerror.ErrAppApprovalRequestPending,
+			expectedMessage: "awaiting review",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.Os.AddDefaultMocks()
+			clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
+			clientsMock.Config.AppFlag = "A111"
+
+			clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+				{Token: "xoxp-tooling", TeamID: "T111", TeamDomain: "team-a"},
+			}, nil)
+			clientsMock.Auth.On("SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+
+			appClientMock := &app.AppClientMock{}
+			appClientMock.On("GetDeployedAll", mock.Anything).Return([]types.App{
+				{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"},
+			}, "", nil)
+			appClientMock.On("GetLocalAll", mock.Anything).Return([]types.App{}, nil)
+			appClientMock.On("GetDeployed", mock.Anything, "T111").Return(types.App{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"}, nil)
+			appClientMock.On("GetLocal", mock.Anything, "T111").Return(types.App{}, nil)
+			clientsMock.AppClient.AppClientInterface = appClientMock
+
+			clientsMock.API.On("GetAppStatus", mock.Anything, "xoxp-tooling", []string{"A111"}, "T111").
+				Return(internalapi.GetAppStatusResult{Apps: []internalapi.AppStatusResultAppInfo{{AppID: "A111", Installed: true}}}, nil)
+			clientsMock.API.On("ValidateSession", mock.Anything, "xoxp-tooling").Return(internalapi.AuthSession{}, nil)
+
+			manifestMock := clientsMock.AppClient.Manifest.(*app.ManifestMockObject)
+			manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
+				AppManifest: types.AppManifest{
+					Settings:    tc.settings,
+					OAuthConfig: &types.OAuthConfig{Scopes: &types.ManifestScopes{Bot: []string{"chat:write"}}},
+				},
+			}, nil)
+
+			clientsMock.API.On("DeveloperAppInstall", mock.Anything, mock.Anything, "xoxp-tooling", mock.Anything, []string{"chat:write"}, []string{}, "", false).
+				Return(tc.installResult, tc.installState, tc.installErr)
+
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+			clients.SDKConfig.WorkingDirectory = "/fake/project"
+
+			token, err := resolveToken(ctx, clients)
+			assert.Empty(t, token)
+			assert.True(t, slackerror.Is(err, tc.expectedErr), "expected %s, got %v", tc.expectedErr, err)
+			assert.Contains(t, err.Error(), tc.expectedMessage)
+			clientsMock.API.AssertNumberOfCalls(t, "DeveloperAppInstall", tc.installCalls)
+		})
+	}
+}
+
+func Test_resolveToken_AppFlag_LocalSlackHostedRuntime(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()
 	clientsMock.Os.AddDefaultMocks()
@@ -550,6 +770,7 @@ func Test_resolveToken_AppFlag_Local(t *testing.T) {
 	manifestMock := clientsMock.AppClient.Manifest.(*app.ManifestMockObject)
 	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
 		AppManifest: types.AppManifest{
+			Settings:    &types.AppSettings{FunctionRuntime: types.SlackHosted},
 			OAuthConfig: &types.OAuthConfig{Scopes: &types.ManifestScopes{Bot: []string{"commands"}}},
 		},
 	}, nil)
@@ -647,6 +868,51 @@ func Test_resolveToken_AppSelection(t *testing.T) {
 	token, err := resolveToken(ctx, clients)
 	assert.NoError(t, err)
 	assert.Equal(t, "xoxb-app-bot-token", token)
+}
+
+func Test_resolveToken_AppSelection_InstallError(t *testing.T) {
+	ctx := slackcontext.MockContext(t.Context())
+	clientsMock := shared.NewClientsMock()
+	clientsMock.Os.AddDefaultMocks()
+	clientsMock.IO.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
+
+	clientsMock.Auth.On("Auths", mock.Anything).Return([]types.SlackAuth{
+		{Token: "xoxp-tooling", TeamID: "T111", TeamDomain: "team-a"},
+	}, nil)
+	clientsMock.Auth.On("SetSelectedAuth", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+
+	appClientMock := &app.AppClientMock{}
+	appClientMock.On("GetDeployedAll", mock.Anything).Return([]types.App{
+		{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"},
+	}, "", nil)
+	appClientMock.On("GetLocalAll", mock.Anything).Return([]types.App{}, nil)
+	appClientMock.On("GetDeployed", mock.Anything, "T111").Return(types.App{AppID: "A111", TeamID: "T111", TeamDomain: "team-a"}, nil)
+	appClientMock.On("GetLocal", mock.Anything, "T111").Return(types.App{}, nil)
+	clientsMock.AppClient.AppClientInterface = appClientMock
+
+	clientsMock.API.On("GetAppStatus", mock.Anything, "xoxp-tooling", []string{"A111"}, "T111").
+		Return(internalapi.GetAppStatusResult{Apps: []internalapi.AppStatusResultAppInfo{{AppID: "A111", Installed: true}}}, nil)
+	clientsMock.API.On("ValidateSession", mock.Anything, "xoxp-tooling").Return(internalapi.AuthSession{}, nil)
+
+	clientsMock.IO.On("SelectPrompt", mock.Anything, "Select an app", mock.Anything, mock.Anything).
+		Return(iostreams.SelectPromptResponse{Index: 0, Prompt: true}, nil)
+
+	manifestMock := clientsMock.AppClient.Manifest.(*app.ManifestMockObject)
+	manifestMock.On("GetManifestLocal", mock.Anything, mock.Anything, mock.Anything).Return(types.SlackYaml{
+		AppManifest: types.AppManifest{
+			OAuthConfig: &types.OAuthConfig{Scopes: &types.ManifestScopes{Bot: []string{"chat:write"}}},
+		},
+	}, nil)
+
+	clientsMock.API.On("DeveloperAppInstall", mock.Anything, mock.Anything, "xoxp-tooling", mock.Anything, []string{"chat:write"}, []string{}, "", false).
+		Return(internalapi.DeveloperAppInstallResult{}, types.InstallState(""), slackerror.New(slackerror.ErrInvalidAppID))
+
+	clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+	clients.SDKConfig.WorkingDirectory = "/fake/project"
+
+	token, err := resolveToken(ctx, clients)
+	assert.Empty(t, token)
+	assert.True(t, slackerror.Is(err, slackerror.ErrInvalidAppID))
 }
 
 func Test_resolveToken_NoTokenFound(t *testing.T) {

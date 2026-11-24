@@ -31,6 +31,9 @@ If no token is available, the request is sent without authentication.
 Use --no-auth to skip authentication entirely and send the request without
 a token.
 
+The response body is always printed. The command exits with an error when the
+HTTP status is outside 2xx or the JSON response has "ok": false.
+
 See all methods at: https://docs.slack.dev/reference/methods
 
 ```

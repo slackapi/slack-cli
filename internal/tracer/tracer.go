@@ -39,7 +39,7 @@ import (
 )
 
 // SetupTracer sets up the tracer to send data to honeycomb with OpenTelemetry
-func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
+func SetupTracer(isDev bool) io.Closer {
 	var collectorEndpoint = "https://slackb.com/traces/v1/otlp"
 	if isDev {
 		collectorEndpoint = "https://dev.slackb.com/traces/v1/otlp"
@@ -60,7 +60,7 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		return provider.Shutdown(ctx)
-	}), bridge
+	})
 }
 
 func newTracerProvider(getenv func(string) string, newExporter func() (sdktrace.SpanExporter, error)) (*sdktrace.TracerProvider, error) {
@@ -171,15 +171,6 @@ func SetTraceHeaders(ctx context.Context, header http.Header) {
 	}
 	b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader)).Inject(ctx, propagation.HeaderCarrier(header))
 	header.Set("x-b3-sampled", "0")
-}
-
-// TraceID returns the trace ID of span, or "" if span has no trace ID.
-func TraceID(span opentracing.Span) string {
-	carrier := opentracing.HTTPHeadersCarrier(http.Header{})
-	if err := span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier); err != nil {
-		return ""
-	}
-	return http.Header(carrier).Get("x-b3-traceid")
 }
 
 var (
