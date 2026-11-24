@@ -266,6 +266,7 @@ const (
 	ErrTooManyCustomizableInputs                     = "too_many_customizable_inputs"
 	ErrTooManyIdsProvided                            = "too_many_ids_provided"
 	ErrTooManyNamedEntities                          = "too_many_named_entities"
+	ErrTosNotAccepted                                = "tos_not_accepted"
 	ErrTriggerCreate                                 = "trigger_create_error"
 	ErrTriggerDelete                                 = "trigger_delete_error"
 	ErrTriggerDoesNotExist                           = "trigger_does_not_exist"
@@ -1635,6 +1636,12 @@ Otherwise create the app on a workspace from app settings, then add it to this p
 	ErrTooManyNamedEntities: {
 		Code:    ErrTooManyNamedEntities,
 		Message: "Too many named entities passed into the trigger permissions setting",
+	},
+
+	ErrTosNotAccepted: {
+		Code:        ErrTosNotAccepted,
+		Message:     "The current terms of service must be accepted to continue",
+		Remediation: fmt.Sprintf("Run %s to review and accept the current terms", style.Commandf("sandbox signup", false)),
 	},
 
 	ErrTriggerCreate: {

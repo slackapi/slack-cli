@@ -23,20 +23,20 @@ import (
 	"net/http"
 	"net/textproto"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/spf13/afero"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // UploadPackageToS3 uploads an archive file to S3, given the provided upload params.
 // TODO: Should be moved out of Client, since it just reuses the httpclient instance directly
 func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID string, uploadParams GenerateS3PresignedPostResult, archiveFilePath string) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.UploadPackageToS3")
-	span.SetTag("app", appID)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.UploadPackageToS3")
+	span.SetAttributes(attribute.String("app", appID))
+	defer span.End()
 
 	extraParams := map[string]string{
 		"X-Amz-Credential":     uploadParams.Fields.AmzCredentials,
@@ -102,9 +102,9 @@ func (c *Client) UploadPackageToS3(ctx context.Context, fs afero.Fs, appID strin
 	}
 	request.Header.Add("User-Agent", useragent.BuildUserAgent(cliVersion))
 
-	var s3span = opentracing.StartSpan("apiclient.UploadPackageToS3.FileUpload", opentracing.ChildOf(span.Context()))
-	s3span.SetTag("app", appID)
-	defer s3span.Finish()
+	_, s3span := tracer.Start(ctx, "apiclient.UploadPackageToS3.FileUpload")
+	s3span.SetAttributes(attribute.String("app", appID))
+	defer s3span.End()
 	uploadresp, err := c.httpClient.Do(request)
 	if err != nil {
 		return fileName, err
