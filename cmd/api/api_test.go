@@ -331,6 +331,128 @@ func Test_runAPICommand_NonOKStatus(t *testing.T) {
 	assert.Contains(t, output, `"ok":false`)
 }
 
+func Test_runAPICommand_OKField(t *testing.T) {
+	tests := map[string]struct {
+		flags         cmdFlags
+		body          string
+		expectedError string
+		expectedOut   []string
+	}{
+		"ok false with error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"invalid_auth"}`,
+			expectedError: "Your user account authorization isn't valid (invalid_auth)",
+			expectedOut:   []string{`{"ok":false,"error":"invalid_auth"}`},
+		},
+		"ok false without error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false}`},
+		},
+		"ok false with --include keeps the headers": {
+			flags:         cmdFlags{method: "POST", include: true},
+			body:          `{"ok":false,"error":"not_authed"}`,
+			expectedError: "(not_authed)",
+			expectedOut:   []string{"HTTP 200", "X-Custom: test-value", `{"ok":false,"error":"not_authed"}`},
+		},
+		"ok false with an unknown error returns the error code": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"some_new_error"}`,
+			expectedError: "(some_new_error)",
+			expectedOut:   []string{`{"ok":false,"error":"some_new_error"}`},
+		},
+		"ok false with an empty error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":""}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false,"error":""}`},
+		},
+		"ok false with a non-string error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":{"code":"invalid_auth"}}`,
+			expectedError: `API request failed with error {"code":"invalid_auth"}`,
+			expectedOut:   []string{`{"ok":false,"error":{"code":"invalid_auth"}}`},
+		},
+		"ok false with a \"null\" string error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"null"}`,
+			expectedError: "(null)",
+			expectedOut:   []string{`{"ok":false,"error":"null"}`},
+		},
+		"ok false with a null error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":null}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false,"error":null}`},
+		},
+		"ok null succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"ok":null}`,
+			expectedOut: []string{`{"ok":null}`},
+		},
+		"uppercase OK key succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"OK":false}`,
+			expectedOut: []string{`{"OK":false}`},
+		},
+		"ok true succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"ok":true,"user_id":"U123"}`,
+			expectedOut: []string{`{"ok":true,"user_id":"U123"}`},
+		},
+		"JSON without ok succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"error":"not_an_ok_field"}`,
+			expectedOut: []string{`{"error":"not_an_ok_field"}`},
+		},
+		"JSON array succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `[{"ok":false}]`,
+			expectedOut: []string{`[{"ok":false}]`},
+		},
+		"non-JSON body succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        "ok=false",
+			expectedOut: []string{"ok=false"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("X-Custom", "test-value")
+				fmt.Fprint(w, tc.body)
+			}))
+			defer server.Close()
+
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.AddDefaultMocks()
+			clientsMock.Config.TokenFlag = "xoxb-test-token"
+			clientsMock.Config.APIHostResolved = server.URL
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			cmd := NewCommand(clients)
+			testutil.MockCmdIO(clients.IO, cmd)
+
+			flags = tc.flags
+			cmd.SetArgs([]string{"auth.test"})
+			err := cmd.ExecuteContext(ctx)
+
+			if tc.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+			output := clientsMock.GetStdoutOutput()
+			for _, expected := range tc.expectedOut {
+				assert.Contains(t, output, expected)
+			}
+		})
+	}
+}
+
 func Test_runAPICommand_InvalidParam(t *testing.T) {
 	ctx := slackcontext.MockContext(t.Context())
 	clientsMock := shared.NewClientsMock()

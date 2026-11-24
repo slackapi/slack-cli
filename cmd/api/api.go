@@ -80,6 +80,9 @@ func NewCommand(clients *shared.ClientFactory) *cobra.Command {
 			"Use --no-auth to skip authentication entirely and send the request without",
 			"a token.",
 			"",
+			"The response body is always printed. The command exits with an error when the",
+			"HTTP status is outside 2xx or the JSON response has \"ok\": false.",
+			"",
 			"See all methods at: https://docs.slack.dev/reference/methods",
 		}, "\n"),
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
@@ -259,7 +262,29 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 			WithMessage("API request failed with status %d", resp.StatusCode)
 	}
 
+	var result map[string]json.RawMessage
+	if json.Unmarshal(resp.Body, &result) == nil {
+		var ok *bool
+		if json.Unmarshal(result["ok"], &ok) == nil && ok != nil && !*ok {
+			return apiResponseError(result["error"], method)
+		}
+	}
+
 	return nil
+}
+
+func apiResponseError(rawError json.RawMessage, method string) error {
+	rawError = bytes.TrimSpace(rawError)
+	var code string
+	if json.Unmarshal(rawError, &code) == nil && code != "" {
+		return slackerror.NewAPIError(code, "", nil, method)
+	}
+	if len(rawError) == 0 || bytes.Equal(rawError, []byte("null")) || bytes.Equal(rawError, []byte(`""`)) {
+		return slackerror.New("api_request_failed").
+			WithMessage("API request failed with \"ok\": false")
+	}
+	return slackerror.New("api_request_failed").
+		WithMessage("API request failed with error %s", rawError)
 }
 
 // parseParams converts key=value arguments into url.Values
