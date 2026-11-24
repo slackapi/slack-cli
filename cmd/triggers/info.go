@@ -17,13 +17,13 @@ package triggers
 import (
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/prompts"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -61,8 +61,8 @@ func NewInfoCommand(clients *shared.ClientFactory) *cobra.Command {
 
 func runInfoCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.info")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.triggers.info")
+	defer span.End()
 
 	// Get the app from the flag or prompt
 	selection, err := infoAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)

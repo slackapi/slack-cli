@@ -21,7 +21,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/hooks"
@@ -30,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
 )
 
@@ -45,8 +45,8 @@ var defaultTriggerFilePathMatchers = [...]string{".*.~\\d?"}
 // trigger definition files that are available in the project. Depending on whether the user chooses to create a trigger
 // or skip the step, the function returns the created trigger.
 func TriggerGenerate(ctx context.Context, clients *shared.ClientFactory, app types.App) (*types.DeployedTrigger, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "cmd.TriggerGenerate")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.TriggerGenerate")
+	defer span.End()
 
 	// FIXME: Stop relying on context getters and setters
 	token := config.GetContextToken(ctx)

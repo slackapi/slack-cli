@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
@@ -28,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -73,8 +73,8 @@ func NewListCommand(clients *shared.ClientFactory) *cobra.Command {
 // runListCommand will execute the list command
 func runListCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.list")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.triggers.list")
+	defer span.End()
 
 	// Get the app selection and accompanying auth from the flag or prompt
 	selection, err := listAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
