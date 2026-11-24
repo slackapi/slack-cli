@@ -23,10 +23,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // RawResponse holds the full HTTP response from a generic API call.
@@ -41,15 +41,14 @@ type RawResponse struct {
 // this does not error on non-200 status codes — it always returns the response body.
 // Retries are still performed for 429/503 with Retry-After headers.
 func (c *Client) RawRequest(ctx context.Context, httpMethod, endpoint, token string, body io.Reader, contentType string, headers map[string]string) (*RawResponse, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "RawRequest")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "RawRequest")
+	defer span.End()
 
 	sURL, err := url.Parse(fmt.Sprintf("%s/api/%s", c.host, endpoint))
 	if err != nil {
 		return nil, err
 	}
-	span.SetTag("request_url", sURL.String())
+	span.SetAttributes(attribute.String("request_url", sURL.String()))
 
 	request, err := http.NewRequest(httpMethod, sURL.String(), body)
 	if err != nil {
@@ -69,7 +68,7 @@ func (c *Client) RawRequest(ctx context.Context, httpMethod, endpoint, token str
 	}
 	request.Header.Set("User-Agent", useragent.BuildUserAgent(cliVersion))
 
-	tracer.SetTraceHeaders(span, request.Header)
+	tracer.SetTraceHeaders(ctx, request.Header)
 
 	for k, v := range headers {
 		request.Header.Set(k, v)
@@ -111,7 +110,7 @@ func (c *Client) RawRequest(ctx context.Context, httpMethod, endpoint, token str
 	defer r.Body.Close()
 
 	c.printResponse(ctx, r, false)
-	span.SetTag("status_code", r.StatusCode)
+	span.SetAttributes(attribute.Int("status_code", r.StatusCode))
 
 	respBody, err := io.ReadAll(r.Body)
 	if err != nil {

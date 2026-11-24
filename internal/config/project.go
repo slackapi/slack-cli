@@ -23,12 +23,12 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cache"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
 )
 
@@ -85,9 +85,8 @@ func NewProjectConfig(fs afero.Fs, os types.Os) *ProjectConfig {
 // InitProjectID will set the project_id in the project-level config when it's unset
 // and then returns the project_id.
 func (c *ProjectConfig) InitProjectID(ctx context.Context, overwriteExistingProjectID bool) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "InitProjectID")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "InitProjectID")
+	defer span.End()
 
 	// Check that current directory is a project
 	if _, err := GetProjectDirPath(c.fs, c.os); err != nil {
@@ -111,9 +110,8 @@ func (c *ProjectConfig) InitProjectID(ctx context.Context, overwriteExistingProj
 
 // GetProjectID reads the project_id from the project-level config file
 func (c *ProjectConfig) GetProjectID(ctx context.Context) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetProjectID")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetProjectID")
+	defer span.End()
 
 	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
@@ -125,9 +123,8 @@ func (c *ProjectConfig) GetProjectID(ctx context.Context) (string, error) {
 
 // SetProjectID sets the project_id to a random UUID string in the project-level config file
 func (c *ProjectConfig) SetProjectID(ctx context.Context, projectID string) (string, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "SetProjectID")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "SetProjectID")
+	defer span.End()
 
 	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
@@ -146,9 +143,8 @@ func (c *ProjectConfig) SetProjectID(ctx context.Context, projectID string) (str
 
 // GetManifestSource finds the manifest source preference for the project
 func (c *ProjectConfig) GetManifestSource(ctx context.Context) (ManifestSource, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetManifestSource")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetManifestSource")
+	defer span.End()
 
 	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
@@ -172,8 +168,8 @@ func (c *ProjectConfig) GetManifestSource(ctx context.Context) (ManifestSource, 
 
 // SetManifestSource saves the manifest source preference for the project
 func SetManifestSource(ctx context.Context, fs afero.Fs, os types.Os, source ManifestSource) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "SetManifestSource")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetManifestSource")
+	defer span.End()
 	projectConfig, err := ReadProjectConfigFile(ctx, fs, os)
 	if err != nil {
 		return err
@@ -191,9 +187,8 @@ func SetManifestSource(ctx context.Context, fs afero.Fs, os types.Os, source Man
 
 // GetSurveyConfig reads the survey for the given survey ID from the project-level config file
 func (c *ProjectConfig) GetSurveyConfig(ctx context.Context, name string) (SurveyConfig, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "GetSurveyConfig")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "GetSurveyConfig")
+	defer span.End()
 
 	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
@@ -210,9 +205,8 @@ func (c *ProjectConfig) GetSurveyConfig(ctx context.Context, name string) (Surve
 
 // SetSurveyConfig writes the survey for the given survey ID from the project-level config file
 func (c *ProjectConfig) SetSurveyConfig(ctx context.Context, name string, surveyConfig SurveyConfig) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetSurveyConfig")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetSurveyConfig")
+	defer span.End()
 
 	var projectConfig, err = ReadProjectConfigFile(ctx, c.fs, c.os)
 	if err != nil {
@@ -234,9 +228,8 @@ func (c *ProjectConfig) SetSurveyConfig(ctx context.Context, name string, survey
 
 // ReadProjectConfigFile reads the project-level config.json file
 func ReadProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os) (ProjectConfig, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "ReadProjectConfigFile")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "ReadProjectConfigFile")
+	defer span.End()
 
 	var projectConfig ProjectConfig
 
@@ -286,9 +279,8 @@ func ReadProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os) (Proje
 
 // WriteProjectConfigFile writes the project-level config.json file
 func WriteProjectConfigFile(ctx context.Context, fs afero.Fs, os types.Os, projectConfig ProjectConfig) (string, error) {
-	var span opentracing.Span
-	span, _ = opentracing.StartSpanFromContext(ctx, "WriteProjectConfigFile")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "WriteProjectConfigFile")
+	defer span.End()
 
 	projectConfigBytes, err := json.MarshalIndent(projectConfig, "", "  ")
 	if err != nil {

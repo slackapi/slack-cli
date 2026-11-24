@@ -20,7 +20,6 @@ import (
 	"net/mail"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -29,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -56,9 +56,8 @@ func NewRemoveCommand(clients *shared.ClientFactory) *cobra.Command {
 
 // runRemoveCommandFunc removes a user as an app collaborator from an app
 func runRemoveCommandFunc(ctx context.Context, clients *shared.ClientFactory, cmd *cobra.Command, args []string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "cmd.Collaborators.Remove")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.Collaborators.Remove")
+	defer span.End()
 	selection, err := appSelectPromptFunc(ctx, clients, prompts.ShowHostedOnly, prompts.ShowInstalledAndUninstalledApps)
 	if err != nil {
 		return err
