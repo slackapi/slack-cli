@@ -20,11 +20,11 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -49,9 +49,8 @@ type FunctionDistributionListResponse struct {
 
 // FunctionDistributionList returns the distribution type. If type is 'named_entities', the IDs of entities that have access are also returned.
 func (c *Client) FunctionDistributionList(ctx context.Context, callbackID, appID string) (types.Permission, []types.FunctionDistributionUser, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.FunctionDistributionList")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.FunctionDistributionList")
+	defer span.End()
 
 	token := config.GetContextToken(ctx)
 
@@ -99,9 +98,8 @@ type FunctionDistributionSetResponse struct {
 // FunctionDistributionSet sets the distribution type for the given function.
 // One can also pass in a list of users to assign access to if distribution type is named_entities.
 func (c *Client) FunctionDistributionSet(ctx context.Context, callbackID, appID string, distributionType types.Permission, users string) ([]types.FunctionDistributionUser, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.TypeFunctionAccess")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.TypeFunctionAccess")
+	defer span.End()
 
 	token := config.GetContextToken(ctx)
 
@@ -144,9 +142,8 @@ type FunctionDistributionAddUsersResponse struct {
 // FunctionDistributionAddUsers adds the given entities to the access list for functions with distribution type 'named_entities'.
 func (c *Client) FunctionDistributionAddUsers(ctx context.Context, callbackID, appID, users string) error {
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.FunctionDistributionAddUsers")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.FunctionDistributionAddUsers")
+	defer span.End()
 
 	token := config.GetContextToken(ctx)
 
@@ -186,9 +183,8 @@ type FunctionDistributionRemoveUsersResponse struct {
 // FunctionDistributionRemoveUsers removes the given entities from the access list for functions with distribution type 'named_entities'.
 func (c *Client) FunctionDistributionRemoveUsers(ctx context.Context, callbackID, appID, users string) error {
 
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.FunctionDistributionRemoveUsers")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.FunctionDistributionRemoveUsers")
+	defer span.End()
 
 	token := config.GetContextToken(ctx)
 

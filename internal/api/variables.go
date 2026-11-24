@@ -18,10 +18,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -38,9 +38,8 @@ type VariablesClient interface {
 
 // AddVariables adds/updates one or more environment variables
 func (c *Client) AddVariable(ctx context.Context, token, appID, name, value string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AddVariable")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AddVariable")
+	defer span.End()
 
 	args := struct {
 		AppID     string              `json:"app_id"`
@@ -81,9 +80,8 @@ type listVariablesResponse struct {
 
 // ListVariables adds/updates an environment variable
 func (c *Client) ListVariables(ctx context.Context, token, appID string) ([]string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListVariables")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.ListVariables")
+	defer span.End()
 
 	args := struct {
 		AppID string `json:"app_id"`
@@ -117,9 +115,8 @@ func (c *Client) ListVariables(ctx context.Context, token, appID string) ([]stri
 
 // RemoveVariable  removes an environment variable
 func (c *Client) RemoveVariable(ctx context.Context, token string, appID string, variableName string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.RemoveVariable")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.RemoveVariable")
+	defer span.End()
 
 	args := struct {
 		AppID          string   `json:"app_id"`

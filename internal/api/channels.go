@@ -18,10 +18,10 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -39,9 +39,8 @@ type ChannelInfoResponse struct {
 
 // ChannelInfo returns information about the channel such as channel name
 func (c *Client) ChannelsInfo(ctx context.Context, token, channelID string) (*types.ChannelInfo, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.channelsInfo")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.channelsInfo")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)

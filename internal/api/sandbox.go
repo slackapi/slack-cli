@@ -52,12 +52,26 @@ type SignupRequest struct {
 	PostalCode             string
 	CountryOption          string
 	NewsletterSubscription bool
-	AcceptTermsOfService   bool
+	// AcceptTermsOfServiceVersion is the version of the terms of service the user has agreed to.
+	// If empty, signup relies on terms the user already accepted. When the current terms haven't
+	// been accepted, a tos_not_accepted error is returned with the current version.
+	AcceptTermsOfServiceVersion string
 }
 
 // SignupResponse contains the response from Developer Program signup
 type SignupResponse struct {
 	DeveloperID string `json:"developer_id"`
+	// TermsOfServiceVersion is the current version of the terms, returned with a tos_not_accepted error.
+	// Retry with this value as accept_tos_version to accept the terms.
+	TermsOfServiceVersion string `json:"tos_version,omitempty"`
+	// TermsAndPolicies lists the terms and policies to accept, returned with a tos_not_accepted error
+	TermsAndPolicies TermsAndPolicies `json:"terms_and_policies,omitempty"`
+}
+
+// TermsAndPolicies are the terms and policies that are accepted with the terms of service
+type TermsAndPolicies []struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
 }
 
 // SandboxClient is the interface for sandbox-related API calls
@@ -233,6 +247,10 @@ type signupAPIResponse struct {
 
 // Signup signs the authenticated user up for the Slack Developer Program.
 // The email address of the developer account is derived from the token, so no email verification is needed.
+//
+// When the current terms of service haven't been accepted, or the version in the request doesn't
+// match the current terms, a tos_not_accepted error is returned alongside a response with the
+// current terms of service so these can be shown before retrying with the accepted version.
 func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error) {
 	ctx, span := tracer.Start(ctx, "apiclient.Signup")
 	defer span.End()
@@ -251,11 +269,11 @@ func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*
 		values.Add("newsletter_subscription", "true")
 	}
 
-	// Setting this parameter to true indicates the user has agreed to the terms and acknowledges the privacy policies:
-	// - Developer Program Agreement: https://slack.com/terms-of-service/slack-developer-program
-	// - Slack Privacy Policy: https://slack.com/trust/privacy/privacy-policy
-	// - Salesforce Privacy Statement: https://www.salesforce.com/company/privacy/
-	values.Add("accept_tos", strconv.FormatBool(req.AcceptTermsOfService))
+	// Setting this parameter indicates the user has agreed to this version of the terms of service.
+	// The parameter is omitted to rely on terms that were accepted before, if any.
+	if req.AcceptTermsOfServiceVersion != "" {
+		values.Add("accept_tos_version", req.AcceptTermsOfServiceVersion)
+	}
 
 	b, err := c.postForm(ctx, sandboxSignupVerifiedMethod, values)
 	if err != nil {
@@ -269,7 +287,11 @@ func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*
 	}
 
 	if !resp.Ok {
-		return nil, slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxSignupVerifiedMethod)
+		apiErr := slackerror.NewAPIError(resp.Error, resp.Description, resp.Errors, sandboxSignupVerifiedMethod)
+		if resp.Error == slackerror.ErrTosNotAccepted {
+			return &resp.SignupResponse, apiErr
+		}
+		return nil, apiErr
 	}
 
 	return &resp.SignupResponse, nil
