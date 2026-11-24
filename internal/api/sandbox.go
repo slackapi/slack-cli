@@ -19,10 +19,10 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -102,9 +102,8 @@ type listSandboxesResponse struct {
 
 // CreateSandbox creates a new developer sandbox
 func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, password, locale, owningOrgID string, templateID int, eventCode string, archiveDate int64, isPartner, useEmailLogin bool) (teamID, sandboxURL string, err error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.CreateSandbox")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.CreateSandbox")
+	defer span.End()
 
 	values := url.Values{}
 	values.Add("token", token)
@@ -156,9 +155,8 @@ func (c *Client) CreateSandbox(ctx context.Context, token, name, domain, passwor
 
 // DeleteSandbox permanently deletes a developer sandbox
 func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.DeleteSandbox")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.DeleteSandbox")
+	defer span.End()
 
 	values := url.Values{}
 	values.Add("token", token)
@@ -184,9 +182,8 @@ func (c *Client) DeleteSandbox(ctx context.Context, token, sandboxID string) err
 
 // ListSandboxes returns all sandboxes owned by the Developer Account with an email address that matches the authenticated user
 func (c *Client) ListSandboxes(ctx context.Context, token string, status string) ([]types.Sandbox, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.ListSandboxes")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.ListSandboxes")
+	defer span.End()
 
 	values := url.Values{}
 	values.Add("token", token)
@@ -218,9 +215,8 @@ func (c *Client) ListSandboxes(ctx context.Context, token string, status string)
 
 // SandboxLogin returns access and refresh tokens for a sandbox owned by the caller
 func (c *Client) SandboxLogin(ctx context.Context, token, sandboxTeamID string) (*SandboxLoginResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.SandboxLogin")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.SandboxLogin")
+	defer span.End()
 
 	values := url.Values{}
 	values.Add("token", token)
@@ -256,9 +252,8 @@ type signupAPIResponse struct {
 // match the current terms, a tos_not_accepted error is returned alongside a response with the
 // current terms of service so these can be shown before retrying with the accepted version.
 func (c *Client) Signup(ctx context.Context, token string, req SignupRequest) (*SignupResponse, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.Signup")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.Signup")
+	defer span.End()
 
 	values := url.Values{}
 	values.Add("token", token)

@@ -18,10 +18,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // For easy mocking
@@ -69,9 +69,8 @@ type appsAuthExternalSelectAuthResponse struct {
 }
 
 func (c *Client) AppsAuthExternalStart(ctx context.Context, token, appID, providerKey string) (string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalStart")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsAuthExternalStart")
+	defer span.End()
 
 	args := struct {
 		AppID       string `json:"app_id,omitempty"`
@@ -105,9 +104,8 @@ func (c *Client) AppsAuthExternalStart(ctx context.Context, token, appID, provid
 }
 
 func (c *Client) AppsAuthExternalDelete(ctx context.Context, token, appID, providerKey string, externalTokenID string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalDelete")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsAuthExternalDelete")
+	defer span.End()
 
 	var body []byte
 	var err error
@@ -159,9 +157,8 @@ func (c *Client) AppsAuthExternalDelete(ctx context.Context, token, appID, provi
 }
 
 func (c *Client) AppsAuthExternalClientSecretAdd(ctx context.Context, token, appID, providerKey string, clientSecret string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalClientSecretAdd")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsAuthExternalClientSecretAdd")
+	defer span.End()
 
 	var body []byte
 	var err error
@@ -204,9 +201,8 @@ func (c *Client) AppsAuthExternalClientSecretAdd(ctx context.Context, token, app
 // The boolean flag include_workflows can be used to get the workflow related information when needed.
 
 func (c *Client) AppsAuthExternalList(ctx context.Context, token, appID string, includeWorkflows bool) (types.ExternalAuthorizationInfoLists, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalList")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsAuthExternalList")
+	defer span.End()
 
 	args := struct {
 		AppID            string `json:"app_id"`
@@ -240,9 +236,8 @@ func (c *Client) AppsAuthExternalList(ctx context.Context, token, appID string, 
 }
 
 func (c *Client) AppsAuthExternalSelectAuth(ctx context.Context, token, appID, providerKey, workflowID, externalTokenID string) error {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsAuthExternalSelectAuth")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsAuthExternalSelectAuth")
+	defer span.End()
 
 	var body []byte
 	var err error
