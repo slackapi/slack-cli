@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	internalapp "github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
@@ -28,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -74,8 +74,8 @@ func NewUpdateCommand(clients *shared.ClientFactory) *cobra.Command {
 
 func runUpdateCommand(clients *shared.ClientFactory, cmd *cobra.Command) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.update")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.triggers.update")
+	defer span.End()
 
 	// Get the app selection and accompanying auth from the flag or prompt
 	selection, err := updateAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
