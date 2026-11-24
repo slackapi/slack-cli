@@ -17,7 +17,7 @@ package config
 import (
 	"strings"
 
-	"github.com/slackapi/slack-cli/internal/version"
+	"github.com/slackapi/slack-cli/internal/telemetry"
 )
 
 // LoadEnvironmentVariables sets flags based on their environment variable value
@@ -57,10 +57,7 @@ func (c *Config) LoadEnvironmentVariables() error {
 		c.AppIconPathFlag = appIconPath
 	}
 
-	// Disable telemetry if either disable-telemetry or test-version environment variables
-	var disableTelemetry = strings.TrimSpace(c.os.Getenv(slackDisableTelemetryEnv))
-	var testVersion = strings.TrimSpace(c.os.Getenv(version.EnvTestVersion))
-	if (disableTelemetry != "" && disableTelemetry != "false" && disableTelemetry != "0") || testVersion != "" {
+	if telemetry.Disabled(c.os.Getenv) {
 		c.DisableTelemetryFlag = true
 	}
 
