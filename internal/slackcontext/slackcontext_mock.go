@@ -27,7 +27,7 @@ const (
 // MockContext sets values in the context that are guaranteed to exist before
 // the Cobra root command is executed.
 func MockContext(ctx context.Context) context.Context {
-	ctx = SetOpenTracingTraceID(ctx, uuid.New().String())
+	ctx = SetTraceID(ctx, uuid.New().String())
 	ctx = SetSessionID(ctx, uuid.New().String())
 	ctx = SetVersion(ctx, mockCLIVersion)
 	return ctx

@@ -63,7 +63,7 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 	// Added line break for each session
 	logger.Println("------------------------------------")
 
-	traceID, err := slackcontext.OpenTracingTraceID(ctx)
+	traceID, err := slackcontext.TraceID(ctx)
 	if err != nil {
 		return err
 	}
