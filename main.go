@@ -43,7 +43,7 @@ func main() {
 	//      - This would allow us to choose the correct API host based on flags
 	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveAPIHost`
 	// var isDevTarget = shared.NewClientFactory().AuthClient().UserDefaultAuthIsProd(ctx) // TODO - hack, remove shared.clients
-	var traceCloser, _ = tracer.SetupTracer(false) // Always setup tracing on prod
+	traceCloser := tracer.SetupTracer(false) // Always setup tracing on prod
 
 	// Set context values
 	sessionID := uuid.New().String()

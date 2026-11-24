@@ -37,7 +37,7 @@ import (
 )
 
 // SetupTracer sets up the tracer to send data to honeycomb with OpenTelemetry
-func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
+func SetupTracer(isDev bool) io.Closer {
 	var collectorEndpoint = "https://slackb.com/traces/v1/otlp"
 	if isDev {
 		collectorEndpoint = "https://dev.slackb.com/traces/v1/otlp"
@@ -57,7 +57,7 @@ func SetupTracer(isDev bool) (io.Closer, opentracing.Tracer) {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 		return provider.Shutdown(ctx)
-	}), bridge
+	})
 }
 
 // exporterOptions sets every value that OTEL_EXPORTER_OTLP_* environment
