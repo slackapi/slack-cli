@@ -355,6 +355,23 @@ func Test_runAPICommand_OKField(t *testing.T) {
 			expectedError: `API request failed with error "not_authed"`,
 			expectedOut:   []string{"HTTP 200", `{"ok":false,"error":"not_authed"}`},
 		},
+		"ok false with a non-string error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":{"code":"invalid_auth"}}`,
+			expectedError: `API request failed with error "{\"code\":\"invalid_auth\"}"`,
+			expectedOut:   []string{`{"ok":false,"error":{"code":"invalid_auth"}}`},
+		},
+		"ok false with a null error returns an error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":null}`,
+			expectedError: `API request failed with "ok": false`,
+			expectedOut:   []string{`{"ok":false,"error":null}`},
+		},
+		"uppercase OK key succeeds": {
+			flags:       cmdFlags{method: "POST"},
+			body:        `{"OK":false}`,
+			expectedOut: []string{`{"OK":false}`},
+		},
 		"ok true succeeds": {
 			flags:       cmdFlags{method: "POST"},
 			body:        `{"ok":true,"user_id":"U123"}`,
