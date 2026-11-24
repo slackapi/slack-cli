@@ -361,6 +361,12 @@ func Test_runAPICommand_OKField(t *testing.T) {
 			expectedError: `API request failed with error "{\"code\":\"invalid_auth\"}"`,
 			expectedOut:   []string{`{"ok":false,"error":{"code":"invalid_auth"}}`},
 		},
+		"ok false with a \"null\" string error returns the error": {
+			flags:         cmdFlags{method: "POST"},
+			body:          `{"ok":false,"error":"null"}`,
+			expectedError: `API request failed with error "null"`,
+			expectedOut:   []string{`{"ok":false,"error":"null"}`},
+		},
 		"ok false with a null error returns an error": {
 			flags:         cmdFlags{method: "POST"},
 			body:          `{"ok":false,"error":null}`,

@@ -278,10 +278,11 @@ func runAPICommand(cmd *cobra.Command, clients *shared.ClientFactory, args []str
 // apiResponseError returns the error for a response with "ok": false
 func apiResponseError(rawError json.RawMessage) error {
 	var message string
-	if json.Unmarshal(rawError, &message) != nil {
-		message = string(bytes.TrimSpace(rawError))
+	rawError = bytes.TrimSpace(rawError)
+	if len(rawError) > 0 && !bytes.Equal(rawError, []byte("null")) && json.Unmarshal(rawError, &message) != nil {
+		message = string(rawError)
 	}
-	if message == "" || message == "null" {
+	if message == "" {
 		return slackerror.New("api_request_failed").
 			WithMessage("API request failed with \"ok\": false")
 	}
