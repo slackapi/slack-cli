@@ -19,7 +19,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -30,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -55,8 +55,8 @@ func NewValidateCommand(clients *shared.ClientFactory) *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
-			var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.manifest.validate")
-			defer span.Finish()
+			_, span := tracer.Start(ctx, "cmd.manifest.validate")
+			defer span.End()
 
 			// Get the app selection and accompanying auth of an installed app or gather
 			// some other authentication token
