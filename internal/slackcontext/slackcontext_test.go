@@ -44,49 +44,6 @@ func Test_SlackContext_SetOpenTracingSpan(t *testing.T) {
 	}
 }
 
-func Test_SlackContext_OpenTracingTraceID(t *testing.T) {
-	tests := map[string]struct {
-		expectedTraceID string
-		expectedError   error
-	}{
-		"returns Trace ID when it exists": {
-			expectedTraceID: uuid.New().String(),
-			expectedError:   nil,
-		},
-		"returns error when Trace ID not found": {
-			expectedTraceID: "",
-			expectedError:   slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for OpenTracing Trace ID could not be found"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = context.WithValue(ctx, contextKeyOpenTracingTraceID, tc.expectedTraceID)
-			actualTraceID, actualError := OpenTracingTraceID(ctx)
-			require.Equal(t, tc.expectedTraceID, actualTraceID)
-			require.Equal(t, tc.expectedError, actualError)
-		})
-	}
-}
-
-func Test_SlackContext_SetOpenTracingTraceID(t *testing.T) {
-	tests := map[string]struct {
-		expectedTraceID string
-	}{
-		"sets the Trace ID in the context": {
-			expectedTraceID: uuid.New().String(),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			ctx := t.Context()
-			ctx = SetOpenTracingTraceID(ctx, tc.expectedTraceID)
-			actualTraceID := ctx.Value(contextKeyOpenTracingTraceID).(string)
-			require.Equal(t, tc.expectedTraceID, actualTraceID)
-		})
-	}
-}
-
 func Test_SlackContext_SetOpenTracingTracer(t *testing.T) {
 	_, _tracer := tracer.SetupTracer(true)
 
@@ -182,6 +139,49 @@ func Test_SlackContext_SetSystemID(t *testing.T) {
 			ctx = SetSystemID(ctx, tc.expectedSystemID)
 			actualSystemID := ctx.Value(contextKeySystemID).(string)
 			require.Equal(t, tc.expectedSystemID, actualSystemID)
+		})
+	}
+}
+
+func Test_SlackContext_TraceID(t *testing.T) {
+	tests := map[string]struct {
+		expectedTraceID string
+		expectedError   error
+	}{
+		"returns Trace ID when it exists": {
+			expectedTraceID: uuid.New().String(),
+			expectedError:   nil,
+		},
+		"returns error when Trace ID not found": {
+			expectedTraceID: "",
+			expectedError:   slackerror.New(slackerror.ErrContextValueNotFound).WithMessage("The value for Trace ID could not be found"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := t.Context()
+			ctx = context.WithValue(ctx, contextKeyTraceID, tc.expectedTraceID)
+			actualTraceID, actualError := TraceID(ctx)
+			require.Equal(t, tc.expectedTraceID, actualTraceID)
+			require.Equal(t, tc.expectedError, actualError)
+		})
+	}
+}
+
+func Test_SlackContext_SetTraceID(t *testing.T) {
+	tests := map[string]struct {
+		expectedTraceID string
+	}{
+		"sets the Trace ID in the context": {
+			expectedTraceID: uuid.New().String(),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := t.Context()
+			ctx = SetTraceID(ctx, tc.expectedTraceID)
+			actualTraceID := ctx.Value(contextKeyTraceID).(string)
+			require.Equal(t, tc.expectedTraceID, actualTraceID)
 		})
 	}
 }

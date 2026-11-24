@@ -19,18 +19,18 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // List returns a list of the apps (only includes dev apps if there is a valid session)
 func List(ctx context.Context, clients *shared.ClientFactory) ([]types.App, string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.list")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pkg.apps.list")
+	defer span.End()
 
 	// List all deployed apps
 	apps, defaultEnvName, err := clients.AppClient().GetDeployedAll(ctx)

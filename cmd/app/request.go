@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/prompts"
@@ -29,6 +28,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 )
 
@@ -106,8 +106,8 @@ func NewRequestCommand(clients *shared.ClientFactory) *cobra.Command {
 // runRequestCommand will execute the request command
 func runRequestCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	span, ctx := opentracing.StartSpanFromContext(ctx, "cmd.app.request")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "cmd.app.request")
+	defer span.End()
 
 	appID, auth, err := requestAppSelection(ctx, clients)
 	if err != nil {

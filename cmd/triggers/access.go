@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/cmdutil"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/goutils"
@@ -30,6 +29,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slacktrace"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/text/cases"
@@ -98,8 +98,8 @@ func NewAccessCommand(clients *shared.ClientFactory) *cobra.Command {
 // runAccessCommand will execute the access command
 func runAccessCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
-	var span, _ = opentracing.StartSpanFromContext(ctx, "cmd.triggers.access")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "cmd.triggers.access")
+	defer span.End()
 
 	// Get the app selection and accompanying auth from the flag or prompt
 	selection, err := accessAppSelectPromptFunc(ctx, clients, prompts.ShowAllEnvironments, prompts.ShowInstalledAppsOnly)
