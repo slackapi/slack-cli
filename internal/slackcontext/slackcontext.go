@@ -39,11 +39,11 @@ import (
 type contextKey int
 
 const (
-	contextKeyOpenTracingTraceID contextKey = iota
-	contextKeyOpenTracingTracer
+	contextKeyOpenTracingTracer contextKey = iota
 	contextKeyProjectID
 	contextKeySessionID
 	contextKeySystemID
+	contextKeyTraceID
 	contextKeyVersion
 )
 
@@ -51,24 +51,6 @@ const (
 // the span. If span is nil, a new context without an active span is returned.
 func SetOpenTracingSpan(ctx context.Context, span opentracing.Span) context.Context {
 	ctx = opentracing.ContextWithSpan(ctx, span)
-	return ctx
-}
-
-// OpenTracingTraceID returns the trace ID associated with `ctx`, or
-// `""` and `slackerror.ErrContextValueNotFound` if no trace ID could be found.
-func OpenTracingTraceID(ctx context.Context) (string, error) {
-	traceID, ok := ctx.Value(contextKeyOpenTracingTraceID).(string)
-	if !ok || traceID == "" {
-		return "", slackerror.New(slackerror.ErrContextValueNotFound).
-			WithMessage("The value for OpenTracing Trace ID could not be found")
-	}
-	return traceID, nil
-}
-
-// SetOpenTracingTraceID returns a new `context.Context` that holds a reference to
-// the `traceID`.
-func SetOpenTracingTraceID(ctx context.Context, traceID string) context.Context {
-	ctx = context.WithValue(ctx, contextKeyOpenTracingTraceID, traceID)
 	return ctx
 }
 
@@ -124,6 +106,20 @@ func SetSystemID(ctx context.Context, systemID string) context.Context {
 		ctx = opentracing.ContextWithSpan(ctx, span)
 	}
 
+	return ctx
+}
+
+func TraceID(ctx context.Context) (string, error) {
+	traceID, ok := ctx.Value(contextKeyTraceID).(string)
+	if !ok || traceID == "" {
+		return "", slackerror.New(slackerror.ErrContextValueNotFound).
+			WithMessage("The value for Trace ID could not be found")
+	}
+	return traceID, nil
+}
+
+func SetTraceID(ctx context.Context, traceID string) context.Context {
+	ctx = context.WithValue(ctx, contextKeyTraceID, traceID)
 	return ctx
 }
 

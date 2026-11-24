@@ -282,7 +282,7 @@ func promptDatastoreQueryRequest(
 	}
 
 	if len(attributes) > 0 {
-		query.ExpressionAttributes = make(map[string]interface{})
+		query.ExpressionAttributes = make(map[string]any)
 	}
 
 	// Prompt for individual attribute selections or gather from the flag
@@ -312,7 +312,7 @@ func promptDatastoreQueryRequest(
 	}
 
 	if len(values) > 0 {
-		query.ExpressionValues = make(map[string]interface{})
+		query.ExpressionValues = make(map[string]any)
 	}
 	for _, value := range values {
 		field := strings.TrimPrefix(value, ":")
@@ -330,8 +330,8 @@ func promptDatastoreQueryRequest(
 }
 
 // mapAttributeFlag converts a flag value into attributes for a query
-func mapAttributeFlag(flag string) (map[string]interface{}, error) {
-	var attributes map[string]interface{}
+func mapAttributeFlag(flag string) (map[string]any, error) {
+	var attributes map[string]any
 	if err := json.Unmarshal([]byte(flag), &attributes); err != nil {
 		return attributes, err
 	}

@@ -17,18 +17,18 @@ package apps
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 // Uninstall will uninstall the app that belongs to the teamDomain from the backend.
 // It will not modify the local project files (apps.json).
 func Uninstall(ctx context.Context, clients *shared.ClientFactory, teamDomain string, app types.App, auth types.SlackAuth) (types.App, string, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "pkg.apps.uninstall")
-	defer span.Finish()
+	_, span := tracer.Start(ctx, "pkg.apps.uninstall")
+	defer span.End()
 
 	// Set selected team as the current team domain
 	clients.Config.TeamFlag = teamDomain
