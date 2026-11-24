@@ -27,26 +27,29 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 // Links to the terms and policies accepted when signing up for the Developer Program
 const (
 	developerProgramAgreementURL  = "https://slack.com/terms-of-service/slack-developer-program"
+	slackAPITermsOfServiceURL     = "https://slack.com/terms-of-service/api"
 	slackPrivacyPolicyURL         = "https://slack.com/trust/privacy/privacy-policy"
-	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/privacy/"
+	salesforcePrivacyStatementURL = "https://www.salesforce.com/company/legal/privacy/"
 )
 
-// developerProfileSettingsURL is where developers can view or update their user data for their Developer Program profile
+// developerProfileSettingsURL is where developers can view or update their user data for their developer program profile
 const developerProfileSettingsURL = "https://api.slack.com/developer-program/settings/profile"
 
+// developerProgramTermsOfServiceVersion is the current version of the terms of service links
+const developerProgramTermsOfServiceVersion = "may2024"
+
 type signupFlags struct {
-	firstName              string
-	lastName               string
-	postalCode             string
-	countryOption          string
-	newsletterSubscription bool
-	acceptTermsOfService   bool
+	firstName                   string
+	lastName                    string
+	postalCode                  string
+	countryOption               string
+	newsletterSubscription      bool
+	acceptTermsOfServiceVersion string
 }
 
 var signupCmdFlags signupFlags
@@ -57,14 +60,13 @@ func NewSignupCommand(clients *shared.ClientFactory) *cobra.Command {
 		Short: "Sign up for the Slack Developer Program",
 		Long: `Sign up for the Slack Developer Program!
 
-The developer program gives you access to sandbox environments for building
+The Developer Program gives you access to sandbox environments for building
 and testing Slack apps isolated from your production workspace.
 
 Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 		Example: style.ExampleCommandsf([]style.ExampleCommand{
 			{Command: "sandbox signup", Meaning: "Sign up for the Developer Program"},
-			{Command: "sandbox signup --first-name Anna --last-name Banana --postal-code 94105 --country US", Meaning: "Sign up with the provided user details"},
-			{Command: "sandbox signup --team T0123456 --accept-tos", Meaning: "Sign up, authenticated as your user on the given team, accept the terms of service and acknowledge the privacy policies"},
+			{Command: "sandbox signup --team T0123456 --postal-code 90210 --country US --newsletter", Meaning: "Sign up, authenticated as your user on the given team with the provided details"},
 		}),
 		Args:   cobra.NoArgs,
 		Hidden: true,
@@ -88,62 +90,54 @@ Learn more at {{LinkText "https://api.slack.com/developer-program"}}`,
 	cmd.Flags().StringVar(&signupCmdFlags.postalCode, "postal-code", "", "Your postal code")
 	cmd.Flags().StringVar(&signupCmdFlags.countryOption, "country", "", "Your country (ISO 3166-1 alpha-2 format, e.g. US)")
 	cmd.Flags().BoolVar(&signupCmdFlags.newsletterSubscription, "newsletter", false, "Subscribe to the developer newsletter")
-	cmd.Flags().BoolVar(&signupCmdFlags.acceptTermsOfService, "accept-tos", false, acceptTermsOfServiceUsage())
+	cmd.Flags().StringVar(&signupCmdFlags.acceptTermsOfServiceVersion, "accept-terms", "", acceptTermsFlagDetails())
+	cmd.Flag("accept-terms").NoOptDefVal = developerProgramTermsOfServiceVersion
 
 	// Rebuild the flag usage when help is shown so the links are styled once styles are toggled
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		style.ToggleStyles(clients.IO.IsTTY() && !clients.Config.NoColor)
-		cmd.Flag("accept-tos").Usage = acceptTermsOfServiceUsage()
+		cmd.Flag("accept-terms").Usage = acceptTermsFlagDetails()
 		cmd.Parent().HelpFunc()(cmd, args)
 	})
 
 	return cmd
 }
 
-// acceptTermsOfServiceUsage returns the usage text for the --accept-tos flag
-func acceptTermsOfServiceUsage() string {
-	return "Confirm agreement to the Slack Developer Program Agreement\n" +
+// acceptTermsFlagDetails returns the usage text for the --accept-terms flag
+func acceptTermsFlagDetails() string {
+	return "Agree to the terms and acknowledge the privacy policies:\n" +
 		"  " + style.LinkText(developerProgramAgreementURL) + "\n" +
-		"  and acknowledge the Slack Privacy Policy\n" +
+		"  " + style.LinkText(slackAPITermsOfServiceURL) + "\n" +
 		"  " + style.LinkText(slackPrivacyPolicyURL) + "\n" +
-		"  and Salesforce Privacy Statement.\n" +
-		"  " + style.LinkText(salesforcePrivacyStatementURL) + "\n" +
-		"  Pass this flag or confirm via the interactive prompt."
+		"  " + style.LinkText(salesforcePrivacyStatementURL) + "\n"
 }
 
-// termsOfServiceLinks returns a bulleted list of the terms and policies accepted at signup
-func termsOfServiceLinks() []string {
-	return []string{
-		fmt.Sprintf("• Developer Program Agreement: %s", style.LinkText(developerProgramAgreementURL)),
-		fmt.Sprintf("• Slack Privacy Policy: %s", style.LinkText(slackPrivacyPolicyURL)),
-		fmt.Sprintf("• Salesforce Privacy Statement: %s", style.LinkText(salesforcePrivacyStatementURL)),
+// knownTermsAndPolicies are the terms and policies of developerProgramTermsOfServiceVersion.
+var knownTermsAndPolicies = api.TermsAndPolicies{
+	{Name: "Developer Program Agreement", URL: developerProgramAgreementURL},
+	{Name: "Slack API Terms of Service", URL: slackAPITermsOfServiceURL},
+	{Name: "Slack Privacy Policy", URL: slackPrivacyPolicyURL},
+	{Name: "Salesforce Privacy Statement", URL: salesforcePrivacyStatementURL},
+}
+
+// formatAPILinks returns a bulleted list of the terms and policies returned by the signup API response
+func formatAPILinks(policies api.TermsAndPolicies) []string {
+	links := make([]string, 0, len(policies))
+	for _, policy := range policies {
+		links = append(links, fmt.Sprintf("• %s: %s", policy.Name, style.LinkText(policy.URL)))
 	}
+	return links
 }
 
 func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	ctx := cmd.Context()
 
-	// The --force flag skips prompts but never accepts the terms on its own
-	if clients.Config.ForceFlag && !signupCmdFlags.acceptTermsOfService {
-		return slackerror.New(slackerror.ErrMissingFlag).
-			WithMessage("The terms of service must be accepted to sign up for the Developer Program").
-			WithRemediation("Include the %s flag to agree to the following terms and acknowledge the privacy policies:\n%s",
-				style.Highlight("--accept-tos"),
-				strings.Join(termsOfServiceLinks(), "\n"),
-			)
-	}
+	// The flag defaults to developerProgramTermsOfServiceVersion but can be overridden by passing another value.
+	acceptTermsFlag := strings.TrimSpace(signupCmdFlags.acceptTermsOfServiceVersion)
 
 	auth, profile, err := selectAuthForSignup(ctx, clients)
 	if err != nil {
 		return err
-	}
-
-	// Always show the terms, but only prompt for acceptance if the --accept-tos flag is not set
-	printTermsOfService(ctx, clients)
-	if !signupCmdFlags.acceptTermsOfService {
-		if err := promptTermsAcceptance(ctx, clients, cmd.Flag("accept-tos")); err != nil {
-			return err
-		}
 	}
 
 	email := prefillUserInfoFromAuth(ctx, clients, auth, profile, &signupCmdFlags)
@@ -155,26 +149,45 @@ func runSignupCommand(cmd *cobra.Command, clients *shared.ClientFactory) error {
 	info.email = email
 
 	req := api.SignupRequest{
-		FirstName:              info.firstName,
-		LastName:               info.lastName,
-		PostalCode:             info.postalCode,
-		CountryOption:          info.countryOption,
-		NewsletterSubscription: signupCmdFlags.newsletterSubscription,
-		AcceptTermsOfService:   true, // Terms were accepted via the --accept-tos flag or prompt
+		FirstName:                   info.firstName,
+		LastName:                    info.lastName,
+		PostalCode:                  info.postalCode,
+		CountryOption:               info.countryOption,
+		NewsletterSubscription:      signupCmdFlags.newsletterSubscription,
+		AcceptTermsOfServiceVersion: acceptTermsFlag,
 	}
 
 	printSignupDetails(ctx, clients, info, signupCmdFlags.newsletterSubscription)
 
-	_, err = apiClientForAuth(clients, auth).Signup(ctx, auth.Token, req)
+	apiClient := apiClientForAuth(clients, auth)
+
+	// Most users will have accepted the terms at login.
+	// If one has not, the API errors with tos_not_accepted and the terms version param must be sent in the request.
+	resp, err := apiClient.Signup(ctx, auth.Token, req)
+	termsShown := false
+	if err != nil && slackerror.Is(err, slackerror.ErrTosNotAccepted) {
+		version, termsErr := promptAcceptTerms(ctx, clients, resp.TermsOfServiceVersion, resp.TermsAndPolicies, acceptTermsFlag)
+		if termsErr != nil {
+			return termsErr
+		}
+		termsShown = true
+		req.AcceptTermsOfServiceVersion = version
+		_, err = apiClient.Signup(ctx, auth.Token, req)
+	}
 	if err != nil {
 		return err
+	}
+
+	// Show the terms for awareness if we didn't just prompt the user
+	if !termsShown {
+		printAPITermsOfService(ctx, clients, knownTermsAndPolicies)
 	}
 
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "tada",
 		Text:  "Welcome to the Slack Developer Program!",
 		Secondary: []string{
-			fmt.Sprintf("Manage your profile details at %s", style.LinkText(developerProfileSettingsURL)),
+			fmt.Sprintf("Manage your profile at %s", style.LinkText(developerProfileSettingsURL)),
 		},
 	}))
 
@@ -204,7 +217,7 @@ func apiClientForAuth(clients *shared.ClientFactory, auth *types.SlackAuth) api.
 	return apiClient
 }
 
-// selectAuthForSignup returns the auth to link to the Developer Program account and, when it
+// selectAuthForSignup returns the auth to link to the developer program account and, when it
 // was already fetched for the prompt, the profile of that user.
 // Uses the global --token or --team flag if present, otherwise prompts the user to select an account.
 func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*types.SlackAuth, *types.UserInfo, error) {
@@ -234,6 +247,11 @@ func selectAuthForSignup(ctx context.Context, clients *shared.ClientFactory) (*t
 			}
 		}
 		return nil, nil, slackerror.New(slackerror.ErrCredentialsNotFound)
+	}
+
+	// If only one login is present, default to that auth without prompting
+	if len(allAuths) == 1 {
+		return &allAuths[0], nil, nil
 	}
 
 	teamFlag := clients.Config.Flags.Lookup("team")
@@ -329,37 +347,59 @@ type userInfo struct {
 	countryOption string
 }
 
-// printTermsOfService shows the terms and policies accepted at signup
-func printTermsOfService(ctx context.Context, clients *shared.ClientFactory) {
-	clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
+// printAPITermsOfService shows the terms and policies returned from the signup API
+func printAPITermsOfService(ctx context.Context, clients *shared.ClientFactory, policies api.TermsAndPolicies) {
+	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji: "scroll",
-		Text:  "Terms of service",
+		Text:  "Terms of Service",
 		Secondary: append(
 			[]string{"By signing up, you agree to the following terms and acknowledge the privacy policies:"},
-			termsOfServiceLinks()...,
+			formatAPILinks(policies)...,
 		),
 	}))
 }
 
-// promptTermsAcceptance prompts the user to accept the terms.
-// The acceptTermsFlag is suggested when prompts aren't possible.
-func promptTermsAcceptance(ctx context.Context, clients *shared.ClientFactory, acceptTermsFlag *pflag.Flag) error {
-	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: false, Flag: acceptTermsFlag})
+// promptAcceptTerms prompts the user to agree to the terms of service and returns the accepted version.
+//
+// Returns an error without prompting when:
+//   - The --accept-terms flag was used, since the API rejected the given version
+//   - Prompts aren't possible, such as with --force or without a TTY, so the current version must be accepted with the --accept-terms flag
+func promptAcceptTerms(ctx context.Context, clients *shared.ClientFactory, version string, policies api.TermsAndPolicies, flagVersion string) (string, error) {
+	acceptTermsRemediation := fmt.Sprintf("Include %s to agree to the following terms and acknowledge the privacy policies:\n%s",
+		style.Highlight(fmt.Sprintf("--accept-terms=%s", version)),
+		strings.Join(formatAPILinks(policies), "\n"),
+	)
+
+	if flagVersion != "" {
+		return "", slackerror.New(slackerror.ErrTosNotAccepted).
+			WithMessage("The value passed for --accept-terms (%s) was invalid", flagVersion).
+			WithRemediation("%s", acceptTermsRemediation)
+	}
+
+	// Never accept terms the user hasn't agreed to, even with --force
+	if clients.Config.ForceFlag || !clients.IO.IsTTY() {
+		return "", slackerror.New(slackerror.ErrMissingFlag).
+			WithMessage("The terms of service must be accepted to sign up for the Developer Program").
+			WithRemediation("%s", acceptTermsRemediation)
+	}
+
+	printAPITermsOfService(ctx, clients, policies)
+	acceptTerms, err := clients.IO.ConfirmPrompt(ctx, "Do you agree to these terms?", iostreams.ConfirmPromptConfig{Default: false})
 	if err != nil {
-		return handlePromptError(clients, err)
+		return "", handlePromptError(clients, err)
 	}
 	if !acceptTerms {
 		clients.IO.PrintInfo(ctx, false, "\n%s", style.Sectionf(style.TextSection{
 			Emoji: "information_source",
-			Text:  "Signup Cancelled",
+			Text:  " Signup Cancelled",
 			Secondary: []string{
-				"You must agree to the terms to join the Developer Program.",
+				"You must agree to the terms to join the Developer Program",
 			},
 		}))
 		clients.IO.SetExitCode(iostreams.ExitCancel)
-		return slackerror.New(slackerror.ErrProcessInterrupted)
+		return "", slackerror.New(slackerror.ErrProcessInterrupted)
 	}
-	return nil
+	return version, nil
 }
 
 // collectUserInfo prompts for a first and last name when not already set.
@@ -409,10 +449,14 @@ func printSignupDetails(ctx context.Context, clients *shared.ClientFactory, info
 	if info.postalCode != "" {
 		details = append(details, fmt.Sprintf("Postal Code: %s", info.postalCode))
 	}
-	details = append(details, fmt.Sprintf("Newsletter: %v", newsletter))
+	newsletterStatus := "opted out"
+	if newsletter {
+		newsletterStatus = "opted in"
+	}
+	details = append(details, fmt.Sprintf("Newsletter: %s", newsletterStatus))
 	clients.IO.PrintInfo(ctx, false, "%s", style.Sectionf(style.TextSection{
 		Emoji:     "clipboard",
-		Text:      "Developer Program Signup",
+		Text:      "Developer Profile",
 		Secondary: details,
 	}))
 }

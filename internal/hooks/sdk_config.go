@@ -37,7 +37,7 @@ type SDKCLIConfig struct {
 		Start         HookScript `json:"start,omitempty"`
 	} `json:"hooks,omitempty"`
 	Config struct {
-		Watch                WatchOpts        `json:"watch,omitempty"`
+		Watch                *WatchOpts       `json:"watch,omitempty"`
 		SDKManagedConnection bool             `json:"sdk-managed-connection-enabled,omitempty"`
 		TriggerPaths         []string         `json:"trigger-paths,omitempty"`
 		SupportedProtocols   ProtocolVersions `json:"protocol-version,omitempty"`
