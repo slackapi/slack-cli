@@ -27,7 +27,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/api"
 	"github.com/slackapi/slack-cli/internal/app"
 	"github.com/slackapi/slack-cli/internal/config"
@@ -37,6 +36,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/style"
+	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/spf13/afero"
 )
 
@@ -200,9 +200,8 @@ func (c *Client) Auths(ctx context.Context) ([]types.SlackAuth, error) {
 
 // auths is an internal getter for a user's authorizations as a map of team_id to auth
 func (c *Client) auths(ctx context.Context) (map[string]types.SlackAuth, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "auths")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "auths")
+	defer span.End()
 
 	var auths types.AuthByTeamDomain
 
@@ -400,9 +399,8 @@ func (c *Client) setAuths(ctx context.Context, auths types.AuthByTeamDomain) (pa
 
 // SetAuth will write new or overwrite existing auth record in credentials.json with provided auth
 func (c *Client) SetAuth(ctx context.Context, auth types.SlackAuth) (types.SlackAuth, string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "SetAuth")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "SetAuth")
+	defer span.End()
 
 	allAuths, err := c.auths(ctx)
 	if err != nil {
