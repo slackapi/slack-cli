@@ -598,8 +598,7 @@ func Test_LocalServer_WatchManifest(t *testing.T) {
 	}
 }
 
-func Test_closeWatcherOnDone(t *testing.T) {
-	// Start blocks sending an event that nobody reads after the context ends, so closing must drain it
+func Test_closeWatcherOnDone_drainsAnUnreadEvent(t *testing.T) {
 	dir := t.TempDir()
 	manifest := filepath.Join(dir, "manifest.json")
 	require.NoError(t, os.WriteFile(manifest, []byte("{}"), 0o600))
