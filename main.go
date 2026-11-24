@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/cmd"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/iostreams"
@@ -31,6 +30,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/tracer"
 	"github.com/slackapi/slack-cli/internal/useragent"
 	"github.com/slackapi/slack-cli/internal/version"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func main() {
@@ -43,8 +43,7 @@ func main() {
 	//      - This would allow us to choose the correct API host based on flags
 	//      - Uncomment `isDevTarget` if we refactor to cmd/root.go and update to call `ResolveAPIHost`
 	// var isDevTarget = shared.NewClientFactory().AuthClient().UserDefaultAuthIsProd(ctx) // TODO - hack, remove shared.clients
-	var jaegerCloser, jaegerTracer = tracer.SetupTracer(false) // Always setup open tracing on prod
-	ctx = slackcontext.SetOpenTracingTracer(ctx, jaegerTracer)
+	var traceCloser, _ = tracer.SetupTracer(false) // Always setup tracing on prod
 
 	// Set context values
 	sessionID := uuid.New().String()
@@ -55,29 +54,29 @@ func main() {
 	osStr := os.Args[0:]
 	processName := goutils.RedactPII(strings.Join(osStr, " "))
 
-	var span = jaegerTracer.StartSpan("main", opentracing.Tag{Key: "version", Value: cliVersion})
-	span.SetTag("slack_cli_sessionID", sessionID)
-	span.SetTag("hashed_hostname", ioutils.GetHostname())
-	span.SetTag("slack_cli_process", processName)
+	ctx, span := tracer.Start(ctx, "main")
+	span.SetAttributes(
+		attribute.String("version", cliVersion),
+		attribute.String("slack_cli_sessionID", sessionID),
+		attribute.String("hashed_hostname", ioutils.GetHostname()),
+		attribute.String("slack_cli_process", processName),
+	)
 	if aiAgentName := useragent.GetAIAgentName(); aiAgentName != "" {
-		span.SetTag("ai_agent", aiAgentName)
+		span.SetAttributes(attribute.String("ai_agent", aiAgentName))
 	}
 	// system_id is set in root.go initConfig()
 	// project_id is set in root.go initConfig()
 
-	if traceID := tracer.TraceID(span); traceID != "" {
-		ctx = slackcontext.SetTraceID(ctx, traceID)
+	if spanContext := span.SpanContext(); spanContext.IsValid() {
+		ctx = slackcontext.SetTraceID(ctx, spanContext.TraceID().String())
 	}
 
 	// Flush on return here, and before each exit in cmd/root.go, which skips these defers
 	tracer.SetFlush(func() {
-		span.Finish()
-		_ = jaegerCloser.Close()
+		span.End()
+		_ = traceCloser.Close()
 	})
 	defer tracer.Flush()
-
-	// add root span to context
-	ctx = slackcontext.SetOpenTracingSpan(ctx, span)
 
 	rootCmd, clients := cmd.Init(ctx)
 	cmd.ExecuteContext(ctx, rootCmd, clients)

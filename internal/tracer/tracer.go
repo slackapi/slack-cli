@@ -155,15 +155,6 @@ func SetTraceHeaders(ctx context.Context, header http.Header) {
 	header.Set("x-b3-sampled", "0")
 }
 
-// TraceID returns the trace ID of span, or "" if span has no trace ID.
-func TraceID(span opentracing.Span) string {
-	carrier := opentracing.HTTPHeadersCarrier(http.Header{})
-	if err := span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, carrier); err != nil {
-		return ""
-	}
-	return http.Header(carrier).Get("x-b3-traceid")
-}
-
 var (
 	flushMu   sync.Mutex
 	flushFunc func()

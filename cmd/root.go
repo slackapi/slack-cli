@@ -305,7 +305,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		// Used by Logstash
 		// TODO(slackcontext) Consolidate storing SystemID to slackcontext
 		clients.Config.SystemID = systemID
-		// Used by OpenTracing
+		// Used by tracing
 		ctx = slackcontext.SetSystemID(ctx, systemID)
 		rootCmd.SetContext(ctx)
 		// Debug logging
@@ -318,7 +318,7 @@ func InitConfig(ctx context.Context, clients *shared.ClientFactory, rootCmd *cob
 		// Used by Logstash
 		// TODO(slackcontext) Consolidate storing ProjectID to slackcontext
 		clients.Config.ProjectID = projectID
-		// Used by OpenTracing
+		// Used by tracing
 		ctx = slackcontext.SetProjectID(ctx, projectID)
 		rootCmd.SetContext(ctx)
 		// Debug logging

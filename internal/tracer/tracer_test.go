@@ -130,14 +130,3 @@ func Test_Start(t *testing.T) {
 	assert.Equal(t, spans["opentracing-parent"].SpanContext().SpanID(), spans["otel-child"].Parent().SpanID())
 	assert.Equal(t, spans["otel-child"].SpanContext().SpanID(), spans["opentracing-grandchild"].Parent().SpanID())
 }
-
-func Test_TraceID(t *testing.T) {
-	recorder := tracetest.NewSpanRecorder()
-	tracer := newBridgeTracer(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
-	span := tracer.StartSpan("span")
-	traceID := TraceID(span)
-	span.Finish()
-	assert.Len(t, traceID, 32)
-	assert.Equal(t, recorder.Ended()[0].SpanContext().TraceID().String(), traceID)
-	assert.Empty(t, TraceID(opentracing.NoopTracer{}.StartSpan("noop")))
-}
