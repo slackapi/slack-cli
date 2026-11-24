@@ -17,15 +17,15 @@ package datastore
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/config"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/shared/types"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 func BulkPut(ctx context.Context, clients *shared.ClientFactory, request types.AppDatastoreBulkPut) (types.AppDatastoreBulkPutResult, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "pkg.datastore.bulkPut")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "pkg.datastore.bulkPut")
+	defer span.End()
 
 	// Get auth token
 	var token = config.GetContextToken(ctx)
