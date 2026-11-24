@@ -18,10 +18,11 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 const (
@@ -54,10 +55,9 @@ type datastoreBaseResponse struct {
 }
 
 func (c *Client) AppsDatastorePut(ctx context.Context, token string, request types.AppDatastorePut) (types.AppDatastorePutResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastorePut")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastorePut")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string                 `json:"datastore,omitempty"`
@@ -97,10 +97,9 @@ func (c *Client) AppsDatastorePut(ctx context.Context, token string, request typ
 }
 
 func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request types.AppDatastoreBulkPut) (types.AppDatastoreBulkPutResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreBulkPut")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreBulkPut")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string                   `json:"datastore,omitempty"`
@@ -144,10 +143,9 @@ func (c *Client) AppsDatastoreBulkPut(ctx context.Context, token string, request
 }
 
 func (c *Client) AppsDatastoreUpdate(ctx context.Context, token string, request types.AppDatastoreUpdate) (types.AppDatastoreUpdateResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreUpdate")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreUpdate")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string                 `json:"datastore,omitempty"`
@@ -187,10 +185,9 @@ func (c *Client) AppsDatastoreUpdate(ctx context.Context, token string, request 
 }
 
 func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query types.AppDatastoreQuery) (types.AppDatastoreQueryResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreQuery")
-	span.SetTag("app", query.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreQuery")
+	span.SetAttributes(attribute.String("app", query.App))
+	defer span.End()
 
 	args := struct {
 		Datastore            string                 `json:"datastore,omitempty"`
@@ -240,10 +237,9 @@ func (c *Client) AppsDatastoreQuery(ctx context.Context, token string, query typ
 }
 
 func (c *Client) AppsDatastoreCount(ctx context.Context, token string, count types.AppDatastoreCount) (types.AppDatastoreCountResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreCount")
-	span.SetTag("count", count.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreCount")
+	span.SetAttributes(attribute.String("count", count.App))
+	defer span.End()
 
 	args := struct {
 		Datastore            string                 `json:"datastore,omitempty"`
@@ -287,10 +283,9 @@ func (c *Client) AppsDatastoreCount(ctx context.Context, token string, count typ
 }
 
 func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request types.AppDatastoreDelete) (types.AppDatastoreDeleteResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreDelete")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreDelete")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string `json:"datastore,omitempty"`
@@ -338,10 +333,9 @@ func (c *Client) AppsDatastoreDelete(ctx context.Context, token string, request 
 }
 
 func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, request types.AppDatastoreBulkDelete) (types.AppDatastoreBulkDeleteResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreBulkDelete")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreBulkDelete")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string   `json:"datastore,omitempty"`
@@ -385,10 +379,9 @@ func (c *Client) AppsDatastoreBulkDelete(ctx context.Context, token string, requ
 }
 
 func (c *Client) AppsDatastoreGet(ctx context.Context, token string, request types.AppDatastoreGet) (types.AppDatastoreGetResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreGet")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreGet")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string `json:"datastore,omitempty"`
@@ -428,10 +421,9 @@ func (c *Client) AppsDatastoreGet(ctx context.Context, token string, request typ
 }
 
 func (c *Client) AppsDatastoreBulkGet(ctx context.Context, token string, request types.AppDatastoreBulkGet) (types.AppDatastoreBulkGetResult, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.AppsDatastoreBulkGet")
-	span.SetTag("app", request.App)
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.AppsDatastoreBulkGet")
+	span.SetAttributes(attribute.String("app", request.App))
+	defer span.End()
 
 	args := struct {
 		Datastore string   `json:"datastore,omitempty"`

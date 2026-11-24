@@ -20,10 +20,10 @@ import (
 	"net/url"
 	"sort"
 
-	"github.com/opentracing/opentracing-go"
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/shared/types"
 	"github.com/slackapi/slack-cli/internal/slackerror"
+	"github.com/slackapi/slack-cli/internal/tracer"
 )
 
 const (
@@ -43,9 +43,8 @@ type TeamInfoResponse struct {
 
 // TeamInfo returns information about the team such as team name
 func (c *Client) TeamsInfo(ctx context.Context, token, teamID string) (*types.TeamInfo, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.teamsInfo")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.teamsInfo")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
@@ -90,9 +89,8 @@ var DefaultAuthTeamsListPageSize = 100
 // Used to retrieve enterprise workspaces that belong to an org.
 // Specify the maximum number of workspaces to return via the `limit` param (value between 1 and 1000).
 func (c *Client) AuthTeamsList(ctx context.Context, token string, limit int) ([]types.TeamInfo, string, error) {
-	var span opentracing.Span
-	span, ctx = opentracing.StartSpanFromContext(ctx, "apiclient.authTeamsList")
-	defer span.Finish()
+	ctx, span := tracer.Start(ctx, "apiclient.authTeamsList")
+	defer span.End()
 
 	var values = url.Values{}
 	values.Add("token", token)
