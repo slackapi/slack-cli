@@ -25,6 +25,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/experiment"
 	"github.com/slackapi/slack-cli/internal/shared"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/slackapi/slack-cli/internal/slackhttp"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/spf13/afero"
@@ -203,7 +204,7 @@ func Test_parentDirExists(t *testing.T) {
 	// Random directory should not exist
 	exists, err = parentDirExists(`path/to/my-app`)
 	assert.False(t, exists, "should not exist")
-	assert.Error(t, err, "should return an error")
+	assert.Nil(t, err, "should not return an error")
 
 	// Dot notation for current directory (.) should exist
 	exists, err = parentDirExists(`.`)
@@ -304,10 +305,11 @@ func Test_generateGitZipFileURL(t *testing.T) {
 
 func Test_getAvailableDir(t *testing.T) {
 	tests := map[string]struct {
-		existing []string
-		dirName  string
-		expected string
-		wantErr  bool
+		existing    []string
+		dirName     string
+		expected    string
+		wantErr     bool
+		wantErrCode string
 	}{
 		"returns the path when the directory does not exist": {
 			dirName:  "my-app",
@@ -324,8 +326,9 @@ func Test_getAvailableDir(t *testing.T) {
 			expected: "my-app-3",
 		},
 		"returns an error when the parent directory does not exist": {
-			dirName: filepath.Join("missing", "my-app"),
-			wantErr: true,
+			dirName:     filepath.Join("missing", "my-app"),
+			wantErr:     true,
+			wantErrCode: slackerror.ErrAppDirectoryAccess,
 		},
 		"returns an error when every numbered directory already exists": {
 			existing: func() []string {
@@ -347,7 +350,10 @@ func Test_getAvailableDir(t *testing.T) {
 			}
 			dirPath, err := getAvailableDir(t.Context(), filepath.Join(baseDir, tc.dirName))
 			if tc.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
+				if tc.wantErrCode != "" {
+					assert.Equal(t, tc.wantErrCode, slackerror.ToSlackError(err).Code)
+				}
 				assert.Empty(t, dirPath)
 				return
 			}

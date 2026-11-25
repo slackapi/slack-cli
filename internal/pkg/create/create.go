@@ -256,7 +256,7 @@ func getAvailableDir(ctx context.Context, dirPath string) (string, error) {
 func parentDirExists(dirPath string) (bool, error) {
 	parentDirPath := filepath.Dir(dirPath)
 	if _, err := os.Stat(parentDirPath); os.IsNotExist(err) {
-		return false, err
+		return false, nil
 	}
 	return true, nil
 }
