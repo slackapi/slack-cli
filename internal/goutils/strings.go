@@ -96,6 +96,11 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\w)*secret(?:\ s*))(?P<values>(([\w\s.-]*)))`),
 		// Escape variables for env and its aliases for set/unset/add/remove commands
 		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (set|unset|add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
+		// Escape password values as "password=hunter2" in form bodies and "--password=hunter2" flags.
+		// Match up to the next field or whitespace, since an encoded value contains "%".
+		regexp.MustCompile(`(?P<keys>(?:\w)*password=)(?P<values>[^&\s]*)`),
+		// Escape password values as "--password hunter2" flags
+		regexp.MustCompile(`(?P<keys>--password\s+)(?P<values>[^\s]*)`),
 		// Add more regex here
 	}
 	// regexListWithQuotes will find sensitive data within quotes and later we escape with "..."
@@ -118,6 +123,8 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*variables(?:\"|\')(?:\:\s*))(?:\[\{)?(?P<values>(\[.*?\]))(?:\}])?`),
 		// Escape client_id
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*client_id(?:\"|\')(?:\:\s*))(?:\"|\')?(?P<values>([\w\s.-]*))(?:\"|\')?`),
+		// Escape password, including any symbols or escaped quotes in the value
+		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*password(?:\"|\')(?:\:\s*))(?P<values>\"(?:[^\"\\]|\\.)*\"|\'[^\']*\')`),
 		// Add more regex here
 	}
 	var regexListOfWords = []*regexp.Regexp{

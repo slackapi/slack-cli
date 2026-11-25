@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
@@ -31,8 +32,10 @@ import (
 
 func Test_printRequest(t *testing.T) {
 	tests := map[string]struct {
-		userAgent string
-		expected  string
+		body        string
+		userAgent   string
+		expected    string
+		notExpected string
 	}{
 		"includes User-Agent header in output": {
 			userAgent: "slack-cli/v1.2.3 (os: darwin)",
@@ -41,6 +44,11 @@ func Test_printRequest(t *testing.T) {
 		"includes empty User-Agent when header is not set": {
 			userAgent: "",
 			expected:  "HTTP Request User-Agent: ",
+		},
+		"redacts the sandbox password in a form body": {
+			body:        "org_name=test-box&password=p%40ss+w%26rd%21&token=xoxp-123",
+			expected:    "org_name=test-box&password=...&token=...",
+			notExpected: "w%26rd",
 		},
 	}
 	for name, tc := range tests {
@@ -55,7 +63,7 @@ func Test_printRequest(t *testing.T) {
 			ioMock.On("PrintDebug", mock.Anything, mock.Anything, mock.MatchedBy(func(args ...any) bool { return true }))
 
 			c := &Client{io: ioMock}
-			req, _ := http.NewRequest("GET", "https://slack.com/api/test", nil)
+			req, _ := http.NewRequest("POST", "https://slack.com/api/test", strings.NewReader(tc.body))
 			if tc.userAgent != "" {
 				req.Header.Set("User-Agent", tc.userAgent)
 			}
@@ -69,6 +77,9 @@ func Test_printRequest(t *testing.T) {
 				}
 			}
 			require.Contains(t, output, tc.expected)
+			if tc.notExpected != "" {
+				require.NotContains(t, output, tc.notExpected)
+			}
 		})
 	}
 }

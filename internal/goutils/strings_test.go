@@ -354,6 +354,30 @@ func Test_RedactPII(t *testing.T) {
 			text:     `slack variables unset topsecret 123`,
 			expected: `slack variables unset ...`,
 		},
+		"Escape from `Command` for sandbox create password flag": {
+			text:     `slack sandbox create --name test-box --password hunter2 --domain test-box`,
+			expected: `slack sandbox create --name test-box --password ... --domain test-box`,
+		},
+		"Escape from `Command` for sandbox create password flag with equals": {
+			text:     `slack sandbox create --password=hunter2 --name test-box`,
+			expected: `slack sandbox create --password=... --name test-box`,
+		},
+		"Preserve the password free option in HTTP request": {
+			text:     `HTTP Request Body:is_password_free=true&org_name=test-box`,
+			expected: `HTTP Request Body:is_password_free=true&org_name=test-box`,
+		},
+		"Redact encoded password in HTTP request": {
+			text:     `HTTP Request Body:org_name=test-box&password=p%40ss+w%26rd%21&token=xoxp-123`,
+			expected: `HTTP Request Body:org_name=test-box&password=...&token=...`,
+		},
+		"Redact password with double quotes": {
+			text:     `{"name":"test-box","password":"p@ss \"w0rd\"!","domain":"test-box"}`,
+			expected: `{"name":"test-box","password":"...","domain":"test-box"}`,
+		},
+		"Redact password with single quotes": {
+			text:     `{'password':'p@ss w0rd!'}`,
+			expected: `{'password':"..."}`,
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
