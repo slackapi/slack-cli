@@ -148,6 +148,38 @@ func Test_addLogWhenValExist(t *testing.T) {
 		})
 	}
 }
+func Test_RedactArgs(t *testing.T) {
+	tests := map[string]struct {
+		args     []string
+		expected []string
+	}{
+		"Preserve arguments without secrets": {
+			args:     []string{"slack", "sandbox", "create", "--name", "test-box"},
+			expected: []string{"slack", "sandbox", "create", "--name", "test-box"},
+		},
+		"Redact a password flag value with spaces": {
+			args:     []string{"slack", "sandbox", "create", "--password", "my secret pass", "--name", "test-box"},
+			expected: []string{"slack", "sandbox", "create", "--password", "...", "--name", "test-box"},
+		},
+		"Redact a password flag value with equals": {
+			args:     []string{"slack", "sandbox", "create", "--password=my secret&pass"},
+			expected: []string{"slack", "sandbox", "create", "--password=..."},
+		},
+		"Preserve a password flag without a value": {
+			args:     []string{"slack", "sandbox", "create", "--password"},
+			expected: []string{"slack", "sandbox", "create", "--password"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			original := append([]string{}, tc.args...)
+			redacted := RedactArgs(tc.args)
+			require.Equal(t, tc.expected, redacted)
+			require.Equal(t, original, tc.args)
+		})
+	}
+}
+
 func Test_RedactPII(t *testing.T) {
 	home, _ := os.UserHomeDir()
 	tests := map[string]struct {

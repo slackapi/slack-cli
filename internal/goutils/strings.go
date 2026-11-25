@@ -75,6 +75,22 @@ func ExtractFirstJSONFromString(s string) string {
 	return s[start : end+1]
 }
 
+// RedactArgs returns a copy of command line arguments with the values of secret flags replaced
+// with "...". Call it before joining arguments, since a quoted value can contain spaces.
+func RedactArgs(args []string) []string {
+	redacted := make([]string, len(args))
+	copy(redacted, args)
+	for i, arg := range redacted {
+		switch {
+		case arg == "--password" && i+1 < len(redacted):
+			redacted[i+1] = "..."
+		case strings.HasPrefix(arg, "--password="):
+			redacted[i] = "--password=..."
+		}
+	}
+	return redacted
+}
+
 // RedactPII will replace all occurrences in a string that match any of the expressions in a regex list
 func RedactPII(s string) string {
 	var regexListNoQuotes = []*regexp.Regexp{

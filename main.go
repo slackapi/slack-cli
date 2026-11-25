@@ -53,7 +53,7 @@ func main() {
 	ctx = slackcontext.SetVersion(ctx, cliVersion)
 
 	osStr := os.Args[0:]
-	processName := goutils.RedactPII(strings.Join(osStr, " "))
+	processName := goutils.RedactPII(strings.Join(goutils.RedactArgs(osStr), " "))
 
 	ctx, span := tracer.Start(ctx, "main")
 	span.SetAttributes(
