@@ -191,7 +191,7 @@ func TestParseAppPath(t *testing.T) {
 	}
 }
 
-func TestGetAvailableDirectory(t *testing.T) {
+func Test_parentDirExists(t *testing.T) {
 	var exists bool
 	var err error
 
@@ -325,6 +325,17 @@ func Test_getAvailableDir(t *testing.T) {
 		},
 		"returns an error when the parent directory does not exist": {
 			dirName: filepath.Join("missing", "my-app"),
+			wantErr: true,
+		},
+		"returns an error when every numbered directory already exists": {
+			existing: func() []string {
+				dirs := []string{"my-app"}
+				for i := 1; i < 100; i++ {
+					dirs = append(dirs, fmt.Sprintf("my-app-%d", i))
+				}
+				return dirs
+			}(),
+			dirName: "my-app",
 			wantErr: true,
 		},
 	}
