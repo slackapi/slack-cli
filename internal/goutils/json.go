@@ -24,7 +24,7 @@ import (
 
 // MergeJSON will merge customJSON into defaultJSON and unmarshal the results to config.
 // When JSON arguments are an empty string, it will default the arg to "{}"
-func MergeJSON(defaultJSON string, customJSON string, config interface{}) error {
+func MergeJSON(defaultJSON string, customJSON string, config any) error {
 	// Validate JSON
 	if strings.TrimSpace(defaultJSON) == "" {
 		defaultJSON = "{}"
@@ -48,7 +48,7 @@ func MergeJSON(defaultJSON string, customJSON string, config interface{}) error 
 
 // JSONMarshalUnescaped converts a struct into a JSON encoding without escaping
 // characters
-func JSONMarshalUnescaped(v interface{}) (string, error) {
+func JSONMarshalUnescaped(v any) (string, error) {
 	var buff bytes.Buffer
 	encoder := json.NewEncoder(&buff)
 	encoder.SetEscapeHTML(false)
@@ -61,7 +61,7 @@ func JSONMarshalUnescaped(v interface{}) (string, error) {
 
 // JSONMarshalUnescapedIndent converts a struct into an easily readable JSON
 // encoding without escaping characters
-func JSONMarshalUnescapedIndent(v interface{}) (string, error) {
+func JSONMarshalUnescapedIndent(v any) (string, error) {
 	var buff bytes.Buffer
 	encoder := json.NewEncoder(&buff)
 	encoder.SetEscapeHTML(false)
@@ -77,7 +77,7 @@ func JSONMarshalUnescapedIndent(v interface{}) (string, error) {
 // JSON-encoded data and stores the result in the value pointed to by v.
 // If v is nil or not a pointer, json.Unmarshal returns an InvalidUnmarshalError
 // which gets converted to a slackerror that is more human readable.
-func JSONUnmarshal(data []byte, v interface{}) error {
+func JSONUnmarshal(data []byte, v any) error {
 	err := json.Unmarshal(data, v)
 	if err != nil {
 		return slackerror.JSONUnmarshalError(err, data)
