@@ -148,6 +148,63 @@ func Test_addLogWhenValExist(t *testing.T) {
 		})
 	}
 }
+func Test_redactArgs(t *testing.T) {
+	tests := map[string]struct {
+		args     []string
+		expected []string
+	}{
+		"Preserve arguments without secrets": {
+			args:     []string{"slack", "sandbox", "create", "--name", "test-box"},
+			expected: []string{"slack", "sandbox", "create", "--name", "test-box"},
+		},
+		"Redact a password flag value with spaces": {
+			args:     []string{"slack", "sandbox", "create", "--password", "my secret pass", "--name", "test-box"},
+			expected: []string{"slack", "sandbox", "create", "--password", "...", "--name", "test-box"},
+		},
+		"Redact a password flag value with equals": {
+			args:     []string{"slack", "sandbox", "create", "--password=my secret&pass"},
+			expected: []string{"slack", "sandbox", "create", "--password=..."},
+		},
+		"Preserve a password flag without a value": {
+			args:     []string{"slack", "sandbox", "create", "--password"},
+			expected: []string{"slack", "sandbox", "create", "--password"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			original := append([]string{}, tc.args...)
+			redacted := redactArgs(tc.args)
+			require.Equal(t, tc.expected, redacted)
+			require.Equal(t, original, tc.args)
+		})
+	}
+}
+
+func Test_RedactCommand(t *testing.T) {
+	tests := map[string]struct {
+		args     []string
+		expected string
+	}{
+		"Preserve a command without secrets": {
+			args:     []string{"slack", "sandbox", "list"},
+			expected: "slack sandbox list",
+		},
+		"Redact a password with spaces": {
+			args:     []string{"slack", "sandbox", "create", "--password", "my secret pass", "--name", "test-box"},
+			expected: "slack sandbox create --password ... --name test-box",
+		},
+		"Redact a token in another flag": {
+			args:     []string{"slack", "deploy", "--token", "xoxp-123"},
+			expected: "slack deploy --token ...",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.expected, RedactCommand(tc.args))
+		})
+	}
+}
+
 func Test_RedactPII(t *testing.T) {
 	home, _ := os.UserHomeDir()
 	tests := map[string]struct {
@@ -353,6 +410,30 @@ func Test_RedactPII(t *testing.T) {
 		"Escape from `Command` for variables unset": {
 			text:     `slack variables unset topsecret 123`,
 			expected: `slack variables unset ...`,
+		},
+		"Escape from `Command` for sandbox create password flag": {
+			text:     `slack sandbox create --name test-box --password hunter2 --domain test-box`,
+			expected: `slack sandbox create --name test-box --password ... --domain test-box`,
+		},
+		"Escape from `Command` for sandbox create password flag with equals": {
+			text:     `slack sandbox create --password=hunter2 --name test-box`,
+			expected: `slack sandbox create --password=... --name test-box`,
+		},
+		"Preserve the password free option in HTTP request": {
+			text:     `HTTP Request Body:is_password_free=true&org_name=test-box`,
+			expected: `HTTP Request Body:is_password_free=true&org_name=test-box`,
+		},
+		"Redact encoded password in HTTP request": {
+			text:     `HTTP Request Body:org_name=test-box&password=p%40ss+w%26rd%21&token=xoxp-123`,
+			expected: `HTTP Request Body:org_name=test-box&password=...&token=...`,
+		},
+		"Redact password with double quotes": {
+			text:     `{"name":"test-box","password":"p@ss \"w0rd\"!","domain":"test-box"}`,
+			expected: `{"name":"test-box","password":"...","domain":"test-box"}`,
+		},
+		"Redact password with single quotes": {
+			text:     `{'password':'p@ss w0rd!'}`,
+			expected: `{'password':"..."}`,
 		},
 	}
 	for name, tc := range tests {

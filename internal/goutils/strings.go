@@ -75,6 +75,27 @@ func ExtractFirstJSONFromString(s string) string {
 	return s[start : end+1]
 }
 
+// RedactCommand returns command line arguments joined with spaces, with secret flag values
+// and other sensitive data replaced with "..."
+func RedactCommand(args []string) string {
+	return RedactPII(strings.Join(redactArgs(args), " "))
+}
+
+// redactArgs returns a copy of args with the values of secret flags replaced with "..."
+func redactArgs(args []string) []string {
+	redacted := make([]string, len(args))
+	copy(redacted, args)
+	for i, arg := range redacted {
+		switch {
+		case arg == "--password" && i+1 < len(redacted):
+			redacted[i+1] = "..."
+		case strings.HasPrefix(arg, "--password="):
+			redacted[i] = "--password=..."
+		}
+	}
+	return redacted
+}
+
 // RedactPII will replace all occurrences in a string that match any of the expressions in a regex list
 func RedactPII(s string) string {
 	var regexListNoQuotes = []*regexp.Regexp{
@@ -96,6 +117,10 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\w)*secret(?:\ s*))(?P<values>(([\w\s.-]*)))`),
 		// Escape variables for env and its aliases for set/unset/add/remove commands
 		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (set|unset|add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
+		// Escape password values in form bodies and flags
+		regexp.MustCompile(`(?P<keys>(?:\w)*password=)(?P<values>[^&\s]*)`),
+		// Escape password values in flags
+		regexp.MustCompile(`(?P<keys>--password\s+)(?P<values>[^\s]*)`),
 		// Add more regex here
 	}
 	// regexListWithQuotes will find sensitive data within quotes and later we escape with "..."
@@ -118,6 +143,8 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*variables(?:\"|\')(?:\:\s*))(?:\[\{)?(?P<values>(\[.*?\]))(?:\}])?`),
 		// Escape client_id
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*client_id(?:\"|\')(?:\:\s*))(?:\"|\')?(?P<values>([\w\s.-]*))(?:\"|\')?`),
+		// Escape password
+		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*password(?:\"|\')(?:\:\s*))(?P<values>\"(?:[^\"\\]|\\.)*\"|\'[^\']*\')`),
 		// Add more regex here
 	}
 	var regexListOfWords = []*regexp.Regexp{
