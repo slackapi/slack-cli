@@ -75,9 +75,14 @@ func ExtractFirstJSONFromString(s string) string {
 	return s[start : end+1]
 }
 
-// RedactArgs returns a copy of command line arguments with the values of secret flags replaced
-// with "...". Call it before joining arguments, since a quoted value can contain spaces.
-func RedactArgs(args []string) []string {
+// RedactCommand returns command line arguments joined with spaces, with secret flag values
+// and other sensitive data replaced with "..."
+func RedactCommand(args []string) string {
+	return RedactPII(strings.Join(redactArgs(args), " "))
+}
+
+// redactArgs returns a copy of args with the values of secret flags replaced with "..."
+func redactArgs(args []string) []string {
 	redacted := make([]string, len(args))
 	copy(redacted, args)
 	for i, arg := range redacted {
@@ -112,10 +117,9 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\w)*secret(?:\ s*))(?P<values>(([\w\s.-]*)))`),
 		// Escape variables for env and its aliases for set/unset/add/remove commands
 		regexp.MustCompile(`(?P<keys>(?:\w)*(env|var|vars|variable|variables|auth) (set|unset|add|remove)(?:\ s*))(?P<values>(([\w\s.-]*)))`),
-		// Escape password values as "password=hunter2" in form bodies and "--password=hunter2" flags.
-		// Match up to the next field or whitespace, since an encoded value contains "%".
+		// Escape password values in form bodies and flags
 		regexp.MustCompile(`(?P<keys>(?:\w)*password=)(?P<values>[^&\s]*)`),
-		// Escape password values as "--password hunter2" flags
+		// Escape password values in flags
 		regexp.MustCompile(`(?P<keys>--password\s+)(?P<values>[^\s]*)`),
 		// Add more regex here
 	}
@@ -139,7 +143,7 @@ func RedactPII(s string) string {
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*variables(?:\"|\')(?:\:\s*))(?:\[\{)?(?P<values>(\[.*?\]))(?:\}])?`),
 		// Escape client_id
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*client_id(?:\"|\')(?:\:\s*))(?:\"|\')?(?P<values>([\w\s.-]*))(?:\"|\')?`),
-		// Escape password, including any symbols or escaped quotes in the value
+		// Escape password
 		regexp.MustCompile(`(?P<keys>(?:\"|\')(?:\w)*password(?:\"|\')(?:\:\s*))(?P<values>\"(?:[^\"\\]|\\.)*\"|\'[^\']*\')`),
 		// Add more regex here
 	}

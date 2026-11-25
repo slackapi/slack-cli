@@ -18,7 +18,6 @@ import (
 	"context"
 	"os"
 	"runtime/debug"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/slackapi/slack-cli/cmd"
@@ -53,7 +52,7 @@ func main() {
 	ctx = slackcontext.SetVersion(ctx, cliVersion)
 
 	osStr := os.Args[0:]
-	processName := goutils.RedactPII(strings.Join(goutils.RedactArgs(osStr), " "))
+	processName := goutils.RedactCommand(osStr)
 
 	ctx, span := tracer.Start(ctx, "main")
 	span.SetAttributes(

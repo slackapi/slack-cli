@@ -148,7 +148,7 @@ func Test_addLogWhenValExist(t *testing.T) {
 		})
 	}
 }
-func Test_RedactArgs(t *testing.T) {
+func Test_redactArgs(t *testing.T) {
 	tests := map[string]struct {
 		args     []string
 		expected []string
@@ -173,9 +173,34 @@ func Test_RedactArgs(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			original := append([]string{}, tc.args...)
-			redacted := RedactArgs(tc.args)
+			redacted := redactArgs(tc.args)
 			require.Equal(t, tc.expected, redacted)
 			require.Equal(t, original, tc.args)
+		})
+	}
+}
+
+func Test_RedactCommand(t *testing.T) {
+	tests := map[string]struct {
+		args     []string
+		expected string
+	}{
+		"Preserve a command without secrets": {
+			args:     []string{"slack", "sandbox", "list"},
+			expected: "slack sandbox list",
+		},
+		"Redact a password with spaces": {
+			args:     []string{"slack", "sandbox", "create", "--password", "my secret pass", "--name", "test-box"},
+			expected: "slack sandbox create --password ... --name test-box",
+		},
+		"Redact a token in another flag": {
+			args:     []string{"slack", "deploy", "--token", "xoxp-123"},
+			expected: "slack deploy --token ...",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.expected, RedactCommand(tc.args))
 		})
 	}
 }

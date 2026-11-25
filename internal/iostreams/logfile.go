@@ -82,7 +82,7 @@ func (io *IOStreams) InitLogFile(ctx context.Context) error {
 	// Log the Slack-CLI version, User's OS, SessionID, TraceID
 	// But format data before writing them to the log file
 	formatAndWriteDataToLogFile(logger, map[string]string{
-		"Command":               goutils.RedactPII(strings.Join(goutils.RedactArgs(os.Args), " ")),
+		"Command":               goutils.RedactCommand(os.Args),
 		"SessionID":             sessionID,
 		"Slack-CLI-TraceID":     traceID,
 		"Slack-CLI Version":     cliVersion,
