@@ -428,6 +428,89 @@ func TestFunctionDistributeCommand_UpdateNamedEntitiesDistribution(t *testing.T)
 	}
 }
 
+func Test_AddCollaboratorsToNamedEntities(t *testing.T) {
+	tests := map[string]struct {
+		collaborators []types.SlackUser
+		listErr       error
+		distListErr   error
+		distSetErr    error
+		addUsersErr   error
+		distType      types.Permission
+		expectedUsers string
+		expectedErr   error
+	}{
+		"sets named entities distribution and adds every collaborator": {
+			collaborators: []types.SlackUser{{ID: "U123"}, {ID: "U456"}},
+			distType:      types.PermissionAppCollaborators,
+			expectedUsers: "U123,U456",
+		},
+		"adds collaborators without resetting a named entities distribution": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distType:      types.PermissionNamedEntities,
+			expectedUsers: "U123",
+		},
+		"does nothing when the app has no collaborators": {
+			collaborators: []types.SlackUser{},
+		},
+		"returns the error when listing collaborators fails": {
+			listErr:     slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr: slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+		"returns the error when listing the distribution fails": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distListErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+		"returns the error when setting the distribution fails": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distType:      types.PermissionAppCollaborators,
+			distSetErr:    slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+		"returns the error when adding users fails": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distType:      types.PermissionNamedEntities,
+			addUsersErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			clientsMock := shared.NewClientsMock()
+			clientsMock.API.On("ListCollaborators", mock.Anything, "xoxp-example", "A123").
+				Return(tc.collaborators, tc.listErr)
+			clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, "A123").
+				Return(tc.distType, []types.FunctionDistributionUser{}, tc.distListErr)
+			clientsMock.API.On("FunctionDistributionSet", mock.Anything, mock.Anything, "A123", types.PermissionNamedEntities, "").
+				Return([]types.FunctionDistributionUser{}, tc.distSetErr)
+			clientsMock.API.On("FunctionDistributionAddUsers", mock.Anything, mock.Anything, "A123", mock.Anything).
+				Return(tc.addUsersErr)
+			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
+
+			err := AddCollaboratorsToNamedEntities(ctx, clients, types.App{AppID: "A123"}, "xoxp-example")
+			assert.Equal(t, tc.expectedErr, err)
+			if tc.expectedErr != nil {
+				if tc.addUsersErr == nil {
+					clientsMock.API.AssertNotCalled(t, "FunctionDistributionAddUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				}
+				return
+			}
+			if tc.expectedUsers == "" {
+				clientsMock.API.AssertNotCalled(t, "FunctionDistributionAddUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				return
+			}
+			clientsMock.API.AssertCalled(t, "FunctionDistributionAddUsers", mock.Anything, mock.Anything, "A123", tc.expectedUsers)
+			if tc.distType == types.PermissionNamedEntities {
+				clientsMock.API.AssertNotCalled(t, "FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+			} else {
+				clientsMock.API.AssertCalled(t, "FunctionDistributionSet", mock.Anything, mock.Anything, "A123", types.PermissionNamedEntities, "")
+			}
+		})
+	}
+}
+
 func Test_printEntityAccess(t *testing.T) {
 	tests := map[string]struct {
 		distType        types.Permission
