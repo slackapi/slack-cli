@@ -491,6 +491,9 @@ func Test_AddCollaboratorsToNamedEntities(t *testing.T) {
 			err := AddCollaboratorsToNamedEntities(ctx, clients, types.App{AppID: "A123"}, "xoxp-example")
 			assert.Equal(t, tc.expectedErr, err)
 			if tc.expectedErr != nil {
+				if tc.addUsersErr == nil {
+					clientsMock.API.AssertNotCalled(t, "FunctionDistributionAddUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				}
 				return
 			}
 			if tc.expectedUsers == "" {
