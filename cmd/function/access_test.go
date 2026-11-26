@@ -432,6 +432,9 @@ func Test_AddCollaboratorsToNamedEntities(t *testing.T) {
 	tests := map[string]struct {
 		collaborators []types.SlackUser
 		listErr       error
+		distListErr   error
+		distSetErr    error
+		addUsersErr   error
 		distType      types.Permission
 		expectedUsers string
 		expectedErr   error
@@ -453,6 +456,23 @@ func Test_AddCollaboratorsToNamedEntities(t *testing.T) {
 			listErr:     slackerror.New(slackerror.ErrHTTPRequestFailed),
 			expectedErr: slackerror.New(slackerror.ErrHTTPRequestFailed),
 		},
+		"returns the error when listing the distribution fails": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distListErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+		"returns the error when setting the distribution fails": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distType:      types.PermissionAppCollaborators,
+			distSetErr:    slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
+		"returns the error when adding users fails": {
+			collaborators: []types.SlackUser{{ID: "U123"}},
+			distType:      types.PermissionNamedEntities,
+			addUsersErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+			expectedErr:   slackerror.New(slackerror.ErrHTTPRequestFailed),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -461,17 +481,21 @@ func Test_AddCollaboratorsToNamedEntities(t *testing.T) {
 			clientsMock.API.On("ListCollaborators", mock.Anything, "xoxp-example", "A123").
 				Return(tc.collaborators, tc.listErr)
 			clientsMock.API.On("FunctionDistributionList", mock.Anything, mock.Anything, "A123").
-				Return(tc.distType, []types.FunctionDistributionUser{}, nil)
+				Return(tc.distType, []types.FunctionDistributionUser{}, tc.distListErr)
 			clientsMock.API.On("FunctionDistributionSet", mock.Anything, mock.Anything, "A123", types.PermissionNamedEntities, "").
-				Return([]types.FunctionDistributionUser{}, nil)
+				Return([]types.FunctionDistributionUser{}, tc.distSetErr)
 			clientsMock.API.On("FunctionDistributionAddUsers", mock.Anything, mock.Anything, "A123", mock.Anything).
-				Return(nil)
+				Return(tc.addUsersErr)
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 
 			err := AddCollaboratorsToNamedEntities(ctx, clients, types.App{AppID: "A123"}, "xoxp-example")
 			assert.Equal(t, tc.expectedErr, err)
+			if tc.expectedErr != nil {
+				return
+			}
 			if tc.expectedUsers == "" {
 				clientsMock.API.AssertNotCalled(t, "FunctionDistributionAddUsers", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+				clientsMock.API.AssertNotCalled(t, "FunctionDistributionSet", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 				return
 			}
 			clientsMock.API.AssertCalled(t, "FunctionDistributionAddUsers", mock.Anything, mock.Anything, "A123", tc.expectedUsers)
