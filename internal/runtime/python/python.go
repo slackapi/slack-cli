@@ -233,7 +233,7 @@ func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afer
 	}
 
 	// Parse only to validate the file structure
-	var config map[string]interface{}
+	var config map[string]any
 	err = toml.Unmarshal(file, &config)
 	if err != nil {
 		ios.PrintDebug(ctx, "Warning: could not parse pyproject.toml: %s", err)
@@ -247,7 +247,7 @@ func installPyProjectToml(ctx context.Context, ios iostreams.IOStreamer, fs afer
 		return "Skipped updating pyproject.toml because project section missing", nil
 	}
 
-	projectMap, ok := projectSection.(map[string]interface{})
+	projectMap, ok := projectSection.(map[string]any)
 	if !ok {
 		ios.PrintDebug(ctx, "Warning: pyproject.toml [project] section is not a valid format")
 		return "Skipped updating pyproject.toml because project section invalid", nil
