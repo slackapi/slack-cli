@@ -27,6 +27,7 @@ import (
 	"github.com/slackapi/slack-cli/internal/goutils"
 	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
+	"github.com/slackapi/slack-cli/internal/slackerror"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -188,6 +189,64 @@ func Test_FlushToLogFile(t *testing.T) {
 				expectedStderr = fmt.Sprintf("Check %s for error logs\n", errorLogFilePath)
 			}
 			assert.Equal(t, expectedStderr, stderrBuff.String())
+		})
+	}
+}
+
+func Test_IOStreams_InitLogFile(t *testing.T) {
+	tests := map[string]struct {
+		missingTraceID bool
+		expectedErr    bool
+	}{
+		"writes the session details to the log file and removes week old logs": {},
+		"returns an error when the trace ID is missing from the context": {
+			missingTraceID: true,
+			expectedErr:    true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			if tc.missingTraceID {
+				ctx = slackcontext.SetOpenTracingTraceID(ctx, "")
+			}
+			logsDir := t.TempDir()
+			oldLogFilePath := filepath.Join(logsDir, "slack-debug-20000101.log")
+			require.NoError(t, os.WriteFile(oldLogFilePath, []byte("old"), 0600))
+			oldTime := time.Now().AddDate(0, 0, -8)
+			require.NoError(t, os.Chtimes(oldLogFilePath, oldTime, oldTime))
+			recentLogFilePath := filepath.Join(logsDir, "slack-debug-20000102.log")
+			require.NoError(t, os.WriteFile(recentLogFilePath, []byte("recent"), 0600))
+			recentTime := time.Now().AddDate(0, 0, -6)
+			require.NoError(t, os.Chtimes(recentLogFilePath, recentTime, recentTime))
+			otherFilePath := filepath.Join(logsDir, "other-20000101.log")
+			require.NoError(t, os.WriteFile(otherFilePath, []byte("other"), 0600))
+			require.NoError(t, os.Chtimes(otherFilePath, oldTime, oldTime))
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			osMock.AddDefaultMocks()
+			var systemConfigMock config.SystemConfigMock
+			systemConfigMock.On("LogsDir", mock.Anything).Return(logsDir, nil)
+			config := config.NewConfig(fsMock, osMock)
+			config.SystemConfig = &systemConfigMock
+			io := NewIOStreams(config, fsMock, osMock)
+
+			err := io.InitLogFile(ctx)
+			if tc.expectedErr {
+				assert.Equal(t, slackerror.ErrContextValueNotFound, slackerror.ToSlackError(err).Code)
+				return
+			}
+			require.NoError(t, err)
+			logFile, err := os.ReadFile(filepath.Join(logsDir, filename))
+			require.NoError(t, err)
+			sessionID, _ := slackcontext.SessionID(ctx)
+			traceID, _ := slackcontext.OpenTracingTraceID(ctx)
+			assert.Contains(t, string(logFile), "------------------------------------")
+			assert.Contains(t, string(logFile), "SessionID: ["+sessionID+"]")
+			assert.Contains(t, string(logFile), "Slack-CLI-TraceID: ["+traceID+"]")
+			assert.NoFileExists(t, oldLogFilePath)
+			assert.FileExists(t, recentLogFilePath)
+			assert.FileExists(t, otherFilePath)
 		})
 	}
 }
