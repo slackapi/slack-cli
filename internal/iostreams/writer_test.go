@@ -250,8 +250,8 @@ func Test_WriteDebugger_Write(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, len(tc.input), n)
 			ioMock.AssertNumberOfCalls(t, "PrintDebug", len(tc.expected))
-			for _, line := range tc.expected {
-				ioMock.AssertCalled(t, "PrintDebug", ctx, "%s", []any{line})
+			for i, line := range tc.expected {
+				assert.Equal(t, mock.Arguments{ctx, "%s", []any{line}}, ioMock.Calls[i].Arguments)
 			}
 		})
 	}
