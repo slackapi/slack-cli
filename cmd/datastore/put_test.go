@@ -156,7 +156,7 @@ func TestPutCommand(t *testing.T) {
 			Query: types.AppDatastorePut{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "0002",
 					"task":    "counting",
 					"status":  "ongoing",
@@ -173,7 +173,7 @@ func TestPutCommand(t *testing.T) {
 			Query: types.AppDatastorePut{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "0101",
 					"task":    "write code",
 					"status":  "wip",
@@ -208,7 +208,7 @@ func TestPutCommand(t *testing.T) {
 			Query: types.AppDatastorePut{
 				Datastore: "Todos",
 				App:       mockAppID,
-				Item: map[string]interface{}{
+				Item: map[string]any{
 					"task_id": "1234",
 					"task":    "prompting for info",
 					"status":  "promptful",

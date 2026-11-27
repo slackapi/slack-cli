@@ -181,10 +181,10 @@ func TestQueryCommand(t *testing.T) {
 				Datastore:  "Todos",
 				App:        mockAppID,
 				Expression: "#task_id < :num",
-				ExpressionAttributes: map[string]interface{}{
+				ExpressionAttributes: map[string]any{
 					"#task_id": "task_id",
 				},
-				ExpressionValues: map[string]interface{}{
+				ExpressionValues: map[string]any{
 					":num": "3",
 				},
 			},
@@ -200,11 +200,11 @@ func TestQueryCommand(t *testing.T) {
 				Datastore:  "Todos",
 				App:        mockAppID,
 				Expression: "#task_id < :num AND #status = :progress",
-				ExpressionAttributes: map[string]interface{}{
+				ExpressionAttributes: map[string]any{
 					"#task_id": "task_id",
 					"#status":  "status",
 				},
-				ExpressionValues: map[string]interface{}{
+				ExpressionValues: map[string]any{
 					":num":      "3",
 					":progress": "wip",
 				},
@@ -221,10 +221,10 @@ func TestQueryCommand(t *testing.T) {
 				Datastore:  "Todos",
 				App:        mockAppID,
 				Expression: "#task_id < :num",
-				ExpressionAttributes: map[string]interface{}{
+				ExpressionAttributes: map[string]any{
 					"#task_id": "task_id",
 				},
-				ExpressionValues: map[string]interface{}{
+				ExpressionValues: map[string]any{
 					":num": "8",
 				},
 				Limit:  4,
@@ -301,11 +301,11 @@ func TestQueryCommand(t *testing.T) {
 				Datastore:  "Todos",
 				App:        mockAppID,
 				Expression: "#task_id < :num AND #task_id <> :zero AND #notes = :progress",
-				ExpressionAttributes: map[string]interface{}{
+				ExpressionAttributes: map[string]any{
 					"#task_id": "task_id",
 					"#notes":   "status",
 				},
-				ExpressionValues: map[string]interface{}{
+				ExpressionValues: map[string]any{
 					":num":      "3",
 					":zero":     "0",
 					":progress": "wip",
@@ -440,10 +440,10 @@ func TestQueryCommandExport(t *testing.T) {
 	})
 }
 
-func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsToReturn int) ([]map[string]interface{}, error) {
-	data := []map[string]interface{}{}
+func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsToReturn int) ([]map[string]any, error) {
+	data := []map[string]any{}
 	for i := 1; i <= numberOfItems; i++ {
-		item := map[string]interface{}{
+		item := map[string]any{
 			"task_id": fmt.Sprintf("%04d", i),
 			"task":    "counting",
 			"status":  "ongoing",
@@ -457,10 +457,10 @@ func prepareExportMockData(cm *shared.ClientsMock, numberOfItems int, maxItemsTo
 			}
 			cm.API.On("AppsDatastoreQuery", mock.Anything, mock.Anything, mock.Anything).
 				Return(types.AppDatastoreQueryResult{
-					Items:      append([]map[string]interface{}{}, data...),
+					Items:      append([]map[string]any{}, data...),
 					NextCursor: nextCursor,
 				}, nil).Once()
-			data = []map[string]interface{}{}
+			data = []map[string]any{}
 		}
 	}
 	return data, nil

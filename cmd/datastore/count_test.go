@@ -189,10 +189,10 @@ func TestCountCommand(t *testing.T) {
 						Datastore:  "tasks",
 						App:        "A001",
 						Expression: "#task_id < :num",
-						ExpressionAttributes: map[string]interface{}{
+						ExpressionAttributes: map[string]any{
 							"#task_id": "task_id",
 						},
-						ExpressionValues: map[string]interface{}{
+						ExpressionValues: map[string]any{
 							":num": "3",
 						},
 					},
@@ -220,11 +220,11 @@ func TestCountCommand(t *testing.T) {
 						Datastore:  "Todos",
 						App:        "A001",
 						Expression: "#task_id < :num AND #status = :progress",
-						ExpressionAttributes: map[string]interface{}{
+						ExpressionAttributes: map[string]any{
 							"#task_id": "task_id",
 							"#status":  "status",
 						},
-						ExpressionValues: map[string]interface{}{
+						ExpressionValues: map[string]any{
 							":num":      "3",
 							":progress": "wip",
 						},
@@ -324,11 +324,11 @@ func TestCountCommand(t *testing.T) {
 						Datastore:  "numbers",
 						App:        "A001",
 						Expression: "#n < :num AND #n <> :zero AND #prime = :bool",
-						ExpressionAttributes: map[string]interface{}{
+						ExpressionAttributes: map[string]any{
 							"#n":     "n",
 							"#prime": "prime",
 						},
-						ExpressionValues: map[string]interface{}{
+						ExpressionValues: map[string]any{
 							":num":  "12",
 							":zero": "0",
 							":bool": "true",
