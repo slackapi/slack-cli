@@ -17,6 +17,7 @@ package create
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -190,7 +191,7 @@ func TestParseAppPath(t *testing.T) {
 	}
 }
 
-func TestGetAvailableDirectory(t *testing.T) {
+func Test_parentDirExists(t *testing.T) {
 	var exists bool
 	var err error
 
@@ -297,6 +298,61 @@ func Test_generateGitZipFileURL(t *testing.T) {
 
 			// Assertions
 			assert.Equal(t, tc.expectedURL, url)
+		})
+	}
+}
+
+func Test_getAvailableDir(t *testing.T) {
+	tests := map[string]struct {
+		existing []string
+		dirName  string
+		expected string
+		wantErr  bool
+	}{
+		"returns the path when the directory does not exist": {
+			dirName:  "my-app",
+			expected: "my-app",
+		},
+		"appends a number when the directory already exists": {
+			existing: []string{"my-app"},
+			dirName:  "my-app",
+			expected: "my-app-1",
+		},
+		"skips numbered directories that already exist": {
+			existing: []string{"my-app", "my-app-1", "my-app-2"},
+			dirName:  "my-app",
+			expected: "my-app-3",
+		},
+		"returns an error when the parent directory does not exist": {
+			dirName: filepath.Join("missing", "my-app"),
+			wantErr: true,
+		},
+		"returns an error when every numbered directory already exists": {
+			existing: func() []string {
+				dirs := []string{"my-app"}
+				for i := 1; i < 100; i++ {
+					dirs = append(dirs, fmt.Sprintf("my-app-%d", i))
+				}
+				return dirs
+			}(),
+			dirName: "my-app",
+			wantErr: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			baseDir := t.TempDir()
+			for _, dir := range tc.existing {
+				require.NoError(t, os.Mkdir(filepath.Join(baseDir, dir), 0o755))
+			}
+			dirPath, err := getAvailableDir(t.Context(), filepath.Join(baseDir, tc.dirName))
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, dirPath)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, filepath.Join(baseDir, tc.expected), dirPath)
 		})
 	}
 }
