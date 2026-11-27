@@ -25,7 +25,7 @@ import (
 // TemplateData contains any optional values to include in the formatted message
 //
 // Note: A custom template function should also be added for custom values
-type TemplateData map[string]interface{}
+type TemplateData map[string]any
 
 // getTemplateFuncs returns custom functions that format data within templates
 //
