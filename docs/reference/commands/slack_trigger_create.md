@@ -22,6 +22,7 @@ slack trigger create [flags]
       --interactivity-name string    when used with --interactivity, specifies
                                        the name of the interactivity parameter
                                        to use (default "interactivity")
+      --manifest-source string       resolve manifest differences using this source (local or remote)
       --org-workspace-grant string   grant access to a specific org workspace ID
                                        (or 'all' for all workspaces in the org)
       --title string                 the title of this trigger
@@ -61,6 +62,9 @@ $ slack trigger create --trigger-def "triggers/shortcut_trigger.ts"
 
 # Create a trigger for a workflow
 $ slack trigger create --workflow "#/workflows/my_workflow"
+
+# Install with the project manifest when app settings differ
+$ slack trigger create --manifest-source=local
 ```
 
 ## See also

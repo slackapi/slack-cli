@@ -69,9 +69,13 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 			{Command: "trigger create", Meaning: "Create a trigger by selecting an app and trigger definition"},
 			{Command: "trigger create --trigger-def \"triggers/shortcut_trigger.ts\"", Meaning: "Create a trigger from a definition file"},
 			{Command: "trigger create --workflow \"#/workflows/my_workflow\"", Meaning: "Create a trigger for a workflow"},
+			{Command: "trigger create --manifest-source=local", Meaning: "Install with the project manifest when app settings differ"},
 		}),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			clients.Config.SetFlags(cmd)
+			if err := cmdutil.ValidateManifestSourceFlag(clients); err != nil {
+				return err
+			}
 			return cmdutil.IsValidProjectDirectory(clients)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -86,6 +90,7 @@ func NewCreateCommand(clients *shared.ClientFactory) *cobra.Command {
 	cmd.Flags().BoolVar(&createFlags.interactivity, "interactivity", false, "when used with --workflow, adds a\n  \"slack#/types/interactivity\" parameter\n  to the trigger with the name specified\n  by --interactivity-name")
 	cmd.Flags().StringVar(&createFlags.interactivityName, "interactivity-name", "interactivity", "when used with --interactivity, specifies\n  the name of the interactivity parameter\n  to use")
 	cmd.Flags().StringVar(&createFlags.orgGrantWorkspaceID, cmdutil.OrgGrantWorkspaceFlag, "", cmdutil.OrgGrantWorkspaceDescription())
+	cmd.Flags().StringVar(&clients.Config.ManifestSourceFlag, "manifest-source", "", "resolve manifest differences using this source (local or remote)")
 	return &cmd
 }
 
