@@ -26,6 +26,10 @@ import (
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func Test_NPMClient_InstallAllPackages(t *testing.T) {
@@ -107,6 +111,7 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 		expectedVerboseArgs   []any
 		expectedValue         string
 		expectedError         error
+		expectedSpanError     string
 	}{
 		"When npm install package is successful": {
 			hookExecuteStdout: "npm install stdout",
@@ -127,11 +132,16 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 			expectedVerboseArgs:   []any{"npm install --save-dev --no-audit --progress=false --loglevel=verbose @slack/cli-hooks", errors.New("super error")},
 			expectedValue:         "",
 			expectedError:         errors.New("super error"),
+			expectedSpanError:     "npm install stdout",
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			t.Cleanup(func() { otel.SetTracerProvider(previous) })
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
@@ -162,6 +172,10 @@ func Test_NPMClient_InstallDevPackage(t *testing.T) {
 			if tc.expectedVerboseOutput != "" {
 				ios.AssertCalled(t, "PrintDebug", mock.Anything, tc.expectedVerboseOutput, tc.expectedVerboseArgs)
 			}
+			if tc.expectedSpanError != "" {
+				require.Len(t, recorder.Ended(), 1)
+				require.Contains(t, recorder.Ended()[0].Attributes(), attribute.String("error", tc.expectedSpanError))
+			}
 		})
 	}
 }
@@ -174,6 +188,7 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 		hookExecuteError    error
 		expectedPkgVersion  string
 		expectedPkgExists   bool
+		expectedSpanError   string
 	}{
 		"When npm list finds the package@version": {
 			hookExecuteStdout: strings.Join([]string{
@@ -192,6 +207,7 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 			hookExecuteError:   errors.New("Exit code 1"),
 			expectedPkgVersion: "",
 			expectedPkgExists:  false,
+			expectedSpanError:  "project-name@1.0.0 /path/to/project\n└── (empty)",
 		},
 		"When npm list does not find the package and returns output not containing the package": {
 			hookExecuteStdout: strings.Join([]string{
@@ -206,6 +222,11 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			recorder := tracetest.NewSpanRecorder()
+			previous := otel.GetTracerProvider()
+			otel.SetTracerProvider(sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder)))
+			t.Cleanup(func() { otel.SetTracerProvider(previous) })
+
 			// Setup
 			ctx := slackcontext.MockContext(t.Context())
 			projectDirPath := "/path/to/project-name"
@@ -233,6 +254,10 @@ func Test_NPMClient_ListPackage(t *testing.T) {
 			// Assertions
 			require.Equal(t, tc.expectedPkgVersion, pkgVersion)
 			require.Equal(t, tc.expectedPkgExists, pkgExists)
+			if tc.expectedSpanError != "" {
+				require.Len(t, recorder.Ended(), 1)
+				require.Contains(t, recorder.Ended()[0].Attributes(), attribute.String("error", tc.expectedSpanError))
+			}
 		})
 	}
 }
