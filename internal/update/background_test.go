@@ -33,6 +33,7 @@ func Test_AutoUpdate(t *testing.T) {
 	tests := map[string]struct {
 		installedVersion string
 		lockHeld         bool
+		movedBinary      bool
 		installErr       error
 		attempts         int
 		expectedCalls    int
@@ -66,6 +67,15 @@ func Test_AutoUpdate(t *testing.T) {
 			expectedCalls:    1,
 			expectedResult:   &AutoUpdateResult{From: "v4.11.0", To: "v4.12.0"},
 		},
+		"skips when another update moved the binary": {
+			installedVersion: "v4.11.0",
+			lockHeld:         true,
+			movedBinary:      true,
+			attempts:         1,
+			expectedCalls:    0,
+			expectedResult:   nil,
+			expectedErr:      errors.New("the running binary is not in a folder that the installation scripts write to"),
+		},
 		"skips when a newer version is installed": {
 			installedVersion: "v4.13.0",
 			attempts:         1,
@@ -76,11 +86,18 @@ func Test_AutoUpdate(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := slackcontext.MockContext(t.Context())
-			binaryPath := filepath.Join(t.TempDir(), "slack")
-			require.NoError(t, os.WriteFile(binaryPath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.installedVersion), 0o755))
+			homeDir := t.TempDir()
+			binaryPath := filepath.Join(homeDir, ".slack", "bin", "slack")
+			executablePath := binaryPath
+			if tc.movedBinary {
+				executablePath = filepath.Join(homeDir, ".slack", "bin", "backups", "v4.11.0", "slack")
+			}
+			require.NoError(t, os.MkdirAll(filepath.Dir(executablePath), 0o755))
+			require.NoError(t, os.WriteFile(executablePath, fmt.Appendf(nil, scriptTemplate, "Using slack "+tc.installedVersion), 0o755))
 			lockPath := filepath.Join(filepath.Dir(binaryPath), "autoupdate.lock")
 			clientsMock := shared.NewClientsMock()
-			clientsMock.Os.On("Executable").Return(binaryPath, nil)
+			clientsMock.Os.On("Executable").Return(executablePath, nil)
+			clientsMock.Os.On("UserHomeDir").Return(homeDir, nil)
 			clientsMock.AddDefaultMocks()
 			clients := shared.NewClientFactory(clientsMock.MockClientFactory())
 			holder := flock.New(lockPath)
