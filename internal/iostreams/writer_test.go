@@ -20,9 +20,11 @@ import (
 	"testing"
 
 	"github.com/slackapi/slack-cli/internal/config"
+	"github.com/slackapi/slack-cli/internal/slackcontext"
 	"github.com/slackapi/slack-cli/internal/slackdeps"
 	"github.com/slackapi/slack-cli/internal/style"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -215,6 +217,44 @@ func Test_IOStreams_WriteOut(t *testing.T) {
 	io := NewIOStreams(cfg, fsMock, osMock)
 	w := io.WriteOut()
 	require.NotNil(t, w)
+}
+
+func Test_WriteDebugger_Write(t *testing.T) {
+	tests := map[string]struct {
+		input    string
+		expected []string
+	}{
+		"writes each line of the input as a separate debug log": {
+			input:    "first\nsecond\n",
+			expected: []string{"first", "second"},
+		},
+		"trims surrounding whitespace before splitting the input": {
+			input:    "  \n  hello  \n\n",
+			expected: []string{"hello"},
+		},
+		"keeps blank lines between lines of the input": {
+			input:    "one\n\ntwo",
+			expected: []string{"one", "", "two"},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx := slackcontext.MockContext(t.Context())
+			fsMock := slackdeps.NewFsMock()
+			osMock := slackdeps.NewOsMock()
+			config := config.NewConfig(fsMock, osMock)
+			ioMock := NewIOStreamsMock(config, fsMock, osMock)
+			ioMock.On("PrintDebug", mock.Anything, mock.Anything, mock.Anything)
+			w := WriteDebugger{ctx: ctx, io: ioMock}
+			n, err := w.Write([]byte(tc.input))
+			require.NoError(t, err)
+			require.Equal(t, len(tc.input), n)
+			ioMock.AssertNumberOfCalls(t, "PrintDebug", len(tc.expected))
+			for i, line := range tc.expected {
+				assert.Equal(t, mock.Arguments{ctx, "%s", []any{line}}, ioMock.Calls[i].Arguments)
+			}
+		})
+	}
 }
 
 func Test_WriteIndent(t *testing.T) {
